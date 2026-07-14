@@ -56,6 +56,47 @@ The harness persists per-attempt history in `.ralph/runs/<run-id>/history.tsv` a
 
 Each task attempt also gets a generated `task-context.md` packet. It summarizes current inventory/matrix metrics, task-specific rows, matching Unit claims, likely file families, and a task-type checklist. Implementers and reviewers are prompted to read the task file plus this packet first; the full plan remains available mainly for dependency and follow-up checks.
 
+For GitHub-backed plans, Ralph hydrates the task's single canonical issue link
+once into that packet before creating an implementation worktree. Hydration
+fails closed when GitHub is unavailable, the issue is closed, lacks
+`ready-for-agent`, declares itself non-runnable, or names any open blocker. The
+same immutable packet is given to the implementer, every reviewer round, and
+the decider, so the local plan never needs a second requirements copy.
+Plans opt into this contract with `<!-- ralph-github-issues: required -->`;
+before changing branches, the runner verifies that every indexed dependency
+matches the corresponding live issue's `## Blocked by` section.
+
+Before execution, Ralph atomically claims the issue with a remote
+`ralph/claims/issue-<number>` Git ref. The claim is a parentless empty-tree
+commit, so acquiring it cannot publish the Base SHA or any unpublished product
+history. Its metadata records the run ID, a persisted random owner token,
+output branch, and Base SHA. A second runner cannot reuse or overwrite that
+claim; a retry from the same locked run directory reuses the persisted token.
+Deletion uses an exact remote-ref lease, so it cannot erase a replacement
+claim. Direct `--commit-to-base` runs close the issue and release the claim
+after the accepted task commit. Integration-branch
+runs intentionally keep both open until the branch is merged. After acceptance,
+verify ancestry and synchronize the tracker with:
+
+```bash
+pnpm exec tsx scripts/ralph-issue-context.ts complete \
+  --plan plans/CLEANROOM_SDK_DELIVERY_RALPH.md \
+  --task 1 \
+  --run-id cleanroom-gh41 \
+  --owner-token "$(<.ralph/runs/cleanroom-gh41/owner-token)" \
+  --output-branch ralph/cleanroom-gh41/integration \
+  --integration-ref ralph/cleanroom-gh41/integration \
+  --accepted-ref master
+```
+
+Keep the output branch until completion succeeds. For an abandoned run,
+`pnpm exec tsx scripts/ralph-issue-context.ts release` requires the task file,
+run ID, persisted owner token, and output branch. It uses compare-and-swap to
+remove only that exact claim and never closes the issue. A failed run retains
+its claim deliberately; this fail-safe prevents another runner from starting
+while product work may still exist. Release it explicitly before deleting the
+run directory or branch.
+
 Codex implementer rounds intentionally keep one stable session per task attempt. The first round runs non-ephemerally and stores the exact Codex session id in `implementation-implementer.session`; later review rounds resume that id. Chooser, reviewer, and decider sessions remain fresh-context so they can still catch stale assumptions and shared blind spots. The harness never resumes with `--last`.
 
 If a Codex implementer resume fails during remote pre-sampling compaction, the harness treats that specific failure as runner-context corruption rather than as a meaningful implementation result. It archives the failed session file as `implementation-implementer.session.compaction-failed.<timestamp>`, starts a fresh Codex implementer in the same task worktree with the current task prompt and reviewer feedback, and records a `codex-implementer-compaction-fallback` event. Other non-zero implementer exits are still reviewed normally because they may leave useful partial diffs.
@@ -176,7 +217,7 @@ In addition, the decider must:
 
 1. choose `retry-same-task` only when the task is still implementation-ready and the next attempt has a concrete implementable delta;
 2. keep attempt-specific failure notes in run-local review/decider artifacts instead of `plans/ACTIVE_PLAN.md`;
-3. for runnable rejections (`retry-same-task` / `needs-more-research`), add or update a concise attempt-agnostic `Retry Guidance:` subsection in the task body that tells the next implementer pass what to change;
+3. for runnable rejections (`retry-same-task` / `needs-more-research`), add or update concise attempt-agnostic retry guidance in the owning requirements source: the canonical issue for GitHub-backed plans, otherwise the local task body;
 4. edit the plan only when the rejection revealed a genuinely new durable planning fact.
 
 When the decider leaves a task `blocked`, it must also record:
@@ -200,7 +241,7 @@ Before editing the plan, the decider must pass a new-information gate in its fin
 2. why that fact was not already implied by the current plan text;
 3. why that fact is durable enough to remain true after run-local artifacts are deleted.
 
-The harness treats attempt-numbered rejection notes in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements and attempt-agnostic `Retry Guidance:` belong in the plan. Attempt scar tissue does not.
+The harness treats attempt-numbered rejection notes in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements and attempt-agnostic retry guidance belong in the canonical issue for GitHub-backed plans and in the plan for other plans. Attempt scar tissue belongs in neither.
 
 This is the key difference between a normal task rejection and a fatal harness failure. Rejection is part of the loop. Fatal harness failure is loss of a trustworthy repo or plan state.
 
@@ -269,6 +310,20 @@ To commit reconciled results directly to `master`, pass:
 ```bash
 scripts/ralph-run.sh plans/some-plan.md --commit-to-master
 ```
+
+To prove issue hydration and prompt construction without claiming or executing
+a task, use a frontier task with `--smoke-task`:
+
+```bash
+scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md \
+  --base master \
+  --run-id cleanroom-launch-smoke \
+  --smoke-task 1
+```
+
+The smoke writes an ignored task packet and implementer prompt, then verifies
+that the prompt carries the selected Base SHA and the packet carries the fetched
+canonical issue body.
 
 For unattended background runs, detach the runner process with `setsid` inside
 `nohup`:

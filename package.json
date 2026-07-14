@@ -13,7 +13,7 @@
     "check:mbt-script-inventory": "node scripts/check-mbt-test-lanes.cjs mbt-script-inventory",
     "check:qnt-inventory": "node scripts/check-qnt-inventory.cjs",
     "check:qnt-run-block-separation": "node scripts/check-qnt-run-block-separation.cjs",
-    "check:ralph-task-index": "node scripts/ralph-task-index-self-test.cjs",
+    "check:ralph-task-index": "node scripts/ralph-task-index-self-test.cjs && pnpm exec tsc -p scripts/ralph-issue-context.tsconfig.json --noEmit && pnpm exec vitest run scripts/ralph-issue-context.test.ts scripts/ralph-issue-context.property.test.ts scripts/ralph-issue-context.cli.test.ts scripts/ralph-issue-context.git.integration.test.ts scripts/ralph-issue-context.process.test.ts scripts/ralph-run.test.ts",
     "proof:qnt": "pnpm check:qnt-inventory && pnpm check:mbt-driver-closure && pnpm --filter @dnd/battle-runtime test:qnt-proofs && pnpm --filter @dnd/shared-algebras proof:quint && pnpm --filter @dnd/character-creation-runtime test:qnt-slice",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
     "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
@@ -30,20 +30,31 @@
     "test": "turbo test"
   },
   "devDependencies": {
-    "@typescript/native": "npm:typescript@^7.0.2",
+    "@effect/cli": "^0.75.2",
+    "@effect/platform": "^0.96.3",
+    "@effect/platform-node": "^0.106.0",
+    "@effect/printer": "^0.49.0",
+    "@effect/printer-ansi": "^0.49.0",
+    "@effect/typeclass": "^0.40.0",
+    "@types/node": "^22.19.15",
     "@typescript-eslint/parser": "^8.57.2",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "effect": "~3.21.5",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
+    "fast-check": "3.23.2",
     "husky": "^9.1.7",
     "jscpd": "^4.0.8",
     "lint-staged": "^16.4.0",
     "madge": "^8.0.0",
     "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
     "turbo": "latest",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^3.2.4"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

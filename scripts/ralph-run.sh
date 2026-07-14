@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+original_args=("$@")
+
 default_codex_model="gpt-5.6-luna"
 default_review_model="gpt-5.6-sol"
 
@@ -34,6 +36,8 @@ Options:
                           Default: 3
   --task <n>              Run only Task n. May be repeated; tasks run in
                           the order provided.
+  --smoke-task <n>        Hydrate one currently runnable task and render its
+                          implementer prompt without claiming or executing it.
   --keep-worktrees        Leave temporary worktrees in place.
   --codex-model <model>   Model passed to codex exec --model. Overrides
                           RALPH_CODEX_MODEL. Default: __DEFAULT_CODEX_MODEL__
@@ -232,6 +236,7 @@ implementation_round_limit="${RALPH_IMPLEMENTATION_ROUND_LIMIT:-0}"
 heartbeat_seconds="${RALPH_HEARTBEAT_SECONDS:-60}"
 min_completed_tasks="${RALPH_MIN_COMPLETED_TASKS:-0}"
 selected_tasks=()
+smoke_task=""
 task_branches=()
 active_worktrees=()
 
@@ -269,7 +274,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --task)
       [[ $# -ge 2 ]] || die "--task requires a value"
+      [[ "$2" =~ ^[1-9][0-9]*$ ]] || die "--task must be a positive task number"
       selected_tasks+=("$2")
+      shift 2
+      ;;
+    --smoke-task)
+      [[ $# -ge 2 ]] || die "--smoke-task requires a value"
+      [[ "$2" =~ ^[1-9][0-9]*$ ]] || die "--smoke-task must be a positive task number"
+      smoke_task="$2"
       shift 2
       ;;
     --keep-worktrees)
@@ -355,11 +367,15 @@ done
   exit 2
 }
 
+[[ "$run_id" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]] || \
+  die "--run-id must be a 1-128 character slug using letters, digits, dot, underscore, or hyphen"
+
 require_cmd git
 require_cmd codex
 require_cmd node
 require_cmd pnpm
 require_cmd rg
+require_cmd flock
 
 load_openrouter_key_from_dotenv
 
@@ -389,7 +405,7 @@ fi
 [[ "$min_completed_tasks" =~ ^[0-9]+$ ]] || die "RALPH_MIN_COMPLETED_TASKS must be a non-negative integer"
 
 [[ -f "$plan_file" ]] || die "plan file not found: $plan_file"
-plan_file="$(realpath "$plan_file")"
+plan_file="$(realpath -- "$plan_file")"
 
 if [[ -z "$output_branch" ]]; then
   output_branch="ralph/$run_id/integration"
@@ -400,29 +416,81 @@ if [[ "$commit_to_base" == true ]]; then
   output_branch="$base_ref"
 fi
 
-git rev-parse --verify "$base_ref" >/dev/null || die "base ref not found: $base_ref"
-base_sha="$(git rev-parse "$base_ref")"
+canonical_output_branch="$(git check-ref-format --branch "$output_branch" 2>/dev/null)" || \
+  die "--output-branch must be a valid short Git branch name"
+[[ "$canonical_output_branch" == "$output_branch" && "$output_branch" != refs/* && "$output_branch" != '@{'* ]] || \
+  die "--output-branch must be a stable short Git branch name"
+[[ "$output_branch" != ralph/claims/* ]] || \
+  die "--output-branch cannot use the reserved ralph/claims/ namespace"
+
+git rev-parse --verify --end-of-options "$base_ref^{commit}" >/dev/null || die "base ref not found: $base_ref"
+base_sha="$(git rev-parse --verify --end-of-options "$base_ref^{commit}")"
 head_sha="$(git rev-parse HEAD)"
 current_branch="$(git branch --show-current)"
+git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+mbt_lock_file="$git_common_dir/ralph-mbt.lock"
 
 [[ "$head_sha" == "$base_sha" ]] || die "current HEAD ($head_sha) does not match $base_ref ($base_sha)"
-git diff --quiet || die "main worktree has unstaged changes; commit or stash before running"
-git diff --cached --quiet || die "main worktree has staged changes; commit or stash before running"
+[[ -z "$(git status --porcelain --untracked-files=normal)" ]] || \
+  die "main worktree has tracked or untracked changes; commit, stash, or remove them before running"
 
-if [[ "$commit_to_base" == false ]]; then
-  if git show-ref --verify --quiet "refs/heads/$output_branch"; then
-    die "output branch already exists: $output_branch"
+mkdir -p "$repo_root/.ralph"
+if [[ "${RALPH_LAUNCHER_LOCKED:-0}" != 1 ]]; then
+  set +e
+  RALPH_LAUNCHER_LOCKED=1 flock --exclusive --nonblock --close \
+    --conflict-exit-code 73 "$repo_root/.ralph/runner.lock" \
+    bash "$0" "${original_args[@]}"
+  launcher_status=$?
+  set -e
+  if [[ "$launcher_status" -eq 73 ]]; then
+    die "another Ralph runner is already using this launcher worktree"
   fi
-  log "creating integration branch $output_branch from $base_ref ($base_sha)"
-  git switch -C "$output_branch" "$base_sha"
-else
-  [[ "$current_branch" == "$base_ref" ]] || die "--commit-to-base requires the current branch to be $base_ref"
+  exit "$launcher_status"
+fi
+unset RALPH_LAUNCHER_LOCKED
+
+github_issue_plan=false
+github_plan_decider_policy=""
+if rg -q '^<!-- ralph-github-issues: required -->$' "$plan_file"; then
+  github_issue_plan=true
+  git show-ref --verify --quiet "refs/heads/$base_ref" || \
+    die "GitHub-backed plans require --base to name a local acceptance branch"
+  github_plan_decider_policy="- This is a GitHub-backed plan: canonical issue bodies own requirements and blocker edges. Never add, split, revise, or rewire task requirements only in the local plan. Make any durable requirement or blocker change on the canonical GitHub issue first, then update only matching execution metadata in the plan; the runner will revalidate the entire live graph before another dispatch. Attempt-local retry observations belong in run artifacts, not a parallel local Retry Guidance requirements section."
+  require_cmd gh
+  pnpm exec tsx "$repo_root/scripts/ralph-issue-context.ts" validate-plan --plan "$plan_file" >/dev/null || \
+    die "GitHub issue plan validation failed"
+  if [[ -z "$smoke_task" && "$commit_to_base" == false && ${#selected_tasks[@]} -eq 0 ]]; then
+    die "GitHub-backed integration runs require at least one explicit --task lane"
+  fi
+fi
+if [[ -n "$smoke_task" && "$github_issue_plan" != true ]]; then
+  die "--smoke-task requires a GitHub-backed plan"
 fi
 
 run_root="$repo_root/.ralph/runs/$run_id"
 worktree_root="$repo_root/.worktrees/ralph/$run_id"
 iterations_root="$run_root/iterations"
 mkdir -p "$run_root" "$worktree_root" "$iterations_root"
+
+owner_token_file="$run_root/owner-token"
+if [[ -f "$owner_token_file" ]]; then
+  claim_owner_token="$(<"$owner_token_file")"
+else
+  claim_owner_token="$(node -e 'process.stdout.write(require("node:crypto").randomUUID())')"
+  (umask 077; printf '%s\n' "$claim_owner_token" >"$owner_token_file")
+fi
+[[ "$claim_owner_token" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$ ]] || \
+  die "invalid persisted Ralph owner token"
+
+if [[ -z "$smoke_task" && "$commit_to_base" == false ]]; then
+  if git show-ref --verify --quiet "refs/heads/$output_branch"; then
+    die "output branch already exists: $output_branch"
+  fi
+  log "creating integration branch $output_branch from $base_ref ($base_sha)"
+  git switch -C "$output_branch" "$base_sha"
+elif [[ -z "$smoke_task" ]]; then
+  [[ "$current_branch" == "$base_ref" ]] || die "--commit-to-base requires the current branch to be $base_ref"
+fi
 
 plan_snapshot="$run_root/plan.md"
 task_index="$run_root/tasks.tsv"
@@ -468,8 +536,17 @@ write_task_index() {
 }
 
 refresh_plan_snapshot() {
+  local pending_task="${1:-0}"
   cp "$plan_file" "$plan_snapshot"
   write_task_index
+  if [[ "$github_issue_plan" == true ]]; then
+    local validation_args=(validate-plan --plan "$plan_snapshot")
+    if [[ "$pending_task" != 0 ]]; then
+      validation_args+=(--pending-task "$pending_task")
+    fi
+    pnpm exec tsx "$repo_root/scripts/ralph-issue-context.ts" "${validation_args[@]}" >/dev/null || \
+      die "GitHub issue plan validation failed after plan refresh"
+  fi
 }
 
 set_task_status_in_plan() {
@@ -1059,6 +1136,11 @@ Task context packet: $context_file
 Current task: Task $task_no
 Verification command: $test_command
 
+When the task is GitHub-backed, the task context packet contains the canonical
+issue body fetched once for this attempt. Treat that shared snapshot as the
+requirements input for the implementer, reviewer, and decider; fail instead of
+reconstructing requirements from the local plan.
+
 Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local constraints:
 - Use pnpm, never npm.
 - Edit only files inside the Workspace path above. Do not edit the main repo worktree at $repo_root or any sibling task worktree; the decider owns main-worktree changes.
@@ -1066,7 +1148,9 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
 - Do not duplicate state across layers.
 - For any modeled D&D rule, read the relevant SRD text under .references/srd-5.2.1/ and check UBIQUITOUS_LANGUAGE.md before implementing.
 - Treat battle MBT as scarce. Only run the appropriate MBT tier after changes require it.
-- Before any MBT run, check for existing runners:
+- Before any MBT run, acquire the cross-worktree lock and keep it for the
+  entire command: flock "$mbt_lock_file" bash -lc '<timed MBT command>'.
+  Only after acquiring that lock, check for stale runners:
   ps aux | grep vitest | grep -v grep
   ps aux | grep quint_evaluator | grep -v grep
   If a prior quint_evaluator is alive, stop it with killall -9 quint_evaluator before starting. If a vitest/MBT process is alive, do not start another MBT run; wait for it or report the blocker.
@@ -1253,21 +1337,22 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The implementat
 
 Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
+$github_plan_decider_policy
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
-- Before any MBT run, check for existing vitest and quint_evaluator processes per AGENTS.md. Kill stale quint_evaluator processes, and do not launch a second MBT while another vitest/MBT run is alive.
+- Before any MBT run, hold the cross-worktree lock for the entire command with: flock "$mbt_lock_file" bash -lc '<timed MBT command>'. Only while holding it, check for existing vitest and quint_evaluator processes per AGENTS.md and kill stale quint_evaluator processes.
 - Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, use the promoted MBT command unless the task explicitly requires a higher tier.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
-- Inspect the implementation and review for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes or parser-error reminders to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
-- Preserve task surface as executable tasks, not only status prose. If you accept a task by narrowing or splitting its original scope, any excluded still-desired work must be added or revised as concrete follow-up tasks in $plan_file before you commit. A note that work "remains support-gated", "is deferred", or "belongs to a later family" is not sufficient unless the corresponding Ralph Task Index, DAG table, and task-detail entries already keep that work visible and dependency-ordered.
-- Before editing $plan_file, answer a New Information Gate in the decider final:
+- Inspect the implementation and review for Plan Impact. For non-GitHub-backed plans, update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. For GitHub-backed plans, follow the canonical-issue policy above. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
+- For non-GitHub-backed plans, preserve task surface as executable tasks, not only status prose. For GitHub-backed plans, preserve or change that surface at the canonical issues first. A note that work "remains support-gated", "is deferred", or "belongs to a later family" is not sufficient unless the owning task graph keeps that work visible and dependency-ordered.
+- Before editing requirements or dependency structure in the owning plan or canonical issue, answer a New Information Gate in the decider final:
   - What new fact was learned?
   - Why was it not already implied by the current plan text?
   - Why is it durable enough to remain correct after run-local artifacts are deleted?
-- If the task stays runnable (
+- For non-GitHub-backed plans, if the task stays runnable (
   - retry-same-task
   - needs-more-research
-  ), add or update a concise Retry Guidance section in the current task body in $plan_file. Keep it attempt-agnostic, actionable, and focused on what the next implementer round should change.
+  ), add or update a concise Retry Guidance section in the current task body in $plan_file. For GitHub-backed plans, put any durable retry guidance on the canonical issue instead and keep attempt-local detail only in run artifacts.
 - If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied, except for required attempt-agnostic Retry Guidance updates on runnable reruns.
 - Every decider result must classify the task disposition as exactly one of:
   - done
@@ -1782,9 +1867,20 @@ cleanup_mbt_artifacts() {
   rm -rf "$repo_root/packages/fat-traces" 2>/dev/null || true
 }
 
+cleanup_idle_mbt_state() {
+  exec 7>"$mbt_lock_file"
+  if flock --nonblock 7; then
+    kill_stray_mbt_processes
+    cleanup_mbt_artifacts
+    flock --unlock 7
+  else
+    log "MBT lane is active; skipping cross-run evaluator/artifact cleanup"
+  fi
+  exec 7>&-
+}
+
 assert_clean_main_worktree() {
-  git diff --quiet || return 1
-  git diff --cached --quiet || return 1
+  [[ -z "$(git status --porcelain --untracked-files=normal)" ]]
 }
 
 recover_dirty_main_worktree_after_decider() {
@@ -2274,9 +2370,11 @@ choose_next_task() {
   mkdir -p "$chooser_root"
 
   refresh_plan_snapshot
-  auto_unblock_blocked_tasks "$plan_file"
-  commit_plan_automation_change "Auto-unblock ready Ralph tasks"
-  refresh_plan_snapshot
+  if [[ "$github_issue_plan" != true ]]; then
+    auto_unblock_blocked_tasks "$plan_file"
+    commit_plan_automation_change "Auto-unblock ready Ralph tasks"
+    refresh_plan_snapshot
+  fi
   write_ready_tasks_file "$ready_tasks_file"
 
   if [[ ${#selected_tasks[@]} -gt 0 ]]; then
@@ -2376,6 +2474,9 @@ run_task_attempt() {
   local attempt_root="$task_root/attempt-$attempt_no"
   local task_file="$attempt_root/task.md"
   local task_context_file="$attempt_root/task-context.md"
+  local canonical_issue_context_file="$attempt_root/canonical-issue-context.md"
+  local issue_claim_file="$attempt_root/issue-claim.json"
+  local claim_base_sha_file="$task_root/claim-base-sha"
   local matrix_before_file="$attempt_root/matrix-before.json"
   local matrix_after_file="$attempt_root/matrix-after.json"
   local matrix_delta_file="$attempt_root/matrix-delta.md"
@@ -2388,6 +2489,42 @@ run_task_attempt() {
   mkdir -p "$attempt_root" "$(dirname "$implementation_worktree")"
   sed -n "${task_start},${task_end}p" "$plan_snapshot" >"$task_file"
   write_task_context "$task_context_file" "$task_no" "$task_id" "$task_file"
+  if [[ "$github_issue_plan" == true ]]; then
+    local claim_base_sha
+    if [[ -f "$claim_base_sha_file" ]]; then
+      claim_base_sha="$(<"$claim_base_sha_file")"
+    else
+      claim_base_sha="$task_base_sha"
+      printf '%s\n' "$claim_base_sha" >"$claim_base_sha_file"
+    fi
+    [[ "$claim_base_sha" =~ ^([0-9a-fA-F]{40}|[0-9a-fA-F]{64})$ ]] || \
+      die "invalid persisted claim Base SHA for task $task_no"
+    require_cmd gh
+    if ! pnpm exec tsx "$repo_root/scripts/ralph-issue-context.ts" hydrate \
+      --task-file "$task_file" \
+      --output "$canonical_issue_context_file"; then
+      printf 'canonical GitHub issue hydration failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
+      note "task" "fatal-issue-hydration task=$task_no attempt=$attempt_no"
+      append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-issue-hydration" "-" "canonical issue could not be hydrated"
+      return 2
+    fi
+    {
+      printf '\n'
+      cat "$canonical_issue_context_file"
+    } >>"$task_context_file"
+    if ! pnpm exec tsx "$repo_root/scripts/ralph-issue-context.ts" claim \
+      --task-file "$task_file" \
+      --run-id "$run_id" \
+      --owner-token "$claim_owner_token" \
+      --output-branch "$output_branch" \
+      --accepted-ref "$base_ref" \
+      --base-sha "$claim_base_sha" >"$issue_claim_file"; then
+      printf 'canonical GitHub issue claim failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
+      note "task" "fatal-issue-claim task=$task_no attempt=$attempt_no"
+      append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-issue-claim" "-" "canonical issue is claimed by another Ralph run"
+      return 2
+    fi
+  fi
   write_matrix_progress_snapshot "$matrix_before_file"
 
   task_branches+=("$implementation_branch")
@@ -2397,8 +2534,7 @@ run_task_attempt() {
   note "task" "start iteration=$iteration task=$task_no id=$task_id attempt=$attempt_no status=$status base=$task_base_sha"
   write_process_snapshot "$attempt_root/process-before.md"
 
-  kill_stray_mbt_processes
-  cleanup_mbt_artifacts
+  cleanup_idle_mbt_state
 
   git worktree add -B "$implementation_branch" "$implementation_worktree" "$task_base_sha"
   bootstrap_worktree_install "$implementation_worktree"
@@ -2469,7 +2605,7 @@ run_task_attempt() {
     return 2
   fi
 
-  refresh_plan_snapshot
+  refresh_plan_snapshot "$task_no"
   local refreshed_task_row=""
   refreshed_task_row="$(lookup_task_row "$task_no" || true)"
   if [[ -z "$refreshed_task_row" ]]; then
@@ -2492,7 +2628,7 @@ run_task_attempt() {
     if set_task_status_in_plan "$task_no" "$task_id" "done" "$plan_file"; then
       note "task" "warning-autorepaired-task-done-status task=$task_no attempt=$attempt_no previous_status=$refreshed_task_status"
       commit_plan_automation_change "Mark Ralph task $task_no done"
-      refresh_plan_snapshot
+      refresh_plan_snapshot "$task_no"
       refreshed_task_row="$(lookup_task_row "$task_no" || true)"
       if [[ -z "$refreshed_task_row" ]]; then
         printf 'task %s disappeared from refreshed plan after done-status autorepair\n' "$task_no" >"$last_error_file"
@@ -2519,6 +2655,23 @@ run_task_attempt() {
   decider_disposition="$authoritative_disposition"
   case "$decider_disposition" in
     done)
+      if [[ "$commit_to_base" == true && -s "$issue_claim_file" ]]; then
+        local accepted_task_sha
+        accepted_task_sha="$(git rev-parse HEAD)"
+        if ! pnpm exec tsx "$repo_root/scripts/ralph-issue-context.ts" complete \
+          --plan "$plan_file" \
+          --task "$task_no" \
+          --run-id "$run_id" \
+          --owner-token "$claim_owner_token" \
+          --output-branch "$output_branch" \
+          --integration-ref "$accepted_task_sha" \
+          --accepted-ref "$base_ref" >/dev/null; then
+          printf 'task %s landed on %s but canonical issue completion failed\n' "$task_no" "$base_ref" >"$last_error_file"
+          note "task" "fatal-issue-completion task=$task_no attempt=$attempt_no"
+          append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-issue-completion" "$accepted_task_sha" "accepted task issue could not be closed"
+          return 2
+        fi
+      fi
       ;;
     retry-same-task)
       if [[ "$final_attempt" == "true" ]]; then
@@ -2527,7 +2680,7 @@ run_task_attempt() {
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task runnable"
         return 2
       fi
-      if ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
+      if [[ "$github_issue_plan" != true ]] && ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
         printf 'task %s attempt %s left task runnable without Retry Guidance in the task body\n' "$task_no" "$attempt_no" >"$last_error_file"
         note "task" "fatal-missing-retry-guidance task=$task_no attempt=$attempt_no disposition=$decider_disposition"
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-retry-guidance" "-" "runnable task missing retry guidance"
@@ -2541,7 +2694,7 @@ run_task_attempt() {
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task research-runnable"
         return 2
       fi
-      if ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
+      if [[ "$github_issue_plan" != true ]] && ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
         printf 'task %s attempt %s left task runnable without Retry Guidance in the task body\n' "$task_no" "$attempt_no" >"$last_error_file"
         note "task" "fatal-missing-retry-guidance task=$task_no attempt=$attempt_no disposition=$decider_disposition"
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-retry-guidance" "-" "runnable task missing retry guidance"
@@ -2571,8 +2724,7 @@ run_task_attempt() {
       return 2
       ;;
   esac
-  kill_stray_mbt_processes
-  cleanup_mbt_artifacts
+  cleanup_idle_mbt_state
   write_process_snapshot "$attempt_root/process-after.md"
 
   local new_head
@@ -2594,6 +2746,35 @@ run_task_attempt() {
 declare -a task_attempts=()
 iteration=0
 
+if [[ -n "$smoke_task" ]]; then
+  require_cmd gh
+  refresh_plan_snapshot
+  smoke_row="$(node "$repo_root/scripts/ralph-task-index.cjs" "$plan_snapshot" --runnable-tsv | awk -F $'\t' -v task_no="$smoke_task" '$1 == task_no { print; found = 1 } END { exit found ? 0 : 1 }')" || \
+    die "smoke task $smoke_task is not in the indexed runnable frontier"
+  IFS=$'\t' read -r smoke_no smoke_id smoke_status smoke_start smoke_end smoke_title <<<"$smoke_row"
+  smoke_root="$run_root/smoke-task-$smoke_no"
+  smoke_task_file="$smoke_root/task.md"
+  smoke_context_file="$smoke_root/task-context.md"
+  smoke_issue_file="$smoke_root/canonical-issue-context.md"
+  smoke_prompt_file="$smoke_root/implementer.prompt.md"
+  mkdir -p "$smoke_root"
+  sed -n "${smoke_start},${smoke_end}p" "$plan_snapshot" >"$smoke_task_file"
+  write_task_context "$smoke_context_file" "$smoke_no" "$smoke_id" "$smoke_task_file"
+  pnpm exec tsx "$repo_root/scripts/ralph-issue-context.ts" hydrate \
+    --task-file "$smoke_task_file" \
+    --output "$smoke_issue_file" >/dev/null
+  {
+    printf '\n'
+    cat "$smoke_issue_file"
+  } >>"$smoke_context_file"
+  write_prompt "implementation" "$smoke_prompt_file" "$repo_root" "$smoke_no" "$smoke_task_file" "$base_ref" "$base_sha" "$smoke_context_file"
+  rg -F "Base SHA: $base_sha" "$smoke_prompt_file" >/dev/null || die "smoke prompt omitted Base SHA"
+  rg -F "## Canonical issue body" "$smoke_context_file" >/dev/null || die "smoke context omitted canonical issue body"
+  printf 'smoke task: %s\nbase SHA: %s\nprompt: %s\ncanonical context: %s\n' \
+    "$smoke_id" "$base_sha" "$smoke_prompt_file" "$smoke_context_file"
+  exit 0
+fi
+
 log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
 log "Codex model: $codex_model"
@@ -2602,8 +2783,7 @@ log "run state: $run_root"
 note "run" "start base=$base_ref sha=$base_sha output=$output_branch codex_model=$codex_model review_model=$review_model"
 write_process_snapshot "$run_root/process-start.md"
 
-kill_stray_mbt_processes
-cleanup_mbt_artifacts
+cleanup_idle_mbt_state
 refresh_plan_snapshot
 
 while true; do

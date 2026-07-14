@@ -102,8 +102,7 @@ function assertAcyclic(tasks, byId) {
   for (const task of tasks) visit(task);
 }
 
-function parsePlan(planPath) {
-  const text = fs.readFileSync(planPath, "utf8");
+function parsePlanText(text, planPath = "<plan>") {
   const index = taskIndexFromPlanText(text, planPath);
   const taskBodyByNumber = headingLines(text);
   const numbers = new Set();
@@ -188,6 +187,10 @@ function parsePlan(planPath) {
   return tasks;
 }
 
+function parsePlan(planPath) {
+  return parsePlanText(fs.readFileSync(planPath, "utf8"), planPath);
+}
+
 function runnableTasks(tasks) {
   const statusById = new Map(tasks.map((task) => [task.id, task.status]));
   return tasks.filter(
@@ -224,4 +227,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { parsePlan, runnableTasks, taskTsv };
+module.exports = { parsePlan, parsePlanText, runnableTasks, taskTsv };
