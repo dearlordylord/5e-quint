@@ -240,9 +240,10 @@ handling, after the concrete algebra is defined.
 
 The Opaque Oracle must be easily discoverable as an implementation aid, not
 hidden in a late conformance appendix. Each Target Language Adapter therefore
-places a native property-test example in its primary implementation guidance.
-The example shows how to run the source-free main application through CLI or
-HTTP and may recommend an ordinary property-testing library for that language.
+contains one native property-test example as its sole code artifact. The
+example shows how to run the source-free main application through CLI or HTTP
+and may recommend an ordinary property-testing library for that language. The
+Adapter contains no broader implementation guidance.
 
 The Target implementer owns the resulting test and all of its policy:
 
@@ -342,8 +343,9 @@ decision performs none of it. Before the Opaque Oracle can be distributed:
 - repeated-evaluation fixtures must establish determinism and the batch
   decomposition law through a fresh CLI process, a persistent CLI process, and
   HTTP; and
-- Target Language Adapter guidance must contain the native property-testing
-  entry point without supplying Target SDK implementation code.
+- each Target Language Adapter must contain its sole native property-test
+  example without supplying Target SDK implementation code or broader
+  implementation guidance.
 
 ## Map impact
 

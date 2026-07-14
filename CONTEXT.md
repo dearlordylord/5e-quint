@@ -17,7 +17,7 @@ The restriction on which source knowledge may be used to build a Target SDK. It 
 _Avoid_: Cleanroom harness, cleanroom implementation
 
 **Cleanroom Core**:
-The one language-neutral input corpus used to build independent Target SDKs. It contains RAW, the Cleanroom Mechanics Slice projected from canonical authored content, active calibrated QNT, and shared domain language. It is not divided into per-Unit or per-assignment packages.
+The one language-neutral input corpus used to build independent Target SDKs. It contains RAW with the applicable license and attribution, source-ready rules assumptions and shared D&D language, the generated Cleanroom Mechanics Slice aggregate, generated portable schemas and cases, and active calibrated QNT with its QNT-side executable entry modules. Oracle Case/Trace schemas and portable fixtures belong here; the source-free production application that evaluates them does not. The Core is not divided into per-Unit or per-assignment packages.
 _Avoid_: Per-Unit package, export catalog, experiment catalog
 
 **Reducer-Eligible Authored Mechanics**:
@@ -41,8 +41,16 @@ The character-progression range for which the Cleanroom requires composed public
 _Avoid_: Spell-level horizon; truncating authored records at the horizon; treating the horizon as the maximum level representable by Target domain types
 
 **Target Language Adapter**:
-The closed conformance-tool profile paired with the Cleanroom Core for one Target Language Profile. It identifies the real language Quint connector, its documentation and invocation, the evidence checks required for conformance, and may recommend an ordinary property-testing library for Target-owned Oracle Case generation and optional shrinking. Rust is currently the only such adapter. It contains no Target SDK interfaces or implementation code.
-_Avoid_: Target implementation kit, reducer skeleton
+The deliberately small language-specific profile paired with the Cleanroom Core for one Target Language Profile. It links to the real language Quint connector and its own documentation and contains the one canonical native property-test example required by the Opaque Oracle contract. That example is its only code artifact. Rust is currently the only such adapter. It contains no connector wrapper, reusable harness or bridge code, Target SDK interfaces, implementation recipe, or conformance ledger.
+_Avoid_: Target implementation kit, conformance harness, reducer skeleton
+
+**Cleanroom Acceptance Run**:
+A portability and conformance run that begins in a fresh Target workspace containing only the Cleanroom Core, the applicable Target Language Adapter, the ordinary Target toolchain, and separately supplied conformance tools such as the source-free Opaque Oracle distribution. Only this run can establish that the declared cleanroom inputs suffice.
+_Avoid_: Promoting a rehearsal result, receipt-based acceptance
+
+**Dirty-Cleanroom Rehearsal**:
+A diagnostic run that stages the declared cleanroom inputs into an existing or otherwise contaminated Target workspace to expose artifact, connector, or Target implementation failures quickly. It may use source-side orchestration, but its result is never Cleanroom acceptance and its shortcuts never become portable inputs.
+_Avoid_: Cleanroom acceptance, portable harness contract
 
 **Opaque Oracle**:
 The role in which Target SDK tests query a source-free distribution of the main production application's CLI or HTTP surface to discover calibrated production behavior during implementation and later differential conformance. Both intrinsic production surfaces expose the same strict JSON contract for one stateless composed Character Creation-to-Battle evaluation; there is no Oracle-specific application or harness. A Target SDK remains buildable and runnable without them, and RAW plus calibrated QNT remain the rules authority.
@@ -79,6 +87,13 @@ _Avoid_: Dhall schema, mechanics support manifest, content release protocol
 The Cleanroom input for one Target SDK is the Cleanroom Core plus the applicable
 Target Language Adapter. There are not multiple Cleanroom Cores per Unit.
 
+The source-free main production application is provided separately for use as
+the Opaque Oracle. It is a source-owned conformance tool, not language-neutral
+Core material, a Target-language adapter, or a Target SDK dependency. A Target
+Language Adapter's native property-test example invokes its CLI or HTTP surface
+directly; no Oracle client, shared comparator, or harness package sits between
+them.
+
 Only active source-side QNT may enter the Cleanroom Core. A new composite
 scenario is introduced in the source repository first, connected to the
 production TypeScript reducers/SDK as applicable, and calibrated there through
@@ -88,10 +103,11 @@ for new QNT.
 ## Cleanroom Enforcement Boundary
 
 The Cleanroom can directly supply only language-neutral inputs and tool
-coordinates: concise prompts/domain documentation, Dhall and generated JSON,
-portable schemas plus conformance fixtures, active QNT, and the selected
-language connector information. Prompts can request an architecture but cannot
-prove it.
+coordinates: a tiny artifact index, source-ready rules/domain documentation, the generated aggregate
+catalog, portable schemas plus conformance fixtures, active QNT, and the
+selected language connector information. Canonical Dhall and per-record JSON
+remain source-publication inputs. No supplied artifact prescribes or proves an
+internal Target architecture.
 
 Executable artifacts can establish observable contracts:
 
@@ -109,53 +125,50 @@ that prompts enforce internal architecture.
 
 ### Minimal Guidance
 
-Cleanroom-specific prose approaches zero. Canonical RAW, curated assumptions,
-and shared domain language remain because they are rules authority, not workflow
-instructions. The cleanroom contract itself is carried by:
+The Cleanroom Core contains no implementation guide, architecture recipe,
+per-Unit instructions, generated guidance essay, or copied wayfinder prose.
+Canonical RAW remains rules ground truth, curated assumptions remain the sole
+record of explicit modeling choices, and shared domain language remains naming
+authority. They are not workflow instructions. One tiny index identifies the
+requested outcome and artifact roots; the contract itself is carried by:
 
 - conventional artifact locations;
 - the portable Surface schema and valid/invalid fixtures;
-- paired Dhall/JSON authored content;
-- active QNT and its executable drivers;
-- a small machine-readable Target Language Adapter configuration identifying
-  the connector and standard invocation.
+- the generated aggregate Surface catalog;
+- active QNT and its QNT-side executable entry modules and protocol fixtures;
+- a minimal Target Language Adapter link to the real connector and its own
+  documentation, plus its one canonical native Opaque Oracle property-test
+  example.
 
-Do not create narrative Unit bundles, generated guidance essays, per-Unit
-checklists, or prose obligation ledgers. Any unavoidable bootstrap text should
-only identify the requested outcome and the artifact roots.
+Target architecture remains unconstrained. Schemas, cases, QNT, and executable
+drivers demonstrate the observable contracts without a narrative recipe.
 
-### Manifest Discipline
+### No Conformance Ledgers
 
-Per-Unit or per-QNT manifests are allowed when they improve an executable
-contract. They are not allowed merely to report status or repeat facts already
-owned elsewhere.
+Do not ship per-Unit, per-QNT, or whole-Core receipt manifests, status ledgers,
+Core digests, release ids, file inventories, or handwritten Unit-to-QNT joins.
+Conformance commands derive their expected sets from executable QNT protocols
+and the generated catalog, fail directly when any required execution is absent,
+and may emit connector invocations, traces, comparisons, and SDK outcomes only
+as run-local diagnostic evidence.
 
-A manifest must satisfy all of these conditions:
-
-- a schema validates it and a conformance command consumes it;
-- missing, stale, duplicate, or contradictory entries fail the command;
-- derivable fields are generated from authoritative Dhall/JSON/QNT rather than
-  handwritten;
-- non-derivable declarations name a real semantic contract and are owned at the
-  source boundary where that contract is decided;
-- it contains no prose guidance, implementation recipe, completion claim, or
-  copied expected outcome;
-- removing it would remove a specific enforceable quality gate.
-
-Potentially useful examples are a generated Dhall/JSON/schema pairing index or
-a source-owned classification of cleanroom-executable QNT entry modules and
-their declared observable cases. File lists, hashes, support labels, and
-Unit-to-QNT joins that can be derived mechanically should not become manually
-maintained truth. Whether either example is justified remains a source-audit
-decision, not a default requirement.
+Run-local evidence has no stable package identity and is not committed as a
+second truth about the current coherent source snapshot. The Opaque Oracle's
+`DistributionId` is distinct operational replay identity for its source-free
+executable, schema, and filtered catalog projection; it is not a Cleanroom Core
+digest or conformance receipt.
 
 **Rules Corpus**:
-The language-neutral rules knowledge allowed by the Cleanroom Constraint, including RAW, canonical authored content, formal QNT semantics, and shared domain language. It contains no TypeScript runtime implementation or TypeScript runtime tests.
+The language-neutral rules knowledge allowed by the Cleanroom Constraint, including RAW, the generated Cleanroom Mechanics Slice, formal QNT semantics, source-ready rules assumptions, and shared D&D language. It contains no canonical Dhall, per-record source JSON, TypeScript runtime implementation, or TypeScript runtime tests.
 _Avoid_: Guidance bundle, Unit index
 
 **Functional Reducer**:
 The central rules engine for a domain such as character creation or battle. It consumes parsed authored mechanics together with reducer state and commands/fills, then returns the next state, required holes, or a typed rejection. QNT conformance targets this layer. The SDK is an interface to it, not a substitute for it.
 _Avoid_: Treating SDK or MCP behavior as the primary rules implementation
+
+**Conformance Closure**:
+The fail-closed, role-specific executable relation showing that every required Cleanroom QNT artifact ran through its applicable Quint lane, every runtime-bearing replay ran through the real language connector and reached the production Functional Reducer, and the required behavior remained publicly reachable where the Cleanroom Workflow Horizon requires an SDK Scenario. Required sets are derived from executable protocols and the generated catalog; run-local evidence is not a durable receipt ledger.
+_Avoid_: Coverage manifest, completion inventory, Core digest
 
 **SDK Scenario**:
 An end-to-end use of the Target SDK through public domain APIs, from an authored-content selection or user-facing input through the Functional Reducer and composed outcome. It confirms that reducer capabilities are reachable through the SDK rather than only through target-owned MBT driver code. It is downstream integration evidence, not the primary QNT parity boundary.
@@ -262,9 +275,10 @@ This paragraph is an observable target contract, not a mandated internal type
 or module design. A Target SDK may realize it differently if the same boundary
 behavior is demonstrated.
 
-The Target Language Adapter may identify required evidence and supported external
-tools, but it must not compile against package-owned target-language interfaces.
-Doing so would prescribe the Target SDK's implementation through its language.
+The Target Language Adapter links the real connector and its documentation but
+does not own these checks. The Target's conformance suite binds that connector
+to its production Functional Reducers and SDK Scenarios without compiling
+against adapter-owned interfaces.
 
 Target conformance must also establish the catalog-to-reducer connection. A
 checksum, import event, or assertion that a JSON file was opened proves only
@@ -402,9 +416,11 @@ Before authored Units can be called implemented:
 - If QNT is missing, literal-only, identity-coupled, or unable to expose the
   behavior needed for conformance, stop that target rule area and perform the
   source-side QNT plus TypeScript repair first.
-- If the language connector cannot provide trustworthy real-execution or
-  comparison evidence, improve the connector/Target Language Adapter; do not
-  replace it with stored traces or target-specific accounting scripts.
+- If the language connector or Target-owned conformance integration cannot
+  provide trustworthy real-execution or comparison evidence, improve that
+  owner. Change the Target Language Adapter only when its connector links,
+  documentation links, or native property-test example are stale; do not
+  replace execution with stored traces or target-specific accounting scripts.
 - If existing Target SDK code conflicts with the foundation, preserve it in Git
   and remove or migrate it incrementally inside the existing repository. Only
   code that passes the foundation gates is retained as production authority.

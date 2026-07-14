@@ -1,6 +1,6 @@
-# Forest of QNT slices, no single top, sibling language harnesses
+# Forest of QNT slices, no single top, sibling Target-owned language harnesses
 
-The engine is QNT-verified via MBT parity and the long-term goal is generating implementations in multiple language targets from one Quint source. A whole-battle Quint model is infeasible: the `creature x turn x effect x hole x fill` cross-product explodes the MBT state space, as the deleted root monoliths demonstrated at scale. Therefore the QNT corpus is structured as a forest of small composite slices that `import` shared atomic rule files, each slice with its own bounded MBT trace generator (state minimal, variability pushed into per-action `nondet`/fills). Composition across slices lives at the production reducer (command dispatch) and at one bounded-fixture-world integration MBT that witnesses cross-slice sequencing (never a generation input). Each language-target implementation is an independent MBT harness against the same Quint source via that language's `quint-connect` equivalent; harnesses do not call each other.
+The engine is QNT-verified via MBT parity and the long-term goal is generating implementations in multiple language targets from one Quint source. A whole-battle Quint model is infeasible: the `creature x turn x effect x hole x fill` cross-product explodes the MBT state space, as the deleted root monoliths demonstrated at scale. Therefore the QNT corpus is structured as a forest of small composite slices that `import` shared atomic rule files, each slice with its own bounded MBT trace generator (state minimal, variability pushed into per-action `nondet`/fills). Composition across slices lives at the production reducer (command dispatch) and at one bounded-fixture-world integration MBT that witnesses cross-slice sequencing (never a generation input). Each language-target implementation owns an independent MBT harness against the same Quint source via that language's `quint-connect` equivalent; the Target Language Adapter does not supply that harness, and harnesses do not call each other.
 
 ## TypeScript calibration before another language target
 
@@ -48,7 +48,7 @@ the bounded-fixture tier described below.
   production TypeScript at the applicable obligation and MBT-branch tiers; a
   QNT-only semantic owner is a source-readiness blocker, not cleanroom work.
 - Implementation completeness per language target is enforced by three orthogonal CI gates: the obligation registry (no slice forgotten), per-slice MBT parity (each handler matches its QNT), and language-level exhaustive dispatch (every command variant has a handler at compile time).
-- Adding a new language target = adding its harness + per-slice drivers; no QNT changes, no changes to other languages' code.
+- Adding a new language target = that Target owns its harness + per-slice drivers; no QNT changes, no changes to other languages' code.
 
 ## Refinement (2026-05): the dominant per-trace cost is import-closure instantiation
 

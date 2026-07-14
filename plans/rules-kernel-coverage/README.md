@@ -43,11 +43,12 @@ role-specific integration described below; they do not each require an
 independent production handler. Bounded cross-slice MBT also remains bounded.
 
 The rules-kernel checker enforces the obligation-level owner/parity chain
-today. Exact action-level TS replay is a separate cleanroom-export gate and must
+today. Exact action-level TS replay is separate source-readiness work and must
 not be inferred from a green obligation row or a driver-level test. Its
 calibration index remains source-only because TypeScript implementation and
-test paths are forbidden cleanroom inputs; the exported manifest records only
-the calibrated source snapshot/hash and pass result.
+test paths are forbidden Cleanroom inputs. Cleanroom conformance derives its
+expected set from executable QNT protocols and the generated catalog and fails
+directly; there is no exported snapshot/hash/pass manifest.
 
 ## Coverage Chain
 
