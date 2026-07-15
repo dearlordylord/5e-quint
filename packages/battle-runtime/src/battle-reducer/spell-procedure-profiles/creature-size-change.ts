@@ -90,6 +90,29 @@ function admitCreatureSizeChange(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly CreatureSizeChangeInvocation[] {
+  return admitCreatureSizeChangeForProcedure(
+    spell,
+    ctx,
+    "creatureSizeIncrease",
+  );
+}
+
+function admitCreatureSizeDecrease(
+  spell: SpellRecord,
+  ctx: SpellAdmissionContext,
+): readonly CreatureSizeChangeInvocation[] {
+  return admitCreatureSizeChangeForProcedure(
+    spell,
+    ctx,
+    "creatureSizeDecrease",
+  );
+}
+
+function admitCreatureSizeChangeForProcedure(
+  spell: SpellRecord,
+  ctx: SpellAdmissionContext,
+  procedure: CreatureSizeChangeInvocation["procedure"],
+): readonly CreatureSizeChangeInvocation[] {
   const projections = creatureSizeChangeSpellProjection(
     ctx.actor.combatantId,
     spell,
@@ -101,13 +124,15 @@ function admitCreatureSizeChange(
     (slot): readonly CreatureSizeChangeInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
-        : projections.map((projection) => ({
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            spell,
-            actionCost: "magicAction",
-            ...projection,
-          })),
+        : projections
+            .filter((projection) => projection.procedure === procedure)
+            .map((projection) => ({
+              access: { tag: "prepared" },
+              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              spell,
+              actionCost: "magicAction",
+              ...projection,
+            })),
   );
 }
 
@@ -714,4 +739,5 @@ export const creatureSizeDecreaseProfile: SpellProcedureProfile<
 > = {
   ...creatureSizeChangeProfile,
   procedure: "creatureSizeDecrease",
+  admit: admitCreatureSizeDecrease,
 };

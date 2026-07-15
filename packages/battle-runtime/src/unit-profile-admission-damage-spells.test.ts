@@ -12,6 +12,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { SpellRecord } from "@dnd/surface/surface/types";
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import {
   acidArrowUnitId,
@@ -175,6 +177,233 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     ]);
   });
+  test("synthetic spell identity does not select the procedure, while mechanics facts change execution", () => {
+    const syntheticRay = (input: {
+      readonly id: string;
+      readonly name: string;
+      readonly provenanceSection: string;
+      readonly damageType: "cold" | "fire";
+    }): SpellRecord => {
+      const source = spellRecord(rayOfFrostUnitId);
+      if (source.mechanics.family !== "activation") {
+        throw new Error("Expected an activation spell fixture.");
+      }
+      const phase = source.mechanics.phases[0];
+      if (phase?.kind !== "attack_roll") {
+        throw new Error("Expected an attack-roll spell fixture.");
+      }
+      const [firstHitEffect, ...remainingHitEffects] = phase.onHit;
+      if (firstHitEffect?.kind !== "damage") {
+        throw new Error("Expected the first hit effect to deal damage.");
+      }
+      return {
+        ...source,
+        id: input.id,
+        name: input.name,
+        provenance: {
+          kind: "synthetic-test" as const,
+          section: input.provenanceSection,
+        },
+        mechanics: {
+          ...source.mechanics,
+          phases: [
+            {
+              ...phase,
+              onHit: [
+                { ...firstHitEffect, damageType: input.damageType },
+                ...remainingHitEffects,
+              ],
+            },
+          ],
+        },
+      };
+    };
+    const withoutSpellIdentity = ({
+      spell: _spell,
+      ...procedureFacts
+    }: Extract<
+      ReturnType<typeof spellActInvocation>,
+      { readonly procedure: "spellAttackDamage" }
+    >) => procedureFacts;
+    const admittedInvocation = (
+      spell: ReturnType<typeof syntheticRay>,
+    ): Extract<
+      ReturnType<typeof spellActInvocation>,
+      { readonly procedure: "spellAttackDamage" }
+    > => {
+      const state = spellBattle({ cantrips: [spell] });
+      const act = spellAct({ state, spellId: spell.id });
+      const targetHole = requireHole(act.initialHoles, "targetChoice");
+      const attackRoll = requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            spellTargetFill(targetHole, spell.id, spellCasterId, spellTargetId),
+          ],
+        }),
+        "attackRoll",
+      );
+      const invocation = spellHoleInvocation([attackRoll]);
+      if (invocation.procedure !== "spellAttackDamage") {
+        throw new Error("Expected synthetic spell attack procedure.");
+      }
+      return invocation;
+    };
+    const identityArbitrary = fc.record({
+      id: fc.constantFrom(
+        "synthetic_frost_beam_a",
+        "synthetic_frost_beam_b",
+        "synthetic_frost_beam_c",
+      ),
+      name: fc.constantFrom(
+        "Synthetic Frost Beam",
+        "Synthetic Ice Ray",
+        "Synthetic Winter Lance",
+      ),
+      provenanceSection: fc.constantFrom(
+        "battle-runtime/synthetic-spell-procedure-a",
+        "battle-runtime/synthetic-spell-procedure-b",
+        "battle-runtime/synthetic-spell-procedure-c",
+      ),
+    });
+
+    const coldA = syntheticRay({
+      id: "synthetic_frost_beam_a",
+      name: "Synthetic Frost Beam",
+      provenanceSection: "battle-runtime/synthetic-spell-procedure-a",
+      damageType: "cold",
+    });
+    const coldB = syntheticRay({
+      id: "synthetic_frost_beam_b",
+      name: "Synthetic Ice Ray",
+      provenanceSection: "battle-runtime/synthetic-spell-procedure-b",
+      damageType: "cold",
+    });
+    const coldInvocationA = admittedInvocation(coldA);
+    const coldInvocationB = admittedInvocation(coldB);
+
+    expect(withoutSpellIdentity(coldInvocationA)).toEqual(
+      withoutSpellIdentity(coldInvocationB),
+    );
+    expect(coldInvocationA).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        damage: expect.objectContaining({ damageType: "cold" }),
+      }),
+    );
+
+    const baselineFacts = withoutSpellIdentity(coldInvocationA);
+    fc.assert(
+      fc.property(identityArbitrary, (identity) => {
+        expect(
+          withoutSpellIdentity(
+            admittedInvocation(
+              syntheticRay({ ...identity, damageType: "cold" }),
+            ),
+          ),
+        ).toEqual(baselineFacts);
+      }),
+      { numRuns: 20 },
+    );
+
+    const stableIdentity = {
+      id: "synthetic_stable_frost_beam",
+      name: "Synthetic Stable Frost Beam",
+      provenanceSection: "battle-runtime/synthetic-stable-spell-procedure",
+    } as const;
+    const coldStableIdentity = syntheticRay({
+      ...stableIdentity,
+      damageType: "cold",
+    });
+    const fireStableIdentity = syntheticRay({
+      ...stableIdentity,
+      damageType: "fire",
+    });
+    const coldStableInvocation = admittedInvocation(coldStableIdentity);
+    const fireStableInvocation = admittedInvocation(fireStableIdentity);
+
+    expect(coldStableInvocation.procedure).toBe("spellAttackDamage");
+    expect(fireStableInvocation.procedure).toBe("spellAttackDamage");
+    expect(coldStableInvocation.damage).toEqual(
+      expect.objectContaining({ damageType: "cold" }),
+    );
+    expect(fireStableInvocation.damage).toEqual(
+      expect.objectContaining({ damageType: "fire" }),
+    );
+
+    const coldResistantTarget = (() => {
+      const target = statBlockWithCreatureType("humanoid");
+      return {
+        ...target,
+        statBlock: {
+          ...target.statBlock,
+          resistances: {
+            kind: "fixed" as const,
+            damageTypes: ["cold"] as const,
+          },
+        },
+      };
+    })();
+    const resolveAgainstColdResistance = (spell: SpellRecord) => {
+      const state = spellBattle({
+        cantrips: [spell],
+        targetStatBlock: coldResistantTarget,
+      });
+      const act = spellAct({ state, spellId: spell.id });
+      const targetFill = spellTargetFill(
+        requireHole(act.initialHoles, "targetChoice"),
+        spell.id,
+        spellCasterId,
+        spellTargetId,
+      );
+      const attackRoll = requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [targetFill],
+        }),
+        "attackRoll",
+      );
+      const pendingDamage = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+        ],
+      });
+      const damageRoll = requireResultHole(pendingDamage, "rolledDice");
+      const resolved = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+          damageRollFillWithGroups(damageRoll, [[2]]),
+        ],
+      });
+      expect(resolved.tag).toBe("resolved");
+      if (resolved.tag !== "resolved") {
+        throw new Error("Expected synthetic spell attack to resolve.");
+      }
+      return requireCombatant(resolved.state, spellTargetId).hp;
+    };
+    const initialTargetHp = requireCombatant(
+      spellBattle({
+        cantrips: [coldStableIdentity],
+        targetStatBlock: coldResistantTarget,
+      }),
+      spellTargetId,
+    ).hp;
+
+    expect(resolveAgainstColdResistance(coldStableIdentity)).toBe(
+      Hp(Number(initialTargetHp) - 1),
+    );
+    expect(resolveAgainstColdResistance(fireStableIdentity)).toBe(
+      Hp(Number(initialTargetHp) - 2),
+    );
+  });
   test("acid_splash is admitted through catalog spell access and projected as a save-gated cantrip", () => {
     const spell = spellRecord(acidSplashUnitId);
     const act = spellAct({
@@ -228,11 +457,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "acid_arrow",
-        2,
-        "spellAttackDamage",
-      ),
+      invocation: spellSlotInvocationRef("acid_arrow", 2, "spellAttackDamage"),
       mode: { tag: "cast" },
     });
     const attackRoll = requireResultHole(
@@ -1592,7 +1817,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       );
     }
     expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(25);
-    expect(Number(requireCombatant(resolved.state, secondTargetId).hp)).toBe(33);
+    expect(Number(requireCombatant(resolved.state, secondTargetId).hp)).toBe(
+      33,
+    );
     expect(
       snapshotBattle(resolved.state).combatants.find(
         (combatant) => combatant.combatantId === spellCasterId,
