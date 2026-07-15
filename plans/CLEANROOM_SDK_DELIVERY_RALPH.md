@@ -60,7 +60,7 @@ runnable, or unblocked.
     {
       "number": 7,
       "id": "GH-47",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Drive spell execution from typed procedure facts",
       "dependencies": [
         "GH-25"
