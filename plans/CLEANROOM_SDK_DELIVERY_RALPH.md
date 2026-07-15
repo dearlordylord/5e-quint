@@ -10,38 +10,301 @@ runnable, or unblocked.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "GH-41", "status": "ready-for-implementation", "title": "Reconcile shared D&D language to SRD 5.2.1", "dependencies": [] },
-    { "number": 2, "id": "GH-42", "status": "ready-for-implementation", "title": "Curate source-ready cleanroom modeling assumptions", "dependencies": [] },
-    { "number": 3, "id": "GH-25", "status": "ready-for-implementation", "title": "Repair the nine canonical RAW-to-Surface catalog omissions", "dependencies": [] },
-    { "number": 4, "id": "GH-61", "status": "ready-for-implementation", "title": "Define the strict Oracle Case and Trace algebra", "dependencies": [] },
-    { "number": 5, "id": "GH-43", "status": "ready-for-implementation", "title": "Audit redistributable cleanroom rules, identity, and licensing", "dependencies": ["GH-41", "GH-42"] },
-    { "number": 6, "id": "GH-44", "status": "ready-for-implementation", "title": "Enforce complete canonical Surface discovery and regeneration", "dependencies": ["GH-25"] },
-    { "number": 7, "id": "GH-47", "status": "ready-for-implementation", "title": "Drive spell execution from typed procedure facts", "dependencies": ["GH-25"] },
-    { "number": 8, "id": "GH-48", "status": "ready-for-implementation", "title": "Drive Unit mechanics from typed support profiles", "dependencies": ["GH-25"] },
-    { "number": 9, "id": "GH-49", "status": "ready-for-implementation", "title": "Drive Stat Block mechanics from typed support profiles", "dependencies": ["GH-25"] },
-    { "number": 10, "id": "GH-62", "status": "ready-for-implementation", "title": "Run stateless Character Creation through fresh Character Sheet", "dependencies": ["GH-61"] },
-    { "number": 11, "id": "GH-45", "status": "ready-for-implementation", "title": "Publish the strict SRD Surface aggregate and Draft 2020-12 schema", "dependencies": ["GH-44"] },
-    { "number": 12, "id": "GH-50", "status": "ready-for-implementation", "title": "Close composition and character-sheet authored-identity boundaries", "dependencies": ["GH-47", "GH-48", "GH-49"] },
-    { "number": 13, "id": "GH-55", "status": "ready-for-implementation", "title": "Capture interrupted-procedure facts in QNT and production state", "dependencies": ["GH-47"] },
-    { "number": 14, "id": "GH-63", "status": "ready-for-implementation", "title": "Run stateless Battle entry, Acts, and Runtime Hole continuations", "dependencies": ["GH-62"] },
-    { "number": 15, "id": "GH-46", "status": "ready-for-implementation", "title": "Prove portable Surface decoding and atomic rejection", "dependencies": ["GH-45"] },
-    { "number": 16, "id": "GH-56", "status": "ready-for-implementation", "title": "Resume Shield-interrupted procedures by capability and phase", "dependencies": ["GH-55"] },
-    { "number": 17, "id": "GH-51", "status": "ready-for-implementation", "title": "Introduce the atomic catalog-install and admission result boundary", "dependencies": ["GH-46", "GH-50"] },
-    { "number": 18, "id": "GH-57", "status": "ready-for-implementation", "title": "Calibrate typed cross-record and shared lifecycle interactions", "dependencies": ["GH-56"] },
-    { "number": 19, "id": "GH-52", "status": "ready-for-implementation", "title": "Admit complete Unit Authored Mechanics Graphs", "dependencies": ["GH-51"] },
-    { "number": 20, "id": "GH-53", "status": "ready-for-implementation", "title": "Admit complete Stat Block Authored Mechanics Graphs", "dependencies": ["GH-51"] },
-    { "number": 21, "id": "GH-54", "status": "ready-for-implementation", "title": "Consume admitted mechanics in binding and dynamic availability", "dependencies": ["GH-52", "GH-53"] },
-    { "number": 22, "id": "GH-29", "status": "ready-for-implementation", "title": "Generate the complete Cleanroom Mechanics Slice", "dependencies": ["GH-54"] },
-    { "number": 23, "id": "GH-58", "status": "ready-for-implementation", "title": "Derive the active executable QNT root and semantic closure", "dependencies": ["GH-29", "GH-57"] },
-    { "number": 24, "id": "GH-59", "status": "ready-for-implementation", "title": "Execute every derived QNT root in its real lane", "dependencies": ["GH-58"] },
-    { "number": 25, "id": "GH-60", "status": "ready-for-implementation", "title": "Replay runtime-bearing QNT through production Functional Reducers", "dependencies": ["GH-59"] },
-    { "number": 26, "id": "GH-64", "status": "ready-for-implementation", "title": "Expose the persistent Oracle CLI batch surface", "dependencies": ["GH-63"] },
-    { "number": 27, "id": "GH-65", "status": "ready-for-implementation", "title": "Expose the Oracle HTTP batch surface", "dependencies": ["GH-63"] },
-    { "number": 28, "id": "GH-66", "status": "ready-for-implementation", "title": "Prove Oracle transport equivalence and atomic failure behavior", "dependencies": ["GH-64", "GH-65"] },
-    { "number": 29, "id": "GH-40", "status": "ready-for-implementation", "title": "Package the calibrated source-free Opaque Oracle distribution", "dependencies": ["GH-29", "GH-60", "GH-66"] },
-    { "number": 30, "id": "GH-34", "status": "ready-for-implementation", "title": "Publish the single language-neutral Cleanroom Core", "dependencies": ["GH-43", "GH-29", "GH-60", "GH-63"] },
-    { "number": 31, "id": "GH-35", "status": "ready-for-implementation", "title": "Publish the minimal Rust Target Language Adapter", "dependencies": ["GH-34", "GH-40"] },
-    { "number": 32, "id": "GH-36", "status": "ready-for-implementation", "title": "Assemble the source-produced Cleanroom Harness", "dependencies": ["GH-34", "GH-35", "GH-40"] }
+    {
+      "number": 1,
+      "id": "GH-41",
+      "status": "done",
+      "title": "Reconcile shared D&D language to SRD 5.2.1",
+      "dependencies": []
+    },
+    {
+      "number": 2,
+      "id": "GH-42",
+      "status": "ready-for-implementation",
+      "title": "Curate source-ready cleanroom modeling assumptions",
+      "dependencies": []
+    },
+    {
+      "number": 3,
+      "id": "GH-25",
+      "status": "ready-for-implementation",
+      "title": "Repair the nine canonical RAW-to-Surface catalog omissions",
+      "dependencies": []
+    },
+    {
+      "number": 4,
+      "id": "GH-61",
+      "status": "ready-for-implementation",
+      "title": "Define the strict Oracle Case and Trace algebra",
+      "dependencies": []
+    },
+    {
+      "number": 5,
+      "id": "GH-43",
+      "status": "ready-for-implementation",
+      "title": "Audit redistributable cleanroom rules, identity, and licensing",
+      "dependencies": [
+        "GH-41",
+        "GH-42"
+      ]
+    },
+    {
+      "number": 6,
+      "id": "GH-44",
+      "status": "ready-for-implementation",
+      "title": "Enforce complete canonical Surface discovery and regeneration",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 7,
+      "id": "GH-47",
+      "status": "ready-for-implementation",
+      "title": "Drive spell execution from typed procedure facts",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 8,
+      "id": "GH-48",
+      "status": "ready-for-implementation",
+      "title": "Drive Unit mechanics from typed support profiles",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 9,
+      "id": "GH-49",
+      "status": "ready-for-implementation",
+      "title": "Drive Stat Block mechanics from typed support profiles",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 10,
+      "id": "GH-62",
+      "status": "ready-for-implementation",
+      "title": "Run stateless Character Creation through fresh Character Sheet",
+      "dependencies": [
+        "GH-61"
+      ]
+    },
+    {
+      "number": 11,
+      "id": "GH-45",
+      "status": "ready-for-implementation",
+      "title": "Publish the strict SRD Surface aggregate and Draft 2020-12 schema",
+      "dependencies": [
+        "GH-44"
+      ]
+    },
+    {
+      "number": 12,
+      "id": "GH-50",
+      "status": "ready-for-implementation",
+      "title": "Close composition and character-sheet authored-identity boundaries",
+      "dependencies": [
+        "GH-47",
+        "GH-48",
+        "GH-49"
+      ]
+    },
+    {
+      "number": 13,
+      "id": "GH-55",
+      "status": "ready-for-implementation",
+      "title": "Capture interrupted-procedure facts in QNT and production state",
+      "dependencies": [
+        "GH-47"
+      ]
+    },
+    {
+      "number": 14,
+      "id": "GH-63",
+      "status": "ready-for-implementation",
+      "title": "Run stateless Battle entry, Acts, and Runtime Hole continuations",
+      "dependencies": [
+        "GH-62"
+      ]
+    },
+    {
+      "number": 15,
+      "id": "GH-46",
+      "status": "ready-for-implementation",
+      "title": "Prove portable Surface decoding and atomic rejection",
+      "dependencies": [
+        "GH-45"
+      ]
+    },
+    {
+      "number": 16,
+      "id": "GH-56",
+      "status": "ready-for-implementation",
+      "title": "Resume Shield-interrupted procedures by capability and phase",
+      "dependencies": [
+        "GH-55"
+      ]
+    },
+    {
+      "number": 17,
+      "id": "GH-51",
+      "status": "ready-for-implementation",
+      "title": "Introduce the atomic catalog-install and admission result boundary",
+      "dependencies": [
+        "GH-46",
+        "GH-50"
+      ]
+    },
+    {
+      "number": 18,
+      "id": "GH-57",
+      "status": "ready-for-implementation",
+      "title": "Calibrate typed cross-record and shared lifecycle interactions",
+      "dependencies": [
+        "GH-56"
+      ]
+    },
+    {
+      "number": 19,
+      "id": "GH-52",
+      "status": "ready-for-implementation",
+      "title": "Admit complete Unit Authored Mechanics Graphs",
+      "dependencies": [
+        "GH-51"
+      ]
+    },
+    {
+      "number": 20,
+      "id": "GH-53",
+      "status": "ready-for-implementation",
+      "title": "Admit complete Stat Block Authored Mechanics Graphs",
+      "dependencies": [
+        "GH-51"
+      ]
+    },
+    {
+      "number": 21,
+      "id": "GH-54",
+      "status": "ready-for-implementation",
+      "title": "Consume admitted mechanics in binding and dynamic availability",
+      "dependencies": [
+        "GH-52",
+        "GH-53"
+      ]
+    },
+    {
+      "number": 22,
+      "id": "GH-29",
+      "status": "ready-for-implementation",
+      "title": "Generate the complete Cleanroom Mechanics Slice",
+      "dependencies": [
+        "GH-54"
+      ]
+    },
+    {
+      "number": 23,
+      "id": "GH-58",
+      "status": "ready-for-implementation",
+      "title": "Derive the active executable QNT root and semantic closure",
+      "dependencies": [
+        "GH-29",
+        "GH-57"
+      ]
+    },
+    {
+      "number": 24,
+      "id": "GH-59",
+      "status": "ready-for-implementation",
+      "title": "Execute every derived QNT root in its real lane",
+      "dependencies": [
+        "GH-58"
+      ]
+    },
+    {
+      "number": 25,
+      "id": "GH-60",
+      "status": "ready-for-implementation",
+      "title": "Replay runtime-bearing QNT through production Functional Reducers",
+      "dependencies": [
+        "GH-59"
+      ]
+    },
+    {
+      "number": 26,
+      "id": "GH-64",
+      "status": "ready-for-implementation",
+      "title": "Expose the persistent Oracle CLI batch surface",
+      "dependencies": [
+        "GH-63"
+      ]
+    },
+    {
+      "number": 27,
+      "id": "GH-65",
+      "status": "ready-for-implementation",
+      "title": "Expose the Oracle HTTP batch surface",
+      "dependencies": [
+        "GH-63"
+      ]
+    },
+    {
+      "number": 28,
+      "id": "GH-66",
+      "status": "ready-for-implementation",
+      "title": "Prove Oracle transport equivalence and atomic failure behavior",
+      "dependencies": [
+        "GH-64",
+        "GH-65"
+      ]
+    },
+    {
+      "number": 29,
+      "id": "GH-40",
+      "status": "ready-for-implementation",
+      "title": "Package the calibrated source-free Opaque Oracle distribution",
+      "dependencies": [
+        "GH-29",
+        "GH-60",
+        "GH-66"
+      ]
+    },
+    {
+      "number": 30,
+      "id": "GH-34",
+      "status": "ready-for-implementation",
+      "title": "Publish the single language-neutral Cleanroom Core",
+      "dependencies": [
+        "GH-43",
+        "GH-29",
+        "GH-60",
+        "GH-63"
+      ]
+    },
+    {
+      "number": 31,
+      "id": "GH-35",
+      "status": "ready-for-implementation",
+      "title": "Publish the minimal Rust Target Language Adapter",
+      "dependencies": [
+        "GH-34",
+        "GH-40"
+      ]
+    },
+    {
+      "number": 32,
+      "id": "GH-36",
+      "status": "ready-for-implementation",
+      "title": "Assemble the source-produced Cleanroom Harness",
+      "dependencies": [
+        "GH-34",
+        "GH-35",
+        "GH-40"
+      ]
+    }
   ]
 }
 -->
