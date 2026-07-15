@@ -19,7 +19,7 @@ acceptance, WIP disposition, and focused verification.
     { "number": 7, "id": "GH-152", "status": "ready-for-implementation", "title": "Define closed schema-owned roles for every decoded Surface string", "dependencies": ["GH-44"] },
     { "number": 8, "id": "GH-98", "status": "ready-for-implementation", "title": "Generate the strict SRD Surface aggregate and bounded Draft 2020-12 schema pair", "dependencies": ["GH-44"] },
     { "number": 9, "id": "GH-100", "status": "ready-for-implementation", "title": "Deliver the canonical weapon-attack interruption frame", "dependencies": ["GH-47"] },
-    { "number": 10, "id": "GH-109", "status": "ready-for-implementation", "title": "Interpret Unit progression and choice mechanics through Character Build", "dependencies": ["GH-25"] },
+    { "number": 10, "id": "GH-154", "status": "ready-for-implementation", "title": "Admit Character Build mechanics through one exact profile graph", "dependencies": ["GH-25"] },
     { "number": 11, "id": "GH-113", "status": "ready-for-implementation", "title": "Project Stat Block mechanics into typed creatures and available Acts", "dependencies": ["GH-25"] },
     { "number": 12, "id": "GH-93", "status": "ready-for-implementation", "title": "Compose the lifecycle-safe Oracle Case and Trace wire algebra", "dependencies": ["GH-92"] },
     { "number": 13, "id": "GH-97", "status": "ready-for-implementation", "title": "Publish the fail-closed redistributable corpus audit", "dependencies": ["GH-153", "GH-41", "GH-42"] },
@@ -27,7 +27,7 @@ acceptance, WIP disposition, and focused verification.
     { "number": 15, "id": "GH-46", "status": "ready-for-implementation", "title": "Prove portable Surface decoding and atomic rejection", "dependencies": ["GH-98"] },
     { "number": 16, "id": "GH-101", "status": "ready-for-implementation", "title": "Select spell-cast interruption frames from typed invocations", "dependencies": ["GH-100"] },
     { "number": 17, "id": "GH-108", "status": "ready-for-implementation", "title": "Deliver next-turn command movement interruption frames", "dependencies": ["GH-100"] },
-    { "number": 18, "id": "GH-110", "status": "ready-for-implementation", "title": "Project Unit mechanics through Character Sheet and Battle handoff", "dependencies": ["GH-109"] },
+    { "number": 18, "id": "GH-110", "status": "ready-for-implementation", "title": "Project Unit mechanics through Character Sheet and Battle handoff", "dependencies": ["GH-155"] },
     { "number": 19, "id": "GH-114", "status": "ready-for-implementation", "title": "Execute typed Stat Block attack and multi-part Act procedures", "dependencies": ["GH-113"] },
     { "number": 20, "id": "GH-94", "status": "ready-for-implementation", "title": "Publish equivalent strict Oracle schemas and canonical value semantics", "dependencies": ["GH-93"] },
     { "number": 21, "id": "GH-102", "status": "ready-for-implementation", "title": "Deliver spell-attack interruption frames", "dependencies": ["GH-101"] },
@@ -38,7 +38,7 @@ acceptance, WIP disposition, and focused verification.
     { "number": 26, "id": "GH-95", "status": "ready-for-implementation", "title": "Generate the portable Oracle fixture corpus through an Effect CLI", "dependencies": ["GH-94"] },
     { "number": 27, "id": "GH-104", "status": "ready-for-implementation", "title": "Deliver the attack-burst resolution interruption frame", "dependencies": ["GH-103"] },
     { "number": 28, "id": "GH-106", "status": "ready-for-implementation", "title": "Deliver after-damage reaction interruption frames", "dependencies": ["GH-101", "GH-105"] },
-    { "number": 29, "id": "GH-115", "status": "ready-for-implementation", "title": "Thread authored selection and parsed mechanics through composition", "dependencies": ["GH-47", "GH-109", "GH-110", "GH-111", "GH-112", "GH-113", "GH-114"] },
+    { "number": 29, "id": "GH-115", "status": "ready-for-implementation", "title": "Thread authored selection and parsed mechanics through composition", "dependencies": ["GH-47", "GH-155", "GH-110", "GH-111", "GH-112", "GH-113", "GH-114"] },
     { "number": 30, "id": "GH-62", "status": "ready-for-implementation", "title": "Run stateless Character Creation through fresh Character Sheet", "dependencies": ["GH-95"] },
     { "number": 31, "id": "GH-107", "status": "ready-for-implementation", "title": "Deliver reaction-forced movement interruption frames", "dependencies": ["GH-105", "GH-106"] },
     { "number": 32, "id": "GH-116", "status": "ready-for-implementation", "title": "Separate durable Character Sheet facts from encounter Execution State", "dependencies": ["GH-115"] },
@@ -63,7 +63,8 @@ acceptance, WIP disposition, and focused verification.
     { "number": 51, "id": "GH-34", "status": "ready-for-implementation", "title": "Publish the single language-neutral Cleanroom Core", "dependencies": ["GH-97", "GH-29", "GH-60", "GH-122"] },
     { "number": 52, "id": "GH-35", "status": "ready-for-implementation", "title": "Publish the minimal Rust Target Language Adapter", "dependencies": ["GH-34", "GH-40"] },
     { "number": 53, "id": "GH-36", "status": "ready-for-implementation", "title": "Assemble the source-produced Cleanroom Harness", "dependencies": ["GH-34", "GH-35", "GH-40"] },
-    { "number": 54, "id": "GH-153", "status": "ready-for-implementation", "title": "Traverse decoded Surface strings with finite tuple-aware schema lockstep", "dependencies": ["GH-152"] }
+    { "number": 54, "id": "GH-153", "status": "ready-for-implementation", "title": "Traverse decoded Surface strings with finite tuple-aware schema lockstep", "dependencies": ["GH-152"] },
+    { "number": 55, "id": "GH-155", "status": "ready-for-implementation", "title": "Replay renamed Unit mechanics through the Character Build lifecycle", "dependencies": ["GH-154"] }
   ]
 }
 -->
@@ -160,9 +161,9 @@ Canonical issue: [Generate the strict SRD Surface aggregate and bounded Draft 20
 
 Canonical issue: [Deliver the canonical weapon-attack interruption frame](https://github.com/dearlordylord/5e-quint/issues/100)
 
-### Task 10 - GH-109
+### Task 10 - GH-154
 
-Canonical issue: [Interpret Unit progression and choice mechanics through Character Build](https://github.com/dearlordylord/5e-quint/issues/109)
+Canonical issue: [Admit Character Build mechanics through one exact profile graph](https://github.com/dearlordylord/5e-quint/issues/154)
 
 ### Task 11 - GH-113
 
@@ -339,3 +340,7 @@ Canonical issue: [Assemble the source-produced Cleanroom Harness](https://github
 ### Task 54 - GH-153
 
 Canonical issue: [Traverse decoded Surface strings with finite tuple-aware schema lockstep](https://github.com/dearlordylord/5e-quint/issues/153)
+
+### Task 55 - GH-155
+
+Canonical issue: [Replay renamed Unit mechanics through the Character Build lifecycle](https://github.com/dearlordylord/5e-quint/issues/155)
