@@ -1808,6 +1808,7 @@ assert_resource_guarded_base() {
   local base_sha="$1"
   local guard_path
   for guard_path in \
+    vitest.config.ts \
     scripts/resource-lock-owner.sh \
     scripts/with-resource-lock.sh \
     scripts/with-broad-workspace-lock.sh \
@@ -1824,6 +1825,7 @@ const readAtBase = (path) => execFileSync(
 )
 const guardSource = readAtBase("scripts/with-resource-lock.sh")
 const ownerSource = readAtBase("scripts/resource-lock-owner.sh")
+const vitestConfigSource = readAtBase("vitest.config.ts")
 const orderedGuardFragments = [
   "# DND_RESOURCE_GUARD_PROTOCOL: heavy-legacy-v2",
   'owner_pid="${DND_RESOURCE_LOCK_OWNER_PID:-}"',
@@ -1866,6 +1868,12 @@ for (const name of ["quality", "typecheck", "test"]) {
   }
 }
 if (!String(scripts["test:turbo"] ?? "").includes("--maxWorkers=1")) {
+  process.exit(1)
+}
+if (!vitestConfigSource.includes(
+  "DND_ROOT_VITEST_RESOURCE_PROTOCOL: pool-independent-v1"
+) || !/\bmaxWorkers\s*:\s*1\b/.test(vitestConfigSource) ||
+    /\b(?:maxForks|maxThreads)\s*:/.test(vitestConfigSource)) {
   process.exit(1)
 }
 NODE

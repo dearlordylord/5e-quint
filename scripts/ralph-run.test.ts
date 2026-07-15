@@ -16,8 +16,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
+import { resolveConfig } from "vitest/node";
 
 const repositoryRoot = process.cwd();
+const rootVitestConfigPath = join(repositoryRoot, "vitest.config.ts");
 const runnerPath = join(repositoryRoot, "scripts", "ralph-run.sh");
 const broadLockPath = join(
   repositoryRoot,
@@ -232,6 +234,7 @@ const makeCleanRepository = () => {
   const root = mkdtempSync(join(tmpdir(), "ralph-runner-test-"));
   roots.push(root);
   mkdirSync(join(root, "scripts"), { recursive: true });
+  cpSync(rootVitestConfigPath, join(root, "vitest.config.ts"));
   cpSync(runnerPath, join(root, "scripts", "ralph-run.sh"));
   cpSync(broadLockPath, join(root, "scripts", "with-broad-workspace-lock.sh"));
   cpSync(mbtLockPath, join(root, "scripts", "with-mbt-lock.sh"));
@@ -545,7 +548,7 @@ describe("Ralph launcher boundaries", () => {
     );
   });
 
-  it("serializes and caps resource-intensive root verification", () => {
+  it("serializes and caps resource-intensive root verification", async () => {
     expect(spawnSync("bash", ["-n", broadLockPath]).status).toBe(0);
     expect(spawnSync("bash", ["-n", mbtLockPath]).status).toBe(0);
     expect(spawnSync("bash", ["-n", resourceLockPath]).status).toBe(0);
@@ -575,6 +578,33 @@ describe("Ralph launcher boundaries", () => {
     expect(
       packageJson.scripts["check:surface-publication-self-test"],
     ).toContain("--maxWorkers=1");
+
+    for (const pool of ["forks", "threads"] as const) {
+      const resolved = await resolveConfig({
+        root: repositoryRoot,
+        pool,
+      });
+      expect(resolved.viteConfig.configFile).toBe(rootVitestConfigPath);
+      expect(resolved.vitestConfig.pool).toBe(pool);
+      expect(resolved.vitestConfig.maxWorkers).toBe(1);
+    }
+
+    const inheritingPackage = await resolveConfig({
+      root: join(repositoryRoot, "packages", "shared-algebras"),
+    });
+    expect(inheritingPackage.viteConfig.configFile).toBe(rootVitestConfigPath);
+    expect(inheritingPackage.vitestConfig.maxWorkers).toBe(1);
+
+    const localPackageConfig = join(
+      repositoryRoot,
+      "packages",
+      "mcp",
+      "vitest.config.ts",
+    );
+    const localPackage = await resolveConfig({
+      root: join(repositoryRoot, "packages", "mcp"),
+    });
+    expect(localPackage.viteConfig.configFile).toBe(localPackageConfig);
 
     const packageJsonPaths = [
       "package.json",
@@ -618,7 +648,7 @@ describe("Ralph launcher boundaries", () => {
     }
   });
 
-  it("rejects Base SHAs that only have the prior separate-lock guard", () => {
+  it("rejects Base SHAs without the current guard and root Vitest cap", () => {
     const root = makeCleanRepository();
     writeFileSync(
       join(root, "package.json"),
@@ -635,6 +665,50 @@ describe("Ralph launcher boundaries", () => {
     );
     git(root, "add", "package.json");
     git(root, "commit", "-m", "add guarded package scripts");
+    expect(runResourceGuardBaseCheck(root).status).toBe(0);
+
+    const vitestConfigPath = join(root, "vitest.config.ts");
+    const currentVitestConfig = readFileSync(vitestConfigPath, "utf8");
+    writeFileSync(
+      vitestConfigPath,
+      currentVitestConfig.replace(
+        "maxWorkers: 1",
+        "maxWorkers: 1, poolOptions: { forks: { maxForks: 2 } }",
+      ),
+    );
+    git(root, "add", "vitest.config.ts");
+    git(root, "commit", "-m", "simulate hybrid Vitest worker caps");
+    expect(runResourceGuardBaseCheck(root).status).not.toBe(0);
+
+    writeFileSync(vitestConfigPath, currentVitestConfig);
+    git(root, "add", "vitest.config.ts");
+    git(root, "commit", "-m", "remove pool-specific Vitest cap");
+    expect(runResourceGuardBaseCheck(root).status).toBe(0);
+
+    writeFileSync(
+      vitestConfigPath,
+      currentVitestConfig.replace(
+        "maxWorkers: 1",
+        "poolOptions: { forks: { maxForks: 1 } }",
+      ),
+    );
+    git(root, "add", "vitest.config.ts");
+    git(root, "commit", "-m", "simulate fork-only Vitest cap");
+    expect(runResourceGuardBaseCheck(root).status).not.toBe(0);
+
+    writeFileSync(vitestConfigPath, currentVitestConfig);
+    git(root, "add", "vitest.config.ts");
+    git(root, "commit", "-m", "restore pool-independent Vitest cap");
+    expect(runResourceGuardBaseCheck(root).status).toBe(0);
+
+    rmSync(vitestConfigPath);
+    git(root, "add", "vitest.config.ts");
+    git(root, "commit", "-m", "remove root Vitest cap");
+    expect(runResourceGuardBaseCheck(root).status).not.toBe(0);
+
+    writeFileSync(vitestConfigPath, currentVitestConfig);
+    git(root, "add", "vitest.config.ts");
+    git(root, "commit", "-m", "restore root Vitest cap");
     expect(runResourceGuardBaseCheck(root).status).toBe(0);
 
     const guardPath = join(root, "scripts", "with-resource-lock.sh");
