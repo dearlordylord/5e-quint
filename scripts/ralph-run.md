@@ -307,7 +307,7 @@ Implementation execution is pipeline-based:
 3. same-worktree handback if the review says `accept-with-fixes` or `reject`;
 4. decider only after the implementation pipeline settles.
 
-This lets review start as soon as an implementer finishes. By default, the handback loop has no harness cap and relies on reviewer convergence. Set `RALPH_IMPLEMENTATION_ROUND_LIMIT=N` or pass `--implementation-round-limit N` to enforce a positive cap for a diagnostic run.
+This lets review start as soon as an implementer finishes. The handback loop stops after 10 implement/review rounds by default so a non-converging task cannot consume resources indefinitely. Set `RALPH_IMPLEMENTATION_ROUND_LIMIT=N` or pass `--implementation-round-limit N` to choose another positive cap.
 
 The output branch must not already exist. This avoids silently resetting an existing run branch.
 

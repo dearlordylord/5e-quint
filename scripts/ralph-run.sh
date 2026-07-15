@@ -5,6 +5,7 @@ original_args=("$@")
 
 default_codex_model="gpt-5.6-luna"
 default_review_model="gpt-5.6-sol"
+default_implementation_round_limit=10
 
 usage() {
   local help_text
@@ -73,7 +74,7 @@ Options:
                           Default: 600
   --implementation-round-limit <n>
                           Safety cap for implement/review convergence rounds.
-                          0 means no harness cap. Default: 0
+                          Must be positive. Default: __DEFAULT_IMPLEMENTATION_ROUND_LIMIT__
   --model-chooser        Use Codex to choose among multiple runnable tasks.
                           Default is deterministic first-runnable selection.
   --skip-decider          Stop each task after implementation and review.
@@ -103,7 +104,8 @@ Environment:
                           selection. Default: 0.
   RALPH_IMPLEMENTATION_ROUND_LIMIT
                           Safety cap for implement/review convergence rounds.
-                          0 means no harness cap. Default: 0.
+                          Must be positive.
+                          Default: __DEFAULT_IMPLEMENTATION_ROUND_LIMIT__.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
   RALPH_HEARTBEAT_SECONDS Seconds between supervisor heartbeats while a model
@@ -116,12 +118,21 @@ Environment:
 EOF
   )"
   help_text="${help_text//__DEFAULT_CODEX_MODEL__/$default_codex_model}"
-  printf '%s\n' "${help_text//__DEFAULT_REVIEW_MODEL__/$default_review_model}"
+  help_text="${help_text//__DEFAULT_REVIEW_MODEL__/$default_review_model}"
+  printf '%s\n' "${help_text//__DEFAULT_IMPLEMENTATION_ROUND_LIMIT__/$default_implementation_round_limit}"
 }
 
 die() {
   printf 'error: %s\n' "$*" >&2
   exit 1
+}
+
+next_implementation_round() {
+  local round="$1"
+  local round_limit="$2"
+
+  (( round < round_limit )) || return 1
+  printf '%s\n' "$((round + 1))"
 }
 
 log() {
@@ -237,7 +248,7 @@ opencode_ollama_base_url="${RALPH_OPENCODE_OLLAMA_BASE_URL:-http://host.docker.i
 opencode_agent="${RALPH_OPENCODE_AGENT:-ralph-implementer}"
 opencode_timeout_seconds="${RALPH_OPENCODE_TIMEOUT_SECONDS:-600}"
 model_chooser="${RALPH_MODEL_CHOOSER:-0}"
-implementation_round_limit="${RALPH_IMPLEMENTATION_ROUND_LIMIT:-0}"
+implementation_round_limit="${RALPH_IMPLEMENTATION_ROUND_LIMIT:-$default_implementation_round_limit}"
 heartbeat_seconds="${RALPH_HEARTBEAT_SECONDS:-60}"
 min_completed_tasks="${RALPH_MIN_COMPLETED_TASKS:-0}"
 selected_tasks=()
@@ -375,6 +386,22 @@ done
 [[ "$run_id" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]] || \
   die "--run-id must be a 1-128 character slug using letters, digits, dot, underscore, or hyphen"
 
+case "$implementation_runner" in
+  codex|opencode|claude)
+    ;;
+  *)
+    die "--implementation-runner must be codex, opencode, or claude"
+    ;;
+esac
+
+[[ "$model_chooser" == "0" || "$model_chooser" == "1" ]] || die "RALPH_MODEL_CHOOSER must be 0 or 1"
+[[ "$implementation_round_limit" =~ ^[1-9][0-9]*$ ]] || die "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a positive integer"
+[[ "$heartbeat_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_HEARTBEAT_SECONDS must be a positive integer"
+[[ "$min_completed_tasks" =~ ^[0-9]+$ ]] || die "RALPH_MIN_COMPLETED_TASKS must be a non-negative integer"
+if [[ "$implementation_runner" == "opencode" ]]; then
+  [[ "$opencode_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_OPENCODE_TIMEOUT_SECONDS must be a positive integer"
+fi
+
 require_cmd git
 require_cmd codex
 require_cmd node
@@ -384,14 +411,6 @@ require_cmd flock
 
 load_openrouter_key_from_dotenv
 
-case "$implementation_runner" in
-  codex|opencode|claude)
-    ;;
-  *)
-    die "--implementation-runner must be codex, opencode, or claude"
-    ;;
-esac
-
 if [[ "$implementation_runner" == "claude" ]]; then
   require_cmd claude
 fi
@@ -400,14 +419,8 @@ if [[ "$implementation_runner" == "opencode" ]]; then
   require_cmd opencode
   require_cmd curl
   require_cmd timeout
-  [[ "$opencode_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_OPENCODE_TIMEOUT_SECONDS must be a positive integer"
   ping_opencode_ollama_model
 fi
-
-[[ "$model_chooser" == "0" || "$model_chooser" == "1" ]] || die "RALPH_MODEL_CHOOSER must be 0 or 1"
-[[ "$implementation_round_limit" =~ ^[0-9]+$ ]] || die "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a non-negative integer"
-[[ "$heartbeat_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_HEARTBEAT_SECONDS must be a positive integer"
-[[ "$min_completed_tasks" =~ ^[0-9]+$ ]] || die "RALPH_MIN_COMPLETED_TASKS must be a non-negative integer"
 
 [[ -f "$plan_file" ]] || die "plan file not found: $plan_file"
 plan_file="$(realpath -- "$plan_file")"
@@ -1432,7 +1445,7 @@ run_implementation_pipeline() {
     implementer_role="Implementer (running on Claude Code)"
   fi
 
-  while (( round_limit == 0 || round <= round_limit )); do
+  while true; do
     local round_prefix="$attempt_root/$slug-round-$round"
     local implementer_prompt="$round_prefix-implementer.prompt.md"
     local implementer_log="$round_prefix-implementer.log"
@@ -1475,14 +1488,15 @@ run_implementation_pipeline() {
     if [[ "$verdict" == "accept" ]]; then
       break
     fi
-    if (( round_limit != 0 && round >= round_limit )); then
+    local next_round
+    if ! next_round="$(next_implementation_round "$round" "$round_limit")"; then
       note "task" "implementation-review-safety-cap task=$task_no round=$round limit=$round_limit verdict=$verdict"
       break
     fi
 
     previous_review="$review_report"
-    note "task" "implementation-handoff task=$task_no round=$round next_round=$((round + 1)) verdict=$verdict"
-    ((round++))
+    note "task" "implementation-handoff task=$task_no round=$round next_round=$next_round verdict=$verdict"
+    round="$next_round"
   done
 
   cp -f "$attempt_root/$slug-round-$round-implementer.prompt.md" "$attempt_root/$slug-implementer.prompt.md"

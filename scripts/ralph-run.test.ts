@@ -407,6 +407,31 @@ const parseDeciderDisposition = (report: string) => {
   });
 };
 
+const runImplementationRounds = (limit: number) => {
+  const runnerSource = readFileSync(runnerPath, "utf8");
+  const helperMatch = runnerSource.match(
+    /next_implementation_round\(\) \{[\s\S]*?\n\}/,
+  );
+  if (!helperMatch) throw new Error("Ralph round transition helper not found");
+
+  return spawnSync("bash", ["-s", "--", String(limit)], {
+    encoding: "utf8",
+    input: [
+      "set -euo pipefail",
+      helperMatch[0],
+      "round=1",
+      'limit="$1"',
+      "while :; do",
+      '  printf "%s\\n" "$round"',
+      '  if ! round="$(next_implementation_round "$round" "$limit")"; then',
+      "    break",
+      "  fi",
+      "done",
+      "",
+    ].join("\n"),
+  });
+};
+
 afterEach(() => {
   for (const root of roots.splice(0))
     rmSync(root, { recursive: true, force: true });
@@ -472,6 +497,61 @@ describe("Ralph launcher boundaries", () => {
     );
     expect(result.status).toBe(0);
     expect(result.stdout).toBe("done");
+  });
+
+  it("bounds implementation review rounds by default and rejects an unbounded limit", () => {
+    const source = readFileSync(runnerPath, "utf8");
+    const help = spawnSync("bash", [runnerPath, "--help"], {
+      encoding: "utf8",
+    });
+    expect(help.status).toBe(0);
+    expect(help.stdout).toContain(
+      "Safety cap for implement/review convergence rounds.",
+    );
+    expect(help.stdout).toContain("Default: 10");
+    expect(help.stdout).not.toContain("no harness cap");
+    expect(source).toContain("default_implementation_round_limit=10");
+    expect(source).toContain(
+      'next_implementation_round "$round" "$round_limit"',
+    );
+
+    const threeRounds = runImplementationRounds(3);
+    expect(threeRounds.status).toBe(0);
+    expect(threeRounds.stdout.trim().split("\n")).toEqual(["1", "2", "3"]);
+
+    const zeroLimit = spawnSync(
+      "bash",
+      [runnerPath, "missing-plan.md", "--implementation-round-limit", "0"],
+      { cwd: repositoryRoot, encoding: "utf8" },
+    );
+    expect(zeroLimit.status).not.toBe(0);
+    expect(zeroLimit.stderr).toContain(
+      "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a positive integer",
+    );
+    expect(zeroLimit.stderr).not.toContain("plan file not found");
+
+    const zeroEnvironmentLimit = spawnSync(
+      "bash",
+      [runnerPath, "missing-plan.md"],
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        env: { ...process.env, RALPH_IMPLEMENTATION_ROUND_LIMIT: "0" },
+      },
+    );
+    expect(zeroEnvironmentLimit.status).not.toBe(0);
+    expect(zeroEnvironmentLimit.stderr).toContain(
+      "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a positive integer",
+    );
+
+    const positiveLimit = spawnSync(
+      "bash",
+      [runnerPath, "missing-plan.md", "--implementation-round-limit", "7"],
+      { cwd: repositoryRoot, encoding: "utf8" },
+    );
+    expect(positiveLimit.status).not.toBe(0);
+    expect(positiveLimit.stderr).toContain("plan file not found");
+    expect(positiveLimit.stderr).not.toContain("must be a positive integer");
   });
 
   it("passes Bash syntax validation and keeps safety checks in front of mutation", () => {
