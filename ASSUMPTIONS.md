@@ -1,206 +1,191 @@
 # Modeling Assumptions
 
-The active specs and shared rule-core slices maintain direct
-feature parity with the SRD. Formalizing prose rules into a state machine
-sometimes requires making explicit what the SRD leaves implicit, such as adding
-events the rules assume, connecting constraints that follow logically but are
-not stated verbatim, or choosing a formalization where the architecture demands
-one. These modeling decisions are documented here. They are curated by the
-project owner, kept minimal, and stay close to RAW.
-
-Each entry records the assumption, rules justification, and what changed. Older
-entries may name deleted root QNT restore files as historical implementation
-locations; those restore files are recoverable from git history but are not
-active verification authority.
-
-## A1: Spell slot expenditure and starting concentration require ability to act
-
-**Assumption:** EXPEND_SLOT, EXPEND_PACT_SLOT, and START_CONCENTRATION are only valid when the creature is alive (hp > 0, not dead) and not incapacitated.
-
-**Rules basis (SRD 5.2.1 Rules-Glossary "Incapacitated [Condition]"):** Casting a spell requires an Action or Bonus Action, and starting concentration is a consequence of casting a concentration spell. "An Incapacitated creature can't take any action, Bonus Action, or Reaction." Multiple conditions impose Incapacitated: Unconscious (from dropping to 0 HP), Paralyzed, Petrified, Stunned, and direct Incapacitated. Any of these blocks slot expenditure and starting new concentration. The SRD never states "you cannot spend a spell slot while unable to act" verbatim — it is a constraint that follows logically from the casting rules.
-
-**Changes:**
-
-- `creature.qnt`: `doExpendSlot` and `doExpendPactSlot` guarded by `isConscious(state) and pCanAct(state)`; `doStartConcentration` guarded by `not(isIncapacitated(state))`.
-- `machine-states.ts`: `EXPEND_SLOT` / `EXPEND_PACT_SLOT` given the `canExpendSlot` guard; both `START_CONCENTRATION` handlers given the `canConcentrate` guard.
-- `machine.ts`: added `canExpendSlot` guard (`c.hp > 0 && !isIncapacitated(c)`).
-
-## A2: END_TURN as modeling convention
-
-**Assumption:** END_TURN is an explicit event in the state machine that transitions a creature from `acting` to `waitingForTurn`.
-
-**Rules basis (PHB Ch. 9):** D&D 5e has no explicit "end turn" action. Turns proceed through initiative order implicitly. However, "at the end of your turn" is a pervasive trigger point in the rules (repeated saves for condition spells, ongoing damage, effect expiry). At the table, players universally say "I end my turn." The state machine needs a discrete transition to prevent START_TURN spam and to process end-of-turn triggers.
-
-**Changes:** Implemented in TA2. `creature.qnt`: added `turnPhase` state variable (`"outOfCombat"` | `"acting"` | `"waitingForTurn"`), `doEndTurn` action processing end-of-turn saves (remove effect + conditions on success), end-of-turn damage (with concentration checks), and clearing expired `AtEndOfTurn` effects. XState: `END_TURN` event on `acting` state transitions to `waitingForTurn`. MBT bridge maps `turnPhase` field-by-field.
-
-## A4: Round = 6 seconds as the atomic time unit
-
-**Assumption:** The round (6 seconds) is the smallest time unit modeled. All durations are tracked as integer turn counts; no sub-round time tracking exists. When authored time-span durations are projected into elapsed-time math, each round contributes exactly 6 seconds — the conversion never prorates or subtracts partial round progress based on whose turn is currently being resolved.
-
-**Rules basis (SRD 5.2.1 Playing-the-Game):** A round represents about 6 seconds in the game world. Reactions, opportunity attacks, and reaction spells are interrupt-style triggers within the round framework, not smaller time quanta. No spell or ability uses a duration shorter than 1 round, and the SRD does not define partial-round elapsed-time accounting.
-
-**Rationale:** Initiative order is a resolution view over combat time, not a statement that one creature's turn consumes an isolated slice of the 6-second round. The model treats the turns in a round as an ordered resolution of one 6-second combat cycle, so it does not charge partial elapsed seconds based on position in initiative order.
-
-**Changes:** Durations are integer turn counts. Shared timing conversion uses `TIME_SPAN_SECONDS_PER_ROUND = 6`; no conversion helper subtracts elapsed turn progress from a round.
-
-## A5: Single-creature turn = 1 round for duration tracking
-
-**Assumption:** In the single-creature model, each START_TURN/END_TURN cycle represents one round passing. Effect duration counters decrement by 1 per cycle regardless of when the effect was applied relative to initiative order.
-
-**Rules basis:** This is a simplification. In multi-creature combat, a round is one full pass through the initiative order. An effect cast mid-round by another creature would technically expire at that creature's turn N rounds later, not at our turn. In a single-creature model we only observe our own turns, so each turn = 1 round is the only tractable approach. The caller is responsible for providing correct initial duration values accounting for initiative-order offset if needed.
-
-**Changes:** Implemented in TA4. `creature.qnt`: `pStartTurnFull` decrements durations and clears expired effects per cycle. XState: `computeStartTurn` in `machine-startturn.ts` mirrors this.
-
-## A6: Death save precedes start-of-turn effect processing
-
-> **TODO: RAW violation.** The SRD 5.2.1 Simultaneous Effects rule (Rules-Glossary) explicitly states: "If two or more things happen at the same time on a turn, the person at the game table — player or GM — whose turn it is decides the order in which those things happen." This means the player should be able to choose whether the death save or start-of-turn effects resolve first. The current fixed ordering violates RAW. Fix: model this as a caller-provided input (the player's choice of ordering), not a hardcoded sequence.
-
-**Assumption:** At the start of a turn, the death save (if applicable) resolves before any start-of-turn spell effects (heals, damage, temp HP, saves).
-
-**Rules basis (SRD 5.2.1 Rules-Glossary "Death Saving Throw"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." This is a mandatory, first-order rule. Start-of-turn spell effects (e.g., Regenerate's heal, Searing Smite's burn) trigger "at the start of your turn" at the same timing point but are optional/conditional. The death save resolves first because: (a) it is mandatory, (b) a natural 20 changes the creature's conscious state (hp 0→1), which affects subsequent processing, (c) death from 3 failures makes subsequent effects irrelevant.
-
-**Changes:** Implemented in TA4. `creature.qnt`: `pStartTurnFull` calls `pDeathSave` (step 3) before `pProcessStartOfTurn` (step 4). XState: `computeStartTurn` follows the same order.
-
-## A8: Two-Weapon Fighting requires melee weapons
-
-**Assumption:** `pCanTWFWithWeapons` requires both weapons to have the Light property AND be melee weapons.
-
-**Rules basis (Equipment.md "Light [Weapon Property]"):** SRD 5.2.1 says "when you take the Attack action on your turn and attack with a Light weapon, you can make one extra attack as a Bonus Action later on the same turn with a different Light weapon." The 5.2.1 text is silent on whether the weapons must be melee. SRD 5.1 explicitly required "light melee weapon." We retain the melee-only requirement because: (a) all Light weapons in the SRD equipment tables are melee weapons (Hand Crossbow is Light but one-handed, and TWF requires a weapon "in the other hand"), (b) removing the constraint would allow dual-wielding hand crossbows RAW, which contradicts the Ammunition property's "one hand free to load" requirement, and (c) the constraint is strictly more conservative than the SRD text.
-
-**Changes:** No code changes. Documents existing `pCanTWFWithWeapons` behavior in `creature.qnt` and `canTwoWeaponFight` in XState.
-
-## A9: Multiclass Channel Divinity — additive per-class pools
-
-**Assumption:** `pChannelDivinityMax(config)` sums `pClericChannelDivinityMax` and `pPaladinChannelDivinityMax` independently based on each class's level. A Cleric 6 / Paladin 3 would have max 3 + 2 = 5 uses, drawn from a single shared charges counter.
-
-**Rules basis:** SRD 5.2.1 Cleric (L2) and Paladin (L3) both say "this class's Channel Divinity," implying per-class tracking. However, the SRD 5.2.1 does not include explicit multiclass rules for Channel Divinity. The 5.1 PHB multiclass rules stated that gaining Channel Divinity from a second class does not grant additional uses — only additional effect options. We model additive pools as a permissive interpretation of 5.2.1's per-class language, which diverges from 5.1 intent (5.1 said no extra uses). This assumption can be revised if official 5.2.1 multiclass guidance clarifies.
-
-**Changes:** `creature.qnt`: `pChannelDivinityMax` sums per-class max functions. No XState changes (framework only).
-
-## A16: Dead creatures: effect processing continues, heal/damage/exhaustion table mutations are no-ops
-
-**Assumption:** When a creature dies mid-turn (e.g., from a death save during START_TURN), remaining start-of-turn and end-of-turn effects continue processing. Saves still remove effects. Temp HP grants still apply (temp HP is not HP). Healing and damage are no-ops on dead creatures. Generic post-death condition application/removal is also a no-op unless a source-owned revival/effect rule explicitly changes the condition; conditions that existed at death persist while their durations are ongoing. Generic post-death exhaustion addition/reduction is also a no-op; the only RAW mechanism for changing exhaustion on a dead creature is revival ("returns with 1 fewer level"), which is a source-owned revival mechanic, not a general table event. Exhaustion levels that existed at death persist.
-
-**Rules basis (SRD 5.2.1 Rules Glossary "Dead"):** "A dead creature has no Hit Points and can't regain them." The same entry says that, unless otherwise stated, a revived creature returns with ongoing conditions, magical contagions, or curses that affected it at death. "If the creature died with any Exhaustion levels, it returns with 1 fewer level." The SRD does not define whether ongoing effects continue to tick on a dead creature's turn — dead creatures don't take turns in practice. This assumption makes the modeling choice explicit: the effect loop runs to completion (matching a fold over all effects), but operations that the SRD implicitly blocks (healing, damage) or leaves to source-owned revival/effect rules (post-death condition/exhaustion mutation) are skipped.
-
-**Changes:** `creature.qnt`: `pProcessStartOfTurn` fold has no dead-break; `pHeal`, `pTakeDamage`, `pAddExhaustion`, and `pReduceExhaustion` check `s.dead` internally; `pGrantTempHp` does not check dead. XState: `computeStartTurn` (`machine-startturn.ts`) removed `if (dead) break`, guards heal/damage with `!dead`, leaves tempHp unguarded. Root handlers gate generic `ADD_EXHAUSTION`, `REDUCE_EXHAUSTION`, `APPLY_STARVATION`, and `APPLY_DEHYDRATION` when `dead`; revival-specific exhaustion reduction stays in dedicated revival/rest flows. `computeEndTurn` (`machine-endturn.ts`) uses `if (dead) continue` for damage loop.
-
-## A17: Standing from prone requires nonzero movement cost
-
-**Assumption:** Standing from prone requires spending movement equal to half your speed (round down). If this cost rounds to 0 (e.g., speed 1 → floor(1/2) = 0), the creature cannot stand — the attempt is a no-op. This is stricter than a literal reading of RAW, which only gates on "Speed is 0."
-
-**Rules basis (SRD 5.2.1 Rules Glossary "Prone"):** "spend an amount of movement equal to half your Speed (round down) to right yourself … If your Speed is 0, you can't right yourself." RAW explicitly blocks speed 0. For speed 1 (cost = 0), the SRD is silent. The spec interprets "spend movement" as requiring a nonzero expenditure — you cannot stand for free. This matches Quint's structural equality check: if no movement is spent, the turn state is unchanged, so prone persists.
-
-**Changes:** `creature.qnt`: `doStandFromProne` uses `t1 != turnState` (structural equality) — zero-cost stand produces identical state, so prone is not removed. XState: `spendHalfSpeed` (`machine-helpers.ts`) returns `success: false` when `cost <= 0`.
-
-## A19: Legendary Action timing in single-creature model
-
-**Assumption:** Legendary Actions fire during `turnPhase == "waitingForTurn"`. In the SRD, a Legendary Action is taken "immediately after another creature's turn." Since the spec models a single creature, `waitingForTurn` represents the window between the creature's own turns — this is when other creatures would act.
-
-**Rules basis (SRD 5.2.1 Monsters > Legendary Actions):** "A Legendary Action is an action that a monster can take immediately after another creature's turn." The spec's single-creature model cannot represent interleaved turns. Using `waitingForTurn` as the proxy is the closest structural equivalent.
-
-**Changes:** `creature.qnt`: `doUseLegendaryAction` guards on `turnPhase == "waitingForTurn"`.
-
-## A22: Recharge abilities refresh on a rest
-
-**Assumption:** Recharge abilities refresh on both a Short Rest and a Long Rest. (Legendary Action refresh at the start of the monster's turn, and Legendary Resistance / daily-ability refresh on a Long Rest, are stated by RAW and need no assumption — only the rest behavior of Recharge abilities is underspecified.)
-
-**Rules basis (SRD 5.2.1 Monsters):** A "Recharge X–Y" ability rolls 1d6 at the start of each of the monster's turns to recharge, but the SRD gives no explicit rule for whether it also recharges on a rest. The spec assumes it does, since an encounter begun after a rest conventionally starts with Recharge abilities available.
-
-**Changes:** `creature.qnt`: `doShortRest` and `doLongRest` both call `pRefreshRechargeAbilities`.
-
-## A26 Stable recovery timers do not cross the battle handoff boundary
-
-**Assumption:** Character Battle handoff may preserve a fresh Stable zero-HP lifecycle, but it rejects an in-progress Stable recovery timer. Calendar-time progress toward the "regains 1 Hit Point after 1d4 hours" outcome remains Character Sheet state and must not be projected into or back out of battle handoff.
-
-**Rules basis (SRD 5.2.1 Rules Glossary "Stable"):** The SRD defines Stable as a creature with 0 Hit Points that isn't required to make Death Saving Throws, and says the creature regains 1 Hit Point after `1d4` hours if it isn't healed first. The SRD does not define a combat-time procedure for partially elapsed out-of-combat Stable recovery while entering or exiting a battle boundary. Representing elapsed recovery time during handoff is therefore an architectural modeling choice rather than a direct RAW rule.
-
-**Changes:** `packages/character-battle-runtime/src/index.ts`: `unsupportedStableRecoveryBattleBoundary` rejects Stable recovery state unless it is the fresh `elapsedBeforeRecoveryRoll = 0` boundary shape. `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` and `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts` include deterministic witness cases for rejected in-progress Stable recovery handoff and accepted fresh Stable settlement.
-
-## A27 Active Wild Shape does not cross the character-sheet handoff boundary
-
-**Assumption:** Character Battle handoff rejects a combatant that is still in an active Wild Shape form. The caller must dismiss the form or resolve reversion before projecting durable Character Sheet state.
-
-**Rules basis (SRD 5.2.1 Druid Level 2 "Wild Shape"):** The SRD defines how long a Wild Shape form lasts and says the druid can leave the form early as a Bonus Action, or that the form ends when Wild Shape is used again, the druid has the Incapacitated condition, or dies. The SRD does not define a cross-boundary persistence protocol for writing durable Character Sheet state while the battle projection is still in Beast form. Blocking handoff until reversion is therefore an architectural boundary choice rather than a direct RAW handoff rule.
-
-**Changes:** `packages/character-battle-runtime/src/index.ts`: `settleCharacterSheetFromBattle` rejects combatants with `combatantHasActiveDruidWildShape(input.combatant)`. `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` and `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts` include deterministic witness cases for active Wild Shape handoff rejection.
-
-## A32: Trigger taxonomy — inferred from reaction catalog (battle layer)
-
-**Assumption:** The SRD does not define a closed set of "trigger types." Each reaction specifies its trigger in natural language (e.g., "when you are hit by an attack roll"). The battle layer infers 11 trigger categories by grouping reactions that fire at the same game moment. This taxonomy is a modeling decision — the SRD does not name or enumerate these categories.
-
-**Rules basis:** Every reaction trigger phrase in SRD 5.2.1 maps to exactly one of: ATTACK_HITS, ATTACK_DAMAGES, DAMAGE_TAKEN, SPELL_BEING_CAST, LEAVES_REACH, FALLS, SAVE_FAILED, TURN_STARTS, TURN_ENDS, MOVE_ENDS, ALLY_TAKES_ATTACK_ACTION. See `battle/REQUIREMENTS.md` R50 for the full mapping with SRD references.
-
-**Why this matters:** The battle machine needs a finite set of interrupt points to check for eligible reactions. Without this taxonomy, the machine would need to pattern-match on natural language trigger descriptions. The taxonomy collapses 26+ reaction trigger phrases into 11 categories with identical game-moment semantics.
-
-## A33: Mid-combat creature roster changes — DM discretion
-
-**Assumption:** Creatures can enter and leave combat at any time. Reinforcements arrive, creatures flee, summons appear. The SRD does not prescribe rules for when or how this happens — it is DM discretion. The battle spec models a mutable creature set (insert/remove operations on the creature map).
-
-**Initiative for new arrivals:** The SRD does not specify how a creature joining mid-combat enters the initiative order. The spec treats this as caller-provided: the caller supplies the initiative count when inserting a new creature.
-
-**Dead/unconscious creatures in initiative:** The SRD does not explicitly remove dead or unconscious creatures from initiative order. Dead monsters are implicitly removed (they cease to exist). Unconscious PCs remain in initiative but are Incapacitated (can't act, speed 0). The spec keeps dead/unconscious creatures in the initiative list until explicitly removed by the caller. `EXIT_COMBAT` remains available after death as the caller-owned teardown mechanism; blocking it would strand a dead creature in initiative under A33.
-
-**Summoned creature initiative:** Varies by spell. Find Familiar: rolls own initiative. Find Steed / Summon Dragon: shares caster's initiative count, acts on caster's turn or immediately after. Conjure spells (Animals, Elemental, etc.): no independent turn — act as effects under caster control.
-
-**Rules basis:** Playing-the-Game.md states "Everyone involved in the combat encounter rolls Initiative" at start, and "The Initiative order remains the same from round to round." No rules for mid-combat changes. Combat ends "when one side or the other is defeated, which can mean the creatures are killed or knocked out or have surrendered or fled" — but no explicit removal from initiative on individual death/flee.
-
-## A37: Grapple Movable cost modeled as movement cost, not speed reduction
-
-**Assumption:** The SRD 5.2.1 Grappled condition's Movable property is modeled directly in battle semantics as an extra movement cost: when the grappler moves while dragging a grappled creature, each foot costs 1 extra foot unless the target is Tiny or two or more sizes smaller than the grappler.
-
-**Rules basis:** Rules-Glossary "Grappled [Condition]" says: "The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it." This is a movement-cost rule, not a Speed reduction on the grappler. The grappled target still has Speed 0 until the grapple ends.
-
-**Rationale:** The previous speed-halving representation diverged from RAW once grapple state changed mid-turn because recomputing `effectiveSpeed` could incorrectly rebuild `movementRemaining` for the grappler after link/release/escape. The current model keeps the grappler's Speed unchanged and applies the extra cost only when movement is actually spent while dragging. That preserves RAW behavior for mid-turn grapple changes and avoids fake movement refunds.
-
-**Changes:** `pComputeEffectiveSpeed` no longer halves speed for `isGrappling`. `pMovementCost` can represent drag cost explicitly, and `battle.qnt` / the TS battle machine spend 2 feet of movement per 1 foot moved when the active creature is dragging a non-exempt grappled target. The target-side Speed 0 behavior remains unchanged.
-
-## A43: Scalar reductions on mixed damage rolls allocate proportionally
-
-**Assumption:** When a single scalar reduction applies to an attack damage roll containing multiple damage types, the runtime allocates that reduction across the pre-adjustment damage entries proportionally to their amounts. Remainders use largest-remainder allocation, with ties resolved by authored entry order, and the total allocated reduction always equals the scalar reduction capped at total damage.
-
-**Rules basis:** SRD 5.2.1 describes damage rolls, damage types, and applying Resistance/Vulnerability/Immunity after other damage modifiers, but it does not specify how to split one scalar reduction across a mixed-type damage roll before target adjustments.
-
-**Rationale:** The promoted runtime stores typed damage entries so target adjustments can be applied after modifiers. Proportional allocation preserves the scalar total while keeping each typed entry nonnegative and deterministic.
-
-**Changes:** Reaction damage-roll reductions and hit-triggered attack-damage reductions use this allocation before Resistance, Vulnerability, and Immunity.
-
-## A44: Stat Block Multiattack dispatches are a named-attack continuation
-
-**Assumption:** Once a monster takes Stat Block Multiattack, the granted named dispatch attacks are a continuation of that Attack action. Until those dispatch resources are spent or the monster ends its turn, ordinary turn options other than Movement between attacks are unavailable: standing from Prone, other standard actions, Bonus Actions, non-Movement runtime commands, spells, feature activations, and unrelated reactions/Legendary Action subjects are not discoverable or replayable as the current turn surface.
-
-**Rules basis:** SRD 5.2.1 Monsters > Overview, "Multiattack" says the listed attacks and additional abilities are made as part of the monster's Attack action. Rules Glossary "Attack [Action]" allows movement between attacks for a feature that gives more than one attack as part of the Attack action, so Movement remains available while pending dispatch attacks are open. Playing the Game "Bonus Actions" says a creature chooses when to take a Bonus Action unless the Bonus Action's timing is specified. This runtime chooses a named-attack continuation model for Stat Block Multiattack dispatch replay so the fixed named dispatch list cannot be interleaved with unrelated non-Movement battle commands unless a future task models another specific RAW-permitted interleave point.
-
-**Changes:** `packages/battle-runtime/src/battle-reducer.ts` treats pending `statBlockMultiattack` action resources as a surface gate: discovery returns matching dispatch attacks, Movement, and End Turn, and resolution rejects other battle subjects as stale. `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt` names the generic continuation predicate; `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` and the Stat Block bridge project the focused battle-runtime dispatch behavior.
-
-## A45: Reaction interrupt continuations use a bounded active window
-
-**Assumption:** The rule-core reaction protocol models at most one active reaction window plus its suspended continuation at a time. If a reaction creates another reaction window before the original interrupted procedure advances, the replacement window carries the suspended outer window kind. QCORE8 bounds that active-plus-suspended depth to two for proof tractability; a third nested offer leaves the current window unchanged. Declining a window closes the active window without spending the Reaction quota and restores the suspended window if one exists. Taking a matching Reaction spends the reactor's Reaction quota and then advances back to the suspended continuation.
-
-**Rules basis:** SRD 5.2.1 says a Reaction is an instant response to a trigger, a creature cannot take another Reaction until the start of its next turn, a Reaction normally occurs immediately after its trigger, and an interrupted creature continues its turn right after the Reaction. Ready says the reacting creature can take its Reaction after the trigger finishes or ignore the trigger. The SRD does not specify a general-purpose queue, stack, or replay policy for multiple nested reaction windows.
-
-**Changes:** `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` encodes Offer, Decline, matching Reaction spend, Advance, bounded nested windows with suspended-window restoration, Opportunity Attack and guarded damage-interruption shallow integrations, reactor-owned Readied Movement Response release gated by the held Readied Movement fact, and actor-owned Concentration break/prevent/damage-save procedures.
-
-## A46: An owner's Long Rest leaves a surviving retained companion's Hit Points and Temporary Hit Points unchanged
-
-**Assumption:** When a character who has a retained one-at-a-time companion (a Find Familiar-like familiar) finishes a Long Rest, a companion that survives the rest is left exactly as it was — its current Hit Points and Temporary Hit Points both persist, with no healing and no Temporary Hit Point expiry. The only companion the owner's Long Rest removes is a Wild Companion-protocol familiar, which disappears when its owner finishes the rest. A companion that had already disappeared at 0 Hit Points stays disappeared.
-
-**Rules basis:** SRD 5.2.1 Temporary Hit Points last until lost or until the creature that has them finishes a Long Rest, and finishing a Long Rest restores the resting creature's own Hit Points; both effects are tied to the creature that finishes the rest. The SRD does not model whether a familiar participates in its owner's Long Rest. With companion rest participation unmodeled, the smallest deviation from RAW silence is to leave the companion untouched by the owner's rest rather than partially apply rest effects (the prior implementation cleared the companion's Temporary Hit Points without restoring its Hit Points, which matched neither a no-participation nor a shared-rest reading). SRD 5.2.1 Druid Wild Companion states the familiar created in that way disappears when the Druid finishes a Long Rest.
-
-**Changes:** `packages/character-sheet-runtime/src/companions.ts` `companionAfterLongRest` removes a surviving companion only when it carries the Wild Companion (owner-long-rest) protocol and otherwise returns the companion unchanged; `packages/character-sheet-runtime/src/rests.ts` applies that helper on both Long Rest return paths; the prior Temporary-Hit-Point-clearing transform (`retainedCompanionManifestationAfterLongRest`) is removed.
-
-## A47: Recasting a retained companion continues its identity and clamps carried Hit Points to the new form
-
-**Assumption:** When a character recasts a Find Familiar-like spell while it already has a retained one-at-a-time companion, the existing durable companion continues — the recast updates that companion in place and cannot replace its durable identity (the out-of-battle creation operation rejects a companion id that differs from the occupied slot's). The companion adopts the newly selected form; its current Hit Points carry over clamped to the new form's maximum and its Temporary Hit Points are kept. The one exception is a companion that had disappeared at 0 Hit Points: recasting re-forms it with the new form's full Hit Points and no Temporary Hit Points. The companion's protocol follows the casting route used for the recast, so recasting a Wild Companion familiar through an ordinary route yields the ordinary protocol. Creating a companion into an empty slot mints the new form's Hit Points. This is one recast semantic across layers: the in-battle form-adoption path already preserved-and-clamped Hit Points.
-
-**Rules basis:** SRD 5.2.1 Find Familiar: "If you cast this spell while you already have a familiar, you cause it to adopt a new form" — one familiar at a time, recast adopts a new form rather than creating a second; and "When the familiar drops to 0 Hit Points, it disappears ... It reappears after you cast this spell again." The SRD does not state whether carried Hit Points transfer to an adopted form, what Hit Points the reappearing familiar has, or whether a casting-specific rider (e.g., Druid Wild Companion's Long Rest disappearance) persists across an ordinary recast. Preserve-and-clamp matches the in-battle form-adoption implementation and avoids both free healing and over-maximum Hit Points; fresh Hit Points on reappearance after 0 HP matches "it reappears" re-forming the familiar; protocol-follows-route keeps the single familiar's behavior tied to how it was most recently cast.
-
-**Changes:** `packages/character-sheet-runtime/src/companions.ts` `createRetainedFamiliarLikeCompanion` reads the existing companion and derives the new Hit Points — clamped carry-over for an embodied or temporarily dismissed companion, fresh form Hit Points for a disappeared one — and rejects a companion id that differs from an occupied slot's durable identity; the in-battle `castFindFamiliar` path (`packages/battle-runtime/src/find-familiar-lifecycle.ts` `hitPointsForFindFamiliarCast`) already preserved-and-clamped form-adoption Hit Points.
-
-## A48: General spell component possession and material consumption are not enforced
-
-**Assumption:** Surface spell records author Verbal, Somatic, and Material component facts, including costly and consumed material metadata, but the runtimes do not generally enforce component possession, Spellcasting Focus substitution, Component Pouch access, free-hand access, or material consumption/spend. Component facts affect behavior only when a focused runtime profile explicitly models that component rule.
-
-**Rules basis:** SRD 5.2.1 Spells > Gaining and Casting > Components says a caster must provide a spell's components to cast it, Material components are consumed only when the spell says so, and Component Pouches or Spellcasting Focuses can substitute only for non-consumed, non-costly materials. Rules Glossary > Spellcasting Focus repeats the non-consumed and no-cost substitution boundary. The repo currently authors those facts in Surface but has not yet modeled the general inventory/hand/focus protocol needed to enforce them for every spell cast.
-
-**Changes:** Documents existing runtime scope. Existing focused profiles that explicitly model component-facing behavior keep doing so; general SDK tracer bullets may select and cast spells without proving inventory possession of each component or material spend until that cross-runtime component protocol is implemented.
+This document records choices required where the SRD is silent, ambiguous, or
+does not define a boundary needed by the model. Each entry states the choice
+and its SRD 5.2.1 basis or gap.
+
+## A1: Spell invocation requires ability to act
+
+**Assumption:** A spell invocation can spend its spell resource and start
+Concentration only when the caster has Hit Points above 0 and can take the
+required action.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Rules-Glossary.md`,
+"Incapacitated [Condition]" says that an Incapacitated creature cannot take an
+Action, Bonus Action, or Reaction, and "Concentration" says that Incapacitated
+or Dead ends Concentration. `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`,
+"Casting Time" specifies whether the applicable spell requires a Magic Action,
+Bonus Action, Reaction, or longer casting time.
+`.references/srd-5.2.1/Playing-the-Game.md`, "Dropping to 0 Hit Points" and
+"Falling Unconscious" establish
+that reaching 0 Hit Points makes a creature Unconscious and subject to the
+Death Saving Throw lifecycle.
+The SRD does not state separately that a spell slot cannot be spent when the
+caster cannot take the required action. The model applies that consequence to
+slot expenditure and starting Concentration.
+
+## A2: Turn completion is a timing boundary
+
+**Assumption:** Completing a creature's turn provides the boundary for effects
+that occur at the end of that turn and for advancing Initiative.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Playing-the-Game.md`, "Combat"
+describes rounds and turns, and the SRD uses "at the end of your turn" as a
+timing phrase throughout spell and feature descriptions. It does not define a
+separate action for completing a turn. The boundary is a model timing
+decision, not an additional player action.
+
+## A4: A round is the model's six-second time unit
+
+**Assumption:** The model treats a round as six seconds and does not represent
+sub-round elapsed time. Time-span conversions count whole rounds without
+prorating a round based on initiative position.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Playing-the-Game.md`, "Combat"
+says that a round represents about 6 seconds and that each participant takes a
+turn during it. The SRD does not define partial-round elapsed-time accounting
+for a turn-resolution model, so the model uses the round as its smallest clock
+unit.
+
+## A8: Two-Weapon Fighting uses melee weapons
+
+**Assumption:** The model permits the Light-property extra attack only when
+both weapons are Light melee weapons.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Equipment.md`, "Light" permits an
+extra attack with a different Light weapon, but does not say that the weapons
+must be melee weapons. The melee-only restriction is therefore a deliberate
+interpretation of that omission, not a quoted SRD requirement.
+
+## A17: Standing from Prone requires a nonzero movement expenditure
+
+**Assumption:** Standing from Prone is unavailable when half the creature's
+Speed, rounded down, is zero; the attempt is a no-op in that case.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Rules-Glossary.md`, "Prone" says
+to spend movement equal to half Speed, rounded down, and separately says that
+Speed 0 prevents righting. It does not say whether a Speed of 1, whose rounded
+cost is zero, permits standing. The model interprets "spend" as requiring a
+nonzero expenditure.
+
+## A26: Stable recovery timers do not cross the battle handoff boundary
+
+**Assumption:** A battle handoff may preserve a fresh Stable zero-Hit-Point
+state, but it does not carry partially elapsed Stable recovery time across the
+boundary. The Stable creature's calendar-time recovery remains owned by the
+non-battle state that tracks that clock.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Rules-Glossary.md`, "Stable" and
+`.references/srd-5.2.1/Playing-the-Game.md`, "Damage and Healing" say that a
+Stable creature at 0 Hit Points regains 1 Hit Point after 1d4 hours if it is
+not healed. The SRD does not define how partially elapsed hours are projected
+when a creature enters or leaves battle, so the handoff boundary is a model
+choice.
+
+## A27: Active Wild Shape does not cross the character-sheet handoff boundary
+
+**Assumption:** A character-sheet handoff requires Wild Shape to have ended; an
+active Beast form is not projected as durable character-sheet state.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Classes/Druid.md`, "Level 2:
+Wild Shape" defines the form's duration and ending conditions, including the
+option to leave it as a Bonus Action. The SRD does not define a protocol for
+writing a durable character sheet while the character remains in Beast form,
+so the handoff boundary requires reversion first.
+
+## A33: Mid-combat roster and initiative changes are caller decisions
+
+**Assumption:** Creatures may enter or leave the modeled combat at any time; an
+arriving creature receives caller-supplied Initiative; creatures remain in the
+initiative representation until the caller removes them. A summoned creature
+uses an explicit summoning rule when one exists, otherwise its Initiative is
+caller-supplied.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Playing-the-Game.md`, "Combat"
+says that participants roll Initiative at the beginning of combat and that the
+Initiative order remains the same from round to round. The SRD does not define
+mid-combat arrival, departure, or a universal summoning initiative procedure.
+Those roster and ordering decisions are therefore outside the RAW-defined
+combat sequence.
+
+## A43: Scalar reductions on mixed damage are allocated proportionally
+
+**Assumption:** A scalar reduction applied to a mixed-damage roll is allocated
+proportionally among the pre-adjustment damage entries. Largest-remainder
+allocation resolves integer remainders, ties preserve authored entry order,
+and the allocated total is capped at total damage.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Rules-Glossary.md`, "Damage
+Types" defines typed damage. `.references/srd-5.2.1/Playing-the-Game.md`,
+"Resistance and Vulnerability" and its "Order of Application" subsection say
+that adjustments are applied before Resistance and Vulnerability. The SRD does
+not specify how one scalar adjustment is split among multiple damage types. The
+allocation rule is a deterministic model choice and does not change the
+ordering of the SRD's damage adjustments.
+
+## A44: Stat Block Multiattack dispatch is a named-attack continuation
+
+**Assumption:** Once a Stat Block Multiattack is selected, its named attack
+dispatches remain the open Attack action. Until the dispatches are spent or the
+turn ends, Movement between attacks and turn completion remain available; unrelated
+actions, Bonus Actions, spells, features, and unrelated reaction or Legendary
+Action subjects are not part of that continuation.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Monsters/Overview.md`,
+"Multiattack" says that the listed attacks and additional abilities are part of
+the Attack action. `.references/srd-5.2.1/Rules-Glossary.md`, "Attack [Action]"
+allows movement between multiple attacks, while
+`.references/srd-5.2.1/Playing-the-Game.md`, "Bonus Actions" leaves the timing
+of an available Bonus Action to the creature unless specified. The SRD does
+not define a replay or interleaving protocol for a partially resolved named
+Multiattack, so the continuation boundary is explicit model policy.
+
+## A46: An owner's Long Rest does not restore a surviving retained companion
+
+**Assumption:** A surviving retained Find Familiar-like companion is unchanged
+by its owner's Long Rest, including Hit Points and Temporary Hit Points. A
+Wild Companion familiar disappears when its owner finishes a Long Rest, and a
+companion already disappeared at 0 Hit Points remains disappeared.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Rules-Glossary.md`, "Long Rest"
+and `.references/srd-5.2.1/Playing-the-Game.md`, "Temporary Hit Points" tie
+restoration and Temporary Hit Point expiry to the creature that finishes the
+rest. `.references/srd-5.2.1/Classes/Druid.md`, "Level 2: Wild Companion"
+explicitly says that this familiar disappears when the Druid finishes a Long
+Rest. The SRD does not say that an ordinary familiar participates in its
+owner's rest, so the retained companion remains unchanged.
+
+## A47: Recasting a retained companion preserves its identity and carries Hit Points
+
+**Assumption:** Recasting Find Familiar while a familiar exists changes that
+familiar's form rather than creating another identity. A living or dismissed
+familiar carries its Hit Points clamped to the new form's maximum and keeps
+Temporary Hit Points; a familiar that disappeared at 0 Hit Points reappears
+with the new form's full Hit Points and no Temporary Hit Points. The casting
+route supplies the companion's protocol.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Spells/Descriptions-E-L.md`,
+"Find Familiar" says that only one familiar can exist, that recasting causes
+it to adopt a new eligible form, and that a familiar at 0 Hit Points reappears
+after the spell is cast again. `.references/srd-5.2.1/Classes/Druid.md`,
+"Level 2: Wild Companion" defines a distinct route that casts Find Familiar
+without Material components and makes the familiar Fey. Neither source
+specifies Hit Point carry-over, reappearance Hit Points, Temporary Hit Points,
+or persistence of a casting route's companion protocol. Those details are
+explicit model choices.
+
+## A49: Enlarge/Reduce creature effects are target-exclusive
+
+**Assumption:** For the creature-target branch of Enlarge/Reduce, a new casting
+replaces the target's existing Enlarge/Reduce size-change effect, including when
+it switches between Enlarge and Reduce. At most one such effect contributes
+active Size, Strength roll modes, and attack damage adjustment for a target.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`,
+"Combining Spell Effects" says that effects of the same spell cast multiple
+times do not combine, and that the most recent effect applies when the castings
+are equally potent. `.references/srd-5.2.1/Spells/Descriptions-E-L.md`,
+"Enlarge/Reduce" defines the distinct Enlarge and Reduce creature projections
+but does not specify how opposite-mode castings are compared or how their
+active projections transition, so the target-exclusive replacement rule is an
+explicit model choice for that gap.
