@@ -213,44 +213,9 @@ repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$repo_root" ]] || die "must be run inside a git repository"
 cd "$repo_root"
 
-worktree_has_install() {
-  local root="$1"
-  [[ -d "$root/node_modules" ]] &&
-    [[ -d "$root/packages/mcp/node_modules" ]]
-}
-
-find_worktree_install_source() {
-  local path=""
-
-  if worktree_has_install "$repo_root"; then
-    printf '%s\n' "$repo_root"
-    return 0
-  fi
-
-  while IFS= read -r path; do
-    [[ -n "$path" ]] || continue
-    if worktree_has_install "$path"; then
-      printf '%s\n' "$path"
-      return 0
-    fi
-  done < <(git worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}')
-
-  return 1
-}
-
 bootstrap_launcher_install() {
-  local install_source_root=""
-
-  [[ -d "$repo_root/node_modules" ]] && return 0
-  if [[ -L "$repo_root/node_modules" ]]; then
-    rm "$repo_root/node_modules"
-  elif [[ -e "$repo_root/node_modules" ]]; then
-    die "launcher node_modules exists but is not a usable directory or symlink"
-  fi
-  install_source_root="$(find_worktree_install_source)"
-  [[ -n "$install_source_root" ]] || \
-    die "could not find a linked worktree install for launcher $repo_root"
-  ln -s "$install_source_root/node_modules" "$repo_root/node_modules"
+  bash "$repo_root/scripts/ralph-install-worktree.sh" "$repo_root" || \
+    die "could not create an isolated launcher install for $repo_root"
 }
 
 plan_file=""
@@ -1829,35 +1794,8 @@ save_full_diff() {
 
 bootstrap_worktree_install() {
   local workspace="$1"
-  local install_source_root=""
-  local path
-
-  install_source_root="$(find_worktree_install_source)"
-  [[ -n "$install_source_root" ]] || die "could not find a worktree with node_modules to bootstrap $workspace"
-
-  for path in \
-    "node_modules" \
-    "packages/mcp/node_modules"; do
-    if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
-      rm -rf "$workspace/$path"
-    fi
-    mkdir -p "$(dirname "$workspace/$path")"
-    ln -s "$install_source_root/$path" "$workspace/$path"
-  done
-
-  while IFS= read -r path; do
-    [[ -n "$path" ]] || continue
-    [[ -e "$install_source_root/$path" || -L "$install_source_root/$path" ]] || continue
-    if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
-      rm -rf "$workspace/$path"
-    fi
-    mkdir -p "$(dirname "$workspace/$path")"
-    ln -s "$install_source_root/$path" "$workspace/$path"
-  done < <(
-    find "$install_source_root/packages" -mindepth 2 -maxdepth 2 -type d -name node_modules |
-      sed "s#^$install_source_root/##" |
-      sort
-  )
+  bash "$repo_root/scripts/ralph-install-worktree.sh" "$workspace" || \
+    die "could not create an isolated task install for $workspace"
 }
 
 

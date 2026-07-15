@@ -5,8 +5,8 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  lstatSync,
   readFileSync,
-  readlinkSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -18,6 +18,11 @@ import { afterEach, describe, expect, it } from "vitest";
 
 const repositoryRoot = process.cwd();
 const runnerPath = join(repositoryRoot, "scripts", "ralph-run.sh");
+const installerPath = join(
+  repositoryRoot,
+  "scripts",
+  "ralph-install-worktree.sh",
+);
 const roots: Array<string> = [];
 
 const git = (cwd: string, ...args: ReadonlyArray<string>) => {
@@ -32,7 +37,10 @@ const makeCleanRepository = () => {
   roots.push(root);
   mkdirSync(join(root, "scripts"), { recursive: true });
   cpSync(runnerPath, join(root, "scripts", "ralph-run.sh"));
+  cpSync(installerPath, join(root, "scripts", "ralph-install-worktree.sh"));
   writeFileSync(join(root, "plan.md"), "test plan\n");
+  writeFileSync(join(root, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  writeFileSync(join(root, "pnpm-workspace.yaml"), "packages: []\n");
   writeFileSync(
     join(root, ".gitignore"),
     ["/.ralph/", "/node_modules", "/packages/*/node_modules", ""].join("\n"),
@@ -126,7 +134,7 @@ describe("Ralph launcher boundaries", () => {
     expect(existsSync(join(root, ".ralph"))).toBe(false);
   });
 
-  it("bootstraps or repairs a linked launcher install before validate-plan", () => {
+  it("bootstraps or repairs an isolated launcher install before validate-plan", () => {
     const root = makeCleanRepository();
     const launcher = mkdtempSync(join(tmpdir(), "ralph-linked-launcher-"));
     roots.push(launcher);
@@ -146,7 +154,18 @@ describe("Ralph launcher boundaries", () => {
     git(root, "worktree", "add", "-b", "launcher/test", launcher, "master");
     symlinkSync(join(root, "removed-install"), join(launcher, "node_modules"));
     mkdirSync(fakeBin, { recursive: true });
-    writeFileSync(fakePnpm, "#!/usr/bin/env bash\nexit 42\n");
+    writeFileSync(
+      fakePnpm,
+      [
+        "#!/usr/bin/env bash",
+        'if [[ "${1:-}" == "install" ]]; then',
+        "  mkdir -p node_modules packages/mcp/node_modules",
+        "  exit 0",
+        "fi",
+        "exit 42",
+        "",
+      ].join("\n"),
+    );
     chmodSync(fakePnpm, 0o755);
 
     const result = spawnSync(
@@ -160,9 +179,14 @@ describe("Ralph launcher boundaries", () => {
     );
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("GitHub issue plan validation failed");
-    expect(readlinkSync(join(launcher, "node_modules"))).toBe(
-      join(root, "node_modules"),
+    expect(lstatSync(join(launcher, "node_modules")).isSymbolicLink()).toBe(
+      false,
     );
+    expect(
+      lstatSync(
+        join(launcher, "packages", "mcp", "node_modules"),
+      ).isSymbolicLink(),
+    ).toBe(false);
   });
 
   it("serializes different run IDs through the launcher-worktree lock", async () => {
