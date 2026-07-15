@@ -433,6 +433,7 @@ base_sha="$(git rev-parse --verify --end-of-options "$base_ref^{commit}")"
 head_sha="$(git rev-parse HEAD)"
 current_branch="$(git branch --show-current)"
 git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+mbt_lock_file="$git_common_dir/ralph-mbt.lock"
 
 [[ "$head_sha" == "$base_sha" ]] || die "current HEAD ($head_sha) does not match $base_ref ($base_sha)"
 [[ -z "$(git status --porcelain --untracked-files=normal)" ]] || \

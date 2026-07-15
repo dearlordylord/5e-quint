@@ -194,6 +194,12 @@ describe("Ralph launcher boundaries", () => {
     expect(globalLock).toBeLessThan(livePlanValidation);
     expect(source).toContain("flock --exclusive --nonblock --close");
     expect(source).toContain("unset RALPH_LAUNCHER_LOCKED");
+    const mbtLockAssignment = source.indexOf(
+      'mbt_lock_file="$git_common_dir/ralph-mbt.lock"',
+    );
+    const idleMbtCleanupLock = source.indexOf('exec 7>"$mbt_lock_file"');
+    expect(mbtLockAssignment).toBeGreaterThan(0);
+    expect(mbtLockAssignment).toBeLessThan(idleMbtCleanupLock);
     expect(source).toContain("scripts/with-mbt-lock.sh");
     expect(source).toContain("scripts/with-broad-workspace-lock.sh");
     expect(source).toContain("caps Turbo concurrency at one");
