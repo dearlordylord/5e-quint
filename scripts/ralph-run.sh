@@ -1882,40 +1882,54 @@ const allowed = new Set(["done", "retry-same-task", "needs-more-research", "bloc
 
 const lines = text.split(/\r?\n/)
 let inDispositionSection = false
-let raw = ""
+let malformedDisposition = false
+const candidates = []
 
 for (const line of lines) {
   const normalized = clean(line)
-  if (!inDispositionSection && /^#{0,6}\s*task disposition:?$/.test(normalized)) {
+  if (/^[-*]?\s*#{0,6}\s*task disposition:?$/.test(normalized)) {
     inDispositionSection = true
     continue
   }
-  if (!inDispositionSection && /^task disposition:\s*(.+)$/.test(normalized)) {
-    raw = normalized.replace(/^task disposition:\s*/, "")
-    break
+  const inlineDisposition = normalized.match(
+    /^[-*]?\s*task disposition:\s*([a-z][a-z0-9-]*)(?:\s*[-\u2013\u2014:]\s+.+)?$/,
+  )
+  if (inlineDisposition) {
+    candidates.push(inlineDisposition[1])
+    if ((normalized.match(/task disposition:/g) ?? []).length !== 1) {
+      malformedDisposition = true
+    }
+    inDispositionSection = false
+    continue
+  }
+  if (/^[-*]?\s*task disposition:/.test(normalized)) {
+    malformedDisposition = true
+    inDispositionSection = false
+    continue
   }
   if (inDispositionSection) {
     if (/^#{1,6}\s+/.test(line) || /^\*\*[^*]+\*\*$/.test(line.trim())) {
-      break
+      inDispositionSection = false
+      continue
     }
     const statusMatch = normalized.match(/^[-*]?\s*status:\s*(.+)$/)
     if (statusMatch) {
-      raw = statusMatch[1]
-      break
+      candidates.push(statusMatch[1])
     }
   }
 }
 
-if (!raw) {
-  const globalStatus = clean(text).match(/status:\s*(done|retry-same-task|needs-more-research|blocked-needs-design|deferred)/)
-  raw = globalStatus?.[1] ?? ""
-}
-
-raw = clean(raw)
-if (!allowed.has(raw)) {
+const dispositions = candidates.map(clean)
+const uniqueDispositions = new Set(dispositions)
+if (
+  malformedDisposition ||
+  dispositions.length === 0 ||
+  dispositions.some((disposition) => !allowed.has(disposition)) ||
+  uniqueDispositions.size !== 1
+) {
   throw new Error("missing Task Disposition status")
 }
-process.stdout.write(raw)
+process.stdout.write(dispositions[0])
 NODE
 }
 

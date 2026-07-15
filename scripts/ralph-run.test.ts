@@ -170,12 +170,92 @@ const addOrphanProbe = (root: string) => {
   return path;
 };
 
+const parseDeciderDisposition = (report: string) => {
+  const root = mkdtempSync(join(tmpdir(), "ralph-disposition-test-"));
+  roots.push(root);
+  const reportPath = join(root, "decider.md");
+  writeFileSync(reportPath, report);
+
+  const runnerSource = readFileSync(runnerPath, "utf8");
+  const parserMatch = runnerSource.match(
+    /parse_decider_disposition\(\) \{[\s\S]*?node - "\$report" <<'NODE'\n([\s\S]*?)\nNODE\n\}/,
+  );
+  if (!parserMatch) throw new Error("Ralph disposition parser not found");
+
+  return spawnSync("node", ["-", reportPath], {
+    encoding: "utf8",
+    input: parserMatch[1],
+  });
+};
+
 afterEach(() => {
   for (const root of roots.splice(0))
     rmSync(root, { recursive: true, force: true });
 });
 
 describe("Ralph launcher boundaries", () => {
+  it("parses the documented and concise decider disposition forms", () => {
+    for (const disposition of [
+      "done",
+      "retry-same-task",
+      "needs-more-research",
+      "blocked-needs-design",
+      "deferred",
+    ] as const) {
+      for (const report of [
+        `- Task Disposition:\n  - Status: ${disposition}\n`,
+        `Task Disposition: ${disposition} — disposition reason.\n`,
+      ]) {
+        const result = parseDeciderDisposition(report);
+        expect(result.status, report).toBe(0);
+        expect(result.stdout, report).toBe(disposition);
+      }
+    }
+
+    for (const [report, expected] of [
+      ["## Task Disposition\n- Status: done\n", "done"],
+      ["- Task Disposition:\n  - Status: done\n", "done"],
+      ["Task Disposition: `done`\n", "done"],
+      [
+        "Task Disposition: `done` — the reviewed commit is accepted.\n",
+        "done",
+      ],
+      [
+        "Task Disposition: retry-same-task: one focused fix remains.\n",
+        "retry-same-task",
+      ],
+    ] as const) {
+      const result = parseDeciderDisposition(report);
+      expect(result.status, report).toBe(0);
+      expect(result.stdout, report).toBe(expected);
+    }
+  });
+
+  it("rejects ambiguous or non-enumerated inline dispositions", () => {
+    for (const report of [
+      "Task Disposition: accepted\n",
+      "Task Disposition: done retry-same-task\n",
+      "Task Disposition: done-ish\n",
+      "- Task Disposition: done-ish\n",
+      "Implementation Status: done\n",
+      "Status: done-ish\n",
+      "Task Disposition: done\nTask Disposition: deferred\n",
+      "Task Disposition: done — Task Disposition: retry-same-task\n",
+    ]) {
+      const result = parseDeciderDisposition(report);
+      expect(result.status, report).not.toBe(0);
+      expect(result.stderr, report).toContain("missing Task Disposition status");
+    }
+  });
+
+  it("tolerates repeated identical explicit dispositions", () => {
+    const result = parseDeciderDisposition(
+      "Task Disposition: done\n## Task Disposition\n- Status: done\n",
+    );
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe("done");
+  });
+
   it("passes Bash syntax validation and keeps safety checks in front of mutation", () => {
     expect(spawnSync("bash", ["-n", runnerPath]).status).toBe(0);
     const source = readFileSync(runnerPath, "utf8");
