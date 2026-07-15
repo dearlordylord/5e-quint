@@ -3,7 +3,7 @@
 TWEETS.md
 CODEX_REVIEW.md
 LESSONS.md
-node_modules/
+node_modules
 .references/*
 !.references/srd/
 !.references/srd-5.2.1/
