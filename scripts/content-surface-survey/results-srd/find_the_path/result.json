@@ -1,9 +1,0 @@
-{
-  "unit_slug": "find_the_path",
-  "outcome": "dm_agenda",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Did not author content/find_the_path.dhall. The spell's entire payload is persistent navigation information: sensing a named destination's direction and distance and knowing which branch is the most direct route. In this repo, analogous location/information effects are treated as caller/DM agenda rather than core mechanics."
-}

@@ -1,9 +1,0 @@
-{
-  "unit_slug": "magic_item_helm_of_comprehending_languages",
-  "outcome": "clean",
-  "atoms_used": ["grant", "grant_spell_access", "magic_item_root"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Straightforward passive magic item: wearing_item condition is implicit (no attunement, no charges). grant_spell_access at_will maps directly to 'you can cast Comprehend Languages from it' with no usage restriction stated."
-}

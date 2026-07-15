@@ -1,9 +1,0 @@
-{
-  "unit_slug": "comprehend_languages",
-  "outcome": "dm_agenda",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Comprehend Languages is an informational utility effect, not a deterministic core-mechanics state change in the current surface. The spell grants understanding of heard, signed, and written language (with touch + reading-time caveats) but does not map to any existing v4 effect atom or closed runtime procedure without inventing a caller-facing narrative/comprehension model. Per existing local precedent, no content/comprehend_languages.{dhall,json,trace.md} was authored."
-}

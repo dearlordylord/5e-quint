@@ -52,8 +52,11 @@ names, slugs, source/provenance sections, page refs, prose labels, or recognizab
 official catalog labels. SRD identity is publishable content/provenance, but it
 is still not the runtime rule model; use Surface shape, support-profile readers,
 typed procedure facts, and explicit runtime state. PHB+ / non-SRD official
-content must not copy real official identity into publishable source, tests, or
-fixtures at all.
+content must not copy real source identity or public source-to-Mushroom crosswalks
+into publishable source, tests, or fixtures. Review Mushroom records against
+[`docs/mushroom-playbook/AUTHORING.md`](../docs/mushroom-playbook/AUTHORING.md);
+unsupported mechanics must not be simplified, rebalanced, or replaced with
+homebrew behavior.
 
 Accept only narrow authored-identity boundaries: Surface catalog/schema/content,
 SRD or synthetic tests/fixtures, composition/user-selection identity, true

@@ -1,9 +1,0 @@
-{
-  "unit_slug": "wizard_ability_score_improvement_l4",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Identical structure to barbarian/bard/cleric/druid/monk/ranger/rogue/sorcerer ability_score_improvement_l4. Passive grant_feat with category=general. No openFallback field needed, matching the established pattern across all class ASI features."
-}

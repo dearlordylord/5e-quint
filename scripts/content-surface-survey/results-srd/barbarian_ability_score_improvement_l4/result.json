@@ -1,9 +1,0 @@
-{
-  "unit_slug": "barbarian_ability_score_improvement_l4",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Identical structure to bard_ability_score_improvement_l4 and wizard_ability_score_improvement_l4. Passive grant_feat with category=general. The 'openFallback: any_qualifying_feat' encoding is not used here, matching the established pattern for this SRD feature text."
-}

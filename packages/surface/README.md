@@ -3,7 +3,7 @@
 Workspace package for authored D&D content records, provenance-bearing Surface
 schemas, catalogs, and review traces.
 
-## Not to be confused with `scripts/content-surface-survey/`
+## Authoring Evidence Boundary
 
 This package holds the **authored corpus** and the **surface types** it is
 authored against:
@@ -12,17 +12,20 @@ authored against:
 - `src/interpreter/tracer.ts` — projects authored content into a mermaid-renderable dependency graph for review.
 - `content/<slug>.{dhall,json,trace.md}` — one entry per **actually-authored** content record. `.dhall` is the source-of-truth mechanics definition; `.json` is `dhall-to-json --omit-empty` output consumed by package code; `.trace.md` is generated from that JSON for review. Unit records and monster Stat Block records are separate record families; Stat Block traces render with a distinct root style so they are not read as Units.
 
-The **mining / oracle pipeline** lives in `scripts/content-surface-survey/`. That directory runs a per-SRD-unit LLM sub-agent survey to propose encodings and flag widenings against this package's current surface. Its outputs are **verdicts**, not content — they live in `scripts/content-surface-survey/results-srd/<slug>/` and aggregate into `survey-results-srd.jsonl` + `REPORT_SRD.md`. Nothing under `scripts/content-surface-survey/` is shipped; it's the "what's MISSING" oracle, not the "what's SHIPPED" artifact.
+Private mining inputs, Mechanical Correspondence, and non-public review evidence
+live in the independent Private Authoring Repository. They are pre-publication
+evidence, not package inputs. This package must compile, test, and run without a
+private checkout or revision.
 
-One-liner: **this package holds what we've SHIPPED; `scripts/content-surface-survey/` tells us what's MISSING.** A content record typically flows: mining proposes → verdict flags a widening → we land the widening in this package's `src/surface/types.ts` → we author the record in this package's `content/<slug>.dhall` → regression passes → we re-mine and the verdict goes `clean`.
+Only approved authored source records cross into this repository. Public JSON,
+traces, catalogs, and manifests are derived from those public sources.
 
 ## Goal (read this first)
 
 This package is **where the taxonomy actually lives and evolves**. It is the
-active authored-content and provenance boundary for the promoted runtime
-path. The vocabulary emerged from research in `.references/xphb-srd-pairing/`
-and continues to be shaped by real authoring pressure from SRD 5.2.1 and PHB
-2024 content.
+authored-content and provenance boundary for the promoted runtime path. The
+vocabulary evolves from public SRD requirements and approved typed authoring
+pressure without retaining private authored identity or correspondence.
 
 Runtime packages consume this package through typed authored-record boundaries.
 They derive execution state at their own package boundaries; Surface remains the
@@ -30,20 +33,14 @@ authored content layer, not a runtime reducer and not projected executable IR.
 Formal runtime models may use Surface-authored records as input, but integration
 belongs in the consuming runtime package, not in this package.
 
-Three-way separation:
+Repository separation:
 
-- `.references/xphb-srd-pairing/` — **frozen input**. Taxonomy
-  research at v4, validation matrices, pressure-case analyses.
-  Read-only from this package's perspective.
-- `.references/competitors/` + `.references/RESEARCH_*.md` —
-  **neighbor research** on how other D&D open-source products
-  (DnDSimulator, Py5e, ShiningSword, avrae, foundryvtt-dnd5e,
-  libsrd5, pf2e's rule-elements system, etc.) tackle similar
-  taxonomy problems. Fed into the pairing workspace's surface docs
-  (e.g., `SURFACES_spells.md` cites `RESEARCH_foundry_effect_staging.md`
-  for effect staging patterns). Read-only.
-- `packages/surface/` (this package) — **where the surface evolves**. Runtime
-  packages consume it through typed record/catalog boundaries.
+- `.references/` owns approved public reference inputs; it is not runtime data.
+- `packages/surface/` owns public authored records, schemas, provenance-bearing
+  collections, and derived public projections.
+- The Private Authoring Repository owns private structured input,
+  correspondence, and review evidence; it is not a dependency of either public
+  boundary.
 
 ## Runtime Boundary
 
@@ -225,22 +222,13 @@ but the battle-runtime support profile must project executable facts such as
 the concrete die size, resource spend, saving throw DC formula, target gate, and
 inherited damage type before reducers consume it.
 
-## Relationship to the sub-agent survey corpus
+## Relationship to private authoring evidence
 
-`scripts/content-surface-survey/results-srd/<slug>/` contains
-sub-agent analyses for SRD 5.2.1 units. The results are classified with
-verdicts such as `structural_widening`, `surface_widening`,
-`atom_widening`, `clean`, `dm_agenda`, `refused`, and `invalid`.
-
-Each `surface_widening` / `atom_widening` entry has a `proposal.md`
-with the sub-agent's shape proposal for the needed widening. Before authoring a
-unit in `content/`, consult the corresponding `results-srd/<slug>/proposal.md`.
-Don't invent widenings from scratch when a proposal already exists —
-evaluate, accept / refactor / reject, then author.
-
-Deferred widening context now lives in the survey corpus and current active
-planning artifacts; the old content-surface plan files have been removed from
-the active tree.
+Private survey proposals and verdicts may inform pre-publication review, but
+they are not Surface inputs or rules authority. A widening enters this package
+only as a typed public schema change backed by public-source tests and the
+applicable RAW trace. Public authoring and verification must remain complete
+when the Private Authoring Repository is unavailable.
 
 As authored records land in this package, their outcomes should be reflected
 back into the survey corpus as ground-truth verdicts before the corpus is used
@@ -306,5 +294,5 @@ runtime packages own executable semantics and parity tests.
 
 ## Related docs
 
-- [`.references/xphb-srd-pairing/INDEX.md`](/workspace/typescript/dnd/.references/xphb-srd-pairing/INDEX.md) — taxonomy research entrypoint.
-- [`scripts/content-surface-survey/README.md`](/workspace/typescript/dnd/scripts/content-surface-survey/README.md) — survey generator / worker docs.
+- [`docs/mushroom-playbook/AUTHORING.md`](/workspace/typescript/dnd/docs/mushroom-playbook/AUTHORING.md) — public/private authoring and publication boundary.
+- [`ARCHITECTURE.md`](/workspace/typescript/dnd/ARCHITECTURE.md) — system ownership and runtime boundaries.

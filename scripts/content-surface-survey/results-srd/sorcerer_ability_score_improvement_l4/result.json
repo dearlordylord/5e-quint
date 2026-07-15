@@ -1,9 +1,0 @@
-{
-  "unit_slug": "sorcerer_ability_score_improvement_l4",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Standard ASI/feat-grant pattern. Encodes identically to barbarian/bard/cleric/druid/monk/ranger/rogue ASI L4. grant_feat with category='general' covers the 'Ability Score Improvement feat or another feat of your choice' wording; the openFallback field is not needed here as the barbarian reference omits it too (the surface allows omission)."
-}

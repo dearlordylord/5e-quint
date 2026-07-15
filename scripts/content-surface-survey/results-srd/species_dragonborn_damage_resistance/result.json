@@ -1,9 +1,0 @@
-{
-  "unit_slug": "species_dragonborn_damage_resistance",
-  "outcome": "clean",
-  "atoms_used": ["grant", "grant_resistance", "species_trait_root"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Passive grant of grant_resistance with build_time_choice DamageTypeRef. The build_time_choice pattern is already established by species_dragonborn_breath_weapon. Encodes the 10-subspecies table as 5 distinct damage types. Typecheck and tracer both pass cleanly."
-}

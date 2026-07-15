@@ -1,9 +1,0 @@
-{
-  "unit_slug": "magic_item_shield_1_2_or_3",
-  "outcome": "clean",
-  "atoms_used": ["grant", "holding_item", "magic_item_root", "modify_ac"],
-  "relations_used": ["grants", "requires", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Collection record (3 variants: uncommon +1, rare +2, very_rare +3). Each variant is a passive with holding_item condition and a fixed modify_ac delta. dieSize=1 collapses to a flat bonus at render time. Typecheck passed, tracer produced clean mermaid graph."
-}

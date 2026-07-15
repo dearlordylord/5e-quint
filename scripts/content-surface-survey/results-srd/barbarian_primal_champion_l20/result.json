@@ -1,9 +1,0 @@
-{
-  "unit_slug": "barbarian_primal_champion_l20",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "modify_ability_score"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Exact structural parallel to monk_body_and_mind_l20 — two modify_ability_score grants (str+4, con+4) capped at 25. PassiveMechanics on ClassFeatureRecord. Typecheck passed, tracer produced a clean graph."
-}

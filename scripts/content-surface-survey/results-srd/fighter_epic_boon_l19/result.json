@@ -1,9 +1,0 @@
-{
-  "unit_slug": "fighter_epic_boon_l19",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Identical structure to bard_epic_boon_l19, cleric_epic_boon_l19, and paladin_epic_boon_l19. Passive grant_feat with all four FeatCategory values encodes 'an Epic Boon feat or another feat of your choice for which you qualify'."
-}

@@ -1,9 +1,0 @@
-{
-  "unit_slug": "magic_item_adamantine_armor",
-  "outcome": "clean",
-  "atoms_used": ["grant", "magic_item_root", "suppress_incoming_critical_hit", "wearing_item"],
-  "relations_used": ["grants", "requires", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Encodes cleanly as passive magic_item with wearing_item equipment predicate and suppress_incoming_critical_hit effect atom, which was added to types.ts specifically for this item. No widenings needed."
-}

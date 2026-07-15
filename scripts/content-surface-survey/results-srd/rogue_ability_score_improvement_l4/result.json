@@ -1,9 +1,0 @@
-{
-  "unit_slug": "rogue_ability_score_improvement_l4",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Encodes as passive class_feature with grant_feat (category: general, openFallback: any_qualifying_feat). The 'Ability Score Improvement feat or another qualifying feat' pattern fits exactly the grant_feat atom's designed shape. Identical encoding to other ASI features across classes."
-}

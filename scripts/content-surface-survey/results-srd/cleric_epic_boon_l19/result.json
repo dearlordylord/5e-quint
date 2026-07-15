@@ -1,9 +1,0 @@
-{
-  "unit_slug": "cleric_epic_boon_l19",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "grant_feat with category='epic_boon' and openFallback='any_qualifying_feat' encodes the SRD text exactly. The type comment in types.ts even cites this exact pattern as the canonical example."
-}

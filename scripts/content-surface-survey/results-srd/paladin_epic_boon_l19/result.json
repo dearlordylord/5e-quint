@@ -1,9 +1,0 @@
-{
-  "unit_slug": "paladin_epic_boon_l19",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Encodes identically to other class Epic Boon L19 features (bard, fighter, cleric, etc.). grant_feat with categories=[epic_boon, general, fighting_style, origin] covers 'Epic Boon feat or another feat of your choice for which you qualify'. The recommended feat (Boon of Truesight) is advisory text only, not a mechanical constraint."
-}

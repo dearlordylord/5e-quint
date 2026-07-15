@@ -1,9 +1,0 @@
-{
-  "unit_slug": "monk_epic_boon_l19",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Identical pattern to bard_epic_boon_l19, cleric_epic_boon_l19, and paladin_epic_boon_l19. Passive class feature granting a feat pick from all four FeatCategory variants (epic_boon | general | fighting_style | origin), encoding the SRD's 'Epic Boon feat or another feat of your choice for which you qualify' text."
-}

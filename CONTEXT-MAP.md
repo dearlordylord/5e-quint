@@ -8,6 +8,8 @@ single authority instead of copying it between documents.
 - [D&D/SRD language](UBIQUITOUS_LANGUAGE.md) — rules and game-domain terms.
 - [Cleanroom SDK](docs/cleanroom/CONTEXT.md) — terms for deploying and evaluating
   independent Target SDK work.
+- [Mushroom Playbook](docs/mushroom-playbook/CONTEXT.md) — terms for the public
+  Mushroom corpus and its private authoring relationships.
 
 ## Related authorities
 
@@ -15,6 +17,8 @@ single authority instead of copying it between documents.
   and ownership.
 - [Modeling assumptions](ASSUMPTIONS.md) own choices where RAW is silent or
   ambiguous.
+- [Mushroom Playbook authoring policy](docs/mushroom-playbook/AUTHORING.md) owns
+  the standing public/private identity, fidelity, and expression boundary.
 - The owning package's `README.md`, `VOCABULARY.md`, or architecture document
   owns package-local technical vocabulary and boundaries.
 - The accepted specification owns work-specific requirements and acceptance.
@@ -28,6 +32,8 @@ single authority instead of copying it between documents.
   relate without redefining D&D rules or Target architecture.
 - Architecture implements and constrains those relationships without becoming
   a second glossary or RAW-assumption owner.
+- Mechanical Correspondence is private Mushroom authoring evidence; it is not
+  D&D/SRD language, public provenance, or a Cleanroom runtime relationship.
 
 `docs/cleanroom/CONTEXT.md` is a glossary, not an architecture document, task
 ledger, specification, or acceptance checklist. Wayfinder decision artifacts

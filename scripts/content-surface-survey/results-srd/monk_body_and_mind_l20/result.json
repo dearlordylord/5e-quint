@@ -1,9 +1,0 @@
-{
-  "unit_slug": "monk_body_and_mind_l20",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "modify_ability_score"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Two modify_ability_score grants (dex +4 max 25, wis +4 max 25) encode the feature exactly. PassiveMechanics family fits naturally — permanent stat increases acquired at level-up. No widening needed."
-}

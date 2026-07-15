@@ -1,9 +1,0 @@
-{
-  "unit_slug": "druid_epic_boon_l19",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Identical pattern to bard_epic_boon_l19 and cleric_epic_boon_l19. Passive grant of grant_feat with all four FeatCategory values. The 'openFallback' field was not used (matching the bard/cleric reference encodings which omit it); the categories list already enumerates all valid feat categories, making the open fallback redundant."
-}

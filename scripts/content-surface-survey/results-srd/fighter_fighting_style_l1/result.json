@@ -1,9 +1,0 @@
-{
-  "unit_slug": "fighter_fighting_style_l1",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "The core mechanic is a build-time feat grant (category: fighting_style), encoded as PassiveMechanics with a single grant_feat atom. The level-up replacement mechanic ('you can replace the feat you chose with a different Fighting Style feat') is character-advancement state, not a runtime mechanical effect — omitted from core, similar to how other build-time replacement rules are handled."
-}

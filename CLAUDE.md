@@ -39,9 +39,13 @@ For monster data in this repo:
 **PHB+** means official D&D rules content that is not in this repo's
 redistributable SRD corpus: PHB material beyond the SRD plus other closed-licensed
 official books such as Xanathar's. Publishable source, tests, fixtures, docs, and
-generated artifacts must not copy real PHB+ ids, names, slugs, prose, examples,
-source headings, page references, or recognizable catalog identity. Use visibly
-synthetic renamed records for non-SRD mechanics examples.
+generated artifacts must not copy real PHB+ source ids, names, slugs, prose,
+examples, source headings, page references, or public source-to-Mushroom
+crosswalks. Use visibly synthetic renamed records for non-SRD mechanics examples.
+
+Mushroom Playbook language and authoring gates live in
+[`docs/mushroom-playbook/CONTEXT.md`](docs/mushroom-playbook/CONTEXT.md) and
+[`docs/mushroom-playbook/AUTHORING.md`](docs/mushroom-playbook/AUTHORING.md).
 
 **Authored identity** means content identity or protected expression: record ids,
 names, slugs, source sections, provenance sections, prose labels, page refs, or

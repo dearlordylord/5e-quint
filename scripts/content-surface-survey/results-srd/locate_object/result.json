@@ -1,9 +1,0 @@
-{
-  "unit_slug": "locate_object",
-  "outcome": "dm_agenda",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "No authored surface file was created. Locate Object's payload is continuous object-location and movement-direction knowledge, which local precedent treats as session-owned spatial information rather than a core mechanics atom."
-}

@@ -1,9 +1,0 @@
-{
-  "unit_slug": "ranger_ability_score_improvement_l4",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Encodes identically to other class ASI features (barbarian, cleric, druid, monk). Passive family with a single grant_feat atom (category: general). The 'or another feat of your choice for which you qualify' fallback is implicit in how grant_feat is interpreted at build time."
-}

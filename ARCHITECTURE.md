@@ -12,6 +12,12 @@ SRD does not prescribe, that choice belongs in `ASSUMPTIONS.md`.
 architecture later, but it must enter through separately owned content
 collections with explicit provenance and distribution policy.
 
+The SRD rules foundation and the SRD authored corpus are distinct architectural
+roles: reusable rules semantics are not an authored-record collection. The
+Mushroom-specific composition of that foundation, the SRD authored corpus, and
+the Mushroom Corpus is mapped in
+[`docs/mushroom-playbook/ARCHITECTURE.md`](docs/mushroom-playbook/ARCHITECTURE.md).
+
 Published non-SRD mechanics fixtures, when present, are synthetic records with
 original public identity. They are not official-content records and must not
 carry non-SRD source citations, page references, copied prose, canonical names,

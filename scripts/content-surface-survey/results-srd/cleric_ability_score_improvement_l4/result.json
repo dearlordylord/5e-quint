@@ -1,9 +1,0 @@
-{
-  "unit_slug": "cleric_ability_score_improvement_l4",
-  "outcome": "clean",
-  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Encodes identically to barbarian_ability_score_improvement_l4 and bard_ability_score_improvement_l4. The text 'the Ability Score Improvement feat or another feat of your choice for which you qualify' maps to grant_feat with category=general; ASI is itself a general feat so the grant covers both the named feat and the open fallback within the same category. The openFallback field was not used since the fallback remains within the same general category — consistent with the barbarian reference encoding."
-}

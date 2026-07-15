@@ -1,9 +1,0 @@
-{
-  "unit_slug": "species_orc_darkvision",
-  "outcome": "clean",
-  "atoms_used": ["grant", "grant_sense", "species_trait_root"],
-  "relations_used": ["grants", "roots"],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Identical structure to darkvision_elf; only species and rangeFeet differ (120 ft vs 60 ft). No widening needed. The other Orc traits (Adrenaline Rush, Relentless Endurance) are out of scope for this unit."
-}
