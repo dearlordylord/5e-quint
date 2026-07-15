@@ -51,7 +51,7 @@ runnable, or unblocked.
     {
       "number": 6,
       "id": "GH-44",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Enforce complete canonical Surface discovery and regeneration",
       "dependencies": [
         "GH-25"
