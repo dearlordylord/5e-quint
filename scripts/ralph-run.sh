@@ -6,6 +6,7 @@ original_args=("$@")
 default_codex_model="gpt-5.6-luna"
 default_review_model="gpt-5.6-sol"
 default_implementation_round_limit=10
+implementation_review_safety_cap_status=3
 
 usage() {
   local help_text
@@ -1436,6 +1437,7 @@ run_implementation_pipeline() {
   local round=1
   local previous_review=""
   local verdict="reject"
+  local safety_cap_reached=false
   local implementer_role="Implementer"
   local round_limit="$implementation_round_limit"
   local session_file="$attempt_root/$slug-implementer.session"
@@ -1491,6 +1493,7 @@ run_implementation_pipeline() {
     local next_round
     if ! next_round="$(next_implementation_round "$round" "$round_limit")"; then
       note "task" "implementation-review-safety-cap task=$task_no round=$round limit=$round_limit verdict=$verdict"
+      safety_cap_reached=true
       break
     fi
 
@@ -1512,6 +1515,23 @@ run_implementation_pipeline() {
   cp -f "$attempt_root/$slug-round-$round.after-review.full.diff" "$attempt_root/$slug.after-review.full.diff"
   if [[ -f "$attempt_root/$slug-round-$round-implementer.final.md" ]]; then
     cp -f "$attempt_root/$slug-round-$round-implementer.final.md" "$attempt_root/$slug-implementer.final.md"
+  fi
+  if [[ "$safety_cap_reached" == true ]]; then
+    cat >"$attempt_root/$slug-safety-cap.md" <<EOF
+# Implementation review safety cap
+
+- Task: $task_no
+- Last round: $round
+- Round limit: $round_limit
+- Last review verdict: $verdict
+- Base SHA: $task_base_sha
+
+The last permitted review did not accept the task. The worktree, branch, claim,
+diffs, logs, and reviews remain quarantined. No decider or integration step may
+run. Reconciliation must remove the canonical issue from the runnable queue,
+classify coherent WIP components, and replace or redesign the leaf.
+EOF
+    return "$implementation_review_safety_cap_status"
   fi
 }
 
@@ -2613,6 +2633,12 @@ run_task_attempt() {
 
   local implementation_status=0
   run_implementation_pipeline "$implementation_runner" "$implementation_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$task_context_file" || implementation_status=$?
+  if [[ "$implementation_status" -eq "$implementation_review_safety_cap_status" ]]; then
+    printf 'implementation review safety cap reached for task %s attempt %s; quarantined before decider integration\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "blocked-implementation-review-safety-cap task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "blocked-implementation-review-safety-cap" "-" "quarantined before decider; leaf requires reconciliation and redesign"
+    return 2
+  fi
   if [[ "$implementation_status" -ne 0 ]]; then
     printf 'implementation pipeline failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
     note "task" "fatal-implementation-pipeline task=$task_no attempt=$attempt_no"

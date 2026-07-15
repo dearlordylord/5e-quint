@@ -511,8 +511,26 @@ describe("Ralph launcher boundaries", () => {
     expect(help.stdout).toContain("Default: 10");
     expect(help.stdout).not.toContain("no harness cap");
     expect(source).toContain("default_implementation_round_limit=10");
+    expect(source).toContain("implementation_review_safety_cap_status=3");
     expect(source).toContain(
       'next_implementation_round "$round" "$round_limit"',
+    );
+    expect(source).toContain("safety_cap_reached=true");
+    expect(source).toContain(
+      'if [[ "$implementation_status" -eq "$implementation_review_safety_cap_status" ]]; then',
+    );
+    expect(source).toContain(
+      "quarantined before decider; leaf requires reconciliation and redesign",
+    );
+    const safetyCapHandler = source.indexOf(
+      'if [[ "$implementation_status" -eq "$implementation_review_safety_cap_status" ]]; then',
+    );
+    expect(safetyCapHandler).toBeGreaterThan(0);
+    expect(safetyCapHandler).toBeLessThan(
+      source.indexOf(
+        'write_decider_prompt "$attempt_root/decider.prompt.md"',
+        safetyCapHandler,
+      ),
     );
 
     const threeRounds = runImplementationRounds(3);
