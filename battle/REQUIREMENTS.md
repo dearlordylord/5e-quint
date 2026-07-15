@@ -455,7 +455,7 @@ All SRD distances are in **feet** (5ft increments on grid, approximate in theatr
 
 ## R50: Trigger Taxonomy
 
-**Source:** Derived from R10 reaction catalog. Each trigger is the union of all reaction trigger phrases that share the same game moment. The SRD does not define a "trigger type" system — this taxonomy is inferred from the reaction triggers. See `ASSUMPTIONS.md` for the modeling decision.
+**Source:** Derived from the R10 reaction catalog. The active executable trigger vocabulary is owned by `packages/battle-runtime/battle-runtime-reaction-kinds.qnt` and `packages/battle-runtime/src/battle-interrupt-triggers.ts`; this catalog does not define a separate runtime trigger union.
 
 | Trigger | Game moment | SRD trigger phrases (from R10) | Reactions at this point |
 |---------|-------------|-------------------------------|------------------------|

@@ -10,8 +10,8 @@
 //   rules-defined turn-boundary trigger shape.
 // - UBIQUITOUS_LANGUAGE.md: Boundary Crossing, Spell Effect, Reaction, Timer.
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
-// Death Saving Throw ordering is intentionally outside this witness;
-// ASSUMPTIONS.md#A6 records the current owner-decision issue.
+// Death Saving Throw ordering is intentionally outside this witness; this
+// fixture does not assert a same-timing ordering for that lifecycle.
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { difficultyClass, Hp, Round } from "@dnd/shared/types";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";

@@ -20,7 +20,7 @@ runnable, or unblocked.
     {
       "number": 2,
       "id": "GH-42",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Curate source-ready cleanroom modeling assumptions",
       "dependencies": []
     },

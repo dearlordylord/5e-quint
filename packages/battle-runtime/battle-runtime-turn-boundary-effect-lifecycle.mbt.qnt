@@ -19,7 +19,8 @@
 // hook, a source "until next turn" start-turn expiry, one start-turn ongoing
 // feature expiry, and one end-turn ongoing feature expiry across two turn
 // advancements. Death Saving Throw ordering is intentionally outside this
-// witness; ASSUMPTIONS.md#A6 records the current owner-decision issue.
+// witness; this fixture does not assert a same-timing ordering for that
+// lifecycle.
 module battleRuntimeTurnBoundaryEffectLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 

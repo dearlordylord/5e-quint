@@ -270,8 +270,8 @@ Scope:
 
 - Offer, Decline, matching Reaction spend, and Advance semantics;
 - Reaction quota reuse from QCORE6, including reset through `startTurn`;
-- bounded active-plus-suspended reaction-window depth, documented by
-  `ASSUMPTIONS.md` A45;
+- reaction-window depth and continuation restoration owned by this QCORE8
+  protocol;
 - Opportunity Attack windows from QCORE7 caller-supplied trigger facts;
 - guarded damage-interruption windows after positive effective damage reaches
   Hit Points through QCORE1's positive-HP damage procedure;
@@ -289,8 +289,7 @@ Out of scope for QCORE8:
   module;
 - all possible reaction features, deferred to QCORE9/QCORE11 procedure
   profiles;
-- battle-wide queue/stack policy beyond the bounded active-window protocol in
-  A45;
+- battle-wide queue/stack policy beyond the QCORE8 reaction-window protocol;
 - pathfinding, line of sight, reach derivation, or authored catalog
   enumeration.
 
