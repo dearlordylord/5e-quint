@@ -60,6 +60,16 @@ export type SpellAdmissionContext = {
   readonly battle: SpellAdmissionBattleProjection | undefined;
 };
 
+// Registry admission is existential over each profile's concrete invocation.
+// This common view preserves the shared input contract while projecting each
+// concrete result to the supported-invocation union covariantly.
+export type SpellProcedureAdmissionProfile = {
+  readonly admit: (
+    spell: SpellRecord,
+    ctx: SpellAdmissionContext,
+  ) => readonly SupportedSpellInvocation[];
+};
+
 function isSpellAdmissionActor(
   actor: BattleCreatureState,
 ): actor is SpellAdmissionActor {
@@ -189,12 +199,13 @@ export type SpellProcedureTargetListInvocationClassifier<
 
 export type SpellProcedureReadiedSpellCompatibility<
   I extends SupportedSpellInvocation,
-> = Extract<
-  ReadiedSpellInvocation,
-  { readonly procedure: I["procedure"] }
-> extends never
-  ? false
-  : boolean;
+> =
+  Extract<
+    ReadiedSpellInvocation,
+    { readonly procedure: I["procedure"] }
+  > extends never
+    ? false
+    : boolean;
 
 // One profile per spell-procedure registration. Generic in the registered
 // procedure literal and the narrowed invocation/input types so admit/resolve
@@ -250,9 +261,7 @@ export type SpellProcedureProfile<
 export function spellProcedureInvocationSchema<
   I,
   S extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
->(
-  schema: S,
-): Schema.Schema<I> {
+>(schema: S): Schema.Schema<I> {
   // Effect Schema preserves the runtime parser for each invocation branch, but
   // generic record/object helpers infer wider structural fields than the
   // reducer's branded/domain aliases. Profile-local discriminants select the

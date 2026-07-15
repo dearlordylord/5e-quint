@@ -55,6 +55,7 @@ export function spellBattle(input: {
   readonly extraTargetMaxHp?: number;
   readonly targetHp?: number;
   readonly targetMaxHp?: number;
+  readonly targetStatBlock?: StatBlockRecord;
   readonly targetAttack?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -150,48 +151,61 @@ export function spellBattle(input: {
           ? {}
           : { metamagic: input.casterMetamagic }),
       }),
-      characterCreature({
-        combatantId: spellTargetId,
-        displayName: "Target",
-        initiative: 10,
-        side: oppositionSide,
-        ...(input.targetAttack === undefined
-          ? {}
-          : { attack: input.targetAttack }),
-        ...(input.targetArmorClass === undefined
-          ? {}
-          : { armorClass: input.targetArmorClass }),
-        ...(input.targetHp === undefined ? {} : { currentHp: input.targetHp }),
-        ...(input.targetMaxHp === undefined
-          ? {}
-          : { maxHp: input.targetMaxHp }),
-        ...(input.targetResources === undefined
-          ? {}
-          : { resources: input.targetResources }),
-        ...(input.targetUnitRefs === undefined
-          ? {}
-          : { characterUnitRefs: input.targetUnitRefs }),
-        ...(input.targetUnitFeatures === undefined
-          ? {}
-          : { unitFeatures: input.targetUnitFeatures }),
-        ...(input.targetSpellcasting === undefined &&
-        input.targetPreparedSpells === undefined
-          ? {}
-          : {
-              spellcasting: input.targetSpellcasting ?? {
-                sourceClassName: "wizard",
-                spellcastingAbilityModifier: abilityModifier(3),
-                proficiencyBonus: proficiencyBonus(2),
-                canCastSpells: true,
-                cantrips: [],
-                preparedSpells: input.targetPreparedSpells ?? [],
-                featurePreparedSpells: [],
-                spellbookRitualSpellAccesses: [],
-                invocationSpellAccesses: [],
-                spellSlots: [{ spellLevel: 1, count: 1 }],
-              },
+      ...(input.targetStatBlock === undefined
+        ? [
+            characterCreature({
+              combatantId: spellTargetId,
+              displayName: "Target",
+              initiative: 10,
+              side: oppositionSide,
+              ...(input.targetAttack === undefined
+                ? {}
+                : { attack: input.targetAttack }),
+              ...(input.targetArmorClass === undefined
+                ? {}
+                : { armorClass: input.targetArmorClass }),
+              ...(input.targetHp === undefined
+                ? {}
+                : { currentHp: input.targetHp }),
+              ...(input.targetMaxHp === undefined
+                ? {}
+                : { maxHp: input.targetMaxHp }),
+              ...(input.targetResources === undefined
+                ? {}
+                : { resources: input.targetResources }),
+              ...(input.targetUnitRefs === undefined
+                ? {}
+                : { characterUnitRefs: input.targetUnitRefs }),
+              ...(input.targetUnitFeatures === undefined
+                ? {}
+                : { unitFeatures: input.targetUnitFeatures }),
+              ...(input.targetSpellcasting === undefined &&
+              input.targetPreparedSpells === undefined
+                ? {}
+                : {
+                    spellcasting: input.targetSpellcasting ?? {
+                      sourceClassName: "wizard",
+                      spellcastingAbilityModifier: abilityModifier(3),
+                      proficiencyBonus: proficiencyBonus(2),
+                      canCastSpells: true,
+                      cantrips: [],
+                      preparedSpells: input.targetPreparedSpells ?? [],
+                      featurePreparedSpells: [],
+                      spellbookRitualSpellAccesses: [],
+                      invocationSpellAccesses: [],
+                      spellSlots: [{ spellLevel: 1, count: 1 }],
+                    },
+                  }),
             }),
-      }),
+          ]
+        : [
+            statBlockCreature({
+              combatantId: spellTargetId,
+              statBlock: input.targetStatBlock,
+              initiative: 10,
+              side: oppositionSide,
+            }),
+          ]),
       ...(input.extraTargetIds ?? []).map((combatantId, index) =>
         characterCreature({
           combatantId,

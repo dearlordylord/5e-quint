@@ -1,12 +1,6 @@
-// Central registry of Spell Procedure Profiles. During migration, registered
-// profiles live here while unmigrated profiles continue to use scattered
-// dispatch sites in spells-resolve.ts, spells-discovery.ts, etc. As profiles
-// migrate, they are added here and the corresponding scattered code is
-// removed.
-//
-// Lookup is partial during migration: registeredSpellProcedureProfile()
-// returns null for procedures that have not been migrated, and callers fall
-// back to their existing dispatch.
+// Central registry of Spell Procedure Profiles. Admission, discovery, and
+// resolution use this same typed procedure vocabulary; profile order and
+// completeness are maintained here rather than in parallel dispatch lists.
 
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./ability-d20-test-roll-mode-save-gate.ts";
@@ -98,10 +92,15 @@ import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
-import type { AnySpellProcedureProfile } from "./profile.ts";
+import type {
+  AnySpellProcedureProfile,
+  SpellAdmissionContext,
+  SpellProcedureAdmissionProfile,
+} from "./profile.ts";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 
-function registeredSpellProcedureProfiles() {
+export function registeredSpellProcedureProfiles() {
   return [
     damageReductionProfile,
     rollModifierProfile,
@@ -234,6 +233,21 @@ export function registeredSpellProcedureProfile(
   procedure: SupportedSpellInvocation["procedure"],
 ): AnySpellProcedureProfile | null {
   return registeredSpellProcedureProfileMap().get(procedure) ?? null;
+}
+
+export function admitRegisteredSpellProcedureProfiles(
+  spell: SpellRecord,
+  ctx: SpellAdmissionContext,
+): readonly SupportedSpellInvocation[] {
+  return REGISTERED_SPELL_PROCEDURE_PROFILES.flatMap((profile) =>
+    admissionProfileFor(profile).admit(spell, ctx),
+  );
+}
+
+function admissionProfileFor(
+  profile: AnySpellProcedureProfile,
+): SpellProcedureAdmissionProfile {
+  return profile;
 }
 
 // Typed lookup for callers that have already narrowed by procedure literal.
