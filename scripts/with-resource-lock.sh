@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# DND_RESOURCE_GUARD_PROTOCOL: heavy-legacy-v1
+# DND_RESOURCE_GUARD_PROTOCOL: heavy-legacy-v2
 
 usage() {
   echo "usage: scripts/with-resource-lock.sh <broad|mbt> <command> [args...]" >&2
@@ -28,9 +28,35 @@ if [[ -n "${DND_RESOURCE_LOCK_KIND:-}" ]]; then
 fi
 
 command_pid=""
-acquisition_pid=""
 pending_signal_status=0
 cleanup_in_progress=false
+owner_pid="${DND_RESOURCE_LOCK_OWNER_PID:-}"
+owner_start_time="${DND_RESOURCE_LOCK_OWNER_START_TIME:-}"
+
+if [[ ! "$owner_pid" =~ ^[0-9]+$ ]] || (( owner_pid <= 1 )) ||
+  [[ ! "$owner_start_time" =~ ^[0-9]+$ ]]; then
+  echo "[$event_name] canceled: missing parent owner identity" >&2
+  exit 125
+fi
+
+owner_is_alive() {
+  local current_parent owner_stat owner_rest
+  local -a owner_fields
+  current_parent="$(awk '/^PPid:/ { print $2 }' "/proc/$$/status" 2>/dev/null || true)"
+  [[ "$current_parent" == "$owner_pid" ]] || return 1
+  [[ -r "/proc/$owner_pid/stat" ]] || return 1
+  owner_stat="$(<"/proc/$owner_pid/stat")"
+  owner_rest="${owner_stat##*) }"
+  read -r -a owner_fields <<<"$owner_rest"
+  (( ${#owner_fields[@]} > 19 )) || return 1
+  [[ "${owner_fields[0]}" != Z && "${owner_fields[0]}" != X ]] || return 1
+  [[ "${owner_fields[19]}" == "$owner_start_time" ]]
+}
+
+abort_for_lost_owner() {
+  echo "[$event_name] canceled: original parent $owner_pid exited" >&2
+  exit 125
+}
 
 group_exists() {
   [[ -n "$command_pid" ]] && kill -0 -- "-$command_pid" 2>/dev/null
@@ -55,14 +81,11 @@ terminate_group() {
 
 handle_signal() {
   local status="$1"
-  pending_signal_status="$status"
-  [[ "$cleanup_in_progress" == false ]] || return 0
-  if [[ -n "$acquisition_pid" ]]; then
-    cleanup_in_progress=true
-    kill -TERM "$acquisition_pid" 2>/dev/null || true
-    wait "$acquisition_pid" 2>/dev/null || true
-    exit "$status"
+  if (( pending_signal_status == 0 )); then
+    pending_signal_status="$status"
   fi
+  status="$pending_signal_status"
+  [[ "$cleanup_in_progress" == false ]] || return 0
   if [[ -n "$command_pid" ]]; then
     cleanup_in_progress=true
     set +e
@@ -72,6 +95,7 @@ handle_signal() {
     (( cleanup_status == 137 )) && exit 137
     exit "$status"
   fi
+  exit "$status"
 }
 
 trap 'handle_signal 129' HUP
@@ -91,15 +115,12 @@ exec {legacy_mbt_lock_fd}>"$git_common_dir/ralph-mbt.lock"
 
 acquire_lock() {
   local lock_fd="$1"
-  flock --exclusive "$lock_fd" &
-  acquisition_pid=$!
-  (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
-  set +e
-  wait "$acquisition_pid"
-  local acquisition_status=$?
-  set -e
-  acquisition_pid=""
-  (( acquisition_status == 0 )) || exit "$acquisition_status"
+  while ! flock --exclusive --nonblock "$lock_fd"; do
+    owner_is_alive || abort_for_lost_owner
+    (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
+    sleep 0.1
+  done
+  owner_is_alive || abort_for_lost_owner
 }
 
 echo "[$event_name] waiting: ${1##*/}" >&2
@@ -115,6 +136,21 @@ export DND_RESOURCE_LOCK_KIND="$lock_kind"
 setsid -- "$@" &
 command_pid=$!
 (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
+
+while [[ -r "/proc/$command_pid/stat" ]]; do
+  command_state="$(ps -o stat= -p "$command_pid" 2>/dev/null || true)"
+  [[ -z "$command_state" || "$command_state" == Z* ]] && break
+  if ! owner_is_alive; then
+    cleanup_in_progress=true
+    set +e
+    terminate_group
+    cleanup_status=$?
+    set -e
+    (( cleanup_status == 137 )) && exit 137
+    abort_for_lost_owner
+  fi
+  sleep 0.1
+done
 
 set +e
 wait "$command_pid"

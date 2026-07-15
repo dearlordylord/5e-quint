@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
-    "test:mbt:reducer-route-connectors": "../../scripts/with-mbt-lock.sh vitest run src/reducer-route-connectors.mbt.test.ts",
+    "test:mbt:reducer-route-connectors": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/reducer-route-connectors.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

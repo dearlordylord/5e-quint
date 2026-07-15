@@ -1156,14 +1156,14 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
 - Do not duplicate state across layers.
 - For any modeled D&D rule, read the relevant SRD text under .references/srd-5.2.1/ and check UBIQUITOUS_LANGUAGE.md before implementing.
 - Treat battle MBT as scarce. Only run the appropriate MBT tier after changes require it.
-- Public proof and MBT package scripts acquire the cross-worktree heavy-verification lock themselves; run them directly and never wrap them in another lock or invoke their internal :body scripts. Run any direct Quint or filtered MBT command through scripts/with-mbt-lock.sh bash -lc '<timed command>'.
+- Public proof and MBT package scripts acquire the cross-worktree heavy-verification lock themselves; run them directly and never wrap them in another lock or invoke their internal :body scripts. For any direct Quint or filtered MBT command, first source scripts/resource-lock-owner.sh and then call with_resource_lock_owner scripts/with-mbt-lock.sh bash -lc '<timed command>'.
   Only after the wrapper acquires that lock, check for stale runners:
   ps aux | grep vitest | grep -v grep
   ps aux | grep quint_evaluator | grep -v grep
   If a prior quint_evaluator is alive, stop it with killall -9 quint_evaluator before starting. If a vitest/MBT process is alive, do not start another MBT run; wait for it or report the blocker.
 - Run MBT with the repo background/timing protocol from AGENTS.md, never as a casual foreground exploratory command.
 - Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Use promoted MBT commands only when the task explicitly requires them.
-- Run public root pnpm typecheck, test, or quality directly: each self-serializes across worktrees and caps Turbo concurrency at one. Do not wrap a public script in flock, call its internal :body/:turbo script, or bypass it with raw Turbo. Run any other broad command through scripts/with-broad-workspace-lock.sh. Broad checks and MBT/proof commands share one heavy-verification lock; never nest either wrapper.
+- Run public root pnpm typecheck, test, or quality directly: each self-serializes across worktrees and caps Turbo concurrency at one and every Vitest task at one worker. Do not wrap a public script in flock, call its internal :body/:turbo script, or bypass it with raw Turbo. For any other broad command, first source scripts/resource-lock-owner.sh and then call with_resource_lock_owner scripts/with-broad-workspace-lock.sh. Broad checks and MBT/proof commands share one heavy-verification lock; never nest either wrapper.
 - Treat SIGKILL or exit 137 from any compiler, test, Quint, or evaluator process as an emergency. Stop launching verification, inspect the process tree, memory/swap/load, and /sys/fs/cgroup/memory.events, clean only confirmed orphan verification children (including compiler, Turbo/pnpm, test, proof, and evaluator processes), and report the exact killed command. Preserve live Ralph agents and unrelated host sessions. Do not retry unchanged.
 - Do not write to the memory system.
 - Broad verification is diagnostic, not an automatic scope-expander. If lint/typecheck/test verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification immediately, record that baseline noise, and do not continue repo-wide cleanup inside this task. Only keep fixing failures that are caused by your task diff itself.
@@ -1209,7 +1209,7 @@ Task context packet: $context_file
 Review report output path: $report
 
 Review the implementation diff against $task_base_sha. Do not modify repository files. Read the task file and context packet first; use the full plan only for dependency/follow-up checks. Focus on correctness, Task $task_no coverage, repo instruction violations, missing verification, duplicated state, and SRD/UBIQUITOUS_LANGUAGE traceability for modeled rules. Flag any changes that implement later tasks prematurely. If you decide verification requires MBT, first check for existing vitest/quint_evaluator processes per AGENTS.md and do not launch a second MBT run while one is alive.
-Run public root pnpm typecheck, test, or quality directly; each self-serializes across worktrees and caps Turbo concurrency at one. Do not wrap it in flock, call its internal body script, or bypass it with raw Turbo. Public proof and MBT package scripts also self-serialize; use scripts/with-mbt-lock.sh only for a direct Quint or filtered MBT command. Broad checks and MBT/proof commands share one heavy-verification lock; never nest either wrapper. Treat SIGKILL or exit 137 as an emergency requiring resource/process inspection and cleanup of only confirmed orphan verification children (including compiler, Turbo/pnpm, test, proof, and evaluator processes) before any retry; preserve live Ralph agents and unrelated host sessions.
+Run public root pnpm typecheck, test, or quality directly; each self-serializes across worktrees and caps Turbo concurrency at one and every Vitest task at one worker. Do not wrap it in flock, call its internal body script, or bypass it with raw Turbo. Public proof and MBT package scripts also self-serialize. For a direct Quint or filtered MBT command, first source scripts/resource-lock-owner.sh and then call with_resource_lock_owner scripts/with-mbt-lock.sh. Broad checks and MBT/proof commands share one heavy-verification lock; never nest either wrapper. Treat SIGKILL or exit 137 as an emergency requiring resource/process inspection and cleanup of only confirmed orphan verification children (including compiler, Turbo/pnpm, test, proof, and evaluator processes) before any retry; preserve live Ralph agents and unrelated host sessions.
 Do not edit the main repo worktree at $repo_root or any sibling task worktree.
 Treat unrelated repo-wide baseline failures as noise unless the reviewed diff clearly causes them. A task should not be rejected merely for not repairing pre-existing broad verification failures outside its touched ownership surface.
 Strict review checklist:
@@ -1349,9 +1349,9 @@ Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
 $github_plan_decider_policy
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
-- Public proof and MBT package scripts acquire the cross-worktree heavy-verification lock themselves; run them directly and never wrap them in another lock or invoke their internal :body scripts. Run any direct Quint or filtered MBT command through scripts/with-mbt-lock.sh bash -lc '<timed command>'. Only while holding the lock, check for existing vitest and quint_evaluator processes per AGENTS.md and kill stale quint_evaluator processes.
+- Public proof and MBT package scripts acquire the cross-worktree heavy-verification lock themselves; run them directly and never wrap them in another lock or invoke their internal :body scripts. For any direct Quint or filtered MBT command, first source scripts/resource-lock-owner.sh and then call with_resource_lock_owner scripts/with-mbt-lock.sh bash -lc '<timed command>'. Only while holding the lock, check for existing vitest and quint_evaluator processes per AGENTS.md and kill stale quint_evaluator processes.
 - Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, use the promoted MBT command unless the task explicitly requires a higher tier.
-- Run public root pnpm typecheck, test, or quality directly; each self-serializes across worktrees and caps Turbo concurrency at one. Do not wrap it in flock, call its internal body script, or bypass it with raw Turbo. Use scripts/with-broad-workspace-lock.sh for any other broad command. Broad checks and MBT/proof commands share one heavy-verification lock; never nest either wrapper.
+- Run public root pnpm typecheck, test, or quality directly; each self-serializes across worktrees and caps Turbo concurrency at one and every Vitest task at one worker. Do not wrap it in flock, call its internal body script, or bypass it with raw Turbo. For any other broad command, first source scripts/resource-lock-owner.sh and then call with_resource_lock_owner scripts/with-broad-workspace-lock.sh. Broad checks and MBT/proof commands share one heavy-verification lock; never nest either wrapper.
 - Treat SIGKILL or exit 137 as an emergency. Stop verification, inspect process/resource state and cgroup memory events, clean only confirmed orphan verification children (including compiler, Turbo/pnpm, test, proof, and evaluator processes), preserve live Ralph agents and unrelated host sessions, and do not retry the unchanged command.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
@@ -1808,6 +1808,7 @@ assert_resource_guarded_base() {
   local base_sha="$1"
   local guard_path
   for guard_path in \
+    scripts/resource-lock-owner.sh \
     scripts/with-resource-lock.sh \
     scripts/with-broad-workspace-lock.sh \
     scripts/with-mbt-lock.sh; do
@@ -1822,15 +1823,21 @@ const readAtBase = (path) => execFileSync(
   { encoding: "utf8", maxBuffer: 1024 * 1024 },
 )
 const guardSource = readAtBase("scripts/with-resource-lock.sh")
+const ownerSource = readAtBase("scripts/resource-lock-owner.sh")
 const orderedGuardFragments = [
-  "# DND_RESOURCE_GUARD_PROTOCOL: heavy-legacy-v1",
+  "# DND_RESOURCE_GUARD_PROTOCOL: heavy-legacy-v2",
+  'owner_pid="${DND_RESOURCE_LOCK_OWNER_PID:-}"',
+  'owner_start_time="${DND_RESOURCE_LOCK_OWNER_START_TIME:-}"',
   'exec {heavy_lock_fd}>"$git_common_dir/ralph-heavy-verification.lock"',
   'exec {legacy_broad_lock_fd}>"$git_common_dir/ralph-broad-workspace-check.lock"',
   'exec {legacy_mbt_lock_fd}>"$git_common_dir/ralph-mbt.lock"',
+  'while ! flock --exclusive --nonblock "$lock_fd"; do',
+  'owner_is_alive || abort_for_lost_owner',
   'acquire_lock "$heavy_lock_fd"',
   'acquire_lock "$legacy_broad_lock_fd"',
   'acquire_lock "$legacy_mbt_lock_fd"',
   'setsid -- "$@" &',
+  'while [[ -r "/proc/$command_pid/stat" ]]; do',
 ]
 const guardPositions = orderedGuardFragments.map((fragment) =>
   guardSource.indexOf(fragment)
@@ -1845,12 +1852,21 @@ const broadWrapper = readAtBase("scripts/with-broad-workspace-lock.sh")
 const mbtWrapper = readAtBase("scripts/with-mbt-lock.sh")
 if (!broadWrapper.includes('with-resource-lock.sh" broad "$@"')) process.exit(1)
 if (!mbtWrapper.includes('with-resource-lock.sh" mbt "$@"')) process.exit(1)
+if (!ownerSource.includes("with_resource_lock_owner()")) process.exit(1)
+if (!ownerSource.includes('owner_pid="$$"')) process.exit(1)
+if (!ownerSource.includes('DND_RESOURCE_LOCK_OWNER_PID="$owner_pid"')) process.exit(1)
+if (!ownerSource.includes('DND_RESOURCE_LOCK_OWNER_START_TIME="$owner_start_time"')) process.exit(1)
 const packageJson = JSON.parse(readAtBase("package.json"))
 const scripts = packageJson.scripts ?? {}
 for (const name of ["quality", "typecheck", "test"]) {
-  if (!String(scripts[name] ?? "").includes("with-broad-workspace-lock.sh")) {
+  const command = String(scripts[name] ?? "")
+  if (!command.includes("resource-lock-owner.sh") ||
+      !command.includes("with_resource_lock_owner scripts/with-broad-workspace-lock.sh")) {
     process.exit(1)
   }
+}
+if (!String(scripts["test:turbo"] ?? "").includes("--maxWorkers=1")) {
+  process.exit(1)
 }
 NODE
 }

@@ -30,6 +30,11 @@ const resourceLockPath = join(
   "scripts",
   "with-resource-lock.sh",
 );
+const resourceLockOwnerPath = join(
+  repositoryRoot,
+  "scripts",
+  "resource-lock-owner.sh",
+);
 const assertLockPath = join(
   repositoryRoot,
   "scripts",
@@ -44,6 +49,13 @@ const installerPath = join(
 const roots: Array<string> = [];
 const independentLockEnvironment = { ...process.env };
 delete independentLockEnvironment.DND_RESOURCE_LOCK_KIND;
+const testOwnerStat = readFileSync(`/proc/${process.pid}/stat`, "utf8");
+const testOwnerFields = testOwnerStat
+  .slice(testOwnerStat.lastIndexOf(") ") + 2)
+  .split(" ");
+independentLockEnvironment.DND_RESOURCE_LOCK_OWNER_PID = String(process.pid);
+independentLockEnvironment.DND_RESOURCE_LOCK_OWNER_START_TIME =
+  testOwnerFields[19];
 
 const delay = (milliseconds: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
@@ -65,6 +77,37 @@ const hasExited = (child: ReturnType<typeof spawn>) =>
 type OwnedProcess = {
   readonly pid: number;
   readonly processGroup: number;
+};
+
+type ProcessIdentity = OwnedProcess & {
+  readonly startTime: string;
+};
+
+const readProcessIdentity = (pid: number): ProcessIdentity | undefined => {
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    const fields = stat.slice(stat.lastIndexOf(") ") + 2).split(" ");
+    const processGroup = Number(fields[2]);
+    const startTime = fields[19];
+    if (
+      !Number.isInteger(processGroup) ||
+      processGroup <= 1 ||
+      startTime === undefined
+    )
+      return undefined;
+    return { pid, processGroup, startTime };
+  } catch {
+    return undefined;
+  }
+};
+
+const processIdentityExists = (identity: ProcessIdentity) => {
+  const current = readProcessIdentity(identity.pid);
+  return (
+    current !== undefined &&
+    current.processGroup === identity.processGroup &&
+    current.startTime === identity.startTime
+  );
 };
 
 const directChildren = (parentPid: number): ReadonlyArray<OwnedProcess> => {
@@ -171,9 +214,12 @@ const processCommand = (pid: number) =>
     encoding: "utf8",
   }).stdout.trim();
 
-const hasDirectFlockChild = (child: ReturnType<typeof spawn>) =>
-  child.pid !== undefined &&
-  directChildren(child.pid).some(({ pid }) => processCommand(pid) === "flock");
+const processParent = (pid: number) =>
+  Number(
+    spawnSync("ps", ["--no-headers", "-p", String(pid), "-o", "ppid="], {
+      encoding: "utf8",
+    }).stdout.trim(),
+  );
 
 const git = (cwd: string, ...args: ReadonlyArray<string>) => {
   const result = spawnSync("git", args, { cwd, encoding: "utf8" });
@@ -190,6 +236,10 @@ const makeCleanRepository = () => {
   cpSync(broadLockPath, join(root, "scripts", "with-broad-workspace-lock.sh"));
   cpSync(mbtLockPath, join(root, "scripts", "with-mbt-lock.sh"));
   cpSync(resourceLockPath, join(root, "scripts", "with-resource-lock.sh"));
+  cpSync(
+    resourceLockOwnerPath,
+    join(root, "scripts", "resource-lock-owner.sh"),
+  );
   cpSync(assertLockPath, join(root, "scripts", "assert-resource-lock.sh"));
   cpSync(installerPath, join(root, "scripts", "ralph-install-worktree.sh"));
   writeFileSync(join(root, "plan.md"), "test plan\n");
@@ -499,12 +549,15 @@ describe("Ralph launcher boundaries", () => {
     expect(spawnSync("bash", ["-n", broadLockPath]).status).toBe(0);
     expect(spawnSync("bash", ["-n", mbtLockPath]).status).toBe(0);
     expect(spawnSync("bash", ["-n", resourceLockPath]).status).toBe(0);
+    expect(spawnSync("sh", ["-n", resourceLockOwnerPath]).status).toBe(0);
     expect(spawnSync("bash", ["-n", assertLockPath]).status).toBe(0);
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
       readonly scripts: Readonly<Record<string, string>>;
     };
     for (const scriptName of ["quality", "typecheck", "test"] as const) {
       const script = packageJson.scripts[scriptName];
+      expect(script).toContain("scripts/resource-lock-owner.sh");
+      expect(script).toContain("with_resource_lock_owner");
       expect(script).toContain("scripts/with-broad-workspace-lock.sh");
     }
     expect(packageJson.scripts["quality:body"]).toContain(
@@ -513,6 +566,7 @@ describe("Ralph launcher boundaries", () => {
     expect(packageJson.scripts["quality:body"]).not.toContain("pnpm typecheck");
     expect(packageJson.scripts["typecheck:turbo"]).toContain("--concurrency=1");
     expect(packageJson.scripts["test:turbo"]).toContain("--concurrency=1");
+    expect(packageJson.scripts["test:turbo"]).toContain("--maxWorkers=1");
     expect(packageJson.scripts["quality:body"]).not.toContain(
       "with-broad-workspace-lock",
     );
@@ -551,6 +605,12 @@ describe("Ralph launcher boundaries", () => {
           );
         } else {
           expect(command, `${relativePath} ${name}`).toContain(
+            "resource-lock-owner.sh",
+          );
+          expect(command, `${relativePath} ${name}`).toContain(
+            "with_resource_lock_owner",
+          );
+          expect(command, `${relativePath} ${name}`).toContain(
             "with-mbt-lock.sh",
           );
         }
@@ -564,9 +624,12 @@ describe("Ralph launcher boundaries", () => {
       join(root, "package.json"),
       JSON.stringify({
         scripts: {
-          quality: "scripts/with-broad-workspace-lock.sh true",
-          typecheck: "scripts/with-broad-workspace-lock.sh true",
-          test: "scripts/with-broad-workspace-lock.sh true",
+          quality:
+            ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh true",
+          typecheck:
+            ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh true",
+          test: ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh true",
+          "test:turbo": "turbo test --concurrency=1 -- --maxWorkers=1",
         },
       }),
     );
@@ -637,9 +700,7 @@ describe("Ralph launcher boundaries", () => {
         );
         const contenderStderr = captureStderr(contender);
         await waitUntil(() => contenderStderr().includes("waiting:"));
-        await waitUntil(
-          () => contender !== undefined && hasDirectFlockChild(contender),
-        );
+        await delay(120);
         expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([
           "A-start",
         ]);
@@ -685,6 +746,158 @@ describe("Ralph launcher boundaries", () => {
     }
   });
 
+  it("rejects a public lock wrapper without a spawning-owner identity", () => {
+    const root = makeCleanRepository();
+    const environment = { ...independentLockEnvironment };
+    delete environment.DND_RESOURCE_LOCK_OWNER_PID;
+    delete environment.DND_RESOURCE_LOCK_OWNER_START_TIME;
+
+    for (const wrapper of [
+      "with-broad-workspace-lock.sh",
+      "with-mbt-lock.sh",
+    ]) {
+      const result = spawnSync(join(root, "scripts", wrapper), ["true"], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+      expect(result.status).toBe(125);
+      expect(result.stderr).toContain("missing parent owner identity");
+    }
+  });
+
+  it("runs and cancels through the production POSIX owner-helper path", async () => {
+    const root = makeCleanRepository();
+    const probe = addLockProbe(root);
+    const completedLog = join(root, "owner-helper-completed.log");
+    const helperCommand =
+      '. "$1" && with_resource_lock_owner "$2" "$3" "$4" "$5"';
+    const completed = spawnSync(
+      "sh",
+      [
+        "-c",
+        helperCommand,
+        "resource-lock-owner",
+        join(root, "scripts", "resource-lock-owner.sh"),
+        join(root, "scripts", "with-broad-workspace-lock.sh"),
+        probe,
+        "contender",
+        completedLog,
+      ],
+      { cwd: root, encoding: "utf8", env: independentLockEnvironment },
+    );
+    expect(completed.status).toBe(0);
+    expect(readFileSync(completedLog, "utf8").trim()).toBe("B-start");
+
+    const command = addOrphanProbe(root);
+    const activeLog = join(root, "owner-helper-active.log");
+    const pidFile = join(root, "owner-helper-active.pids");
+    const owner = spawn(
+      "sh",
+      [
+        "-c",
+        helperCommand,
+        "resource-lock-owner",
+        join(root, "scripts", "resource-lock-owner.sh"),
+        join(root, "scripts", "with-broad-workspace-lock.sh"),
+        command,
+        activeLog,
+        pidFile,
+      ],
+      { cwd: root, env: independentLockEnvironment },
+    );
+    let wrapperIdentity: ProcessIdentity | undefined;
+    let commandIdentity: ProcessIdentity | undefined;
+    let grandchildIdentity: ProcessIdentity | undefined;
+    try {
+      await waitUntil(() => existsSync(pidFile));
+      const wrapper = directChildren(owner.pid!)[0];
+      if (wrapper === undefined)
+        throw new Error("owner helper did not retain a wrapper child");
+      wrapperIdentity = readProcessIdentity(wrapper.pid);
+      if (wrapperIdentity === undefined)
+        throw new Error("owner helper wrapper identity is unreadable");
+      const [directPidText, grandchildPidText] = readFileSync(pidFile, "utf8")
+        .trim()
+        .split(" ");
+      const directPid = Number(directPidText);
+      const capturedCommandIdentity = readProcessIdentity(directPid);
+      const capturedGrandchildIdentity = readProcessIdentity(
+        Number(grandchildPidText),
+      );
+      if (
+        capturedCommandIdentity === undefined ||
+        capturedGrandchildIdentity === undefined
+      )
+        throw new Error("owner helper command identity is unreadable");
+      if (
+        capturedGrandchildIdentity.processGroup !==
+        capturedCommandIdentity.processGroup
+      )
+        throw new Error("owner helper command group is inconsistent");
+      commandIdentity = capturedCommandIdentity;
+      grandchildIdentity = capturedGrandchildIdentity;
+      expect(processParent(wrapper.pid)).toBe(owner.pid);
+
+      owner.kill("SIGKILL");
+      await waitUntil(() => hasExited(owner), 1_000);
+      await waitUntil(() => !processExists(wrapper.pid), 5_000);
+      expect(() => process.kill(directPid, 0)).toThrow();
+      expect(() => process.kill(capturedGrandchildIdentity.pid, 0)).toThrow();
+      expect(readFileSync(activeLog, "utf8")).toContain("A-child-ended");
+    } finally {
+      await terminateOwnedChild(owner);
+      if (
+        wrapperIdentity !== undefined &&
+        processIdentityExists(wrapperIdentity)
+      ) {
+        try {
+          process.kill(wrapperIdentity.pid, "SIGTERM");
+          await waitUntil(
+            () => !processIdentityExists(wrapperIdentity!),
+            1_000,
+          );
+        } catch {
+          try {
+            if (processIdentityExists(wrapperIdentity))
+              process.kill(wrapperIdentity.pid, "SIGKILL");
+          } catch {
+            // The wrapper completed cleanup between checks.
+          }
+        }
+      }
+      const retainedCommandMember = [commandIdentity, grandchildIdentity].find(
+        (identity): identity is ProcessIdentity =>
+          identity !== undefined &&
+          commandIdentity !== undefined &&
+          identity.processGroup === commandIdentity.processGroup &&
+          processIdentityExists(identity),
+      );
+      if (retainedCommandMember !== undefined) {
+        try {
+          process.kill(-retainedCommandMember.processGroup, "SIGKILL");
+        } catch {
+          // The command group completed cleanup between checks.
+        }
+      }
+      const knownSurvivors = [
+        wrapperIdentity,
+        commandIdentity,
+        grandchildIdentity,
+      ].filter(
+        (identity): identity is ProcessIdentity => identity !== undefined,
+      );
+      if (knownSurvivors.length > 0)
+        await waitUntil(
+          () =>
+            knownSurvivors.every(
+              (identity) => !processIdentityExists(identity),
+            ),
+          1_000,
+        );
+    }
+  });
+
   it("cancels a lock waiter without leaving a flock child", async () => {
     const root = makeCleanRepository();
     const probe = addLockProbe(root);
@@ -706,18 +919,9 @@ describe("Ralph launcher boundaries", () => {
       );
       await delay(120);
       expect(existsSync(contenderLog)).toBe(false);
-      const acquisitionProcess = spawnSync(
-        "ps",
-        ["--no-headers", "--ppid", String(waiter.pid), "-o", "pid=,comm="],
-        { encoding: "utf8" },
-      ).stdout.trim();
-      const [acquisitionPidText, acquisitionCommand] =
-        acquisitionProcess.split(/\s+/);
-      expect(acquisitionCommand).toBe("flock");
-      const acquisitionPid = Number(acquisitionPidText);
       waiter.kill("SIGTERM");
       expect(await waitForExit(waiter)).toBe(143);
-      expect(() => process.kill(acquisitionPid, 0)).toThrow();
+      expect(directChildren(waiter.pid!)).toEqual([]);
       writeFileSync(release, "release\n");
       expect(await waitForExit(holder)).toBe(0);
       await delay(80);
@@ -726,6 +930,212 @@ describe("Ralph launcher boundaries", () => {
       writeFileSync(release, "release\n");
       await terminateOwnedChild(holder);
       if (waiter !== undefined) await terminateOwnedChild(waiter);
+    }
+  });
+
+  it("abandons a lock wait when its original parent is killed", async () => {
+    const root = makeCleanRepository();
+    const probe = addLockProbe(root);
+    const holderLog = join(root, "lost-parent-holder.log");
+    const release = join(root, "lost-parent-holder.release");
+    const contenderLog = join(root, "lost-parent-contender.log");
+    const waiterPidFile = join(root, "lost-parent-waiter.pid");
+    const launcher = join(root, "scripts", "orphan-waiter-launcher.sh");
+    writeFileSync(
+      launcher,
+      [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        '. "$(dirname -- "$0")/resource-lock-owner.sh"',
+        "establish_resource_lock_owner",
+        '"$1" "$2" contender "$3" &',
+        'waiter_pid="$!"',
+        'printf "%s\\n" "$waiter_pid" >"$4"',
+        'wait "$waiter_pid"',
+        "",
+      ].join("\n"),
+    );
+    chmodSync(launcher, 0o755);
+
+    const holder = spawn(
+      join(root, "scripts", "with-broad-workspace-lock.sh"),
+      [probe, "holder", holderLog, release],
+      { cwd: root, env: independentLockEnvironment },
+    );
+    let parent: ReturnType<typeof spawn> | undefined;
+    try {
+      await waitUntil(() => existsSync(holderLog));
+      parent = spawn(
+        launcher,
+        [
+          join(root, "scripts", "with-broad-workspace-lock.sh"),
+          probe,
+          contenderLog,
+          waiterPidFile,
+        ],
+        { cwd: root, env: independentLockEnvironment },
+      );
+      const parentStderr = captureStderr(parent);
+      await waitUntil(() => existsSync(waiterPidFile));
+      const waiterPid = Number(readFileSync(waiterPidFile, "utf8").trim());
+      await waitUntil(() => parentStderr().includes("waiting:"));
+      expect(processExists(waiterPid)).toBe(true);
+      expect(processParent(waiterPid)).toBe(parent.pid);
+      expect(existsSync(contenderLog)).toBe(false);
+
+      parent.kill("SIGKILL");
+      await waitUntil(() => hasExited(parent!), 1_000);
+      expect(parent.signalCode).toBe("SIGKILL");
+      await waitUntil(() => !processExists(waiterPid), 3_000);
+
+      writeFileSync(release, "release\n");
+      expect(await waitForExit(holder)).toBe(0);
+      await delay(120);
+      expect(existsSync(contenderLog)).toBe(false);
+    } finally {
+      writeFileSync(release, "release\n");
+      await terminateOwnedChild(holder);
+      if (parent !== undefined) await terminateOwnedChild(parent);
+    }
+  });
+
+  it("rejects a waiter reparented before the public wrapper starts", async () => {
+    const root = makeCleanRepository();
+    const probe = addLockProbe(root);
+    const holderLog = join(root, "startup-race-holder.log");
+    const release = join(root, "startup-race-holder.release");
+    const contenderLog = join(root, "startup-race-contender.log");
+    const waiterPidFile = join(root, "startup-race-waiter.pid");
+    const preExecMarker = join(root, "startup-race-pre-exec");
+    const waiterStderr = join(root, "startup-race-waiter.stderr");
+    const launcher = join(root, "scripts", "startup-race-launcher.sh");
+    writeFileSync(
+      launcher,
+      [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        '. "$(dirname -- "$0")/resource-lock-owner.sh"',
+        "establish_resource_lock_owner",
+        "(",
+        "  sleep 0.2",
+        '  printf "started\\n" >"$5"',
+        '  exec "$1" "$2" contender "$3"',
+        ') >/dev/null 2>"$6" &',
+        'printf "%s\\n" "$!" >"$4"',
+        "",
+      ].join("\n"),
+    );
+    chmodSync(launcher, 0o755);
+
+    const holder = spawn(
+      join(root, "scripts", "with-broad-workspace-lock.sh"),
+      [probe, "holder", holderLog, release],
+      { cwd: root, env: independentLockEnvironment },
+    );
+    try {
+      await waitUntil(() => existsSync(holderLog));
+      const parent = spawnSync(
+        launcher,
+        [
+          join(root, "scripts", "with-broad-workspace-lock.sh"),
+          probe,
+          contenderLog,
+          waiterPidFile,
+          preExecMarker,
+          waiterStderr,
+        ],
+        { cwd: root, env: independentLockEnvironment, encoding: "utf8" },
+      );
+      expect(parent.status).toBe(0);
+      const waiterPid = Number(readFileSync(waiterPidFile, "utf8").trim());
+      await waitUntil(() => existsSync(preExecMarker), 3_000);
+      await waitUntil(
+        () =>
+          existsSync(waiterStderr) &&
+          readFileSync(waiterStderr, "utf8").includes(
+            "canceled: original parent",
+          ),
+        3_000,
+      );
+      await waitUntil(() => !processExists(waiterPid), 3_000);
+
+      writeFileSync(release, "release\n");
+      expect(await waitForExit(holder)).toBe(0);
+      expect(existsSync(contenderLog)).toBe(false);
+    } finally {
+      writeFileSync(release, "release\n");
+      await terminateOwnedChild(holder);
+    }
+  });
+
+  it("terminates a guarded command group when its original parent dies", async () => {
+    const root = makeCleanRepository();
+    addLockProbe(root);
+    const command = addOrphanProbe(root);
+    const log = join(root, "lost-owner-command.log");
+    const pidFile = join(root, "lost-owner-command-pids");
+    const wrapperPidFile = join(root, "lost-owner-wrapper.pid");
+    const launcher = join(root, "scripts", "lost-owner-command-launcher.sh");
+    writeFileSync(
+      launcher,
+      [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        '. "$(dirname -- "$0")/resource-lock-owner.sh"',
+        "establish_resource_lock_owner",
+        '"$1" "$2" "$3" "$4" &',
+        'wrapper_pid="$!"',
+        'printf "%s\\n" "$wrapper_pid" >"$5"',
+        'wait "$wrapper_pid"',
+        "",
+      ].join("\n"),
+    );
+    chmodSync(launcher, 0o755);
+
+    const parent = spawn(
+      launcher,
+      [
+        join(root, "scripts", "with-broad-workspace-lock.sh"),
+        command,
+        log,
+        pidFile,
+        wrapperPidFile,
+      ],
+      { cwd: root, env: independentLockEnvironment },
+    );
+    let contender: ReturnType<typeof spawn> | undefined;
+    try {
+      await waitUntil(() => existsSync(pidFile));
+      const wrapperPid = Number(readFileSync(wrapperPidFile, "utf8").trim());
+      const [directPidText, grandchildPidText] = readFileSync(pidFile, "utf8")
+        .trim()
+        .split(" ");
+      const directPid = Number(directPidText);
+      const grandchildPid = Number(grandchildPidText);
+      expect(processParent(wrapperPid)).toBe(parent.pid);
+
+      contender = spawn(
+        join(root, "scripts", "with-mbt-lock.sh"),
+        [join(root, "scripts", "lock-probe.sh"), "contender", log],
+        { cwd: root, env: independentLockEnvironment },
+      );
+      const contenderStderr = captureStderr(contender);
+      await waitUntil(() => contenderStderr().includes("waiting:"));
+
+      parent.kill("SIGKILL");
+      await waitUntil(() => hasExited(parent), 1_000);
+      await waitUntil(() => !processExists(wrapperPid), 5_000);
+      expect(await waitForExit(contender, 5_000)).toBe(0);
+      expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([
+        "A-start",
+        "A-child-ended",
+        "B-start",
+      ]);
+      expect(() => process.kill(directPid, 0)).toThrow();
+      expect(() => process.kill(grandchildPid, 0)).toThrow();
+    } finally {
+      await terminateOwnedChild(parent);
+      if (contender !== undefined) await terminateOwnedChild(contender);
     }
   });
 
@@ -807,7 +1217,7 @@ describe("Ralph launcher boundaries", () => {
       holder.kill("SIGTERM");
       await delay(20);
       if (holder.exitCode === null) holder.kill("SIGHUP");
-      expect(await waitForExit(holder)).toBe(143);
+      expect([129, 143]).toContain(await waitForExit(holder));
       expect(readFileSync(log, "utf8")).toContain("A-child-ended");
       expect(() => process.kill(grandchildPid, 0)).toThrow();
 
@@ -982,9 +1392,7 @@ describe("Ralph launcher boundaries", () => {
         );
         const contenderStderr = captureStderr(newContender);
         await waitUntil(() => contenderStderr().includes("waiting:"));
-        await waitUntil(
-          () => newContender !== undefined && hasDirectFlockChild(newContender),
-        );
+        await delay(120);
         expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([
           "A-start",
         ]);

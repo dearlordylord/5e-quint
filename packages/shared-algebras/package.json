@@ -32,15 +32,15 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
-    "test:qnt-proofs": "../../scripts/with-mbt-lock.sh pnpm run test:qnt-proofs:body",
+    "test:qnt-proofs": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run test:qnt-proofs:body",
     "test:qnt-proofs:body": "../../scripts/assert-resource-lock.sh mbt && RUN_QNT_PROOFS=1 vitest run src/shared-algebras-qnt-proofs.test.ts",
     "test:deterministic": "vitest run src/ability-score-algebra.test.ts src/character-advancement-algebra.test.ts src/multiclass-prerequisite-algebra.test.ts src/movement-cost-algebra.test.ts src/reducer-algebras.test.ts src/spell-save-gate-algebra.test.ts src/spell-slot-expenditure-algebra.test.ts src/speed-algebra.test.ts",
-    "test:mbt": "../../scripts/with-mbt-lock.sh vitest run src/reducer-algebras.mbt.test.ts",
-    "proof:inductive": "../../scripts/with-mbt-lock.sh pnpm run proof:inductive:body",
+    "test:mbt": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/reducer-algebras.mbt.test.ts",
+    "proof:inductive": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run proof:inductive:body",
     "proof:inductive:body": "../../scripts/assert-resource-lock.sh mbt && RUN_QNT_INDUCTIVE_PROOFS=1 vitest run src/shared-algebras-inductive-proofs.test.ts",
-    "proof:initiative": "../../scripts/with-mbt-lock.sh pnpm run proof:initiative:body",
+    "proof:initiative": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run proof:initiative:body",
     "proof:initiative:body": "../../scripts/assert-resource-lock.sh mbt && pnpm exec quint run proofs/initiative-algebra-invariant.qnt --invariant invariant --max-samples 2000 --max-steps 40",
-    "proof:quint": "../../scripts/with-mbt-lock.sh pnpm run proof:quint:body",
+    "proof:quint": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run proof:quint:body",
     "proof:quint:body": "../../scripts/assert-resource-lock.sh mbt && pnpm run test:qnt-proofs:body && pnpm run proof:inductive:body && pnpm run proof:initiative:body"
   },
   "dependencies": {
