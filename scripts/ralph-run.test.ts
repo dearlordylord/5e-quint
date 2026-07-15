@@ -1,11 +1,14 @@
 import { spawn, spawnSync } from "node:child_process";
 import {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readlinkSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -30,7 +33,10 @@ const makeCleanRepository = () => {
   mkdirSync(join(root, "scripts"), { recursive: true });
   cpSync(runnerPath, join(root, "scripts", "ralph-run.sh"));
   writeFileSync(join(root, "plan.md"), "test plan\n");
-  writeFileSync(join(root, ".gitignore"), "/.ralph/\n");
+  writeFileSync(
+    join(root, ".gitignore"),
+    ["/.ralph/", "/node_modules", "/packages/*/node_modules", ""].join("\n"),
+  );
   git(root, "init", "--initial-branch=master");
   git(root, "config", "user.name", "Ralph Test");
   git(root, "config", "user.email", "ralph-test@example.invalid");
@@ -118,6 +124,45 @@ describe("Ralph launcher boundaries", () => {
       "main worktree has tracked or untracked changes",
     );
     expect(existsSync(join(root, ".ralph"))).toBe(false);
+  });
+
+  it("bootstraps or repairs a linked launcher install before validate-plan", () => {
+    const root = makeCleanRepository();
+    const launcher = mkdtempSync(join(tmpdir(), "ralph-linked-launcher-"));
+    roots.push(launcher);
+    rmSync(launcher, { recursive: true });
+    const fakeBin = join(root, "fake-bin");
+    const fakePnpm = join(fakeBin, "pnpm");
+    writeFileSync(
+      join(root, "plan.md"),
+      "<!-- ralph-github-issues: required -->\n",
+    );
+    git(root, "add", "plan.md");
+    git(root, "commit", "-m", "github plan");
+    mkdirSync(join(root, "node_modules"), { recursive: true });
+    mkdirSync(join(root, "packages", "mcp", "node_modules"), {
+      recursive: true,
+    });
+    git(root, "worktree", "add", "-b", "launcher/test", launcher, "master");
+    symlinkSync(join(root, "removed-install"), join(launcher, "node_modules"));
+    mkdirSync(fakeBin, { recursive: true });
+    writeFileSync(fakePnpm, "#!/usr/bin/env bash\nexit 42\n");
+    chmodSync(fakePnpm, 0o755);
+
+    const result = spawnSync(
+      "bash",
+      ["scripts/ralph-run.sh", "plan.md", "--base", "master", "--task", "1"],
+      {
+        cwd: launcher,
+        encoding: "utf8",
+        env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH ?? ""}` },
+      },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("GitHub issue plan validation failed");
+    expect(readlinkSync(join(launcher, "node_modules"))).toBe(
+      join(root, "node_modules"),
+    );
   });
 
   it("serializes different run IDs through the launcher-worktree lock", async () => {

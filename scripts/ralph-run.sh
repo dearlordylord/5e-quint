@@ -213,6 +213,46 @@ repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$repo_root" ]] || die "must be run inside a git repository"
 cd "$repo_root"
 
+worktree_has_install() {
+  local root="$1"
+  [[ -d "$root/node_modules" ]] &&
+    [[ -d "$root/packages/mcp/node_modules" ]]
+}
+
+find_worktree_install_source() {
+  local path=""
+
+  if worktree_has_install "$repo_root"; then
+    printf '%s\n' "$repo_root"
+    return 0
+  fi
+
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    if worktree_has_install "$path"; then
+      printf '%s\n' "$path"
+      return 0
+    fi
+  done < <(git worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}')
+
+  return 1
+}
+
+bootstrap_launcher_install() {
+  local install_source_root=""
+
+  [[ -d "$repo_root/node_modules" ]] && return 0
+  if [[ -L "$repo_root/node_modules" ]]; then
+    rm "$repo_root/node_modules"
+  elif [[ -e "$repo_root/node_modules" ]]; then
+    die "launcher node_modules exists but is not a usable directory or symlink"
+  fi
+  install_source_root="$(find_worktree_install_source)"
+  [[ -n "$install_source_root" ]] || \
+    die "could not find a linked worktree install for launcher $repo_root"
+  ln -s "$install_source_root/node_modules" "$repo_root/node_modules"
+}
+
 plan_file=""
 base_ref="master"
 run_id="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -457,6 +497,7 @@ if rg -q '^<!-- ralph-github-issues: required -->$' "$plan_file"; then
     die "GitHub-backed plans require --base to name a local acceptance branch"
   github_plan_decider_policy="- This is a GitHub-backed plan: canonical issue bodies own requirements and blocker edges. Never add, split, revise, or rewire task requirements only in the local plan. Make any durable requirement or blocker change on the canonical GitHub issue first, then update only matching execution metadata in the plan; the runner will revalidate the entire live graph before another dispatch. Attempt-local retry observations belong in run artifacts, not a parallel local Retry Guidance requirements section."
   require_cmd gh
+  bootstrap_launcher_install
   pnpm exec tsx "$repo_root/scripts/ralph-issue-context.ts" validate-plan --plan "$plan_file" >/dev/null || \
     die "GitHub issue plan validation failed"
   if [[ -z "$smoke_task" && "$commit_to_base" == false && ${#selected_tasks[@]} -eq 0 ]]; then
@@ -1819,30 +1860,6 @@ bootstrap_worktree_install() {
   )
 }
 
-worktree_has_install() {
-  local root="$1"
-  [[ -d "$root/node_modules" ]] &&
-    [[ -d "$root/packages/mcp/node_modules" ]]
-}
-
-find_worktree_install_source() {
-  local path=""
-
-  if worktree_has_install "$repo_root"; then
-    printf '%s\n' "$repo_root"
-    return 0
-  fi
-
-  while IFS= read -r path; do
-    [[ -n "$path" ]] || continue
-    if worktree_has_install "$path"; then
-      printf '%s\n' "$path"
-      return 0
-    fi
-  done < <(git worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}')
-
-  return 1
-}
 
 kill_stray_mbt_processes() {
   local pid
