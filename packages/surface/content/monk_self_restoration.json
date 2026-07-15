@@ -5,8 +5,7 @@
   "id": "monk_self_restoration",
   "kind": "class_feature",
   "mechanics": {
-    "family": "passive",
-    "grants": []
+    "family": "passive"
   },
   "name": "Self-Restoration",
   "provenance": {

@@ -1648,7 +1648,10 @@ export const PassiveMechanicsSchema = Schema.Struct({
   family: Schema.Literal("passive"),
   condition: exactOptional(EquipmentPredicateSchema),
   suppressedBy: exactOptional(Schema.NonEmptyArray(PassiveSuppressorSchema)),
-  grants: Schema.Array(EffectAtomSchema),
+  grants: Schema.optionalWith(Schema.Array(EffectAtomSchema), {
+    exact: true,
+    default: () => [],
+  }),
   operations: exactOptional(Schema.NonEmptyArray(PassiveOperationSchema)),
 });
 
@@ -3364,7 +3367,10 @@ export const SubclassRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: SubclassRecordKindSchema,
   className: ClassNameSchema,
-  featureGrants: Schema.Array(ClassFeatureGrantSchema),
+  featureGrants: Schema.optionalWith(Schema.Array(ClassFeatureGrantSchema), {
+    exact: true,
+    default: () => [],
+  }),
 });
 
 export const MasteryRecordSchema = Schema.Struct({

@@ -11,14 +11,11 @@
     "family": "activation",
     "ongoingFeature": {
       "activationTiming": "activation_cost",
-      "actionRestrictions": [],
       "lifecycle": {
         "duration": {
           "amount": 1,
           "unit": "minute"
         },
-        "earlyEndArmorCategories": [],
-        "earlyEndConditions": [],
         "kind": "fixed_duration"
       }
     },

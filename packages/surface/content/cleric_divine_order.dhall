@@ -1,5 +1,5 @@
 let ProficiencyGrant =
-      { kind : Text, proficiency : Optional { kind : Text, proficiencies : List { kind : Text, category : Text } }, count : Optional Natural, mode : Optional Text, spellLevel : Optional Natural, spellList : Optional Text, delta : Optional { kind : Text, ability : Text, minimum : Natural, sign : Text }, on : Optional (List Text), skillFilter : Optional { kind : Text, skills : List Text } }
+      { kind : Text, proficiency : Optional { kind : Text, proficiencies : List { kind : Text, category : Text } }, count : Optional Natural, mode : Optional Text, spellLevel : Optional Natural, spellList : Optional Text, delta : Optional { kind : Text, ability : Text, minimum : Natural, sign : Text }, on : Optional (List Text), abilityFilter : Optional (List Text), skillFilter : Optional { kind : Text, skills : List Text } }
 
 let protectorGrant =
       { kind = "grant_proficiency"
@@ -17,6 +17,7 @@ let protectorGrant =
       , spellList = None Text
       , delta = None { kind : Text, ability : Text, minimum : Natural, sign : Text }
       , on = None (List Text)
+      , abilityFilter = None (List Text)
       , skillFilter = None { kind : Text, skills : List Text }
       } : ProficiencyGrant
 
@@ -29,6 +30,7 @@ let clericCantripGrant =
       , spellList = Some "cleric"
       , delta = None { kind : Text, ability : Text, minimum : Natural, sign : Text }
       , on = None (List Text)
+      , abilityFilter = None (List Text)
       , skillFilter = None { kind : Text, skills : List Text }
       } : ProficiencyGrant
 
@@ -41,6 +43,7 @@ let divineSkillBonus =
       , spellList = None Text
       , delta = Some { kind = "ability_modifier", ability = "wis", minimum = 1, sign = "+" }
       , on = Some [ "ability_check" ]
+      , abilityFilter = Some [ "int" ]
       , skillFilter = Some { kind = "fixed", skills = [ "arcana", "religion" ] }
       } : ProficiencyGrant
 

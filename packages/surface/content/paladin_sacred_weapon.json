@@ -1,48 +1,51 @@
 {
-  "kind": "class_feature",
-  "id": "paladin_sacred_weapon",
-  "name": "Sacred Weapon",
-  "className": "paladin",
   "acquiredAtLevel": 3,
-  "provenance": {
-    "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:263-272"
-  },
+  "className": "paladin",
   "description": "When you take the Attack action, expend Channel Divinity to imbue one held Melee weapon for 10 minutes. Add Charisma modifier, minimum +1, to attack rolls with it; hits can deal normal or Radiant damage; the weapon emits Bright Light and Dim Light.",
+  "id": "paladin_sacred_weapon",
+  "kind": "class_feature",
   "mechanics": {
-    "family": "sacred_weapon",
     "activationCost": {
-      "kind": "standard_action",
-      "action": "attack"
+      "action": "attack",
+      "kind": "standard_action"
     },
-    "spends": {
-      "resourceUnitId": "paladin_channel_divinity",
-      "amount": 1
-    },
-    "target": {
-      "kind": "held_melee_weapon"
+    "attackRollBonus": {
+      "ability": "cha",
+      "appliesTo": "imbued_weapon_attack_rolls",
+      "kind": "ability_modifier",
+      "minimum": 1
     },
     "duration": {
-      "unit": "minute",
       "amount": 10,
       "endsOn": [
         "use_feature_again",
         "dismiss_no_action",
         "not_carrying_weapon"
-      ]
+      ],
+      "unit": "minute"
     },
-    "attackRollBonus": {
-      "kind": "ability_modifier",
-      "ability": "cha",
-      "minimum": 1,
-      "appliesTo": "imbued_weapon_attack_rolls"
-    },
+    "family": "sacred_weapon",
     "hitDamageType": {
-      "choice": ["normal", "radiant"]
+      "choice": [
+        "normal",
+        "radiant"
+      ]
     },
     "light": {
       "brightRadiusFeet": 20,
       "dimAdditionalFeet": 20
+    },
+    "spends": {
+      "amount": 1,
+      "resourceUnitId": "paladin_channel_divinity"
+    },
+    "target": {
+      "kind": "held_melee_weapon"
     }
+  },
+  "name": "Sacred Weapon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin.md:263-272"
   }
 }

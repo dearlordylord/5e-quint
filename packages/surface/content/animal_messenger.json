@@ -66,8 +66,12 @@
                 "kind": "exact"
               },
               "mode": "one",
-              "targetKinds": ["creature"],
-              "typeFilter": ["beast"]
+              "targetKinds": [
+                "creature"
+              ],
+              "typeFilter": [
+                "beast"
+              ]
             }
           }
         },

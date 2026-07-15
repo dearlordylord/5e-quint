@@ -22,6 +22,9 @@
               "spellList": "druid"
             },
             {
+              "abilityFilter": [
+                "int"
+              ],
               "delta": {
                 "ability": "wis",
                 "kind": "ability_modifier",
@@ -38,10 +41,7 @@
                   "arcana",
                   "nature"
                 ]
-              },
-              "abilityFilter": [
-                "int"
-              ]
+              }
             }
           ]
         }

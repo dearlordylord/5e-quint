@@ -10,7 +10,10 @@
   },
   "size": {
     "kind": "choice",
-    "options": ["medium", "small"]
+    "options": [
+      "medium",
+      "small"
+    ]
   },
   "species": "human",
   "speed": {

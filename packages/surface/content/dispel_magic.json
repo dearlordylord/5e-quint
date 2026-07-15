@@ -26,7 +26,11 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "targetKinds": ["creature", "object", "magical_effect"]
+              "targetKinds": [
+                "creature",
+                "object",
+                "magical_effect"
+              ]
             }
           }
         },
@@ -48,7 +52,11 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "targetKinds": ["creature", "object", "magical_effect"]
+              "targetKinds": [
+                "creature",
+                "object",
+                "magical_effect"
+              ]
             }
           }
         },

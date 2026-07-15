@@ -1,48 +1,48 @@
 {
-  "generatedAt": "2026-06-21T12:40:24.481Z",
+  "generatedAt": "2026-07-15T04:20:14.752Z",
   "scope": "SRD 5.2.1 authored Surface corpus provenance audit over generated packages/surface/content JSON records. Includes Unit records and StatBlock records with SRD provenance.",
   "metrics": {
-    "authoredRecords": 575,
-    "provenanceParts": 584,
+    "authoredRecords": 620,
+    "provenanceParts": 632,
     "failures": 0,
-    "warnings": 107,
-    "unitReferenceChecks": 194,
+    "warnings": 106,
+    "unitReferenceChecks": 224,
     "unitReferenceFailures": 0,
-    "unitReferenceWarnings": 5,
+    "unitReferenceWarnings": 1,
     "statusCounts": {
-      "ok-heading": 364,
-      "ok-line-range": 111,
+      "ok-heading": 395,
+      "ok-line-range": 129,
       "ok-prose-anchor": 2,
-      "ok-heading-alias": 89,
+      "ok-heading-alias": 88,
       "ok-prose-anchor-alias": 18
     },
     "kindCounts": {
-      "spell": 240,
+      "spell": 265,
       "feat": 13,
       "armor": 12,
       "background": 4,
-      "class_feature": 110,
-      "class": 12,
-      "magic_item": 71,
+      "class_feature": 129,
+      "class": 15,
+      "magic_item": 70,
       "species_trait": 21,
       "shield": 1,
       "armor_template": 3,
       "weapon_template": 3,
       "shield_template": 2,
-      "mastery": 3,
+      "mastery": 5,
       "species": 18,
       "statBlock": 21,
       "subclass": 12,
       "weapon": 38
     },
     "catalogBoundaryCounts": {
-      "srd-unit-collection": 340,
-      "authored-not-installed": 223,
+      "srd-unit-collection": 407,
+      "authored-not-installed": 204,
       "srd-stat-block-collection": 21
     },
     "unitReferenceStatusCounts": {
-      "ok-authored-unit": 189,
-      "srd-spell-reference-without-authored-unit": 5
+      "ok-authored-unit": 223,
+      "srd-spell-reference-without-authored-unit": 1
     }
   },
   "checks": [
@@ -185,7 +185,7 @@
       "kind": "spell",
       "name": "Animate Objects",
       "section": "Spells/Descriptions-A-D#Animate Objects",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-A-D#Animate Objects",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Animate Objects",
@@ -198,7 +198,7 @@
       "kind": "spell",
       "name": "Antilife Shell",
       "section": "Spells/Descriptions-A-D#Antilife Shell",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-A-D#Antilife Shell",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Antilife Shell",
@@ -228,6 +228,19 @@
       "part": "Spells/Descriptions-A-D#Arcane Eye",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Arcane Eye",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/arcane_hand.json",
+      "contentFile": "arcane_hand.json",
+      "id": "arcane_hand",
+      "kind": "spell",
+      "name": "Arcane Hand",
+      "section": "Spells/Descriptions-A-D#Arcane Hand",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Arcane Hand",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Arcane Hand",
       "severity": "ok"
     },
     {
@@ -452,6 +465,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/awaken.json",
+      "contentFile": "awaken.json",
+      "id": "awaken",
+      "kind": "spell",
+      "name": "Awaken",
+      "section": "Spells/Descriptions-A-D#Awaken",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Awaken",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Awaken",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/background_acolyte.json",
       "contentFile": "background_acolyte.json",
       "id": "background_acolyte",
@@ -548,6 +574,21 @@
       "part": "Classes/Barbarian#Ability Score Improvement",
       "status": "ok-heading",
       "canonical": "Classes/Barbarian.md#Level 4: Ability Score Improvement",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/barbarian_brutal_strike.json",
+      "contentFile": "barbarian_brutal_strike.json",
+      "id": "barbarian_brutal_strike",
+      "kind": "class_feature",
+      "name": "Brutal Strike",
+      "section": "Classes/Barbarian.md:128-134",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Barbarian.md:128-134",
+      "status": "ok-line-range",
+      "canonical": "Classes/Barbarian.md:128-134",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -652,6 +693,21 @@
       "part": "Classes/Barbarian#Reckless Attack",
       "status": "ok-heading",
       "canonical": "Classes/Barbarian.md#Level 2: Reckless Attack",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/barbarian_retaliation.json",
+      "contentFile": "barbarian_retaliation.json",
+      "id": "barbarian_retaliation",
+      "kind": "class_feature",
+      "name": "Retaliation",
+      "section": "Classes/Barbarian.md:186-188",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Barbarian.md:186-188",
+      "status": "ok-line-range",
+      "canonical": "Classes/Barbarian.md:186-188",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -771,6 +827,21 @@
       "part": "Classes/Bard#Jack of All Trades",
       "status": "ok-heading",
       "canonical": "Classes/Bard.md#Level 2: Jack of All Trades",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/bard_magical_secrets.json",
+      "contentFile": "bard_magical_secrets.json",
+      "id": "bard_magical_secrets",
+      "kind": "class_feature",
+      "name": "Magical Secrets",
+      "section": "Classes/Bard.md:123-125",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Bard.md:123-125",
+      "status": "ok-line-range",
+      "canonical": "Classes/Bard.md:123-125",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -1039,11 +1110,11 @@
       "id": "class_barbarian",
       "kind": "class",
       "name": "Barbarian",
-      "section": "Classes/Barbarian.md:3-25,33-38,56-110",
+      "section": "Classes/Barbarian.md:3-25,33-38,56-116",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Barbarian.md:3-25,33-38,56-110",
+      "part": "Classes/Barbarian.md:3-25,33-38,56-116",
       "status": "ok-line-range",
-      "canonical": "Classes/Barbarian.md:3-25,33-38,56-110",
+      "canonical": "Classes/Barbarian.md:3-25,33-38,56-116",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -1054,13 +1125,26 @@
       "id": "class_bard",
       "kind": "class",
       "name": "Bard",
-      "section": "Classes/Bard.md:3-26,34-37,69-103,109-111",
+      "section": "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230; Spells/Descriptions-M-P#Phantasmal Force",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Bard.md:3-26,34-37,69-103,109-111",
+      "part": "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230",
       "status": "ok-line-range",
-      "canonical": "Classes/Bard.md:3-26,34-37,69-103,109-111",
+      "canonical": "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230",
       "legacyBase": false,
       "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_bard.json",
+      "contentFile": "class_bard.json",
+      "id": "class_bard",
+      "kind": "class",
+      "name": "Bard",
+      "section": "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230; Spells/Descriptions-M-P#Phantasmal Force",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Phantasmal Force",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Phantasmal Force",
       "severity": "ok"
     },
     {
@@ -1069,11 +1153,11 @@
       "id": "class_cleric",
       "kind": "class",
       "name": "Cleric",
-      "section": "Classes/Cleric.md:3-24,33-109,142-179",
+      "section": "Classes/Cleric.md:3-24,33-45,56-109,146-255",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Cleric.md:3-24,33-109,142-179",
+      "part": "Classes/Cleric.md:3-24,33-45,56-109,146-255",
       "status": "ok-line-range",
-      "canonical": "Classes/Cleric.md:3-24,33-109,142-179",
+      "canonical": "Classes/Cleric.md:3-24,33-45,56-109,146-255",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -1084,11 +1168,11 @@
       "id": "class_druid",
       "kind": "class",
       "name": "Druid",
-      "section": "Classes/Druid.md:3-35,57-79,134-136,184-227",
+      "section": "Classes/Druid.md:3-35,57-79,134-136,184-266",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Druid.md:3-35,57-79,134-136,184-227",
+      "part": "Classes/Druid.md:3-35,57-79,134-136,184-266",
       "status": "ok-line-range",
-      "canonical": "Classes/Druid.md:3-35,57-79,134-136,184-227",
+      "canonical": "Classes/Druid.md:3-35,57-79,134-136,184-266",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -1099,11 +1183,11 @@
       "id": "class_fighter",
       "kind": "class",
       "name": "Fighter",
-      "section": "Classes/Fighter.md:3-24,29-34,56-92",
+      "section": "Classes/Fighter.md:3-24,29-34,56-97",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Fighter.md:3-24,29-34,56-92",
+      "part": "Classes/Fighter.md:3-24,29-34,56-97",
       "status": "ok-line-range",
-      "canonical": "Classes/Fighter.md:3-24,29-34,56-92",
+      "canonical": "Classes/Fighter.md:3-24,29-34,56-97",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -1129,11 +1213,11 @@
       "id": "class_paladin",
       "kind": "class",
       "name": "Paladin",
-      "section": "Classes/Paladin.md:3-24,33-38,66-124",
+      "section": "Classes/Paladin.md:3-24,33-43,66-129,172-204,206-215",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Paladin.md:3-24,33-38,66-124",
+      "part": "Classes/Paladin.md:3-24,33-43,66-129,172-204,206-215",
       "status": "ok-line-range",
-      "canonical": "Classes/Paladin.md:3-24,33-38,66-124",
+      "canonical": "Classes/Paladin.md:3-24,33-43,66-129,172-204,206-215",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -1144,11 +1228,11 @@
       "id": "class_ranger",
       "kind": "class",
       "name": "Ranger",
-      "section": "Classes/Ranger.md:3-24,33-36,58-99,106-109,156-177",
+      "section": "Classes/Ranger.md:3-24,33-43,58-120,160-213",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Ranger.md:3-24,33-36,58-99,106-109,156-177",
+      "part": "Classes/Ranger.md:3-24,33-43,58-120,160-213",
       "status": "ok-line-range",
-      "canonical": "Classes/Ranger.md:3-24,33-36,58-99,106-109,156-177",
+      "canonical": "Classes/Ranger.md:3-24,33-43,58-120,160-213",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -1174,13 +1258,26 @@
       "id": "class_sorcerer",
       "kind": "class",
       "name": "Sorcerer",
-      "section": "Classes/Sorcerer.md:3-24,33-76,123-129,219-259",
+      "section": "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319; Spells/Descriptions-M-P#Phantasmal Force",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Sorcerer.md:3-24,33-76,123-129,219-259",
+      "part": "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319",
       "status": "ok-line-range",
-      "canonical": "Classes/Sorcerer.md:3-24,33-76,123-129,219-259",
+      "canonical": "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319",
       "legacyBase": false,
       "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_sorcerer.json",
+      "contentFile": "class_sorcerer.json",
+      "id": "class_sorcerer",
+      "kind": "class",
+      "name": "Sorcerer",
+      "section": "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319; Spells/Descriptions-M-P#Phantasmal Force",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Phantasmal Force",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Phantasmal Force",
       "severity": "ok"
     },
     {
@@ -1189,11 +1286,11 @@
       "id": "class_warlock",
       "kind": "class",
       "name": "Warlock",
-      "section": "Classes/Warlock.md:3-24,31-54,68-102,334-374",
+      "section": "Classes/Warlock.md:3-24,31-45,68-104,332-406",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Warlock.md:3-24,31-54,68-102,334-374",
+      "part": "Classes/Warlock.md:3-24,31-45,68-104,332-406",
       "status": "ok-line-range",
-      "canonical": "Classes/Warlock.md:3-24,31-54,68-102,334-374",
+      "canonical": "Classes/Warlock.md:3-24,31-45,68-104,332-406",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -1204,13 +1301,26 @@
       "id": "class_wizard",
       "kind": "class",
       "name": "Wizard",
-      "section": "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190",
+      "section": "Classes/Wizard.md:3-25,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190",
+      "part": "Classes/Wizard.md:3-25,31-43,56-82,94-114,138-266",
       "status": "ok-line-range",
-      "canonical": "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190",
+      "canonical": "Classes/Wizard.md:3-25,31-43,56-82,94-114,138-266",
       "legacyBase": false,
       "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_wizard.json",
+      "contentFile": "class_wizard.json",
+      "id": "class_wizard",
+      "kind": "class",
+      "name": "Wizard",
+      "section": "Classes/Wizard.md:3-25,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Phantasmal Force",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Phantasmal Force",
       "severity": "ok"
     },
     {
@@ -1252,6 +1362,21 @@
       "part": "Classes/Cleric#Level 3: Disciple of Life",
       "status": "ok-heading",
       "canonical": "Classes/Cleric.md#Level 3: Disciple of Life",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/cleric_divine_intervention.json",
+      "contentFile": "cleric_divine_intervention.json",
+      "id": "cleric_divine_intervention",
+      "kind": "class_feature",
+      "name": "Divine Intervention",
+      "section": "Classes/Cleric.md:122-126",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Cleric.md:122-126",
+      "status": "ok-line-range",
+      "canonical": "Classes/Cleric.md:122-126",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -1326,7 +1451,7 @@
       "kind": "spell",
       "name": "Cloudkill",
       "section": "Spells/Descriptions-A-D#Cloudkill",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-A-D#Cloudkill",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Cloudkill",
@@ -1356,6 +1481,32 @@
       "part": "Spells/Descriptions-A-D#Command",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Command",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/commune.json",
+      "contentFile": "commune.json",
+      "id": "commune",
+      "kind": "spell",
+      "name": "Commune",
+      "section": "Spells/Descriptions-A-D#Commune",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Commune",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Commune",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/commune_with_nature.json",
+      "contentFile": "commune_with_nature.json",
+      "id": "commune_with_nature",
+      "kind": "spell",
+      "name": "Commune with Nature",
+      "section": "Spells/Descriptions-A-D#Commune with Nature",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Commune with Nature",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Commune with Nature",
       "severity": "ok"
     },
     {
@@ -1391,7 +1542,7 @@
       "kind": "spell",
       "name": "Cone of Cold",
       "section": "Spells/Descriptions-A-D#Cone of Cold",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-A-D#Cone of Cold",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Cone of Cold",
@@ -1408,6 +1559,19 @@
       "part": "Spells/Descriptions-A-D#Conjure Animals",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Conjure Animals",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/conjure_elemental.json",
+      "contentFile": "conjure_elemental.json",
+      "id": "conjure_elemental",
+      "kind": "spell",
+      "name": "Conjure Elemental",
+      "section": "Spells/Descriptions-A-D#Conjure Elemental",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Conjure Elemental",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Conjure Elemental",
       "severity": "ok"
     },
     {
@@ -1435,6 +1599,32 @@
       "status": "ok-heading-alias",
       "canonical": "Spells/Descriptions-A-D.md#Conjure Woodland Beings",
       "severity": "warning"
+    },
+    {
+      "contentPath": "packages/surface/content/contact_other_plane.json",
+      "contentFile": "contact_other_plane.json",
+      "id": "contact_other_plane",
+      "kind": "spell",
+      "name": "Contact Other Plane",
+      "section": "Spells/Descriptions-A-D#Contact Other Plane",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Contact Other Plane",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Contact Other Plane",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/contagion.json",
+      "contentFile": "contagion.json",
+      "id": "contagion",
+      "kind": "spell",
+      "name": "Contagion",
+      "section": "Spells/Descriptions-A-D#Contagion",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Contagion",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Contagion",
+      "severity": "ok"
     },
     {
       "contentPath": "packages/surface/content/continual_flame.json",
@@ -1469,7 +1659,7 @@
       "kind": "spell",
       "name": "Create Food and Water",
       "section": "Spells/Descriptions-A-D#Create Food and Water",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-A-D#Create Food and Water",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Create Food and Water",
@@ -1486,6 +1676,19 @@
       "part": "Spells/Descriptions-A-D#Create Undead",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Create Undead",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/creation.json",
+      "contentFile": "creation.json",
+      "id": "creation",
+      "kind": "spell",
+      "name": "Creation",
+      "section": "Spells/Descriptions-A-D#Creation",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Creation",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Creation",
       "severity": "ok"
     },
     {
@@ -1560,7 +1763,7 @@
       "kind": "spell",
       "name": "Daylight",
       "section": "Spells/Descriptions-A-D#Daylight",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-A-D#Daylight",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Daylight",
@@ -1658,6 +1861,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/dispel_evil_and_good.json",
+      "contentFile": "dispel_evil_and_good.json",
+      "id": "dispel_evil_and_good",
+      "kind": "spell",
+      "name": "Dispel Evil and Good",
+      "section": "Spells/Descriptions-A-D#Dispel Evil and Good",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Dispel Evil and Good",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Dispel Evil and Good",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/dispel_magic.json",
       "contentFile": "dispel_magic.json",
       "id": "dispel_magic",
@@ -1742,7 +1958,7 @@
       "kind": "spell",
       "name": "Dominate Person",
       "section": "Spells/Descriptions-A-D#Dominate Person",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-A-D#Dominate Person",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Dominate Person",
@@ -1759,6 +1975,19 @@
       "part": "Spells/Descriptions-A-D#Dragon's Breath",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-A-D.md#Dragon's Breath",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/dream.json",
+      "contentFile": "dream.json",
+      "id": "dream",
+      "kind": "spell",
+      "name": "Dream",
+      "section": "Spells/Descriptions-A-D#Dream",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-A-D#Dream",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-A-D.md#Dream",
       "severity": "ok"
     },
     {
@@ -1833,7 +2062,7 @@
       "kind": "class_feature",
       "name": "Nature's Ward",
       "section": "Classes/Druid#Nature's Ward",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Classes/Druid#Nature's Ward",
       "status": "ok-heading",
       "canonical": "Classes/Druid.md#Nature's Ward",
@@ -2306,6 +2535,21 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/fighter_heroic_warrior.json",
+      "contentFile": "fighter_heroic_warrior.json",
+      "id": "fighter_heroic_warrior",
+      "kind": "class_feature",
+      "name": "Heroic Warrior",
+      "section": "Classes/Fighter.md:150-152",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Fighter.md:150-152",
+      "status": "ok-line-range",
+      "canonical": "Classes/Fighter.md:150-152",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/fighter_improved_critical.json",
       "contentFile": "fighter_improved_critical.json",
       "id": "fighter_improved_critical",
@@ -2317,6 +2561,21 @@
       "status": "ok-heading-alias",
       "canonical": "Classes/Fighter.md#Level 3: Improved Critical",
       "severity": "warning"
+    },
+    {
+      "contentPath": "packages/surface/content/fighter_indomitable.json",
+      "contentFile": "fighter_indomitable.json",
+      "id": "fighter_indomitable",
+      "kind": "class_feature",
+      "name": "Indomitable",
+      "section": "Classes/Fighter.md:102-106",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Fighter.md:102-106",
+      "status": "ok-line-range",
+      "canonical": "Classes/Fighter.md:102-106",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
     },
     {
       "contentPath": "packages/surface/content/fighter_remarkable_athlete.json",
@@ -2344,6 +2603,21 @@
       "part": "Classes/Fighter#Second Wind",
       "status": "ok-heading",
       "canonical": "Classes/Fighter.md#Level 1: Second Wind",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/fighter_tactical_master.json",
+      "contentFile": "fighter_tactical_master.json",
+      "id": "fighter_tactical_master",
+      "kind": "class_feature",
+      "name": "Tactical Master",
+      "section": "Classes/Fighter.md:108-110",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Fighter.md:108-110",
+      "status": "ok-line-range",
+      "canonical": "Classes/Fighter.md:108-110",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -2500,7 +2774,7 @@
       "kind": "spell",
       "name": "Flame Strike",
       "section": "Spells/Descriptions-E-L#Flame Strike",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-E-L#Flame Strike",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-E-L.md#Flame Strike",
@@ -2604,7 +2878,7 @@
       "kind": "spell",
       "name": "Geas",
       "section": "Spells/Descriptions-E-L#Geas",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-E-L#Geas",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-E-L.md#Geas",
@@ -2663,6 +2937,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/greater_restoration.json",
+      "contentFile": "greater_restoration.json",
+      "id": "greater_restoration",
+      "kind": "spell",
+      "name": "Greater Restoration",
+      "section": "Spells/Descriptions-E-L#Greater Restoration",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-E-L#Greater Restoration",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-E-L.md#Greater Restoration",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/guidance.json",
       "contentFile": "guidance.json",
       "id": "guidance",
@@ -2699,6 +2986,19 @@
       "part": "Spells/Descriptions-E-L#Gust of Wind",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-E-L.md#Gust of Wind",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/hallow.json",
+      "contentFile": "hallow.json",
+      "id": "hallow",
+      "kind": "spell",
+      "name": "Hallow",
+      "section": "Spells/Descriptions-E-L#Hallow",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-E-L#Hallow",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-E-L.md#Hallow",
       "severity": "ok"
     },
     {
@@ -2825,7 +3125,7 @@
       "kind": "spell",
       "name": "Hold Monster",
       "section": "Spells/Descriptions-E-L#Hold Monster",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-E-L#Hold Monster",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-E-L.md#Hold Monster",
@@ -2955,7 +3255,7 @@
       "kind": "spell",
       "name": "Insect Plague",
       "section": "Spells/Descriptions-E-L#Insect Plague",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-E-L#Insect Plague",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-E-L.md#Insect Plague",
@@ -2998,6 +3298,19 @@
       "part": "Spells/Descriptions-E-L#Knock",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-E-L.md#Knock",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/legend_lore.json",
+      "contentFile": "legend_lore.json",
+      "id": "legend_lore",
+      "kind": "spell",
+      "name": "Legend Lore",
+      "section": "Spells/Descriptions-E-L#Legend Lore",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-E-L#Legend Lore",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-E-L.md#Legend Lore",
       "severity": "ok"
     },
     {
@@ -3898,19 +4211,6 @@
       "severity": "warning"
     },
     {
-      "contentPath": "packages/surface/content/magic_item_staff_of_charming.json",
-      "contentFile": "magic_item_staff_of_charming.json",
-      "id": "magic_item_staff_of_charming",
-      "kind": "magic_item",
-      "name": "Staff of Charming",
-      "section": "MagicItems#StaffOfCharming",
-      "catalogBoundary": "authored-not-installed",
-      "part": "MagicItems#StaffOfCharming",
-      "status": "ok-heading-alias",
-      "canonical": "Magic-Items/Items-Q-Z.md#Staff of Charming",
-      "severity": "warning"
-    },
-    {
       "contentPath": "packages/surface/content/magic_item_staff_of_fire.json",
       "contentFile": "magic_item_staff_of_fire.json",
       "id": "magic_item_staff_of_fire",
@@ -4236,6 +4536,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/mastery_push.json",
+      "contentFile": "mastery_push.json",
+      "id": "mastery_push",
+      "kind": "mastery",
+      "name": "Push",
+      "section": "Equipment#Push",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Equipment#Push",
+      "status": "ok-heading",
+      "canonical": "Equipment.md#Push",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/mastery_sap.json",
       "contentFile": "mastery_sap.json",
       "id": "mastery_sap",
@@ -4246,6 +4559,19 @@
       "part": "Equipment#Sap",
       "status": "ok-heading",
       "canonical": "Equipment.md#Sap",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/mastery_slow.json",
+      "contentFile": "mastery_slow.json",
+      "id": "mastery_slow",
+      "kind": "mastery",
+      "name": "Slow",
+      "section": "Equipment#Slow",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Equipment#Slow",
+      "status": "ok-heading",
+      "canonical": "Equipment.md#Slow",
       "severity": "ok"
     },
     {
@@ -4353,6 +4679,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/mislead.json",
+      "contentFile": "mislead.json",
+      "id": "mislead",
+      "kind": "spell",
+      "name": "Mislead",
+      "section": "Spells/Descriptions-M-P#Mislead",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Mislead",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Mislead",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/misty_step.json",
       "contentFile": "misty_step.json",
       "id": "misty_step",
@@ -4366,6 +4705,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/modify_memory.json",
+      "contentFile": "modify_memory.json",
+      "id": "modify_memory",
+      "kind": "spell",
+      "name": "Modify Memory",
+      "section": "Spells/Descriptions-M-P#Modify Memory",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Modify Memory",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Modify Memory",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/monk_ability_score_improvement_l4.json",
       "contentFile": "monk_ability_score_improvement_l4.json",
       "id": "monk_ability_score_improvement_l4",
@@ -4376,6 +4728,21 @@
       "part": "Classes/Monk#Ability Score Improvement",
       "status": "ok-heading",
       "canonical": "Classes/Monk.md#Level 4: Ability Score Improvement",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/monk_acrobatic_movement.json",
+      "contentFile": "monk_acrobatic_movement.json",
+      "id": "monk_acrobatic_movement",
+      "kind": "class_feature",
+      "name": "Acrobatic Movement",
+      "section": "Classes/Monk.md:138-140",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Monk.md:138-140",
+      "status": "ok-line-range",
+      "canonical": "Classes/Monk.md:138-140",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -4418,6 +4785,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/monk_evasion.json",
+      "contentFile": "monk_evasion.json",
+      "id": "monk_evasion",
+      "kind": "class_feature",
+      "name": "Evasion",
+      "section": "Classes/Monk#Evasion",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Monk#Evasion",
+      "status": "ok-heading",
+      "canonical": "Classes/Monk.md#Level 7: Evasion",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/monk_extra_attack.json",
       "contentFile": "monk_extra_attack.json",
       "id": "monk_extra_attack",
@@ -4428,6 +4808,21 @@
       "part": "Classes/Monk#Extra Attack",
       "status": "ok-heading",
       "canonical": "Classes/Monk.md#Level 5: Extra Attack",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/monk_heightened_focus.json",
+      "contentFile": "monk_heightened_focus.json",
+      "id": "monk_heightened_focus",
+      "kind": "class_feature",
+      "name": "Heightened Focus",
+      "section": "Classes/Monk.md:142-150",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Monk.md:142-150",
+      "status": "ok-line-range",
+      "canonical": "Classes/Monk.md:142-150",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -4469,6 +4864,21 @@
       "part": "Classes/Monk.md:192-202",
       "status": "ok-line-range",
       "canonical": "Classes/Monk.md:192-202",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/monk_self_restoration.json",
+      "contentFile": "monk_self_restoration.json",
+      "id": "monk_self_restoration",
+      "kind": "class_feature",
+      "name": "Self-Restoration",
+      "section": "Classes/Monk.md:152-156",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Monk.md:152-156",
+      "status": "ok-line-range",
+      "canonical": "Classes/Monk.md:152-156",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -4612,6 +5022,36 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/paladin_abjure_foes.json",
+      "contentFile": "paladin_abjure_foes.json",
+      "id": "paladin_abjure_foes",
+      "kind": "class_feature",
+      "name": "Abjure Foes",
+      "section": "Classes/Paladin.md:144-146",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Paladin.md:144-146",
+      "status": "ok-line-range",
+      "canonical": "Classes/Paladin.md:144-146",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/paladin_aura_of_courage.json",
+      "contentFile": "paladin_aura_of_courage.json",
+      "id": "paladin_aura_of_courage",
+      "kind": "class_feature",
+      "name": "Aura of Courage",
+      "section": "Classes/Paladin.md:148-150",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Paladin.md:148-150",
+      "status": "ok-line-range",
+      "canonical": "Classes/Paladin.md:148-150",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/paladin_channel_divinity.json",
       "contentFile": "paladin_channel_divinity.json",
       "id": "paladin_channel_divinity",
@@ -4748,6 +5188,32 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/passwall.json",
+      "contentFile": "passwall.json",
+      "id": "passwall",
+      "kind": "spell",
+      "name": "Passwall",
+      "section": "Spells/Descriptions-M-P#Passwall",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Passwall",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Passwall",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/phantasmal_force.json",
+      "contentFile": "phantasmal_force.json",
+      "id": "phantasmal_force",
+      "kind": "spell",
+      "name": "Phantasmal Force",
+      "section": "Spells/Descriptions-M-P#Phantasmal Force",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Phantasmal Force",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Phantasmal Force",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/phantom_steed.json",
       "contentFile": "phantom_steed.json",
       "id": "phantom_steed",
@@ -4758,6 +5224,19 @@
       "part": "Spells/Descriptions-M-P#Phantom Steed",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-M-P.md#Phantom Steed",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/planar_binding.json",
+      "contentFile": "planar_binding.json",
+      "id": "planar_binding",
+      "kind": "spell",
+      "name": "Planar Binding",
+      "section": "Spells/Descriptions-M-P#Planar Binding",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-M-P#Planar Binding",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-M-P.md#Planar Binding",
       "severity": "ok"
     },
     {
@@ -4917,6 +5396,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/raise_dead.json",
+      "contentFile": "raise_dead.json",
+      "id": "raise_dead",
+      "kind": "spell",
+      "name": "Raise Dead",
+      "section": "Spells/Descriptions-Q-R#Raise Dead",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-Q-R#Raise Dead",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-Q-R.md#Raise Dead",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/ranger_ability_score_improvement_l4.json",
       "contentFile": "ranger_ability_score_improvement_l4.json",
       "id": "ranger_ability_score_improvement_l4",
@@ -4930,6 +5422,21 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/ranger_ability_score_improvement_l8.json",
+      "contentFile": "ranger_ability_score_improvement_l8.json",
+      "id": "ranger_ability_score_improvement_l8",
+      "kind": "class_feature",
+      "name": "Ability Score Improvement",
+      "section": "Classes/Ranger.md:106-108",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Ranger.md:106-108",
+      "status": "ok-line-range",
+      "canonical": "Classes/Ranger.md:106-108",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/ranger_deft_explorer.json",
       "contentFile": "ranger_deft_explorer.json",
       "id": "ranger_deft_explorer",
@@ -4940,6 +5447,21 @@
       "part": "Classes/Ranger.md:88-94",
       "status": "ok-line-range",
       "canonical": "Classes/Ranger.md:88-94",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/ranger_expertise.json",
+      "contentFile": "ranger_expertise.json",
+      "id": "ranger_expertise",
+      "kind": "class_feature",
+      "name": "Expertise",
+      "section": "Classes/Ranger.md:118-120",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Ranger.md:118-120",
+      "status": "ok-line-range",
+      "canonical": "Classes/Ranger.md:118-120",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
@@ -5031,7 +5553,7 @@
       "kind": "class_feature",
       "name": "Tireless",
       "section": "Classes/Ranger#Tireless",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Classes/Ranger#Tireless",
       "status": "ok-heading",
       "canonical": "Classes/Ranger.md#Level 10: Tireless",
@@ -5092,6 +5614,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/reincarnate.json",
+      "contentFile": "reincarnate.json",
+      "id": "reincarnate",
+      "kind": "spell",
+      "name": "Reincarnate",
+      "section": "Spells/Descriptions-Q-R#Reincarnate",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-Q-R#Reincarnate",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-Q-R.md#Reincarnate",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/remove_curse.json",
       "contentFile": "remove_curse.json",
       "id": "remove_curse",
@@ -5141,6 +5676,21 @@
       "part": "Spells/Descriptions-Q-R#Revivify",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-Q-R.md#Revivify",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/rogue_ability_score_improvement_l10.json",
+      "contentFile": "rogue_ability_score_improvement_l10.json",
+      "id": "rogue_ability_score_improvement_l10",
+      "kind": "class_feature",
+      "name": "Ability Score Improvement",
+      "section": "Classes/Rogue.md:93-95",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Rogue.md:93-95",
+      "status": "ok-line-range",
+      "canonical": "Classes/Rogue.md:93-95",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -5269,6 +5819,21 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/rogue_supreme_sneak.json",
+      "contentFile": "rogue_supreme_sneak.json",
+      "id": "rogue_supreme_sneak",
+      "kind": "class_feature",
+      "name": "Supreme Sneak",
+      "section": "Classes/Rogue.md:175-179",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Rogue.md:175-179",
+      "status": "ok-line-range",
+      "canonical": "Classes/Rogue.md:175-179",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/rogue_thieves_cant.json",
       "contentFile": "rogue_thieves_cant.json",
       "id": "rogue_thieves_cant",
@@ -5362,6 +5927,19 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/scrying.json",
+      "contentFile": "scrying.json",
+      "id": "scrying",
+      "kind": "spell",
+      "name": "Scrying",
+      "section": "Spells/Descriptions-S-Z#Scrying",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-S-Z#Scrying",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-S-Z.md#Scrying",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/searing_smite.json",
       "contentFile": "searing_smite.json",
       "id": "searing_smite",
@@ -5385,6 +5963,19 @@
       "part": "Spells/Descriptions-S-Z#See Invisibility",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-S-Z.md#See Invisibility",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/seeming.json",
+      "contentFile": "seeming.json",
+      "id": "seeming",
+      "kind": "spell",
+      "name": "Seeming",
+      "section": "Spells/Descriptions-S-Z#Seeming",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-S-Z#Seeming",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-S-Z.md#Seeming",
       "severity": "ok"
     },
     {
@@ -6859,7 +7450,7 @@
       "kind": "spell",
       "name": "Summon Dragon",
       "section": "Spells/Descriptions-S-Z#Summon Dragon",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-S-Z#Summon Dragon",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-S-Z.md#Summon Dragon",
@@ -6898,10 +7489,36 @@
       "kind": "spell",
       "name": "Telekinesis",
       "section": "Spells/Descriptions-S-Z#Telekinesis",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-S-Z#Telekinesis",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-S-Z.md#Telekinesis",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/telepathic_bond.json",
+      "contentFile": "telepathic_bond.json",
+      "id": "telepathic_bond",
+      "kind": "spell",
+      "name": "Telepathic Bond",
+      "section": "Spells/Descriptions-S-Z#Telepathic Bond",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-S-Z#Telepathic Bond",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-S-Z.md#Telepathic Bond",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/teleportation_circle.json",
+      "contentFile": "teleportation_circle.json",
+      "id": "teleportation_circle",
+      "kind": "spell",
+      "name": "Teleportation Circle",
+      "section": "Spells/Descriptions-S-Z#Teleportation Circle",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-S-Z#Teleportation Circle",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-S-Z.md#Teleportation Circle",
       "severity": "ok"
     },
     {
@@ -6954,6 +7571,19 @@
       "part": "Spells/Descriptions-S-Z#Tongues",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-S-Z.md#Tongues",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/tree_stride.json",
+      "contentFile": "tree_stride.json",
+      "id": "tree_stride",
+      "kind": "spell",
+      "name": "Tree Stride",
+      "section": "Spells/Descriptions-S-Z#Tree Stride",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Spells/Descriptions-S-Z#Tree Stride",
+      "status": "ok-heading",
+      "canonical": "Spells/Descriptions-S-Z.md#Tree Stride",
       "severity": "ok"
     },
     {
@@ -7054,7 +7684,7 @@
       "kind": "spell",
       "name": "Wall of Force",
       "section": "Spells/Descriptions-S-Z#Wall of Force",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-S-Z#Wall of Force",
       "status": "ok-heading",
       "canonical": "Spells/Descriptions-S-Z.md#Wall of Force",
@@ -7080,7 +7710,7 @@
       "kind": "spell",
       "name": "Wall of Stone",
       "section": "Spells/Descriptions-W#Wall of Stone",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Spells/Descriptions-W#Wall of Stone",
       "status": "ok-heading-alias",
       "canonical": "Spells/Descriptions-S-Z.md#Wall of Stone",
@@ -7132,7 +7762,7 @@
       "kind": "class_feature",
       "name": "Contact Patron",
       "section": "Classes/Warlock#Contact Patron",
-      "catalogBoundary": "authored-not-installed",
+      "catalogBoundary": "srd-unit-collection",
       "part": "Classes/Warlock#Contact Patron",
       "status": "ok-heading",
       "canonical": "Classes/Warlock.md#Level 9: Contact Patron",
@@ -7175,6 +7805,21 @@
       "part": "Classes/Warlock#Fiend Spells",
       "status": "ok-heading",
       "canonical": "Classes/Warlock.md#Fiend Spells",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/warlock_fiendish_resilience.json",
+      "contentFile": "warlock_fiendish_resilience.json",
+      "id": "warlock_fiendish_resilience",
+      "kind": "class_feature",
+      "name": "Fiendish Resilience",
+      "section": "Classes/Warlock.md:483-485",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Warlock.md:483-485",
+      "status": "ok-line-range",
+      "canonical": "Classes/Warlock.md:483-485",
+      "legacyBase": false,
+      "invalidRanges": [],
       "severity": "ok"
     },
     {
@@ -7808,6 +8453,21 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/wizard_empowered_evocation.json",
+      "contentFile": "wizard_empowered_evocation.json",
+      "id": "wizard_empowered_evocation",
+      "kind": "class_feature",
+      "name": "Empowered Evocation",
+      "section": "Classes/Wizard.md:425-427",
+      "catalogBoundary": "srd-unit-collection",
+      "part": "Classes/Wizard.md:425-427",
+      "status": "ok-line-range",
+      "canonical": "Classes/Wizard.md:425-427",
+      "legacyBase": false,
+      "invalidRanges": [],
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/wizard_evocation_savant.json",
       "contentFile": "wizard_evocation_savant.json",
       "id": "wizard_evocation_savant",
@@ -7984,6 +8644,39 @@
       "id": "class_barbarian",
       "kind": "class",
       "name": "Barbarian",
+      "fieldPath": "featureGrants[5].unitId",
+      "targetUnitId": "barbarian_extra_attack",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_barbarian.json",
+      "id": "class_barbarian",
+      "kind": "class",
+      "name": "Barbarian",
+      "fieldPath": "featureGrants[6].unitId",
+      "targetUnitId": "barbarian_fast_movement",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_barbarian.json",
+      "id": "class_barbarian",
+      "kind": "class",
+      "name": "Barbarian",
+      "fieldPath": "featureGrants[7].unitId",
+      "targetUnitId": "barbarian_brutal_strike",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_barbarian.json",
+      "id": "class_barbarian",
+      "kind": "class",
+      "name": "Barbarian",
       "fieldPath": "subclassChoices[0].options[0]",
       "targetUnitId": "subclass_barbarian_path_of_the_berserker",
       "relation": "subclass-choice",
@@ -8039,6 +8732,28 @@
       "id": "class_bard",
       "kind": "class",
       "name": "Bard",
+      "fieldPath": "featureGrants[4].unitId",
+      "targetUnitId": "bard_expertise",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_bard.json",
+      "id": "class_bard",
+      "kind": "class",
+      "name": "Bard",
+      "fieldPath": "featureGrants[5].unitId",
+      "targetUnitId": "bard_magical_secrets",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_bard.json",
+      "id": "class_bard",
+      "kind": "class",
+      "name": "Bard",
       "fieldPath": "subclassChoices[0].options[0]",
       "targetUnitId": "subclass_bard_college_of_lore",
       "relation": "subclass-choice",
@@ -8074,6 +8789,17 @@
       "name": "Cleric",
       "fieldPath": "featureGrants[2].unitId",
       "targetUnitId": "cleric_ability_score_improvement_l4",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_cleric.json",
+      "id": "class_cleric",
+      "kind": "class",
+      "name": "Cleric",
+      "fieldPath": "featureGrants[3].unitId",
+      "targetUnitId": "cleric_divine_intervention",
       "relation": "feature-grant",
       "status": "ok-authored-unit",
       "severity": "ok"
@@ -8226,6 +8952,39 @@
       "id": "class_fighter",
       "kind": "class",
       "name": "Fighter",
+      "fieldPath": "featureGrants[6].unitId",
+      "targetUnitId": "fighter_extra_attack",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_fighter.json",
+      "id": "class_fighter",
+      "kind": "class",
+      "name": "Fighter",
+      "fieldPath": "featureGrants[7].unitId",
+      "targetUnitId": "fighter_indomitable",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_fighter.json",
+      "id": "class_fighter",
+      "kind": "class",
+      "name": "Fighter",
+      "fieldPath": "featureGrants[8].unitId",
+      "targetUnitId": "fighter_tactical_master",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_fighter.json",
+      "id": "class_fighter",
+      "kind": "class",
+      "name": "Fighter",
       "fieldPath": "subclassChoices[0].options[0]",
       "targetUnitId": "subclass_fighter_champion",
       "relation": "subclass-choice",
@@ -8336,6 +9095,39 @@
       "id": "class_monk",
       "kind": "class",
       "name": "Monk",
+      "fieldPath": "featureGrants[9].unitId",
+      "targetUnitId": "monk_acrobatic_movement",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_monk.json",
+      "id": "class_monk",
+      "kind": "class",
+      "name": "Monk",
+      "fieldPath": "featureGrants[10].unitId",
+      "targetUnitId": "monk_heightened_focus",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_monk.json",
+      "id": "class_monk",
+      "kind": "class",
+      "name": "Monk",
+      "fieldPath": "featureGrants[11].unitId",
+      "targetUnitId": "monk_self_restoration",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_monk.json",
+      "id": "class_monk",
+      "kind": "class",
+      "name": "Monk",
       "fieldPath": "subclassChoices[0].options[0]",
       "targetUnitId": "subclass_monk_warrior_of_the_open_hand",
       "relation": "subclass-choice",
@@ -8413,6 +9205,39 @@
       "id": "class_paladin",
       "kind": "class",
       "name": "Paladin",
+      "fieldPath": "featureGrants[6].unitId",
+      "targetUnitId": "paladin_extra_attack",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_paladin.json",
+      "id": "class_paladin",
+      "kind": "class",
+      "name": "Paladin",
+      "fieldPath": "featureGrants[7].unitId",
+      "targetUnitId": "paladin_abjure_foes",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_paladin.json",
+      "id": "class_paladin",
+      "kind": "class",
+      "name": "Paladin",
+      "fieldPath": "featureGrants[8].unitId",
+      "targetUnitId": "paladin_aura_of_courage",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_paladin.json",
+      "id": "class_paladin",
+      "kind": "class",
+      "name": "Paladin",
       "fieldPath": "subclassChoices[0].options[0]",
       "targetUnitId": "subclass_paladin_oath_of_devotion",
       "relation": "subclass-choice",
@@ -8470,6 +9295,61 @@
       "name": "Ranger",
       "fieldPath": "featureGrants[4].unitId",
       "targetUnitId": "ranger_ability_score_improvement_l4",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_ranger.json",
+      "id": "class_ranger",
+      "kind": "class",
+      "name": "Ranger",
+      "fieldPath": "featureGrants[5].unitId",
+      "targetUnitId": "ranger_extra_attack",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_ranger.json",
+      "id": "class_ranger",
+      "kind": "class",
+      "name": "Ranger",
+      "fieldPath": "featureGrants[6].unitId",
+      "targetUnitId": "ranger_roving",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_ranger.json",
+      "id": "class_ranger",
+      "kind": "class",
+      "name": "Ranger",
+      "fieldPath": "featureGrants[7].unitId",
+      "targetUnitId": "ranger_ability_score_improvement_l8",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_ranger.json",
+      "id": "class_ranger",
+      "kind": "class",
+      "name": "Ranger",
+      "fieldPath": "featureGrants[8].unitId",
+      "targetUnitId": "ranger_expertise",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_ranger.json",
+      "id": "class_ranger",
+      "kind": "class",
+      "name": "Ranger",
+      "fieldPath": "featureGrants[9].unitId",
+      "targetUnitId": "ranger_tireless",
       "relation": "feature-grant",
       "status": "ok-authored-unit",
       "severity": "ok"
@@ -8558,6 +9438,39 @@
       "name": "Rogue",
       "fieldPath": "featureGrants[6].unitId",
       "targetUnitId": "rogue_cunning_strike",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_rogue.json",
+      "id": "class_rogue",
+      "kind": "class",
+      "name": "Rogue",
+      "fieldPath": "featureGrants[7].unitId",
+      "targetUnitId": "rogue_uncanny_dodge",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_rogue.json",
+      "id": "class_rogue",
+      "kind": "class",
+      "name": "Rogue",
+      "fieldPath": "featureGrants[8].unitId",
+      "targetUnitId": "rogue_supreme_sneak",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_rogue.json",
+      "id": "class_rogue",
+      "kind": "class",
+      "name": "Rogue",
+      "fieldPath": "featureGrants[9].unitId",
+      "targetUnitId": "rogue_ability_score_improvement_l10",
       "relation": "feature-grant",
       "status": "ok-authored-unit",
       "severity": "ok"
@@ -8679,6 +9592,17 @@
       "name": "Warlock",
       "fieldPath": "featureGrants[3].unitId",
       "targetUnitId": "warlock_ability_score_improvement_l4",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/class_warlock.json",
+      "id": "class_warlock",
+      "kind": "class",
+      "name": "Warlock",
+      "fieldPath": "featureGrants[4].unitId",
+      "targetUnitId": "warlock_contact_patron",
       "relation": "feature-grant",
       "status": "ok-authored-unit",
       "severity": "ok"
@@ -8845,8 +9769,8 @@
       "fieldPath": "mechanics.grants[0].tiers[3].spellIds[0]",
       "targetUnitId": "greater_restoration",
       "relation": "spell-list",
-      "status": "srd-spell-reference-without-authored-unit",
-      "severity": "warning"
+      "status": "ok-authored-unit",
+      "severity": "ok"
     },
     {
       "contentPath": "packages/surface/content/cleric_life_domain_spells.json",
@@ -9065,8 +9989,8 @@
       "fieldPath": "mechanics.grants[0].spellsByLand.temperate[3].spellIds[0]",
       "targetUnitId": "tree_stride",
       "relation": "spell-list",
-      "status": "srd-spell-reference-without-authored-unit",
-      "severity": "warning"
+      "status": "ok-authored-unit",
+      "severity": "ok"
     },
     {
       "contentPath": "packages/surface/content/druid_circle_of_the_land_spells.json",
@@ -9201,6 +10125,17 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/paladin_abjure_foes.json",
+      "id": "paladin_abjure_foes",
+      "kind": "class_feature",
+      "name": "Abjure Foes",
+      "fieldPath": "mechanics.spends.resourceUnitId",
+      "targetUnitId": "paladin_channel_divinity",
+      "relation": "resource-link",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/paladin_oath_of_devotion_spells.json",
       "id": "paladin_oath_of_devotion_spells",
       "kind": "class_feature",
@@ -9296,8 +10231,8 @@
       "fieldPath": "mechanics.grants[0].tiers[4].spellIds[0]",
       "targetUnitId": "commune",
       "relation": "spell-list",
-      "status": "srd-spell-reference-without-authored-unit",
-      "severity": "warning"
+      "status": "ok-authored-unit",
+      "severity": "ok"
     },
     {
       "contentPath": "packages/surface/content/paladin_oath_of_devotion_spells.json",
@@ -9417,8 +10352,8 @@
       "fieldPath": "mechanics.grants[0].tiers[3].spellIds[0]",
       "targetUnitId": "legend_lore",
       "relation": "spell-list",
-      "status": "srd-spell-reference-without-authored-unit",
-      "severity": "warning"
+      "status": "ok-authored-unit",
+      "severity": "ok"
     },
     {
       "contentPath": "packages/surface/content/sorcerer_draconic_spells.json",
@@ -9696,6 +10631,17 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/subclass_barbarian_path_of_the_berserker.json",
+      "id": "subclass_barbarian_path_of_the_berserker",
+      "kind": "subclass",
+      "name": "Path of the Berserker",
+      "fieldPath": "featureGrants[1].unitId",
+      "targetUnitId": "barbarian_retaliation",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/subclass_cleric_life_domain.json",
       "id": "subclass_cleric_life_domain",
       "kind": "subclass",
@@ -9751,6 +10697,17 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/subclass_druid_circle_of_the_land.json",
+      "id": "subclass_druid_circle_of_the_land",
+      "kind": "subclass",
+      "name": "Circle of the Land",
+      "fieldPath": "featureGrants[2].unitId",
+      "targetUnitId": "druid_natures_ward",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/subclass_fighter_champion.json",
       "id": "subclass_fighter_champion",
       "kind": "subclass",
@@ -9768,6 +10725,17 @@
       "name": "Champion",
       "fieldPath": "featureGrants[1].unitId",
       "targetUnitId": "fighter_remarkable_athlete",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/subclass_fighter_champion.json",
+      "id": "subclass_fighter_champion",
+      "kind": "subclass",
+      "name": "Champion",
+      "fieldPath": "featureGrants[2].unitId",
+      "targetUnitId": "fighter_heroic_warrior",
       "relation": "feature-grant",
       "status": "ok-authored-unit",
       "severity": "ok"
@@ -9883,6 +10851,17 @@
       "severity": "ok"
     },
     {
+      "contentPath": "packages/surface/content/subclass_warlock_fiend_patron.json",
+      "id": "subclass_warlock_fiend_patron",
+      "kind": "subclass",
+      "name": "Fiend Patron",
+      "fieldPath": "featureGrants[2].unitId",
+      "targetUnitId": "warlock_fiendish_resilience",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
       "contentPath": "packages/surface/content/subclass_wizard_evoker.json",
       "id": "subclass_wizard_evoker",
       "kind": "subclass",
@@ -9900,6 +10879,17 @@
       "name": "Evoker",
       "fieldPath": "featureGrants[1].unitId",
       "targetUnitId": "wizard_potent_cantrip",
+      "relation": "feature-grant",
+      "status": "ok-authored-unit",
+      "severity": "ok"
+    },
+    {
+      "contentPath": "packages/surface/content/subclass_wizard_evoker.json",
+      "id": "subclass_wizard_evoker",
+      "kind": "subclass",
+      "name": "Evoker",
+      "fieldPath": "featureGrants[2].unitId",
+      "targetUnitId": "wizard_empowered_evocation",
       "relation": "feature-grant",
       "status": "ok-authored-unit",
       "severity": "ok"

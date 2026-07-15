@@ -54,8 +54,6 @@ let summonDragon =
               }
           , creature =
               { kind = "inline"
-          , creature =
-              { kind = "inline"
               , statBlock =
                   { displayName = "Draconic Spirit"
                 , size = "large"
@@ -191,7 +189,6 @@ let summonDragon =
                     ]
                 }
                   }
-              }
           , control =
               { initiative = "shared_with_caster"
               , turnOrder = "immediately_after_caster"
@@ -203,7 +200,7 @@ let summonDragon =
               { onZeroHp = "disappears"
               , onSpellEnd = "disappears"
               }
-          }
+      }
       }
 
 in  summonDragon

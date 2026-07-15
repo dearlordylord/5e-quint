@@ -123,7 +123,6 @@ let wardingBond =
               }
           , attachment =
               { kind = "caster_target_bond"
-              , bondId = "warding_bond_mystic_connection"
               , target =
                   { kind = "hole"
                   , holeId = "warding_bond_target"

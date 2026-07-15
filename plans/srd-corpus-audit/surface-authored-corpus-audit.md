@@ -8,21 +8,21 @@ A provenance part is considered scanner-visible when this script can resolve it 
 
 ## Metrics
 
-- Authored SRD records: 575
-- Provenance parts checked: 584
+- Authored SRD records: 620
+- Provenance parts checked: 632
 - Failures: 0
-- Warnings: 107
-- Unit reference checks: 194
+- Warnings: 106
+- Unit reference checks: 224
 - Unit reference failures: 0
-- Unit reference warnings: 5
+- Unit reference warnings: 1
 
 ### Status Counts
 
 | Status | Count |
 |---|---:|
-| ok-heading | 364 |
-| ok-heading-alias | 89 |
-| ok-line-range | 111 |
+| ok-heading | 395 |
+| ok-heading-alias | 88 |
+| ok-line-range | 129 |
 | ok-prose-anchor | 2 |
 | ok-prose-anchor-alias | 18 |
 
@@ -33,16 +33,16 @@ A provenance part is considered scanner-visible when this script can resolve it 
 | armor | 12 |
 | armor_template | 3 |
 | background | 4 |
-| class | 12 |
-| class_feature | 110 |
+| class | 15 |
+| class_feature | 129 |
 | feat | 13 |
-| magic_item | 71 |
-| mastery | 3 |
+| magic_item | 70 |
+| mastery | 5 |
 | shield | 1 |
 | shield_template | 2 |
 | species | 18 |
 | species_trait | 21 |
-| spell | 240 |
+| spell | 265 |
 | statBlock | 21 |
 | subclass | 12 |
 | weapon | 38 |
@@ -52,9 +52,9 @@ A provenance part is considered scanner-visible when this script can resolve it 
 
 | Boundary | Provenance parts |
 |---|---:|
-| authored-not-installed | 223 |
+| authored-not-installed | 204 |
 | srd-stat-block-collection | 21 |
-| srd-unit-collection | 340 |
+| srd-unit-collection | 407 |
 
 ### Unit Reference Closure
 
@@ -62,8 +62,8 @@ This checks scanner-visible Unit references inside authored records: class/subcl
 
 | Status | Count |
 |---|---:|
-| ok-authored-unit | 189 |
-| srd-spell-reference-without-authored-unit | 5 |
+| ok-authored-unit | 223 |
+| srd-spell-reference-without-authored-unit | 1 |
 
 #### Unit Reference Failures
 
@@ -77,11 +77,7 @@ These references point to scanner-visible SRD spell sections, but the target spe
 
 | Owner | Relation | Field | Target Unit |
 |---|---|---|---|
-| `cleric_life_domain_spells` | spell-list | `mechanics.grants[0].tiers[3].spellIds[0]` | `greater_restoration` |
-| `druid_circle_of_the_land_spells` | spell-list | `mechanics.grants[0].spellsByLand.temperate[3].spellIds[0]` | `tree_stride` |
 | `paladin_oath_of_devotion_spells` | spell-list | `mechanics.grants[0].tiers[3].spellIds[1]` | `guardian_of_faith` |
-| `paladin_oath_of_devotion_spells` | spell-list | `mechanics.grants[0].tiers[4].spellIds[0]` | `commune` |
-| `sorcerer_draconic_spells` | spell-list | `mechanics.grants[0].tiers[3].spellIds[0]` | `legend_lore` |
 
 ## Failures
 
@@ -161,7 +157,6 @@ Warnings are scanner-visible through a known legacy alias, but the provenance st
 | `magic_item_shield_1_2_or_3` | shield_template | Shield, +1, +2, or +3 | `packages/surface/content/magic_item_shield_1_2_or_3.json` | ok-heading-alias | `MagicItems#Shield+1+2or+3` -> `Magic-Items/Items-Q-Z.md#Shield, +1, +2, or +3` |
 | `magic_item_slippers_of_spider_climbing` | magic_item | Slippers of Spider Climbing | `packages/surface/content/magic_item_slippers_of_spider_climbing.json` | ok-heading-alias | `MagicItems#Slippers of Spider Climbing` -> `Magic-Items/Items-Q-Z.md#Slippers of Spider Climbing` |
 | `magic_item_sovereign_glue` | magic_item | Sovereign Glue | `packages/surface/content/magic_item_sovereign_glue.json` | ok-heading-alias | `MagicItems#SovereignGlue` -> `Magic-Items/Items-Q-Z.md#Sovereign Glue` |
-| `magic_item_staff_of_charming` | magic_item | Staff of Charming | `packages/surface/content/magic_item_staff_of_charming.json` | ok-heading-alias | `MagicItems#StaffOfCharming` -> `Magic-Items/Items-Q-Z.md#Staff of Charming` |
 | `magic_item_staff_of_fire` | magic_item | Staff of Fire | `packages/surface/content/magic_item_staff_of_fire.json` | ok-heading-alias | `MagicItems#StaffOfFire` -> `Magic-Items/Items-Q-Z.md#Staff of Fire` |
 | `magic_item_staff_of_healing` | magic_item | Staff of Healing | `packages/surface/content/magic_item_staff_of_healing.json` | ok-heading-alias | `MagicItems#StaffOfHealing` -> `Magic-Items/Items-Q-Z.md#Staff of Healing` |
 | `magic_item_staff_of_power` | magic_item | Staff of Power | `packages/surface/content/magic_item_staff_of_power.json` | ok-heading-alias | `MagicItems#StaffOfPower` -> `Magic-Items/Items-Q-Z.md#Staff of Power` |

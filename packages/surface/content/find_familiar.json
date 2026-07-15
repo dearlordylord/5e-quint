@@ -27,49 +27,10 @@
         "sharedSenses": "bonus_action"
       }
     },
-    "dismissal": {
-      "leavesBehind": "equipment",
-      "manualDismiss": "magic_action",
-      "onSpellEnd": "disappears",
-      "onZeroHp": "disappears"
-    },
-    "duration": {
-      "kind": "instantaneous"
-    },
-    "family": "spawned_creature",
-    "level": 1,
-    "mode": {
-      "label": "creature type",
-      "options": [
-        {
-          "displayName": "Celestial",
-          "id": "celestial",
-          "overrides": {
-            "creatureType": "celestial"
-          }
-        },
-        {
-          "displayName": "Fey",
-          "id": "fey",
-          "overrides": {
-            "creatureType": "fey"
-          }
-        },
-        {
-          "displayName": "Fiend",
-          "id": "fiend",
-          "overrides": {
-            "creatureType": "fiend"
-          }
-        }
-      ]
-    },
-    "range": {
-      "feet": 10,
-      "kind": "point"
-    },
-    "school": "conjuration",
     "creature": {
+      "additionalNormalFormEligibility": {
+        "kind": "challengeRatingZeroBeast"
+      },
       "kind": "familiar_form_catalog",
       "normalForms": [
         {
@@ -127,11 +88,50 @@
           "formId": "weasel",
           "statBlockId": "stat_block_weasel"
         }
-      ],
-      "additionalNormalFormEligibility": {
-        "kind": "challengeRatingZeroBeast"
-      }
-    }
+      ]
+    },
+    "dismissal": {
+      "leavesBehind": "equipment",
+      "manualDismiss": "magic_action",
+      "onSpellEnd": "disappears",
+      "onZeroHp": "disappears"
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "spawned_creature",
+    "level": 1,
+    "mode": {
+      "label": "creature type",
+      "options": [
+        {
+          "displayName": "Celestial",
+          "id": "celestial",
+          "overrides": {
+            "creatureType": "celestial"
+          }
+        },
+        {
+          "displayName": "Fey",
+          "id": "fey",
+          "overrides": {
+            "creatureType": "fey"
+          }
+        },
+        {
+          "displayName": "Fiend",
+          "id": "fiend",
+          "overrides": {
+            "creatureType": "fiend"
+          }
+        }
+      ]
+    },
+    "range": {
+      "feet": 10,
+      "kind": "point"
+    },
+    "school": "conjuration"
   },
   "name": "Find Familiar",
   "provenance": {

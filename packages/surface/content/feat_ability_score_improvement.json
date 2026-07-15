@@ -21,8 +21,7 @@
   "id": "feat_ability_score_improvement",
   "kind": "feat",
   "mechanics": {
-    "family": "passive",
-    "grants": []
+    "family": "passive"
   },
   "name": "Ability Score Improvement",
   "provenance": {

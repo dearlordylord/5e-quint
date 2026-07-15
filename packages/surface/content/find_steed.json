@@ -20,6 +20,104 @@
       "initiative": "shared_with_caster",
       "turnOrder": "immediately_after_caster"
     },
+    "creature": {
+      "kind": "inline",
+      "statBlock": {
+        "abilityScores": {
+          "cha": 8,
+          "con": 14,
+          "dex": 12,
+          "int": 6,
+          "str": 18,
+          "wis": 12
+        },
+        "ac": {
+          "axis": "slot",
+          "base": 10,
+          "kind": "linear_per_level",
+          "perLevel": 1,
+          "startingAtLevel": 2
+        },
+        "actions": {
+          "attacks": [
+            {
+              "attackBonus": {
+                "kind": "caster_derived",
+                "source": "spell_attack_mod"
+              },
+              "attackType": "melee",
+              "name": "Otherworldly Slam",
+              "onHit": [
+                {
+                  "amount": {
+                    "expr": {
+                      "dice": 1,
+                      "dieSize": 8
+                    },
+                    "kind": "fixed"
+                  },
+                  "damageType": "radiant",
+                  "kind": "damage"
+                }
+              ],
+              "reachFeet": 5
+            }
+          ]
+        },
+        "creatureType": {
+          "kind": "choice",
+          "label": "creature type",
+          "options": [
+            "celestial",
+            "fey",
+            "fiend"
+          ]
+        },
+        "displayName": "Otherworldly Steed",
+        "hp": {
+          "axis": "slot",
+          "base": 5,
+          "kind": "linear_per_level",
+          "perLevel": 10,
+          "startingAtLevel": 2
+        },
+        "languages": "caster_languages",
+        "saveProficiencies": [
+          "str",
+          "dex",
+          "con",
+          "wis"
+        ],
+        "size": "large",
+        "speeds": [
+          {
+            "feet": {
+              "kind": "literal",
+              "value": 60
+            },
+            "kind": "walk"
+          },
+          {
+            "feet": {
+              "kind": "literal",
+              "value": 60
+            },
+            "kind": "fly",
+            "requiresSlotLevel": 4
+          }
+        ],
+        "traits": [
+          {
+            "description": "When you regain Hit Points from a level 1+ spell, the steed regains the same number of Hit Points if you're within 5 feet of it.",
+            "effect": {
+              "kind": "caster_heal_link",
+              "rangeFeet": 5
+            },
+            "name": "Life Bond"
+          }
+        ]
+      }
+    },
     "dismissal": {
       "caster0Hp": "disappears",
       "leavesBehind": "equipment",
@@ -61,105 +159,7 @@
       "feet": 30,
       "kind": "point"
     },
-    "school": "conjuration",
-    "creature": {
-      "kind": "inline",
-      "statBlock": {
-      "abilityScores": {
-        "cha": 8,
-        "con": 14,
-        "dex": 12,
-        "int": 6,
-        "str": 18,
-        "wis": 12
-      },
-      "ac": {
-        "axis": "slot",
-        "base": 10,
-        "kind": "linear_per_level",
-        "perLevel": 1,
-        "startingAtLevel": 2
-      },
-      "actions": {
-        "attacks": [
-          {
-            "attackBonus": {
-              "kind": "caster_derived",
-              "source": "spell_attack_mod"
-            },
-            "attackType": "melee",
-            "name": "Otherworldly Slam",
-            "onHit": [
-              {
-                "amount": {
-                  "expr": {
-                    "dice": 1,
-                    "dieSize": 8
-                  },
-                  "kind": "fixed"
-                },
-                "damageType": "radiant",
-                "kind": "damage"
-              }
-            ],
-            "reachFeet": 5
-          }
-        ]
-      },
-      "creatureType": {
-        "kind": "choice",
-        "label": "creature type",
-        "options": [
-          "celestial",
-          "fey",
-          "fiend"
-        ]
-      },
-      "displayName": "Otherworldly Steed",
-      "hp": {
-        "axis": "slot",
-        "base": 5,
-        "kind": "linear_per_level",
-        "perLevel": 10,
-        "startingAtLevel": 2
-      },
-      "languages": "caster_languages",
-      "saveProficiencies": [
-        "str",
-        "dex",
-        "con",
-        "wis"
-      ],
-      "size": "large",
-      "speeds": [
-        {
-          "feet": {
-            "kind": "literal",
-            "value": 60
-          },
-          "kind": "walk"
-        },
-        {
-          "feet": {
-            "kind": "literal",
-            "value": 60
-          },
-          "kind": "fly",
-          "requiresSlotLevel": 4
-        }
-      ],
-      "traits": [
-        {
-          "description": "When you regain Hit Points from a level 1+ spell, the steed regains the same number of Hit Points if you're within 5 feet of it.",
-          "effect": {
-            "kind": "caster_heal_link",
-            "rangeFeet": 5
-          },
-          "name": "Life Bond"
-        }
-      ]
-      }
-    }
+    "school": "conjuration"
   },
   "name": "Find Steed",
   "provenance": {

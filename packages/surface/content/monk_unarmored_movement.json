@@ -9,7 +9,11 @@
       "kind": "all_of",
       "predicates": [
         {
-          "categories": ["light", "medium", "heavy"],
+          "categories": [
+            "light",
+            "medium",
+            "heavy"
+          ],
           "kind": "not_wearing_armor"
         },
         {

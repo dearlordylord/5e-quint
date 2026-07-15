@@ -12,7 +12,9 @@
         "selection": {
           "disposition": "willing",
           "mode": "one",
-          "targetKinds": ["creature"]
+          "targetKinds": [
+            "creature"
+          ]
         }
       }
     },

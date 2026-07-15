@@ -26,14 +26,20 @@
     "operations": [
       {
         "effect": {
-          "abilityFilter": ["cha"],
+          "abilityFilter": [
+            "cha"
+          ],
           "affects": "self_roll",
           "kind": "modify_roll_advantage",
           "mode": "advantage",
-          "on": ["ability_check"],
+          "on": [
+            "ability_check"
+          ],
           "skillFilter": {
             "kind": "fixed",
-            "skills": ["intimidation"]
+            "skills": [
+              "intimidation"
+            ]
           }
         },
         "trigger": {

@@ -12,6 +12,35 @@
 -- active-effect boundary.
 -- Cantrip upgrade: 1d8 → 2d8 (L5) → 3d8 (L11) → 4d8 (L17).
 
+let Effect =
+      { kind : Text
+      , damageType : Optional Text
+      , amount :
+          Optional
+            { kind : Text
+            , axis : Text
+            , base : { dice : Natural, dieSize : Natural }
+            , tiers : List { atLevel : Natural, override : { dice : Natural } }
+            }
+      , radiusFeet : Optional Natural
+      , expiresAt : Optional Text
+      , condition : Optional Text
+      }
+
+let defaultEffect : Effect =
+      { kind = ""
+      , damageType = None Text
+      , amount = None
+          { kind : Text
+          , axis : Text
+          , base : { dice : Natural, dieSize : Natural }
+          , tiers : List { atLevel : Natural, override : { dice : Natural } }
+          }
+      , radiusFeet = None Natural
+      , expiresAt = None Text
+      , condition = None Text
+      }
+
 let starryWisp =
       { kind = "spell"
       , id = "starry_wisp"
@@ -45,7 +74,7 @@ let starryWisp =
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit =
-                    [ { kind = "damage"
+                    [ defaultEffect // { kind = "damage"
                       , damageType = Some "radiant"
                       , amount =
                           Some
@@ -61,7 +90,7 @@ let starryWisp =
                       , radiusFeet = None Natural
                       , expiresAt = None Text
                       }
-                    , { kind = "emit_dim_light"
+                    , defaultEffect // { kind = "emit_dim_light"
                       , damageType = None Text
                       , amount =
                           None
@@ -77,8 +106,8 @@ let starryWisp =
                       , radiusFeet = Some 10
                       , expiresAt = Some "end_of_caster_next_turn"
                       }
-                    , { kind = "suppress_condition_benefit"
-                      , condition = "invisible"
+                    , defaultEffect // { kind = "suppress_condition_benefit"
+                      , condition = Some "invisible"
                       , damageType = None Text
                       , amount =
                           None

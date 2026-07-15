@@ -57,10 +57,6 @@
         "kind": "caster_spell_save_dc"
       },
       "kind": "save_gate",
-      "usageLimit": {
-        "kind": "once_per_turn",
-        "limitGroup": "moonbeam_save_per_turn"
-      },
       "onFail": {
         "effects": [
           {
@@ -92,6 +88,10 @@
       },
       "onSuccess": {
         "kind": "half_damage"
+      },
+      "usageLimit": {
+        "kind": "once_per_turn",
+        "limitGroup": "moonbeam_save_per_turn"
       }
     },
     "level": 2,

@@ -27,6 +27,14 @@
 --   2. Nonmagical-light denial is a light/visibility witness consequence,
 --      not a Darkness-local duplicate light state.
 
+let OperationEffect =
+      { kind : Text
+      , maxSpellLevel : Optional Natural
+      }
+
+let defaultOperationEffect : OperationEffect =
+      { kind = "", maxSpellLevel = None Natural }
+
 let darkness =
       { kind = "spell"
       , id = "darkness"
@@ -64,13 +72,13 @@ let darkness =
               }
           , operations =
               [ { trigger = { kind = "passive" }
-                , effect = { kind = "area_is_magical_darkness" }
+                , effect = defaultOperationEffect // { kind = "area_is_magical_darkness" }
                 }
               , { trigger = { kind = "passive" }
                 , effect =
-                    { kind =
+                    defaultOperationEffect // { kind =
                         "end_overlapping_spell_created_bright_or_dim_light"
-                    , maxSpellLevel = 2
+                    , maxSpellLevel = Some 2
                     }
                 }
               ]

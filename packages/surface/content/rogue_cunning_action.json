@@ -7,8 +7,12 @@
   "mechanics": {
     "family": "alternate_action_cost",
     "from": {
-      "kind": "standard_action",
-      "actions": ["dash", "disengage", "hide"]
+      "actions": [
+        "dash",
+        "disengage",
+        "hide"
+      ],
+      "kind": "standard_action"
     },
     "to": {
       "kind": "bonus_action"

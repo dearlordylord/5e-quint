@@ -23,7 +23,11 @@
       "onFailure": "caster_hit_normally",
       "onHit": "duplicate_hit_instead_and_destroyed",
       "successAtLeast": 3,
-      "unaffectedBy": ["blinded", "blindsight", "truesight"]
+      "unaffectedBy": [
+        "blinded",
+        "blindsight",
+        "truesight"
+      ]
     },
     "duration": {
       "kind": "timed",

@@ -17,7 +17,9 @@
             "perSlotAboveBase": 1
           },
           "mode": "choose_up_to",
-          "targetKinds": ["creature"]
+          "targetKinds": [
+            "creature"
+          ]
         }
       }
     },
@@ -48,7 +50,10 @@
             "sign": "+"
           },
           "kind": "modify_roll_numeric",
-          "on": ["attack_roll", "saving_throw"]
+          "on": [
+            "attack_roll",
+            "saving_throw"
+          ]
         },
         "trigger": {
           "kind": "passive"
