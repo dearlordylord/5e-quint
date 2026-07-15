@@ -85,10 +85,12 @@ import conjureElementalInput from "../../content/conjure_elemental.json";
 import contagionInput from "../../content/contagion.json";
 import counterspellInput from "../../content/counterspell.json";
 import creationInput from "../../content/creation.json";
+import createFoodAndWaterInput from "../../content/create_food_and_water.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
 import darknessInput from "../../content/darkness.json";
 import darkvisionInput from "../../content/darkvision.json";
+import daylightInput from "../../content/daylight.json";
 import dispelMagicInput from "../../content/dispel_magic.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
@@ -240,6 +242,7 @@ import paladinSacredWeaponInput from "../../content/paladin_sacred_weapon.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import passwallInput from "../../content/passwall.json";
 import passWithoutTraceInput from "../../content/pass_without_trace.json";
+import phantasmalForceInput from "../../content/phantasmal_force.json";
 import plantGrowthInput from "../../content/plant_growth.json";
 import planarBindingInput from "../../content/planar_binding.json";
 import poisonSprayInput from "../../content/poison_spray.json";
@@ -397,6 +400,7 @@ import wizardScholarInput from "../../content/wizard_scholar.json";
 import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
+  SpellcastingClassRecord,
   Provenance,
   StartingEquipmentChoice,
   UnitRecord,
@@ -428,10 +432,120 @@ export type UnitCatalog = {
   readonly requireUnit: (id: UnitId) => UnitRecord;
 };
 
+export type ClassSpellListName = SpellcastingClassRecord["className"];
+
+export type ClassSpellList = {
+  readonly cantrips: readonly UnitId[];
+  readonly leveled: readonly {
+    readonly spellId: UnitId;
+    readonly spellLevel: number;
+  }[];
+};
+
+function isSpellcastingClassRecord(
+  unit: UnitRecord,
+): unit is SpellcastingClassRecord {
+  return unit.kind === "class" && unit.spellcasting !== undefined;
+}
+
+function classSpellListFromRecord(
+  classRecord: SpellcastingClassRecord,
+): ClassSpellList {
+  const spellcasting = classRecord.spellcasting;
+  const leveled =
+    spellcasting.kind === "wizard_spellcasting_creation"
+      ? spellcasting.spellbookAccess.spells
+      : spellcasting.preparedAccess.spells;
+
+  return {
+    cantrips: spellcasting.cantripAccess?.spellIds ?? [],
+    leveled,
+  };
+}
+
+export function classSpellListForClassName(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+}): ClassSpellList | undefined {
+  const classRecord = input.unitLibrary
+    .listUnits()
+    .find(
+      (unit) =>
+        isSpellcastingClassRecord(unit) && unit.className === input.className,
+    );
+  return classRecord === undefined || !isSpellcastingClassRecord(classRecord)
+    ? undefined
+    : classSpellListFromRecord(classRecord);
+}
+
+export function classSpellListPreparedSpellLevel(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+  readonly spellId: UnitId;
+}): number | undefined {
+  return classSpellListForClassName(input)?.leveled.find(
+    (spell) => spell.spellId === input.spellId,
+  )?.spellLevel;
+}
+
+export function allCantripsFromClassSpellList(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+  readonly spellIds: readonly UnitId[];
+}): boolean {
+  const cantrips = new Set(classSpellListForClassName(input)?.cantrips ?? []);
+  return input.spellIds.every((spellId) => cantrips.has(spellId));
+}
+
+export function allCantripsFromAnyClassSpellList(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly spellIds: readonly UnitId[];
+}): boolean {
+  return input.spellIds.every((spellId) =>
+    input.unitLibrary
+      .listUnits()
+      .filter(isSpellcastingClassRecord)
+      .some((classRecord) =>
+        allCantripsFromClassSpellList({
+          className: classRecord.className,
+          spellIds: [spellId],
+          unitLibrary: input.unitLibrary,
+        }),
+      ),
+  );
+}
+
+export function allLeveledSpellsFromAnyClassSpellList(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly spells: readonly {
+    readonly spellId: UnitId;
+    readonly spellLevel: number;
+  }[];
+}): boolean {
+  return input.spells.every((spell) =>
+    input.unitLibrary
+      .listUnits()
+      .filter(isSpellcastingClassRecord)
+      .some(
+        (classRecord) =>
+          classSpellListPreparedSpellLevel({
+            className: classRecord.className,
+            spellId: spell.spellId,
+            unitLibrary: input.unitLibrary,
+          }) === spell.spellLevel,
+      ),
+  );
+}
+
 export type UnitCatalogBuildIssue =
   | {
       readonly code: "duplicateUnitId";
       readonly unitId: UnitId;
+    }
+  | {
+      readonly code: "duplicateSpellcastingClassName";
+      readonly className: SpellcastingClassRecord["className"];
+      readonly unitIds: readonly [UnitId, UnitId];
     }
   | {
       readonly code: "mixedProvenance";
@@ -737,10 +851,12 @@ export const srdUnitCollection = defineSrdUnitCollection({
     contagionInput,
     counterspellInput,
     creationInput,
+    createFoodAndWaterInput,
     cureWoundsInput,
     dancingLightsInput,
     darknessInput,
     darkvisionInput,
+    daylightInput,
     dispelEvilAndGoodInput,
     dispelMagicInput,
     dissonantWhispersInput,
@@ -800,6 +916,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     wallOfForceInput,
     wallOfStoneInput,
     passWithoutTraceInput,
+    phantasmalForceInput,
     plantGrowthInput,
     planarBindingInput,
     poisonSprayInput,
@@ -906,6 +1023,10 @@ export function buildUnitCatalog(input: {
 }): UnitCatalogBuildResult {
   const issues: UnitCatalogBuildIssue[] = [];
   const records = new Map<UnitId, UnitRecord>();
+  const spellcastingClassOwners = new Map<
+    SpellcastingClassRecord["className"],
+    UnitId
+  >();
 
   for (const collection of input.collections) {
     issues.push(...validateSrdUnitCollection(collection));
@@ -918,6 +1039,18 @@ export function buildUnitCatalog(input: {
         });
       } else {
         records.set(unit.id, unit);
+        if (isSpellcastingClassRecord(unit)) {
+          const existingUnitId = spellcastingClassOwners.get(unit.className);
+          if (existingUnitId === undefined) {
+            spellcastingClassOwners.set(unit.className, unit.id);
+          } else {
+            issues.push({
+              code: "duplicateSpellcastingClassName",
+              className: unit.className,
+              unitIds: [existingUnitId, unit.id],
+            });
+          }
+        }
       }
     }
   }

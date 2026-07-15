@@ -1,0 +1,125 @@
+{
+  "description": "You attempt to craft an illusion in the mind of a creature you can see within range. The target makes an Intelligence saving throw. On a failed save, you create a phantasmal object, creature, or other phenomenon that is no larger than a 10-foot Cube and that is perceivable only to the target for the duration. The phantasm includes sound, temperature, and other stimuli. The target can take a Study action to examine the phantasm with an Intelligence (Investigation) check against your spell save DC. If the check succeeds, the target realizes that the phantasm is an illusion, and the spell ends. While affected by the spell, the target treats the phantasm as if it were real and rationalizes any illogical outcomes from interacting with it. For example, if the target steps through a phantasmal bridge and survives the fall, it believes the bridge exists and something else caused it to fall. An affected target can even take damage from the illusion if the phantasm represents a dangerous creature or hazard. On each of your turns, such a phantasm can deal 2d8 Psychic damage to the target if it is in the phantasm's area or within 5 feet of the phantasm. The target perceives the damage as a type appropriate to the illusion.",
+  "id": "phantasmal_force",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "phantasmal_force_target",
+      "kind": "hole",
+      "label": "creature the caster can see within range",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one",
+          "targetKinds": [
+            "creature"
+          ],
+          "visibility": "caster_can_see"
+        }
+      }
+    },
+    "authoredConditionalEffects": [
+      {
+        "amount": {
+          "expr": {
+            "dice": 2,
+            "dieSize": 8,
+            "flat": 0
+          },
+          "kind": "fixed"
+        },
+        "choice": "caster_may_deal",
+        "damageType": "psychic",
+        "eligibility": {
+          "feet": 5,
+          "kind": "target_in_phantasm_area_or_within_feet_of_phantasm"
+        },
+        "kind": "phantasm_damage",
+        "perceivedAs": "illusion_appropriate",
+        "source": "dangerous_creature_or_hazard",
+        "timing": "each_caster_turn"
+      }
+    ],
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a bit of fleece",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "int",
+      "attachment": {
+        "holeId": "phantasmal_force_target",
+        "kind": "hole",
+        "label": "creature the caster can see within range",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "one",
+            "targetKinds": [
+              "creature"
+            ],
+            "visibility": "caster_can_see"
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "channels": [
+          "visual",
+          "sound",
+          "temperature"
+        ],
+        "kind": "create_phantasmal_illusion",
+        "maxCubeSideFeet": 10,
+        "perception": "target_only",
+        "rationalization": "treat_illogical_outcomes_as_real"
+      },
+      "onSuccess": {
+        "kind": "none"
+      }
+    },
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "ability": "int",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "ability_check_gate",
+          "onPass": {
+            "kind": "end_current_effect"
+          },
+          "skill": "investigation"
+        },
+        "trigger": {
+          "kind": "on_creature_studies"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Phantasmal Force",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Phantasmal Force"
+  }
+}

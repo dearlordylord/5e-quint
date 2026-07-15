@@ -8,10 +8,11 @@ import { Brand, Either, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import {
-  CLASS_SPELL_LISTS,
   allCantripsFromClassSpellList,
+  classSpellListForClassName,
   classSpellListPreparedSpellLevel,
-} from "@dnd/surface/surface/schema";
+  type ClassSpellListName,
+} from "@dnd/surface/surface/unit-catalog";
 import type {
   ClassSpellcastingCreation,
   ClassFeatureRecord,
@@ -690,7 +691,6 @@ type FightingStyleCantripGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access_choice" }
 >;
-type ClassSpellListName = keyof typeof CLASS_SPELL_LISTS;
 type SupportedFightingStyleCantripGrant = FightingStyleCantripGrant & {
   readonly spellList: ClassSpellListName;
   readonly replacement: {
@@ -863,9 +863,11 @@ export function fightingStyleCantripUnitId(input: {
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
 
   if (
-    !allCantripsFromClassSpellList(featureChoice.right.grant.spellList, [
-      input.unitId,
-    ])
+    !allCantripsFromClassSpellList({
+      className: featureChoice.right.grant.spellList,
+      spellIds: [input.unitId],
+      unitLibrary: input.unitLibrary,
+    })
   ) {
     return Either.left({
       code: "invalidFightingStyleCantripReplacement",
@@ -1181,18 +1183,16 @@ export function advanceCharacterBuildClassLevel(input: {
         levelGain,
       }),
     ),
-    Match.when(
-      { tag: "classLevelGainWithListPreparedSpellcasting" },
-      () =>
-        plainClassLevelGainFeatures({
-          build: buildForFeatureUpdate,
-          unitLibrary: input.unitLibrary,
-          levelGain: {
-            tag: "classLevelGain",
-            classUnitId: input.levelGain.classUnitId,
-            hitPointRule: input.levelGain.hitPointRule,
-          },
-        }),
+    Match.when({ tag: "classLevelGainWithListPreparedSpellcasting" }, () =>
+      plainClassLevelGainFeatures({
+        build: buildForFeatureUpdate,
+        unitLibrary: input.unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: input.levelGain.classUnitId,
+          hitPointRule: input.levelGain.hitPointRule,
+        },
+      }),
     ),
     Match.when(
       { tag: "fighterLevelGainWithFightingStyleReplacement" },
@@ -1301,8 +1301,7 @@ export type CharacterBuildWarlockLevelGainRouteSubject = "selectedReference";
 
 export type CharacterBuildWarlockLevelGainRouteFill = "choiceSet";
 
-export type CharacterBuildWarlockLevelGainAcceptedRouteOwner =
-  "characterBuild";
+export type CharacterBuildWarlockLevelGainAcceptedRouteOwner = "characterBuild";
 
 export type CharacterBuildWarlockLevelGainRejectedRouteOwner =
   "creationSupportProfileAdmission";
@@ -1376,7 +1375,9 @@ export function advanceCharacterBuildFightingStyleReplacementWithRoute<
   });
 }
 
-export function applyCharacterBuildWarlockLevelGainWithRoute<RouteEvent>(input: {
+export function applyCharacterBuildWarlockLevelGainWithRoute<
+  RouteEvent,
+>(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildWarlockLevelGain;
@@ -2390,6 +2391,7 @@ function updateFightingStyleCantrips(input: {
     currentCantrips: source.cantrips,
     featureChoice: featureChoice.right,
     replacement: input.levelGain.replacement,
+    unitLibrary: input.unitLibrary,
   });
   if (Either.isLeft(cantrips)) return Either.left(cantrips.left);
 
@@ -2431,6 +2433,7 @@ function fightingStyleCantripsReplaced(input: {
   readonly currentCantrips: readonly UnitRecord["id"][];
   readonly featureChoice: FightingStyleCantripFeatureChoice;
   readonly replacement: CharacterBuildFightingStyleCantripReplacementLevelGain["replacement"];
+  readonly unitLibrary: UnitCatalog;
 }): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   if (input.currentCantrips.length !== input.featureChoice.grant.count) {
     return Either.left({
@@ -2445,9 +2448,11 @@ function fightingStyleCantripsReplaced(input: {
 
   const invalidCurrentCantrip = input.currentCantrips.find(
     (cantripId) =>
-      !allCantripsFromClassSpellList(input.featureChoice.grant.spellList, [
-        cantripId,
-      ]),
+      !allCantripsFromClassSpellList({
+        className: input.featureChoice.grant.spellList,
+        spellIds: [cantripId],
+        unitLibrary: input.unitLibrary,
+      }),
   );
   if (invalidCurrentCantrip !== undefined) {
     return Either.left({
@@ -2538,7 +2543,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
     nextSpellcasting === undefined ||
     !isListPreparedSpellcastingCreation(currentSpellcasting) ||
     !isListPreparedSpellcastingCreation(nextSpellcasting) ||
-    !isClassSpellListName(facts.value.className)
+    !isClassSpellListName(input.unitLibrary, facts.value.className)
   ) {
     return Either.left({
       code: "missingListPreparedSpellcasting",
@@ -2562,6 +2567,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
     nextClassLevel: currentClassLevel + 1,
     currentSpellcasting,
     nextSpellcasting,
+    unitLibrary: input.unitLibrary,
   });
   if (Either.isLeft(preparedSpells)) return Either.left(preparedSpells.left);
 
@@ -2573,6 +2579,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
 
 function applyListPreparedSpellChanges(input: {
   readonly eligibleSpellLists: readonly ClassSpellListName[];
+  readonly unitLibrary: UnitCatalog;
   readonly currentPreparedSpells: readonly UnitRecord["id"][];
   readonly levelGain: CharacterBuildListPreparedSpellcastingLevelGain;
   readonly currentClassLevel: number;
@@ -2627,6 +2634,7 @@ function applyListPreparedSpellChanges(input: {
     const spellLevel = preparedSpellLevelFromEligibleLists(
       input.eligibleSpellLists,
       spellId,
+      input.unitLibrary,
     );
     return spellLevel === undefined || !availableSpellLevels.has(spellLevel);
   });
@@ -2702,10 +2710,7 @@ function listPreparedSpellEligibleSpellLists(input: {
   readonly classUnitId: ClassUnitId;
   readonly nextClassLevel: number;
 }): readonly ClassSpellListName[] {
-  if (
-    input.className === BARD_CLASS_NAME &&
-    bardMagicalSecretsApplies(input)
-  ) {
+  if (input.className === BARD_CLASS_NAME && bardMagicalSecretsApplies(input)) {
     return BARD_MAGICAL_SECRETS_SPELL_LISTS;
   }
   return [input.className];
@@ -2735,9 +2740,14 @@ function bardMagicalSecretsApplies(input: {
 function preparedSpellLevelFromEligibleLists(
   spellLists: readonly ClassSpellListName[],
   spellId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
 ): number | undefined {
   for (const spellList of spellLists) {
-    const spellLevel = classSpellListPreparedSpellLevel(spellList, spellId);
+    const spellLevel = classSpellListPreparedSpellLevel({
+      className: spellList,
+      spellId,
+      unitLibrary,
+    });
     if (spellLevel !== undefined) return spellLevel;
   }
   return undefined;
@@ -3220,6 +3230,7 @@ function updateWarlockPactMagic(input: {
   if (currentIssue !== undefined) return Either.left(currentIssue);
 
   const cantrips = applyWarlockPactMagicCantripChanges({
+    unitLibrary: input.unitLibrary,
     currentCantrips: source.cantrips,
     pactMagic: input.levelGain.pactMagic,
     currentProgression,
@@ -3228,6 +3239,7 @@ function updateWarlockPactMagic(input: {
   if (Either.isLeft(cantrips)) return Either.left(cantrips.left);
 
   const preparedSpells = applyWarlockPactMagicPreparedSpellChanges({
+    unitLibrary: input.unitLibrary,
     currentPreparedSpells: source.preparedSpells,
     pactMagic: input.levelGain.pactMagic,
     currentProgression,
@@ -3347,6 +3359,7 @@ function warlockPactMagicCanRemainUnchanged(input: {
 }
 
 function applyWarlockPactMagicCantripChanges(input: {
+  readonly unitLibrary: UnitCatalog;
   readonly currentCantrips: readonly UnitRecord["id"][];
   readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
   readonly currentProgression: PactMagicProgressionRow;
@@ -3388,7 +3401,11 @@ function applyWarlockPactMagicCantripChanges(input: {
     ...input.pactMagic.gainedCantrips,
   ];
   const invalidCantrip = finalCantrips.find(
-    (cantripId) => !isWarlockCantrip(cantripId),
+    (cantripId) =>
+      !isWarlockCantrip({
+        cantripId,
+        unitLibrary: input.unitLibrary,
+      }),
   );
   if (invalidCantrip !== undefined) {
     return Either.left({
@@ -3421,6 +3438,7 @@ function applyWarlockPactMagicCantripChanges(input: {
 }
 
 function applyWarlockPactMagicPreparedSpellChanges(input: {
+  readonly unitLibrary: UnitCatalog;
   readonly currentPreparedSpells: readonly UnitRecord["id"][];
   readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
   readonly currentProgression: PactMagicProgressionRow;
@@ -3471,6 +3489,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
       !warlockPreparedSpellIsEligible({
         spellId,
         maximumSpellLevel: input.nextProgression.pactSlotLevel,
+        unitLibrary: input.unitLibrary,
       }),
   );
   if (invalidSpell !== undefined) {
@@ -3685,7 +3704,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
           optionGrant.replacement?.trigger !== "class_level_gain" ||
           optionGrant.replacement.replacementCount !==
             FIGHTING_STYLE_CANTRIP_REPLACEMENT_COUNT ||
-          !isClassSpellListName(optionGrant.spellList)
+          !isClassSpellListName(input.unitLibrary, optionGrant.spellList)
         ) {
           return [];
         }
@@ -3740,9 +3759,13 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
 }
 
 function isClassSpellListName(
+  unitLibrary: UnitCatalog,
   spellList: string,
 ): spellList is ClassSpellListName {
-  return Object.hasOwn(CLASS_SPELL_LISTS, spellList);
+  return (
+    classSpellListForClassName({ className: spellList, unitLibrary }) !==
+    undefined
+  );
 }
 
 function eldritchInvocationFeatureForWarlockClass(input: {
@@ -4179,24 +4202,32 @@ function hasKnownWarlockCantripForInvocationPrerequisite(input: {
     { readonly kind: "knownWarlockCantrip" }
   >["cantrip"];
 }): boolean {
-  return knownWarlockCantripIds(input.build, input.classUnitId).some(
-    (cantripId) =>
-      knownWarlockCantripSatisfiesEldritchInvocationRule({
-        unitLibrary: input.unitLibrary,
-        cantripId,
-        cantrip: input.cantrip,
-      }),
+  return knownWarlockCantripIds(
+    input.build,
+    input.classUnitId,
+    input.unitLibrary,
+  ).some((cantripId) =>
+    knownWarlockCantripSatisfiesEldritchInvocationRule({
+      unitLibrary: input.unitLibrary,
+      cantripId,
+      cantrip: input.cantrip,
+    }),
   );
 }
 
 function knownWarlockCantripIds(
   build: Pick<CharacterBuild, "spellcasting">,
   classUnitId: WarlockClassUnitId,
+  unitLibrary: UnitCatalog,
 ): readonly UnitRecord["id"][] {
   return (
     warlockSpellcastingSource(build, classUnitId)?.cantrips.filter(
       (cantripId) =>
-        allCantripsFromClassSpellList(WARLOCK_CLASS_NAME, [cantripId]),
+        allCantripsFromClassSpellList({
+          className: WARLOCK_CLASS_NAME,
+          spellIds: [cantripId],
+          unitLibrary,
+        }),
     ) ?? []
   );
 }
@@ -4238,9 +4269,11 @@ function repeatableChoiceAvailableForBuild(input: {
   return input.choiceRule.kind !== "knownWarlockCantrip"
     ? true
     : input.repeatableChoice.kind === "knownWarlockCantrip" &&
-        knownWarlockCantripIds(input.build, input.classUnitId).includes(
-          input.repeatableChoice.cantripId,
-        );
+        knownWarlockCantripIds(
+          input.build,
+          input.classUnitId,
+          input.unitLibrary,
+        ).includes(input.repeatableChoice.cantripId);
 }
 
 function warlockSpellcastingSource(
@@ -4376,18 +4409,27 @@ function pactMagicSlotPoolFromProgression(
   };
 }
 
-function isWarlockCantrip(cantripId: UnitRecord["id"]): boolean {
-  return allCantripsFromClassSpellList(WARLOCK_CLASS_NAME, [cantripId]);
+function isWarlockCantrip(input: {
+  readonly cantripId: UnitRecord["id"];
+  readonly unitLibrary: UnitCatalog;
+}): boolean {
+  return allCantripsFromClassSpellList({
+    className: WARLOCK_CLASS_NAME,
+    spellIds: [input.cantripId],
+    unitLibrary: input.unitLibrary,
+  });
 }
 
 function warlockPreparedSpellIsEligible(input: {
   readonly spellId: UnitRecord["id"];
   readonly maximumSpellLevel: number;
+  readonly unitLibrary: UnitCatalog;
 }): boolean {
-  const spellLevel = classSpellListPreparedSpellLevel(
-    WARLOCK_CLASS_NAME,
-    input.spellId,
-  );
+  const spellLevel = classSpellListPreparedSpellLevel({
+    className: WARLOCK_CLASS_NAME,
+    spellId: input.spellId,
+    unitLibrary: input.unitLibrary,
+  });
   return spellLevel !== undefined && spellLevel <= input.maximumSpellLevel;
 }
 

@@ -16,9 +16,10 @@ import {
   readSpeciesCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import {
-  CLASS_SPELL_LISTS,
   allCantripsFromClassSpellList,
-} from "@dnd/surface/surface/schema";
+  classSpellListForClassName,
+  type ClassSpellListName,
+} from "@dnd/surface/surface/unit-catalog";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   BackgroundToolProficiency,
@@ -603,8 +604,7 @@ function discoverClassFeatureGrantHolesInLevelOrder(
         draft,
         unitLibrary,
         {
-          deferOwnedSkillExpertiseChoices:
-            deferLaterOwnedSkillExpertiseChoices,
+          deferOwnedSkillExpertiseChoices: deferLaterOwnedSkillExpertiseChoices,
         },
       ),
     );
@@ -657,21 +657,25 @@ type GrantSpellAccessChoice = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access_choice" }
 >;
-type ClassFeatureAcquisitionCantripGrantSpellList =
-  keyof typeof CLASS_SPELL_LISTS;
+type ClassFeatureAcquisitionCantripGrantSpellList = ClassSpellListName;
 
 function classFeatureAcquisitionCantripGrantSpellList(
+  unitLibrary: UnitCatalog,
   spellList: GrantSpellAccessChoice["spellList"],
 ): ClassFeatureAcquisitionCantripGrantSpellList | undefined {
-  return isClassFeatureAcquisitionCantripGrantSpellList(spellList)
+  return isClassFeatureAcquisitionCantripGrantSpellList(unitLibrary, spellList)
     ? spellList
     : undefined;
 }
 
 function isClassFeatureAcquisitionCantripGrantSpellList(
+  unitLibrary: UnitCatalog,
   spellList: GrantSpellAccessChoice["spellList"],
 ): spellList is ClassFeatureAcquisitionCantripGrantSpellList {
-  return Object.hasOwn(CLASS_SPELL_LISTS, spellList);
+  return (
+    classSpellListForClassName({ className: spellList, unitLibrary }) !==
+    undefined
+  );
 }
 
 export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
@@ -748,6 +752,7 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
             return [];
           }
           const grantedSpellList = classFeatureAcquisitionCantripGrantSpellList(
+            input.unitLibrary,
             grant.spellList,
           );
           if (grantedSpellList === undefined) {
@@ -760,7 +765,11 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
               (unit) =>
                 unit.kind === "spell" &&
                 unit.mechanics.level === 0 &&
-                allCantripsFromClassSpellList(grantedSpellList, [unit.id]) &&
+                allCantripsFromClassSpellList({
+                  className: grantedSpellList,
+                  spellIds: [unit.id],
+                  unitLibrary: input.unitLibrary,
+                }) &&
                 !primaryCantrips.has(creationChoiceOptionId(unit.id)),
             )
             .sort((left, right) =>
@@ -988,12 +997,10 @@ export function speciesLineageChoiceHoles(
         GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
       ),
       cardinality: EXACTLY_ONE_CHOICE,
-      options: mechanics.spellcastingAbilityChoice.abilities.map(
-        (ability) => ({
-          optionId: creationChoiceOptionId(ability),
-          label: ability.toUpperCase(),
-        }),
-      ),
+      options: mechanics.spellcastingAbilityChoice.abilities.map((ability) => ({
+        optionId: creationChoiceOptionId(ability),
+        label: ability.toUpperCase(),
+      })),
     }),
   ].filter(isChoiceCreationHole);
 }

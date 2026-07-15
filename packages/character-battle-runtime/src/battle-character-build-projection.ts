@@ -65,7 +65,7 @@ import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import {
   allCantripsFromAnyClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
-} from "@dnd/surface/surface/schema";
+} from "@dnd/surface/surface/unit-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
@@ -676,9 +676,7 @@ function spellcastingAllowedByArmorTraining(
       ? undefined
       : getRequiredUnit(
           unitLibrary,
-          characterEquipmentItemSourceFromId(
-            build.equipment.loadout.armor,
-          )
+          characterEquipmentItemSourceFromId(build.equipment.loadout.armor)
             .unitId,
         );
   if (armor !== undefined && Either.isLeft(armor)) {
@@ -907,15 +905,24 @@ function bookOfShadowsSpellAccess(input: {
       "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
     );
   }
-  if (!allCantripsFromAnyClassSpellList(access.cantrips)) {
+  if (
+    !allCantripsFromAnyClassSpellList({
+      spellIds: access.cantrips,
+      unitLibrary: input.unitLibrary,
+    })
+  ) {
     return battleCreatureInitIssue(
       "Book of Shadows cantrips must come from class spell lists.",
     );
   }
   if (
-    !allLeveledSpellsFromAnyClassSpellList(
-      access.ritualSpells.map((spellId) => ({ spellId, spellLevel: 1 })),
-    )
+    !allLeveledSpellsFromAnyClassSpellList({
+      spells: access.ritualSpells.map((spellId) => ({
+        spellId,
+        spellLevel: 1,
+      })),
+      unitLibrary: input.unitLibrary,
+    })
   ) {
     return battleCreatureInitIssue(
       "Book of Shadows Ritual spells must be level-1 spells from class spell lists.",

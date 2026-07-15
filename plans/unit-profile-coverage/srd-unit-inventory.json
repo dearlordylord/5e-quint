@@ -289,7 +289,7 @@
     "levelNineClassRows": 21,
     "spellPressureRows": 370,
     "levelThreeSpellPressureRows": 128,
-    "levelThreeInstalledSpellPressureRows": 86,
+    "levelThreeInstalledSpellPressureRows": 93,
     "levelFourSpellPressureRows": 81,
     "levelFourInstalledSpellPressureRows": 0,
     "levelFiveSpellPressureRows": 88,
@@ -449,20 +449,19 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 617,
       "non-runtime": 120,
-      "catalog-only/dead-for-now": 307,
-      "missing-authored-runtime-closed": 35
+      "catalog-only/dead-for-now": 310,
+      "missing-authored-runtime-closed": 32
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
-      "catalog-only/dead-for-now": 118,
-      "missing-authored-runtime-closed": 3
+      "catalog-only/dead-for-now": 121
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 88,
       "catalog-installed-owner-evidence-present": 40
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 46,
+      "catalog-only/dead-for-now": 53,
       "catalog-installed-owner-evidence-present": 40
     },
     "levelFourSpellPressureRowsByDisposition": {
@@ -14589,7 +14588,7 @@
         "sourceRecordPath": "packages/surface/content/create_food_and_water.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "create_food_and_water"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -14600,7 +14599,18 @@
         "owner": "runtime-detached table inventory and survival adjudication owner",
         "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit create_food_and_water is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table inventory and survival adjudication owner",
+          "evidence": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -14627,7 +14637,7 @@
         "sourceRecordPath": "packages/surface/content/daylight.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "daylight"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -14638,7 +14648,18 @@
         "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
         "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit daylight is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "evidence": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -20158,7 +20179,7 @@
         "sourceRecordPath": "packages/surface/content/daylight.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "daylight"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -20169,7 +20190,18 @@
         "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
         "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit daylight is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "evidence": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -28205,7 +28237,7 @@
         "sourceRecordPath": "packages/surface/content/create_food_and_water.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "create_food_and_water"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -28216,7 +28248,18 @@
         "owner": "runtime-detached table inventory and survival adjudication owner",
         "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit create_food_and_water is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table inventory and survival adjudication owner",
+          "evidence": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -28243,7 +28286,7 @@
         "sourceRecordPath": "packages/surface/content/daylight.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "daylight"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -28254,7 +28297,18 @@
         "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
         "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit daylight is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "evidence": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -31357,7 +31411,7 @@
         "sourceRecordPath": "packages/surface/content/daylight.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "daylight"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -31368,7 +31422,18 @@
         "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
         "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit daylight is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "evidence": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -38073,7 +38138,7 @@
         "sourceRecordPath": "packages/surface/content/daylight.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "daylight"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -38084,7 +38149,18 @@
         "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
         "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit daylight is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "evidence": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -52038,22 +52114,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "phantasmal_force",
+        "sourceRecordPath": "packages/surface/content/phantasmal_force.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "phantasmal_force"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "missing-authored-runtime-closed",
+      "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-battle-runtime",
         "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
         "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity."
       },
-      "ownerEvidence": [],
-      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit phantasmal_force is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
+          "evidence": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -52074,22 +52163,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "phantasmal_force",
+        "sourceRecordPath": "packages/surface/content/phantasmal_force.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "phantasmal_force"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "missing-authored-runtime-closed",
+      "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-battle-runtime",
         "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
         "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity."
       },
-      "ownerEvidence": [],
-      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit phantasmal_force is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
+          "evidence": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -52110,22 +52212,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "phantasmal_force",
+        "sourceRecordPath": "packages/surface/content/phantasmal_force.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "phantasmal_force"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "missing-authored-runtime-closed",
+      "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-battle-runtime",
         "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
         "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity."
       },
-      "ownerEvidence": [],
-      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit phantasmal_force is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
+          "evidence": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     }
   ]

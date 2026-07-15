@@ -24,7 +24,7 @@
 , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Cleric.md:3-24,33-45,56-109,146-219"
+  , section = "Classes/Cleric.md:3-24,33-45,56-109,146-255"
   }
 , savingThrowProficiencies = [ "wis", "cha" ]
 , skillProficiencyChoice =
@@ -104,6 +104,28 @@
       , { spellId = "spirit_guardians", spellLevel = 3 }
       , { spellId = "tongues", spellLevel = 3 }
       , { spellId = "water_walk", spellLevel = 3 }
+      , { spellId = "aura_of_life", spellLevel = 4 }
+      , { spellId = "banishment", spellLevel = 4 }
+      , { spellId = "control_water", spellLevel = 4 }
+      , { spellId = "death_ward", spellLevel = 4 }
+      , { spellId = "divination", spellLevel = 4 }
+      , { spellId = "freedom_of_movement", spellLevel = 4 }
+      , { spellId = "guardian_of_faith", spellLevel = 4 }
+      , { spellId = "locate_creature", spellLevel = 4 }
+      , { spellId = "stone_shape", spellLevel = 4 }
+      , { spellId = "commune", spellLevel = 5 }
+      , { spellId = "contagion", spellLevel = 5 }
+      , { spellId = "dispel_evil_and_good", spellLevel = 5 }
+      , { spellId = "flame_strike", spellLevel = 5 }
+      , { spellId = "geas", spellLevel = 5 }
+      , { spellId = "greater_restoration", spellLevel = 5 }
+      , { spellId = "hallow", spellLevel = 5 }
+      , { spellId = "insect_plague", spellLevel = 5 }
+      , { spellId = "legend_lore", spellLevel = 5 }
+      , { spellId = "mass_cure_wounds", spellLevel = 5 }
+      , { spellId = "planar_binding", spellLevel = 5 }
+      , { spellId = "raise_dead", spellLevel = 5 }
+      , { spellId = "scrying", spellLevel = 5 }
       ]
     }
   , spellSlotProjection =

@@ -16,6 +16,7 @@ import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
+import phantasmalForceInput from "../../content/phantasmal_force.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
@@ -110,6 +111,16 @@ describe("Surface trace interpreter", () => {
         }),
       ]),
     );
+  });
+
+  test("preserves Phantasmal Force authored conditional damage in the trace", () => {
+    const trace = traceUnit(decodeUnitRecordSync(phantasmalForceInput));
+    const authoredConditionalEffect = trace.nodes.find(
+      (node) => node.atomKind === "authored_conditional_effect",
+    );
+
+    expect(authoredConditionalEffect?.label).toContain("2d8 psychic damage");
+    expect(authoredConditionalEffect?.label).toContain("(non-executable)");
   });
 
   test("renders Flame Blade held-object lifecycle and active blade gates", () => {

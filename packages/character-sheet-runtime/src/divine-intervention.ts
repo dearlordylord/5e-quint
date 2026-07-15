@@ -7,7 +7,7 @@ import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import {
   allCantripsFromClassSpellList,
   classSpellListPreparedSpellLevel,
-} from "@dnd/surface/surface/schema";
+} from "@dnd/surface/surface/unit-catalog";
 import {
   topLevelSpellCastingTime,
   type SpellRecord,
@@ -81,6 +81,7 @@ export function castDivineIntervention(input: {
   const invocation = divineInterventionInvocationFromSpell({
     spell: spell.right,
     featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
   });
   if (Either.isLeft(invocation)) return Either.left(invocation.left);
 
@@ -142,11 +143,17 @@ function divineInterventionResource(input: {
 function divineInterventionInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly featureUnitId: UnitRecord["id"];
+  readonly unitLibrary: UnitCatalog;
 }): Either.Either<
   CharacterSheetDivineInterventionInvocation,
   CharacterSheetIssue
 > {
-  if (!isClericSpellAtSupportedDivineInterventionLevel(input.spell)) {
+  if (
+    !isClericSpellAtSupportedDivineInterventionLevel(
+      input.spell,
+      input.unitLibrary,
+    )
+  ) {
     return characterSheetIssue(
       "Divine Intervention requires a Cleric spell of level 5 or lower.",
     );
@@ -177,16 +184,24 @@ function divineInterventionInvocationFromSpell(input: {
 
 function isClericSpellAtSupportedDivineInterventionLevel(
   spell: SpellRecord,
+  unitLibrary: UnitCatalog,
 ): boolean {
   if (spell.mechanics.level > 5) {
     return false;
   }
   if (spell.mechanics.level === 0) {
-    return allCantripsFromClassSpellList("cleric", [spell.id]);
+    return allCantripsFromClassSpellList({
+      className: "cleric",
+      spellIds: [spell.id],
+      unitLibrary,
+    });
   }
   return (
-    classSpellListPreparedSpellLevel("cleric", spell.id) ===
-    spell.mechanics.level
+    classSpellListPreparedSpellLevel({
+      className: "cleric",
+      spellId: spell.id,
+      unitLibrary,
+    }) === spell.mechanics.level
   );
 }
 

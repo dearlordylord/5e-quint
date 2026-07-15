@@ -13,6 +13,7 @@ import magicWeaponInput from "../../content/magic_weapon.json";
 import meldIntoStoneInput from "../../content/meld_into_stone.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
+import phantasmalForceInput from "../../content/phantasmal_force.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
@@ -368,6 +369,118 @@ describe("SRD Unit catalog boundary", () => {
         section: "Spells/Descriptions-E-L#Haste",
       },
     });
+  });
+
+  test("installs Phantasmal Force with its target, save, illusion, and Study facts", () => {
+    const decoded = decodeUnitRecordSync(phantasmalForceInput);
+    if (decoded.kind !== "spell") {
+      throw new Error("Expected Phantasmal Force to decode as a spell.");
+    }
+    if (decoded.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Phantasmal Force to decode as ongoing effect.");
+    }
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    expect(result.catalog.requireUnit("phantasmal_force")).toEqual(decoded);
+
+    expect(decoded).toMatchObject({
+      id: "phantasmal_force",
+      kind: "spell",
+      mechanics: {
+        attachment: {
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature"],
+              visibility: "caster_can_see",
+            },
+          },
+        },
+        castingTime: { kind: "action" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "minute" },
+        },
+        family: "ongoing_effect",
+        initialPhase: {
+          ability: "int",
+          kind: "save_gate",
+          onFail: {
+            channels: ["visual", "sound", "temperature"],
+            kind: "create_phantasmal_illusion",
+            maxCubeSideFeet: 10,
+            perception: "target_only",
+            rationalization: "treat_illogical_outcomes_as_real",
+          },
+        },
+        level: 2,
+        authoredConditionalEffects: [
+          {
+            amount: {
+              expr: { dice: 2, dieSize: 8, flat: 0 },
+              kind: "fixed",
+            },
+            choice: "caster_may_deal",
+            damageType: "psychic",
+            eligibility: {
+              feet: 5,
+              kind: "target_in_phantasm_area_or_within_feet_of_phantasm",
+            },
+            kind: "phantasm_damage",
+            perceivedAs: "illusion_appropriate",
+            source: "dangerous_creature_or_hazard",
+            timing: "each_caster_turn",
+          },
+        ],
+        operations: [
+          {
+            effect: {
+              ability: "int",
+              kind: "ability_check_gate",
+              skill: "investigation",
+              onPass: { kind: "end_current_effect" },
+            },
+            trigger: { kind: "on_creature_studies" },
+          },
+        ],
+        range: { feet: 60, kind: "point" },
+        school: "illusion",
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-M-P#Phantasmal Force",
+      },
+    });
+    expect(decoded.mechanics.operations).toHaveLength(1);
+    expect(decoded.mechanics.authoredConditionalEffects).toHaveLength(1);
+    expect(decoded.description).toContain(
+      "While affected by the spell, the target treats the phantasm as if it were real and rationalizes any illogical outcomes",
+    );
+    expect(decoded.description).toContain(
+      "On each of your turns, such a phantasm can deal 2d8 Psychic damage",
+    );
+  });
+
+  test("rejects contradictory illusion shapes without dropping Phantasmal Force facts", () => {
+    const contradictory: unknown = {
+      ...phantasmalForceInput,
+      mechanics: {
+        ...phantasmalForceInput.mechanics,
+        initialPhase: {
+          ...phantasmalForceInput.mechanics.initialPhase,
+          onFail: {
+            ...phantasmalForceInput.mechanics.initialPhase.onFail,
+            kind: "create_illusion",
+            maxSize: "large",
+          },
+        },
+      },
+    };
+
+    expect(Either.isLeft(decodeUnitRecordEither(contradictory))).toBe(true);
   });
 
   test("keeps Shield of Faith's creature target and Armor Class bonus explicit", () => {
@@ -9162,6 +9275,37 @@ describe("SRD Unit catalog boundary", () => {
         unitId: "class_fighter",
       });
     }
+  });
+
+  test("rejects duplicate spellcasting class ownership", () => {
+    const bard = srdUnitCollection.units.find(
+      (unit) => unit.id === "class_bard",
+    );
+    if (bard === undefined) {
+      throw new Error("class_bard fixture missing from SRD collection");
+    }
+    const duplicateBard = {
+      ...bard,
+      id: "class_bard_duplicate",
+    } satisfies Srd521Unit;
+    const duplicate = buildUnitCatalog({
+      collections: [
+        defineSrdUnitCollection({
+          units: [...srdUnitCollection.units, duplicateBard],
+        }),
+      ],
+    });
+
+    expect(duplicate).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          className: "bard",
+          code: "duplicateSpellcastingClassName",
+          unitIds: ["class_bard", "class_bard_duplicate"],
+        },
+      ],
+    });
   });
 
   test("rejects malformed SRD collections with mixed provenance", () => {

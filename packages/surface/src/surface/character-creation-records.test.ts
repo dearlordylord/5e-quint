@@ -47,6 +47,11 @@ import {
   decodeUnitRecordSync,
   EffectAtomSchema,
 } from "./schema.ts";
+import {
+  buildUnitCatalog,
+  classSpellListForClassName,
+  srdUnitCollection,
+} from "./unit-catalog.ts";
 
 const classRecordWithSpellcasting = (
   className: string,
@@ -926,6 +931,109 @@ describe("character-creation Surface records", () => {
         });
       }
     }
+  });
+
+  test("preserves all nine canonical GH-25 class Spell Access rows", () => {
+    const catalogResult = buildUnitCatalog({
+      collections: [srdUnitCollection],
+    });
+    expect(catalogResult.tag).toBe("ok");
+    if (catalogResult.tag !== "ok") return;
+
+    const cases = [
+      {
+        className: "bard",
+        input: classBardInput,
+        provenance: "Spells/Descriptions-M-P#Phantasmal Force",
+        spellIds: ["phantasmal_force"],
+      },
+      {
+        className: "sorcerer",
+        input: classSorcererInput,
+        provenance: "Spells/Descriptions-M-P#Phantasmal Force",
+        spellIds: ["phantasmal_force"],
+      },
+      {
+        className: "wizard",
+        input: classWizardInput,
+        provenance: "Spells/Descriptions-M-P#Phantasmal Force",
+        spellIds: ["phantasmal_force"],
+      },
+      {
+        className: "paladin",
+        input: classPaladinInput,
+        provenance: "Classes/Paladin.md:3-24,33-43,66-129,172-204,206-215",
+        spellIds: [
+          "create_food_and_water",
+          "daylight",
+          "dispel_magic",
+          "magic_circle",
+          "remove_curse",
+          "revivify",
+        ],
+      },
+    ] as const;
+
+    for (const entry of cases) {
+      const classRecord = decodeClassRecordSync(
+        catalogResult.catalog.requireUnit(entry.input.id),
+      );
+      const spellcasting = classRecord.spellcasting;
+      if (spellcasting === undefined) {
+        throw new Error("Expected class Spell Access.");
+      }
+      expect(classRecord.provenance.section).toContain(entry.provenance);
+      const spellIds =
+        spellcasting.kind === "wizard_spellcasting_creation"
+          ? spellcasting.spellbookAccess.spells.map((spell) => spell.spellId)
+          : spellcasting.preparedAccess.spells.map((spell) => spell.spellId);
+
+      expect(spellIds).toEqual(expectArrayContainingValues(entry.spellIds));
+      const projectedSpellList = classSpellListForClassName({
+        className: entry.className,
+        unitLibrary: catalogResult.catalog,
+      });
+      expect(projectedSpellList, entry.className).toBeDefined();
+      if (projectedSpellList === undefined) continue;
+      expect([
+        ...projectedSpellList.cantrips,
+        ...projectedSpellList.leveled.map((spell) => spell.spellId),
+      ]).toEqual(expectArrayContainingValues(entry.spellIds));
+      for (const spellId of entry.spellIds) {
+        expect(catalogResult.catalog.requireUnit(spellId)).toMatchObject({
+          id: spellId,
+          kind: "spell",
+        });
+      }
+      if (spellcasting.kind === "wizard_spellcasting_creation") {
+        expect(spellcasting.preparedAccess.spellIds).toEqual(
+          expectArrayContainingValues(entry.spellIds),
+        );
+      }
+    }
+  });
+
+  test("rejects prepared options above the represented slot progression", () => {
+    if (
+      classPaladinInput.spellcasting.kind !==
+      "list_prepared_spellcasting_progression_creation"
+    ) {
+      throw new Error("Expected Paladin list-prepared spellcasting.");
+    }
+
+    const onlyLevelsOneThroughFive =
+      classPaladinInput.spellcasting.spellcastingProgression.filter(
+        (row) => row.atLevel <= 5,
+      );
+    const invalidRecord = {
+      ...classPaladinInput,
+      spellcasting: {
+        ...classPaladinInput.spellcasting,
+        spellcastingProgression: onlyLevelsOneThroughFive,
+      },
+    };
+
+    expect(Either.isLeft(decodeUnitRecordEither(invalidRecord))).toBe(true);
   });
 
   test("decodes class-container tool, filtered weapon, and mixed multiclass proficiency source facts", () => {
@@ -2295,50 +2403,6 @@ describe("character-creation Surface records", () => {
                 "healing_word",
               ],
               cantrips: ["dancing_lights", "vicious_mockery"],
-            }),
-          ),
-        ),
-      ),
-    ).toBe(true);
-
-    expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
-          classRecordWithSpellcasting("bard", {
-            ...bardSpellcasting,
-            preparedAccess: {
-              ...bardSpellcasting.preparedAccess,
-              spells: [
-                { spellId: "charm_person", spellLevel: 1 },
-                { spellId: "magic_missile", spellLevel: 1 },
-                { spellId: "dissonant_whispers", spellLevel: 1 },
-                { spellId: "healing_word", spellLevel: 1 },
-              ],
-            },
-          }),
-        ),
-      ),
-    ).toBe(true);
-
-    expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
-          classRecordWithSpellcasting(
-            "cleric",
-            listPreparedSpellcasting({
-              className: "cleric",
-              spellcastingAbility: "wis",
-              spellcastingFocus: "holy_symbol",
-              preparedChangeOn: "long_rest",
-              preparedReplacementCount: "any",
-              preparedCount: 4,
-              preparedSpells: [
-                "bless",
-                "cure_wounds",
-                "guiding_bolt",
-                "shield_of_faith",
-              ],
-              cantrips: ["guidance", "dancing_lights", "thaumaturgy"],
             }),
           ),
         ),

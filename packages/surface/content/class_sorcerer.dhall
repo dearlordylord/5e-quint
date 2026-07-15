@@ -17,7 +17,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319"
+  , section = "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "con", "cha" ]
 , skillProficiencyChoice =
@@ -102,6 +102,7 @@
       , { spellId = "magic_weapon", spellLevel = 2 }
       , { spellId = "mirror_image", spellLevel = 2 }
       , { spellId = "misty_step", spellLevel = 2 }
+      , { spellId = "phantasmal_force", spellLevel = 2 }
       , { spellId = "scorching_ray", spellLevel = 2 }
       , { spellId = "see_invisibility", spellLevel = 2 }
       , { spellId = "shatter", spellLevel = 2 }

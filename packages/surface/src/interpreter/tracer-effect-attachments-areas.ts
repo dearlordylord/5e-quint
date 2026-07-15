@@ -32,6 +32,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "ignite_objects"
       | "create_object"
       | "create_illusion"
+      | "create_phantasmal_illusion"
       | "force_drop_item"
       | "move_object"
       | "pull_object_away"
@@ -285,6 +286,16 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "create_illusion",
         label: `create_illusion\nmax ${e.maxSize}\nchannels: ${e.channels.join(", ")}`,
+      });
+      return id;
+    }
+    case "create_phantasmal_illusion": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "create_phantasmal_illusion",
+        label: `create_phantasmal_illusion\nmax ${e.maxCubeSideFeet}-ft cube\nperception: ${e.perception}\nrationalization: ${e.rationalization}\nchannels: ${e.channels.join(", ")}`,
       });
       return id;
     }

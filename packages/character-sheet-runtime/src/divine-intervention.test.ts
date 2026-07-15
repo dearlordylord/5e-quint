@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-REPLAY: L110C-03-DIVINE-INTERVENTION-SESSION cleric_divine_intervention doUseClericDivineIntervention
 // UNIT-IDENTITY-REPLAY: L110C-03-DIVINE-INTERVENTION-SESSION flame_strike doCastFlameStrikeThroughDivineIntervention
 import { describe, expect, it, test } from "vitest";
+import { classSpellListPreparedSpellLevel } from "@dnd/surface/surface/unit-catalog";
 
 import {
   Either,
@@ -177,6 +178,30 @@ describe("Character Sheet runtime / Divine Intervention", () => {
         }),
       ),
     ).toBe(true);
+  });
+
+  test("admits an installed level-5 Cleric spell from the canonical class list", () => {
+    expect(
+      classSpellListPreparedSpellLevel({
+        className: "cleric",
+        spellId: "contagion",
+        unitLibrary,
+      }),
+    ).toBe(5);
+
+    const invocation = requireRight(
+      castDivineIntervention({
+        sheet: divineInterventionClericSheet(),
+        unitLibrary,
+        spellId: "contagion",
+      }),
+    ).invocation;
+
+    expect(invocation).toMatchObject({
+      spellId: "contagion",
+      spellLevel: 5,
+      spellList: "cleric",
+    });
   });
 
   test("rejects non-action or non-Cleric spell handoffs", () => {

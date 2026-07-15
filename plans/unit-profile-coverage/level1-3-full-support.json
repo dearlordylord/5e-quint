@@ -2451,6 +2451,78 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
+      "sourceRecordPath": "packages/surface/content/phantasmal_force.json",
+      "sourceRows": [
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Phantasmal Force",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
+          "levelBand": "spell-level-2",
+          "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 522,
+            "lineStart": 522,
+            "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Phantasmal Force",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
+          "levelBand": "spell-level-2",
+          "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 522,
+            "lineStart": 522,
+            "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Phantasmal Force",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
+          "levelBand": "spell-level-2",
+          "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 522,
+            "lineStart": 522,
+            "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        }
+      ],
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
+      "unitId": "phantasmal_force"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "outside-battle-runtime"
@@ -3467,7 +3539,7 @@
       ]
     },
     {
-      "count": 8,
+      "count": 9,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -3476,6 +3548,7 @@
         "enlarge_reduce",
         "levitate",
         "moonbeam",
+        "phantasmal_force",
         "prayer_of_healing",
         "rogue_fast_hands",
         "sorcerer_metamagic"
@@ -3542,13 +3615,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 197,
+      "denominator": 198,
       "numerator": 146,
-      "percent": "74.1%"
+      "percent": "73.7%"
     },
     "strictTargetClosure": {
-      "denominator": 197,
-      "numerator": 197,
+      "denominator": 198,
+      "numerator": 198,
       "percent": "100%"
     }
   },
@@ -4509,119 +4582,6 @@
           }
         ],
         "unitId": "message"
-      },
-      {
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
-              "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
-              "source": "unit-claim",
-              "state": "recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Bard spell list Phantasmal Force",
-            "finalDisposition": "missing-authored-runtime-closed",
-            "levelBand": "spell-level-2",
-            "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
-            "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "unsupported-profile"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
-              "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
-              "source": "unit-claim",
-              "state": "recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Sorcerer spell list Phantasmal Force",
-            "finalDisposition": "missing-authored-runtime-closed",
-            "levelBand": "spell-level-2",
-            "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
-            "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "unsupported-profile"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
-              "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
-              "source": "unit-claim",
-              "state": "recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Wizard spell list Phantasmal Force",
-            "finalDisposition": "missing-authored-runtime-closed",
-            "levelBand": "spell-level-2",
-            "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
-            "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "reason": "The SRD row has spell-level-2 spell-list Unit pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Phantasmal Force",
-            "finalDisposition": "missing-authored-runtime-closed",
-            "id": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
-            "levelBand": "spell-level-2",
-            "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 522,
-              "lineStart": 522,
-              "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
-            },
-            "unitProfileDisposition": "unsupported-profile"
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Phantasmal Force",
-            "finalDisposition": "missing-authored-runtime-closed",
-            "id": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
-            "levelBand": "spell-level-2",
-            "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 522,
-              "lineStart": 522,
-              "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
-            },
-            "unitProfileDisposition": "unsupported-profile"
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Phantasmal Force",
-            "finalDisposition": "missing-authored-runtime-closed",
-            "id": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
-            "levelBand": "spell-level-2",
-            "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 522,
-              "lineStart": 522,
-              "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
-            },
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "unitId": "phantasmal_force"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
@@ -12066,7 +12026,7 @@
     },
     "rowsByStatus": {
       "not-applicable": 5,
-      "not-required": 29,
+      "not-required": 30,
       "witness-present": 163
     }
   },
@@ -13089,17 +13049,17 @@
     "groupsByClaimTag": {
       "profile-subset-supported": 22,
       "supported-profile": 146,
-      "unsupported-profile": 29
+      "unsupported-profile": 30
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 2,
-      "closed-outside-battle-runtime-boundary": 8,
+      "closed-outside-battle-runtime-boundary": 9,
       "closed-runtime-detached-table-adjudication": 35,
       "supported-profile": 146
     },
-    "nonSupportedFrontier": 51,
-    "strictDenominator": 197
+    "nonSupportedFrontier": 52,
+    "strictDenominator": 198
   }
 }

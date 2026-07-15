@@ -36,8 +36,8 @@
       "accepted-no-battle-effect": 442
     },
     "rowsByCatalogAdmission": {
-      "installed": 721,
-      "not-installed": 224
+      "installed": 731,
+      "not-installed": 214
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 184,
@@ -51,8 +51,8 @@
     },
     "rowsByFinalDisposition": {
       "catalog-installed-owner-evidence-present": 507,
-      "catalog-only/dead-for-now": 307,
-      "missing-authored-runtime-closed": 35,
+      "catalog-only/dead-for-now": 310,
+      "missing-authored-runtime-closed": 32,
       "non-runtime": 96
     },
     "rowsByLevelBand": {
@@ -10038,7 +10038,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "create_food_and_water"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -10086,7 +10086,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "daylight"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -14986,7 +14986,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "daylight"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -21863,7 +21863,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "create_food_and_water"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -21911,7 +21911,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "daylight"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -24842,7 +24842,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "daylight"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -31227,7 +31227,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "daylight"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -43488,7 +43488,7 @@
         "sourceInventoryRowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
         "state": "present"
       },
-      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
       "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -43498,7 +43498,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantasmal_force.json",
+          "state": "authored-record-present",
+          "unitId": "phantasmal_force"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -43512,10 +43514,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "phantasmal_force"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -43534,7 +43536,7 @@
         "sourceInventoryRowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
         "state": "present"
       },
-      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
       "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -43544,7 +43546,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantasmal_force.json",
+          "state": "authored-record-present",
+          "unitId": "phantasmal_force"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -43558,10 +43562,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "phantasmal_force"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -43580,7 +43584,7 @@
         "sourceInventoryRowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
         "state": "present"
       },
-      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
       "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -43590,7 +43594,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantasmal_force.json",
+          "state": "authored-record-present",
+          "unitId": "phantasmal_force"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -43604,10 +43610,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "phantasmal_force"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -44200,7 +44206,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "create_food_and_water"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -44291,7 +44297,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "daylight"
         },
         "finalDisposition": "catalog-only/dead-for-now",
