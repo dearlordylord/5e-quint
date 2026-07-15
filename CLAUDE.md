@@ -170,6 +170,41 @@ next run. When an MBT test fails, the error includes the seed (e.g.,
 test and `QUINT_SEED`. Do not dismiss MBT failures as flaky; reproduce with the
 seed, diagnose, and fix unless the user explicitly says otherwise.
 
+## Resource-bounded verification (CRITICAL)
+
+Root workspace verification is intentionally resource-bounded. `pnpm
+typecheck` and `pnpm test` acquire the Git-common-directory
+`ralph-broad-workspace-check.lock`, shared by all linked worktrees, and cap
+Turbo concurrency at one package task. `pnpm quality` uses the same lock. Run
+those public scripts directly; do not wrap them in another `flock`, bypass them
+with raw Turbo, or invoke their internal `:body`/`:turbo` scripts. For another
+broad workspace command, use `scripts/with-broad-workspace-lock.sh <command>`.
+Keep focused package checks focused; they do not require this broad-check lock.
+
+All Quint/QNT proof and battle MBT commands must hold the separate shared
+`ralph-mbt.lock` for the entire command. Public proof and MBT package scripts do
+this automatically. Run those public scripts directly; do not wrap them in
+another lock or invoke their internal `:body` scripts. Run any direct Quint or
+filtered MBT command through `scripts/with-mbt-lock.sh <command>`.
+The broad-check and MBT locks are distinct and must never be nested. Import-
+closure budgets, per-module proof timeouts, and the one-MBT-at-a-time rule
+remain mandatory; a lock is not permission to run an unbounded model.
+
+**SIGKILL / exit 137 is an emergency signal**, including when it comes from
+TypeScript rather than Quint. Immediately stop launching verification and:
+
+1. Record the exact killed command and child PID(s).
+2. Inspect `ps` for `quint_evaluator`, `quint`, `vitest`, fuzzers, compilers,
+   and surviving children; inspect `free -h`, load, and readable cgroup
+   `memory.events` counters.
+3. Kill only confirmed orphan verification children, including compiler,
+   Turbo/pnpm, test, proof, and evaluator processes. Preserve live Ralph agents
+   and unrelated host sessions.
+4. Do not retry the unchanged command. First reduce/serialize concurrency,
+   shrink an accidental QNT import closure, select the focused lane, or otherwise
+   remove the demonstrated resource cause.
+5. Report the emergency and the evidence. A partial run is not verification.
+
 ## MBT runs are expensive
 
 Battle-runtime MBT is selective. Archived restore-source MBT is not an active

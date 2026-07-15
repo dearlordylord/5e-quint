@@ -433,7 +433,6 @@ base_sha="$(git rev-parse --verify --end-of-options "$base_ref^{commit}")"
 head_sha="$(git rev-parse HEAD)"
 current_branch="$(git branch --show-current)"
 git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
-mbt_lock_file="$git_common_dir/ralph-mbt.lock"
 
 [[ "$head_sha" == "$base_sha" ]] || die "current HEAD ($head_sha) does not match $base_ref ($base_sha)"
 [[ -z "$(git status --porcelain --untracked-files=normal)" ]] || \
@@ -1154,14 +1153,15 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
 - Do not duplicate state across layers.
 - For any modeled D&D rule, read the relevant SRD text under .references/srd-5.2.1/ and check UBIQUITOUS_LANGUAGE.md before implementing.
 - Treat battle MBT as scarce. Only run the appropriate MBT tier after changes require it.
-- Before any MBT run, acquire the cross-worktree lock and keep it for the
-  entire command: flock "$mbt_lock_file" bash -lc '<timed MBT command>'.
-  Only after acquiring that lock, check for stale runners:
+- Public proof and MBT package scripts acquire the cross-worktree MBT lock themselves; run them directly and never wrap them in another lock or invoke their internal :body scripts. Run any direct Quint or filtered MBT command through scripts/with-mbt-lock.sh bash -lc '<timed command>'.
+  Only after the wrapper acquires that lock, check for stale runners:
   ps aux | grep vitest | grep -v grep
   ps aux | grep quint_evaluator | grep -v grep
   If a prior quint_evaluator is alive, stop it with killall -9 quint_evaluator before starting. If a vitest/MBT process is alive, do not start another MBT run; wait for it or report the blocker.
 - Run MBT with the repo background/timing protocol from AGENTS.md, never as a casual foreground exploratory command.
 - Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Use promoted MBT commands only when the task explicitly requires them.
+- Run public root pnpm typecheck, test, or quality directly: each self-serializes across worktrees and caps Turbo concurrency at one. Do not wrap a public script in flock, call its internal :body/:turbo script, or bypass it with raw Turbo. Run any other broad command through scripts/with-broad-workspace-lock.sh. Keep the broad-check and MBT locks distinct and never nest them.
+- Treat SIGKILL or exit 137 from any compiler, test, Quint, or evaluator process as an emergency. Stop launching verification, inspect the process tree, memory/swap/load, and /sys/fs/cgroup/memory.events, clean only confirmed orphan verification children (including compiler, Turbo/pnpm, test, proof, and evaluator processes), and report the exact killed command. Preserve live Ralph agents and unrelated host sessions. Do not retry unchanged.
 - Do not write to the memory system.
 - Broad verification is diagnostic, not an automatic scope-expander. If lint/typecheck/test verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification immediately, record that baseline noise, and do not continue repo-wide cleanup inside this task. Only keep fixing failures that are caused by your task diff itself.
 
@@ -1206,6 +1206,7 @@ Task context packet: $context_file
 Review report output path: $report
 
 Review the implementation diff against $task_base_sha. Do not modify repository files. Read the task file and context packet first; use the full plan only for dependency/follow-up checks. Focus on correctness, Task $task_no coverage, repo instruction violations, missing verification, duplicated state, and SRD/UBIQUITOUS_LANGUAGE traceability for modeled rules. Flag any changes that implement later tasks prematurely. If you decide verification requires MBT, first check for existing vitest/quint_evaluator processes per AGENTS.md and do not launch a second MBT run while one is alive.
+Run public root pnpm typecheck, test, or quality directly; each self-serializes across worktrees and caps Turbo concurrency at one. Do not wrap it in flock, call its internal body script, or bypass it with raw Turbo. Public proof and MBT package scripts also self-serialize; use scripts/with-mbt-lock.sh only for a direct Quint or filtered MBT command. Never nest the broad-check and MBT locks. Treat SIGKILL or exit 137 as an emergency requiring resource/process inspection and cleanup of only confirmed orphan verification children (including compiler, Turbo/pnpm, test, proof, and evaluator processes) before any retry; preserve live Ralph agents and unrelated host sessions.
 Do not edit the main repo worktree at $repo_root or any sibling task worktree.
 Treat unrelated repo-wide baseline failures as noise unless the reviewed diff clearly causes them. A task should not be rejected merely for not repairing pre-existing broad verification failures outside its touched ownership surface.
 Strict review checklist:
@@ -1345,8 +1346,10 @@ Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
 $github_plan_decider_policy
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
-- Before any MBT run, hold the cross-worktree lock for the entire command with: flock "$mbt_lock_file" bash -lc '<timed MBT command>'. Only while holding it, check for existing vitest and quint_evaluator processes per AGENTS.md and kill stale quint_evaluator processes.
+- Public proof and MBT package scripts acquire the cross-worktree MBT lock themselves; run them directly and never wrap them in another lock or invoke their internal :body scripts. Run any direct Quint or filtered MBT command through scripts/with-mbt-lock.sh bash -lc '<timed command>'. Only while holding the lock, check for existing vitest and quint_evaluator processes per AGENTS.md and kill stale quint_evaluator processes.
 - Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, use the promoted MBT command unless the task explicitly requires a higher tier.
+- Run public root pnpm typecheck, test, or quality directly; each self-serializes across worktrees and caps Turbo concurrency at one. Do not wrap it in flock, call its internal body script, or bypass it with raw Turbo. Use scripts/with-broad-workspace-lock.sh for any other broad command, and never nest the broad-check and MBT locks.
+- Treat SIGKILL or exit 137 as an emergency. Stop verification, inspect process/resource state and cgroup memory events, clean only confirmed orphan verification children (including compiler, Turbo/pnpm, test, proof, and evaluator processes), preserve live Ralph agents and unrelated host sessions, and do not retry the unchanged command.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
 - Inspect the implementation and review for Plan Impact. For non-GitHub-backed plans, update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. For GitHub-backed plans, follow the canonical-issue policy above. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
