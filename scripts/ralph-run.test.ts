@@ -320,6 +320,9 @@ describe("Ralph launcher boundaries", () => {
     );
     expect(packageJson.scripts["proof:qnt"]).toContain("with-mbt-lock.sh");
     expect(packageJson.scripts["proof:qnt:body"]).toContain("test:qnt-proofs");
+    expect(packageJson.scripts["check:surface-publication-self-test"]).toContain(
+      "--maxWorkers=1",
+    );
 
     const packageJsonPaths = [
       "package.json",
