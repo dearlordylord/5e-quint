@@ -27,7 +27,7 @@ runnable, or unblocked.
     {
       "number": 3,
       "id": "GH-25",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Repair the nine canonical RAW-to-Surface catalog omissions",
       "dependencies": []
     },

@@ -790,14 +790,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "phantasmal_force",
-    {
-      kind: missingAuthoredRuntimeClosureKind,
-      reason:
-        "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
-    },
-  ],
-  [
     "private_sanctum",
     {
       kind: missingAuthoredRuntimeClosureKind,

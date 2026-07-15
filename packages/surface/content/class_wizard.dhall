@@ -16,7 +16,7 @@
 , primaryAbilities = { abilities = [ "int" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Wizard.md:3-25,31-43,56-82,94-114,138-266"
+  , section = "Classes/Wizard.md:3-25,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "int", "wis" ]
 , skillProficiencyChoice =
@@ -118,6 +118,7 @@
       , "mind_spike"
       , "mirror_image"
       , "misty_step"
+      , "phantasmal_force"
       , "ray_of_enfeeblement"
       , "rope_trick"
       , "scorching_ray"
@@ -223,6 +224,7 @@
       , { spellId = "mind_spike", spellLevel = 2 }
       , { spellId = "mirror_image", spellLevel = 2 }
       , { spellId = "misty_step", spellLevel = 2 }
+      , { spellId = "phantasmal_force", spellLevel = 2 }
       , { spellId = "ray_of_enfeeblement", spellLevel = 2 }
       , { spellId = "rope_trick", spellLevel = 2 }
       , { spellId = "scorching_ray", spellLevel = 2 }

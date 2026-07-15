@@ -82,7 +82,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-43,66-129,172-204"
+    "section": "Classes/Paladin.md:3-24,33-43,66-129,172-204,206-215"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -205,6 +205,30 @@
         {
           "spellId": "zone_of_truth",
           "spellLevel": 2
+        },
+        {
+          "spellId": "create_food_and_water",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "daylight",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "dispel_magic",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "magic_circle",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "remove_curse",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "revivify",
+          "spellLevel": 3
         }
       ]
     },
@@ -279,6 +303,89 @@
           {
             "count": 2,
             "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 6,
+        "cantripCount": 0,
+        "preparedSpellCount": 6,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 2,
+            "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 7,
+        "cantripCount": 0,
+        "preparedSpellCount": 7,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 8,
+        "cantripCount": 0,
+        "preparedSpellCount": 7,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 9,
+        "cantripCount": 0,
+        "preparedSpellCount": 9,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          },
+          {
+            "count": 2,
+            "spellLevel": 3
+          }
+        ]
+      },
+      {
+        "atLevel": 10,
+        "cantripCount": 0,
+        "preparedSpellCount": 9,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          },
+          {
+            "count": 2,
+            "spellLevel": 3
           }
         ]
       }

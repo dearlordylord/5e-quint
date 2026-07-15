@@ -210,6 +210,7 @@ export function traceEffectAtomScaling(
     case "ignite_objects":
     case "create_object":
     case "create_illusion":
+    case "create_phantasmal_illusion":
     case "force_drop_item":
     case "move_object":
     case "pull_object_away":

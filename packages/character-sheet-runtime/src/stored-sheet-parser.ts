@@ -55,7 +55,7 @@ import {
   allCantripsFromAnyClassSpellList,
   allCantripsFromClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
-} from "@dnd/surface/surface/schema";
+} from "@dnd/surface/surface/unit-catalog";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import {
   isSupportedClassFeatureSpellFreeCastResourceTag,
@@ -795,7 +795,13 @@ function knownWarlockCantripIdsForStoredBuild(
       continue;
     }
     for (const cantripId of source.cantrips) {
-      if (allCantripsFromClassSpellList("warlock", [cantripId])) {
+      if (
+        allCantripsFromClassSpellList({
+          className: "warlock",
+          spellIds: [cantripId],
+          unitLibrary,
+        })
+      ) {
         cantripIds.add(cantripId);
       }
     }
@@ -897,15 +903,24 @@ function storedBookOfShadowsSelectionIssue(
       "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
     );
   }
-  if (!allCantripsFromAnyClassSpellList(access.cantrips)) {
+  if (
+    !allCantripsFromAnyClassSpellList({
+      spellIds: access.cantrips,
+      unitLibrary,
+    })
+  ) {
     return characterSheetIssue(
       "Character Build Book of Shadows cantrips must come from class spell lists.",
     );
   }
   if (
-    !allLeveledSpellsFromAnyClassSpellList(
-      access.ritualSpells.map((spellId) => ({ spellId, spellLevel: 1 })),
-    )
+    !allLeveledSpellsFromAnyClassSpellList({
+      spells: access.ritualSpells.map((spellId) => ({
+        spellId,
+        spellLevel: 1,
+      })),
+      unitLibrary,
+    })
   ) {
     return characterSheetIssue(
       "Character Build Book of Shadows Ritual spells must be level-1 spells from class spell lists.",

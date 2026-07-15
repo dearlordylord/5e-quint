@@ -10,6 +10,7 @@ import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeAbilityCheck,
   describeDc,
+  describeDiceAmount,
   describeOngoingPredicate,
   describeRandomTableOutcomeRange,
   describeRandomTableRoll,
@@ -72,6 +73,22 @@ export function traceOngoingEffect(
       edges,
       ids,
     );
+  }
+
+  for (const effect of m.authoredConditionalEffects ?? []) {
+    const effectId = ids("authored");
+    nodes.push({
+      id: effectId,
+      category: "effect",
+      atomKind: "authored_conditional_effect",
+      label:
+        `authored_conditional_effect\n${effect.source}\n` +
+        `${effect.choice}\n${effect.timing}\n` +
+        `${effect.eligibility.kind} (${effect.eligibility.feet} ft)\n` +
+        `${describeDiceAmount(effect.amount)} ${effect.damageType} damage\n` +
+        `perceived as: ${effect.perceivedAs}\n(non-executable)`,
+    });
+    edges.push({ from: ctx.procId, to: effectId, relation: "documents" });
   }
 }
 

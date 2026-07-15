@@ -144,7 +144,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230"
+    "section": "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230; Spells/Descriptions-M-P#Phantasmal Force"
   },
   "savingThrowProficiencies": [
     "dex",
@@ -362,6 +362,10 @@
         },
         {
           "spellId": "mirror_image",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "phantasmal_force",
           "spellLevel": 2
         },
         {

@@ -61,7 +61,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230"
+  , section = "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "dex", "cha" ]
 , skillProficiencyChoice =
@@ -152,6 +152,7 @@
       , { spellId = "locate_object", spellLevel = 2 }
       , { spellId = "magic_mouth", spellLevel = 2 }
       , { spellId = "mirror_image", spellLevel = 2 }
+      , { spellId = "phantasmal_force", spellLevel = 2 }
       , { spellId = "see_invisibility", spellLevel = 2 }
       , { spellId = "shatter", spellLevel = 2 }
       , { spellId = "silence", spellLevel = 2 }

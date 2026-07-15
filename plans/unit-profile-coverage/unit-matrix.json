@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 511,
-      "numerator": 342,
-      "percent": "66.9%"
+      "denominator": 512,
+      "numerator": 345,
+      "percent": "67.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 599,
-      "numerator": 392,
-      "percent": "65.4%"
+      "denominator": 600,
+      "numerator": 395,
+      "percent": "65.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 393
+      "value": 396
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 215,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 393,
-      "numerator": 393,
+      "denominator": 396,
+      "numerator": 396,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "99.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 343,
+      "denominator": 346,
       "numerator": 215,
-      "percent": "62.7%"
+      "percent": "62.1%"
     }
   },
   "metricSemantics": [
@@ -20179,8 +20179,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 185,
-        "installedUnitDenominator": 185,
+        "executableUnitDenominator": 188,
+        "installedUnitDenominator": 188,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 209,
@@ -20190,7 +20190,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 148,
         "supportedProfileUnits": 98,
-        "unsupportedOrOtherUnits": 33
+        "unsupportedOrOtherUnits": 36
       },
       {
         "executableUnitDenominator": 118,
@@ -35338,6 +35338,29 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "runtime-detached table inventory and survival adjudication owner",
+          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers."
+        },
+        "reason": "Create Food and Water is an SRD level-3 Spell Definition whose Surface record models Action Spell Slot casting, 30-foot range, V/S components, Instantaneous duration, and direct creation of food and fresh water as object provisions. No promoted battle-runtime profile is claimed because the represented food and water require table or inventory ownership for placement on the ground or in containers, item quantity and holder state, clean-water and nourishing-food facts, food spoilage after 24 hours, later consumption, and malnutrition or dehydration hazard adjudication rather than generic Spell Invocation reducers.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/create_food_and_water.json",
+      "unitId": "create_food_and_water"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.hit-point-restoration"
         ],
@@ -35561,6 +35584,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/darkvision.json",
       "unitId": "darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
+        },
+        "reason": "Daylight is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 60-foot range, V/S components, timed 1-hour duration, point-origin 60-foot Sphere sunlight, and Bright Light plus Dim Light facts, with RAW prose for the alternative object-origin Emanation and overlap dispel against Darkness created by a spell of level 3 or lower. No promoted battle-runtime profile is claimed because full support needs a sunlight Spell Effect owner that admits both point-origin and object-origin modes, carries the occurrence duration, consumes table-supplied object worn/carried, opaque-cover, area, and overlap witnesses, projects Bright Light and Dim Light illumination consequences, and ends qualifying magical Darkness spell effects by generic source-level and effect facts rather than authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/daylight.json",
+      "unitId": "daylight"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -40445,6 +40491,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
       "unitId": "pass_without_trace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
+          "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity."
+        },
+        "reason": "Phantasmal Force is authored and installed as an SRD level-2 Surface Spell Definition with Action Spell Slot casting, 60-foot range, V/S/M bit-of-fleece components, Concentration up to 1 minute, a one-creature target, an initial Intelligence Saving Throw, target-specific visual/sound/temperature phantasm facts, and Study/Investigation disbelief. No promoted profile is claimed because recurring Psychic damage and dangerous phantasm/hazard adjudication remain outside the current promoted runtime owners.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/phantasmal_force.json",
+      "unitId": "phantasmal_force"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -47936,68 +48005,12 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "runtime-detached table inventory and survival adjudication owner",
-          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers."
-        },
-        "reason": "Create Food and Water is an SRD level-3 Spell Definition whose Surface record models Action Spell Slot casting, 30-foot range, V/S components, Instantaneous duration, and direct creation of food and fresh water as object provisions. No promoted battle-runtime profile is claimed because the represented food and water require table or inventory ownership for placement on the ground or in containers, item quantity and holder state, clean-water and nourishing-food facts, food spoilage after 24 hours, later consumption, and malnutrition or dehydration hazard adjudication rather than generic Spell Invocation reducers.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/create_food_and_water.json",
-      "unitId": "create_food_and_water"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/create_undead.json",
       "unitId": "create_undead"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
-        },
-        "reason": "Daylight is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 60-foot range, V/S components, timed 1-hour duration, point-origin 60-foot Sphere sunlight, and Bright Light plus Dim Light facts, with RAW prose for the alternative object-origin Emanation and overlap dispel against Darkness created by a spell of level 3 or lower. No promoted battle-runtime profile is claimed because full support needs a sunlight Spell Effect owner that admits both point-origin and object-origin modes, carries the occurrence duration, consumes table-supplied object worn/carried, opaque-cover, area, and overlap witnesses, projects Bright Light and Dim Light illumination consequences, and ends qualifying magical Darkness spell effects by generic source-level and effect facts rather than authored-identity dispatch.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/daylight.json",
-      "unitId": "daylight"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -1627,6 +1627,13 @@ type EffectAtom =
       readonly maxSize: Size;
       readonly channels: ReadonlyNonEmptyArray<IllusionSensoryChannel>;
     }
+  | {
+      readonly kind: "create_phantasmal_illusion";
+      readonly maxCubeSideFeet: 10;
+      readonly channels: ReadonlyNonEmptyArray<IllusionSensoryChannel>;
+      readonly perception: "target_only";
+      readonly rationalization: "treat_illogical_outcomes_as_real";
+    }
   | { readonly kind: "force_drop_item" }
   | { readonly kind: "move_object"; readonly maxDistanceFeet: number }
   | { readonly kind: "pull_object_away"; readonly maxDistanceFeet: number }
@@ -4085,10 +4092,17 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         consumable: optionalExact(Schema.Literal(true)),
         durability: optionalExact(CreatedObjectDurabilitySchema),
       }),
-      Schema.Struct({
+      strictStruct({
         kind: Schema.Literal("create_illusion"),
         maxSize: SizeSchema,
         channels: nonEmpty(IllusionSensoryChannelSchema),
+      }),
+      strictStruct({
+        kind: Schema.Literal("create_phantasmal_illusion"),
+        maxCubeSideFeet: Schema.Literal(10),
+        channels: nonEmpty(IllusionSensoryChannelSchema),
+        perception: Schema.Literal("target_only"),
+        rationalization: Schema.Literal("treat_illogical_outcomes_as_real"),
       }),
       Schema.Struct({ kind: Schema.Literal("force_drop_item") }),
       Schema.Struct({
@@ -4493,6 +4507,20 @@ export const OngoingEffectSchema: Schema.suspend<
   ),
 );
 
+export const AuthoredConditionalEffectSchema = strictStruct({
+  kind: Schema.Literal("phantasm_damage"),
+  source: Schema.Literal("dangerous_creature_or_hazard"),
+  choice: Schema.Literal("caster_may_deal"),
+  timing: Schema.Literal("each_caster_turn"),
+  eligibility: strictStruct({
+    kind: Schema.Literal("target_in_phantasm_area_or_within_feet_of_phantasm"),
+    feet: Schema.Literal(5),
+  }),
+  damageType: Schema.Literal("psychic"),
+  amount: DiceAmountSchema,
+  perceivedAs: Schema.Literal("illusion_appropriate"),
+});
+
 export const OngoingOperationSchema = Schema.Struct({
   trigger: OngoingTriggerSchema,
   predicate: optionalExact(OngoingPredicateSchema),
@@ -4514,6 +4542,9 @@ export const OngoingEffectMechanicsSchema = Schema.extend(
     attachment: AttachmentSchema,
     initialPhase: optionalExact(ActivationPhaseSchema),
     operations: nonEmpty(OngoingOperationSchema),
+    authoredConditionalEffects: optionalExact(
+      nonEmpty(AuthoredConditionalEffectSchema),
+    ),
   }),
 );
 
