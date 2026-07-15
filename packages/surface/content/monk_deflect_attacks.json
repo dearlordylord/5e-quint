@@ -1,55 +1,54 @@
 {
+  "acquiredAtLevel": 3,
+  "className": "monk",
+  "description": "When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, take a Reaction to reduce the attack's total damage against you.",
   "id": "monk_deflect_attacks",
   "kind": "class_feature",
-  "name": "Deflect Attacks",
-  "className": "monk",
-  "acquiredAtLevel": 3,
-  "description": "When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, take a Reaction to reduce the attack's total damage against you.",
-  "provenance": {
-    "kind": "srd-5.2.1",
-    "section": "Classes/Monk#Deflect Attacks"
-  },
   "mechanics": {
     "family": "reaction_roll_or_damage_reduction",
     "modifiers": [
       {
         "kind": "attack_damage_reduction",
-        "trigger": {
-          "kind": "hit_by_attack_roll",
-          "damageIncludes": ["bludgeoning", "piercing", "slashing"]
-        },
         "reduction": {
-          "kind": "dice_plus_ability_modifier_plus_class_level",
+          "ability": "dex",
           "dice": {
             "dice": 1,
             "dieSize": 10
           },
-          "ability": "dex"
+          "kind": "dice_plus_ability_modifier_plus_class_level"
+        },
+        "trigger": {
+          "damageIncludes": [
+            "bludgeoning",
+            "piercing",
+            "slashing"
+          ],
+          "kind": "hit_by_attack_roll"
         },
         "zeroDamageRedirect": {
-          "spends": {
-            "resourceUnitId": "monk_monks_focus",
-            "amount": 1
-          },
-          "save": {
-            "ability": "dex",
-            "dc": {
-              "kind": "ability_plus_proficiency",
-              "base": 8,
-              "ability": "wis"
-            }
-          },
           "damage": {
+            "ability": "dex",
+            "damageType": {
+              "kind": "same_type_dealt_by_attack"
+            },
             "dice": {
               "dice": 2,
               "dieSize": {
                 "kind": "martial_arts_die"
               }
-            },
-            "ability": "dex",
-            "damageType": {
-              "kind": "same_type_dealt_by_attack"
             }
+          },
+          "save": {
+            "ability": "dex",
+            "dc": {
+              "ability": "wis",
+              "base": 8,
+              "kind": "ability_plus_proficiency"
+            }
+          },
+          "spends": {
+            "amount": 1,
+            "resourceUnitId": "monk_monks_focus"
           },
           "targetGate": {
             "melee": {
@@ -62,5 +61,10 @@
         }
       }
     ]
+  },
+  "name": "Deflect Attacks",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk#Deflect Attacks"
   }
 }

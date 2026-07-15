@@ -104,12 +104,12 @@
     "selectionRepeatability": {
       "kind": "unique"
     },
+    "spellUseLimit": {
+      "kind": "one_per_spell_unless_option_allows_stacking"
+    },
     "spends": {
       "kind": "class_feature_point_pool",
       "resourceUnitId": "sorcerer_font_of_magic"
-    },
-    "spellUseLimit": {
-      "kind": "one_per_spell_unless_option_allows_stacking"
     },
     "timing": "class_feature_acquisition"
   },

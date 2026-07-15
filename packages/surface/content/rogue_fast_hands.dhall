@@ -10,6 +10,14 @@
 -- Utilize effects, and magic-item activation procedures remain outside this
 -- authored mechanics shape.
 
+let ObjectAction =
+      { action : Text
+      , restrictedTo : Optional Text
+      }
+
+let defaultObjectAction : ObjectAction =
+      { action = "", restrictedTo = None Text }
+
 let fastHands =
       { acquiredAtLevel = 3
       , className = "rogue"
@@ -30,9 +38,9 @@ let fastHands =
           }
         , objectUse =
           { actions =
-            [ { action = "utilize" }
-            , { action = "magic"
-              , restrictedTo = "magic_item_requires_magic_action"
+            [ defaultObjectAction // { action = "utilize" }
+            , defaultObjectAction // { action = "magic"
+              , restrictedTo = Some "magic_item_requires_magic_action"
               }
             ]
           }

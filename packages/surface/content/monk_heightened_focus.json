@@ -5,8 +5,7 @@
   "id": "monk_heightened_focus",
   "kind": "class_feature",
   "mechanics": {
-    "family": "passive",
-    "grants": []
+    "family": "passive"
   },
   "name": "Heightened Focus",
   "provenance": {

@@ -49,7 +49,7 @@ let ChargePool =
       , cap : { kind : Text, uses : Natural }
       }
 
-let ActivationCost = { kind : Text }
+let ActivationCost = { kind : Text, action : Optional Text }
 
 let DirectPhase =
       { kind : Text
@@ -112,7 +112,7 @@ let staffOfFire =
               , { family = "activation"
                 , condition = None HoldingItemCondition
                 , grants = None (List GrantResistanceOrSpellAccess)
-                , activationCost = Some { kind = "standard_action", action = "magic" }
+                , activationCost = Some { kind = "standard_action", action = Some "magic" }
                 , resource =
                     Some
                       { kind = "charge_pool"

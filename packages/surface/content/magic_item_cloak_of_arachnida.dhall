@@ -26,7 +26,7 @@ let ActivationEffect =
       , dcOverride : Optional FixedDc
       }
 
-let ActivationCost = { kind : Text }
+let ActivationCost = { kind : Text, action : Optional Text }
 
 let UseCountResource =
       { kind : Text
@@ -96,7 +96,7 @@ let cloak =
                 }
               , { family = "activation"
                 , grants = None (List PassiveEffect)
-                , activationCost = Some { kind = "standard_action", action = "magic" }
+                , activationCost = Some { kind = "standard_action", action = Some "magic" }
                 , resource =
                     Some
                       { kind = "use_count"

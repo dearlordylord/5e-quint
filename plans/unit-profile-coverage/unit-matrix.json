@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 512,
+      "denominator": 511,
       "numerator": 345,
-      "percent": "67.4%"
+      "percent": "67.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 600,
+      "denominator": 599,
       "numerator": 395,
-      "percent": "65.8%"
+      "percent": "65.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -49681,24 +49681,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/magic_item_sovereign_glue.json",
       "unitId": "magic_item_sovereign_glue"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "intentional-backlog",
-          "planningLane": "future magic item profile intake",
-          "reason": "SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "magic_item",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/magic_item_staff_of_charming.json",
-      "unitId": "magic_item_staff_of_charming"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

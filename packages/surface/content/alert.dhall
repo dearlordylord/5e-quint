@@ -6,6 +6,24 @@
 --   2. Initiative Swap - swap your initiative with a willing ally immediately
 --      after rolling, unless either creature has the Incapacitated condition.
 
+let Grant =
+      { kind : Text
+      , on : Optional (List Text)
+      , delta : Optional { kind : Text, sign : Text }
+      , timing : Optional Text
+      , ally : Optional Text
+      , prohibitedByCondition : Optional Text
+      }
+
+let defaultGrant : Grant =
+      { kind = ""
+      , on = None (List Text)
+      , delta = None { kind : Text, sign : Text }
+      , timing = None Text
+      , ally = None Text
+      , prohibitedByCondition = None Text
+      }
+
 let alert =
       { kind = "feat"
       , id = "alert"
@@ -20,17 +38,18 @@ let alert =
       , mechanics =
           { family = "passive"
           , grants =
-              [ { kind = "modify_roll_numeric"
-                , on = [ "initiative" ]
+              [ defaultGrant // { kind = "modify_roll_numeric"
+                , on = Some [ "initiative" ]
                 , delta =
-                    { kind = "proficiency_bonus"
-                    , sign = "+"
-                    }
+                    Some
+                      { kind = "proficiency_bonus"
+                      , sign = "+"
+                      }
                 }
-              , { kind = "initiative_swap"
-                , timing = "immediately_after_initiative_roll"
-                , ally = "willing_ally_same_combat"
-                , prohibitedByCondition = "incapacitated"
+              , defaultGrant // { kind = "initiative_swap"
+                , timing = Some "immediately_after_initiative_roll"
+                , ally = Some "willing_ally_same_combat"
+                , prohibitedByCondition = Some "incapacitated"
                 }
               ]
           }

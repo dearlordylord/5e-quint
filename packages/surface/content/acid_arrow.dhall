@@ -13,6 +13,32 @@
 --   • DamageEffectAtom.timing = "end_of_next_turn" (deferred damage)
 --   • attack-roll miss damage derived as half initial damage only
 
+let DamagePhase =
+      { kind : Text
+      , damageType : Text
+      , amount :
+          { kind : Text
+          , axis : Text
+          , base : { dice : Natural, dieSize : Natural }
+          , perLevel : { dice : Natural }
+          , startingAtLevel : Natural
+          }
+      , timing : Optional Text
+      }
+
+let defaultDamagePhase : DamagePhase =
+      { kind = ""
+      , damageType = ""
+      , amount =
+          { kind = ""
+          , axis = ""
+          , base = { dice = 0, dieSize = 1 }
+          , perLevel = { dice = 0 }
+          , startingAtLevel = 1
+          }
+      , timing = None Text
+      }
+
 let acidArrow =
       { kind = "spell"
       , id = "acid_arrow"
@@ -48,7 +74,7 @@ let acidArrow =
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit =
-                    [ { kind = "damage"
+                    [ defaultDamagePhase // { kind = "damage"
                       , damageType = "acid"
                       , amount =
                           { kind = "linear_per_level"
@@ -58,7 +84,7 @@ let acidArrow =
                           , startingAtLevel = 2
                           }
                       }
-                    , { kind = "damage"
+                    , defaultDamagePhase // { kind = "damage"
                       , damageType = "acid"
                       , amount =
                           { kind = "linear_per_level"
@@ -67,7 +93,7 @@ let acidArrow =
                           , perLevel = { dice = 1 }
                           , startingAtLevel = 2
                           }
-                      , timing = "end_of_next_turn"
+                      , timing = Some "end_of_next_turn"
                       }
                     ]
                 , onMiss =

@@ -58,8 +58,8 @@
     "family": "on_hit_trigger",
     "optional": true,
     "trigger": {
-      "kind": "hit_with_attack_roll",
       "eligibility": "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
+      "kind": "hit_with_attack_roll",
       "weaponFilter": "finesse_or_ranged"
     },
     "usageLimit": {

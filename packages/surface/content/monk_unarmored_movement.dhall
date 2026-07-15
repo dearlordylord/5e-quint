@@ -8,6 +8,14 @@
 -- This level 1-2 record owns the level-2 +10 ft. Speed projection. Later
 -- Monk levels own the higher table values.
 
+let Predicate =
+      { kind : Text
+      , categories : Optional (List Text)
+      }
+
+let defaultPredicate : Predicate =
+      { kind = "", categories = None (List Text) }
+
 let unarmoredMovement =
       { acquiredAtLevel = 2
       , className = "monk"
@@ -19,10 +27,10 @@ let unarmoredMovement =
           { condition =
               { kind = "all_of"
               , predicates =
-                  [ { kind = "not_wearing_armor"
-                    , categories = [ "light", "medium", "heavy" ]
+                  [ defaultPredicate // { kind = "not_wearing_armor"
+                    , categories = Some [ "light", "medium", "heavy" ]
                     }
-                  , { kind = "not_wielding_shield" }
+                  , defaultPredicate // { kind = "not_wielding_shield" }
                   ]
               }
           , family = "passive"

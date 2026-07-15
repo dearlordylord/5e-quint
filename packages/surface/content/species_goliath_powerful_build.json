@@ -12,7 +12,9 @@
         },
         "kind": "modify_roll_advantage",
         "mode": "advantage",
-        "on": ["ability_check"]
+        "on": [
+          "ability_check"
+        ]
       }
     ]
   },

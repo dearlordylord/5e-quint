@@ -25,7 +25,10 @@
         },
         {
           "battleExecution": {
-            "focusActions": ["disengage", "dodge"],
+            "focusActions": [
+              "disengage",
+              "dodge"
+            ],
             "focusPointCost": 1,
             "freeAction": "disengage",
             "kind": "bonus_action_defensive_modes"
@@ -35,7 +38,10 @@
         },
         {
           "battleExecution": {
-            "focusActions": ["disengage", "dash"],
+            "focusActions": [
+              "disengage",
+              "dash"
+            ],
             "focusPointCost": 1,
             "freeAction": "dash",
             "jumpDistanceMultiplier": {

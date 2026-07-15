@@ -20,24 +20,6 @@
       "initiative": "shared_with_caster",
       "turnOrder": "immediately_after_caster"
     },
-    "dismissal": {
-      "onSpellEnd": "disappears",
-      "onZeroHp": "disappears"
-    },
-    "duration": {
-      "kind": "concentration",
-      "upTo": {
-        "amount": 1,
-        "unit": "hour"
-      }
-    },
-    "family": "spawned_creature",
-    "level": 5,
-    "range": {
-      "feet": 60,
-      "kind": "point"
-    },
-    "school": "conjuration",
     "creature": {
       "kind": "inline",
       "statBlock": {
@@ -237,7 +219,25 @@
           }
         ]
       }
-    }
+    },
+    "dismissal": {
+      "onSpellEnd": "disappears",
+      "onZeroHp": "disappears"
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "spawned_creature",
+    "level": 5,
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "conjuration"
   },
   "name": "Summon Dragon",
   "provenance": {

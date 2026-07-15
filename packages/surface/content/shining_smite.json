@@ -83,7 +83,9 @@
           "affects": "rolls_against_self",
           "kind": "modify_roll_advantage",
           "mode": "advantage",
-          "on": ["attack_roll"]
+          "on": [
+            "attack_roll"
+          ]
         },
         "trigger": {
           "kind": "passive"

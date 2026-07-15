@@ -7,6 +7,46 @@
 -- consumes: active Sphere, Heavily Obscured projection, Constitution
 -- save-for-half Poison damage, and once-per-turn area triggers.
 
+let SaveDamage =
+      { kind : Text
+      , damageType : Text
+      , amount :
+          { kind : Text
+          , axis : Text
+          , base : { dice : Natural, dieSize : Natural }
+          , perLevel : { dice : Natural }
+          , startingAtLevel : Natural
+          }
+      }
+
+let OperationEffect =
+      { kind : Text
+      , ability : Optional Text
+      , dc : Optional { kind : Text }
+      , onFail : Optional SaveDamage
+      , onSuccess : Optional { kind : Text }
+      }
+
+let defaultOperationEffect : OperationEffect =
+      { kind = ""
+      , ability = None Text
+      , dc = None { kind : Text }
+      , onFail = None SaveDamage
+      , onSuccess = None { kind : Text }
+      }
+
+let Operation =
+      { trigger : { kind : Text }
+      , usageLimit : Optional { kind : Text }
+      , effect : OperationEffect
+      }
+
+let defaultOperation : Operation =
+      { trigger = { kind = "" }
+      , usageLimit = None { kind : Text }
+      , effect = defaultOperationEffect
+      }
+
 let cloudkill =
       { kind = "spell"
       , id = "cloudkill"
@@ -67,15 +107,15 @@ let cloudkill =
               , onSuccess = { kind = "half_damage" }
               }
           , operations =
-              [ { trigger = { kind = "passive" }
-                , effect = { kind = "area_is_heavily_obscured" }
+              [ defaultOperation // { trigger = { kind = "passive" }
+                , effect = defaultOperationEffect // { kind = "area_is_heavily_obscured" }
                 }
-              , { trigger = { kind = "on_attached_turn_start" }
+              , defaultOperation // { trigger = { kind = "on_attached_turn_start" }
                 , effect =
-                    { kind = "save_gate"
-                    , ability = "con"
-                    , dc = { kind = "caster_spell_save_dc" }
-                    , onFail =
+                    defaultOperationEffect // { kind = "save_gate"
+                    , ability = Some "con"
+                    , dc = Some { kind = "caster_spell_save_dc" }
+                    , onFail = Some
                         { kind = "damage"
                         , damageType = "poison"
                         , amount =
@@ -86,16 +126,16 @@ let cloudkill =
                             , startingAtLevel = 5
                             }
                         }
-                    , onSuccess = { kind = "half_damage" }
+                    , onSuccess = Some { kind = "half_damage" }
                     }
                 }
-              , { trigger = { kind = "on_creature_enters_area" }
-                , usageLimit = { kind = "once_per_turn" }
+              , defaultOperation // { trigger = { kind = "on_creature_enters_area" }
+                , usageLimit = Some { kind = "once_per_turn" }
                 , effect =
-                    { kind = "save_gate"
-                    , ability = "con"
-                    , dc = { kind = "caster_spell_save_dc" }
-                    , onFail =
+                    defaultOperationEffect // { kind = "save_gate"
+                    , ability = Some "con"
+                    , dc = Some { kind = "caster_spell_save_dc" }
+                    , onFail = Some
                         { kind = "damage"
                         , damageType = "poison"
                         , amount =
@@ -106,16 +146,16 @@ let cloudkill =
                             , startingAtLevel = 5
                             }
                         }
-                    , onSuccess = { kind = "half_damage" }
+                    , onSuccess = Some { kind = "half_damage" }
                     }
                 }
-              , { trigger = { kind = "on_creature_ends_turn_in_area" }
-                , usageLimit = { kind = "once_per_turn" }
+              , defaultOperation // { trigger = { kind = "on_creature_ends_turn_in_area" }
+                , usageLimit = Some { kind = "once_per_turn" }
                 , effect =
-                    { kind = "save_gate"
-                    , ability = "con"
-                    , dc = { kind = "caster_spell_save_dc" }
-                    , onFail =
+                    defaultOperationEffect // { kind = "save_gate"
+                    , ability = Some "con"
+                    , dc = Some { kind = "caster_spell_save_dc" }
+                    , onFail = Some
                         { kind = "damage"
                         , damageType = "poison"
                         , amount =
@@ -126,7 +166,7 @@ let cloudkill =
                             , startingAtLevel = 5
                             }
                         }
-                    , onSuccess = { kind = "half_damage" }
+                    , onSuccess = Some { kind = "half_damage" }
                     }
                 }
               ]

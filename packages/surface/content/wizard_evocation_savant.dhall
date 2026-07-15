@@ -1,3 +1,25 @@
+let MaximumSpellLevel = < fixed : Natural | available : { kind : Text } >
+
+let LearningGrant =
+      { choiceCount : Natural
+      , eligibility :
+          { className : Text
+          , maximumSpellLevel : MaximumSpellLevel
+          , school : Text
+          }
+      , timing : { kind : Text, className : Optional Text }
+      }
+
+let defaultLearningGrant : LearningGrant =
+      { choiceCount = 1
+      , eligibility =
+          { className = ""
+          , maximumSpellLevel = MaximumSpellLevel.fixed 1
+          , school = ""
+          }
+      , timing = { kind = "", className = None Text }
+      }
+
 let evocationSavant =
       { acquiredAtLevel = 3
       , className = "wizard"
@@ -8,23 +30,23 @@ let evocationSavant =
       , mechanics =
           { family = "wizard_spellbook_learning"
           , grants =
-            [ { choiceCount = 2
+            [ defaultLearningGrant // { choiceCount = 2
               , eligibility =
                   { className = "wizard"
-                  , maximumSpellLevel = 2
+                  , maximumSpellLevel = MaximumSpellLevel.fixed 2
                   , school = "evocation"
                   }
-              , timing = { kind = "class_feature_acquisition" }
+              , timing = { kind = "class_feature_acquisition", className = None Text }
               }
-            , { choiceCount = 1
+            , defaultLearningGrant // { choiceCount = 1
               , eligibility =
                   { className = "wizard"
                   , maximumSpellLevel =
-                      { kind = "available_spell_slot_level" }
+                      MaximumSpellLevel.available { kind = "available_spell_slot_level" }
                   , school = "evocation"
                   }
               , timing =
-                  { className = "wizard"
+                  { className = Some "wizard"
                   , kind = "new_spell_slot_level_access"
                   }
               }

@@ -33,7 +33,10 @@
               },
               "mode": "choose_up_to",
               "repeatsAllowed": true,
-              "targetKinds": ["creature", "object"]
+              "targetKinds": [
+                "creature",
+                "object"
+              ]
             }
           }
         },

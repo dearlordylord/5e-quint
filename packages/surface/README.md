@@ -262,6 +262,19 @@ installed. Compile with:
 dhall-to-json --omit-empty --file content/bless.dhall --output content/bless.json
 ```
 
+The root publication check discovers every direct `content/*.dhall` record
+source (excluding underscore-prefixed Dhall helpers), regenerates a temporary
+JSON peer, compares it byte-for-byte with the committed peer, and strictly
+decodes both generated and committed records through the Effect Surface
+schemas. It reports missing, orphaned, drifted, compile-failing, and
+decode-failing peers together:
+
+```sh
+pnpm check:surface-content-publication
+```
+
+Generated JSON remains an output of Dhall; it is never the discovery authority.
+
 Generate the review trace from the compiled JSON:
 
 ```sh

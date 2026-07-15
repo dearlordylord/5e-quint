@@ -23,6 +23,20 @@
 --   color rendering. The caster's blue/green/violet choice has no mechanical
 --   consequence and is intentionally omitted from structured mechanics.
 
+let Effect =
+      { kind : Text
+      , mode : Optional Text
+      , on : Optional (List Text)
+      , condition : Optional Text
+      }
+
+let defaultEffect : Effect =
+      { kind = ""
+      , mode = None Text
+      , on = None (List Text)
+      , condition = None Text
+      }
+
 let faerieFire =
       { kind = "spell"
       , id = "faerie_fire"
@@ -61,12 +75,12 @@ let faerieFire =
                 , onFail =
                     { kind = "composite"
                     , effects =
-                        [ { kind = "modify_roll_advantage"
-                          , mode = "advantage"
-                          , on = [ "attack_roll" ]
+                        [ defaultEffect // { kind = "modify_roll_advantage"
+                          , mode = Some "advantage"
+                          , on = Some [ "attack_roll" ]
                           }
-                        , { kind = "suppress_condition_benefit"
-                          , condition = "invisible"
+                        , defaultEffect // { kind = "suppress_condition_benefit"
+                          , condition = Some "invisible"
                           }
                         ]
                     }

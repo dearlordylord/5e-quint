@@ -5,8 +5,7 @@
   "id": "wizard_empowered_evocation",
   "kind": "class_feature",
   "mechanics": {
-    "family": "passive",
-    "grants": []
+    "family": "passive"
   },
   "name": "Empowered Evocation",
   "provenance": {

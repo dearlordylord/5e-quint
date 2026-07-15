@@ -31,6 +31,30 @@ let SaveAction =
       , target : { kind : Text, rangeFeet : Natural }
       }
 
+let AttackEffect =
+      { kind : Text
+      , amount : Optional
+          { expr : { dice : Natural, dieSize : Natural, flat : Optional Natural }
+          , kind : Text
+          , static : Optional Natural
+          }
+      , damageType : Optional Text
+      , condition : Optional Text
+      , maxCreatureSize : Optional Text
+      }
+
+let defaultAttackEffect : AttackEffect =
+      { kind = ""
+      , amount = None
+          { expr : { dice : Natural, dieSize : Natural, flat : Optional Natural }
+          , kind : Text
+          , static : Optional Natural
+          }
+      , damageType = None Text
+      , condition = None Text
+      , maxCreatureSize = None Text
+      }
+
 in  [ { challengeRating = 0.25
   , id = "stat_block_riding_horse"
   , kind = "statBlock"
@@ -47,12 +71,12 @@ in  [ { challengeRating = 0.25
           , description = None Text
           , name = "Hooves"
           , onHit =
-            [ { amount =
+            [ defaultAttackEffect // { amount = Some
                 { expr = { dice = 1, dieSize = 8, flat = Some 3 }
                 , kind = "fixed"
                 , static = Some 7
                 }
-              , damageType = "bludgeoning"
+              , damageType = Some "bludgeoning"
               , kind = "damage"
               }
             ]
@@ -102,17 +126,17 @@ in  [ { challengeRating = 0.25
           , description = None Text
           , name = "Bite"
           , onHit =
-            [ { amount =
+            [ defaultAttackEffect // { amount = Some
                 { expr = { dice = 1, dieSize = 6, flat = Some 2 }
                 , kind = "fixed"
                 , static = Some 5
                 }
-              , damageType = "piercing"
+              , damageType = Some "piercing"
               , kind = "damage"
               }
-            , { condition = "prone"
+            , defaultAttackEffect // { condition = Some "prone"
               , kind = "apply_condition_if_target_size_at_most"
-              , maxCreatureSize = "medium"
+              , maxCreatureSize = Some "medium"
               }
             ]
           , rangeFeet = None { long : Natural, normal : Natural }

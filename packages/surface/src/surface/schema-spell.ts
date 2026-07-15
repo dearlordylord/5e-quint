@@ -4671,7 +4671,10 @@ export const AnchoredTriggerMechanicsSchema = Schema.extend(
     family: Schema.Literal("anchored_trigger"),
     anchor: AnchorTargetSchema,
     events: Schema.Array(AnchoredEventSchema),
-    filters: Schema.Array(AnchoredFilterSchema),
+    filters: Schema.optionalWith(Schema.Array(AnchoredFilterSchema), {
+      exact: true,
+      default: () => [],
+    }),
     signals: Schema.Array(AnchoredSignalSchema),
   }),
 );

@@ -17,73 +17,113 @@
           "arid": [
             {
               "minimumClassLevel": 3,
-              "spellIds": ["blur", "burning_hands", "fire_bolt"]
+              "spellIds": [
+                "blur",
+                "burning_hands",
+                "fire_bolt"
+              ]
             },
             {
               "minimumClassLevel": 5,
-              "spellIds": ["fireball"]
+              "spellIds": [
+                "fireball"
+              ]
             },
             {
               "minimumClassLevel": 7,
-              "spellIds": ["blight"]
+              "spellIds": [
+                "blight"
+              ]
             },
             {
               "minimumClassLevel": 9,
-              "spellIds": ["wall_of_stone"]
+              "spellIds": [
+                "wall_of_stone"
+              ]
             }
           ],
           "polar": [
             {
               "minimumClassLevel": 3,
-              "spellIds": ["fog_cloud", "hold_person", "ray_of_frost"]
+              "spellIds": [
+                "fog_cloud",
+                "hold_person",
+                "ray_of_frost"
+              ]
             },
             {
               "minimumClassLevel": 5,
-              "spellIds": ["sleet_storm"]
+              "spellIds": [
+                "sleet_storm"
+              ]
             },
             {
               "minimumClassLevel": 7,
-              "spellIds": ["ice_storm"]
+              "spellIds": [
+                "ice_storm"
+              ]
             },
             {
               "minimumClassLevel": 9,
-              "spellIds": ["cone_of_cold"]
+              "spellIds": [
+                "cone_of_cold"
+              ]
             }
           ],
           "temperate": [
             {
               "minimumClassLevel": 3,
-              "spellIds": ["misty_step", "shocking_grasp", "sleep"]
+              "spellIds": [
+                "misty_step",
+                "shocking_grasp",
+                "sleep"
+              ]
             },
             {
               "minimumClassLevel": 5,
-              "spellIds": ["lightning_bolt"]
+              "spellIds": [
+                "lightning_bolt"
+              ]
             },
             {
               "minimumClassLevel": 7,
-              "spellIds": ["freedom_of_movement"]
+              "spellIds": [
+                "freedom_of_movement"
+              ]
             },
             {
               "minimumClassLevel": 9,
-              "spellIds": ["tree_stride"]
+              "spellIds": [
+                "tree_stride"
+              ]
             }
           ],
           "tropical": [
             {
               "minimumClassLevel": 3,
-              "spellIds": ["acid_splash", "ray_of_sickness", "web"]
+              "spellIds": [
+                "acid_splash",
+                "ray_of_sickness",
+                "web"
+              ]
             },
             {
               "minimumClassLevel": 5,
-              "spellIds": ["stinking_cloud"]
+              "spellIds": [
+                "stinking_cloud"
+              ]
             },
             {
               "minimumClassLevel": 7,
-              "spellIds": ["polymorph"]
+              "spellIds": [
+                "polymorph"
+              ]
             },
             {
               "minimumClassLevel": 9,
-              "spellIds": ["insect_plague"]
+              "spellIds": [
+                "insect_plague"
+              ]
             }
           ]
         }
