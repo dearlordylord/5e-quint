@@ -59,32 +59,121 @@ const waitUntil = async (
   }
 };
 
-const waitForExit = (
+const hasExited = (child: ReturnType<typeof spawn>) =>
+  child.exitCode !== null || child.signalCode !== null;
+
+type OwnedProcess = {
+  readonly pid: number;
+  readonly processGroup: number;
+};
+
+const directChildren = (parentPid: number): ReadonlyArray<OwnedProcess> => {
+  const result = spawnSync(
+    "ps",
+    ["--no-headers", "--ppid", String(parentPid), "-o", "pid=,pgid="],
+    { encoding: "utf8" },
+  );
+  return result.stdout
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => line.trim().split(/\s+/).map(Number))
+    .filter(
+      (pair): pair is [number, number] =>
+        pair.length === 2 &&
+        pair.every((value) => Number.isInteger(value) && value > 1),
+    )
+    .map(([pid, processGroup]) => ({ pid, processGroup }));
+};
+
+const ownedDescendants = (
+  child: ReturnType<typeof spawn>,
+): ReadonlyArray<OwnedProcess> => {
+  if (child.pid === undefined) return [];
+  const descendants: Array<OwnedProcess> = [];
+  const pending = [child.pid];
+  while (pending.length > 0) {
+    const parentPid = pending.shift()!;
+    for (const descendant of directChildren(parentPid)) {
+      descendants.push(descendant);
+      pending.push(descendant.pid);
+    }
+  }
+  return descendants;
+};
+
+const processExists = (pid: number) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const killOwnedDescendants = (descendants: ReadonlyArray<OwnedProcess>) => {
+  for (const { pid, processGroup } of [...descendants].reverse()) {
+    try {
+      if (pid === processGroup) process.kill(-processGroup, "SIGKILL");
+      else process.kill(pid, "SIGKILL");
+    } catch {
+      // The wrapper may have completed its own process-tree cleanup.
+    }
+  }
+};
+
+const terminateOwnedChild = async (child: ReturnType<typeof spawn>) => {
+  if (hasExited(child)) return;
+  const descendants = ownedDescendants(child);
+  child.kill("SIGTERM");
+  try {
+    await waitUntil(() => hasExited(child), 3_000);
+  } catch {
+    killOwnedDescendants(descendants);
+    child.kill("SIGKILL");
+    await waitUntil(() => hasExited(child), 1_000);
+  }
+  const survivors = descendants.filter(({ pid }) => processExists(pid));
+  killOwnedDescendants(survivors);
+  if (survivors.length > 0)
+    await waitUntil(
+      () => survivors.every(({ pid }) => !processExists(pid)),
+      1_000,
+    );
+};
+
+const waitForExit = async (
   child: ReturnType<typeof spawn>,
   timeoutMilliseconds = 3_000,
-) =>
-  new Promise<number>((resolve, reject) => {
-    if (child.exitCode !== null) {
-      resolve(child.exitCode);
-      return;
-    }
-    const timer = setTimeout(() => {
-      child.kill("SIGKILL");
-      reject(new Error("timed out waiting for child process"));
-    }, timeoutMilliseconds);
-    child.once("error", (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-    child.once("exit", (code, signal) => {
-      clearTimeout(timer);
-      if (signal !== null) {
-        reject(new Error(`child exited from ${signal}`));
-        return;
-      }
-      resolve(code ?? 1);
-    });
+) => {
+  try {
+    await waitUntil(() => hasExited(child), timeoutMilliseconds);
+  } catch {
+    await terminateOwnedChild(child);
+    throw new Error("timed out waiting for child process");
+  }
+  if (child.signalCode !== null)
+    throw new Error(`child exited from ${child.signalCode}`);
+  return child.exitCode ?? 1;
+};
+
+const captureStderr = (child: ReturnType<typeof spawn>) => {
+  let output = "";
+  child.stderr?.setEncoding("utf8");
+  child.stderr?.on("data", (chunk) => {
+    output += String(chunk);
   });
+  return () => output;
+};
+
+const processCommand = (pid: number) =>
+  spawnSync("ps", ["--no-headers", "-p", String(pid), "-o", "comm="], {
+    encoding: "utf8",
+  }).stdout.trim();
+
+const hasDirectFlockChild = (child: ReturnType<typeof spawn>) =>
+  child.pid !== undefined &&
+  directChildren(child.pid).some(({ pid }) => processCommand(pid) === "flock");
 
 const git = (cwd: string, ...args: ReadonlyArray<string>) => {
   const result = spawnSync("git", args, { cwd, encoding: "utf8" });
@@ -170,6 +259,83 @@ const addOrphanProbe = (root: string) => {
   return path;
 };
 
+const addStubbornProbe = (root: string) => {
+  const path = join(root, "scripts", "stubborn-probe.sh");
+  writeFileSync(
+    path,
+    [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      'log="$1"',
+      'pid_file="$2"',
+      "trap '' TERM",
+      'echo A-start >>"$log"',
+      'echo "$$" >"$pid_file"',
+      "while :; do sleep 0.02; done",
+      "",
+    ].join("\n"),
+  );
+  chmodSync(path, 0o755);
+  git(root, "add", "scripts/stubborn-probe.sh");
+  git(root, "commit", "-m", "add stubborn probe");
+  return path;
+};
+
+const runIdleMbtCleanup = (root: string, fakeBin: string) => {
+  const runnerSource = readFileSync(
+    join(root, "scripts", "ralph-run.sh"),
+    "utf8",
+  );
+  const start = runnerSource.indexOf("kill_stray_mbt_processes() {");
+  const endMarker = "\n}\n\nassert_clean_main_worktree()";
+  const end = runnerSource.indexOf(endMarker, start);
+  if (start < 0 || end < 0)
+    throw new Error("Ralph cleanup functions not found");
+  const cleanupFunctions = runnerSource.slice(start, end + 2);
+  return spawnSync("bash", ["-s", "--", root], {
+    cwd: root,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH ?? ""}` },
+    input: [
+      "set -euo pipefail",
+      cleanupFunctions,
+      'repo_root="$1"',
+      'git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"',
+      'heavy_verification_lock_file="$git_common_dir/ralph-heavy-verification.lock"',
+      'legacy_broad_lock_file="$git_common_dir/ralph-broad-workspace-check.lock"',
+      'legacy_mbt_lock_file="$git_common_dir/ralph-mbt.lock"',
+      'log() { echo "$*" >&2; }',
+      "cleanup_idle_mbt_state",
+      "",
+    ].join("\n"),
+  });
+};
+
+const runResourceGuardBaseCheck = (root: string) => {
+  const runnerSource = readFileSync(
+    join(root, "scripts", "ralph-run.sh"),
+    "utf8",
+  );
+  const start = runnerSource.indexOf("assert_resource_guarded_base() {");
+  const end = runnerSource.indexOf(
+    "\n}\n\n\nkill_stray_mbt_processes()",
+    start,
+  );
+  if (start < 0 || end < 0)
+    throw new Error("Ralph Base-SHA resource guard not found");
+  const guardFunction = runnerSource.slice(start, end + 2);
+  return spawnSync("bash", ["-s", "--"], {
+    cwd: root,
+    encoding: "utf8",
+    input: [
+      "set -euo pipefail",
+      guardFunction,
+      'assert_resource_guarded_base "$(git rev-parse HEAD)"',
+      "",
+    ].join("\n"),
+  });
+};
+
 const parseDeciderDisposition = (report: string) => {
   const root = mkdtempSync(join(tmpdir(), "ralph-disposition-test-"));
   roots.push(root);
@@ -216,10 +382,7 @@ describe("Ralph launcher boundaries", () => {
       ["## Task Disposition\n- Status: done\n", "done"],
       ["- Task Disposition:\n  - Status: done\n", "done"],
       ["Task Disposition: `done`\n", "done"],
-      [
-        "Task Disposition: `done` — the reviewed commit is accepted.\n",
-        "done",
-      ],
+      ["Task Disposition: `done` — the reviewed commit is accepted.\n", "done"],
       [
         "Task Disposition: retry-same-task: one focused fix remains.\n",
         "retry-same-task",
@@ -244,7 +407,9 @@ describe("Ralph launcher boundaries", () => {
     ]) {
       const result = parseDeciderDisposition(report);
       expect(result.status, report).not.toBe(0);
-      expect(result.stderr, report).toContain("missing Task Disposition status");
+      expect(result.stderr, report).toContain(
+        "missing Task Disposition status",
+      );
     }
   });
 
@@ -274,12 +439,24 @@ describe("Ralph launcher boundaries", () => {
     expect(globalLock).toBeLessThan(livePlanValidation);
     expect(source).toContain("flock --exclusive --nonblock --close");
     expect(source).toContain("unset RALPH_LAUNCHER_LOCKED");
-    const mbtLockAssignment = source.indexOf(
-      'mbt_lock_file="$git_common_dir/ralph-mbt.lock"',
+    const heavyVerificationLockAssignment = source.indexOf(
+      'heavy_verification_lock_file="$git_common_dir/ralph-heavy-verification.lock"',
     );
-    const idleMbtCleanupLock = source.indexOf('exec 7>"$mbt_lock_file"');
-    expect(mbtLockAssignment).toBeGreaterThan(0);
-    expect(mbtLockAssignment).toBeLessThan(idleMbtCleanupLock);
+    const legacyBroadLockAssignment = source.indexOf(
+      'legacy_broad_lock_file="$git_common_dir/ralph-broad-workspace-check.lock"',
+    );
+    const legacyMbtLockAssignment = source.indexOf(
+      'legacy_mbt_lock_file="$git_common_dir/ralph-mbt.lock"',
+    );
+    const idleMbtCleanupLock = source.indexOf(
+      'exec 7>"$heavy_verification_lock_file"',
+    );
+    expect(heavyVerificationLockAssignment).toBeGreaterThan(0);
+    expect(heavyVerificationLockAssignment).toBeLessThan(idleMbtCleanupLock);
+    expect(legacyBroadLockAssignment).toBeGreaterThan(0);
+    expect(legacyBroadLockAssignment).toBeLessThan(idleMbtCleanupLock);
+    expect(legacyMbtLockAssignment).toBeGreaterThan(0);
+    expect(legacyMbtLockAssignment).toBeLessThan(idleMbtCleanupLock);
     expect(source).toContain("scripts/with-mbt-lock.sh");
     expect(source).toContain("scripts/with-broad-workspace-lock.sh");
     expect(source).toContain("caps Turbo concurrency at one");
@@ -288,6 +465,27 @@ describe("Ralph launcher boundaries", () => {
       "compiler, Turbo/pnpm, test, proof, and evaluator",
     );
     expect(source).toContain("cleanup_idle_mbt_state");
+    const resourceGuardCheck = source.indexOf(
+      'assert_resource_guarded_base "$task_base_sha"',
+    );
+    const issueClaim = source.indexOf(
+      'ralph-issue-context.ts" claim',
+      resourceGuardCheck,
+    );
+    const taskWorktreeAdd = source.indexOf(
+      'git worktree add -B "$implementation_branch"',
+      resourceGuardCheck,
+    );
+    const taskInstall = source.indexOf(
+      'bootstrap_worktree_install "$implementation_worktree"',
+      taskWorktreeAdd,
+    );
+    expect(resourceGuardCheck).toBeGreaterThan(0);
+    expect(issueClaim).toBeGreaterThan(resourceGuardCheck);
+    expect(taskWorktreeAdd).toBeGreaterThan(0);
+    expect(taskWorktreeAdd).toBeGreaterThan(issueClaim);
+    expect(taskInstall).toBeGreaterThan(taskWorktreeAdd);
+    expect(source).toContain("predates guarded verification");
     expect(source).toContain(
       "GitHub-backed integration runs require at least one explicit --task lane",
     );
@@ -320,9 +518,9 @@ describe("Ralph launcher boundaries", () => {
     );
     expect(packageJson.scripts["proof:qnt"]).toContain("with-mbt-lock.sh");
     expect(packageJson.scripts["proof:qnt:body"]).toContain("test:qnt-proofs");
-    expect(packageJson.scripts["check:surface-publication-self-test"]).toContain(
-      "--maxWorkers=1",
-    );
+    expect(
+      packageJson.scripts["check:surface-publication-self-test"],
+    ).toContain("--maxWorkers=1");
 
     const packageJsonPaths = [
       "package.json",
@@ -360,7 +558,54 @@ describe("Ralph launcher boundaries", () => {
     }
   });
 
-  it("serializes both resource lanes across linked worktrees", async () => {
+  it("rejects Base SHAs that only have the prior separate-lock guard", () => {
+    const root = makeCleanRepository();
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        scripts: {
+          quality: "scripts/with-broad-workspace-lock.sh true",
+          typecheck: "scripts/with-broad-workspace-lock.sh true",
+          test: "scripts/with-broad-workspace-lock.sh true",
+        },
+      }),
+    );
+    git(root, "add", "package.json");
+    git(root, "commit", "-m", "add guarded package scripts");
+    expect(runResourceGuardBaseCheck(root).status).toBe(0);
+
+    const guardPath = join(root, "scripts", "with-resource-lock.sh");
+    const currentGuard = readFileSync(guardPath, "utf8");
+    writeFileSync(
+      guardPath,
+      currentGuard.replace(
+        "ralph-heavy-verification.lock",
+        "ralph-broad-workspace-check.lock",
+      ),
+    );
+    git(root, "add", "scripts/with-resource-lock.sh");
+    git(root, "commit", "-m", "simulate prior separate-lock guard");
+    expect(runResourceGuardBaseCheck(root).status).not.toBe(0);
+
+    writeFileSync(
+      guardPath,
+      currentGuard.replace(
+        [
+          'acquire_lock "$heavy_lock_fd"',
+          'acquire_lock "$legacy_broad_lock_fd"',
+        ].join("\n"),
+        [
+          'acquire_lock "$legacy_broad_lock_fd"',
+          'acquire_lock "$heavy_lock_fd"',
+        ].join("\n"),
+      ),
+    );
+    git(root, "add", "scripts/with-resource-lock.sh");
+    git(root, "commit", "-m", "simulate reordered guard acquisition");
+    expect(runResourceGuardBaseCheck(root).status).not.toBe(0);
+  });
+
+  it("serializes every resource-lane pairing across linked worktrees", async () => {
     const root = makeCleanRepository();
     addLockProbe(root);
     const linked = mkdtempSync(join(tmpdir(), "ralph-lock-linked-"));
@@ -368,14 +613,17 @@ describe("Ralph launcher boundaries", () => {
     rmSync(linked, { recursive: true });
     git(root, "worktree", "add", "-b", "lock-linked", linked, "master");
 
-    for (const wrapper of [
-      "with-broad-workspace-lock.sh",
-      "with-mbt-lock.sh",
-    ]) {
-      const log = join(root, `${wrapper}.log`);
-      const release = join(root, `${wrapper}.release`);
+    for (const [holderWrapper, contenderWrapper] of [
+      ["with-broad-workspace-lock.sh", "with-broad-workspace-lock.sh"],
+      ["with-broad-workspace-lock.sh", "with-mbt-lock.sh"],
+      ["with-mbt-lock.sh", "with-broad-workspace-lock.sh"],
+      ["with-mbt-lock.sh", "with-mbt-lock.sh"],
+    ] as const) {
+      const pair = `${holderWrapper}-${contenderWrapper}`;
+      const log = join(root, `${pair}.log`);
+      const release = join(root, `${pair}.release`);
       const holder = spawn(
-        join(root, "scripts", wrapper),
+        join(root, "scripts", holderWrapper),
         [join(root, "scripts", "lock-probe.sh"), "holder", log, release],
         { cwd: root, env: independentLockEnvironment },
       );
@@ -383,11 +631,15 @@ describe("Ralph launcher boundaries", () => {
       try {
         await waitUntil(() => existsSync(log));
         contender = spawn(
-          join(linked, "scripts", wrapper),
+          join(linked, "scripts", contenderWrapper),
           [join(linked, "scripts", "lock-probe.sh"), "contender", log],
           { cwd: linked, env: independentLockEnvironment },
         );
-        await delay(120);
+        const contenderStderr = captureStderr(contender);
+        await waitUntil(() => contenderStderr().includes("waiting:"));
+        await waitUntil(
+          () => contender !== undefined && hasDirectFlockChild(contender),
+        );
         expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([
           "A-start",
         ]);
@@ -401,8 +653,8 @@ describe("Ralph launcher boundaries", () => {
         ]);
       } finally {
         writeFileSync(release, "release\n");
-        if (holder.exitCode === null) holder.kill("SIGTERM");
-        if (contender?.exitCode === null) contender.kill("SIGTERM");
+        await terminateOwnedChild(holder);
+        if (contender !== undefined) await terminateOwnedChild(contender);
       }
     }
   });
@@ -472,8 +724,8 @@ describe("Ralph launcher boundaries", () => {
       expect(existsSync(contenderLog)).toBe(false);
     } finally {
       writeFileSync(release, "release\n");
-      if (holder.exitCode === null) holder.kill("SIGTERM");
-      if (waiter?.exitCode === null) waiter.kill("SIGTERM");
+      await terminateOwnedChild(holder);
+      if (waiter !== undefined) await terminateOwnedChild(waiter);
     }
   });
 
@@ -532,8 +784,8 @@ describe("Ralph launcher boundaries", () => {
       ]);
       expect(() => process.kill(grandchildPid, 0)).toThrow();
     } finally {
-      if (holder.exitCode === null) holder.kill("SIGTERM");
-      if (contender?.exitCode === null) contender.kill("SIGTERM");
+      await terminateOwnedChild(holder);
+      if (contender !== undefined) await terminateOwnedChild(contender);
     }
   });
 
@@ -566,7 +818,7 @@ describe("Ralph launcher boundaries", () => {
       );
       expect(await waitForExit(successor)).toBe(0);
     } finally {
-      if (holder.exitCode === null) holder.kill("SIGTERM");
+      await terminateOwnedChild(holder);
     }
   });
 
@@ -612,6 +864,44 @@ describe("Ralph launcher boundaries", () => {
     expect(existsSync(escalationMarker)).toBe(true);
   });
 
+  it("SIGKILLs a real stubborn command before releasing the lock", async () => {
+    const root = makeCleanRepository();
+    addLockProbe(root);
+    const stubbornProbe = addStubbornProbe(root);
+    const log = join(root, "stubborn-order.log");
+    const pidFile = join(root, "stubborn-pid");
+    const holder = spawn(
+      join(root, "scripts", "with-broad-workspace-lock.sh"),
+      [stubbornProbe, log, pidFile],
+      { cwd: root, env: independentLockEnvironment },
+    );
+    const holderStderr = captureStderr(holder);
+    let contender: ReturnType<typeof spawn> | undefined;
+    try {
+      await waitUntil(() => existsSync(pidFile));
+      const stubbornPid = Number(readFileSync(pidFile, "utf8").trim());
+      contender = spawn(
+        join(root, "scripts", "with-mbt-lock.sh"),
+        [join(root, "scripts", "lock-probe.sh"), "contender", log],
+        { cwd: root, env: independentLockEnvironment },
+      );
+      const contenderStderr = captureStderr(contender);
+      await waitUntil(() => contenderStderr().includes("waiting:"));
+      holder.kill("SIGTERM");
+      expect(await waitForExit(holder, 5_000)).toBe(137);
+      expect(holderStderr()).toContain("EMERGENCY");
+      expect(() => process.kill(stubbornPid, 0)).toThrow();
+      expect(await waitForExit(contender)).toBe(0);
+      expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([
+        "A-start",
+        "B-start",
+      ]);
+    } finally {
+      await terminateOwnedChild(holder);
+      if (contender !== undefined) await terminateOwnedChild(contender);
+    }
+  });
+
   it("does not launch a command after cancellation at the acquired event", () => {
     const root = makeCleanRepository();
     const signalLauncher = join(root, "scripts", "acquired-signal-launcher.sh");
@@ -650,28 +940,189 @@ describe("Ralph launcher boundaries", () => {
     expect(existsSync(forbiddenSideEffect)).toBe(false);
   });
 
-  it("keeps the broad-check and MBT locks independent", async () => {
+  it("serializes new wrappers against both legacy lock generations", async () => {
     const root = makeCleanRepository();
     const probe = addLockProbe(root);
-    const log = join(root, "distinct-locks.log");
-    const release = join(root, "release-mbt-holder");
-    const mbtHolder = spawn(
-      join(root, "scripts", "with-mbt-lock.sh"),
-      [probe, "holder", log, release],
-      { cwd: root, env: independentLockEnvironment },
+    const linked = mkdtempSync(join(tmpdir(), "ralph-legacy-lock-linked-"));
+    roots.push(linked);
+    rmSync(linked, { recursive: true });
+    git(root, "worktree", "add", "-b", "legacy-lock-linked", linked, "master");
+    const commonDir = git(
+      root,
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-common-dir",
     );
-    try {
-      await waitUntil(() => existsSync(log));
-      const broadCheck = spawn(
-        join(root, "scripts", "with-broad-workspace-lock.sh"),
-        [probe, "contender", log],
+
+    for (const [legacyName, newWrapper] of [
+      ["ralph-mbt.lock", "with-broad-workspace-lock.sh"],
+      ["ralph-broad-workspace-check.lock", "with-mbt-lock.sh"],
+    ] as const) {
+      const log = join(root, `${legacyName}.compat.log`);
+      const release = join(root, `${legacyName}.compat.release`);
+      const legacyHolder = spawn(
+        "flock",
+        [
+          "--exclusive",
+          join(commonDir, legacyName),
+          probe,
+          "holder",
+          log,
+          release,
+        ],
         { cwd: root, env: independentLockEnvironment },
       );
-      expect(await waitForExit(broadCheck, 1_000)).toBe(0);
-      expect(readFileSync(log, "utf8")).toContain("B-start");
+      let newContender: ReturnType<typeof spawn> | undefined;
+      try {
+        await waitUntil(() => existsSync(log));
+        newContender = spawn(
+          join(linked, "scripts", newWrapper),
+          [join(linked, "scripts", "lock-probe.sh"), "contender", log],
+          { cwd: linked, env: independentLockEnvironment },
+        );
+        const contenderStderr = captureStderr(newContender);
+        await waitUntil(() => contenderStderr().includes("waiting:"));
+        await waitUntil(
+          () => newContender !== undefined && hasDirectFlockChild(newContender),
+        );
+        expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([
+          "A-start",
+        ]);
+        writeFileSync(release, "release\n");
+        expect(await waitForExit(legacyHolder)).toBe(0);
+        expect(await waitForExit(newContender)).toBe(0);
+        expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([
+          "A-start",
+          "A-end",
+          "B-start",
+        ]);
+      } finally {
+        writeFileSync(release, "release\n");
+        await terminateOwnedChild(legacyHolder);
+        if (newContender !== undefined) await terminateOwnedChild(newContender);
+      }
+
+      const reverseLog = join(root, `${legacyName}.reverse.log`);
+      const reverseRelease = join(root, `${legacyName}.reverse.release`);
+      const waitingMarker = join(root, `${legacyName}.reverse.waiting`);
+      const newHolder = spawn(
+        join(root, "scripts", newWrapper),
+        [probe, "holder", reverseLog, reverseRelease],
+        { cwd: root, env: independentLockEnvironment },
+      );
+      let legacyContender: ReturnType<typeof spawn> | undefined;
+      try {
+        await waitUntil(() => existsSync(reverseLog));
+        legacyContender = spawn(
+          "bash",
+          [
+            "-c",
+            'echo waiting >"$1"; exec flock --exclusive "$2" "$3" contender "$4"',
+            "legacy-contender",
+            waitingMarker,
+            join(commonDir, legacyName),
+            join(linked, "scripts", "lock-probe.sh"),
+            reverseLog,
+          ],
+          { cwd: linked, env: independentLockEnvironment },
+        );
+        await waitUntil(() => existsSync(waitingMarker));
+        await waitUntil(
+          () =>
+            legacyContender?.pid !== undefined &&
+            processCommand(legacyContender.pid) === "flock",
+        );
+        expect(readFileSync(reverseLog, "utf8").trim().split("\n")).toEqual([
+          "A-start",
+        ]);
+        writeFileSync(reverseRelease, "release\n");
+        expect(await waitForExit(newHolder)).toBe(0);
+        expect(await waitForExit(legacyContender)).toBe(0);
+        expect(readFileSync(reverseLog, "utf8").trim().split("\n")).toEqual([
+          "A-start",
+          "A-end",
+          "B-start",
+        ]);
+      } finally {
+        writeFileSync(reverseRelease, "release\n");
+        await terminateOwnedChild(newHolder);
+        if (legacyContender !== undefined)
+          await terminateOwnedChild(legacyContender);
+      }
+    }
+  });
+
+  it("runs destructive idle cleanup only when new and legacy locks are idle", async () => {
+    const root = makeCleanRepository();
+    const probe = addLockProbe(root);
+    const commonDir = git(
+      root,
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-common-dir",
+    );
+    const fakeBin = join(root, "fake-bin");
+    const killallMarker = join(root, "killall-called");
+    const artifact = join(root, "packages", "mbt-fuzz.log");
+    mkdirSync(fakeBin);
+    mkdirSync(join(root, "packages"), { recursive: true });
+    writeFileSync(
+      join(fakeBin, "killall"),
+      ["#!/usr/bin/env bash", ': >"$CLEANUP_KILLALL_MARKER"', ""].join("\n"),
+    );
+    writeFileSync(
+      join(fakeBin, "pgrep"),
+      ["#!/usr/bin/env bash", "exit 1", ""].join("\n"),
+    );
+    chmodSync(join(fakeBin, "killall"), 0o755);
+    chmodSync(join(fakeBin, "pgrep"), 0o755);
+
+    for (const [name, command, args] of [
+      ["new", join(root, "scripts", "with-broad-workspace-lock.sh"), [probe]],
+      [
+        "legacy-broad",
+        "flock",
+        [
+          "--exclusive",
+          join(commonDir, "ralph-broad-workspace-check.lock"),
+          probe,
+        ],
+      ],
+      [
+        "legacy-mbt",
+        "flock",
+        ["--exclusive", join(commonDir, "ralph-mbt.lock"), probe],
+      ],
+    ] as const) {
+      const log = join(root, `${name}-cleanup.log`);
+      const release = join(root, `${name}-cleanup.release`);
+      writeFileSync(artifact, "must survive while locked\n");
+      rmSync(killallMarker, { force: true });
+      const holder = spawn(command, [...args, "holder", log, release], {
+        cwd: root,
+        env: independentLockEnvironment,
+      });
+      try {
+        await waitUntil(() => existsSync(log));
+        const cleanup = runIdleMbtCleanup(root, fakeBin);
+        expect(cleanup.status).toBe(0);
+        expect(cleanup.stderr).toContain("heavy verification is active");
+        expect(existsSync(artifact)).toBe(true);
+        expect(existsSync(killallMarker)).toBe(false);
+      } finally {
+        writeFileSync(release, "release\n");
+        await terminateOwnedChild(holder);
+      }
+    }
+
+    process.env.CLEANUP_KILLALL_MARKER = killallMarker;
+    try {
+      const idleCleanup = runIdleMbtCleanup(root, fakeBin);
+      expect(idleCleanup.status).toBe(0);
+      expect(existsSync(artifact)).toBe(false);
+      expect(existsSync(killallMarker)).toBe(true);
     } finally {
-      writeFileSync(release, "release\n");
-      expect(await waitForExit(mbtHolder)).toBe(0);
+      delete process.env.CLEANUP_KILLALL_MARKER;
     }
   });
 
@@ -797,7 +1248,7 @@ describe("Ralph launcher boundaries", () => {
       );
       expect(git(root, "branch", "--show-current")).toBe("master");
     } finally {
-      holder.kill("SIGKILL");
+      await terminateOwnedChild(holder);
     }
   });
 });

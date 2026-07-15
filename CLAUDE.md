@@ -174,21 +174,28 @@ seed, diagnose, and fix unless the user explicitly says otherwise.
 
 Root workspace verification is intentionally resource-bounded. `pnpm
 typecheck` and `pnpm test` acquire the Git-common-directory
-`ralph-broad-workspace-check.lock`, shared by all linked worktrees, and cap
+`ralph-heavy-verification.lock`, shared by all linked worktrees, and cap
 Turbo concurrency at one package task. `pnpm quality` uses the same lock. Run
 those public scripts directly; do not wrap them in another `flock`, bypass them
 with raw Turbo, or invoke their internal `:body`/`:turbo` scripts. For another
 broad workspace command, use `scripts/with-broad-workspace-lock.sh <command>`.
 Keep focused package checks focused; they do not require this broad-check lock.
 
-All Quint/QNT proof and battle MBT commands must hold the separate shared
-`ralph-mbt.lock` for the entire command. Public proof and MBT package scripts do
-this automatically. Run those public scripts directly; do not wrap them in
-another lock or invoke their internal `:body` scripts. Run any direct Quint or
-filtered MBT command through `scripts/with-mbt-lock.sh <command>`.
-The broad-check and MBT locks are distinct and must never be nested. Import-
+All Quint/QNT proof and battle MBT commands must hold that same shared
+`ralph-heavy-verification.lock` for the entire command. Public proof and MBT
+package scripts do this automatically. Run those public scripts directly; do
+not wrap them in another lock or invoke their internal `:body` scripts. Run any
+direct Quint or filtered MBT command through
+`scripts/with-mbt-lock.sh <command>`. The broad-check and MBT wrappers are two
+entry points to one lock and must never be nested. Import-
 closure budgets, per-module proof timeouts, and the one-MBT-at-a-time rule
 remain mandatory; a lock is not permission to run an unbounded model.
+
+The guard also acquires the former `ralph-broad-workspace-check.lock` and
+`ralph-mbt.lock` in a fixed order. This bridges older guarded worktrees that use
+either prior name. Commits predating the guard are not protected by a lock, so
+Ralph refuses to launch agents from such a Base SHA. Do not remove either legacy
+acquisition merely because current worktrees use the common lock.
 
 **SIGKILL / exit 137 is an emergency signal**, including when it comes from
 TypeScript rather than Quint. Immediately stop launching verification and:

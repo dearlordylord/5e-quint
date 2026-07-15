@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# DND_RESOURCE_GUARD_PROTOCOL: heavy-legacy-v1
+
 usage() {
   echo "usage: scripts/with-resource-lock.sh <broad|mbt> <command> [args...]" >&2
   exit 64
@@ -12,11 +14,9 @@ shift
 
 case "$lock_kind" in
   broad)
-    lock_name="ralph-broad-workspace-check.lock"
     event_name="broad-workspace-check"
     ;;
   mbt)
-    lock_name="ralph-mbt.lock"
     event_name="mbt-proof-check"
     ;;
   *) usage ;;
@@ -80,20 +80,33 @@ trap 'handle_signal 143' TERM
 
 git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
 (( pending_signal_status == 0 )) || exit "$pending_signal_status"
-lock_file="$git_common_dir/$lock_name"
 
-exec {lock_fd}>"$lock_file"
+# Keep both legacy locks during the rolling migration. Ralph worktrees execute
+# the guard script from their task Base SHA, so a live old worktree may still
+# acquire only one of these names. The common-first fixed order prevents new
+# wrappers from deadlocking each other while also excluding both old lanes.
+exec {heavy_lock_fd}>"$git_common_dir/ralph-heavy-verification.lock"
+exec {legacy_broad_lock_fd}>"$git_common_dir/ralph-broad-workspace-check.lock"
+exec {legacy_mbt_lock_fd}>"$git_common_dir/ralph-mbt.lock"
+
+acquire_lock() {
+  local lock_fd="$1"
+  flock --exclusive "$lock_fd" &
+  acquisition_pid=$!
+  (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
+  set +e
+  wait "$acquisition_pid"
+  local acquisition_status=$?
+  set -e
+  acquisition_pid=""
+  (( acquisition_status == 0 )) || exit "$acquisition_status"
+}
+
 echo "[$event_name] waiting: ${1##*/}" >&2
 (( pending_signal_status == 0 )) || exit "$pending_signal_status"
-flock --exclusive "$lock_fd" &
-acquisition_pid=$!
-(( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
-set +e
-wait "$acquisition_pid"
-acquisition_status=$?
-set -e
-acquisition_pid=""
-(( acquisition_status == 0 )) || exit "$acquisition_status"
+acquire_lock "$heavy_lock_fd"
+acquire_lock "$legacy_broad_lock_fd"
+acquire_lock "$legacy_mbt_lock_fd"
 
 echo "[$event_name] acquired: ${1##*/}" >&2
 export DND_RESOURCE_LOCK_KIND="$lock_kind"
