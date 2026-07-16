@@ -63,7 +63,7 @@ acceptance, WIP disposition, and focused verification.
     { "number": 51, "id": "GH-34", "status": "ready-for-implementation", "title": "Publish the single language-neutral Cleanroom Core", "dependencies": ["GH-97", "GH-29", "GH-60", "GH-122"] },
     { "number": 52, "id": "GH-35", "status": "ready-for-implementation", "title": "Publish the minimal Rust Target Language Adapter", "dependencies": ["GH-34", "GH-40"] },
     { "number": 53, "id": "GH-36", "status": "ready-for-implementation", "title": "Assemble the source-produced Cleanroom Harness", "dependencies": ["GH-34", "GH-35", "GH-40"] },
-    { "number": 54, "id": "GH-153", "status": "ready-for-implementation", "title": "Traverse decoded Surface strings with finite tuple-aware schema lockstep", "dependencies": ["GH-152"] },
+    { "number": 54, "id": "GH-153", "status": "done", "title": "Traverse decoded Surface strings with finite tuple-aware schema lockstep", "dependencies": ["GH-152"] },
     { "number": 55, "id": "GH-155", "status": "ready-for-implementation", "title": "Replay renamed Unit mechanics through the Character Build lifecycle", "dependencies": ["GH-154"] }
   ]
 }
