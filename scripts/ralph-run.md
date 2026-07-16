@@ -367,7 +367,7 @@ mismatch; branch repair belongs to the runner or decider, not the task agent.
 
 ## Environment
 
-Ralph passes `gpt-5.6-luna` to Codex-backed implementation, optional model
+Ralph passes `gpt-5.6-sol` to Codex-backed implementation, optional model
 selection, and the decider by default. Reviews use `gpt-5.6-sol` by default.
 The implementation/chooser/decider model and review model are printed at
 startup and recorded in `state.env`, `events.tsv`, and the final

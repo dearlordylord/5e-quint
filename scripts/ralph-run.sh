@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 original_args=("$@")
 
-default_codex_model="gpt-5.6-luna"
+default_codex_model="gpt-5.6-sol"
 default_review_model="gpt-5.6-sol"
 default_implementation_round_limit=10
 implementation_review_safety_cap_status=3
