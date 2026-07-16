@@ -31,6 +31,10 @@ import {
   SkillSchema,
   SpeciesRecordKindSchema,
   StandardActionKindSchema,
+  surfaceSchemaRole,
+  type SurfaceIdentityKind,
+  type SurfaceProtocolKind,
+  type SurfaceUnitReferenceRelation,
   ToolProficiencyGrantSchema,
   WeaponProficiencySchema,
   WeaponCategorySchema,
@@ -57,6 +61,33 @@ import {
   SpellRecordSchema,
   SpawnedCreatureStatBlockSchema,
 } from "./schema-spell.ts";
+
+const surfaceIdentity = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  kind: SurfaceIdentityKind,
+) =>
+  surfaceSchemaRole(schema, {
+    category: "identity",
+    kind,
+  });
+
+const surfaceProtocol = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  kind: SurfaceProtocolKind,
+) => surfaceSchemaRole(schema, { category: "protocol", kind });
+
+const surfaceReference = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  relation: SurfaceUnitReferenceRelation,
+) =>
+  surfaceSchemaRole(schema, {
+    category: "reference",
+    relation,
+    targetKind: "unit",
+  });
+
+const surfaceProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
+  surfaceSchemaRole(schema, { category: "prose" });
 
 const NonEmptyStringSchema = Schema.NonEmptyTrimmedString;
 
@@ -214,7 +245,7 @@ export const ChargePoolResourceSchema = Schema.Struct({
 
 export const PointPoolResourceSchema = Schema.Struct({
   kind: Schema.Literal("point_pool"),
-  poolId: NonEmptyStringSchema,
+  poolId: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
   cap: FiniteResourceCapSchema,
 });
 
@@ -508,12 +539,12 @@ const FeatureChoiceSelectionRepeatabilitySchema = Schema.Union(
 
 export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("class_feature_acquisition_choice"),
-  choiceKey: NonEmptyStringSchema,
+  choiceKey: surfaceProtocol(NonEmptyStringSchema, "choiceKey"),
   timing: Schema.Literal("class_feature_acquisition"),
   options: Schema.NonEmptyArray(
     Schema.Struct({
-      id: NonEmptyStringSchema,
-      displayName: NonEmptyStringSchema,
+      id: surfaceIdentity(NonEmptyStringSchema, "id"),
+      displayName: surfaceIdentity(NonEmptyStringSchema, "displayName"),
       mechanics: Schema.suspend(() => PassiveMechanicsSchema),
     }),
   ),
@@ -535,12 +566,12 @@ export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
   optionSet: Schema.Struct({
-    choiceKey: NonEmptyStringSchema,
+    choiceKey: surfaceProtocol(NonEmptyStringSchema, "choiceKey"),
     timing: Schema.Literal("resource_use"),
     initialOptions: Schema.NonEmptyArray(
       Schema.Struct({
-        id: NonEmptyStringSchema,
-        displayName: NonEmptyStringSchema,
+        id: surfaceIdentity(NonEmptyStringSchema, "id"),
+        displayName: surfaceIdentity(NonEmptyStringSchema, "displayName"),
         battleExecution: exactOptional(
           Schema.Union(
             Schema.Struct({
@@ -631,7 +662,10 @@ export const ClassFeatureResourcePoolMechanicsSchema = Schema.Struct({
 export const FeatureChoiceMechanicsSchema = Schema.Union(
   Schema.Struct({
     family: Schema.Literal("feature_choice"),
-    choiceKey: Schema.Literal("eldritch_invocations"),
+    choiceKey: surfaceSchemaRole(Schema.Literal("eldritch_invocations"), {
+      category: "protocol",
+      kind: "choiceKey",
+    }),
     timing: Schema.Literal("class_feature_acquisition"),
     choiceCount: ClassLevelChoiceCountSchema,
     optionSource: Schema.Struct({
@@ -744,71 +778,98 @@ export const SORCERER_METAMAGIC_EFFECT_KINDS = [
 
 const MetamagicOptionSchema = Schema.Union(
   Schema.Struct({
-    id: Schema.Literal("sorcerer_careful_spell"),
-    displayName: Schema.Literal("Careful Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_careful_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Careful Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(CAREFUL_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_distant_spell"),
-    displayName: Schema.Literal("Distant Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_distant_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Distant Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(DISTANT_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_empowered_spell"),
-    displayName: Schema.Literal("Empowered Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_empowered_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Empowered Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: CanCombineMetamagicStackingSchema,
     effectKind: Schema.Literal(EMPOWERED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_extended_spell"),
-    displayName: Schema.Literal("Extended Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_extended_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Extended Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(EXTENDED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_heightened_spell"),
-    displayName: Schema.Literal("Heightened Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_heightened_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Heightened Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(2),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(HEIGHTENED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_quickened_spell"),
-    displayName: Schema.Literal("Quickened Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_quickened_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Quickened Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(2),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(QUICKENED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_seeking_spell"),
-    displayName: Schema.Literal("Seeking Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_seeking_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Seeking Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: CanCombineMetamagicStackingSchema,
     effectKind: Schema.Literal(SEEKING_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_subtle_spell"),
-    displayName: Schema.Literal("Subtle Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_subtle_spell"), "id"),
+    displayName: surfaceIdentity(Schema.Literal("Subtle Spell"), "displayName"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(SUBTLE_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_transmuted_spell"),
-    displayName: Schema.Literal("Transmuted Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_transmuted_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Transmuted Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(TRANSMUTED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
-    id: Schema.Literal("sorcerer_twinned_spell"),
-    displayName: Schema.Literal("Twinned Spell"),
+    id: surfaceIdentity(Schema.Literal("sorcerer_twinned_spell"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Twinned Spell"),
+      "displayName",
+    ),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
     effectKind: Schema.Literal(TWINNED_SPELL_METAMAGIC_EFFECT_KIND),
@@ -824,7 +885,10 @@ const MetamagicOptionsSchema = Schema.NonEmptyArray(MetamagicOptionSchema).pipe(
 
 export const SorcererMetamagicMechanicsSchema = Schema.Struct({
   family: Schema.Literal("metamagic_options"),
-  choiceKey: Schema.Literal(SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY),
+  choiceKey: surfaceSchemaRole(
+    Schema.Literal(SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY),
+    { category: "protocol", kind: "choiceKey" },
+  ),
   timing: Schema.Literal("class_feature_acquisition"),
   choiceCount: MetamagicChoiceCountSchema,
   changeOn: Schema.Struct({
@@ -837,7 +901,10 @@ export const SorcererMetamagicMechanicsSchema = Schema.Struct({
   }),
   spends: Schema.Struct({
     kind: Schema.Literal("class_feature_point_pool"),
-    resourceUnitId: Schema.Literal("sorcerer_font_of_magic"),
+    resourceUnitId: surfaceReference(
+      Schema.Literal("sorcerer_font_of_magic"),
+      "resource-link",
+    ),
   }),
   spellUseLimit: Schema.Struct({
     kind: Schema.Literal("one_per_spell_unless_option_allows_stacking"),
@@ -855,7 +922,10 @@ const DruidWildCompanionSpendOptionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("spell_slot") }),
   Schema.Struct({
     kind: Schema.Literal("one_class_feature_use"),
-    resourceUnitId: Schema.Literal("druid_wild_shape"),
+    resourceUnitId: surfaceReference(
+      Schema.Literal("druid_wild_shape"),
+      "resource-link",
+    ),
   }),
 );
 
@@ -887,14 +957,14 @@ export const DruidWildCompanionSpellCastMechanicsSchema = Schema.Struct({
     kind: Schema.Literal("standard_action"),
     action: Schema.Literal("magic"),
   }),
-  spellId: Schema.Literal("find_familiar"),
+  spellId: surfaceReference(Schema.Literal("find_familiar"), "spell-reference"),
   spendOptions: DruidWildCompanionSpendOptionsSchema,
   componentOverride: Schema.Struct({
     material: Schema.Literal("not_required"),
   }),
   spellModeOverride: Schema.Struct({
     kind: Schema.Literal("fixed_creature_type_mode_option"),
-    optionId: Schema.Literal("fey"),
+    optionId: surfaceIdentity(Schema.Literal("fey"), "id"),
   }),
   familiarDismissal: Schema.Struct({
     kind: Schema.Literal("caster_finishes_long_rest"),
@@ -952,7 +1022,10 @@ export const SorcererSorcerousRestorationMechanicsSchema = Schema.Struct({
   recoveryTrigger: Schema.Literal("short_rest"),
   resource: Schema.Struct({
     kind: Schema.Literal("point_pool"),
-    resourceUnitId: Schema.Literal("sorcerer_font_of_magic"),
+    resourceUnitId: surfaceReference(
+      Schema.Literal("sorcerer_font_of_magic"),
+      "resource-link",
+    ),
   }),
   recoveryCap: Schema.Struct({
     kind: Schema.Literal("half_class_level_rounded_down"),
@@ -1004,7 +1077,7 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
   family: Schema.Literal("failed_ability_check_resource_boost"),
   trigger: Schema.Struct({ kind: Schema.Literal("failed_ability_check") }),
   spends: Schema.Struct({
-    resourceUnitId: NonEmptyStringSchema,
+    resourceUnitId: surfaceReference(NonEmptyStringSchema, "resource-link"),
   }),
   bonus: Schema.Struct({
     kind: Schema.Literal("dice"),
@@ -1018,7 +1091,10 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
 
 const MonkUncannyMetabolismHealingAmountSchema = Schema.Struct({
   kind: Schema.Literal("monk_martial_arts_die_plus_monk_level"),
-  martialArtsUnitId: Schema.Literal("monk_martial_arts"),
+  martialArtsUnitId: surfaceReference(
+    Schema.Literal("monk_martial_arts"),
+    "resource-link",
+  ),
 });
 
 export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
@@ -1027,7 +1103,10 @@ export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
   optional: Schema.Literal(true),
   recovery: Schema.Struct({
     kind: Schema.Literal("recover_all_expended_uses"),
-    resourceUnitId: Schema.Literal("monk_monks_focus"),
+    resourceUnitId: surfaceReference(
+      Schema.Literal("monk_monks_focus"),
+      "resource-link",
+    ),
   }),
   healing: Schema.Struct({
     kind: Schema.Literal("heal_hp"),
@@ -1038,7 +1117,7 @@ export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
 });
 
 const ReferencedResourceSpendSchema = strictStruct({
-  resourceUnitId: NonEmptyStringSchema,
+  resourceUnitId: surfaceReference(NonEmptyStringSchema, "resource-link"),
   amount: PositiveIntegerSchema,
 });
 
@@ -1188,8 +1267,11 @@ export const OpenHandTechniqueMechanicsSchema = strictStruct({
   family: Schema.Literal("open_hand_technique"),
   trigger: strictStruct({
     kind: Schema.Literal("hit_with_attack_granted_by"),
-    resourceOptionUnitId: Schema.Literal("monk_monks_focus"),
-    optionId: Schema.Literal("flurry_of_blows"),
+    resourceOptionUnitId: surfaceReference(
+      Schema.Literal("monk_monks_focus"),
+      "resource-link",
+    ),
+    optionId: surfaceIdentity(Schema.Literal("flurry_of_blows"), "id"),
   }),
   optional: Schema.Literal(true),
   effectSaveDc: strictStruct({
@@ -1199,14 +1281,14 @@ export const OpenHandTechniqueMechanicsSchema = strictStruct({
   }),
   choices: Schema.Tuple(
     strictStruct({
-      id: Schema.Literal("addle"),
+      id: surfaceIdentity(Schema.Literal("addle"), "id"),
       effect: strictStruct({
         kind: Schema.Literal("deny_opportunity_attacks"),
         expires: Schema.Literal("start_of_target_next_turn"),
       }),
     }),
     strictStruct({
-      id: Schema.Literal("push"),
+      id: surfaceIdentity(Schema.Literal("push"), "id"),
       save: strictStruct({
         ability: Schema.Literal("str"),
       }),
@@ -1216,7 +1298,7 @@ export const OpenHandTechniqueMechanicsSchema = strictStruct({
       }),
     }),
     strictStruct({
-      id: Schema.Literal("topple"),
+      id: surfaceIdentity(Schema.Literal("topple"), "id"),
       save: strictStruct({
         ability: Schema.Literal("dex"),
       }),
@@ -1236,7 +1318,10 @@ export const StunningStrikeMechanicsSchema = strictStruct({
   }),
   optional: Schema.Literal(true),
   spends: strictStruct({
-    resourceUnitId: Schema.Literal("monk_monks_focus"),
+    resourceUnitId: surfaceReference(
+      Schema.Literal("monk_monks_focus"),
+      "resource-link",
+    ),
     amount: Schema.Literal(1),
   }),
   savingThrow: strictStruct({
@@ -1281,7 +1366,10 @@ export const CunningStrikeMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("deal_sneak_attack_damage"),
-    sourceUnitId: Schema.Literal("rogue_sneak_attack"),
+    sourceUnitId: surfaceReference(
+      Schema.Literal("rogue_sneak_attack"),
+      "unit-reference",
+    ),
   }),
   choice: strictStruct({
     kind: Schema.Literal("choose_one"),
@@ -1294,13 +1382,19 @@ export const CunningStrikeMechanicsSchema = strictStruct({
   }),
   options: Schema.Tuple(
     strictStruct({
-      id: Schema.Literal(CUNNING_STRIKE_POISON_OPTION_SELECTION_ID),
+      id: surfaceIdentity(
+        Schema.Literal(CUNNING_STRIKE_POISON_OPTION_SELECTION_ID),
+        "id",
+      ),
       cost: CunningStrikeDieCostSchema,
       requires: strictStruct({
         kind: Schema.Literal("equipment_on_person"),
         equipment: strictStruct({
           kind: Schema.Literal("tool"),
-          toolId: Schema.Literal("poisoners_kit"),
+          toolId: surfaceIdentity(
+            Schema.Literal("poisoners_kit"),
+            "catalog-reference",
+          ),
         }),
       }),
       save: strictStruct({
@@ -1320,7 +1414,10 @@ export const CunningStrikeMechanicsSchema = strictStruct({
       }),
     }),
     strictStruct({
-      id: Schema.Literal(CUNNING_STRIKE_TRIP_OPTION_SELECTION_ID),
+      id: surfaceIdentity(
+        Schema.Literal(CUNNING_STRIKE_TRIP_OPTION_SELECTION_ID),
+        "id",
+      ),
       cost: CunningStrikeDieCostSchema,
       target: strictStruct({
         maxSize: Schema.Literal("large"),
@@ -1334,7 +1431,10 @@ export const CunningStrikeMechanicsSchema = strictStruct({
       }),
     }),
     strictStruct({
-      id: Schema.Literal(CUNNING_STRIKE_WITHDRAW_OPTION_SELECTION_ID),
+      id: surfaceIdentity(
+        Schema.Literal(CUNNING_STRIKE_WITHDRAW_OPTION_SELECTION_ID),
+        "id",
+      ),
       cost: CunningStrikeDieCostSchema,
       movement: strictStruct({
         timing: Schema.Literal("immediately_after_attack"),
@@ -1351,7 +1451,10 @@ export const BrutalStrikeMechanicsSchema = strictStruct({
   family: Schema.Literal("brutal_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("reckless_attack_strength_attack_hit"),
-    prerequisiteUnitId: Schema.Literal("barbarian_reckless_attack"),
+    prerequisiteUnitId: surfaceReference(
+      Schema.Literal("barbarian_reckless_attack"),
+      "unit-reference",
+    ),
     timing: Schema.Literal("on_your_turn"),
     advantageForgone: Schema.Literal(true),
     attackMustNotHaveDisadvantage: Schema.Literal(true),
@@ -1370,7 +1473,7 @@ export const BrutalStrikeMechanicsSchema = strictStruct({
   }),
   options: Schema.Tuple(
     strictStruct({
-      id: Schema.Literal("forceful_blow"),
+      id: surfaceIdentity(Schema.Literal("forceful_blow"), "id"),
       target: strictStruct({
         kind: Schema.Literal("hit_target"),
       }),
@@ -1386,7 +1489,7 @@ export const BrutalStrikeMechanicsSchema = strictStruct({
       }),
     }),
     strictStruct({
-      id: Schema.Literal("hamstring_blow"),
+      id: surfaceIdentity(Schema.Literal("hamstring_blow"), "id"),
       target: strictStruct({
         kind: Schema.Literal("hit_target"),
       }),
@@ -1502,10 +1605,16 @@ export const AcrobaticMovementMechanicsSchema = strictStruct({
 
 export const SupremeSneakMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike_option_grant"),
-  sourceUnitId: Schema.Literal("rogue_cunning_strike"),
+  sourceUnitId: surfaceReference(
+    Schema.Literal("rogue_cunning_strike"),
+    "unit-reference",
+  ),
   option: strictStruct({
-    id: Schema.Literal("stealth_attack"),
-    displayName: Schema.Literal("Stealth Attack"),
+    id: surfaceIdentity(Schema.Literal("stealth_attack"), "id"),
+    displayName: surfaceIdentity(
+      Schema.Literal("Stealth Attack"),
+      "displayName",
+    ),
     cost: CunningStrikeDieCostSchema,
     prerequisite: strictStruct({
       kind: Schema.Literal("hide_action_invisible_condition"),
@@ -1563,7 +1672,7 @@ export const HuntersPreyMechanicsSchema = strictStruct({
   }),
   options: Schema.Tuple(
     strictStruct({
-      id: Schema.Literal("colossus_slayer"),
+      id: surfaceIdentity(Schema.Literal("colossus_slayer"), "id"),
       trigger: strictStruct({
         kind: Schema.Literal("hit_creature_with_weapon"),
       }),
@@ -1579,7 +1688,7 @@ export const HuntersPreyMechanicsSchema = strictStruct({
       }),
     }),
     strictStruct({
-      id: Schema.Literal("horde_breaker"),
+      id: surfaceIdentity(Schema.Literal("horde_breaker"), "id"),
       trigger: strictStruct({
         kind: Schema.Literal("make_weapon_attack"),
       }),
@@ -1977,7 +2086,7 @@ const ClassLevelMultiplierReductionSchema = strictStruct({
 
 const AttackDamageReductionZeroDamageRedirectSchema = strictStruct({
   spends: strictStruct({
-    resourceUnitId: NonEmptyStringSchema,
+    resourceUnitId: surfaceReference(NonEmptyStringSchema, "resource-link"),
     amount: Schema.Literal(1),
   }),
   save: strictStruct({
@@ -2289,10 +2398,10 @@ export const TriggeredReplacementMechanicsSchema = Schema.Union(
 );
 
 const UnitMetadataSchema = Schema.Struct({
-  id: NonEmptyStringSchema,
-  name: NonEmptyStringSchema,
+  id: surfaceIdentity(NonEmptyStringSchema, "id"),
+  name: surfaceIdentity(NonEmptyStringSchema, "name"),
   provenance: ProvenanceSchema,
-  description: Schema.String,
+  description: surfaceProse(Schema.String),
 });
 
 const distinctAbilities = (abilities: readonly unknown[]): boolean =>
@@ -2350,7 +2459,7 @@ export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
 export const StartingEquipmentItemRefSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("unit_ref"),
-    unitId: NonEmptyStringSchema,
+    unitId: surfaceReference(NonEmptyStringSchema, "unit-reference"),
     quantity: exactOptional(PositiveIntegerSchema),
   }),
   Schema.Struct({
@@ -2358,19 +2467,19 @@ export const StartingEquipmentItemRefSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("draft_owned_item"),
-    itemName: NonEmptyStringSchema,
+    itemName: surfaceIdentity(NonEmptyStringSchema, "name"),
     quantity: exactOptional(PositiveIntegerSchema),
   }),
 );
 
 export const StartingEquipmentChoiceSchema = Schema.Union(
   Schema.Struct({
-    id: NonEmptyStringSchema,
+    id: surfaceIdentity(NonEmptyStringSchema, "id"),
     kind: Schema.Literal("coin_grant"),
     coinsGp: NonNegativeIntegerSchema,
   }),
   Schema.Struct({
-    id: NonEmptyStringSchema,
+    id: surfaceIdentity(NonEmptyStringSchema, "id"),
     kind: Schema.Literal("item_bundle"),
     items: Schema.NonEmptyArray(StartingEquipmentItemRefSchema),
     coinsGp: exactOptional(NonNegativeIntegerSchema),
@@ -2378,7 +2487,7 @@ export const StartingEquipmentChoiceSchema = Schema.Union(
 );
 
 export const ClassFeatureGrantSchema = Schema.Struct({
-  unitId: NonEmptyStringSchema,
+  unitId: surfaceReference(NonEmptyStringSchema, "unit-reference"),
   level: PositiveIntegerSchema,
 });
 
@@ -2436,12 +2545,12 @@ const PactMagicProgressionSchema = Schema.NonEmptyArray(
 );
 
 const SpellbookSpellAccessSchema = Schema.Struct({
-  spellId: NonEmptyStringSchema,
+  spellId: surfaceReference(NonEmptyStringSchema, "spell-reference"),
   spellLevel: PositiveIntegerSchema,
 });
 
 const ClassSpellAccessSchema = Schema.Struct({
-  spellId: NonEmptyStringSchema,
+  spellId: surfaceReference(NonEmptyStringSchema, "spell-reference"),
   spellLevel: PositiveIntegerSchema,
 });
 
@@ -2550,7 +2659,9 @@ const ListPreparedSpellcastingClassNameSchema = Schema.Literal(
 const ClassCantripAccessSchema = Schema.Struct({
   kind: Schema.Literal("known_cantrips_from_class_spell_list"),
   choose: PositiveIntegerSchema,
-  spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+  spellIds: Schema.NonEmptyArray(
+    surfaceReference(NonEmptyStringSchema, "spell-list"),
+  ),
   changeOn: Schema.Struct({
     kind: Schema.Literal("class_level"),
     count: PositiveIntegerSchema,
@@ -2715,7 +2826,9 @@ export const PactMagicSpellcastingCreationSchema = Schema.Struct({
   cantripAccess: Schema.Struct({
     kind: Schema.Literal("known_cantrips_from_class_spell_list"),
     choose: PositiveIntegerSchema,
-    spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+    spellIds: Schema.NonEmptyArray(
+      surfaceReference(NonEmptyStringSchema, "spell-list"),
+    ),
     changeOn: Schema.Struct({
       kind: Schema.Literal("class_level"),
       count: PositiveIntegerSchema,
@@ -2758,7 +2871,9 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
   cantripAccess: Schema.Struct({
     kind: Schema.Literal("known_cantrips"),
     choose: PositiveIntegerSchema,
-    spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+    spellIds: Schema.NonEmptyArray(
+      surfaceReference(NonEmptyStringSchema, "spell-list"),
+    ),
     changeOn: Schema.Struct({
       kind: Schema.Literal("long_rest"),
       count: PositiveIntegerSchema,
@@ -2772,7 +2887,9 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
   preparedAccess: Schema.Struct({
     kind: Schema.Literal("prepared_from_spellbook"),
     choose: PositiveIntegerSchema,
-    spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+    spellIds: Schema.NonEmptyArray(
+      surfaceReference(NonEmptyStringSchema, "spell-list"),
+    ),
     changeOn: Schema.Struct({ kind: Schema.Literal("long_rest") }),
   }),
   spellSlotProjection: SpellSlotProjectionSchema,
@@ -3094,7 +3211,9 @@ const ClassRecordBaseFields = {
   subclassChoices: Schema.Array(
     Schema.Struct({
       level: PositiveIntegerSchema,
-      options: Schema.NonEmptyArray(NonEmptyStringSchema),
+      options: Schema.NonEmptyArray(
+        surfaceReference(NonEmptyStringSchema, "subclass-choice"),
+      ),
     }),
   ),
 };
@@ -3472,17 +3591,26 @@ const GnomishLineageForestMechanicsSchema = strictStruct({
   grants: Schema.Tuple(
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: Schema.Literal("minor_illusion"),
+      spellId: surfaceReference(
+        Schema.Literal("minor_illusion"),
+        "spell-reference",
+      ),
       mode: Schema.Literal("known"),
     }),
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: Schema.Literal("speak_with_animals"),
+      spellId: surfaceReference(
+        Schema.Literal("speak_with_animals"),
+        "spell-reference",
+      ),
       mode: Schema.Literal("prepared"),
     }),
     strictStruct({
       kind: Schema.Literal("grant_spell_free_casts"),
-      spellId: Schema.Literal("speak_with_animals"),
+      spellId: surfaceReference(
+        Schema.Literal("speak_with_animals"),
+        "spell-reference",
+      ),
       count: strictStruct({
         kind: Schema.Literal("proficiency_bonus"),
       }),
@@ -3496,12 +3624,15 @@ const GnomishLineageRockMechanicsSchema = strictStruct({
   grants: Schema.Tuple(
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: Schema.Literal("mending"),
+      spellId: surfaceReference(Schema.Literal("mending"), "spell-reference"),
       mode: Schema.Literal("known"),
     }),
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: Schema.Literal("prestidigitation"),
+      spellId: surfaceReference(
+        Schema.Literal("prestidigitation"),
+        "spell-reference",
+      ),
       mode: Schema.Literal("known"),
     }),
   ),
@@ -3511,7 +3642,10 @@ const GnomishLineageRockClockworkDeviceSchema = strictStruct({
   creation: strictStruct({
     trigger: strictStruct({
       kind: Schema.Literal("prestidigitation_cast"),
-      spellId: Schema.Literal("prestidigitation"),
+      spellId: surfaceReference(
+        Schema.Literal("prestidigitation"),
+        "spell-reference",
+      ),
       castingTime: strictStruct({
         amount: Schema.Literal(10),
         unit: Schema.Literal("minute"),
@@ -3546,21 +3680,24 @@ const GnomishLineageRockClockworkDeviceSchema = strictStruct({
 });
 
 const GnomishLineageForestOptionSchema = strictStruct({
-  id: Schema.Literal("forest_gnome"),
-  displayName: Schema.Literal("Forest Gnome"),
+  id: surfaceIdentity(Schema.Literal("forest_gnome"), "id"),
+  displayName: surfaceIdentity(Schema.Literal("Forest Gnome"), "displayName"),
   mechanics: GnomishLineageForestMechanicsSchema,
 });
 
 const GnomishLineageRockOptionSchema = strictStruct({
-  id: Schema.Literal("rock_gnome"),
-  displayName: Schema.Literal("Rock Gnome"),
+  id: surfaceIdentity(Schema.Literal("rock_gnome"), "id"),
+  displayName: surfaceIdentity(Schema.Literal("Rock Gnome"), "displayName"),
   mechanics: GnomishLineageRockMechanicsSchema,
   clockworkDevice: GnomishLineageRockClockworkDeviceSchema,
 });
 
 export const GnomishLineageMechanicsSchema = strictStruct({
   family: Schema.Literal("species_lineage_choice"),
-  choiceKey: Schema.Literal("gnome_lineage"),
+  choiceKey: surfaceSchemaRole(Schema.Literal("gnome_lineage"), {
+    category: "protocol",
+    kind: "choiceKey",
+  }),
   timing: Schema.Literal("species_selection"),
   spellcastingAbilityChoice: strictStruct({
     kind: Schema.Literal("spellcasting_ability_choice"),
@@ -3630,14 +3767,14 @@ export const SpeciesTraitMechanicsSchema = Schema.Union(
 export const SpeciesTraitRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("species_trait"),
-  species: NonEmptyStringSchema,
+  species: surfaceIdentity(NonEmptyStringSchema, "reference"),
   mechanics: SpeciesTraitMechanicsSchema,
 });
 
 export const BackgroundToolProficiencySchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("specific_tool"),
-    toolId: NonEmptyStringSchema,
+    toolId: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
   }),
   Schema.Struct({
     kind: Schema.Literal("tool_category_choice"),
@@ -3650,7 +3787,7 @@ export const BackgroundRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: BackgroundRecordKindSchema,
   abilityScoreIncrease: BackgroundAbilityScoreIncreaseSchema,
-  originFeatId: NonEmptyStringSchema,
+  originFeatId: surfaceReference(NonEmptyStringSchema, "origin-feat-reference"),
   skillProficiencies: Schema.NonEmptyArray(SkillSchema),
   toolProficiency: BackgroundToolProficiencySchema,
   startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),
@@ -3694,57 +3831,60 @@ export const DragonbornSpeciesTraitsSchema = Schema.Struct({
 
 const DraconicAncestryDamageTypeSourceSchema = strictStruct({
   kind: Schema.Literal("choice_table"),
-  holeId: Schema.Literal("species_dragonborn_draconic_ancestry_damage_type"),
-  label: Schema.Literal("draconic ancestry"),
+  holeId: surfaceProtocol(
+    Schema.Literal("species_dragonborn_draconic_ancestry_damage_type"),
+    "holeId",
+  ),
+  label: surfaceIdentity(Schema.Literal("draconic ancestry"), "label"),
   options: Schema.Tuple(
     strictStruct({
-      id: Schema.Literal("black"),
-      displayName: Schema.Literal("Black"),
+      id: surfaceIdentity(Schema.Literal("black"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Black"), "displayName"),
       damageType: Schema.Literal("acid"),
     }),
     strictStruct({
-      id: Schema.Literal("blue"),
-      displayName: Schema.Literal("Blue"),
+      id: surfaceIdentity(Schema.Literal("blue"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Blue"), "displayName"),
       damageType: Schema.Literal("lightning"),
     }),
     strictStruct({
-      id: Schema.Literal("brass"),
-      displayName: Schema.Literal("Brass"),
+      id: surfaceIdentity(Schema.Literal("brass"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Brass"), "displayName"),
       damageType: Schema.Literal("fire"),
     }),
     strictStruct({
-      id: Schema.Literal("bronze"),
-      displayName: Schema.Literal("Bronze"),
+      id: surfaceIdentity(Schema.Literal("bronze"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Bronze"), "displayName"),
       damageType: Schema.Literal("lightning"),
     }),
     strictStruct({
-      id: Schema.Literal("copper"),
-      displayName: Schema.Literal("Copper"),
+      id: surfaceIdentity(Schema.Literal("copper"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Copper"), "displayName"),
       damageType: Schema.Literal("acid"),
     }),
     strictStruct({
-      id: Schema.Literal("gold"),
-      displayName: Schema.Literal("Gold"),
+      id: surfaceIdentity(Schema.Literal("gold"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Gold"), "displayName"),
       damageType: Schema.Literal("fire"),
     }),
     strictStruct({
-      id: Schema.Literal("green"),
-      displayName: Schema.Literal("Green"),
+      id: surfaceIdentity(Schema.Literal("green"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Green"), "displayName"),
       damageType: Schema.Literal("poison"),
     }),
     strictStruct({
-      id: Schema.Literal("red"),
-      displayName: Schema.Literal("Red"),
+      id: surfaceIdentity(Schema.Literal("red"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Red"), "displayName"),
       damageType: Schema.Literal("fire"),
     }),
     strictStruct({
-      id: Schema.Literal("silver"),
-      displayName: Schema.Literal("Silver"),
+      id: surfaceIdentity(Schema.Literal("silver"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("Silver"), "displayName"),
       damageType: Schema.Literal("cold"),
     }),
     strictStruct({
-      id: Schema.Literal("white"),
-      displayName: Schema.Literal("White"),
+      id: surfaceIdentity(Schema.Literal("white"), "id"),
+      displayName: surfaceIdentity(Schema.Literal("White"), "displayName"),
       damageType: Schema.Literal("cold"),
     }),
   ),
@@ -3926,9 +4066,9 @@ export const MagicItemAttunementSchema = Schema.Union(
 );
 
 export const MagicItemVariantSchema = Schema.Struct({
-  id: NonEmptyStringSchema,
-  name: NonEmptyStringSchema,
-  description: exactOptional(Schema.String),
+  id: surfaceIdentity(NonEmptyStringSchema, "id"),
+  name: surfaceIdentity(NonEmptyStringSchema, "name"),
+  description: exactOptional(surfaceProse(Schema.String)),
   rarity: MagicItemRaritySchema,
   mechanics: MagicItemMechanicsSchema,
   destruction: ItemDestructionPolicySchema,
@@ -3969,9 +4109,9 @@ export const MagicEquipmentTraitSchema = Schema.Struct({
 });
 
 export const MagicEquipmentVariantSchema = Schema.Struct({
-  id: NonEmptyStringSchema,
-  name: NonEmptyStringSchema,
-  description: exactOptional(Schema.String),
+  id: surfaceIdentity(NonEmptyStringSchema, "id"),
+  name: surfaceIdentity(NonEmptyStringSchema, "name"),
+  description: exactOptional(surfaceProse(Schema.String)),
   magic: MagicEquipmentTraitSchema,
 });
 
@@ -4013,7 +4153,11 @@ export const ArmorTemplateRecordSchema = Schema.Struct({
   armorApplicability: Schema.Struct({
     kind: Schema.Literal("any_armor"),
     categories: Schema.NonEmptyArray(ArmorCategorySchema),
-    excludedArmorIds: exactOptional(Schema.Array(NonEmptyStringSchema)),
+    excludedArmorIds: exactOptional(
+      Schema.Array(
+        surfaceReference(NonEmptyStringSchema, "excluded-armor-reference"),
+      ),
+    ),
   }),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
 });

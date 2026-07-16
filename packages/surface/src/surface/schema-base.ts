@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import * as AST from "effect/SchemaAST";
 import {
   ABILITIES,
   CLASS_NAMES as SHARED_CLASS_NAMES,
@@ -10,6 +11,212 @@ import {
 } from "@dnd/shared/game-facts";
 
 import { exactOptional } from "./schema-helpers.ts";
+
+export const SURFACE_SCHEMA_ROLE_ANNOTATION =
+  "dnd.surface.schema-role" as const;
+
+export const SURFACE_IDENTITY_KINDS = [
+  "catalog-reference",
+  "displayName",
+  "id",
+  "label",
+  "name",
+  "reference",
+] as const;
+
+export const SURFACE_PROTOCOL_KINDS = [
+  "choiceKey",
+  "holeId",
+  "limitGroup",
+] as const;
+
+export const SURFACE_PROJECTION_KINDS = [
+  "derived-label",
+  "derived-reference",
+] as const;
+
+export const SURFACE_UNIT_REFERENCE_RELATIONS = [
+  "excluded-armor-reference",
+  "item-reference",
+  "linked-spell-reference",
+  "origin-feat-reference",
+  "resource-link",
+  "spell-reference",
+  "subclass-choice",
+  "unit-reference",
+  "spell-list",
+  "weapon-reference",
+] as const;
+
+export const SURFACE_STAT_BLOCK_REFERENCE_RELATIONS = [
+  "monster-reference",
+  "stat-block-reference",
+  "recommended-stat-block-reference",
+] as const;
+
+export type SurfaceUnitReferenceRelation =
+  (typeof SURFACE_UNIT_REFERENCE_RELATIONS)[number];
+export type SurfaceStatBlockReferenceRelation =
+  (typeof SURFACE_STAT_BLOCK_REFERENCE_RELATIONS)[number];
+export type SurfaceIdentityKind = (typeof SURFACE_IDENTITY_KINDS)[number];
+export type SurfaceProtocolKind = (typeof SURFACE_PROTOCOL_KINDS)[number];
+export type SurfaceProjectionKind = (typeof SURFACE_PROJECTION_KINDS)[number];
+
+export type SurfaceSchemaFieldRole =
+  | {
+      readonly category: "identity";
+      readonly kind: SurfaceIdentityKind;
+    }
+  | {
+      readonly category: "prose";
+    }
+  | {
+      readonly category: "protocol";
+      readonly kind: SurfaceProtocolKind;
+    }
+  | {
+      readonly category: "vocabulary";
+      readonly kind: "literal";
+    }
+  | {
+      readonly category: "provenance";
+    }
+  | {
+      readonly category: "reference";
+      readonly relation: (typeof SURFACE_UNIT_REFERENCE_RELATIONS)[number];
+      readonly targetKind: "unit";
+    }
+  | {
+      readonly category: "reference";
+      readonly relation: (typeof SURFACE_STAT_BLOCK_REFERENCE_RELATIONS)[number];
+      readonly targetKind: "statBlock";
+    }
+  | {
+      readonly category: "projection";
+      readonly kind: SurfaceProjectionKind;
+    };
+
+function isStringSchemaAst(ast: AST.AST): boolean {
+  let current = ast;
+  while (AST.isRefinement(current) || AST.isTransformation(current)) {
+    current = current.from;
+  }
+  return (
+    current?._tag === "StringKeyword" ||
+    (current?._tag === "Literal" && typeof current.literal === "string")
+  );
+}
+
+const exactRoleKeys = (
+  value: Record<string, unknown>,
+  keys: readonly string[],
+) =>
+  Object.keys(value).length === keys.length &&
+  keys.every((key) => Object.hasOwn(value, key));
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+export function isSurfaceSchemaRole(
+  value: unknown,
+): value is SurfaceSchemaFieldRole {
+  if (!isRecord(value) || typeof value.category !== "string") return false;
+  const role = value;
+  if (role.category === "prose" || role.category === "provenance") {
+    return exactRoleKeys(role, ["category"]);
+  }
+  if (role.category === "identity") {
+    return (
+      exactRoleKeys(role, ["category", "kind"]) &&
+      typeof role.kind === "string" &&
+      SURFACE_IDENTITY_KINDS.some((kind) => kind === role.kind)
+    );
+  }
+  if (role.category === "protocol") {
+    return (
+      exactRoleKeys(role, ["category", "kind"]) &&
+      typeof role.kind === "string" &&
+      SURFACE_PROTOCOL_KINDS.some((kind) => kind === role.kind)
+    );
+  }
+  if (role.category === "vocabulary") {
+    return exactRoleKeys(role, ["category", "kind"]) && role.kind === "literal";
+  }
+  if (role.category === "projection") {
+    return (
+      exactRoleKeys(role, ["category", "kind"]) &&
+      SURFACE_PROJECTION_KINDS.some((kind) => kind === role.kind)
+    );
+  }
+  if (role.category === "reference") {
+    return (
+      exactRoleKeys(role, ["category", "relation", "targetKind"]) &&
+      typeof role.relation === "string" &&
+      typeof role.targetKind === "string" &&
+      ((role.targetKind === "unit" &&
+        SURFACE_UNIT_REFERENCE_RELATIONS.some(
+          (relation) => relation === role.relation,
+        )) ||
+        (role.targetKind === "statBlock" &&
+          SURFACE_STAT_BLOCK_REFERENCE_RELATIONS.some(
+            (relation) => relation === role.relation,
+          )))
+    );
+  }
+  return false;
+}
+
+function surfaceSchemaRoleKey(value: unknown): string | undefined {
+  if (!isSurfaceSchemaRole(value)) return undefined;
+  if (value.category === "identity" || value.category === "protocol") {
+    return `${value.category}:${value.kind}`;
+  }
+  if (value.category === "reference") {
+    return `reference:${value.targetKind}:${value.relation}`;
+  }
+  if (value.category === "projection") return `projection:${value.kind}`;
+  if (value.category === "vocabulary") return "vocabulary:literal";
+  return value.category;
+}
+
+export function surfaceSchemaRolesEqual(
+  left: unknown,
+  right: unknown,
+): boolean {
+  const leftKey = surfaceSchemaRoleKey(left);
+  return leftKey !== undefined && leftKey === surfaceSchemaRoleKey(right);
+}
+
+export function readSurfaceSchemaRole(
+  ast: AST.AST,
+): SurfaceSchemaFieldRole | undefined {
+  if (!("annotations" in ast)) return undefined;
+  const value = ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION];
+  return isSurfaceSchemaRole(value) ? value : undefined;
+}
+
+export function surfaceSchemaRole<A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  role: SurfaceSchemaFieldRole,
+): Schema.Schema<A & string, I, R> {
+  if (!isStringSchemaAst(schema.ast)) {
+    throw new Error("Surface schema roles can only annotate string schemas");
+  }
+  const requestedRoleKey = surfaceSchemaRoleKey(role);
+  if (requestedRoleKey === undefined) {
+    throw new Error("Invalid Surface schema role");
+  }
+  const existingRole = schema.ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION];
+  if (
+    existingRole !== undefined &&
+    !surfaceSchemaRolesEqual(existingRole, role)
+  ) {
+    throw new Error("Conflicting Surface schema roles");
+  }
+  return schema.annotations({
+    [SURFACE_SCHEMA_ROLE_ANNOTATION]: role,
+  });
+}
 
 export { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 
@@ -52,7 +259,11 @@ export const WeaponFilterSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("specific_item"),
-    itemId: Schema.String,
+    itemId: surfaceSchemaRole(Schema.String, {
+      category: "reference",
+      relation: "item-reference",
+      targetKind: "unit",
+    }),
   }),
 );
 
@@ -426,7 +637,10 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("tool"),
-    toolId: Schema.NonEmptyTrimmedString,
+    toolId: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+      category: "identity",
+      kind: "catalog-reference",
+    }),
   }),
   Schema.Struct({
     kind: Schema.Literal("tool_category"),
@@ -437,7 +651,10 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
 export const ToolProficiencyGrantSubjectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("tool"),
-    toolId: Schema.NonEmptyTrimmedString,
+    toolId: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+      category: "identity",
+      kind: "catalog-reference",
+    }),
   }),
   Schema.Struct({
     kind: Schema.Literal("tool_category"),
@@ -483,7 +700,10 @@ const ProficiencyGrantChoiceSchema = Schema.Struct({
 });
 
 const NamedProficiencyGrantChoiceSchema = Schema.Struct({
-  choiceKey: Schema.NonEmptyTrimmedString,
+  choiceKey: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+    category: "protocol",
+    kind: "choiceKey",
+  }),
   ...ProficiencyGrantChoiceSchema.fields,
 });
 
@@ -673,15 +893,26 @@ export const GrantedSpellTargetRestrictionSchema = Schema.Union(
 
 export const GrantedSpellDurationOverrideSchema = Schema.Struct({
   removeConcentration: exactOptional(Schema.Literal(true)),
-  endsWhenGrantedSpellEnds: exactOptional(Schema.String),
+  endsWhenGrantedSpellEnds: exactOptional(
+    surfaceSchemaRole(Schema.String, {
+      category: "reference",
+      relation: "linked-spell-reference",
+      targetKind: "unit",
+    }),
+  ),
 });
 
 export const ProvenanceSchema = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1", "xphb", "synthetic-test"),
-  section: Schema.String,
+  section: surfaceSchemaRole(Schema.String, { category: "provenance" }),
 });
 
 export const UsageLimitSchema = Schema.Struct({
   kind: Schema.Literal("once_per_turn", "once_per_round"),
-  limitGroup: exactOptional(Schema.String),
+  limitGroup: exactOptional(
+    surfaceSchemaRole(Schema.String, {
+      category: "protocol",
+      kind: "limitGroup",
+    }),
+  ),
 });
