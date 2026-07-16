@@ -508,9 +508,9 @@ describe("Ralph launcher boundaries", () => {
     expect(help.stdout).toContain(
       "Safety cap for implement/review convergence rounds.",
     );
-    expect(help.stdout).toContain("Default: 10");
+    expect(help.stdout).toContain("Default: 6");
     expect(help.stdout).not.toContain("no harness cap");
-    expect(source).toContain("default_implementation_round_limit=10");
+    expect(source).toContain("default_implementation_round_limit=6");
     expect(source).toContain("implementation_review_safety_cap_status=3");
     expect(source).toContain(
       'next_implementation_round "$round" "$round_limit"',
