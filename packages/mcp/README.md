@@ -186,6 +186,22 @@ those schemas before converting to branded runtime ids. Tool responses include
 JSON text content plus `structuredContent`; success responses are encoded
 through their output schemas.
 
+Generated output schemas carry content-addressed root identities. Identical
+output codecs therefore share one generated schema in the server and one AJV
+validator in clients that honor JSON Schema `$id`; changing a schema shape
+changes its identity automatically.
+
+The current output interface remains wider than necessary. In particular, the
+session projection included by character-only tools carries transient battle
+subjects and fills, while battle tool schemas repeat large snapshot, subject,
+hole, fill, and supported-procedure definitions. A future deepening should give
+character, battle-session, and battle-resolution tools projections specific to
+their workflows, all derived from the existing canonical session and runtime
+state. It must not add shadow session state, weaken structured-output
+validation, or replace typed runtime facts with generic JSON. Measure that work
+against cold default-client `listTools()` schema-compilation time as well as the
+normal MCP acceptance suite.
+
 Character-session input/store schemas are mutable state and selections only.
 They may carry current HP, Temporary Hit Points, Hit Point Maximum reduction,
 zero-HP lifecycle, conditions, spent Hit Dice, ordinary Spell Slot

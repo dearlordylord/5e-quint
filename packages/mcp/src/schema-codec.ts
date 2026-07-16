@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { Either, JSONSchema, Schema } from "effect";
 
 import {
@@ -13,6 +15,8 @@ export type McpOutputSchema = Readonly<Record<string, unknown>>;
 
 export type ToolError = ReturnType<typeof errorContent>;
 export type ToolInputResult<A> = Either.Either<A, ToolError>;
+
+const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
 
 export function decodeToolArgs<A, I>(
   schema: Schema.Schema<A, I, never>,
@@ -49,7 +53,16 @@ export function mcpObjectJsonSchema<A, I>(
 export function mcpOutputJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpOutputSchema {
-  return jsonSchemaFromCodec(schema);
+  const cached = outputSchemaByCodec.get(schema);
+  if (cached !== undefined) return cached;
+
+  const generated = jsonSchemaFromCodec(schema);
+  const identified = {
+    $id: outputSchemaId(generated),
+    ...generated,
+  } satisfies McpOutputSchema;
+  outputSchemaByCodec.set(schema, identified);
+  return identified;
 }
 
 export function schemaJsonContent<A, I>(
@@ -121,4 +134,11 @@ function stripSchemaIds(value: unknown): unknown {
       .filter(([key]) => key !== "$id")
       .map(([key, entry]) => [key, stripSchemaIds(entry)]),
   );
+}
+
+function outputSchemaId(schema: McpOutputSchema): string {
+  const digest = createHash("sha256")
+    .update(JSON.stringify(schema))
+    .digest("hex");
+  return `urn:dnd:mcp:output-schema:sha256:${digest}`;
 }
