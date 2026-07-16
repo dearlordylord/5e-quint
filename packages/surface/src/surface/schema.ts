@@ -321,6 +321,8 @@ export {
   OnHitTriggerMechanicsSchema,
   OnHitRiderEffectSchema,
   PassiveMechanicsSchema,
+  PreparedSpellListExpansionMechanicsSchema,
+  SpellDamageRollAbilityModifierMechanicsSchema,
   PassiveOperationSchema,
   PassiveSuppressorSchema,
   PaladinClassFeatureMechanicsSchema,

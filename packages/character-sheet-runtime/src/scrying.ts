@@ -9,6 +9,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   SCRYING_MATERIAL_COMPONENTS,
@@ -43,10 +44,8 @@ export function castScrying(input: {
   const spell = scryingSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedScryingAccess(input.sheet)) {
-    return characterSheetIssue(
-      "Scrying requires prepared class Spell Access.",
-    );
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
+    return characterSheetIssue("Scrying requires prepared class Spell Access.");
   }
 
   const targetIssue = scryingTargetIssue(input.target);
@@ -89,14 +88,6 @@ function scryingSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedScryingAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === SCRYING_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function scryingTargetIssue(
   target: CharacterSheetScryingTarget,
 ): string | null {
@@ -131,7 +122,6 @@ function scryingInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetScryingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== SCRYING_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "self" ||
@@ -299,14 +289,14 @@ function hasScryingMaterialComponents(
   return (
     casting.materialComponents.focusCostGpMinimum ===
       SCRYING_MATERIAL_COMPONENTS.focusCostGpMinimum &&
-    casting.materialComponents.consumed === SCRYING_MATERIAL_COMPONENTS.consumed &&
+    casting.materialComponents.consumed ===
+      SCRYING_MATERIAL_COMPONENTS.consumed &&
     casting.materialComponents.focusExamples.length ===
       SCRYING_MATERIAL_COMPONENTS.focusExamples.length &&
-    casting.materialComponents.focusExamples.every(
-      (example) =>
-        SCRYING_MATERIAL_COMPONENTS.focusExamples.some(
-          (supportedExample) => supportedExample === example,
-        ),
+    casting.materialComponents.focusExamples.every((example) =>
+      SCRYING_MATERIAL_COMPONENTS.focusExamples.some(
+        (supportedExample) => supportedExample === example,
+      ),
     )
   );
 }

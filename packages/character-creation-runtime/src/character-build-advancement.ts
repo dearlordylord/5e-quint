@@ -76,16 +76,8 @@ import {
 } from "./weapon-mastery.ts";
 
 const FIGHTER_CLASS_NAME = "fighter" as const satisfies ClassName;
-const BARD_CLASS_NAME = "bard" as const satisfies ClassName;
 const SORCERER_CLASS_NAME = "sorcerer" as const satisfies ClassName;
 const WARLOCK_CLASS_NAME = "warlock" as const satisfies ClassName;
-const BARD_MAGICAL_SECRETS_UNIT_ID = "bard_magical_secrets" as const;
-const BARD_MAGICAL_SECRETS_SPELL_LISTS = [
-  "bard",
-  "cleric",
-  "druid",
-  "wizard",
-] as const satisfies ReadonlyArray<ClassSpellListName>;
 const FIGHTING_STYLE_FEAT_CATEGORY =
   "fighting_style" as const satisfies FeatRecord["category"];
 const FIGHTING_STYLE_CANTRIP_SPELL_LEVEL = 0 as const;
@@ -2711,31 +2703,27 @@ function listPreparedSpellEligibleSpellLists(input: {
   readonly classUnitId: ClassUnitId;
   readonly nextClassLevel: number;
 }): readonly ClassSpellListName[] {
-  if (input.className === BARD_CLASS_NAME && bardMagicalSecretsApplies(input)) {
-    return BARD_MAGICAL_SECRETS_SPELL_LISTS;
-  }
-  return [input.className];
-}
-
-function bardMagicalSecretsApplies(input: {
-  readonly build: Pick<CharacterBuild, "features">;
-  readonly unitLibrary: UnitCatalog;
-  readonly classUnitId: ClassUnitId;
-  readonly nextClassLevel: number;
-}): boolean {
-  const unit = input.unitLibrary.getUnit(BARD_MAGICAL_SECRETS_UNIT_ID);
-  return (
-    Option.isSome(unit) &&
-    unit.value.kind === "class_feature" &&
-    unit.value.className === BARD_CLASS_NAME &&
-    unit.value.acquiredAtLevel <= input.nextClassLevel &&
-    input.build.features.some(
-      (feature) =>
-        feature.kind === "selectedClassChoice" &&
-        feature.selectedFromUnitId === input.classUnitId &&
-        feature.unitId === BARD_MAGICAL_SECRETS_UNIT_ID,
-    )
-  );
+  const additionalSpellLists = input.build.features.flatMap((feature) => {
+    if (
+      feature.kind !== "selectedClassChoice" ||
+      feature.selectedFromUnitId !== input.classUnitId
+    ) {
+      return [];
+    }
+    const unit = input.unitLibrary.getUnit(feature.unitId);
+    if (
+      Option.isNone(unit) ||
+      unit.value.kind !== "class_feature" ||
+      unit.value.className !== input.className ||
+      unit.value.acquiredAtLevel > input.nextClassLevel ||
+      unit.value.mechanics.family !== "prepared_spell_list_expansion" ||
+      unit.value.mechanics.baseSpellList !== input.className
+    ) {
+      return [];
+    }
+    return unit.value.mechanics.additionalEligibleSpellLists;
+  });
+  return [...new Set([input.className, ...additionalSpellLists])];
 }
 
 function preparedSpellLevelFromEligibleLists(

@@ -809,6 +809,12 @@ export type PassiveSuppressor = Schema.Schema.Type<
 export type PassiveMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.PassiveMechanicsSchema
 >;
+export type PreparedSpellListExpansionMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.PreparedSpellListExpansionMechanicsSchema
+>;
+export type SpellDamageRollAbilityModifierMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SpellDamageRollAbilityModifierMechanicsSchema
+>;
 export type ClassFeatureMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureMechanicsSchema
 >;

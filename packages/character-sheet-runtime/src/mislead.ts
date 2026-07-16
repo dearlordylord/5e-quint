@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -29,10 +30,8 @@ export function castMislead(input: {
   const spell = misleadSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedMisleadAccess(input.sheet)) {
-    return characterSheetIssue(
-      "Mislead requires prepared class Spell Access.",
-    );
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
+    return characterSheetIssue("Mislead requires prepared class Spell Access.");
   }
 
   if (!Number.isInteger(input.casting.casterSpeedFeet)) {
@@ -72,21 +71,12 @@ function misleadSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedMisleadAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === MISLEAD_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function misleadInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly casting: CharacterSheetMisleadCasting;
 }): Either.Either<CharacterSheetMisleadInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== MISLEAD_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "illusion" ||
@@ -120,8 +110,7 @@ function misleadInvocationFromSpell(input: {
       phase.attachment.kind === "self" &&
       phase.effects?.some(
         (effect) =>
-          effect.kind === "apply_condition" &&
-          effect.condition === "invisible",
+          effect.kind === "apply_condition" && effect.condition === "invisible",
       ) === true,
   );
   if (directPhase === undefined) {
@@ -186,10 +175,7 @@ function misleadInvocationFromSpell(input: {
   });
 }
 
-function hasDurationEnd(
-  spell: SpellRecord,
-  kind: string,
-): boolean {
+function hasDurationEnd(spell: SpellRecord, kind: string): boolean {
   return spell.mechanics.duration.kind === "concentration"
     ? spell.mechanics.duration.earlyEnd?.some(
         (trigger) => trigger.kind === kind,

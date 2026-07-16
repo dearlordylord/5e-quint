@@ -32,7 +32,7 @@ import {
   type CharacterSheetShortRestInput,
   type CharacterSheetLongRestInput,
 } from "./sheet-types.ts";
-import { isRecord } from "./stored-sheet-parser.ts";
+import { isRecord, recordHasExactKeys } from "./stored-sheet-parser.ts";
 
 const FIENDISH_RESILIENCE_UNIT_ID = "warlock_fiendish_resilience" as const;
 const NATURES_WARD_UNIT_ID = "druid_natures_ward" as const;
@@ -62,7 +62,10 @@ export function fiendishResilienceFromInput(
     CharacterSheetInput,
     "build" | "unitLibrary" | "fiendishResilience"
   >,
-): Either.Either<CharacterSheetFiendishResilience | undefined, CharacterSheetIssue> {
+): Either.Either<
+  CharacterSheetFiendishResilience | undefined,
+  CharacterSheetIssue
+> {
   const featureOwned = ownedClassFeature(input, FIENDISH_RESILIENCE_UNIT_ID);
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) {
@@ -77,17 +80,15 @@ export function fiendishResilienceFromInput(
       "Fiendish Resilience requires selected damage type state.",
     );
   }
-  if (input.fiendishResilience.sourceUnitId !== FIENDISH_RESILIENCE_UNIT_ID) {
-    return characterSheetIssue(
-      "Fiendish Resilience selection source must be the Fiendish Resilience feature.",
-    );
-  }
   return fiendishResilienceSelection(input.fiendishResilience.damageType);
 }
 
 export function fiendishResilienceAfterShortRest(input: {
   readonly input: CharacterSheetShortRestInput;
-}): Either.Either<CharacterSheetFiendishResilience | undefined, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetFiendishResilience | undefined,
+  CharacterSheetIssue
+> {
   const sheet = input.input.completion.startedRest.sheet;
   return fiendishResilienceAfterRestSelection({
     sheet,
@@ -100,7 +101,10 @@ export function fiendishResilienceAfterShortRest(input: {
 
 export function fiendishResilienceAfterLongRest(input: {
   readonly input: CharacterSheetLongRestInput;
-}): Either.Either<CharacterSheetFiendishResilience | undefined, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetFiendishResilience | undefined,
+  CharacterSheetIssue
+> {
   const sheet = input.input.completion.startedRest.sheet;
   return fiendishResilienceAfterRestSelection({
     sheet,
@@ -119,7 +123,8 @@ export function characterSheetPassiveDefenseProjection(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheetPassiveDefenseProjection, CharacterSheetIssue> {
   const fiendishResilience = fiendishResilienceForSheet(input);
-  if (Either.isLeft(fiendishResilience)) return Either.left(fiendishResilience.left);
+  if (Either.isLeft(fiendishResilience))
+    return Either.left(fiendishResilience.left);
   const naturesWard = naturesWardForSheet(input);
   if (Either.isLeft(naturesWard)) return Either.left(naturesWard.left);
   const auraOfCourage = auraOfCourageForSheet(input);
@@ -206,49 +211,64 @@ export function empoweredEvocationDamageRollModifier(input: {
       "Empowered Evocation requires the retained Wizard Empowered Evocation feature.",
     );
   }
-  if (input.spellSourceUnitId !== "class_wizard") {
+  if (
+    featureOwned.right.kind !== "class_feature" ||
+    featureOwned.right.mechanics.family !== "spell_damage_roll_ability_modifier"
+  ) {
+    return characterSheetIssue(
+      "Empowered Evocation requires supported spell damage roll modifier facts.",
+    );
+  }
+  const mechanics = featureOwned.right.mechanics;
+  const spellSourceUnit = input.unitLibrary.getUnit(input.spellSourceUnitId);
+  if (
+    Option.isNone(spellSourceUnit) ||
+    spellSourceUnit.value.kind !== "class" ||
+    spellSourceUnit.value.className !== mechanics.spellSourceClassName
+  ) {
     return characterSheetIssue(
       "Empowered Evocation requires Wizard Spell Access.",
     );
   }
   if (
     !("school" in input.spell.mechanics) ||
-    input.spell.mechanics.school !== "evocation"
+    input.spell.mechanics.school !== mechanics.school
   ) {
     return characterSheetIssue(
       "Empowered Evocation requires an Evocation Spell Definition.",
     );
   }
-  const wizardSource = input.sheet.build.spellcasting?.sources.find(
-    (source) => source.sourceUnitId === "class_wizard",
+  const spellSource = input.sheet.build.spellcasting?.sources.find(
+    (source) => source.sourceUnitId === input.spellSourceUnitId,
   );
-  if (wizardSource === undefined) {
+  if (spellSource === undefined) {
     return characterSheetIssue(
-      "Empowered Evocation requires a Wizard spellcasting source.",
+      "Empowered Evocation requires the selected spellcasting source.",
     );
   }
-  if (wizardSource.spellcastingAbility !== "int") {
+  if (spellSource.spellcastingAbility !== mechanics.ability) {
     return characterSheetIssue(
       "Empowered Evocation requires Intelligence-based Wizard spellcasting.",
     );
   }
-  const wizardSpellAccess = [
-    ...wizardSource.cantrips,
-    ...wizardSource.spellbook,
-    ...wizardSource.preparedSpells,
+  const spellAccess = [
+    ...spellSource.cantrips,
+    ...spellSource.spellbook,
+    ...spellSource.preparedSpells,
   ];
-  if (!wizardSpellAccess.includes(input.spell.id)) {
+  if (!spellAccess.includes(input.spell.id)) {
     return characterSheetIssue(
       "Empowered Evocation requires the spell to be present in Wizard Spell Access.",
     );
   }
   return Either.right({
     sourceUnitId: EMPOWERED_EVOCATION_UNIT_ID,
-    spellSourceUnitId: "class_wizard",
-    school: "evocation",
-    damageRollAbility: "int",
+    spellSourceUnitId: input.spellSourceUnitId,
+    school: mechanics.school,
+    damageRollAbility: mechanics.ability,
+    damageRollCount: mechanics.damageRollCount,
     damageRollModifier: abilityModifier(
-      abilityScoreToMod(input.sheet.build.abilityScores.int),
+      abilityScoreToMod(input.sheet.build.abilityScores[mechanics.ability]),
     ) as AbilityModifier,
   });
 }
@@ -256,7 +276,10 @@ export function empoweredEvocationDamageRollModifier(input: {
 function fiendishResilienceForSheet(input: {
   readonly sheet: Pick<CharacterSheet, "build" | "fiendishResilience">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetFiendishResilience | undefined, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetFiendishResilience | undefined,
+  CharacterSheetIssue
+> {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     FIENDISH_RESILIENCE_UNIT_ID,
@@ -297,7 +320,8 @@ function naturesWardForSheet(input: {
     conditionImmunities: NATURES_WARD_CONDITION_IMMUNITIES,
     resistance: {
       land: input.sheet.druidCircleLand.land,
-      damageType: NATURES_WARD_RESISTANCE_BY_LAND[input.sheet.druidCircleLand.land],
+      damageType:
+        NATURES_WARD_RESISTANCE_BY_LAND[input.sheet.druidCircleLand.land],
     },
   });
 }
@@ -305,7 +329,10 @@ function naturesWardForSheet(input: {
 function auraOfCourageForSheet(input: {
   readonly sheet: Pick<CharacterSheet, "build">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetAuraOfCourage | undefined, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetAuraOfCourage | undefined,
+  CharacterSheetIssue
+> {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     AURA_OF_COURAGE_UNIT_ID,
@@ -325,7 +352,10 @@ function auraOfCourageForSheet(input: {
 function selfRestorationForSheet(input: {
   readonly sheet: Pick<CharacterSheet, "build">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetSelfRestoration | undefined, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetSelfRestoration | undefined,
+  CharacterSheetIssue
+> {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     SELF_RESTORATION_UNIT_ID,
@@ -343,13 +373,19 @@ function fiendishResilienceAfterRestSelection(input: {
   readonly sheet: Pick<CharacterSheet, "build" | "fiendishResilience">;
   readonly unitLibrary: UnitCatalog;
   readonly selectedDamageType?: DamageType;
-}): Either.Either<CharacterSheetFiendishResilience | undefined, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetFiendishResilience | undefined,
+  CharacterSheetIssue
+> {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     FIENDISH_RESILIENCE_UNIT_ID,
   );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
-  if (featureOwned.right === undefined && input.selectedDamageType !== undefined) {
+  if (
+    featureOwned.right === undefined &&
+    input.selectedDamageType !== undefined
+  ) {
     return characterSheetIssue(
       "Fiendish Resilience selection requires the Fiendish Resilience feature.",
     );
@@ -367,7 +403,6 @@ function fiendishResilienceSelection(
     (candidate) => candidate === damageType,
   )
     ? Either.right({
-        sourceUnitId: FIENDISH_RESILIENCE_UNIT_ID,
         damageType,
       })
     : characterSheetIssue(
@@ -377,14 +412,17 @@ function fiendishResilienceSelection(
 
 export function parseStoredFiendishResilience(
   value: unknown,
-): Either.Either<CharacterSheetFiendishResilience | undefined, CharacterSheetIssue> {
+): Either.Either<
+  CharacterSheetFiendishResilience | undefined,
+  CharacterSheetIssue
+> {
   if (value === undefined) return Either.right(undefined);
   if (!isRecord(value)) {
     return characterSheetIssue("Expected Fiendish Resilience selection.");
   }
-  if (value.sourceUnitId !== FIENDISH_RESILIENCE_UNIT_ID) {
+  if (!recordHasExactKeys(value, ["damageType"])) {
     return characterSheetIssue(
-      "Fiendish Resilience selection source must be the Fiendish Resilience feature.",
+      "Fiendish Resilience selection must contain exactly a damage type.",
     );
   }
   if (!isDamageType(value.damageType)) {
@@ -402,7 +440,11 @@ function ownedClassFeature(
   },
   featureUnitId: UnitRecord["id"],
 ): Either.Either<UnitRecord | undefined, CharacterSheetIssue> {
-  if (!characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(featureUnitId)) {
+  if (
+    !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
+      featureUnitId,
+    )
+  ) {
     return Either.right(undefined);
   }
   const unit = input.unitLibrary.getUnit(featureUnitId);

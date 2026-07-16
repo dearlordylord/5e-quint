@@ -458,8 +458,7 @@ export function characterSheetSpellLifecycleCreatureId(
 
 export type CharacterSheetHallowAreaId = string &
   Brand.Brand<"CharacterSheetHallowAreaId">;
-const CharacterSheetHallowAreaId =
-  Brand.nominal<CharacterSheetHallowAreaId>();
+const CharacterSheetHallowAreaId = Brand.nominal<CharacterSheetHallowAreaId>();
 
 export function characterSheetHallowAreaId(
   value: string,
@@ -484,8 +483,7 @@ export function characterSheetAwakenTargetId(
 
 export type CharacterSheetGeasTargetId = string &
   Brand.Brand<"CharacterSheetGeasTargetId">;
-const CharacterSheetGeasTargetId =
-  Brand.nominal<CharacterSheetGeasTargetId>();
+const CharacterSheetGeasTargetId = Brand.nominal<CharacterSheetGeasTargetId>();
 
 export function characterSheetGeasTargetId(
   value: string,
@@ -629,7 +627,6 @@ export type CharacterSheetWithSpellSlots = CharacterSheet & {
 };
 
 export type CharacterSheetFiendishResilience = {
-  readonly sourceUnitId: UnitRecord["id"];
   readonly damageType: DamageType;
 };
 
@@ -663,9 +660,10 @@ export type CharacterSheetSelfRestoration = {
 
 export type CharacterSheetEmpoweredEvocation = {
   readonly sourceUnitId: UnitRecord["id"];
-  readonly spellSourceUnitId: "class_wizard";
+  readonly spellSourceUnitId: UnitRecord["id"];
   readonly school: "evocation";
   readonly damageRollAbility: "int";
+  readonly damageRollCount: 1;
   readonly damageRollModifier: AbilityModifier;
 };
 
@@ -678,9 +676,7 @@ export type CharacterSheetPassiveDefenseProjection = {
   readonly naturesWard?: CharacterSheetNatureWard;
 };
 
-export const CHARACTER_SHEET_EXHAUSTION_LEVELS = [
-  0, 1, 2, 3, 4, 5, 6,
-] as const;
+export const CHARACTER_SHEET_EXHAUSTION_LEVELS = [0, 1, 2, 3, 4, 5, 6] as const;
 export type CharacterSheetExhaustionLevel =
   (typeof CHARACTER_SHEET_EXHAUSTION_LEVELS)[number];
 
@@ -832,7 +828,6 @@ export type CharacterSheetRestFeatureUse =
     }
   | {
       readonly tag: typeof COMMUNE_CASTING_REST_FEATURE_TAG;
-      readonly spellId: UnitRecord["id"];
       readonly usedSinceLongRest: true;
       readonly castCount: ResourceCount;
     };
@@ -2637,7 +2632,10 @@ export type CharacterSheetModifyMemoryOutcome =
       readonly conditionsDuringSpell: readonly ["charmed", "incapacitated"];
       readonly memoryAltered: true;
       readonly takesHold: "when_spell_ends";
-      readonly restoredBySpells: readonly ["remove_curse", "greater_restoration"];
+      readonly restoredBySpells: readonly [
+        "remove_curse",
+        "greater_restoration",
+      ];
       readonly behaviorConsequenceOwner: "table";
       readonly nonsensicalMemoryAdjudicationOwner: "table";
     };
@@ -2658,7 +2656,10 @@ export type CharacterSheetModifyMemoryInvocation = {
   readonly components: readonly ["v", "s"];
   readonly concentration: {
     readonly upTo: TimeSpanDuration;
-    readonly earlyEnd: readonly ["target_takes_damage", "targeted_by_another_spell"];
+    readonly earlyEnd: readonly [
+      "target_takes_damage",
+      "targeted_by_another_spell",
+    ];
     readonly noMemoryModifiedOnEarlyEnd: true;
   };
   readonly target: CharacterSheetModifyMemoryTarget;
@@ -3405,8 +3406,14 @@ export type CharacterSheetConjureElementalInvocation = {
     readonly onlyIfNoRestrainedCreature: true;
     readonly savingThrowAbility: "dex";
     readonly dc: "caster_spell_save_dc";
-    readonly firstFailedSaveDamageDice: { readonly count: number; readonly die: 8 };
-    readonly repeatFailedSaveDamageDice: { readonly count: number; readonly die: 8 };
+    readonly firstFailedSaveDamageDice: {
+      readonly count: number;
+      readonly die: 8;
+    };
+    readonly repeatFailedSaveDamageDice: {
+      readonly count: number;
+      readonly die: 8;
+    };
     readonly restrainedUntilSpellEnds: true;
     readonly repeatSaveAtStartOfRestrainedTurns: true;
     readonly tableTriggerOwner: "table";

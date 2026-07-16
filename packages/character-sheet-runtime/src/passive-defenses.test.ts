@@ -156,7 +156,6 @@ describe("Character Sheet runtime / passive defenses", () => {
         tempHp: Hp(0),
         unitLibrary,
         fiendishResilience: {
-          sourceUnitId: "warlock_fiendish_resilience",
           damageType: "fire",
         },
       }),
@@ -169,7 +168,6 @@ describe("Character Sheet runtime / passive defenses", () => {
       right: {
         damageResistances: ["fire"],
         fiendishResilience: {
-          sourceUnitId: "warlock_fiendish_resilience",
           damageType: "fire",
         },
       },
@@ -183,7 +181,6 @@ describe("Character Sheet runtime / passive defenses", () => {
       }),
     );
     expect(shortRested.fiendishResilience).toEqual({
-      sourceUnitId: "warlock_fiendish_resilience",
       damageType: "cold",
     });
 
@@ -195,7 +192,6 @@ describe("Character Sheet runtime / passive defenses", () => {
       }),
     );
     expect(longRested.fiendishResilience).toEqual({
-      sourceUnitId: "warlock_fiendish_resilience",
       damageType: "psychic",
     });
   });
@@ -209,7 +205,6 @@ describe("Character Sheet runtime / passive defenses", () => {
         tempHp: Hp(0),
         unitLibrary,
         fiendishResilience: {
-          sourceUnitId: "warlock_fiendish_resilience",
           damageType: "fire",
         },
       }),
@@ -241,7 +236,6 @@ describe("Character Sheet runtime / passive defenses", () => {
         tempHp: Hp(0),
         unitLibrary,
         fiendishResilience: {
-          sourceUnitId: "warlock_fiendish_resilience",
           damageType: "fire",
         },
       }),
@@ -435,8 +429,7 @@ describe("Character Sheet runtime / passive defenses", () => {
     ).toMatchObject({
       _tag: "Left",
       left: {
-        message:
-          "Empowered Evocation requires an Evocation Spell Definition.",
+        message: "Empowered Evocation requires an Evocation Spell Definition.",
       },
     });
 
@@ -601,7 +594,6 @@ const passiveDefenseSelectedIdentityActions = {
           tempHp: Hp(0),
           unitLibrary,
           fiendishResilience: {
-            sourceUnitId: "warlock_fiendish_resilience",
             damageType: "fire",
           },
         }),
@@ -624,7 +616,9 @@ const passiveDefenseSelectedIdentityActions = {
         }),
       );
       if (projection.fiendishResilience?.damageType !== "fire") {
-        throw new Error("Expected Fiendish Resilience replay to start as fire.");
+        throw new Error(
+          "Expected Fiendish Resilience replay to start as fire.",
+        );
       }
       if (shortRested.fiendishResilience?.damageType !== "cold") {
         throw new Error(

@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -30,7 +31,7 @@ export function castTelepathicBond(input: {
   const spell = telepathicBondSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedTelepathicBondAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Telepathic Bond requires prepared class Spell Access.",
     );
@@ -69,16 +70,6 @@ function telepathicBondSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedTelepathicBondAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === TELEPATHIC_BOND_SPELL_ID,
-      ),
-    ) ?? false
-  );
-}
-
 function telepathicBondTargetIssue(
   targets: readonly CharacterSheetTelepathicBondTarget[],
 ): string | null {
@@ -101,7 +92,6 @@ function telepathicBondInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetTelepathicBondInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== TELEPATHIC_BOND_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "point" ||
@@ -118,7 +108,9 @@ function telepathicBondInvocationFromSpell(input: {
   }
   const duration = timeSpanDuration(spell.mechanics.duration.value);
   if (Either.isLeft(duration)) {
-    return characterSheetIssue("Telepathic Bond requires a supported duration.");
+    return characterSheetIssue(
+      "Telepathic Bond requires a supported duration.",
+    );
   }
   const directPhase = spell.mechanics.phases.find(
     (phase) =>

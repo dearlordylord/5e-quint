@@ -7,12 +7,10 @@ import {
   spellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type {
-  SpellRecord,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   COMMUNE_CASTING_REST_FEATURE_TAG,
@@ -36,17 +34,13 @@ export function castCommune(input: {
   const spell = communeSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedCommuneAccess(input.sheet)) {
-    return characterSheetIssue(
-      "Commune requires prepared class Spell Access.",
-    );
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
+    return characterSheetIssue("Commune requires prepared class Spell Access.");
   }
 
   const invocation = communeInvocationFromSpell({
     spell: spell.right,
-    previousCastCountSinceLongRest: communeCastCountSinceLongRest(
-      input.sheet,
-    ),
+    previousCastCountSinceLongRest: communeCastCountSinceLongRest(input.sheet),
   });
   if (Either.isLeft(invocation)) return Either.left(invocation.left);
 
@@ -82,20 +76,11 @@ function communeSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedCommuneAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === COMMUNE_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function communeInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly previousCastCountSinceLongRest: CharacterSheetCommuneInvocation["repeatedCasting"]["previousCastCountSinceLongRest"];
 }): Either.Either<CharacterSheetCommuneInvocation, CharacterSheetIssue> {
   if (
-    input.spell.id !== COMMUNE_SPELL_ID ||
     input.spell.mechanics.family !== "activation" ||
     input.spell.mechanics.level !== 5 ||
     input.spell.mechanics.range.kind !== "self" ||
@@ -155,12 +140,12 @@ function communeCastCountSinceLongRest(
 ): CharacterSheetCommuneInvocation["repeatedCasting"]["previousCastCountSinceLongRest"] {
   return (
     sheet.restFeatureUses.find(
-      (use): use is Extract<
+      (
+        use,
+      ): use is Extract<
         CharacterSheetRestFeatureUse,
         { readonly tag: typeof COMMUNE_CASTING_REST_FEATURE_TAG }
-      > =>
-        use.tag === COMMUNE_CASTING_REST_FEATURE_TAG &&
-        use.spellId === COMMUNE_SPELL_ID,
+      > => use.tag === COMMUNE_CASTING_REST_FEATURE_TAG,
     )?.castCount ?? resourceCount(0)
   );
 }
@@ -171,15 +156,10 @@ function replaceCommuneCastCountSinceLongRest(input: {
 }): readonly CharacterSheetRestFeatureUse[] {
   return [
     ...input.restFeatureUses.filter(
-      (use) =>
-        !(
-          use.tag === COMMUNE_CASTING_REST_FEATURE_TAG &&
-          use.spellId === COMMUNE_SPELL_ID
-        ),
+      (use) => use.tag !== COMMUNE_CASTING_REST_FEATURE_TAG,
     ),
     {
       tag: COMMUNE_CASTING_REST_FEATURE_TAG,
-      spellId: COMMUNE_SPELL_ID satisfies UnitRecord["id"],
       usedSinceLongRest: true,
       castCount: input.nextCastCount,
     },

@@ -5,6 +5,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -25,7 +26,7 @@ export function castCommuneWithNature(input: {
   const spell = communeWithNatureSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedCommuneWithNatureAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Commune with Nature requires prepared class Spell Access.",
     );
@@ -58,21 +59,13 @@ function communeWithNatureSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedCommuneWithNatureAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === COMMUNE_WITH_NATURE_SPELL_ID,
-      ),
-    ) ?? false
-  );
-}
-
 function communeWithNatureInvocationFromSpell(
   spell: SpellRecord,
-): Either.Either<CharacterSheetCommuneWithNatureInvocation, CharacterSheetIssue> {
+): Either.Either<
+  CharacterSheetCommuneWithNatureInvocation,
+  CharacterSheetIssue
+> {
   if (
-    spell.id !== COMMUNE_WITH_NATURE_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "self" ||

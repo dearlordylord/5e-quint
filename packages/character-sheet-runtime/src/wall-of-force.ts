@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { OngoingEffect, SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -37,7 +38,7 @@ export function castWallOfForce(input: {
   const spell = wallOfForceSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedWallOfForceAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Wall of Force requires prepared class Spell Access.",
     );
@@ -77,16 +78,6 @@ function wallOfForceSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedWallOfForceAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === WALL_OF_FORCE_SPELL_ID,
-      ),
-    ) ?? false
-  );
-}
-
 function wallOfForceShapeIssue(
   shape: CharacterSheetWallOfForceShape,
 ): string | null {
@@ -122,7 +113,6 @@ function wallOfForceInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetWallOfForceInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== WALL_OF_FORCE_SPELL_ID ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "evocation" ||
@@ -131,8 +121,7 @@ function wallOfForceInvocationFromSpell(input: {
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !==
-      WALL_OF_FORCE_DURATION_MINUTES ||
+    spell.mechanics.duration.upTo.amount !== WALL_OF_FORCE_DURATION_MINUTES ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
     spell.mechanics.components.m !== "a shard of glass"
@@ -256,13 +245,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function hasRequiredBarrierOperations(spell: SpellRecord): boolean {
   if (spell.mechanics.family !== "ongoing_effect") return false;
-  const effects = spell.mechanics.operations.map((operation) => operation.effect);
+  const effects = spell.mechanics.operations.map(
+    (operation) => operation.effect,
+  );
   return (
     hasEffect(
       effects,
       (effect) =>
-        effect.kind === "block_travel" &&
-        effect.scope === "physical_passage",
+        effect.kind === "block_travel" && effect.scope === "physical_passage",
     ) &&
     hasEffect(
       effects,
@@ -272,12 +262,14 @@ function hasRequiredBarrierOperations(spell: SpellRecord): boolean {
       effects,
       (effect) =>
         effect.kind === "cannot_be_dispelled_by_spell" &&
+        // authored-id-dispatch-allow: rule-named-cross-record-reference-boundary
         effect.spellId === "dispel_magic",
     ) &&
     hasEffect(
       effects,
       (effect) =>
         effect.kind === "object_destroyed_by_spell" &&
+        // authored-id-dispatch-allow: rule-named-cross-record-reference-boundary
         effect.spellId === "disintegrate",
     ) &&
     hasEffect(effects, (effect) => effect.kind === "block_ethereal_travel")

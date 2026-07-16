@@ -9,7 +9,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Either } from "effect";
 
 import {
   characterSheetHitPointCapacity,
@@ -503,8 +503,7 @@ function restFeatureUsesFromInput(
 }
 
 function restFeatureUseStateKey(use: CharacterSheetRestFeatureUse): string {
-  return use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG ||
-    use.tag === COMMUNE_CASTING_REST_FEATURE_TAG
+  return use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG
     ? `${use.tag}:${use.spellId}`
     : use.tag;
 }
@@ -526,11 +525,6 @@ function restFeatureUseStateMatchesBuild(
     return Either.right(undefined);
   }
   if (use.tag === COMMUNE_CASTING_REST_FEATURE_TAG) {
-    const spell = getRequiredCommuneSpell({
-      spellId: use.spellId,
-      unitLibrary: input.unitLibrary,
-    });
-    if (Either.isLeft(spell)) return Either.left(spell.left);
     if (!Number.isInteger(use.castCount) || use.castCount < 1) {
       return characterSheetIssue(
         "Commune cast count requires a positive integer count.",
@@ -706,28 +700,15 @@ function parseStoredRestFeatureUses(
       continue;
     }
     if (use.tag === COMMUNE_CASTING_REST_FEATURE_TAG) {
-      if (
-        !recordHasExactKeys(use, [
-          "tag",
-          "spellId",
-          "usedSinceLongRest",
-          "castCount",
-        ])
-      ) {
+      if (!recordHasExactKeys(use, ["tag", "usedSinceLongRest", "castCount"])) {
         return characterSheetIssue(
-          "Commune casting state must contain exactly tag, spell Unit id, Long Rest use flag, and cast count.",
-        );
-      }
-      if (typeof use.spellId !== "string") {
-        return characterSheetIssue(
-          "Commune casting state requires a spell Unit id.",
+          "Commune casting state must contain exactly tag, Long Rest use flag, and cast count.",
         );
       }
       const castCount = parseResourceCount(use.castCount);
       if (Either.isLeft(castCount)) return Either.left(castCount.left);
       uses.push({
         tag: use.tag,
-        spellId: use.spellId,
         usedSinceLongRest: true,
         castCount: castCount.right,
       });
@@ -745,23 +726,4 @@ function parseStoredRestFeatureUses(
     unitLibrary,
     restFeatureUses: uses,
   });
-}
-
-function getRequiredCommuneSpell(input: {
-  readonly spellId: UnitRecord["id"];
-  readonly unitLibrary: UnitCatalog;
-}): Either.Either<void, CharacterSheetIssue> {
-  const unit = input.unitLibrary.getUnit(input.spellId);
-  if (Option.isNone(unit) || unit.value.kind !== "spell") {
-    return characterSheetIssue("Commune casting state requires Commune Spell.");
-  }
-  if (
-    input.spellId !== "commune" ||
-    unit.value.mechanics.family !== "activation" ||
-    unit.value.mechanics.level !== 5 ||
-    unit.value.mechanics.range.kind !== "self"
-  ) {
-    return characterSheetIssue("Commune casting state requires Commune Spell.");
-  }
-  return Either.right(undefined);
 }

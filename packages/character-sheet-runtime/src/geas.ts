@@ -9,6 +9,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -37,7 +38,7 @@ export function castGeas(input: {
   const spell = geasSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedGeasAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue("Geas requires prepared class Spell Access.");
   }
 
@@ -78,14 +79,6 @@ function geasSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedGeasAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === GEAS_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function geasCommandIssue(command: CharacterSheetGeasCommand): string | null {
   if (command.commandText.trim().length === 0) {
     return "Geas requires a nonempty command.";
@@ -117,7 +110,6 @@ function geasInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetGeasInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== GEAS_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "enchantment" ||

@@ -59,8 +59,13 @@ const ALLOWLIST_PATH_RULES = [
 
 const INLINE_ALLOWLIST_PATH_RULES = [
   {
+    reason: "rule-named-cross-record-reference-boundary",
+    pattern: /^packages\/character-sheet-runtime\/src\/wall-of-force\.ts$/,
+  },
+  {
     reason: "battle-runtime-mbt-fixture-boundary",
-    pattern: /^packages\/battle-runtime\/src\/battle-runtime-mbt-driver-kit\.ts$/,
+    pattern:
+      /^packages\/battle-runtime\/src\/battle-runtime-mbt-driver-kit\.ts$/,
   },
   {
     reason: "battle-runtime-unit-feature-support-profile-boundary",
@@ -72,8 +77,7 @@ const INLINE_ALLOWLIST_PATH_RULES = [
   },
 ];
 
-const INLINE_ALLOWLIST_COMMENT =
-  /\bauthored-id-dispatch-allow:\s*([a-z0-9-]+)/;
+const INLINE_ALLOWLIST_COMMENT = /\bauthored-id-dispatch-allow:\s*([a-z0-9-]+)/;
 const IDENTIFIER_EXPRESSION_PATTERN = String.raw`[A-Za-z_$][\w$]*(?:(?:\.|\?\.)[A-Za-z_$][\w$]*)*`;
 
 function escapeForRegExp(text) {
@@ -182,9 +186,7 @@ function transformedIdentityLiteralsFor(literal) {
         .join("")}`,
     );
     transformed.add(
-      words
-        .map((word) => `${word[0].toUpperCase()}${word.slice(1)}`)
-        .join(""),
+      words.map((word) => `${word[0].toUpperCase()}${word.slice(1)}`).join(""),
     );
   }
 
@@ -796,10 +798,8 @@ function collectAuthoredIdentityFieldComparisonViolations(
 
       const left = match[1] ?? "";
       const right = match[3] ?? "";
-      const leftIsAuthoredIdentity =
-        isAuthoredIdentityFieldExpression(left);
-      const rightIsAuthoredIdentity =
-        isAuthoredIdentityFieldExpression(right);
+      const leftIsAuthoredIdentity = isAuthoredIdentityFieldExpression(left);
+      const rightIsAuthoredIdentity = isAuthoredIdentityFieldExpression(right);
       if (!leftIsAuthoredIdentity && !rightIsAuthoredIdentity) {
         continue;
       }
@@ -948,8 +948,7 @@ function collectEffectMatchViolations(
       continue;
     }
 
-    const pipeOpenIndex =
-      valueCloseIndex + 1 + pipeMatch[0].lastIndexOf("(");
+    const pipeOpenIndex = valueCloseIndex + 1 + pipeMatch[0].lastIndexOf("(");
     const pipeCloseIndex = findMatchingParenIndex(content, pipeOpenIndex);
     if (pipeCloseIndex == null) {
       continue;
@@ -980,8 +979,7 @@ function collectEffectMatchViolations(
       });
     }
 
-    const whenAliasRegex =
-      /\bMatch\s*\.\s*when\s*\(\s*([A-Za-z_$][\w$]*)\b/g;
+    const whenAliasRegex = /\bMatch\s*\.\s*when\s*\(\s*([A-Za-z_$][\w$]*)\b/g;
     for (;;) {
       const whenMatch = whenAliasRegex.exec(pipeBody);
       if (whenMatch == null) {
@@ -1181,9 +1179,7 @@ function findViolationsForFile(
       importedContainers,
       importedNamespaceContainers,
     ),
-  ]).filter(
-    (violation) => !isInlineAllowlistedViolation(content, violation),
-  );
+  ]).filter((violation) => !isInlineAllowlistedViolation(content, violation));
 }
 
 function inlineAllowlistReasonForLine(content, line) {
@@ -1213,7 +1209,9 @@ function isInlineAllowlistedViolation(content, violation) {
     return false;
   }
 
-  return inlineAllowlistReasonForLine(content, violation.line) === boundaryReason;
+  return (
+    inlineAllowlistReasonForLine(content, violation.line) === boundaryReason
+  );
 }
 
 function formatCountMapEntries(map) {
@@ -1287,7 +1285,7 @@ function runSelfTest() {
     '    case "Magic Missile": return "spell-name-switch";',
     "  }",
     '  const spellNames = ["Magic Missile"];',
-    "  if (spellNames.includes(invocation.spell.name)) return \"spell-name-container\";",
+    '  if (spellNames.includes(invocation.spell.name)) return "spell-name-container";',
     "  Match.value(invocation.spell.name).pipe(",
     '    Match.when("Magic Missile", () => "spell-name-effect-match"),',
     "    Match.exhaustive,",
@@ -1564,10 +1562,8 @@ function main() {
     process.exit(1);
   }
 
-  const {
-    identityLiterals: authoredIdentityLiterals,
-    malformedContentFiles,
-  } = collectAuthoredIdentityLiterals();
+  const { identityLiterals: authoredIdentityLiterals, malformedContentFiles } =
+    collectAuthoredIdentityLiterals();
   if (malformedContentFiles.length > 0) {
     console.error(
       "authored-id boundary check: malformed surface content file(s):",

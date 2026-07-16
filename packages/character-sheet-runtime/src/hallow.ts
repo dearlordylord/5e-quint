@@ -5,6 +5,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   HALLOW_MATERIAL_COMPONENTS,
@@ -37,7 +38,7 @@ export function castHallow(input: {
   const spell = hallowSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedHallowAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue("Hallow requires prepared class Spell Access.");
   }
 
@@ -80,14 +81,6 @@ function hallowSpell(
     return characterSheetIssue("Hallow requires a Spell record.");
   }
   return Either.right(unit.right);
-}
-
-function hasPreparedHallowAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === HALLOW_SPELL_ID),
-    ) ?? false
-  );
 }
 
 function hallowInputIssue(input: {
@@ -172,7 +165,6 @@ function hallowInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetHallowInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== HALLOW_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "touch" ||

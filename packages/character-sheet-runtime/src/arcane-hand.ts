@@ -11,6 +11,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { characterSheetHitPointMaximum } from "./hit-points.ts";
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -36,7 +37,7 @@ export function castArcaneHand(input: {
   const spell = arcaneHandSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedArcaneHandAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Arcane Hand requires prepared class Spell Access.",
     );
@@ -87,16 +88,6 @@ function arcaneHandSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedArcaneHandAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === ARCANE_HAND_SPELL_ID,
-      ),
-    ) ?? false
-  );
-}
-
 function arcaneHandInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly space: CharacterSheetArcaneHandSpace;
@@ -105,7 +96,6 @@ function arcaneHandInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetArcaneHandInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== ARCANE_HAND_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "evocation" ||
