@@ -17,7 +17,7 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type { CharacterSheetTelekinesisTarget } from "./index.ts";
+import { type CharacterSheetTelekinesisTarget } from "./sheet-types.ts";
 
 const telekinesisSelectedIdentityDriverSchema = {
   doCastTelekinesis: {},

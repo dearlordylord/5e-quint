@@ -17,10 +17,10 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetModifyMemoryMemoryEdit,
-  CharacterSheetModifyMemoryTarget,
-} from "./index.ts";
+import {
+  type CharacterSheetModifyMemoryMemoryEdit,
+  type CharacterSheetModifyMemoryTarget,
+} from "./sheet-types.ts";
 
 const modifyMemorySelectedIdentityDriverSchema = {
   doCastModifyMemory: {},
@@ -98,7 +98,9 @@ describe("Character Sheet runtime / Modify Memory", () => {
   });
 
   it("spends a prepared level-5 spell slot and returns the failed-save memory-edit contract", () => {
-    const target = modifyMemoryTarget({ savingThrowOutcome: { tag: "failed" } });
+    const target = modifyMemoryTarget({
+      savingThrowOutcome: { tag: "failed" },
+    });
     const memoryEdit = modifyMemoryEdit();
     const result = requireRight(
       castModifyMemory({
@@ -163,7 +165,9 @@ describe("Character Sheet runtime / Modify Memory", () => {
           slots: 1,
         }),
         unitLibrary,
-        target: modifyMemoryTarget({ savingThrowOutcome: { tag: "succeeded" } }),
+        target: modifyMemoryTarget({
+          savingThrowOutcome: { tag: "succeeded" },
+        }),
         memoryEdit: modifyMemoryEdit(),
       }),
     );

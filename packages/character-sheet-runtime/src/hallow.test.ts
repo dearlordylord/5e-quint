@@ -18,11 +18,11 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetHallowArea,
-  CharacterSheetHallowCreatureTypes,
-  CharacterSheetHallowExtraEffect,
-} from "./index.ts";
+import {
+  type CharacterSheetHallowArea,
+  type CharacterSheetHallowCreatureTypes,
+  type CharacterSheetHallowExtraEffect,
+} from "./sheet-types.ts";
 
 const hallowSelectedIdentityDriverSchema = {
   doCastHallow: {},
@@ -142,7 +142,10 @@ describe("Character Sheet runtime / Hallow", () => {
       sheet,
       unitLibrary,
       casting: completedHallowCasting,
-      area: { ...hallowArea, areaAlreadyHallowed: true } as unknown as CharacterSheetHallowArea,
+      area: {
+        ...hallowArea,
+        areaAlreadyHallowed: true,
+      } as unknown as CharacterSheetHallowArea,
       wardCreatureTypes,
       extraEffect: resistanceEffect,
     });
@@ -177,7 +180,10 @@ describe("Character Sheet runtime / Hallow", () => {
       unitLibrary,
       casting: completedHallowCasting,
       area: hallowArea,
-      wardCreatureTypes: ["fiend", "fiend"] as unknown as CharacterSheetHallowCreatureTypes,
+      wardCreatureTypes: [
+        "fiend",
+        "fiend",
+      ] as unknown as CharacterSheetHallowCreatureTypes,
       extraEffect: resistanceEffect,
     });
 
@@ -222,7 +228,10 @@ const hallowSelectedIdentityActions = {
       }),
     );
     const extraEffect = result.invocation.extraEffect;
-    if (extraEffect.kind !== "resistance" || extraEffect.damageType !== "fire") {
+    if (
+      extraEffect.kind !== "resistance" ||
+      extraEffect.damageType !== "fire"
+    ) {
       throw new Error("Expected Hallow Resistance extra effect.");
     }
     return {
@@ -238,8 +247,7 @@ const hallowSelectedIdentityActions = {
       duration: result.invocation.duration,
       materialCostGpMinimum:
         result.invocation.materialComponents.consumedIncenseCostGpMinimum,
-      blockedCreatureTypes:
-        result.invocation.hallowedWard.blockedCreatureTypes,
+      blockedCreatureTypes: result.invocation.hallowedWard.blockedCreatureTypes,
       extraEffect: extraEffect.kind,
       extraEffectDamageType: extraEffect.damageType,
       durableAreaOwner: result.invocation.durableArea.persistenceOwner,

@@ -18,7 +18,7 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type { CharacterSheetTeleportationCircleDestination } from "./index.ts";
+import { type CharacterSheetTeleportationCircleDestination } from "./sheet-types.ts";
 
 const teleportationCircleSelectedIdentityDriverSchema = {
   doCastTeleportationCircle: {},

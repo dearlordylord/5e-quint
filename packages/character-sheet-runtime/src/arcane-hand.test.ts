@@ -18,7 +18,8 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type { CharacterSheet, CharacterSheetArcaneHandSpace } from "./index.ts";
+import type { CharacterSheet } from "./index.ts";
+import { type CharacterSheetArcaneHandSpace } from "./sheet-types.ts";
 
 const arcaneHandSelectedIdentityDriverSchema = {
   doCastArcaneHand: {},
@@ -77,8 +78,7 @@ const selectedUnitIdentityReplays = [
 describe("Character Sheet runtime / Arcane Hand", () => {
   it("replays selected Unit identities deterministically", () => {
     for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<ArcaneHandSelectedIdentityDriverAction>();
+      const replayedActions = new Set<ArcaneHandSelectedIdentityDriverAction>();
 
       for (const sequence of replay.sequences) {
         let projection: ArcaneHandSelectedIdentityProjection | undefined;
@@ -261,7 +261,9 @@ const arcaneHandSelectedIdentityActions = {
 >;
 
 const arcaneHandSpace = {
-  objectId: requireRight(characterSheetArcaneHandObjectId("object:arcane-hand")),
+  objectId: requireRight(
+    characterSheetArcaneHandObjectId("object:arcane-hand"),
+  ),
   unoccupiedSpaceVisibleWithinRange: true,
 } as const satisfies CharacterSheetArcaneHandSpace;
 

@@ -17,11 +17,11 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetGeasCommand,
-  CharacterSheetGeasSavingThrowOutcome,
-  CharacterSheetGeasTarget,
-} from "./index.ts";
+import {
+  type CharacterSheetGeasCommand,
+  type CharacterSheetGeasSavingThrowOutcome,
+  type CharacterSheetGeasTarget,
+} from "./sheet-types.ts";
 
 const geasSelectedIdentityDriverSchema = {
   doCastGeas: {},

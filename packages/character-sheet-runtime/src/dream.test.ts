@@ -19,11 +19,11 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetDreamMessenger,
-  CharacterSheetDreamMode,
-  CharacterSheetDreamTarget,
-} from "./index.ts";
+import {
+  type CharacterSheetDreamMessenger,
+  type CharacterSheetDreamMode,
+  type CharacterSheetDreamTarget,
+} from "./sheet-types.ts";
 
 const dreamSelectedIdentityDriverSchema = {
   doCastDream: {},

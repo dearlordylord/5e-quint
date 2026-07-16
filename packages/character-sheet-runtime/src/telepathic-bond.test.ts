@@ -17,7 +17,7 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type { CharacterSheetTelepathicBondTarget } from "./index.ts";
+import { type CharacterSheetTelepathicBondTarget } from "./sheet-types.ts";
 
 const telepathicBondSelectedIdentityDriverSchema = {
   doCastTelepathicBond: {},
@@ -231,17 +231,21 @@ function expectedTelepathicBondProjection(): TelepathicBondSelectedIdentityProje
 function telepathicBondTargets(
   count: number,
 ): readonly CharacterSheetTelepathicBondTarget[] {
-  return Array.from({ length: count }, (_, index) => ({
-    targetId: requireRight(
-      characterSheetTelepathicBondTargetId(
-        `telepathic-bond-target:${index + 1}`,
-      ),
-    ),
-    willing: true,
-    withinRangeFeet: 30,
-    canCommunicateInLanguage: true,
-    plane: "same_plane_as_caster",
-  }) as const);
+  return Array.from(
+    { length: count },
+    (_, index) =>
+      ({
+        targetId: requireRight(
+          characterSheetTelepathicBondTargetId(
+            `telepathic-bond-target:${index + 1}`,
+          ),
+        ),
+        willing: true,
+        withinRangeFeet: 30,
+        canCommunicateInLanguage: true,
+        plane: "same_plane_as_caster",
+      }) as const,
+  );
 }
 
 function telepathicBondBardSheet(input: {

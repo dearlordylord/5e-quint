@@ -21,16 +21,14 @@ import wizardArcaneRecoveryInput from "../../surface/content/wizard_arcane_recov
 import wizardRitualAdeptInput from "../../surface/content/wizard_ritual_adept.json";
 import wizardScholarInput from "../../surface/content/wizard_scholar.json";
 import wallOfStoneInput from "../../surface/content/wall_of_stone.json";
+import { characterSheetId } from "./index.ts";
+import { characterSheetWallOfStoneWallId } from "./sheet-types.ts";
+import { castWallOfStone } from "./wall-of-stone.ts";
+import type { CharacterSheet } from "./index.ts";
 import {
-  castWallOfStone,
-  characterSheetId,
-  characterSheetWallOfStoneWallId,
-} from "./index.ts";
-import type {
-  CharacterSheet,
-  CharacterSheetWallOfStonePlacement,
-  CharacterSheetWallOfStoneShape,
-} from "./index.ts";
+  type CharacterSheetWallOfStonePlacement,
+  type CharacterSheetWallOfStoneShape,
+} from "./sheet-types.ts";
 
 const wallOfStoneSelectedIdentityDriverSchema = {
   doCastWallOfStone: {},
@@ -89,7 +87,8 @@ const selectedUnitIdentityReplays = [
 describe("Character Sheet runtime / Wall of Stone", () => {
   it("replays selected Unit identities deterministically", () => {
     for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions = new Set<WallOfStoneSelectedIdentityDriverAction>();
+      const replayedActions =
+        new Set<WallOfStoneSelectedIdentityDriverAction>();
 
       for (const sequence of replay.sequences) {
         let projection: WallOfStoneSelectedIdentityProjection | undefined;
@@ -255,8 +254,7 @@ const wallOfStoneSelectedIdentityActions = {
       panelCount: result.invocation.shape.panelCount,
       thicknessInches: result.invocation.shape.thicknessInches,
       material: result.invocation.wall.material,
-      pushDistanceFeet:
-        result.invocation.wall.initialCreaturePush.distanceFeet,
+      pushDistanceFeet: result.invocation.wall.initialCreaturePush.distanceFeet,
       enclosureSavingThrowAbility:
         result.invocation.wall.enclosureEscape.savingThrowAbility,
       wallAc: result.invocation.wall.durability.ac,
@@ -411,7 +409,9 @@ const unitLibrary = minimalUnitCatalog([
 
 function requireRight<R, L>(result: Either.Either<R, L>): R {
   if (Either.isRight(result)) return result.right;
-  throw new Error(`Expected Right, received Left: ${JSON.stringify(result.left)}`);
+  throw new Error(
+    `Expected Right, received Left: ${JSON.stringify(result.left)}`,
+  );
 }
 
 function minimalUnitCatalog(units: readonly UnitRecord[]): UnitCatalog {

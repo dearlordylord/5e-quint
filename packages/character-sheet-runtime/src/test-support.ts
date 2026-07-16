@@ -45,43 +45,11 @@ import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   applyCharacterSheetSpellRestBenefit,
   applyLayOnHands,
-  castAntilifeShell,
-  castAnimateObjects,
-  castArcaneHand,
-  castAwaken,
-  castConjureElemental,
-  castCreation,
-  castDream,
-  castDominatePerson,
-  castGeas,
-  castHallow,
-  castModifyMemory,
-  castMislead,
   characterSheetAbilityCheckAbility,
-  characterSheetAwakenTargetId,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassProjection,
   characterSheetArmorClassState,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
-  castPasswall,
-  castPlanarBinding,
-  castSummonDragon,
-  castTelekinesis,
-  castWallOfForce,
-  castWallOfStone,
-  castTreeStride,
-  castGreaterRestorationOnSheet,
-  castRaiseDeadOnSheet,
-  castReincarnateOnSheet,
-  castCommune,
-  castCommuneWithNature,
-  castContactPatron,
-  castDivineIntervention,
-  castLegendLore,
-  castScrying,
-  castSeeming,
-  castTelepathicBond,
-  castTeleportationCircle,
   characterSheetCurrentHp,
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
@@ -92,20 +60,11 @@ import {
   characterSheetLongRestCalendarGate,
   characterSheetMonkUncannyMetabolismUseState,
   characterSheetMonksFocusSaveDc,
-  characterSheetPassiveDefenseProjection,
   characterSheetPactSlots,
   characterSheetResources,
   characterSheetSpellInvocation,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
-  completedDreamCasting,
-  completedHallowCasting,
-  completedLegendLoreCasting,
-  AWAKEN_MATERIAL_COMPONENTS,
-  completedScryingCasting,
-  completedTeleportationCircleCasting,
-  scryingSavingThrowModifier,
-  spendCharacterSheetSpellSlot,
   completeLongRestArcaneRecoveryResetWithRoute as completeLongRestArcaneRecoveryResetWithRouteCore,
   completeLongRestWeaponMasteryReselectionWithRoute as completeLongRestWeaponMasteryReselectionWithRouteCore,
   completeLongRest as completeLongRestCore,
@@ -115,12 +74,65 @@ import {
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
-  empoweredEvocationDamageRollModifier,
   finishLongRest,
   finishShortRest,
+  characterSheetId,
+  characterSheetTempHp,
+  interruptLongRest as interruptLongRestCore,
+  interruptShortRest as interruptShortRestCore,
+  parseCharacterSheet,
+  startLongRest,
+  startShortRest,
+  timePassed,
+  useMonkUncannyMetabolismWhenRollingInitiative,
+  type CharacterSheet,
+  type CharacterSheetInput,
+  type CharacterSheetLongRestInput,
+  type CharacterSheetLongRestInterruption,
+  type CharacterSheetLongRestStartTiming,
+  type CharacterSheetShortRestInterruption,
+  type CharacterSheetShortRestInput,
+  type CharacterSheetWeaponMasteryReselection,
+} from "./index.ts";
+import { castAntilifeShell } from "./antilife-shell.ts";
+import { castArcaneHand } from "./arcane-hand.ts";
+import { castAwaken } from "./awaken.ts";
+import { castCommuneWithNature } from "./commune-with-nature.ts";
+import { castCommune } from "./commune.ts";
+import { castContactPatron } from "./contact-patron.ts";
+import { castCreation } from "./creation-spell.ts";
+import { castDivineIntervention } from "./divine-intervention.ts";
+import { castDominatePerson } from "./dominate-person.ts";
+import { castDream, completedDreamCasting } from "./dream.ts";
+import { castGeas } from "./geas.ts";
+import { castHallow, completedHallowCasting } from "./hallow.ts";
+import { useHeroicWarriorAtCombatTurnStart } from "./heroic-warrior.ts";
+import { castLegendLore, completedLegendLoreCasting } from "./legend-lore.ts";
+import { castMislead } from "./mislead.ts";
+import { castModifyMemory } from "./modify-memory.ts";
+import {
+  characterSheetPassiveDefenseProjection,
+  empoweredEvocationDamageRollModifier,
+  removeSelfRestorationConditionAtTurnEnd,
+} from "./passive-defenses.ts";
+import { castPasswall } from "./passwall.ts";
+import { useRangerTirelessTemporaryHitPoints } from "./resources.ts";
+import {
+  castGreaterRestorationOnSheet,
+  castRaiseDeadOnSheet,
+  castReincarnateOnSheet,
+} from "./restoration-death-spells.ts";
+import {
+  castScrying,
+  completedScryingCasting,
+  scryingSavingThrowModifier,
+} from "./scrying.ts";
+import { castSeeming } from "./seeming.ts";
+import {
+  characterSheetAwakenTargetId,
+  AWAKEN_MATERIAL_COMPONENTS,
   characterSheetAntilifeShellBarrierId,
   characterSheetArcaneHandObjectId,
-  characterSheetId,
   characterSheetCreationObjectId,
   characterSheetDominatePersonTargetId,
   characterSheetDreamMessengerId,
@@ -141,27 +153,23 @@ import {
   characterSheetTeleportationCircleSigilSequenceId,
   characterSheetTreeStrideTreeId,
   characterSheetTreeStrideTreeKind,
-  characterSheetTempHp,
-  interruptLongRest as interruptLongRestCore,
-  interruptShortRest as interruptShortRestCore,
-  parseCharacterSheet,
-  resolveTreeStrideTransit,
-  startLongRest,
-  startShortRest,
-  timePassed,
-  removeSelfRestorationConditionAtTurnEnd,
-  useMonkUncannyMetabolismWhenRollingInitiative,
-  useHeroicWarriorAtCombatTurnStart,
-  useRangerTirelessTemporaryHitPoints,
-  type CharacterSheet,
-  type CharacterSheetInput,
-  type CharacterSheetLongRestInput,
-  type CharacterSheetLongRestInterruption,
-  type CharacterSheetLongRestStartTiming,
-  type CharacterSheetShortRestInterruption,
-  type CharacterSheetShortRestInput,
-  type CharacterSheetWeaponMasteryReselection,
-} from "./index.ts";
+} from "./sheet-types.ts";
+import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
+import {
+  castAnimateObjects,
+  castConjureElemental,
+  castPlanarBinding,
+  castSummonDragon,
+} from "./summoned-object-lifecycle-spells.ts";
+import { castTelekinesis } from "./telekinesis.ts";
+import { castTelepathicBond } from "./telepathic-bond.ts";
+import {
+  castTeleportationCircle,
+  completedTeleportationCircleCasting,
+} from "./teleportation-circle.ts";
+import { castTreeStride, resolveTreeStrideTransit } from "./tree-stride.ts";
+import { castWallOfForce } from "./wall-of-force.ts";
+import { castWallOfStone } from "./wall-of-stone.ts";
 
 export {
   abilityScoreAssignment,

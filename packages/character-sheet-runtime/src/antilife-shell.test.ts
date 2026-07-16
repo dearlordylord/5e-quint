@@ -22,15 +22,11 @@ import druidDruidicInput from "../../surface/content/druid_druidic.json";
 import druidPrimalOrderInput from "../../surface/content/druid_primal_order.json";
 import druidWildCompanionInput from "../../surface/content/druid_wild_companion.json";
 import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
-import {
-  castAntilifeShell,
-  characterSheetAntilifeShellBarrierId,
-  characterSheetId,
-} from "./index.ts";
-import type {
-  CharacterSheet,
-  CharacterSheetAntilifeShellBarrierPlacement,
-} from "./index.ts";
+import { characterSheetId } from "./index.ts";
+import { castAntilifeShell } from "./antilife-shell.ts";
+import { characterSheetAntilifeShellBarrierId } from "./sheet-types.ts";
+import type { CharacterSheet } from "./index.ts";
+import { type CharacterSheetAntilifeShellBarrierPlacement } from "./sheet-types.ts";
 
 const antilifeShellSelectedIdentityDriverSchema = {
   doCastAntilifeShell: {},
@@ -226,11 +222,7 @@ function expectedAntilifeShellProjection(): AntilifeShellSelectedIdentityProject
     concentrationRequired: true,
     radiusFeet: 10,
     exceptCreatureTypes: ["construct", "undead"],
-    allowedThroughBarrier: [
-      "spells",
-      "ranged_attacks",
-      "reach_weapon_attacks",
-    ],
+    allowedThroughBarrier: ["spells", "ranged_attacks", "reach_weapon_attacks"],
     crossingMembershipOwner: "table",
     forcedPassageEndsSpell: true,
   };
@@ -337,7 +329,9 @@ const unitLibrary = minimalUnitCatalog([
 
 function requireRight<R, L>(result: Either.Either<R, L>): R {
   if (Either.isRight(result)) return result.right;
-  throw new Error(`Expected Right, received Left: ${JSON.stringify(result.left)}`);
+  throw new Error(
+    `Expected Right, received Left: ${JSON.stringify(result.left)}`,
+  );
 }
 
 function minimalUnitCatalog(units: readonly UnitRecord[]): UnitCatalog {

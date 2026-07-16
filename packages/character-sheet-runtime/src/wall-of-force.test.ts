@@ -17,10 +17,10 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetWallOfForcePlacement,
-  CharacterSheetWallOfForceShape,
-} from "./index.ts";
+import {
+  type CharacterSheetWallOfForcePlacement,
+  type CharacterSheetWallOfForceShape,
+} from "./sheet-types.ts";
 
 const wallOfForceSelectedIdentityDriverSchema = {
   doCastWallOfForce: {},

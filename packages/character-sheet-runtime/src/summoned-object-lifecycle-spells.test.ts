@@ -30,12 +30,12 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetAnimateObjectsTarget,
-  CharacterSheetConjureElementalSpirit,
-  CharacterSheetPlanarBindingTarget,
-  CharacterSheetSummonDragonSpirit,
-} from "./index.ts";
+import {
+  type CharacterSheetAnimateObjectsTarget,
+  type CharacterSheetConjureElementalSpirit,
+  type CharacterSheetPlanarBindingTarget,
+  type CharacterSheetSummonDragonSpirit,
+} from "./sheet-types.ts";
 
 const selectedLifecycleDriverSchema = {
   doCastAnimateObjects: {},
@@ -421,7 +421,9 @@ const lifecycleSelectedIdentityActions = {
 
 const animateObjectsTargets = [
   {
-    objectId: requireRight(characterSheetSpellLifecycleObjectId("object:chair")),
+    objectId: requireRight(
+      characterSheetSpellLifecycleObjectId("object:chair"),
+    ),
     size: "large",
     nonmagical: true,
     withinRange: true,
@@ -445,14 +447,18 @@ const elementalSpirit = {
 } as const satisfies CharacterSheetConjureElementalSpirit;
 
 const dragonSpirit = {
-  spiritId: requireRight(characterSheetSpellLifecycleCreatureId("spirit:dragon")),
+  spiritId: requireRight(
+    characterSheetSpellLifecycleCreatureId("spirit:dragon"),
+  ),
   damageType: "fire",
   unoccupiedSpaceVisibleWithinRange: true,
   engravedDragonObjectWorth500Gp: true,
 } as const satisfies CharacterSheetSummonDragonSpirit;
 
 const planarBindingTarget = {
-  creatureId: requireRight(characterSheetSpellLifecycleCreatureId("fiend:bound")),
+  creatureId: requireRight(
+    characterSheetSpellLifecycleCreatureId("fiend:bound"),
+  ),
   creatureType: "fiend",
   withinRangeForEntireCasting: true,
   savingThrowOutcome: { tag: "failed" },

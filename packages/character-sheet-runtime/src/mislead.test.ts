@@ -208,8 +208,7 @@ const misleadSelectedIdentityActions = {
       durationHours: result.invocation.concentration.upTo.amount,
       doubleMoveFeet:
         result.invocation.illusoryDouble.movementControl.maxDistanceFeet,
-      movementAction:
-        result.invocation.illusoryDouble.movementControl.action,
+      movementAction: result.invocation.illusoryDouble.movementControl.action,
       remoteSight: result.invocation.illusoryDouble.remoteSenses.sight,
       remoteHearing: result.invocation.illusoryDouble.remoteSenses.hearing,
       tableOwner: result.invocation.illusoryDouble.mapPlacementOwner,

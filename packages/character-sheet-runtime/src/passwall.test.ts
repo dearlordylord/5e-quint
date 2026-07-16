@@ -17,10 +17,10 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetPasswallDimensions,
-  CharacterSheetPasswallSurface,
-} from "./index.ts";
+import {
+  type CharacterSheetPasswallDimensions,
+  type CharacterSheetPasswallSurface,
+} from "./sheet-types.ts";
 
 const passwallSelectedIdentityDriverSchema = {
   doCastPasswall: {},
@@ -118,7 +118,8 @@ describe("Character Sheet runtime / Passwall", () => {
       dimensions: passwallDimensions,
       passage: {
         createsNoStructuralInstability: true,
-        ejectionWhenOpeningDisappears: "nearest_unoccupied_space_to_cast_surface",
+        ejectionWhenOpeningDisappears:
+          "nearest_unoccupied_space_to_cast_surface",
       },
     });
     expect(result.sheet.spellSlotExpenditures).toEqual([

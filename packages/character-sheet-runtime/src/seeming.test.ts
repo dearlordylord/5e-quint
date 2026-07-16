@@ -17,12 +17,12 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetSeemingAppearance,
-  CharacterSheetSeemingTarget,
-  CharacterSheetSeemingUnwillingTarget,
-  CharacterSheetSeemingWillingTarget,
-} from "./index.ts";
+import {
+  type CharacterSheetSeemingAppearance,
+  type CharacterSheetSeemingTarget,
+  type CharacterSheetSeemingUnwillingTarget,
+  type CharacterSheetSeemingWillingTarget,
+} from "./sheet-types.ts";
 
 const seemingSelectedIdentityDriverSchema = {
   doCastSeeming: {},
