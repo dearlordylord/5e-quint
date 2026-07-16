@@ -9,7 +9,10 @@ import {
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
-import { McpSessionSnapshotSchema } from "./session-snapshot-output.ts";
+import {
+  McpSessionSnapshotSchema,
+  McpSessionSummarySchema,
+} from "./session-snapshot-output.ts";
 
 const JsonObjectSchema = Schema.Record({
   key: Schema.String,
@@ -54,7 +57,7 @@ const BattleResolutionResultSchema = Schema.Union(
 
 export const SelectStatBlockOutputSchema = Schema.Struct({
   selectedStatBlock: JsonObjectSchema,
-  session: McpSessionSnapshotSchema,
+  session: McpSessionSummarySchema,
 });
 
 export const BattleSessionOutputSchema = Schema.Struct({
@@ -64,7 +67,7 @@ export const BattleSessionOutputSchema = Schema.Struct({
 
 export const StartBattleOutputSchema = Schema.Struct({
   snapshot: BattleSnapshotSchema,
-  session: McpSessionSnapshotSchema,
+  session: McpSessionSummarySchema,
 });
 
 export const BattleResolutionOutputSchema = Schema.Struct({
@@ -76,5 +79,5 @@ export const BattleResolutionOutputSchema = Schema.Struct({
 export const EndBattleOutputSchema = Schema.Struct({
   endedBattleId: Schema.String,
   characters: Schema.Array(JsonObjectSchema),
-  session: McpSessionSnapshotSchema,
+  session: McpSessionSummarySchema,
 });

@@ -31,6 +31,7 @@ import type {
   PendingBattleFillSession,
 } from "./session-store.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
+import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 export type BattleToolResult =
@@ -59,7 +60,7 @@ export function handleBattleToolCall(
       }
       return schemaJsonContent(SelectStatBlockOutputSchema, {
         selectedStatBlock: selected.right,
-        session: root.sessionStore.snapshot(),
+        session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
     Match.when({ name: battleToolNames.startBattle }, (matched) =>
@@ -264,7 +265,7 @@ export function handleBattleToolCall(
             session,
           }),
         ),
-        session: root.sessionStore.snapshot(),
+        session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
     Match.exhaustive,

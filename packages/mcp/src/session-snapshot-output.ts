@@ -3,7 +3,7 @@ import { Schema } from "effect";
 
 import type { McpSessionSnapshot } from "./session-store.ts";
 
-const CharacterToolSessionSnapshotFields = {
+const McpSessionSummaryFields = {
   draftIds: Schema.Array(Schema.String),
   characterIds: Schema.Array(Schema.String),
   selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
@@ -16,12 +16,10 @@ const CharacterToolSessionSnapshotFields = {
   ),
 };
 
-export const CharacterToolSessionSnapshotSchema = Schema.Struct(
-  CharacterToolSessionSnapshotFields,
-);
+export const McpSessionSummarySchema = Schema.Struct(McpSessionSummaryFields);
 
 export const McpSessionSnapshotSchema = Schema.Struct({
-  ...CharacterToolSessionSnapshotFields,
+  ...McpSessionSummaryFields,
   transientBattleFills: Schema.Union(
     Schema.Struct({
       subject: BattleSubjectSchema,
@@ -31,12 +29,11 @@ export const McpSessionSnapshotSchema = Schema.Struct({
   ),
 });
 
-export type CharacterToolSessionSnapshot =
-  typeof CharacterToolSessionSnapshotSchema.Type;
+export type McpSessionSummary = typeof McpSessionSummarySchema.Type;
 
-export function characterToolSessionSnapshot(
+export function mcpSessionSummary(
   snapshot: McpSessionSnapshot,
-): CharacterToolSessionSnapshot {
+): McpSessionSummary {
   return {
     draftIds: snapshot.draftIds,
     characterIds: snapshot.characterIds,

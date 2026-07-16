@@ -16,7 +16,7 @@ import type { AvailableCharacterSession } from "./session-store.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
-import { characterToolSessionSnapshot } from "./session-snapshot-output.ts";
+import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 export function applyCharacterSessionOperation(
@@ -121,7 +121,7 @@ function applyRetainOneAtATimeCompanionOperation(
   root.sessionStore.characters.set(updated.right);
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
     character: updated.right,
-    session: characterToolSessionSnapshot(root.sessionStore.snapshot()),
+    session: mcpSessionSummary(root.sessionStore.snapshot()),
   });
 }
 

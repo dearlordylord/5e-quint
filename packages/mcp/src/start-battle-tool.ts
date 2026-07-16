@@ -26,6 +26,7 @@ import {
 } from "./start-battle-tool-input.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
+import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 type StartableCharacterSessionCombatant = {
@@ -106,7 +107,7 @@ export function handleStartBattleToolCall(
 
   return schemaJsonContent(StartBattleOutputSchema, {
     snapshot: snapshotBattle(admittedState.right),
-    session: root.sessionStore.snapshot(),
+    session: mcpSessionSummary(root.sessionStore.snapshot()),
   });
 }
 

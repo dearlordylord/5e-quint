@@ -1323,7 +1323,6 @@ describe("MCP server route", () => {
           battleId: "battle:mcp-shell",
           currentActorId: "fighter",
         },
-        transientBattleFills: null,
       },
     });
     expect(started.snapshot.combatants[0]).toMatchObject({
@@ -3452,8 +3451,6 @@ describe("MCP server route", () => {
         { combatantId: "goblin", hp: 10, armorClass: 15 },
       ],
     });
-    expect(started.session.transientBattleFills).toBeNull();
-
     const fighterActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -3660,7 +3657,6 @@ describe("MCP server route", () => {
       endedBattleId: "battle:mcp-full-vertical",
       session: {
         activeBattle: null,
-        transientBattleFills: null,
         characterIds: [testCharacterId(draftId)],
       },
     });
@@ -3875,7 +3871,6 @@ describe("MCP server route", () => {
 
     expect(ended.session).toMatchObject({
       activeBattle: null,
-      transientBattleFills: null,
     });
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({
