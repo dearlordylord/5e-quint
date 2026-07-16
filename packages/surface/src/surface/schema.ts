@@ -443,8 +443,29 @@ import {
   WeaponTemplateRecordSchema,
   WeaponRecordSchema,
 } from "./schema-nonspell.ts";
-import { ProvenanceSchema } from "./schema-base.ts";
+import { ProvenanceSchema, surfaceSchemaRole } from "./schema-base.ts";
 import { CreatureStatBlockSchema, SpellRecordSchema } from "./schema-spell.ts";
+
+export {
+  SURFACE_IDENTITY_KINDS,
+  SURFACE_PROTOCOL_KINDS,
+  SURFACE_PROJECTION_KINDS,
+  SURFACE_SCHEMA_ROLE_ANNOTATION,
+  SURFACE_STAT_BLOCK_REFERENCE_RELATIONS,
+  SURFACE_UNIT_REFERENCE_RELATIONS,
+  isSurfaceSchemaRole,
+  readSurfaceSchemaRole,
+  surfaceSchemaRole,
+  surfaceSchemaRolesEqual,
+} from "./schema-base.ts";
+export type {
+  SurfaceSchemaFieldRole,
+  SurfaceIdentityKind,
+  SurfaceProjectionKind,
+  SurfaceProtocolKind,
+  SurfaceStatBlockReferenceRelation,
+  SurfaceUnitReferenceRelation,
+} from "./schema-base.ts";
 
 // EXPLANATION: package-owned handwritten Effect decode boundary for the full
 // content surface. Consumers decode through these helpers and derive types from
@@ -460,9 +481,15 @@ export const SRD_CHALLENGE_RATINGS = [
 export const ChallengeRatingSchema = Schema.Literal(...SRD_CHALLENGE_RATINGS);
 
 export const StatBlockRecordSchema = Schema.Struct({
-  id: Schema.NonEmptyTrimmedString,
+  id: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+    category: "identity",
+    kind: "id",
+  }),
   kind: Schema.Literal("statBlock"),
-  name: Schema.NonEmptyTrimmedString,
+  name: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+    category: "identity",
+    kind: "name",
+  }),
   provenance: ProvenanceSchema,
   challengeRating: ChallengeRatingSchema,
   statBlock: MonsterStatBlockSchema,
