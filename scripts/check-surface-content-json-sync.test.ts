@@ -1,4 +1,10 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -8,6 +14,12 @@ import {
   runPublicationCheck,
   type PublicationIssue,
 } from "./check-surface-content-json-sync.ts";
+import {
+  serializeSurfacePublicationArtifact,
+  SRD_SURFACE_PUBLICATION_ARTIFACTS,
+  SRD_SURFACE_PUBLICATION_FILE_NAMES,
+  SURFACE_PUBLICATION_MEMBERS,
+} from "../packages/surface/src/surface/publication-artifacts.ts";
 
 const validRecord = readFileSync(
   join(process.cwd(), "packages/surface/content/bless.json"),
@@ -68,4 +80,41 @@ describe("Surface content publication checker", () => {
       rmSync(contentDir, { force: true, recursive: true });
     }
   }, 30_000);
+
+  it("detects drift in committed language-neutral artifacts", () => {
+    const contentDir = mkdtempSync(join(tmpdir(), "surface-artifact-test-"));
+    const publicationDir = join(contentDir, "publication");
+
+    try {
+      mkdirSync(publicationDir, { recursive: true });
+      for (const member of SURFACE_PUBLICATION_MEMBERS) {
+        const fileName = SRD_SURFACE_PUBLICATION_FILE_NAMES[member];
+        const value = SRD_SURFACE_PUBLICATION_ARTIFACTS[member];
+        writeFileSync(
+          join(publicationDir, fileName),
+          serializeSurfacePublicationArtifact(value),
+        );
+      }
+      writeFileSync(
+        join(publicationDir, SRD_SURFACE_PUBLICATION_FILE_NAMES.schema),
+        `${readFileSync(join(publicationDir, SRD_SURFACE_PUBLICATION_FILE_NAMES.schema), "utf8")}\n`,
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        publicationDir,
+        compile: () => undefined,
+      });
+
+      expect(result.issues).toEqual([
+        {
+          kind: "out-of-sync-publication-artifact",
+          file: `publication/${SRD_SURFACE_PUBLICATION_FILE_NAMES.schema}`,
+        },
+      ]);
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
 });

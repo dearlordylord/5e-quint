@@ -905,6 +905,18 @@ export type TriggeredReplacementMechanics = Schema.Schema.Type<
 export type Provenance = Schema.Schema.Type<
   typeof SurfaceSchema.ProvenanceSchema
 >;
+export type SrdProvenance = Schema.Schema.Type<
+  typeof SurfaceSchema.SrdProvenanceSchema
+>;
+export type SrdUnitRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.SrdUnitRecordSchema
+>;
+export type SrdStatBlockRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.SrdStatBlockRecordSchema
+>;
+export type SrdSurface = Schema.Schema.Type<
+  typeof SurfaceSchema.SrdSurfaceSchema
+>;
 export type SpellRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpellRecordSchema
 >;

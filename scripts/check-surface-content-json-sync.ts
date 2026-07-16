@@ -10,6 +10,15 @@ import {
   StatBlockRecordSchema,
   UnitRecordSchema,
 } from "../packages/surface/src/surface/schema.ts";
+import {
+  serializeSurfacePublicationArtifact,
+  SRD_SURFACE_PUBLICATION_ARTIFACTS,
+  SRD_SURFACE_PUBLICATION_FILE_NAMES,
+  SRD_SURFACE_SCHEMA_BOUNDS,
+  SRD_SURFACE_SCHEMA_SIZE,
+  SURFACE_PUBLICATION_MEMBERS,
+  SURFACE_SCHEMA_BOUND_MEASURES,
+} from "../packages/surface/src/surface/publication-artifacts.ts";
 
 export type PublicationIssue =
   | {
@@ -32,6 +41,22 @@ export type PublicationIssue =
       readonly kind: "decode-failed";
       readonly file: string;
       readonly message: string;
+    }
+  | { readonly kind: "missing-publication-artifact"; readonly file: string }
+  | {
+      readonly kind: "out-of-sync-publication-artifact";
+      readonly file: string;
+    }
+  | {
+      readonly kind: "unreadable-publication-artifact";
+      readonly file: string;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "publication-schema-bound-exceeded";
+      readonly measure: keyof typeof SRD_SURFACE_SCHEMA_BOUNDS;
+      readonly actual: number;
+      readonly limit: number;
     };
 
 type JsonDocument = unknown;
@@ -39,6 +64,7 @@ type JsonDocument = unknown;
 export type PublicationCheckOptions = {
   readonly repoRoot: string;
   readonly contentDir: string;
+  readonly publicationDir?: string;
   readonly compile: (
     sourcePath: string,
     outputPath: string,
@@ -224,6 +250,78 @@ function checkJsonFile(
   addDecodeIssues(issues, displayFile, parsed.value, context);
 }
 
+type PublicationArtifactReadResult =
+  | { readonly tag: "ok"; readonly bytes: Buffer }
+  | { readonly tag: "missing" }
+  | { readonly tag: "unreadable"; readonly message: string };
+
+function readPublicationArtifact(
+  filePath: string,
+): PublicationArtifactReadResult {
+  try {
+    return { tag: "ok", bytes: readFileSync(filePath) };
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return { tag: "missing" };
+    }
+    return {
+      tag: "unreadable",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+function checkSurfacePublicationArtifacts(
+  issues: PublicationIssue[],
+  repoRoot: string,
+  publicationDir: string,
+): void {
+  for (const member of SURFACE_PUBLICATION_MEMBERS) {
+    const fileName = SRD_SURFACE_PUBLICATION_FILE_NAMES[member];
+    const value = SRD_SURFACE_PUBLICATION_ARTIFACTS[member];
+    const filePath = join(publicationDir, fileName);
+    const displayFile = repoPath(repoRoot, filePath);
+    const committed = readPublicationArtifact(filePath);
+    if (committed.tag === "missing") {
+      issues.push({ kind: "missing-publication-artifact", file: displayFile });
+      continue;
+    }
+    if (committed.tag === "unreadable") {
+      issues.push({
+        kind: "unreadable-publication-artifact",
+        file: displayFile,
+        message: committed.message,
+      });
+      continue;
+    }
+
+    if (!committed.bytes.equals(serializeSurfacePublicationArtifact(value))) {
+      issues.push({
+        kind: "out-of-sync-publication-artifact",
+        file: displayFile,
+      });
+    }
+  }
+
+  for (const measure of SURFACE_SCHEMA_BOUND_MEASURES) {
+    const actual = SRD_SURFACE_SCHEMA_SIZE[measure];
+    const limit = SRD_SURFACE_SCHEMA_BOUNDS[measure];
+    if (actual >= limit) {
+      issues.push({
+        kind: "publication-schema-bound-exceeded",
+        measure,
+        actual,
+        limit,
+      });
+    }
+  }
+}
+
 export function runPublicationCheck(
   options: PublicationCheckOptions,
 ): PublicationCheckResult {
@@ -306,6 +404,10 @@ export function runPublicationCheck(
     rmSync(temporaryDirectory, { force: true, recursive: true });
   }
 
+  if (options.publicationDir !== undefined) {
+    checkSurfacePublicationArtifacts(issues, repoRoot, options.publicationDir);
+  }
+
   return { issues, sourceCount: sources.length, peerCount: peers.length };
 }
 
@@ -327,6 +429,7 @@ function main(): void {
   const { issues, sourceCount, peerCount } = runPublicationCheck({
     repoRoot,
     contentDir,
+    publicationDir: join(repoRoot, "packages", "surface", "publication"),
     compile: compileDhallToJson,
   });
 
@@ -343,8 +446,20 @@ function main(): void {
         console.error(`- out-of-sync-json: ${issue.peer} from ${issue.source}`);
       } else if (issue.kind === "compile-failed") {
         console.error(`- compile-failed: ${issue.source}\n${issue.message}`);
-      } else {
+      } else if (issue.kind === "decode-failed") {
         console.error(`- decode-failed: ${issue.file}\n${issue.message}`);
+      } else if (issue.kind === "missing-publication-artifact") {
+        console.error(`- missing-publication-artifact: ${issue.file}`);
+      } else if (issue.kind === "out-of-sync-publication-artifact") {
+        console.error(`- out-of-sync-publication-artifact: ${issue.file}`);
+      } else if (issue.kind === "unreadable-publication-artifact") {
+        console.error(
+          `- unreadable-publication-artifact: ${issue.file}\n${issue.message}`,
+        );
+      } else {
+        console.error(
+          `- publication-schema-bound-exceeded: ${issue.measure} ${issue.actual} >= ${issue.limit}`,
+        );
       }
     }
     process.exitCode = 1;
