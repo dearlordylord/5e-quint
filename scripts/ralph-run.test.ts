@@ -432,6 +432,108 @@ const runImplementationRounds = (limit: number) => {
   });
 };
 
+const runImplementationPipeline = (
+  roundLimit: number,
+  technicalAttemptLimit: number,
+  reviewResults: ReadonlyArray<{
+    readonly status: number;
+    readonly verdict?: "accept" | "accept-with-fixes" | "reject";
+  }>,
+) => {
+  const root = mkdtempSync(join(tmpdir(), "ralph-implementation-test-"));
+  roots.push(root);
+  const attemptRoot = join(root, "attempt");
+  mkdirSync(attemptRoot);
+  const taskFile = join(root, "task.md");
+  const contextFile = join(root, "context.md");
+  writeFileSync(taskFile, "task\n");
+  writeFileSync(contextFile, "context\n");
+
+  const runnerSource = readFileSync(runnerPath, "utf8");
+  const reviewMatch = runnerSource.match(
+    /run_implementation_review\(\) \{[\s\S]*?\n\}\n\nwrite_decider_prompt/,
+  );
+  const pipelineMatch = runnerSource.match(
+    /run_implementation_pipeline\(\) \{[\s\S]*?\n\}\n\nrecover_dirty_main_worktree_after_decider/,
+  );
+  const parseVerdictMatch = runnerSource.match(
+    /parse_review_verdict\(\) \{[\s\S]*?\n\}\n\nrun_implementation_review/,
+  );
+  const nextRoundMatch = runnerSource.match(
+    /next_implementation_round\(\) \{[\s\S]*?\n\}/,
+  );
+  if (!reviewMatch || !pipelineMatch || !parseVerdictMatch || !nextRoundMatch)
+    throw new Error("Ralph implementation review helpers not found");
+
+  const encodedResults = reviewResults
+    .map(({ status, verdict }) => `${status}:${verdict ?? "none"}`)
+    .join(",");
+  const script = [
+    "set -euo pipefail",
+    nextRoundMatch[0],
+    parseVerdictMatch[0].replace(/\n\nrun_implementation_review$/, ""),
+    reviewMatch[0].replace(/\n\nwrite_decider_prompt$/, ""),
+    pipelineMatch[0].replace(
+      /\n\nrecover_dirty_main_worktree_after_decider$/,
+      "",
+    ),
+    `implementation_round_limit=${roundLimit}`,
+    `implementation_review_technical_attempt_limit=${technicalAttemptLimit}`,
+    "implementation_review_safety_cap_status=3",
+    "implementation_review_technical_failure_status=4",
+    'review_model="review-model"',
+    `review_results=${JSON.stringify(encodedResults)}`,
+    'review_call_file="$1/review-calls"',
+    'implementer_call_file="$1/implementer-calls"',
+    'feedback_file="$1/feedback-files"',
+    'event_file="$1/events"',
+    'note() { printf "%s\\n" "$2" >>"$event_file"; }',
+    'write_implementation_prompt() { printf "%s\\n" "$9" >>"$feedback_file"; : >"$2"; }',
+    'run_codex_implementer() { printf "call\\n" >>"$implementer_call_file"; : >"$3"; printf "done\\n" >"$4"; }',
+    'write_review_prompt() { : >"$4"; }',
+    'save_full_diff() { : >"$2"; }',
+    'save_diff() { : >"$2"; }',
+    "run_codex() {",
+    "  local calls=0 entry status verdict",
+    '  [[ -f "$review_call_file" ]] && calls="$(wc -l <"$review_call_file")"',
+    '  IFS=, read -r -a results <<<"$review_results"',
+    '  entry="${results[$calls]}"',
+    '  status="${entry%%:*}"',
+    '  verdict="${entry#*:}"',
+    '  printf "call\\n" >>"$review_call_file"',
+    '  printf "review status %s\\n" "$status" >"$3"',
+    '  if [[ "$verdict" == none ]]; then : >"$4"; else printf "Verdict: %s\\n" "$verdict" >"$4"; fi',
+    '  return "$status"',
+    "}",
+    "status=0",
+    'run_implementation_pipeline codex "$1" "$1" 7 "$2" base-ref base-sha "$3" || status=$?',
+    'printf "%s\\n" "$status" >"$1/pipeline-status"',
+    "",
+  ].join("\n");
+  const result = spawnSync(
+    "bash",
+    ["-s", "--", attemptRoot, taskFile, contextFile],
+    {
+      cwd: root,
+      encoding: "utf8",
+      input: script,
+    },
+  );
+  const countLines = (path: string) =>
+    existsSync(path)
+      ? readFileSync(path, "utf8").trim().split("\n").filter(Boolean).length
+      : 0;
+  return {
+    result,
+    root: attemptRoot,
+    status: Number(readFileSync(join(attemptRoot, "pipeline-status"), "utf8")),
+    implementerCalls: countLines(join(attemptRoot, "implementer-calls")),
+    reviewCalls: countLines(join(attemptRoot, "review-calls")),
+    events: readFileSync(join(attemptRoot, "events"), "utf8"),
+    feedbackFiles: readFileSync(join(attemptRoot, "feedback-files"), "utf8"),
+  };
+};
+
 afterEach(() => {
   for (const root of roots.splice(0))
     rmSync(root, { recursive: true, force: true });
@@ -482,6 +584,9 @@ describe("Ralph launcher boundaries", () => {
       "Status: done-ish\n",
       "Task Disposition: done\nTask Disposition: deferred\n",
       "Task Disposition: done — Task Disposition: retry-same-task\n",
+      "Task Disposition:\n- Status: accepted\n",
+      "Task Disposition:\n- Status: done\n- Status: deferred\n",
+      "Task Disposition:\nStatus: done\nWhy: first answer\nStatus: deferred\n",
     ]) {
       const result = parseDeciderDisposition(report);
       expect(result.status, report).not.toBe(0);
@@ -499,6 +604,115 @@ describe("Ralph launcher boundaries", () => {
     expect(result.stdout).toBe("done");
   });
 
+  it("ends Task Disposition at later plain decider sections", () => {
+    for (const laterSections of [
+      "Remaining risk: full workspace quality remains blocked by baseline violations.\n\nNew Information Gate: not applicable; no plan requirements changed.\n\nPlan Impact:\n\n- Status: none\n- Affected tasks: none\n- Plan edits: none; GitHub issue is canonical.\n",
+      "New Information Gate:\n- Status: none\nPlan Impact:\n- Status: none\n",
+      "Plan Impact:\n- Status: none\nNew Information Gate:\n- Status: applied\n",
+      "## Plan Impact\n- Status: none\n",
+    ]) {
+      const report = `Task Disposition:\n- Status: done\n- Why this disposition is correct now\n${laterSections}`;
+      const result = parseDeciderDisposition(report);
+      expect(result.status, report).toBe(0);
+      expect(result.stdout, report).toBe("done");
+    }
+  });
+
+  it("retries technical review failures without consuming a semantic round", () => {
+    const run = runImplementationPipeline(1, 3, [
+      { status: 1 },
+      { status: 0, verdict: "accept" },
+    ]);
+    expect(run.result.status).toBe(0);
+    expect(run.status).toBe(0);
+    expect(run.implementerCalls).toBe(1);
+    expect(run.reviewCalls).toBe(2);
+    expect(run.feedbackFiles.trim()).toBe("");
+    expect(run.events).toContain(
+      "implementation-review-technical-retry task=7 round=1 technical_attempt=1",
+    );
+    expect(run.events).toContain(
+      "implementation-review-semantic-complete task=7 round=1 technical_attempt=2 verdict=accept",
+    );
+    expect(run.events).not.toContain("implementation-handoff");
+    expect(
+      readFileSync(join(run.root, "implementation-round-1-review.md"), "utf8"),
+    ).toContain("Verdict: accept");
+    expect(
+      existsSync(
+        join(
+          run.root,
+          "implementation-round-1-review-technical-attempt-1.exit",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(run.root, "implementation-round-1-review-technical-attempt-1.log"),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(run.root, "implementation-round-1-review-technical-attempt-1.md"),
+      ),
+    ).toBe(true);
+  });
+
+  it("fails explicitly when technical review attempts are exhausted", () => {
+    const run = runImplementationPipeline(1, 2, [{ status: 1 }, { status: 1 }]);
+    expect(run.result.status).toBe(0);
+    expect(run.status).toBe(4);
+    expect(run.implementerCalls).toBe(1);
+    expect(run.reviewCalls).toBe(2);
+    expect(run.events).toContain(
+      "implementation-review-technical-exhausted task=7 round=1 technical_attempt=2 limit=2 status=1",
+    );
+    expect(run.events).not.toContain("implementation-handoff");
+    expect(run.events).not.toContain("implementation-review-safety-cap");
+  });
+
+  it("allows multiple technical retries under a one-round semantic cap", () => {
+    const run = runImplementationPipeline(1, 3, [
+      { status: 1 },
+      { status: 1 },
+      { status: 0, verdict: "accept" },
+    ]);
+    expect(run.status).toBe(0);
+    expect(run.implementerCalls).toBe(1);
+    expect(run.reviewCalls).toBe(3);
+    expect(run.events).toContain(
+      "implementation-review-semantic-complete task=7 round=1 technical_attempt=3 verdict=accept",
+    );
+    expect(run.events).not.toContain("implementation-review-safety-cap");
+  });
+
+  it("preserves ordinary semantic rejection and safety-cap behavior", () => {
+    const accepted = runImplementationPipeline(2, 2, [
+      { status: 0, verdict: "reject" },
+      { status: 0, verdict: "accept" },
+    ]);
+    expect(accepted.status).toBe(0);
+    expect(accepted.implementerCalls).toBe(2);
+    expect(accepted.reviewCalls).toBe(2);
+    expect(accepted.feedbackFiles).toContain(
+      "implementation-round-1-review.md",
+    );
+    expect(accepted.events).toContain(
+      "implementation-handoff task=7 round=1 next_round=2 verdict=reject",
+    );
+
+    const capped = runImplementationPipeline(1, 2, [
+      { status: 0, verdict: "reject" },
+    ]);
+    expect(capped.status).toBe(3);
+    expect(capped.implementerCalls).toBe(1);
+    expect(capped.reviewCalls).toBe(1);
+    expect(capped.events).toContain("implementation-review-safety-cap");
+    expect(existsSync(join(capped.root, "implementation-safety-cap.md"))).toBe(
+      true,
+    );
+  });
+
   it("bounds implementation review rounds by default and rejects an unbounded limit", () => {
     const source = readFileSync(runnerPath, "utf8");
     const help = spawnSync("bash", [runnerPath, "--help"], {
@@ -511,7 +725,11 @@ describe("Ralph launcher boundaries", () => {
     expect(help.stdout).toContain("Default: 6");
     expect(help.stdout).not.toContain("no harness cap");
     expect(source).toContain("default_implementation_round_limit=6");
+    expect(source).toContain("default_review_technical_attempt_limit=3");
     expect(source).toContain("implementation_review_safety_cap_status=3");
+    expect(source).toContain(
+      "implementation_review_technical_failure_status=4",
+    );
     expect(source).toContain(
       'next_implementation_round "$round" "$round_limit"',
     );
@@ -530,6 +748,16 @@ describe("Ralph launcher boundaries", () => {
       source.indexOf(
         'write_decider_prompt "$attempt_root/decider.prompt.md"',
         safetyCapHandler,
+      ),
+    );
+    const technicalFailureHandler = source.indexOf(
+      'if [[ "$implementation_status" -eq "$implementation_review_technical_failure_status" ]]; then',
+    );
+    expect(technicalFailureHandler).toBeGreaterThan(safetyCapHandler);
+    expect(technicalFailureHandler).toBeLessThan(
+      source.indexOf(
+        'write_decider_prompt "$attempt_root/decider.prompt.md"',
+        technicalFailureHandler,
       ),
     );
 
@@ -560,6 +788,20 @@ describe("Ralph launcher boundaries", () => {
     expect(zeroEnvironmentLimit.status).not.toBe(0);
     expect(zeroEnvironmentLimit.stderr).toContain(
       "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a positive integer",
+    );
+
+    const zeroTechnicalAttemptLimit = spawnSync(
+      "bash",
+      [runnerPath, "missing-plan.md"],
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        env: { ...process.env, RALPH_REVIEW_TECHNICAL_ATTEMPT_LIMIT: "0" },
+      },
+    );
+    expect(zeroTechnicalAttemptLimit.status).not.toBe(0);
+    expect(zeroTechnicalAttemptLimit.stderr).toContain(
+      "RALPH_REVIEW_TECHNICAL_ATTEMPT_LIMIT must be a positive integer",
     );
 
     const positiveLimit = spawnSync(
