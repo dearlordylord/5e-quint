@@ -6,7 +6,9 @@ original_args=("$@")
 default_codex_model="gpt-5.6-sol"
 default_review_model="gpt-5.6-sol"
 default_implementation_round_limit=6
+default_review_technical_attempt_limit=3
 implementation_review_safety_cap_status=3
+implementation_review_technical_failure_status=4
 
 usage() {
   local help_text
@@ -107,6 +109,10 @@ Environment:
                           Safety cap for implement/review convergence rounds.
                           Must be positive.
                           Default: __DEFAULT_IMPLEMENTATION_ROUND_LIMIT__.
+  RALPH_REVIEW_TECHNICAL_ATTEMPT_LIMIT
+                          Attempts allowed for one semantic implementation
+                          review when the reviewer runner fails technically.
+                          Must be positive. Default: __DEFAULT_REVIEW_TECHNICAL_ATTEMPT_LIMIT__.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
   RALPH_HEARTBEAT_SECONDS Seconds between supervisor heartbeats while a model
@@ -120,7 +126,8 @@ EOF
   )"
   help_text="${help_text//__DEFAULT_CODEX_MODEL__/$default_codex_model}"
   help_text="${help_text//__DEFAULT_REVIEW_MODEL__/$default_review_model}"
-  printf '%s\n' "${help_text//__DEFAULT_IMPLEMENTATION_ROUND_LIMIT__/$default_implementation_round_limit}"
+  help_text="${help_text//__DEFAULT_IMPLEMENTATION_ROUND_LIMIT__/$default_implementation_round_limit}"
+  printf '%s\n' "${help_text//__DEFAULT_REVIEW_TECHNICAL_ATTEMPT_LIMIT__/$default_review_technical_attempt_limit}"
 }
 
 die() {
@@ -250,6 +257,7 @@ opencode_agent="${RALPH_OPENCODE_AGENT:-ralph-implementer}"
 opencode_timeout_seconds="${RALPH_OPENCODE_TIMEOUT_SECONDS:-600}"
 model_chooser="${RALPH_MODEL_CHOOSER:-0}"
 implementation_round_limit="${RALPH_IMPLEMENTATION_ROUND_LIMIT:-$default_implementation_round_limit}"
+implementation_review_technical_attempt_limit="${RALPH_REVIEW_TECHNICAL_ATTEMPT_LIMIT:-$default_review_technical_attempt_limit}"
 heartbeat_seconds="${RALPH_HEARTBEAT_SECONDS:-60}"
 min_completed_tasks="${RALPH_MIN_COMPLETED_TASKS:-0}"
 selected_tasks=()
@@ -397,6 +405,7 @@ esac
 
 [[ "$model_chooser" == "0" || "$model_chooser" == "1" ]] || die "RALPH_MODEL_CHOOSER must be 0 or 1"
 [[ "$implementation_round_limit" =~ ^[1-9][0-9]*$ ]] || die "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a positive integer"
+[[ "$implementation_review_technical_attempt_limit" =~ ^[1-9][0-9]*$ ]] || die "RALPH_REVIEW_TECHNICAL_ATTEMPT_LIMIT must be a positive integer"
 [[ "$heartbeat_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_HEARTBEAT_SECONDS must be a positive integer"
 [[ "$min_completed_tasks" =~ ^[0-9]+$ ]] || die "RALPH_MIN_COMPLETED_TASKS must be a non-negative integer"
 if [[ "$implementation_runner" == "opencode" ]]; then
@@ -1327,6 +1336,52 @@ process.stdout.write(verdict)
 NODE
 }
 
+run_implementation_review() {
+  local workspace="$1"
+  local review_prompt="$2"
+  local round_prefix="$3"
+  local task_no="$4"
+  local round="$5"
+  local technical_attempt=1
+
+  while (( technical_attempt <= implementation_review_technical_attempt_limit )); do
+    local technical_prefix="$round_prefix-review-technical-attempt-$technical_attempt"
+    local technical_log="$technical_prefix.log"
+    local technical_report="$technical_prefix.md"
+    local technical_exit="$technical_prefix.exit"
+    local parse_error="$technical_prefix.parse-error.log"
+    local review_status=0
+    local verdict=""
+
+    : >"$technical_report"
+    run_codex "$workspace" "$review_prompt" "$technical_log" "$technical_report" "$review_model" || review_status=$?
+    printf '%s\n' "$review_status" >"$technical_exit"
+
+    if [[ "$review_status" -eq 0 ]] && verdict="$(parse_review_verdict "$technical_report" 2>"$parse_error")"; then
+      rm -f "$parse_error"
+      cp -f "$technical_log" "$round_prefix-review.log"
+      cp -f "$technical_report" "$round_prefix-review.md"
+      cp -f "$technical_exit" "$round_prefix-review.exit"
+      note "task" "implementation-review-semantic-complete task=$task_no round=$round technical_attempt=$technical_attempt verdict=$verdict status=$review_status"
+      printf '%s\n' "$verdict"
+      return 0
+    fi
+
+    local failure_kind="runner-exit"
+    if [[ "$review_status" -eq 0 ]]; then
+      failure_kind="invalid-report"
+    else
+      rm -f "$parse_error"
+    fi
+    if (( technical_attempt >= implementation_review_technical_attempt_limit )); then
+      note "task" "implementation-review-technical-exhausted task=$task_no round=$round technical_attempt=$technical_attempt limit=$implementation_review_technical_attempt_limit status=$review_status failure=$failure_kind"
+      return 1
+    fi
+    note "task" "implementation-review-technical-retry task=$task_no round=$round technical_attempt=$technical_attempt status=$review_status failure=$failure_kind"
+    technical_attempt="$((technical_attempt + 1))"
+  done
+}
+
 write_decider_prompt() {
   local output_file="$1"
   local task_no="$2"
@@ -1454,9 +1509,7 @@ run_implementation_pipeline() {
     local implementer_exit="$round_prefix-implementer.exit"
     local implementer_final="$round_prefix-implementer.final.md"
     local review_prompt="$round_prefix-review.prompt.md"
-    local review_log="$round_prefix-review.log"
     local review_report="$round_prefix-review.md"
-    local review_exit="$round_prefix-review.exit"
     local diff_file="$round_prefix.diff"
     local full_diff_file="$round_prefix.full.diff"
     local after_review_diff="$round_prefix.after-review.diff"
@@ -1479,13 +1532,11 @@ run_implementation_pipeline() {
     note "task" "implementation-finished task=$task_no round=$round status=$implementer_status"
 
     write_review_prompt "Implementation" "$workspace" "$review_report" "$review_prompt" "$task_no" "$task_file" "$task_base_sha" "$context_file"
-    local review_status=0
-    run_codex "$workspace" "$review_prompt" "$review_log" "$review_report" "$review_model" || review_status=$?
-    printf '%s\n' "$review_status" >"$review_exit"
+    if ! verdict="$(run_implementation_review "$workspace" "$review_prompt" "$round_prefix" "$task_no" "$round")"; then
+      return "$implementation_review_technical_failure_status"
+    fi
     save_full_diff "$workspace" "$after_review_full_diff" "$task_base_sha"
     save_diff "$workspace" "$after_review_diff" "$task_base_sha"
-    verdict="$(parse_review_verdict "$review_report")"
-    note "task" "implementation-reviewed task=$task_no round=$round verdict=$verdict status=$review_status"
 
     if [[ "$verdict" == "accept" ]]; then
       break
@@ -2025,13 +2076,19 @@ for (const line of lines) {
     continue
   }
   if (inDispositionSection) {
-    if (/^#{1,6}\s+/.test(line) || /^\*\*[^*]+\*\*$/.test(line.trim())) {
-      inDispositionSection = false
-      continue
-    }
     const statusMatch = normalized.match(/^[-*]?\s*status:\s*(.+)$/)
     if (statusMatch) {
       candidates.push(statusMatch[1])
+      continue
+    }
+    const trimmed = line.trim()
+    const isPlainTopLevelSection = line === trimmed && (
+      /^[a-z][a-z0-9 /&()'-]*:$/.test(normalized) ||
+      /^(?:new information gate|plan impact):\s+.+$/.test(normalized)
+    )
+    if (/^#{1,6}\s+/.test(line) || /^\*\*[^*]+\*\*$/.test(trimmed) || isPlainTopLevelSection) {
+      inDispositionSection = false
+      continue
     }
   }
 }
@@ -2637,6 +2694,12 @@ run_task_attempt() {
     printf 'implementation review safety cap reached for task %s attempt %s; quarantined before decider integration\n' "$task_no" "$attempt_no" >"$last_error_file"
     note "task" "blocked-implementation-review-safety-cap task=$task_no attempt=$attempt_no"
     append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "blocked-implementation-review-safety-cap" "-" "quarantined before decider; leaf requires reconciliation and redesign"
+    return 2
+  fi
+  if [[ "$implementation_status" -eq "$implementation_review_technical_failure_status" ]]; then
+    printf 'implementation reviewer technical attempts exhausted for task %s attempt %s; decider was not run\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-implementation-review-technical-failure task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-implementation-review-technical-failure" "-" "reviewer runner failed before semantic review"
     return 2
   fi
   if [[ "$implementation_status" -ne 0 ]]; then
