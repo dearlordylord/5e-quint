@@ -4614,8 +4614,6 @@ export function magicActionSaveGatedConditionProfileForUnit(
   if (
     mechanics.activationCost.kind !== "standard_action" ||
     mechanics.activationCost.action !== "magic" ||
-    mechanics.spends.resourceUnitId !==
-      PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID ||
     mechanics.spends.amount !== 1 ||
     mechanics.targetSelection.kind !== "visible_creatures_within_range" ||
     mechanics.targetSelection.rangeFeet !== 60 ||
@@ -4654,7 +4652,7 @@ export function magicActionSaveGatedConditionProfileForUnit(
     condition: {
       activationCost: { kind: "standardAction", action: "magic" },
       spends: {
-        resourceUnitId: PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID,
+        resourceUnitId: mechanics.spends.resourceUnitId,
         amount: 1,
       },
       targetSelection: {
@@ -6828,10 +6826,12 @@ export function battleBrutalStrikeSupportForUnit(
   }
   const mechanics = unit.mechanics;
   const forceful = mechanics.options.find(
-    (option) => option.id === "forceful_blow",
+    (option): option is (typeof mechanics.options)[0] =>
+      "forcedMovement" in option && "selfMovement" in option,
   );
   const hamstring = mechanics.options.find(
-    (option) => option.id === "hamstring_blow",
+    (option): option is (typeof mechanics.options)[1] =>
+      "speedPenalty" in option,
   );
   if (
     mechanics.trigger.kind !== "reckless_attack_strength_attack_hit" ||
@@ -6873,7 +6873,7 @@ export function battleBrutalStrikeSupportForUnit(
       },
       options: [
         {
-          id: "forceful_blow",
+          id: forceful.id,
           pushFeet: movementFeet(forceful.forcedMovement.feet),
           selfMovement: {
             kind: "moveTowardTarget",
@@ -6882,7 +6882,7 @@ export function battleBrutalStrikeSupportForUnit(
           },
         },
         {
-          id: "hamstring_blow",
+          id: hamstring.id,
           deltaFeet: movementDeltaFeet(-hamstring.speedPenalty.feet),
           stacking: "mostRecentOnly",
           expires: "startOfYourNextTurn",

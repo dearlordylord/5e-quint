@@ -147,15 +147,24 @@ import {
 import { weaponAttackDamageExpression } from "./statblock-attacks.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 
-const WEAPON_MASTERY_PROPERTY_SUPPORT_PROFILES = [
-  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
-  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
-  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
-  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-  WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
-] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
+const WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE = [
+  { supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE, property: "push" },
+  { supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE, property: "sap" },
+  { supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE, property: "slow" },
+  {
+    supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+    property: "topple",
+  },
+  {
+    supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+    property: "cleave",
+  },
+] as const satisfies ReadonlyArray<{
+  readonly supportProfile: BattleUnitSupportProfile;
+  readonly property: CharacterWeaponAttackActionOption["weapon"]["mastery"];
+}>;
 type WeaponMasteryPropertySupportProfile =
-  (typeof WEAPON_MASTERY_PROPERTY_SUPPORT_PROFILES)[number];
+  (typeof WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE)[number]["supportProfile"];
 
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
@@ -872,7 +881,6 @@ export function applyWeaponMasterySapOnHit(
     state,
     attackerId,
     attack,
-    property: "sap",
     supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   });
   const target = state.combatants.get(targetId);
@@ -994,7 +1002,6 @@ export function applyWeaponMasteryPushOnHit(input: {
     state: input.state,
     attackerId: input.attackerId,
     attack: input.attack,
-    property: "push",
     supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   });
   if (selection === null) {
@@ -1062,7 +1069,6 @@ export function applyWeaponMasterySlowAfterDamage(input: {
     state: input.state,
     attackerId: input.attackerId,
     attack: input.attack,
-    property: "slow",
     supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   });
   const target = input.state.combatants.get(input.targetId);
@@ -1196,7 +1202,6 @@ function weaponMasteryToppleSelection(
         state,
         attackerId,
         attack,
-        property: "topple",
         supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
       })
     : null;
@@ -1606,7 +1611,6 @@ function weaponMasteryCleaveSelection(
     state,
     attackerId,
     attack,
-    property: "cleave",
     supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   });
 }
@@ -1687,11 +1691,11 @@ function selectedWeaponMasteryProperty(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
   readonly attack: SupportedAttackActionOption;
-  readonly property: CharacterWeaponAttackActionOption["weapon"]["mastery"];
   readonly supportProfile: WeaponMasteryPropertySupportProfile;
 }): SelectedWeaponMasteryProperty | null {
   const attack = input.attack;
-  if (attack.kind !== "weapon" || attack.weapon.mastery !== input.property) {
+  const property = weaponMasteryPropertyForSupportProfile(input.supportProfile);
+  if (property === null || attack.kind !== "weapon" || attack.weapon.mastery !== property) {
     return null;
   }
   const attacker = input.state.combatants.get(input.attackerId);
@@ -1724,9 +1728,16 @@ function weaponMasteryPropertySupportProfiles(
 function isWeaponMasteryPropertySupportProfile(
   supportProfile: BattleUnitSupportProfile,
 ): supportProfile is WeaponMasteryPropertySupportProfile {
-  return WEAPON_MASTERY_PROPERTY_SUPPORT_PROFILES.some(
-    (profile) => profile === supportProfile,
-  );
+  return weaponMasteryPropertyForSupportProfile(supportProfile) !== null;
+}
+
+function weaponMasteryPropertyForSupportProfile(
+  supportProfile: BattleUnitSupportProfile,
+): CharacterWeaponAttackActionOption["weapon"]["mastery"] | null {
+  for (const entry of WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE) {
+    if (entry.supportProfile === supportProfile) return entry.property;
+  }
+  return null;
 }
 
 export function consumeSelfAttackRollEffects(
