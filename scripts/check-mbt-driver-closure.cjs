@@ -172,6 +172,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-subject-kinds.qnt",
   "battle-runtime-sorcerous-burst-damage-choice.qnt",
   "battle-runtime-witness-protocol.qnt",
+  "battle-runtime-weapon-attack-interruption-frame.qnt",
   "battle-runtime-weapon-attack-ordering.qnt",
   "battle-runtime-weapon-hosted-capability-facts.qnt",
   "creature-attack.qnt",
@@ -204,8 +205,7 @@ const ALLOWLIST = {
   },
   "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": {
     classification: "computed oracle",
-    rationale:
-      "attack-roll mode depends on mutable bypass/advantage state",
+    rationale: "attack-roll mode depends on mutable bypass/advantage state",
   },
   "battle-runtime-mirror-image-hit-interception.mbt.qnt": {
     classification: "computed oracle",
@@ -224,7 +224,8 @@ const ALLOWLIST = {
   },
   "rule-core-stat-block-controls.mbt.qnt": {
     classification: "computed oracle",
-    rationale: "dispatch resolution depends on mutable remaining-dispatch counts",
+    rationale:
+      "dispatch resolution depends on mutable remaining-dispatch counts",
   },
 };
 
@@ -269,7 +270,9 @@ function validateNoRuntimeDeclarations(rel, text, label) {
     ["run", /^\s*run\b/m],
   ]) {
     if (pattern.test(text)) {
-      issues.push(`${rel}: ${label} must not contain ${declaration} declarations.`);
+      issues.push(
+        `${rel}: ${label} must not contain ${declaration} declarations.`,
+      );
     }
   }
   return issues;
@@ -311,7 +314,9 @@ function validateConfiguredBattleRuntimeLeaves(root) {
     const rel = `packages/battle-runtime/${base}`;
     const file = repoPathToFile(root, rel);
     if (!fs.existsSync(file)) {
-      failures.push(`${rel}: configured battle-runtime leaf module does not exist.`);
+      failures.push(
+        `${rel}: configured battle-runtime leaf module does not exist.`,
+      );
       continue;
     }
     failures.push(
@@ -355,7 +360,10 @@ function validatePureVocabularyLeaf(root, rel, rationale) {
     issues.push(`${rel}: pure vocabulary leaf entry must include a rationale.`);
   }
   if (!fs.existsSync(file)) {
-    return [...issues, `${rel}: configured pure vocabulary leaf does not exist.`];
+    return [
+      ...issues,
+      `${rel}: configured pure vocabulary leaf does not exist.`,
+    ];
   }
   const text = fs.readFileSync(file, "utf8");
   if (depsOf(file).length > 0) {
@@ -541,9 +549,7 @@ function withFixtureRoot(fn) {
 }
 
 function fixtureModuleName(rel) {
-  return path
-    .basename(rel, ".qnt")
-    .replace(/[^A-Za-z0-9]/g, "_");
+  return path.basename(rel, ".qnt").replace(/[^A-Za-z0-9]/g, "_");
 }
 
 function writeConfiguredLeafFixtures(root) {
@@ -749,9 +755,12 @@ function runSelfTest() {
     const runtimeDir = path.join(fixtureRoot, "packages/battle-runtime");
     fs.writeFileSync(
       path.join(runtimeDir, "battle-runtime-fill-kinds.qnt"),
-      ["module battleRuntimeFillKinds {", "  action notLeaf = true", "}", ""].join(
-        "\n",
-      ),
+      [
+        "module battleRuntimeFillKinds {",
+        "  action notLeaf = true",
+        "}",
+        "",
+      ].join("\n"),
     );
     fs.writeFileSync(
       path.join(runtimeDir, "fixture-impure-battle-leaf.mbt.qnt"),

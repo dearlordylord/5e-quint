@@ -499,7 +499,7 @@ export {
   attackDamageEventAmountForTarget,
   attackDamageEventEntries,
   attackDamageEventWithEntries,
-  attackDamagePrefixFills,
+  attackDamageInterruptionFrame,
   attackDamageReductionRedirectResource,
   attackDamageReductionRedirectResourceAvailable,
   attackDamageReductionZeroDamageRedirectHoles,
@@ -527,6 +527,7 @@ export {
   interruptChoices,
   interruptDecisionHole,
   interruptCheckpointAfterModifier,
+  interruptedProcedureSubject,
   interruptCheckpointFrame,
   reactionModifiedAttackRollFills,
   interruptTriggerLabel,
@@ -974,6 +975,36 @@ export type GlyphStoredSpellReleaseReplayContext = {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly witness: Omit<GlyphStoredSpellReleaseWitness, "fills">;
 };
+export type BattleAttackDamageCriticalConsequence =
+  | {
+      readonly kind: "ordinaryHit";
+    }
+  | {
+      readonly kind: "criticalHit";
+    };
+export type BattleAttackDamageInterruptionContinuation = {
+  readonly concentrationSavingThrows: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[];
+  readonly damageDisposition: BattleAttackDamageDisposition;
+  readonly attackDamageRiders: readonly AttackDamageRider[];
+  readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
+  readonly cunningStrike?: BattleCunningStrikeDamageContinuation;
+};
+export type BattleAttackDamageInterruptionFrame = {
+  readonly kind: "attackDamage";
+  readonly participant: BattleAttackHostSubject;
+  readonly target: {
+    readonly combatantId: CombatantId;
+    readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  };
+  readonly attackResult: BattleAttackRollResult;
+  readonly damageInput: BattleAttackDamageEvent;
+  readonly criticalConsequence: BattleAttackDamageCriticalConsequence;
+  readonly phase: "attackDamage";
+  readonly continuation: BattleAttackDamageInterruptionContinuation;
+};
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
@@ -1042,23 +1073,7 @@ export type BattleInterruptedProcedure =
       readonly movement: BattleResolvedMovement;
       readonly endTurnFills: readonly BattleFill[];
     }
-  | {
-      readonly kind: "attackDamage";
-      readonly subject: BattleAttackHostSubject;
-      readonly attackerId: CombatantId;
-      readonly targetId: CombatantId;
-      readonly damageEvent: BattleAttackDamageEvent;
-      readonly fills: readonly BattleAttackDamagePrefixFill[];
-      readonly concentrationSavingThrows: readonly Extract<
-        BattleFill,
-        { readonly kind: "concentrationSavingThrow" }
-      >[];
-      readonly deathFailuresAtZeroHp: 1 | 2;
-      readonly damageDisposition: BattleAttackDamageDisposition;
-      readonly attackDamageRiders: readonly AttackDamageRider[];
-      readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
-      readonly cunningStrike?: BattleCunningStrikeDamageContinuation;
-    };
+  | BattleAttackDamageInterruptionFrame;
 export type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
@@ -1088,16 +1103,6 @@ export type BattleAttackHostSubject =
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "retaliationAttack" }
     >;
-export type BattleAttackDamagePrefixFill = Extract<
-  BattleFill,
-  {
-    readonly kind:
-      | "targetChoice"
-      | "attackRoll"
-      | "rolledDice"
-      | "attackDamageDisposition";
-  }
->;
 export type BattleCunningStrikeSelectedOption = {
   readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
@@ -2430,7 +2435,9 @@ type SpellFailedSaveConditionNoRepeatLifecycle = {
 type SpellFailedSaveConditionEndTurnSaveLifecycle = {
   readonly escape: null;
   readonly turnStartDamage: null;
-  readonly repeatSave: SpellConditionRepeatSave | SpellConditionCountedRepeatSave;
+  readonly repeatSave:
+    | SpellConditionRepeatSave
+    | SpellConditionCountedRepeatSave;
 };
 export type SpellFailedSaveFixedConditionEffect =
   SpellFailedSaveConditionEffectBase &

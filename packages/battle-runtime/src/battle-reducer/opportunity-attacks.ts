@@ -60,7 +60,7 @@ import {
   attackDamageEventAmountForTarget,
   attackDamageEventEntries,
   attackDamageEventWithEntries,
-  attackDamagePrefixFills,
+  attackDamageInterruptionFrame,
   attackFillsThroughAttackRoll,
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -121,7 +121,9 @@ export function resolveOpportunityAttackCommand(
     input.pendingAttackDamageReductions ?? [];
   const subject = input.subject;
   const commandLabel =
-    subject.command === "retaliationAttack" ? "Retaliation" : "Opportunity Attack";
+    subject.command === "retaliationAttack"
+      ? "Retaliation"
+      : "Opportunity Attack";
   const target = input.state.combatants.get(subject.targetId);
   const attack =
     subject.command === "retaliationAttack"
@@ -493,18 +495,19 @@ export function resolveOpportunityAttackCommand(
       spellReducedState,
       {
         trigger: "attackDamage",
-        continuation: {
-          kind: "attackDamage",
-          subject: input.subject,
-          attackerId: subject.reactorId,
+        continuation: attackDamageInterruptionFrame({
+          participant: input.subject,
           targetId: subject.targetId,
-          damageEvent: reducedDamageEventAfterSpellReduction,
-          fills: attackDamagePrefixFills(input.fills),
-          concentrationSavingThrows: fillSet.concentrationSavingThrows,
-          deathFailuresAtZeroHp: critical ? 2 : 1,
-          damageDisposition: fillSet.damageDisposition,
-          attackDamageRiders: [],
-        },
+          targetSpatialFacts: fillSet.targetSpatialFacts,
+          attackResult: effectiveAttackRoll,
+          damageInput: reducedDamageEventAfterSpellReduction,
+          critical,
+          continuation: {
+            concentrationSavingThrows: fillSet.concentrationSavingThrows,
+            damageDisposition: fillSet.damageDisposition,
+            attackDamageRiders: [],
+          },
+        }),
       },
       input.handledInterruptTrigger,
     );
@@ -774,24 +777,25 @@ export function resolveOpportunityAttackCommand(
     spellReducedState,
     {
       trigger: "attackDamage",
-      continuation: {
-        kind: "attackDamage",
-        subject: input.subject,
-        attackerId: subject.reactorId,
+      continuation: attackDamageInterruptionFrame({
+        participant: input.subject,
         targetId: subject.targetId,
-        damageEvent: reducedDamageEventAfterSpellReduction,
-        fills: attackDamagePrefixFills(input.fills),
-        concentrationSavingThrows: fillSet.concentrationSavingThrows,
-        deathFailuresAtZeroHp: critical ? 2 : 1,
-        damageDisposition: fillSet.damageDisposition,
-        attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-        ...(selectedDamageDiceChoice === null
-          ? {}
-          : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-        ...(selectedCunningStrikeContinuation === undefined
-          ? {}
-          : { cunningStrike: selectedCunningStrikeContinuation }),
-      },
+        targetSpatialFacts: fillSet.targetSpatialFacts,
+        attackResult: effectiveAttackRoll,
+        damageInput: reducedDamageEventAfterSpellReduction,
+        critical,
+        continuation: {
+          concentrationSavingThrows: fillSet.concentrationSavingThrows,
+          damageDisposition: fillSet.damageDisposition,
+          attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+          ...(selectedDamageDiceChoice === null
+            ? {}
+            : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+          ...(selectedCunningStrikeContinuation === undefined
+            ? {}
+            : { cunningStrike: selectedCunningStrikeContinuation }),
+        },
+      }),
     },
     input.handledInterruptTrigger,
   );

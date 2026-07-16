@@ -33,6 +33,8 @@ import {
   resolveBattleSubject,
   snapshotBattle,
 } from "./battle-runtime-test-support.ts";
+import { attackDamageInterruptionFrame } from "./battle-reducer.ts";
+import { DieRollResult } from "@dnd/shared/types";
 import type {
   BattleInterruptCheckpoint,
   BattleState,
@@ -317,31 +319,33 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           ],
         },
       ],
-      continuation: {
-        kind: "attackDamage",
-        subject,
-        attackerId: goblinId,
+      continuation: attackDamageInterruptionFrame({
+        participant: subject,
         targetId: fighterId,
-        damageEvent: {
+        targetSpatialFacts: [],
+        attackResult: { total: 15, naturalD20: DieRollResult(10) },
+        damageInput: {
           kind: "rolledDamage",
           damageRollByType: [
             { damageType: "slashing", amount: 5 },
             { damageType: "poison", amount: 4 },
           ],
         },
-        fills: [],
-        concentrationSavingThrows: [],
-        deathFailuresAtZeroHp: 1,
-        damageDisposition: { kind: "ordinaryDamage" },
-        attackDamageRiders: [],
-      },
+        critical: false,
+        continuation: {
+          concentrationSavingThrows: [],
+          damageDisposition: { kind: "ordinaryDamage" },
+          attackDamageRiders: [],
+        },
+      }),
     };
 
     const pendingState = {
       ...state,
       interruptStack: [{ kind: "interruptCheckpoint", frame }],
     } satisfies BattleState;
-    const decision = snapshotBattle(pendingState).pendingInterrupt?.decisionHole;
+    const decision =
+      snapshotBattle(pendingState).pendingInterrupt?.decisionHole;
     if (decision === undefined) {
       throw new Error("Expected pending interrupt decision.");
     }
@@ -428,27 +432,29 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           initialHoles: [],
         },
       ],
-      continuation: {
-        kind: "attackDamage",
-        subject,
-        attackerId: goblinId,
+      continuation: attackDamageInterruptionFrame({
+        participant: subject,
         targetId: skeletonId,
-        damageEvent: {
+        targetSpatialFacts: [],
+        attackResult: { total: 15, naturalD20: DieRollResult(10) },
+        damageInput: {
           kind: "rolledDamage",
           damageRollByType: [{ damageType: "bludgeoning", amount: 5 }],
         },
-        fills: [],
-        concentrationSavingThrows: [],
-        deathFailuresAtZeroHp: 1,
-        damageDisposition: { kind: "ordinaryDamage" },
-        attackDamageRiders: [],
-      },
+        critical: false,
+        continuation: {
+          concentrationSavingThrows: [],
+          damageDisposition: { kind: "ordinaryDamage" },
+          attackDamageRiders: [],
+        },
+      }),
     };
     const pendingState = {
       ...state,
       interruptStack: [{ kind: "interruptCheckpoint", frame }],
     } satisfies BattleState;
-    const decision = snapshotBattle(pendingState).pendingInterrupt?.decisionHole;
+    const decision =
+      snapshotBattle(pendingState).pendingInterrupt?.decisionHole;
     if (decision === undefined) {
       throw new Error("Expected pending interrupt decision.");
     }

@@ -209,19 +209,21 @@ import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/af
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
+import { battleAttackHostParticipantId } from "./attack-damage-events.ts";
 import {
   battleStateAfterWardingBondSeparation,
   wardingBondSeparationFactsAreSatisfied,
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
 export {
+  battleAttackHostParticipantId,
+  attackDamageInterruptionFrame,
   attackDamageEventAfterPendingReduction,
   attackDamageEventAfterPendingReductions,
   attackDamageEventAmountBeforeTargetAdjustments,
   attackDamageEventAmountForTarget,
   attackDamageEventEntries,
   attackDamageEventWithEntries,
-  attackDamagePrefixFills,
   attackFillsThroughAttackRoll,
   damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
@@ -754,7 +756,10 @@ export function resolveBattleSubjectInternal(
     if (activeFrame !== null) {
       if (activeFrame.kind === "attackDamageContinuationConcentration") {
         if (
-          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
+          !sameBattleSubject(
+            input.subject,
+            activeFrame.continuation.participant,
+          )
         ) {
           return invalidResult(
             input.state,
@@ -771,7 +776,10 @@ export function resolveBattleSubjectInternal(
       }
       if (activeFrame.kind === "attackDamageContinuationCunningStrike") {
         if (
-          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
+          !sameBattleSubject(
+            input.subject,
+            activeFrame.continuation.participant,
+          )
         ) {
           return invalidResult(
             input.state,
@@ -2855,12 +2863,11 @@ export function openCreatureFallsInterruptWindow(input: {
     },
     undefined,
   );
-  const result =
-    reactionWindow ?? {
-      tag: "resolved" as const,
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-    };
+  const result = reactionWindow ?? {
+    tag: "resolved" as const,
+    state: input.state,
+    snapshot: snapshotBattle(input.state),
+  };
   const routeEvents = battleReducerRouteForCreatureFallsInterruptWindow(result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }
@@ -3205,7 +3212,11 @@ export function resolveBattleInterrupt(input: {
     result: BattleResolutionResult,
   ): BattleResolutionResult => ({
     ...result,
-    routeEvents: battleReducerRouteForInterrupt(input.state, input.fill, result),
+    routeEvents: battleReducerRouteForInterrupt(
+      input.state,
+      input.fill,
+      result,
+    ),
   });
   const frame = currentInterruptCheckpoint(input.state);
   if (frame === null) {
@@ -3465,7 +3476,7 @@ export function resolveReactionRollOrDamageReduction(input: {
   if (
     input.choice.choice.kind === "damageRollReduction" &&
     (input.frame.trigger !== "attackDamage" ||
-      input.frame.continuation.damageEvent.kind !== "rolledDamage")
+      input.frame.continuation.damageInput.kind !== "rolledDamage")
   ) {
     return invalidResult(
       input.state,
@@ -4592,12 +4603,12 @@ export function interruptCheckpointAfterModifier(
     choice.kind === "damageRollReduction"
   ) {
     const nextDamageEntries = damageAmountByTypeEntriesAfterScalarReduction(
-      attackDamageEventEntries(frame.continuation.damageEvent),
+      attackDamageEventEntries(frame.continuation.damageInput),
       choice.reduction.kind,
       reduction,
     );
     const nextDamageEvent =
-      frame.continuation.damageEvent.kind === "rolledDamage"
+      frame.continuation.damageInput.kind === "rolledDamage"
         ? ({
             kind: "rolledDamage" as const,
             damageRollByType: nextDamageEntries,
@@ -4610,7 +4621,7 @@ export function interruptCheckpointAfterModifier(
       ...frame,
       continuation: {
         ...frame.continuation,
-        damageEvent: nextDamageEvent,
+        damageInput: nextDamageEvent,
       },
     };
   }
@@ -4920,7 +4931,7 @@ export function resumeInterruptedProcedure(
           ),
         ],
       };
-      return needsHolesResult(pendingState, continuation.subject, [
+      return needsHolesResult(pendingState, continuation.participant, [
         concentrationPending,
       ]);
     }
@@ -4928,26 +4939,26 @@ export function resumeInterruptedProcedure(
       attackDamageContinuationConcentrationFills(continuation);
     const damagedState = applyAttackDamageAmount(
       state,
-      continuation.attackerId,
-      continuation.targetId,
+      attackDamageInterruptionParticipantId(continuation),
+      continuation.target.combatantId,
       damageAmount,
-      continuation.deathFailuresAtZeroHp,
-      continuation.damageDisposition,
-      continuation.attackDamageRiders,
-      continuation.weaponDamageDiceRollChoice,
+      attackDamageDeathFailuresAtZeroHp(continuation),
+      continuation.continuation.damageDisposition,
+      continuation.continuation.attackDamageRiders,
+      continuation.continuation.weaponDamageDiceRollChoice,
       attackDamageContinuationTargetConcentrationFill(state, continuation),
       [],
       continuationConcentrationSavingThrows,
       attackDamageContinuationTargetSpatialFacts(continuation),
     );
     const afterDamageEvent = {
-      damageSourceId: continuation.attackerId,
-      damagedId: continuation.targetId,
+      damageSourceId: attackDamageInterruptionParticipantId(continuation),
+      damagedId: continuation.target.combatantId,
       damageAmount,
       reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
         facts: attackDamageContinuationTargetSpatialFacts(continuation),
-        damagedId: continuation.targetId,
-        damageSourceId: continuation.attackerId,
+        damagedId: continuation.target.combatantId,
+        damageSourceId: attackDamageInterruptionParticipantId(continuation),
       }),
     } satisfies BattleAfterDamageEvent;
     return resolveAttackDamageContinuationCunningStrike({
@@ -4958,17 +4969,21 @@ export function resumeInterruptedProcedure(
         afterDamageEvent,
         handledInterruptTrigger,
       },
-      subject: continuation.subject,
+      subject: continuation.participant,
       fills: attackDamageContinuationCunningStrikePrefixFills(continuation),
     });
   }
 
-  return resolveReplayContinuationFromState(
-    state,
-    continuation,
-    handledInterruptTrigger,
-    continuation.fills,
-  );
+  if (continuation.kind === "replay") {
+    return resolveReplayContinuationFromState(
+      state,
+      continuation,
+      handledInterruptTrigger,
+      continuation.fills,
+    );
+  }
+  continuation satisfies never;
+  throw new Error("Unhandled interrupted procedure variant.");
 }
 
 export function resolveAttackDamageContinuationCunningStrike(input: {
@@ -4978,10 +4993,10 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
   readonly fills: readonly BattleFill[];
 }): BattleResolutionResult {
   const continuation = input.frame.continuation;
-  if (continuation.cunningStrike === undefined) {
+  if (continuation.continuation.cunningStrike === undefined) {
     return openAfterDamageSequenceInterruptWindow({
       state: input.state,
-      subject: continuation.subject,
+      subject: continuation.participant,
       events: [input.frame.afterDamageEvent],
       objectDamages: [],
       objectIgnitions: [],
@@ -5005,11 +5020,11 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
     return invalidResult(input.state, "invalidFill", nextFill.message);
   }
   const cunningStrike = {
-    ...continuation.cunningStrike,
+    ...continuation.continuation.cunningStrike,
     fills:
       nextFill.value === undefined
-        ? continuation.cunningStrike.fills
-        : [...continuation.cunningStrike.fills, nextFill.value],
+        ? continuation.continuation.cunningStrike.fills
+        : [...continuation.continuation.cunningStrike.fills, nextFill.value],
   };
   const fillSet = attackDamageContinuationCunningStrikeFillSet(
     cunningStrike.fills,
@@ -5033,7 +5048,10 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
       ...input.frame,
       continuation: {
         ...continuation,
-        cunningStrike,
+        continuation: {
+          ...continuation.continuation,
+          cunningStrike,
+        },
       },
     };
     const pendingState = {
@@ -5047,7 +5065,7 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
   }
   return openAfterDamageSequenceInterruptWindow({
     state: resolved.state,
-    subject: continuation.subject,
+    subject: continuation.participant,
     events: [input.frame.afterDamageEvent],
     objectDamages: [],
     objectIgnitions: [],
@@ -5116,11 +5134,28 @@ function attackDamageContinuationTargetSpatialFacts(
     { readonly kind: "attackDamage" }
   >,
 ): readonly BattleTargetSpatialFact[] {
-  return (
-    continuation.fills.find(
-      (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
-        fill.kind === "targetChoice",
-    )?.spatialFacts ?? []
+  return continuation.target.spatialFacts;
+}
+
+function attackDamageInterruptionParticipantId(
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >,
+): CombatantId {
+  return battleAttackHostParticipantId(continuation.participant);
+}
+
+function attackDamageDeathFailuresAtZeroHp(
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >,
+): 1 | 2 {
+  return Match.value(continuation.criticalConsequence.kind).pipe(
+    Match.when("ordinaryHit", (): 1 => 1),
+    Match.when("criticalHit", (): 2 => 2),
+    Match.exhaustive,
   );
 }
 
@@ -5473,10 +5508,10 @@ export function attackDamageContinuationAmount(
     { readonly kind: "attackDamage" }
   >,
 ): DamageAmount | null {
-  const target = state.combatants.get(continuation.targetId);
+  const target = state.combatants.get(continuation.target.combatantId);
   return target === undefined
     ? null
-    : attackDamageEventAmountForTarget(target, continuation.damageEvent);
+    : attackDamageEventAmountForTarget(target, continuation.damageInput);
 }
 
 export function attackDamageContinuationConcentrationHole(
@@ -5486,12 +5521,12 @@ export function attackDamageContinuationConcentrationHole(
     { readonly kind: "attackDamage" }
   >,
 ): BattleConcentrationSavingThrowHole | null {
-  const target = state.combatants.get(continuation.targetId);
+  const target = state.combatants.get(continuation.target.combatantId);
   if (target === undefined) {
     return null;
   }
   const damageAmount = Number(
-    attackDamageEventAmountForTarget(target, continuation.damageEvent),
+    attackDamageEventAmountForTarget(target, continuation.damageInput),
   );
   const fills = attackDamageContinuationConcentrationFills(continuation);
   return (
@@ -5513,13 +5548,13 @@ function attackDamageContinuationTargetConcentrationFill(
 ):
   | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
   | undefined {
-  const target = state.combatants.get(continuation.targetId);
+  const target = state.combatants.get(continuation.target.combatantId);
   if (target === undefined) {
     return undefined;
   }
   const hole = concentrationSavingThrowHole(
     target,
-    Number(attackDamageEventAmountForTarget(target, continuation.damageEvent)),
+    Number(attackDamageEventAmountForTarget(target, continuation.damageInput)),
   );
   return hole === null
     ? undefined
@@ -5537,7 +5572,7 @@ function attackDamageContinuationConcentrationFills(
   BattleFill,
   { readonly kind: "concentrationSavingThrow" }
 >[] {
-  return continuation.concentrationSavingThrows;
+  return continuation.continuation.concentrationSavingThrows;
 }
 
 export function resolveAttackDamageContinuationConcentration(input: {
@@ -5601,10 +5636,15 @@ export function resolveAttackDamageContinuationConcentration(input: {
     stateWithoutFrame,
     {
       ...input.frame.continuation,
-      concentrationSavingThrows: [
-        ...attackDamageContinuationConcentrationFills(input.frame.continuation),
-        concentrationFill.value,
-      ],
+      continuation: {
+        ...input.frame.continuation.continuation,
+        concentrationSavingThrows: [
+          ...attackDamageContinuationConcentrationFills(
+            input.frame.continuation,
+          ),
+          concentrationFill.value,
+        ],
+      },
     },
     input.frame.handledInterruptTrigger,
   );
@@ -5621,12 +5661,17 @@ export function attackDamageContinuationConcentrationFill(
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const prefix = [
-    ...continuation.fills,
-    ...attackDamageContinuationConcentrationFills(continuation),
-  ];
-  const accumulated = battleFillPrefixAccumulated(prefix, fills);
-  const remaining = accumulated ? fills.slice(prefix.length) : fills;
+  const prefix = attackDamageContinuationConcentrationFills(continuation);
+  const submitted = fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    > => fill.kind === "concentrationSavingThrow",
+  );
+  const accumulated = battleFillPrefixAccumulated(prefix, submitted);
+  const remaining = accumulated ? submitted.slice(prefix.length) : submitted;
   if (remaining.length === 0) {
     return { tag: "ok", value: undefined };
   }
@@ -5652,11 +5697,10 @@ function attackDamageContinuationCunningStrikeFill(
       readonly value: BattleCunningStrikeContinuationFill | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const prefix = attackDamageContinuationCunningStrikePrefixFills(
-    frame.continuation,
-  );
-  const accumulated = battleFillPrefixAccumulated(prefix, fills);
-  const remaining = accumulated ? fills.slice(prefix.length) : fills;
+  const prefix = frame.continuation.continuation.cunningStrike?.fills ?? [];
+  const submitted = fills.filter(isCunningStrikeContinuationFill);
+  const accumulated = battleFillPrefixAccumulated(prefix, submitted);
+  const remaining = accumulated ? submitted.slice(prefix.length) : submitted;
   if (remaining.length === 0) {
     return { tag: "ok", value: undefined };
   }
@@ -5677,9 +5721,8 @@ function attackDamageContinuationCunningStrikePrefixFills(
   continuation: BattleAttackDamageContinuationWithoutConcentration,
 ): readonly BattleFill[] {
   return [
-    ...continuation.fills,
     ...attackDamageContinuationConcentrationFills(continuation),
-    ...(continuation.cunningStrike?.fills ?? []),
+    ...(continuation.continuation.cunningStrike?.fills ?? []),
   ];
 }
 
@@ -6028,8 +6071,14 @@ function movementFillValuesEqual(
 }
 
 function acrobaticMovementFactsEqual(
-  a: Extract<BattleFill, { readonly kind: "movement" }>["value"]["acrobaticMovement"],
-  b: Extract<BattleFill, { readonly kind: "movement" }>["value"]["acrobaticMovement"],
+  a: Extract<
+    BattleFill,
+    { readonly kind: "movement" }
+  >["value"]["acrobaticMovement"],
+  b: Extract<
+    BattleFill,
+    { readonly kind: "movement" }
+  >["value"]["acrobaticMovement"],
 ): boolean {
   if (a === undefined || b === undefined) {
     return a === b;
@@ -6295,6 +6344,14 @@ export function currentInterruptCheckpoint(
   return frame?.kind === "interruptCheckpoint" ? frame.frame : null;
 }
 
+export function interruptedProcedureSubject(
+  procedure: BattleInterruptedProcedure,
+): BattleSubject {
+  return procedure.kind === "attackDamage"
+    ? procedure.participant
+    : procedure.subject;
+}
+
 export function interruptDecisionHole(
   frame: BattleInterruptCheckpoint,
 ): BattleInterruptDecisionHole {
@@ -6432,7 +6489,7 @@ function maybeOpenInterruptWindowWithChoices(
   return {
     tag: "needsHoles",
     state: nextState,
-    subject: frame.continuation.subject,
+    subject: interruptedProcedureSubject(frame.continuation),
     holes: [decisionHole],
     snapshot: snapshotBattle(nextState),
   };
@@ -6547,7 +6604,7 @@ export function attackHitBonusActionSpellReactionChoices(
 ): readonly BattleInterruptProcedureChoice[] {
   if (
     frame.trigger !== "attackHit" ||
-    frame.continuation.subject.tag === "bonusAction" ||
+    interruptedProcedureSubject(frame.continuation).tag === "bonusAction" ||
     frame.attackerId !== currentActorId(state)
   ) {
     return [];
@@ -6716,7 +6773,10 @@ export function retaliationReactionAttackChoices(
 }
 
 function retaliationDamageSourceWithinFiveFeet(
-  frame: Extract<BattleInterruptCheckpointInput, { readonly trigger: "afterDamage" }>,
+  frame: Extract<
+    BattleInterruptCheckpointInput,
+    { readonly trigger: "afterDamage" }
+  >,
   reactorId: CombatantId,
 ): boolean {
   return frame.reactionSpellTargetFacts.some(

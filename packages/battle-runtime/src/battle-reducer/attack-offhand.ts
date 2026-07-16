@@ -71,7 +71,7 @@ import {
   attackDamageEventAmountForTarget,
   attackDamageEventEntries,
   attackDamageEventWithEntries,
-  attackDamagePrefixFills,
+  attackDamageInterruptionFrame,
   attackFillsThroughAttackRoll,
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -694,24 +694,25 @@ function resolveBonusActionAttack(
       spellReducedState,
       {
         trigger: "attackDamage",
-        continuation: {
-          kind: "attackDamage",
-          subject: input.subject,
-          attackerId: input.subject.actorId,
+        continuation: attackDamageInterruptionFrame({
+          participant: input.subject,
           targetId: target.combatantId,
-          damageEvent: reducedDamageEventAfterSpellReduction,
-          fills: attackDamagePrefixFills(input.fills),
-          concentrationSavingThrows: fillSet.concentrationSavingThrows,
-          deathFailuresAtZeroHp: critical ? 2 : 1,
-          damageDisposition: fillSet.damageDisposition,
-          attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-          ...(selectedDamageDiceChoice === null
-            ? {}
-            : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-          ...(selectedCunningStrikeContinuation === undefined
-            ? {}
-            : { cunningStrike: selectedCunningStrikeContinuation }),
-        },
+          targetSpatialFacts: fillSet.targetSpatialFacts,
+          attackResult: effectiveAttackRoll,
+          damageInput: reducedDamageEventAfterSpellReduction,
+          critical,
+          continuation: {
+            concentrationSavingThrows: fillSet.concentrationSavingThrows,
+            damageDisposition: fillSet.damageDisposition,
+            attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+            ...(selectedDamageDiceChoice === null
+              ? {}
+              : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+            ...(selectedCunningStrikeContinuation === undefined
+              ? {}
+              : { cunningStrike: selectedCunningStrikeContinuation }),
+          },
+        }),
       },
       input.handledInterruptTrigger,
     );
