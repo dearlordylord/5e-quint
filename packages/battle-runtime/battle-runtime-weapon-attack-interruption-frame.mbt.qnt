@@ -16,6 +16,63 @@ module battleRuntimeWeaponAttackInterruptionFrameMbt {
     continuation: ApplyWeaponAttackDamage,
   }
 
+  pure def reconstructFrame(
+    target: WeaponAttackTarget,
+    attackTotal: int,
+    naturalD20: int,
+    damageAmount: int,
+    phase: WeaponAttackInterruptionBoundaryPhase,
+  ): WeaponAttackInterruptionFrameParseResult =
+    parseWeaponAttackInterruptionFrame(
+      WeaponAttacker,
+      target,
+      WeaponAttackHit({ total: attackTotal, naturalD20: naturalD20 }),
+      RolledWeaponDamage({ amount: damageAmount }),
+      OrdinaryHitDeathFailureConsequence,
+      phase,
+      ApplyWeaponAttackDamage,
+    )
+
+  val canonicalReconstruction = reconstructFrame(
+    WeaponTarget,
+    15,
+    10,
+    8,
+    WeaponAttackDamageBoundaryPhase,
+  )
+
+  val reconstructionEvidence: bool = all {
+    canonicalReconstruction == WeaponAttackInterruptionFrameDecoded(canonicalFrame),
+    reconstructFrame(
+      AlternateWeaponTarget,
+      15,
+      10,
+      8,
+      WeaponAttackDamageBoundaryPhase,
+    ) != canonicalReconstruction,
+    reconstructFrame(
+      WeaponTarget,
+      16,
+      11,
+      8,
+      WeaponAttackDamageBoundaryPhase,
+    ) != canonicalReconstruction,
+    reconstructFrame(
+      WeaponTarget,
+      15,
+      10,
+      7,
+      WeaponAttackDamageBoundaryPhase,
+    ) != canonicalReconstruction,
+    reconstructFrame(
+      WeaponTarget,
+      15,
+      10,
+      8,
+      WeaponAttackHitBoundaryPhase,
+    ) == InvalidWeaponAttackInterruptionPhase,
+  }
+
   val deliveryIsCanonical: bool =
     match qDelivery {
       | NoWeaponAttackInterruption => true
@@ -29,6 +86,7 @@ module battleRuntimeWeaponAttackInterruptionFrameMbt {
     }
 
   action init = all {
+    reconstructionEvidence,
     qDelivery' = NoWeaponAttackInterruption,
   }
 

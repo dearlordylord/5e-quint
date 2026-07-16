@@ -218,6 +218,7 @@ import {
 export {
   battleAttackHostParticipantId,
   attackDamageInterruptionFrame,
+  parseAttackDamageInterruptionFrame,
   attackDamageEventAfterPendingReduction,
   attackDamageEventAfterPendingReductions,
   attackDamageEventAmountBeforeTargetAdjustments,

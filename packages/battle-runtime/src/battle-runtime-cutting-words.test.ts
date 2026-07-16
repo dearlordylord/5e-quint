@@ -210,19 +210,6 @@ describe("battle runtime: Cutting Words", () => {
       phase: "attackDamage",
       continuation: { damageDisposition: { kind: "ordinaryDamage" } },
     });
-    const reconstructedChanges = [
-      { ...frame, participant: { ...subject, attackName: "Shortsword" } },
-      { ...frame, target: { ...frame.target, combatantId: fighterId } },
-      { ...frame, attackResult: { ...frame.attackResult, total: 19 } },
-      {
-        ...frame,
-        damageInput: { kind: "rolledDamage", damageRollByType: [] },
-      },
-      { ...frame, phase: "attackHit" },
-    ];
-    for (const changed of reconstructedChanges) {
-      expect(changed).not.toEqual(frame);
-    }
     expect(
       attackDamageInterruptionFrame({
         participant: frame.participant,

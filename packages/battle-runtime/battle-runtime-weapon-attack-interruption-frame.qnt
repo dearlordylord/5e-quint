@@ -14,13 +14,18 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 module battleRuntimeWeaponAttackInterruptionFrame {
   type WeaponAttackParticipant = | WeaponAttacker
-  type WeaponAttackTarget = | WeaponTarget
+  type WeaponAttackTarget =
+    | WeaponTarget
+    | AlternateWeaponTarget
   type WeaponAttackResult = WeaponAttackHit({ total: int, naturalD20: int })
   type WeaponAttackDamageInput = RolledWeaponDamage({ amount: int })
   type WeaponAttackCriticalConsequence =
     | OrdinaryHitDeathFailureConsequence
     | CriticalHitDeathFailureConsequence
   type WeaponAttackPhase = | WeaponAttackDamagePhase
+  type WeaponAttackInterruptionBoundaryPhase =
+    | WeaponAttackHitBoundaryPhase
+    | WeaponAttackDamageBoundaryPhase
   type WeaponAttackContinuation = | ApplyWeaponAttackDamage
 
   type WeaponAttackInterruptionFrame = {
@@ -39,6 +44,10 @@ module battleRuntimeWeaponAttackInterruptionFrame {
     continuation: WeaponAttackContinuation,
   }
 
+  type WeaponAttackInterruptionFrameParseResult =
+    | WeaponAttackInterruptionFrameDecoded(WeaponAttackInterruptionFrame)
+    | InvalidWeaponAttackInterruptionPhase
+
   type WeaponAttackInterruptionDelivery =
     | NoWeaponAttackInterruption
     | WeaponAttackInterruptionOffered(WeaponAttackInterruptionFrame)
@@ -49,6 +58,29 @@ module battleRuntimeWeaponAttackInterruptionFrame {
     frame: WeaponAttackInterruptionFrame,
   ): WeaponAttackInterruptionDelivery =
     WeaponAttackInterruptionOffered(frame)
+
+  pure def parseWeaponAttackInterruptionFrame(
+    participant: WeaponAttackParticipant,
+    target: WeaponAttackTarget,
+    attackResult: WeaponAttackResult,
+    damageInput: WeaponAttackDamageInput,
+    criticalConsequence: WeaponAttackCriticalConsequence,
+    phase: WeaponAttackInterruptionBoundaryPhase,
+    continuation: WeaponAttackContinuation,
+  ): WeaponAttackInterruptionFrameParseResult =
+    match phase {
+      | WeaponAttackHitBoundaryPhase => InvalidWeaponAttackInterruptionPhase
+      | WeaponAttackDamageBoundaryPhase =>
+          WeaponAttackInterruptionFrameDecoded({
+            participant: participant,
+            target: target,
+            attackResult: attackResult,
+            damageInput: damageInput,
+            criticalConsequence: criticalConsequence,
+            phase: WeaponAttackDamagePhase,
+            continuation: continuation,
+          })
+    }
 
   pure def interruptWeaponAttack(
     delivery: WeaponAttackInterruptionDelivery,
