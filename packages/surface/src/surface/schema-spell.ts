@@ -36,6 +36,7 @@ import {
   WeaponFilterSchema,
 } from "./schema-base.ts";
 import {
+  ForbiddenValueSchema,
   exactOptional as optionalExact,
   nonEmpty,
   strictStruct,
@@ -354,7 +355,11 @@ export const CastTimeEffectModeChoiceSchema = Schema.Struct({
     Schema.Struct({
       id: surfaceIdentity(Schema.String, "id"),
       displayName: surfaceIdentity(Schema.String, "displayName"),
-      effects: optionalExact(Schema.suspend(() => nonEmpty(EffectAtomSchema))),
+      effects: optionalExact(
+        Schema.suspend(() => nonEmpty(EffectAtomSchema)).annotations({
+          identifier: "EffectAtomArray",
+        }),
+      ),
     }),
   ),
   allowsMidDurationSwitchAs: optionalExact(Schema.Literal("magic_action")),
@@ -2027,7 +2032,7 @@ export const ReactionTriggerSchema: Schema.suspend<
       triggers: nonEmpty(ReactionTriggerSchema),
     }),
   ),
-);
+).annotations({ identifier: "ReactionTrigger" });
 
 export const BonusActionTriggerSchema = Schema.Struct({
   kind: Schema.Literal("after_hit_with"),
@@ -2298,7 +2303,9 @@ export const CreatureTargetSelectionSchema = strictStruct({
   targetKinds: CreatureTargetKindsSchema,
   typeFilter: optionalExact(TargetTypeFilterSchema),
   creatureSizeFilter: optionalExact(
-    Schema.suspend(() => CreatureSizeFilterSchema),
+    Schema.suspend(() => CreatureSizeFilterSchema).annotations({
+      identifier: "CreatureSizeFilter",
+    }),
   ),
   visibility: optionalExact(TargetVisibilityRequirementSchema),
   relativePosition: optionalExact(TargetRelativePositionSchema),
@@ -2312,7 +2319,9 @@ export const TargetSelectionSchema = Schema.Union(
   strictStruct({
     mode: Schema.Literal("one"),
     targetKinds: CreatureOrObjectTargetKindsSchema,
-    objectFilter: Schema.suspend(() => ObjectFilterSchema),
+    objectFilter: Schema.suspend(() => ObjectFilterSchema).annotations({
+      identifier: "ObjectFilter",
+    }),
     creatureDisposition: optionalExact(TargetDispositionSchema),
   }),
   strictStruct({
@@ -3132,7 +3141,11 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           strictStruct({
             id: surfaceIdentity(Schema.String, "id"),
             displayName: surfaceIdentity(Schema.String, "displayName"),
-            operations: nonEmpty(Schema.suspend(() => OngoingOperationSchema)),
+            operations: nonEmpty(
+              Schema.suspend(() => OngoingOperationSchema).annotations({
+                identifier: "OngoingOperation",
+              }),
+            ),
           }),
         ),
       }),
@@ -4366,7 +4379,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({ kind: Schema.Literal("none") }),
     ),
-  );
+  ).annotations({ identifier: "EffectAtom" });
 
 export const AreaScopedEffectAtomSchema = AreaPushUnsecuredObjectsSchema;
 export const AreaDirectEffectAtomSchema = Schema.Union(
@@ -4385,7 +4398,7 @@ export const SaveSuccessOutcomeSchema: Schema.suspend<
     }),
     EffectAtomSchema,
   ),
-);
+).annotations({ identifier: "SaveSuccessOutcome" });
 
 export const RepeatSaveSpecSchema = Schema.Struct({
   cadence: Schema.Literal("end_of_target_turn", "on_target_takes_damage"),
@@ -4413,7 +4426,7 @@ export const RandomTableOutcomeSchema: Schema.suspend<
     label: surfaceIdentity(Schema.String, "label"),
     phases: optionalExact(nonEmpty(ActivationPhaseSchema)),
   }),
-);
+).annotations({ identifier: "RandomTableOutcome" });
 
 export const OngoingRandomTableOutcomeSchema: Schema.suspend<
   OngoingRandomTableOutcome,
@@ -4426,7 +4439,7 @@ export const OngoingRandomTableOutcomeSchema: Schema.suspend<
     label: surfaceIdentity(Schema.String, "label"),
     effects: optionalExact(nonEmpty(OngoingEffectSchema)),
   }),
-);
+).annotations({ identifier: "OngoingRandomTableOutcome" });
 
 export const PhaseContinuationSchema: Schema.suspend<
   PhaseContinuation,
@@ -4439,7 +4452,7 @@ export const PhaseContinuationSchema: Schema.suspend<
     limits: nonEmpty(ContinuationLimitSchema),
     next: nonEmpty(ActivationPhaseSchema),
   }),
-);
+).annotations({ identifier: "PhaseContinuation" });
 
 export const ActivationPhaseSchema: Schema.suspend<
   ActivationPhase,
@@ -4466,7 +4479,7 @@ export const ActivationPhaseSchema: Schema.suspend<
       autoSuccessIfCasterSlotGte: optionalExact(
         Schema.Literal("triggering_spell_level"),
       ),
-      autoSuccessIfTarget: optionalExact(Schema.Never),
+      autoSuccessIfTarget: optionalExact(ForbiddenValueSchema),
       saveAppliesIf: optionalExact(
         Schema.Literal("unwilling_target", "unwilling_creature_target"),
       ),
@@ -4519,7 +4532,7 @@ export const ActivationPhaseSchema: Schema.suspend<
       mode: optionalExact(CastTimeEffectModeChoiceSchema),
     }),
   ),
-);
+).annotations({ identifier: "ActivationPhase" });
 
 export const OngoingEffectSchema: Schema.suspend<
   OngoingEffect,
@@ -4567,7 +4580,7 @@ export const OngoingEffectSchema: Schema.suspend<
     }),
     ModifyAcSetFloorEffectSchema,
   ),
-);
+).annotations({ identifier: "OngoingEffect" });
 
 export const AuthoredConditionalEffectSchema = strictStruct({
   kind: Schema.Literal("phantasm_damage"),
@@ -4848,7 +4861,11 @@ export const CreatureNamedAttackRollSchema = Schema.Struct({
   ),
   onHit: nonEmpty(CreatureAttackEffectAtomSchema),
   multiattackCount: optionalExact(StatBlockValueSchema),
-  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
+  limitedUse: optionalExact(
+    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
+      identifier: "CreatureLimitedUse",
+    }),
+  ),
 });
 
 const CreatureNamedSaveGateBaseSchemaFields = {
@@ -4859,7 +4876,11 @@ const CreatureNamedSaveGateBaseSchemaFields = {
   onFail: EffectAtomSchema,
   onSuccess: SaveSuccessOutcomeSchema,
   multiattackCount: optionalExact(StatBlockValueSchema),
-  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
+  limitedUse: optionalExact(
+    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
+      identifier: "CreatureLimitedUse",
+    }),
+  ),
 } as const;
 
 export const CreatureNamedSaveGateSchema = Schema.Union(
@@ -4882,7 +4903,11 @@ export const CreatureNamedSupportSchema = Schema.Struct({
   rangeFeet: optionalExact(Schema.Number),
   effect: EffectAtomSchema,
   multiattackCount: optionalExact(StatBlockValueSchema),
-  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
+  limitedUse: optionalExact(
+    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
+      identifier: "CreatureLimitedUse",
+    }),
+  ),
 });
 
 export const CreatureNamedMultiattackSchema = Schema.Struct({
@@ -4898,13 +4923,21 @@ export const CreatureNamedMultiattackSchema = Schema.Struct({
 export const CreatureNamedActionOptionSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
   options: nonEmpty(StandardActionKindSchema),
-  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
+  limitedUse: optionalExact(
+    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
+      identifier: "CreatureLimitedUse",
+    }),
+  ),
 });
 
 export const CreatureNamedSpecialActionSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
   description: surfaceProse(Schema.String),
-  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
+  limitedUse: optionalExact(
+    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
+      identifier: "CreatureLimitedUse",
+    }),
+  ),
 });
 
 export const CreatureActionsSchema = Schema.Struct({

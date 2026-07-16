@@ -10,7 +10,8 @@
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
     "./surface/unit-catalog": "./src/surface/unit-catalog.ts",
     "./surface/types": "./src/surface/types.ts",
-    "./surface/schema": "./src/surface/schema.ts"
+    "./surface/schema": "./src/surface/schema.ts",
+    "./surface/surface-catalog": "./src/surface/surface-catalog.ts"
   },
   "imports": {
     "#/*": "./src/*"
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@typescript/native": "npm:typescript@^7.0.2",
+    "ajv": "^8.18.0",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3",
     "vitest": "^3.0.5"

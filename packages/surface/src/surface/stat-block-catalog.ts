@@ -8,7 +8,12 @@ import skeletonInput from "../../content/stat_block_skeleton.json";
 import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
 import wildShapeRecommendedFormsInput from "../../content/stat_block_wild_shape_recommended_forms.json";
 import { decodeStatBlockRecordSync } from "./schema.ts";
-import type { Provenance, StatBlockRecord } from "./types.ts";
+import type {
+  Provenance,
+  SrdProvenance,
+  SrdStatBlockRecord,
+  StatBlockRecord,
+} from "./types.ts";
 
 /**
  * Authored monster Stat Block lookup/provenance boundary.
@@ -20,19 +25,13 @@ import type { Provenance, StatBlockRecord } from "./types.ts";
  * record family rather than becoming a Unit.
  */
 
-export type Srd521CollectionProvenance = {
-  readonly kind: "srd-5.2.1";
-};
+export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
 
 export type StatBlockId = StatBlockRecord["id"];
 
-export type Srd521Provenance = Provenance & {
-  readonly kind: "srd-5.2.1";
-};
+export type Srd521Provenance = SrdProvenance;
 
-export type Srd521StatBlock = StatBlockRecord & {
-  readonly provenance: Srd521Provenance;
-};
+export type Srd521StatBlock = SrdStatBlockRecord;
 
 export type SrdStatBlockCollection = {
   readonly kind: "srdStatBlockCollection";

@@ -860,7 +860,7 @@ export const DiceAmountSchema = Schema.suspend(() =>
       link: LinkedDamageSchema,
     }),
   ),
-);
+).annotations({ identifier: "DiceAmount" });
 
 export const SpellAccessModeSchema = Schema.Union(
   Schema.Literal(

@@ -12,6 +12,10 @@ export const strictStruct = <Fields extends Schema.Struct.Fields>(
     parseOptions: { onExcessProperty: "error" },
   });
 
+export const ForbiddenValueSchema = Schema.Never.annotations({
+  identifier: "ForbiddenValue",
+});
+
 // EXPLANATION: shared shorthand for closed non-empty arrays in the handwritten
 // surface codec. Keeps the spell/non-spell files from owning private wrappers.
 export const nonEmpty = <A, I, R>(schema: Schema.Schema<A, I, R>) =>

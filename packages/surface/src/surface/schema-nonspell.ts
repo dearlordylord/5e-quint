@@ -43,7 +43,11 @@ import {
   WeaponPropertyDetailSchema,
   WeaponUsageSchema,
 } from "./schema-base.ts";
-import { exactOptional, strictStruct } from "./schema-helpers.ts";
+import {
+  ForbiddenValueSchema,
+  exactOptional,
+  strictStruct,
+} from "./schema-helpers.ts";
 import {
   ActivationPhaseSchema,
   CreatureControlSchema,
@@ -399,7 +403,7 @@ export const EquipmentPredicateSchema = Schema.suspend(() =>
       predicates: Schema.NonEmptyArray(baseEquipmentPredicateSchema),
     }),
   ),
-);
+).annotations({ identifier: "EquipmentPredicate" });
 
 export const PassiveSuppressorSchema = Schema.Struct({
   kind: Schema.Literal("condition_active"),
@@ -412,7 +416,11 @@ export const PassiveOperationSchema = Schema.Struct({
     unit: Schema.Literal("hour", "day"),
     amount: Schema.Number,
   }),
-  predicate: exactOptional(Schema.suspend(() => OngoingPredicateSchema)),
+  predicate: exactOptional(
+    Schema.suspend(() => OngoingPredicateSchema).annotations({
+      identifier: "OngoingPredicate",
+    }),
+  ),
   effect: EffectAtomSchema,
 });
 
@@ -442,19 +450,19 @@ const ResourceOngoingFeatureAbilityFields = {
   ...ActivatedAbilityBaseFields,
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
-  duration: exactOptional(Schema.Never),
+  duration: exactOptional(ForbiddenValueSchema),
 };
 const ResourcelessOngoingFeatureAbilityFields = {
   ...ActivatedAbilityBaseFields,
-  resource: exactOptional(Schema.Never),
-  resetCadence: exactOptional(Schema.Never),
-  duration: exactOptional(Schema.Never),
+  resource: exactOptional(ForbiddenValueSchema),
+  resetCadence: exactOptional(ForbiddenValueSchema),
+  duration: exactOptional(ForbiddenValueSchema),
 };
 export const ActivatedAbilityMechanicsSchema = Schema.Union(
   Schema.Struct({
     ...ResourceActivatedAbilityFields,
     activationCost: ClassFeatureActivationCostSchema,
-    ongoingFeature: exactOptional(Schema.Never),
+    ongoingFeature: exactOptional(ForbiddenValueSchema),
     family: Schema.Literal("activation"),
     phases: Schema.NonEmptyArray(ActivationPhaseSchema),
   }),
@@ -545,7 +553,9 @@ export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
     Schema.Struct({
       id: surfaceIdentity(NonEmptyStringSchema, "id"),
       displayName: surfaceIdentity(NonEmptyStringSchema, "displayName"),
-      mechanics: Schema.suspend(() => PassiveMechanicsSchema),
+      mechanics: Schema.suspend(() => PassiveMechanicsSchema).annotations({
+        identifier: "PassiveMechanics",
+      }),
     }),
   ),
 });
@@ -988,12 +998,22 @@ export const WarlockPactSlotRecoveryMechanicsSchema = Schema.Struct({
 });
 
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
-  Schema.suspend(() => PassiveMechanicsSchema),
+  Schema.suspend(() => PassiveMechanicsSchema).annotations({
+    identifier: "PassiveMechanics",
+  }),
   ActivatedAbilityMechanicsSchema,
   AlternateActionCostMechanicsSchema,
-  Schema.suspend(() => OnHitTriggerMechanicsSchema),
-  Schema.suspend(() => SaveDamageReplacementMechanicsSchema),
-  Schema.suspend(() => ReactionRollOrDamageReductionMechanicsSchema),
+  Schema.suspend(() => OnHitTriggerMechanicsSchema).annotations({
+    identifier: "OnHitTriggerMechanics",
+  }),
+  Schema.suspend(() => SaveDamageReplacementMechanicsSchema).annotations({
+    identifier: "SaveDamageReplacementMechanics",
+  }),
+  Schema.suspend(
+    () => ReactionRollOrDamageReductionMechanicsSchema,
+  ).annotations({
+    identifier: "ReactionRollOrDamageReductionMechanics",
+  }),
 );
 
 export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
@@ -3367,7 +3387,7 @@ export const SpellcastingClassRecordSchema = Schema.Union(
 export const NonSpellcastingClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
   className: Schema.Literal(...NON_SPELLCASTING_CLASS_NAMES),
-  spellcasting: exactOptional(Schema.Never),
+  spellcasting: exactOptional(ForbiddenValueSchema),
 });
 
 export const ClassContainerOnlyRecordSchema = Schema.Struct({
@@ -3375,7 +3395,7 @@ export const ClassContainerOnlyRecordSchema = Schema.Struct({
   className: Schema.Literal(
     ...CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES,
   ),
-  spellcasting: exactOptional(Schema.Never),
+  spellcasting: exactOptional(ForbiddenValueSchema),
 });
 
 export const NonWizardClassRecordSchema = Schema.Union(
@@ -4258,4 +4278,4 @@ export const UnitRecordSchema = Schema.Union(
   ShieldTemplateRecordSchema,
   WeaponTemplateRecordSchema,
   WeaponRecordSchema,
-);
+).annotations({ identifier: "UnitRecord" });

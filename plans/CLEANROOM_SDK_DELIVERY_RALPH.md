@@ -68,7 +68,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 8,
       "id": "GH-98",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Generate the strict SRD Surface aggregate and bounded Draft 2020-12 schema pair",
       "dependencies": [
         "GH-44"

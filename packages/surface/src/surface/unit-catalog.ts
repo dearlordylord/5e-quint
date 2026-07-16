@@ -402,23 +402,19 @@ import { decodeUnitRecordSync } from "./schema.ts";
 import type {
   SpellcastingClassRecord,
   Provenance,
+  SrdProvenance,
+  SrdUnitRecord,
   StartingEquipmentChoice,
   UnitRecord,
 } from "./types.ts";
 
-export type Srd521CollectionProvenance = {
-  readonly kind: "srd-5.2.1";
-};
+export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
 
 export type UnitId = UnitRecord["id"];
 
-export type Srd521Provenance = Provenance & {
-  readonly kind: "srd-5.2.1";
-};
+export type Srd521Provenance = SrdProvenance;
 
-export type Srd521Unit = UnitRecord & {
-  readonly provenance: Srd521Provenance;
-};
+export type Srd521Unit = SrdUnitRecord;
 
 export type SrdUnitCollection = {
   readonly kind: "srdUnitCollection";
