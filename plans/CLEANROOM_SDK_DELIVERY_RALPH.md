@@ -52,7 +52,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 6,
       "id": "GH-92",
-      "status": "ready-for-implementation",
+      "status": "deferred",
       "title": "Derive presentation-free Oracle facts from production owners",
       "dependencies": []
     },
@@ -86,7 +86,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 10,
       "id": "GH-154",
-      "status": "ready-for-implementation",
+      "status": "deferred",
       "title": "Admit Character Build mechanics through one exact profile graph",
       "dependencies": [
         "GH-25"
@@ -95,7 +95,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 11,
       "id": "GH-113",
-      "status": "ready-for-implementation",
+      "status": "deferred",
       "title": "Project Stat Block mechanics into typed creatures and available Acts",
       "dependencies": [
         "GH-25"
