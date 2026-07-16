@@ -14,9 +14,10 @@ import { Either, Match } from "effect";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
-import { schemaJsonContent } from "./schema-codec.ts";
-import { errorContent } from "./tool-content.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
+import { schemaJsonContent } from "./schema-codec.ts";
+import { characterToolSessionSnapshot } from "./session-snapshot-output.ts";
+import { errorContent } from "./tool-content.ts";
 
 export function applyCharacterSessionOperation(
   root: McpCompositionRoot,
@@ -120,7 +121,7 @@ function applyRetainOneAtATimeCompanionOperation(
   root.sessionStore.characters.set(updated.right);
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
     character: updated.right,
-    session: root.sessionStore.snapshot(),
+    session: characterToolSessionSnapshot(root.sessionStore.snapshot()),
   });
 }
 

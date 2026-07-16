@@ -7,7 +7,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { Schema } from "effect";
 
-import { McpSessionSnapshotSchema } from "./session-snapshot-output.ts";
+import { CharacterToolSessionSnapshotSchema } from "./session-snapshot-output.ts";
 
 const JsonObjectSchema = Schema.Record({
   key: Schema.String,
@@ -172,26 +172,26 @@ export const CreationDraftOutputSchema = Schema.Struct({
   draft: JsonObjectSchema,
   holes: Schema.Array(CreationHoleSchema),
   finalization: CreationFinalizationSchema,
-  session: McpSessionSnapshotSchema,
+  session: CharacterToolSessionSnapshotSchema,
 });
 export const FillCreationHolesOutputSchema = Schema.Struct({
   result: CreationFillResultSchema,
   storedDraft: JsonObjectSchema,
-  session: McpSessionSnapshotSchema,
+  session: CharacterToolSessionSnapshotSchema,
 });
 export const FinalizeCharacterOutputSchema = Schema.Struct({
   draftId: Schema.String,
   finalization: CreationFinalizationSchema,
   build: Schema.Union(JsonObjectSchema, Schema.Null),
-  session: McpSessionSnapshotSchema,
+  session: CharacterToolSessionSnapshotSchema,
 });
 export const ListCharactersOutputSchema = Schema.Struct({
   characters: Schema.Array(CharacterSessionRowSchema),
-  session: McpSessionSnapshotSchema,
+  session: CharacterToolSessionSnapshotSchema,
 });
 export const CharacterSessionOperationOutputSchema = Schema.Struct({
   character: JsonObjectSchema,
-  session: McpSessionSnapshotSchema,
+  session: CharacterToolSessionSnapshotSchema,
 });
 
 export type CharacterSessionRow = Schema.Schema.Type<

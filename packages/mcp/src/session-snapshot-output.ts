@@ -1,10 +1,9 @@
 import { BattleFillSchema, BattleSubjectSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
-// Wire-output projection of the `McpSessionSnapshot` runtime type (session-store.ts).
-// One definition shared by every tool-output schema so the snapshot shape — in
-// particular `transientBattleFills` — cannot diverge per tool.
-export const McpSessionSnapshotSchema = Schema.Struct({
+import type { McpSessionSnapshot } from "./session-store.ts";
+
+const CharacterToolSessionSnapshotFields = {
   draftIds: Schema.Array(Schema.String),
   characterIds: Schema.Array(Schema.String),
   selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
@@ -15,6 +14,14 @@ export const McpSessionSnapshotSchema = Schema.Struct({
     }),
     Schema.Null,
   ),
+};
+
+export const CharacterToolSessionSnapshotSchema = Schema.Struct(
+  CharacterToolSessionSnapshotFields,
+);
+
+export const McpSessionSnapshotSchema = Schema.Struct({
+  ...CharacterToolSessionSnapshotFields,
   transientBattleFills: Schema.Union(
     Schema.Struct({
       subject: BattleSubjectSchema,
@@ -23,3 +30,17 @@ export const McpSessionSnapshotSchema = Schema.Struct({
     Schema.Null,
   ),
 });
+
+export type CharacterToolSessionSnapshot =
+  typeof CharacterToolSessionSnapshotSchema.Type;
+
+export function characterToolSessionSnapshot(
+  snapshot: McpSessionSnapshot,
+): CharacterToolSessionSnapshot {
+  return {
+    draftIds: snapshot.draftIds,
+    characterIds: snapshot.characterIds,
+    selectedStatBlockId: snapshot.selectedStatBlockId,
+    activeBattle: snapshot.activeBattle,
+  };
+}

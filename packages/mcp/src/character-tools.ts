@@ -37,6 +37,7 @@ import {
   ListCharactersOutputSchema,
 } from "./character-tool-output.ts";
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
+import { characterToolSessionSnapshot } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
@@ -156,7 +157,7 @@ export function handleCharacterToolCall(
         result,
         storedDraft:
           root.sessionStore.drafts.get(input.draftId) ?? result.draft,
-        session: root.sessionStore.snapshot(),
+        session: characterToolSessionSnapshot(root.sessionStore.snapshot()),
       });
     }),
     Match.when({ name: characterToolNames.finalizeCharacter }, (matched) => {
@@ -199,7 +200,7 @@ export function handleCharacterToolCall(
         draftId,
         finalization,
         build: finalization.tag === "ready" ? finalization.build : null,
-        session: root.sessionStore.snapshot(),
+        session: characterToolSessionSnapshot(root.sessionStore.snapshot()),
       });
     }),
     Match.when(
@@ -216,7 +217,7 @@ export function handleCharacterToolCall(
       }
       return schemaJsonContent(ListCharactersOutputSchema, {
         characters: rows.right,
-        session: root.sessionStore.snapshot(),
+        session: characterToolSessionSnapshot(root.sessionStore.snapshot()),
       });
     }),
     Match.exhaustive,
@@ -263,6 +264,6 @@ function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
       draft,
       unitLibrary: root.unitLibrary,
     }),
-    session: root.sessionStore.snapshot(),
+    session: characterToolSessionSnapshot(root.sessionStore.snapshot()),
   };
 }
