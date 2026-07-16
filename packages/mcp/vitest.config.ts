@@ -6,5 +6,8 @@ export default defineConfig({
   test: {
     exclude: ["**/node_modules/**", "**/dist/**"],
     globals: false,
+    // Tests construct fresh composition roots and close their transports.
+    // Sharing the module cache avoids recollecting the runtime schema graph.
+    isolate: false,
   },
 })
