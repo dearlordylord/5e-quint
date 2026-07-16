@@ -41,7 +41,6 @@ export {
   attackDamageEventAmountForTarget,
   attackDamageEventEntries,
   attackDamageEventWithEntries,
-  attackDamagePrefixFills,
   attackFillsThroughAttackRoll,
   damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";

@@ -37,6 +37,7 @@ import { combatantCanSee } from "./creature-state-leaves.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 
 import { combatantProficiencyBonus } from "./movement-speed.ts";
+import { battleAttackHostParticipantId } from "./attack-damage-events.ts";
 
 import { signedModifier } from "./statblock-attacks.ts";
 
@@ -391,8 +392,12 @@ export function reactionRollOrDamageReductionChoiceForProfile(
   }
   if (
     modifier.kind === "attackDamageRollReduction" &&
-    frame.continuation.damageEvent.kind === "rolledDamage" &&
-    combatantCanSee(state, reactorId, frame.continuation.attackerId)
+    frame.continuation.damageInput.kind === "rolledDamage" &&
+    combatantCanSee(
+      state,
+      reactorId,
+      battleAttackHostParticipantId(frame.continuation.participant),
+    )
   ) {
     return [
       {

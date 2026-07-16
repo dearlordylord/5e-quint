@@ -1,21 +1,107 @@
-// Attack damage event projections, reductions, and replay-fill prefixes.
+// Attack damage event projections, reductions, and interruption frames.
 // Extracted from dispatcher.ts so attack/reaction modules do not depend on dispatcher arithmetic.
 
-import { damageAmount as toDamageAmount,type DamageAmount } from "@dnd/shared/types";
-import type {
-BattleAttackDamageEvent,
-BattleAttackDamagePrefixFill,
-BattleCreatureState,
-BattleFill,
-BattlePendingAttackDamageReduction,
-BattleReactionModifierChoice,
-} from "../battle-reducer.ts";
 import {
-damageAmountByTypeAfterTargetAdjustments,
-damageAmountByTypeEntriesToMap,
-entriesAfterProportionalDamageReduction,
-type DamageAmountByTypeEntry,
+  damageAmount as toDamageAmount,
+  type DamageAmount,
+} from "@dnd/shared/types";
+import { Match } from "effect";
+
+// KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
+import type {
+  BattleAttackDamageInterruptionBoundaryInput,
+  BattleAttackDamageInterruptionBoundaryResult,
+  BattleAttackDamageInterruptionContinuation,
+  BattleAttackDamageInterruptionFacts,
+  BattleAttackDamageInterruptionFrame,
+  BattleAttackDamageEvent,
+  BattleAttackHostSubject,
+  BattleAttackRollResult,
+  BattleCreatureState,
+  BattleFill,
+  BattlePendingAttackDamageReduction,
+  BattleReactionModifierChoice,
+  BattleTargetSpatialFact,
+} from "../battle-reducer.ts";
+import type { CombatantId } from "../identity.ts";
+import {
+  damageAmountByTypeAfterTargetAdjustments,
+  damageAmountByTypeEntriesToMap,
+  entriesAfterProportionalDamageReduction,
+  type DamageAmountByTypeEntry,
 } from "./damage-helpers.ts";
+
+export function battleAttackHostParticipantId(
+  participant: BattleAttackHostSubject,
+): CombatantId {
+  return participant.tag === "pactOfTheChainFamiliarAttack"
+    ? participant.familiarId
+    : participant.actorId;
+}
+
+export function attackDamageInterruptionFrame(input: {
+  readonly participant: BattleAttackHostSubject;
+  readonly targetId: CombatantId;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+  readonly attackResult: BattleAttackRollResult;
+  readonly damageInput: BattleAttackDamageEvent;
+  readonly critical: boolean;
+  readonly continuation: BattleAttackDamageInterruptionContinuation;
+}): BattleAttackDamageInterruptionFrame {
+  const { critical, ...facts } = input;
+  return attackDamageInterruptionFrameFromFacts({
+    ...facts,
+    criticalConsequence: critical
+      ? { kind: "criticalHit" }
+      : { kind: "ordinaryHit" },
+  });
+}
+
+function attackDamageInterruptionFrameFromFacts(
+  input: BattleAttackDamageInterruptionFacts,
+): BattleAttackDamageInterruptionFrame {
+  return {
+    kind: "attackDamage",
+    participant: input.participant,
+    target: {
+      combatantId: input.targetId,
+      spatialFacts: input.targetSpatialFacts,
+    },
+    attackResult: input.attackResult,
+    damageInput: input.damageInput,
+    criticalConsequence: input.criticalConsequence,
+    phase: "attackDamage",
+    continuation: input.continuation,
+  };
+}
+
+export function parseAttackDamageInterruptionFrame(
+  input: BattleAttackDamageInterruptionBoundaryInput,
+): BattleAttackDamageInterruptionBoundaryResult {
+  return Match.value(input).pipe(
+    Match.when(
+      { phase: "attackHit" },
+      (): Extract<
+        BattleAttackDamageInterruptionBoundaryResult,
+        { readonly tag: "invalidPhase" }
+      > => ({ tag: "invalidPhase", phase: "attackHit" }),
+    ),
+    Match.when(
+      { phase: "attackDamage" },
+      ({
+        phase: _phase,
+        ...facts
+      }): Extract<
+        BattleAttackDamageInterruptionBoundaryResult,
+        { readonly tag: "decoded" }
+      > => ({
+        tag: "decoded",
+        frame: attackDamageInterruptionFrameFromFacts(facts),
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
 
 export function attackDamageEventEntries(
   event: BattleAttackDamageEvent,
@@ -100,17 +186,5 @@ export function attackFillsThroughAttackRoll(
 ): readonly BattleFill[] {
   return fills.filter(
     (fill) => fill.kind === "targetChoice" || fill.kind === "attackRoll",
-  );
-}
-
-export function attackDamagePrefixFills(
-  fills: readonly BattleFill[],
-): readonly BattleAttackDamagePrefixFill[] {
-  return fills.filter(
-    (fill): fill is BattleAttackDamagePrefixFill =>
-      fill.kind === "targetChoice" ||
-      fill.kind === "attackRoll" ||
-      fill.kind === "rolledDice" ||
-      fill.kind === "attackDamageDisposition",
   );
 }

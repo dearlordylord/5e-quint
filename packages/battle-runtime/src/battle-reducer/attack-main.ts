@@ -105,7 +105,8 @@ import {
   attackDamageEventAmountForTarget,
   attackDamageEventEntries,
   attackDamageEventWithEntries,
-  attackDamagePrefixFills,
+  attackDamageInterruptionFrame,
+  battleAttackHostParticipantId,
   attackFillsThroughAttackRoll,
   maybeOpenInterruptWindow,
   resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
@@ -195,7 +196,6 @@ import type {
   BattleAttackHostSubject,
   BattleAttackDamageEvent,
   BattleAfterDamageEvent,
-  BattleAttackDamagePrefixFill,
   AttackDamageRider,
   BattleCreatureState,
   BattleFill,
@@ -253,14 +253,6 @@ export {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./attack-ordering-messages.ts";
-
-function attackProcedureAttackerId(
-  subject: BattleAttackHostSubject,
-): CombatantId {
-  return subject.tag === "pactOfTheChainFamiliarAttack"
-    ? subject.familiarId
-    : subject.actorId;
-}
 
 type GrapplerPunchAndGrabEligibility = {
   readonly link: BattleGrappleLink;
@@ -713,7 +705,7 @@ export function resolveSelectedAttackProcedure(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  const attackerId = attackProcedureAttackerId(input.subject);
+  const attackerId = battleAttackHostParticipantId(input.subject);
 
   if (fillSet.targetId == null) {
     if (
@@ -1605,18 +1597,19 @@ export function resolveSelectedAttackProcedure(
       grapplerPunchAndGrab.state,
       {
         trigger: "attackDamage",
-        continuation: {
-          kind: "attackDamage",
-          subject: input.subject,
-          attackerId: attackerId,
+        continuation: attackDamageInterruptionFrame({
+          participant: input.subject,
           targetId: target.combatantId,
-          damageEvent: reducedDamageEventAfterSpellReduction,
-          fills: attackDamagePrefixFills(input.fills),
-          concentrationSavingThrows: primaryConcentrationSavingThrows,
-          deathFailuresAtZeroHp: critical ? 2 : 1,
-          damageDisposition: primaryAttackDamageDisposition(fillSet),
-          attackDamageRiders: [],
-        },
+          targetSpatialFacts: fillSet.targetSpatialFacts,
+          attackResult: effectiveAttackRoll,
+          damageInput: reducedDamageEventAfterSpellReduction,
+          critical,
+          continuation: {
+            concentrationSavingThrows: primaryConcentrationSavingThrows,
+            damageDisposition: primaryAttackDamageDisposition(fillSet),
+            attackDamageRiders: [],
+          },
+        }),
       },
       input.handledInterruptTrigger,
     );
@@ -1659,18 +1652,19 @@ export function resolveSelectedAttackProcedure(
           state: grapplerPunchAndGrab.state,
           subject: input.subject,
           attack,
-          continuation: {
-            kind: "attackDamage",
-            subject: input.subject,
-            attackerId: attackerId,
+          continuation: attackDamageInterruptionFrame({
+            participant: input.subject,
             targetId: target.combatantId,
-            damageEvent: reducedDamageEventAfterSpellReduction,
-            fills: attackDamagePrefixFills(input.fills),
-            concentrationSavingThrows: primaryConcentrationSavingThrows,
-            deathFailuresAtZeroHp: critical ? 2 : 1,
-            damageDisposition: primaryAttackDamageDisposition(fillSet),
-            attackDamageRiders: [],
-          },
+            targetSpatialFacts: fillSet.targetSpatialFacts,
+            attackResult: effectiveAttackRoll,
+            damageInput: reducedDamageEventAfterSpellReduction,
+            critical,
+            continuation: {
+              concentrationSavingThrows: primaryConcentrationSavingThrows,
+              damageDisposition: primaryAttackDamageDisposition(fillSet),
+              attackDamageRiders: [],
+            },
+          }),
           concentrationSave: pendingConcentrationSave,
         });
       }
@@ -1991,24 +1985,25 @@ export function resolveSelectedAttackProcedure(
       grapplerPunchAndGrab.state,
       {
         trigger: "attackDamage",
-        continuation: {
-          kind: "attackDamage",
-          subject: input.subject,
-          attackerId: attackerId,
+        continuation: attackDamageInterruptionFrame({
+          participant: input.subject,
           targetId: target.combatantId,
-          damageEvent: reducedDamageEventAfterSpellReduction,
-          fills: attackDamagePrefixFills(input.fills),
-          concentrationSavingThrows: primaryConcentrationSavingThrows,
-          deathFailuresAtZeroHp: critical ? 2 : 1,
-          damageDisposition: primaryAttackDamageDisposition(fillSet),
-          attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-          ...(selectedDamageDiceChoice === null
-            ? {}
-            : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-          ...(selectedCunningStrikeContinuation === undefined
-            ? {}
-            : { cunningStrike: selectedCunningStrikeContinuation }),
-        },
+          targetSpatialFacts: fillSet.targetSpatialFacts,
+          attackResult: effectiveAttackRoll,
+          damageInput: reducedDamageEventAfterSpellReduction,
+          critical,
+          continuation: {
+            concentrationSavingThrows: primaryConcentrationSavingThrows,
+            damageDisposition: primaryAttackDamageDisposition(fillSet),
+            attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+            ...(selectedDamageDiceChoice === null
+              ? {}
+              : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+            ...(selectedCunningStrikeContinuation === undefined
+              ? {}
+              : { cunningStrike: selectedCunningStrikeContinuation }),
+          },
+        }),
       },
       input.handledInterruptTrigger,
     );
@@ -2051,24 +2046,25 @@ export function resolveSelectedAttackProcedure(
           state: grapplerPunchAndGrab.state,
           subject: input.subject,
           attack,
-          continuation: {
-            kind: "attackDamage",
-            subject: input.subject,
-            attackerId: attackerId,
+          continuation: attackDamageInterruptionFrame({
+            participant: input.subject,
             targetId: target.combatantId,
-            damageEvent: reducedDamageEventAfterSpellReduction,
-            fills: attackDamagePrefixFills(input.fills),
-            concentrationSavingThrows: primaryConcentrationSavingThrows,
-            deathFailuresAtZeroHp: critical ? 2 : 1,
-            damageDisposition: primaryAttackDamageDisposition(fillSet),
-            attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-            ...(selectedDamageDiceChoice === null
-              ? {}
-              : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-            ...(selectedCunningStrikeContinuation === undefined
-              ? {}
-              : { cunningStrike: selectedCunningStrikeContinuation }),
-          },
+            targetSpatialFacts: fillSet.targetSpatialFacts,
+            attackResult: effectiveAttackRoll,
+            damageInput: reducedDamageEventAfterSpellReduction,
+            critical,
+            continuation: {
+              concentrationSavingThrows: primaryConcentrationSavingThrows,
+              damageDisposition: primaryAttackDamageDisposition(fillSet),
+              attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+              ...(selectedDamageDiceChoice === null
+                ? {}
+                : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+              ...(selectedCunningStrikeContinuation === undefined
+                ? {}
+                : { cunningStrike: selectedCunningStrikeContinuation }),
+            },
+          }),
           concentrationSave: pendingConcentrationSave,
         });
       }
@@ -2861,23 +2857,20 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     cleaveAttackRolledState,
     input.subject.actorId,
   );
-  const cleaveDamagePrefixFills = [
-    input.fillSet.weaponMasteryCleaveTarget,
-    input.fillSet.weaponMasteryCleaveAttackRoll,
-    input.fillSet.weaponMasteryCleaveDamageRoll,
-  ] as const satisfies readonly BattleAttackDamagePrefixFill[];
-  const continuation = {
-    kind: "attackDamage" as const,
-    subject: input.subject,
-    attackerId: input.subject.actorId,
+  const continuation = attackDamageInterruptionFrame({
+    participant: input.subject,
     targetId: secondTargetId,
-    damageEvent,
-    fills: cleaveDamagePrefixFills,
-    concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
-    deathFailuresAtZeroHp: cleaveCritical ? (2 as const) : (1 as const),
-    damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
-    attackDamageRiders: [],
-  };
+    targetSpatialFacts:
+      input.fillSet.weaponMasteryCleaveTarget.spatialFacts ?? [],
+    attackResult: effectiveCleaveAttackRoll,
+    damageInput: damageEvent,
+    critical: cleaveCritical,
+    continuation: {
+      concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+      damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
+      attackDamageRiders: [],
+    },
+  });
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
     cleaveUsedState,
     {
@@ -3525,23 +3518,20 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.subject.actorId,
     unitId,
   );
-  const prefixFills = [
-    input.fillSet.huntersPreyHordeBreakerTarget,
-    input.fillSet.huntersPreyHordeBreakerAttackRoll,
-    input.fillSet.huntersPreyHordeBreakerDamageRoll,
-  ] as const satisfies readonly BattleAttackDamagePrefixFill[];
-  const continuation = {
-    kind: "attackDamage" as const,
-    subject: input.subject,
-    attackerId: input.subject.actorId,
+  const continuation = attackDamageInterruptionFrame({
+    participant: input.subject,
     targetId: secondTargetId,
-    damageEvent,
-    fills: prefixFills,
-    concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
-    deathFailuresAtZeroHp: critical ? (2 as const) : (1 as const),
-    damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
-    attackDamageRiders: hordeBreakerSelectedDamageRiders,
-  };
+    targetSpatialFacts:
+      input.fillSet.huntersPreyHordeBreakerTarget.spatialFacts ?? [],
+    attackResult: effectiveHordeBreakerAttackRoll,
+    damageInput: damageEvent,
+    critical,
+    continuation: {
+      concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+      damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
+      attackDamageRiders: hordeBreakerSelectedDamageRiders,
+    },
+  });
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
     usedState,
     {

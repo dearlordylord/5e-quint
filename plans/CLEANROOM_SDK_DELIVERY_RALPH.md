@@ -10,61 +10,519 @@ acceptance, WIP disposition, and focused verification.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "GH-41", "status": "done", "title": "Reconcile shared D&D language to SRD 5.2.1", "dependencies": [] },
-    { "number": 2, "id": "GH-42", "status": "done", "title": "Curate source-ready cleanroom modeling assumptions", "dependencies": [] },
-    { "number": 3, "id": "GH-25", "status": "done", "title": "Repair the nine canonical RAW-to-Surface catalog omissions", "dependencies": [] },
-    { "number": 4, "id": "GH-44", "status": "done", "title": "Enforce complete canonical Surface discovery and regeneration", "dependencies": ["GH-25"] },
-    { "number": 5, "id": "GH-47", "status": "done", "title": "Drive spell execution from typed procedure facts", "dependencies": ["GH-25"] },
-    { "number": 6, "id": "GH-92", "status": "ready-for-implementation", "title": "Derive presentation-free Oracle facts from production owners", "dependencies": [] },
-    { "number": 7, "id": "GH-152", "status": "done", "title": "Define closed schema-owned roles for every decoded Surface string", "dependencies": ["GH-44"] },
-    { "number": 8, "id": "GH-98", "status": "ready-for-implementation", "title": "Generate the strict SRD Surface aggregate and bounded Draft 2020-12 schema pair", "dependencies": ["GH-44"] },
-    { "number": 9, "id": "GH-100", "status": "ready-for-implementation", "title": "Deliver the canonical weapon-attack interruption frame", "dependencies": ["GH-47"] },
-    { "number": 10, "id": "GH-154", "status": "ready-for-implementation", "title": "Admit Character Build mechanics through one exact profile graph", "dependencies": ["GH-25"] },
-    { "number": 11, "id": "GH-113", "status": "ready-for-implementation", "title": "Project Stat Block mechanics into typed creatures and available Acts", "dependencies": ["GH-25"] },
-    { "number": 12, "id": "GH-93", "status": "ready-for-implementation", "title": "Compose the lifecycle-safe Oracle Case and Trace wire algebra", "dependencies": ["GH-92"] },
-    { "number": 13, "id": "GH-97", "status": "ready-for-implementation", "title": "Publish the fail-closed redistributable corpus audit", "dependencies": ["GH-153", "GH-41", "GH-42"] },
-    { "number": 14, "id": "GH-99", "status": "ready-for-implementation", "title": "Publish and read the Surface pair through one atomic leased store", "dependencies": ["GH-98"] },
-    { "number": 15, "id": "GH-46", "status": "ready-for-implementation", "title": "Prove portable Surface decoding and atomic rejection", "dependencies": ["GH-98"] },
-    { "number": 16, "id": "GH-101", "status": "ready-for-implementation", "title": "Select spell-cast interruption frames from typed invocations", "dependencies": ["GH-100"] },
-    { "number": 17, "id": "GH-108", "status": "ready-for-implementation", "title": "Deliver next-turn command movement interruption frames", "dependencies": ["GH-100"] },
-    { "number": 18, "id": "GH-110", "status": "ready-for-implementation", "title": "Project Unit mechanics through Character Sheet and Battle handoff", "dependencies": ["GH-155"] },
-    { "number": 19, "id": "GH-114", "status": "ready-for-implementation", "title": "Execute typed Stat Block attack and multi-part Act procedures", "dependencies": ["GH-113"] },
-    { "number": 20, "id": "GH-94", "status": "ready-for-implementation", "title": "Publish equivalent strict Oracle schemas and canonical value semantics", "dependencies": ["GH-93"] },
-    { "number": 21, "id": "GH-102", "status": "ready-for-implementation", "title": "Deliver spell-attack interruption frames", "dependencies": ["GH-101"] },
-    { "number": 22, "id": "GH-103", "status": "ready-for-implementation", "title": "Deliver the attack-burst attack-hit interruption frame", "dependencies": ["GH-101"] },
-    { "number": 23, "id": "GH-105", "status": "ready-for-implementation", "title": "Deliver damage-only save-gated interruption frames", "dependencies": ["GH-101"] },
-    { "number": 24, "id": "GH-111", "status": "ready-for-implementation", "title": "Initialize Battle creatures from passive Unit mechanics", "dependencies": ["GH-110"] },
-    { "number": 25, "id": "GH-112", "status": "ready-for-implementation", "title": "Execute active Unit mechanics through Battle Acts and reactions", "dependencies": ["GH-110"] },
-    { "number": 26, "id": "GH-95", "status": "ready-for-implementation", "title": "Generate the portable Oracle fixture corpus through an Effect CLI", "dependencies": ["GH-94"] },
-    { "number": 27, "id": "GH-104", "status": "ready-for-implementation", "title": "Deliver the attack-burst resolution interruption frame", "dependencies": ["GH-103"] },
-    { "number": 28, "id": "GH-106", "status": "ready-for-implementation", "title": "Deliver after-damage reaction interruption frames", "dependencies": ["GH-101", "GH-105"] },
-    { "number": 29, "id": "GH-115", "status": "ready-for-implementation", "title": "Thread authored selection and parsed mechanics through composition", "dependencies": ["GH-47", "GH-155", "GH-110", "GH-111", "GH-112", "GH-113", "GH-114"] },
-    { "number": 30, "id": "GH-62", "status": "ready-for-implementation", "title": "Run stateless Character Creation through fresh Character Sheet", "dependencies": ["GH-95"] },
-    { "number": 31, "id": "GH-107", "status": "ready-for-implementation", "title": "Deliver reaction-forced movement interruption frames", "dependencies": ["GH-105", "GH-106"] },
-    { "number": 32, "id": "GH-116", "status": "ready-for-implementation", "title": "Separate durable Character Sheet facts from encounter Execution State", "dependencies": ["GH-115"] },
-    { "number": 33, "id": "GH-56", "status": "ready-for-implementation", "title": "Resume Shield-interrupted procedures by capability and phase", "dependencies": ["GH-102", "GH-104"] },
-    { "number": 34, "id": "GH-121", "status": "ready-for-implementation", "title": "Enter Characters and Stat Blocks into stateless Oracle Battle evaluation", "dependencies": ["GH-62"] },
-    { "number": 35, "id": "GH-51", "status": "ready-for-implementation", "title": "Introduce the atomic catalog-install and admission result boundary", "dependencies": ["GH-46", "GH-116"] },
-    { "number": 36, "id": "GH-119", "status": "ready-for-implementation", "title": "Preserve the typed Magic Missile cross-record interruption rule", "dependencies": ["GH-56"] },
-    { "number": 37, "id": "GH-120", "status": "ready-for-implementation", "title": "Resume interrupted procedures through the shared damage lifecycle", "dependencies": ["GH-56", "GH-107"] },
-    { "number": 38, "id": "GH-52", "status": "ready-for-implementation", "title": "Admit complete Unit Authored Mechanics Graphs", "dependencies": ["GH-51"] },
-    { "number": 39, "id": "GH-53", "status": "ready-for-implementation", "title": "Admit complete Stat Block Authored Mechanics Graphs", "dependencies": ["GH-51"] },
-    { "number": 40, "id": "GH-122", "status": "ready-for-implementation", "title": "Trace selected Oracle Acts through Runtime Hole continuation replay", "dependencies": ["GH-121"] },
-    { "number": 41, "id": "GH-117", "status": "ready-for-implementation", "title": "Bind selected Authored Mechanics Graphs from the admitted catalog", "dependencies": ["GH-52", "GH-53"] },
-    { "number": 42, "id": "GH-64", "status": "ready-for-implementation", "title": "Expose persistent Oracle CLI identity and batch evaluation", "dependencies": ["GH-122"] },
-    { "number": 43, "id": "GH-65", "status": "ready-for-implementation", "title": "Expose and launch the loopback Oracle HTTP identity and batch service", "dependencies": ["GH-122"] },
-    { "number": 44, "id": "GH-118", "status": "ready-for-implementation", "title": "Discover dynamic availability from bound admitted mechanics", "dependencies": ["GH-117"] },
-    { "number": 45, "id": "GH-66", "status": "ready-for-implementation", "title": "Prove Oracle transport equivalence and atomic failure behavior", "dependencies": ["GH-64", "GH-65"] },
-    { "number": 46, "id": "GH-29", "status": "ready-for-implementation", "title": "Generate the complete Cleanroom Mechanics Slice", "dependencies": ["GH-118"] },
-    { "number": 47, "id": "GH-58", "status": "ready-for-implementation", "title": "Derive the active executable QNT root and semantic closure", "dependencies": ["GH-29", "GH-119", "GH-120", "GH-108"] },
-    { "number": 48, "id": "GH-59", "status": "ready-for-implementation", "title": "Execute every derived QNT root in its real lane", "dependencies": ["GH-58"] },
-    { "number": 49, "id": "GH-60", "status": "ready-for-implementation", "title": "Replay runtime-bearing QNT through production Functional Reducers", "dependencies": ["GH-59"] },
-    { "number": 50, "id": "GH-40", "status": "ready-for-implementation", "title": "Package the calibrated source-free Opaque Oracle distribution", "dependencies": ["GH-29", "GH-60", "GH-66"] },
-    { "number": 51, "id": "GH-34", "status": "ready-for-implementation", "title": "Publish the single language-neutral Cleanroom Core", "dependencies": ["GH-97", "GH-29", "GH-60", "GH-122"] },
-    { "number": 52, "id": "GH-35", "status": "ready-for-implementation", "title": "Publish the minimal Rust Target Language Adapter", "dependencies": ["GH-34", "GH-40"] },
-    { "number": 53, "id": "GH-36", "status": "ready-for-implementation", "title": "Assemble the source-produced Cleanroom Harness", "dependencies": ["GH-34", "GH-35", "GH-40"] },
-    { "number": 54, "id": "GH-153", "status": "done", "title": "Traverse decoded Surface strings with finite tuple-aware schema lockstep", "dependencies": ["GH-152"] },
-    { "number": 55, "id": "GH-155", "status": "ready-for-implementation", "title": "Replay renamed Unit mechanics through the Character Build lifecycle", "dependencies": ["GH-154"] }
+    {
+      "number": 1,
+      "id": "GH-41",
+      "status": "done",
+      "title": "Reconcile shared D&D language to SRD 5.2.1",
+      "dependencies": []
+    },
+    {
+      "number": 2,
+      "id": "GH-42",
+      "status": "done",
+      "title": "Curate source-ready cleanroom modeling assumptions",
+      "dependencies": []
+    },
+    {
+      "number": 3,
+      "id": "GH-25",
+      "status": "done",
+      "title": "Repair the nine canonical RAW-to-Surface catalog omissions",
+      "dependencies": []
+    },
+    {
+      "number": 4,
+      "id": "GH-44",
+      "status": "done",
+      "title": "Enforce complete canonical Surface discovery and regeneration",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 5,
+      "id": "GH-47",
+      "status": "done",
+      "title": "Drive spell execution from typed procedure facts",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 6,
+      "id": "GH-92",
+      "status": "ready-for-implementation",
+      "title": "Derive presentation-free Oracle facts from production owners",
+      "dependencies": []
+    },
+    {
+      "number": 7,
+      "id": "GH-152",
+      "status": "done",
+      "title": "Define closed schema-owned roles for every decoded Surface string",
+      "dependencies": [
+        "GH-44"
+      ]
+    },
+    {
+      "number": 8,
+      "id": "GH-98",
+      "status": "ready-for-implementation",
+      "title": "Generate the strict SRD Surface aggregate and bounded Draft 2020-12 schema pair",
+      "dependencies": [
+        "GH-44"
+      ]
+    },
+    {
+      "number": 9,
+      "id": "GH-100",
+      "status": "done",
+      "title": "Deliver the canonical weapon-attack interruption frame",
+      "dependencies": [
+        "GH-47"
+      ]
+    },
+    {
+      "number": 10,
+      "id": "GH-154",
+      "status": "ready-for-implementation",
+      "title": "Admit Character Build mechanics through one exact profile graph",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 11,
+      "id": "GH-113",
+      "status": "ready-for-implementation",
+      "title": "Project Stat Block mechanics into typed creatures and available Acts",
+      "dependencies": [
+        "GH-25"
+      ]
+    },
+    {
+      "number": 12,
+      "id": "GH-93",
+      "status": "ready-for-implementation",
+      "title": "Compose the lifecycle-safe Oracle Case and Trace wire algebra",
+      "dependencies": [
+        "GH-92"
+      ]
+    },
+    {
+      "number": 13,
+      "id": "GH-97",
+      "status": "ready-for-implementation",
+      "title": "Publish the fail-closed redistributable corpus audit",
+      "dependencies": [
+        "GH-153",
+        "GH-41",
+        "GH-42"
+      ]
+    },
+    {
+      "number": 14,
+      "id": "GH-99",
+      "status": "ready-for-implementation",
+      "title": "Publish and read the Surface pair through one atomic leased store",
+      "dependencies": [
+        "GH-98"
+      ]
+    },
+    {
+      "number": 15,
+      "id": "GH-46",
+      "status": "ready-for-implementation",
+      "title": "Prove portable Surface decoding and atomic rejection",
+      "dependencies": [
+        "GH-98"
+      ]
+    },
+    {
+      "number": 16,
+      "id": "GH-101",
+      "status": "ready-for-implementation",
+      "title": "Select spell-cast interruption frames from typed invocations",
+      "dependencies": [
+        "GH-100"
+      ]
+    },
+    {
+      "number": 17,
+      "id": "GH-108",
+      "status": "ready-for-implementation",
+      "title": "Deliver next-turn command movement interruption frames",
+      "dependencies": [
+        "GH-100"
+      ]
+    },
+    {
+      "number": 18,
+      "id": "GH-110",
+      "status": "ready-for-implementation",
+      "title": "Project Unit mechanics through Character Sheet and Battle handoff",
+      "dependencies": [
+        "GH-155"
+      ]
+    },
+    {
+      "number": 19,
+      "id": "GH-114",
+      "status": "ready-for-implementation",
+      "title": "Execute typed Stat Block attack and multi-part Act procedures",
+      "dependencies": [
+        "GH-113"
+      ]
+    },
+    {
+      "number": 20,
+      "id": "GH-94",
+      "status": "ready-for-implementation",
+      "title": "Publish equivalent strict Oracle schemas and canonical value semantics",
+      "dependencies": [
+        "GH-93"
+      ]
+    },
+    {
+      "number": 21,
+      "id": "GH-102",
+      "status": "ready-for-implementation",
+      "title": "Deliver spell-attack interruption frames",
+      "dependencies": [
+        "GH-101"
+      ]
+    },
+    {
+      "number": 22,
+      "id": "GH-103",
+      "status": "ready-for-implementation",
+      "title": "Deliver the attack-burst attack-hit interruption frame",
+      "dependencies": [
+        "GH-101"
+      ]
+    },
+    {
+      "number": 23,
+      "id": "GH-105",
+      "status": "ready-for-implementation",
+      "title": "Deliver damage-only save-gated interruption frames",
+      "dependencies": [
+        "GH-101"
+      ]
+    },
+    {
+      "number": 24,
+      "id": "GH-111",
+      "status": "ready-for-implementation",
+      "title": "Initialize Battle creatures from passive Unit mechanics",
+      "dependencies": [
+        "GH-110"
+      ]
+    },
+    {
+      "number": 25,
+      "id": "GH-112",
+      "status": "ready-for-implementation",
+      "title": "Execute active Unit mechanics through Battle Acts and reactions",
+      "dependencies": [
+        "GH-110"
+      ]
+    },
+    {
+      "number": 26,
+      "id": "GH-95",
+      "status": "ready-for-implementation",
+      "title": "Generate the portable Oracle fixture corpus through an Effect CLI",
+      "dependencies": [
+        "GH-94"
+      ]
+    },
+    {
+      "number": 27,
+      "id": "GH-104",
+      "status": "ready-for-implementation",
+      "title": "Deliver the attack-burst resolution interruption frame",
+      "dependencies": [
+        "GH-103"
+      ]
+    },
+    {
+      "number": 28,
+      "id": "GH-106",
+      "status": "ready-for-implementation",
+      "title": "Deliver after-damage reaction interruption frames",
+      "dependencies": [
+        "GH-101",
+        "GH-105"
+      ]
+    },
+    {
+      "number": 29,
+      "id": "GH-115",
+      "status": "ready-for-implementation",
+      "title": "Thread authored selection and parsed mechanics through composition",
+      "dependencies": [
+        "GH-47",
+        "GH-155",
+        "GH-110",
+        "GH-111",
+        "GH-112",
+        "GH-113",
+        "GH-114"
+      ]
+    },
+    {
+      "number": 30,
+      "id": "GH-62",
+      "status": "ready-for-implementation",
+      "title": "Run stateless Character Creation through fresh Character Sheet",
+      "dependencies": [
+        "GH-95"
+      ]
+    },
+    {
+      "number": 31,
+      "id": "GH-107",
+      "status": "ready-for-implementation",
+      "title": "Deliver reaction-forced movement interruption frames",
+      "dependencies": [
+        "GH-105",
+        "GH-106"
+      ]
+    },
+    {
+      "number": 32,
+      "id": "GH-116",
+      "status": "ready-for-implementation",
+      "title": "Separate durable Character Sheet facts from encounter Execution State",
+      "dependencies": [
+        "GH-115"
+      ]
+    },
+    {
+      "number": 33,
+      "id": "GH-56",
+      "status": "ready-for-implementation",
+      "title": "Resume Shield-interrupted procedures by capability and phase",
+      "dependencies": [
+        "GH-102",
+        "GH-104"
+      ]
+    },
+    {
+      "number": 34,
+      "id": "GH-121",
+      "status": "ready-for-implementation",
+      "title": "Enter Characters and Stat Blocks into stateless Oracle Battle evaluation",
+      "dependencies": [
+        "GH-62"
+      ]
+    },
+    {
+      "number": 35,
+      "id": "GH-51",
+      "status": "ready-for-implementation",
+      "title": "Introduce the atomic catalog-install and admission result boundary",
+      "dependencies": [
+        "GH-46",
+        "GH-116"
+      ]
+    },
+    {
+      "number": 36,
+      "id": "GH-119",
+      "status": "ready-for-implementation",
+      "title": "Preserve the typed Magic Missile cross-record interruption rule",
+      "dependencies": [
+        "GH-56"
+      ]
+    },
+    {
+      "number": 37,
+      "id": "GH-120",
+      "status": "ready-for-implementation",
+      "title": "Resume interrupted procedures through the shared damage lifecycle",
+      "dependencies": [
+        "GH-56",
+        "GH-107"
+      ]
+    },
+    {
+      "number": 38,
+      "id": "GH-52",
+      "status": "ready-for-implementation",
+      "title": "Admit complete Unit Authored Mechanics Graphs",
+      "dependencies": [
+        "GH-51"
+      ]
+    },
+    {
+      "number": 39,
+      "id": "GH-53",
+      "status": "ready-for-implementation",
+      "title": "Admit complete Stat Block Authored Mechanics Graphs",
+      "dependencies": [
+        "GH-51"
+      ]
+    },
+    {
+      "number": 40,
+      "id": "GH-122",
+      "status": "ready-for-implementation",
+      "title": "Trace selected Oracle Acts through Runtime Hole continuation replay",
+      "dependencies": [
+        "GH-121"
+      ]
+    },
+    {
+      "number": 41,
+      "id": "GH-117",
+      "status": "ready-for-implementation",
+      "title": "Bind selected Authored Mechanics Graphs from the admitted catalog",
+      "dependencies": [
+        "GH-52",
+        "GH-53"
+      ]
+    },
+    {
+      "number": 42,
+      "id": "GH-64",
+      "status": "ready-for-implementation",
+      "title": "Expose persistent Oracle CLI identity and batch evaluation",
+      "dependencies": [
+        "GH-122"
+      ]
+    },
+    {
+      "number": 43,
+      "id": "GH-65",
+      "status": "ready-for-implementation",
+      "title": "Expose and launch the loopback Oracle HTTP identity and batch service",
+      "dependencies": [
+        "GH-122"
+      ]
+    },
+    {
+      "number": 44,
+      "id": "GH-118",
+      "status": "ready-for-implementation",
+      "title": "Discover dynamic availability from bound admitted mechanics",
+      "dependencies": [
+        "GH-117"
+      ]
+    },
+    {
+      "number": 45,
+      "id": "GH-66",
+      "status": "ready-for-implementation",
+      "title": "Prove Oracle transport equivalence and atomic failure behavior",
+      "dependencies": [
+        "GH-64",
+        "GH-65"
+      ]
+    },
+    {
+      "number": 46,
+      "id": "GH-29",
+      "status": "ready-for-implementation",
+      "title": "Generate the complete Cleanroom Mechanics Slice",
+      "dependencies": [
+        "GH-118"
+      ]
+    },
+    {
+      "number": 47,
+      "id": "GH-58",
+      "status": "ready-for-implementation",
+      "title": "Derive the active executable QNT root and semantic closure",
+      "dependencies": [
+        "GH-29",
+        "GH-119",
+        "GH-120",
+        "GH-108"
+      ]
+    },
+    {
+      "number": 48,
+      "id": "GH-59",
+      "status": "ready-for-implementation",
+      "title": "Execute every derived QNT root in its real lane",
+      "dependencies": [
+        "GH-58"
+      ]
+    },
+    {
+      "number": 49,
+      "id": "GH-60",
+      "status": "ready-for-implementation",
+      "title": "Replay runtime-bearing QNT through production Functional Reducers",
+      "dependencies": [
+        "GH-59"
+      ]
+    },
+    {
+      "number": 50,
+      "id": "GH-40",
+      "status": "ready-for-implementation",
+      "title": "Package the calibrated source-free Opaque Oracle distribution",
+      "dependencies": [
+        "GH-29",
+        "GH-60",
+        "GH-66"
+      ]
+    },
+    {
+      "number": 51,
+      "id": "GH-34",
+      "status": "ready-for-implementation",
+      "title": "Publish the single language-neutral Cleanroom Core",
+      "dependencies": [
+        "GH-97",
+        "GH-29",
+        "GH-60",
+        "GH-122"
+      ]
+    },
+    {
+      "number": 52,
+      "id": "GH-35",
+      "status": "ready-for-implementation",
+      "title": "Publish the minimal Rust Target Language Adapter",
+      "dependencies": [
+        "GH-34",
+        "GH-40"
+      ]
+    },
+    {
+      "number": 53,
+      "id": "GH-36",
+      "status": "ready-for-implementation",
+      "title": "Assemble the source-produced Cleanroom Harness",
+      "dependencies": [
+        "GH-34",
+        "GH-35",
+        "GH-40"
+      ]
+    },
+    {
+      "number": 54,
+      "id": "GH-153",
+      "status": "done",
+      "title": "Traverse decoded Surface strings with finite tuple-aware schema lockstep",
+      "dependencies": [
+        "GH-152"
+      ]
+    },
+    {
+      "number": 55,
+      "id": "GH-155",
+      "status": "ready-for-implementation",
+      "title": "Replay renamed Unit mechanics through the Character Build lifecycle",
+      "dependencies": [
+        "GH-154"
+      ]
+    }
   ]
 }
 -->

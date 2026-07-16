@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 import { describe, expect, test } from "vitest";
+import { damageAmount, DieRollResult } from "@dnd/shared/types";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
   wardingBondSharedDamageConcentrationSavingThrowHoles,
@@ -10,6 +11,7 @@ import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-help
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { concentrationSavingThrowFill } from "./battle-runtime-test-support.ts";
 import {
+  attackDamageInterruptionFrame,
   resumeInterruptedProcedure,
   type BattleInterruptedProcedure,
 } from "./battle-reducer.ts";
@@ -277,21 +279,24 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       action: "attack",
       attackName: "Club",
     } satisfies Extract<BattleSubject, { readonly tag: "action" }>;
-    const continuation = {
-      kind: "attackDamage",
-      subject,
-      attackerId: spellCasterId,
+    const continuation = attackDamageInterruptionFrame({
+      participant: subject,
       targetId: spellTargetId,
-      damageEvent: {
+      targetSpatialFacts: [],
+      attackResult: { total: 15, naturalD20: DieRollResult(10) },
+      damageInput: {
         kind: "rolledDamage",
-        damageRollByType: [{ damageType: "bludgeoning", amount: 8 }],
+        damageRollByType: [
+          { damageType: "bludgeoning", amount: damageAmount(8) },
+        ],
       },
-      fills: [],
-      concentrationSavingThrows: [],
-      deathFailuresAtZeroHp: 1,
-      damageDisposition: { kind: "ordinaryDamage" },
-      attackDamageRiders: [],
-    } satisfies Extract<
+      critical: false,
+      continuation: {
+        concentrationSavingThrows: [],
+        damageDisposition: { kind: "ordinaryDamage" },
+        attackDamageRiders: [],
+      },
+    }) satisfies Extract<
       BattleInterruptedProcedure,
       { readonly kind: "attackDamage" }
     >;

@@ -255,7 +255,7 @@ Plus exported `Schema` consts: `ActiveOngoingFeatureOccurrenceSnapshotSchema` (1
 | `BattleDamageRollHole` | `SpellMarkedDamageRider`, `SpellWeaponDamageRider` |
 | `BattleFill` | `BattleSpellTargetListSpatialFact` |
 | `BattleHelpAttack` | `TurnAnchoredBattleActiveEffectExpiration` |
-| `BattleInterruptedProcedure` | `BattleAfterDamageEvent`, `BattleAttackDamageEvent`, `BattleAttackDamagePrefixFill`, `BattleAttackHostSubject`, `BattlePendingAttackDamageReduction`, `BattleResolvedMovement`, `WeaponDamageDiceRollChoiceFill` |
+| `BattleInterruptedProcedure` | `BattleAfterDamageEvent`, `BattleAttackDamageEvent`, `BattleAttackHostSubject`, `BattlePendingAttackDamageReduction`, `BattleResolvedMovement`, `WeaponDamageDiceRollChoiceFill` |
 | `BattleInterruptCheckpoint` | `BattleAttackDamageContinuationWithoutConcentration`, `BattleAttackKindForRedirect`, `BattleInterruptCheckpointBase`, `BattleInterruptCheckpointWithContinuationBase` |
 | `BattleInterruptProcedureChoice` | `BattleInterruptProcedureChoiceWithSubject`, `BattleInterruptProcedureModifierChoice` |
 | `BattleInterruptProcedureSelection` | `BattleReactionModifierChoice` |

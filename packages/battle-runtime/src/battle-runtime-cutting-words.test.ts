@@ -35,6 +35,7 @@ import {
   resolveSuccessfulAbilityCheckReactionReduction,
 } from "./battle-runtime-test-support.ts";
 import type { BattleSubject } from "./battle-runtime-test-support.ts";
+import { attackDamageInterruptionFrame } from "./battle-reducer.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Cutting Words", () => {
@@ -191,6 +192,35 @@ describe("battle runtime: Cutting Words", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Cutting Words damage Reaction window.");
     }
+    const checkpoint = awaitingReaction.state.interruptStack.at(-1);
+    if (
+      checkpoint?.kind !== "interruptCheckpoint" ||
+      checkpoint.frame.trigger !== "attackDamage"
+    ) {
+      throw new Error("Expected an Attack Damage interruption checkpoint.");
+    }
+    const frame = checkpoint.frame.continuation;
+    expect(frame).toMatchObject({
+      kind: "attackDamage",
+      participant: subject,
+      target: { combatantId: skeletonId },
+      attackResult: { total: 20, naturalD20: 15 },
+      damageInput: { kind: "rolledDamage" },
+      criticalConsequence: { kind: "ordinaryHit" },
+      phase: "attackDamage",
+      continuation: { damageDisposition: { kind: "ordinaryDamage" } },
+    });
+    expect(
+      attackDamageInterruptionFrame({
+        participant: frame.participant,
+        targetId: frame.target.combatantId,
+        targetSpatialFacts: frame.target.spatialFacts,
+        attackResult: frame.attackResult,
+        damageInput: frame.damageInput,
+        critical: true,
+        continuation: frame.continuation,
+      }).criticalConsequence,
+    ).toEqual({ kind: "criticalHit" });
     const choice = reactionModifierChoice(
       awaitingReaction.snapshot.pendingInterrupt!.choices,
       cuttingWordsDamageOnly.id,

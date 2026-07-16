@@ -29,6 +29,7 @@ import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
+  interruptedProcedureSubject,
   type AvailableBattleAct,
   type BattleInterruptCheckpoint,
   type BattleInterruptCheckpointFrame,
@@ -315,7 +316,9 @@ function stateAfterCounteredSpellCast(
   | { readonly tag: "invalid"; readonly message: string } {
   const interruptFrame = state.interruptStack[state.interruptStack.length - 1];
   const spellCastCheckpoint =
-    interruptFrame?.kind === "interruptCheckpoint" ? interruptFrame.frame : null;
+    interruptFrame?.kind === "interruptCheckpoint"
+      ? interruptFrame.frame
+      : null;
   if (spellCastCheckpoint?.trigger !== "spellCast") {
     return {
       tag: "invalid",
@@ -352,7 +355,9 @@ function stateAfterCounteredSpellCast(
           offeredResponders: spellCastCheckpoint.eligibleResponders,
           continuation: {
             kind: "resolved",
-            subject: spellCastCheckpoint.continuation.subject,
+            subject: interruptedProcedureSubject(
+              spellCastCheckpoint.continuation,
+            ),
           },
         }),
       ],
