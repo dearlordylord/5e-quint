@@ -2676,19 +2676,20 @@ function replaceListPreparedSpell(input: {
   if (input.replacement === undefined) {
     return Either.right(input.currentPreparedSpells);
   }
+  const replacement = input.replacement;
 
-  if (input.replacement.replaceSpellId === input.replacement.selectedSpellId) {
+  if (replacement.replaceSpellId === replacement.selectedSpellId) {
     return Either.left({
       code: "sameListPreparedSpellReplacement",
-      spellId: input.replacement.selectedSpellId,
+      spellId: replacement.selectedSpellId,
       message: "List-prepared spell replacement must choose a different spell.",
     });
   }
 
-  if (!input.currentPreparedSpells.includes(input.replacement.replaceSpellId)) {
+  if (!input.currentPreparedSpells.includes(replacement.replaceSpellId)) {
     return Either.left({
       code: "missingListPreparedSpellReplacement",
-      spellId: input.replacement.replaceSpellId,
+      spellId: replacement.replaceSpellId,
       message:
         "Cannot replace a list-prepared spell that the build does not have prepared.",
     });
@@ -2696,8 +2697,8 @@ function replaceListPreparedSpell(input: {
 
   return Either.right(
     input.currentPreparedSpells.map((spellId) =>
-      spellId === input.replacement?.replaceSpellId
-        ? input.replacement.selectedSpellId
+      spellId === replacement.replaceSpellId
+        ? replacement.selectedSpellId
         : spellId,
     ),
   );
@@ -3529,22 +3530,21 @@ function replaceWarlockPactMagicCantrip(input: {
   if (input.replacement === undefined) {
     return Either.right(input.currentCantrips);
   }
+  const replacement = input.replacement;
 
-  if (
-    input.replacement.replaceCantripId === input.replacement.selectedCantripId
-  ) {
+  if (replacement.replaceCantripId === replacement.selectedCantripId) {
     return Either.left({
       code: "sameWarlockPactMagicCantripReplacement",
-      cantripId: input.replacement.selectedCantripId,
+      cantripId: replacement.selectedCantripId,
       message:
         "Warlock Pact Magic cantrip replacement must choose a different Warlock cantrip.",
     });
   }
 
-  if (!input.currentCantrips.includes(input.replacement.replaceCantripId)) {
+  if (!input.currentCantrips.includes(replacement.replaceCantripId)) {
     return Either.left({
       code: "missingWarlockPactMagicCantripReplacement",
-      cantripId: input.replacement.replaceCantripId,
+      cantripId: replacement.replaceCantripId,
       message:
         "Cannot replace a Pact Magic cantrip that the build does not know.",
     });
@@ -3552,8 +3552,8 @@ function replaceWarlockPactMagicCantrip(input: {
 
   return Either.right(
     input.currentCantrips.map((cantripId) =>
-      cantripId === input.replacement?.replaceCantripId
-        ? input.replacement.selectedCantripId
+      cantripId === replacement.replaceCantripId
+        ? replacement.selectedCantripId
         : cantripId,
     ),
   );
@@ -3566,20 +3566,21 @@ function replaceWarlockPactMagicPreparedSpell(input: {
   if (input.replacement === undefined) {
     return Either.right(input.currentPreparedSpells);
   }
+  const replacement = input.replacement;
 
-  if (input.replacement.replaceSpellId === input.replacement.selectedSpellId) {
+  if (replacement.replaceSpellId === replacement.selectedSpellId) {
     return Either.left({
       code: "sameWarlockPactMagicPreparedSpellReplacement",
-      spellId: input.replacement.selectedSpellId,
+      spellId: replacement.selectedSpellId,
       message:
         "Warlock Pact Magic prepared-spell replacement must choose a different Warlock spell.",
     });
   }
 
-  if (!input.currentPreparedSpells.includes(input.replacement.replaceSpellId)) {
+  if (!input.currentPreparedSpells.includes(replacement.replaceSpellId)) {
     return Either.left({
       code: "missingWarlockPactMagicPreparedSpellReplacement",
-      spellId: input.replacement.replaceSpellId,
+      spellId: replacement.replaceSpellId,
       message:
         "Cannot replace a Pact Magic prepared spell that the build does not have prepared.",
     });
@@ -3587,8 +3588,8 @@ function replaceWarlockPactMagicPreparedSpell(input: {
 
   return Either.right(
     input.currentPreparedSpells.map((spellId) =>
-      spellId === input.replacement?.replaceSpellId
-        ? input.replacement.selectedSpellId
+      spellId === replacement.replaceSpellId
+        ? replacement.selectedSpellId
         : spellId,
     ),
   );
