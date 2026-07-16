@@ -16,7 +16,7 @@ acceptance, WIP disposition, and focused verification.
     { "number": 4, "id": "GH-44", "status": "done", "title": "Enforce complete canonical Surface discovery and regeneration", "dependencies": ["GH-25"] },
     { "number": 5, "id": "GH-47", "status": "done", "title": "Drive spell execution from typed procedure facts", "dependencies": ["GH-25"] },
     { "number": 6, "id": "GH-92", "status": "ready-for-implementation", "title": "Derive presentation-free Oracle facts from production owners", "dependencies": [] },
-    { "number": 7, "id": "GH-152", "status": "ready-for-implementation", "title": "Define closed schema-owned roles for every decoded Surface string", "dependencies": ["GH-44"] },
+    { "number": 7, "id": "GH-152", "status": "done", "title": "Define closed schema-owned roles for every decoded Surface string", "dependencies": ["GH-44"] },
     { "number": 8, "id": "GH-98", "status": "ready-for-implementation", "title": "Generate the strict SRD Surface aggregate and bounded Draft 2020-12 schema pair", "dependencies": ["GH-44"] },
     { "number": 9, "id": "GH-100", "status": "ready-for-implementation", "title": "Deliver the canonical weapon-attack interruption frame", "dependencies": ["GH-47"] },
     { "number": 10, "id": "GH-154", "status": "ready-for-implementation", "title": "Admit Character Build mechanics through one exact profile graph", "dependencies": ["GH-25"] },
