@@ -7,10 +7,12 @@ import { defineConfig } from "vitest/config";
 // these local bounds also keep one Vitest worker or concurrent proof child at a
 // time inside the package.
 //
-// Discovery, resolution, and globals stay at Vitest defaults. This file owns
-// execution bounds only.
+// Test files share one module cache so the 150-file suite does not repeatedly
+// collect the full reducer and Surface catalog graph. Tests must construct
+// fresh runtime state and restore any globals they modify.
 export default defineConfig({
   test: {
+    isolate: false,
     maxConcurrency: 1,
     pool: "forks",
     poolOptions: {
