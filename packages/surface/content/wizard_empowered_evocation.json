@@ -5,7 +5,11 @@
   "id": "wizard_empowered_evocation",
   "kind": "class_feature",
   "mechanics": {
-    "family": "passive"
+    "ability": "int",
+    "damageRollCount": 1,
+    "family": "spell_damage_roll_ability_modifier",
+    "school": "evocation",
+    "spellSourceClassName": "wizard"
   },
   "name": "Empowered Evocation",
   "provenance": {

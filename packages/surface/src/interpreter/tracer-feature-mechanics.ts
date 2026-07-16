@@ -453,6 +453,30 @@ export function traceClassFeatureMechanics(
       });
       return [heroicInspirationId];
     }
+    case "prepared_spell_list_expansion": {
+      const expansionId = ids("prepared-spell-list-expansion");
+      nodes.push({
+        id: expansionId,
+        category: "procedure",
+        atomKind: "prepared_spell_list_expansion",
+        label:
+          `prepared_spell_list_expansion\n${m.baseSpellList}\n` +
+          m.additionalEligibleSpellLists.join(" | "),
+      });
+      return [expansionId];
+    }
+    case "spell_damage_roll_ability_modifier": {
+      const modifierId = ids("spell-damage-roll-ability-modifier");
+      nodes.push({
+        id: modifierId,
+        category: "procedure",
+        atomKind: "spell_damage_roll_ability_modifier",
+        label:
+          `spell_damage_roll_ability_modifier\n${m.spellSourceClassName}:${m.school}\n` +
+          `${m.ability} to ${m.damageRollCount} damage roll`,
+      });
+      return [modifierId];
+    }
     case "composite":
       return m.parts.map((part) => {
         switch (part.family) {

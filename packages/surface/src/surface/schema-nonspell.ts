@@ -112,19 +112,8 @@ const FontOfMagicCreatedSpellSlotLevelSchema = Schema.Literal(
   ...FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS,
 );
 
-type ClassFeatureRecordWithSpecificMechanicsClassName =
-  | "cleric"
-  | "druid"
-  | "fighter"
-  | "monk"
-  | "paladin"
-  | "ranger"
-  | "rogue"
-  | "sorcerer"
-  | "wizard"
-  | "warlock";
-
 const CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES = [
+  "bard",
   "cleric",
   "druid",
   "fighter",
@@ -136,6 +125,8 @@ const CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES = [
   "wizard",
   "warlock",
 ] as const satisfies ReadonlyArray<ClassName>;
+type ClassFeatureRecordWithSpecificMechanicsClassName =
+  (typeof CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES)[number];
 
 const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
   (
@@ -1784,6 +1775,24 @@ export const PassiveMechanicsSchema = Schema.Struct({
   operations: exactOptional(Schema.NonEmptyArray(PassiveOperationSchema)),
 });
 
+export const PreparedSpellListExpansionMechanicsSchema = strictStruct({
+  family: Schema.Literal("prepared_spell_list_expansion"),
+  baseSpellList: Schema.Literal("bard"),
+  additionalEligibleSpellLists: Schema.Tuple(
+    Schema.Literal("cleric"),
+    Schema.Literal("druid"),
+    Schema.Literal("wizard"),
+  ),
+});
+
+export const SpellDamageRollAbilityModifierMechanicsSchema = strictStruct({
+  family: Schema.Literal("spell_damage_roll_ability_modifier"),
+  spellSourceClassName: Schema.Literal("wizard"),
+  school: Schema.Literal("evocation"),
+  ability: Schema.Literal("int"),
+  damageRollCount: Schema.Literal(1),
+});
+
 export const CombatTurnStartHeroicInspirationMechanicsSchema = strictStruct({
   family: Schema.Literal("combat_turn_start_heroic_inspiration"),
   trigger: strictStruct({
@@ -1831,6 +1840,8 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   HuntersPreyMechanicsSchema,
   SteadyAimMechanicsSchema,
   PotentCantripMechanicsSchema,
+  PreparedSpellListExpansionMechanicsSchema,
+  SpellDamageRollAbilityModifierMechanicsSchema,
   CombatTurnStartHeroicInspirationMechanicsSchema,
 );
 
@@ -1842,6 +1853,11 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureResourcePoolMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   BonusActionDelegatedStandardActionsMechanicsSchema,
+);
+
+export const BardClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  PreparedSpellListExpansionMechanicsSchema,
 );
 
 export const ClericClassFeatureMechanicsSchema = Schema.Union(
@@ -1862,6 +1878,7 @@ export const WizardClassFeatureMechanicsSchema = Schema.Union(
   RestSpellSlotRecoveryMechanicsSchema,
   WizardSpellbookLearningMechanicsSchema,
   PotentCantripMechanicsSchema,
+  SpellDamageRollAbilityModifierMechanicsSchema,
 );
 
 export const BarbarianClassFeatureMechanicsSchema = Schema.Union(
@@ -3415,6 +3432,12 @@ const ClassFeatureRecordBaseFields = {
   acquiredAtLevel: PositiveIntegerSchema,
 };
 
+export const BardClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("bard"),
+  mechanics: BardClassFeatureMechanicsSchema,
+});
+
 export const WizardClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("wizard"),
@@ -3488,6 +3511,7 @@ export const OtherClassFeatureRecordSchema = Schema.Struct({
 });
 
 export const ClassFeatureRecordSchema = Schema.Union(
+  BardClassFeatureRecordSchema,
   WizardClassFeatureRecordSchema,
   BarbarianClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,

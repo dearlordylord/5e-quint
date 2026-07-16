@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   TELEPORTATION_CIRCLE_MATERIAL_COMPONENTS,
@@ -34,7 +35,7 @@ export function castTeleportationCircle(input: {
   const spell = teleportationCircleSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedTeleportationCircleAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Teleportation Circle requires prepared class Spell Access.",
     );
@@ -66,21 +67,9 @@ function teleportationCircleSpell(
   const unit = getRequiredUnit(unitLibrary, TELEPORTATION_CIRCLE_SPELL_ID);
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
-    return characterSheetIssue(
-      "Teleportation Circle requires a Spell record.",
-    );
+    return characterSheetIssue("Teleportation Circle requires a Spell record.");
   }
   return Either.right(unit.right);
-}
-
-function hasPreparedTeleportationCircleAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === TELEPORTATION_CIRCLE_SPELL_ID,
-      ),
-    ) ?? false
-  );
 }
 
 function teleportationCircleInvocationFromSpell(input: {
@@ -93,7 +82,6 @@ function teleportationCircleInvocationFromSpell(input: {
 > {
   const spell = input.spell;
   if (
-    spell.id !== TELEPORTATION_CIRCLE_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "point" ||

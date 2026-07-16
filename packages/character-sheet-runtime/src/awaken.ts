@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   AWAKEN_MATERIAL_COMPONENTS,
@@ -35,7 +36,7 @@ export function castAwaken(input: {
   const spell = awakenSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedAwakenAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue("Awaken requires prepared class Spell Access.");
   }
 
@@ -73,14 +74,6 @@ function awakenSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedAwakenAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === AWAKEN_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function awakenTargetIssue(target: CharacterSheetAwakenTarget): string | null {
   if (target.languageGranted.length === 0) {
     return "Awaken requires one language the caster knows.";
@@ -101,7 +94,6 @@ function awakenInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetAwakenInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== AWAKEN_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "touch" ||

@@ -931,7 +931,8 @@ export function eligibleAttackDamageDieFloorUnitIdsForAttacker(
   }
   const mainWeapon = attacker.origin.selectedLoadout.weapon;
   if (
-    mainWeapon?.unitId !== attack.weapon.id ||
+    mainWeapon === undefined ||
+    mainWeapon.unitId !== attack.weapon.id ||
     mainWeapon.grip !== "two_handed"
   ) {
     return [];

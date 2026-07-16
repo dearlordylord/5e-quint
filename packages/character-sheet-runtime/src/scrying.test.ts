@@ -20,11 +20,11 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetScryingCreatureTarget,
-  CharacterSheetScryingLocationTarget,
-  CharacterSheetScryingTarget,
-} from "./index.ts";
+import {
+  type CharacterSheetScryingCreatureTarget,
+  type CharacterSheetScryingLocationTarget,
+  type CharacterSheetScryingTarget,
+} from "./sheet-types.ts";
 
 const scryingSelectedIdentityDriverSchema = {
   doCastScrying: {},

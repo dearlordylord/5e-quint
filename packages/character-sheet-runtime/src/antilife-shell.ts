@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   ANTILIFE_SHELL_ALLOWED_BARRIER_INTERACTION_VALUES,
@@ -32,7 +33,7 @@ export function castAntilifeShell(input: {
   const spell = antilifeShellSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedAntilifeShellAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Antilife Shell requires prepared class Spell Access.",
     );
@@ -68,23 +69,12 @@ function antilifeShellSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedAntilifeShellAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === ANTILIFE_SHELL_SPELL_ID,
-      ),
-    ) ?? false
-  );
-}
-
 function antilifeShellInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly placement: CharacterSheetAntilifeShellBarrierPlacement;
 }): Either.Either<CharacterSheetAntilifeShellInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== ANTILIFE_SHELL_SPELL_ID ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "abjuration" ||

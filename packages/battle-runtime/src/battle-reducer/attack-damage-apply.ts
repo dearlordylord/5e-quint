@@ -1038,11 +1038,17 @@ function mainHandWeaponItemIdForAttack(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
 ): string | undefined {
-  return actor.origin.kind === "character" &&
-    actor.origin.attack?.kind === "weapon" &&
-    actor.origin.attack === attack &&
-    actor.origin.selectedLoadout.weapon?.unitId === attack.weapon.id
-    ? actor.origin.selectedLoadout.weapon.itemId
+  if (
+    actor.origin.kind !== "character" ||
+    actor.origin.attack?.kind !== "weapon" ||
+    actor.origin.attack !== attack
+  ) {
+    return undefined;
+  }
+  const mainHandWeapon = actor.origin.selectedLoadout.weapon;
+  return mainHandWeapon !== undefined &&
+    mainHandWeapon.unitId === attack.weapon.id
+    ? mainHandWeapon.itemId
     : undefined;
 }
 
@@ -1050,10 +1056,16 @@ function offHandWeaponItemIdForAttack(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
 ): string | undefined {
-  return actor.origin.kind === "character" &&
-    actor.origin.offHandAttack === attack &&
-    actor.origin.selectedLoadout.offHandWeapon?.unitId === attack.weapon.id
-    ? actor.origin.selectedLoadout.offHandWeapon.itemId
+  if (
+    actor.origin.kind !== "character" ||
+    actor.origin.offHandAttack !== attack
+  ) {
+    return undefined;
+  }
+  const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
+  return offHandWeapon !== undefined &&
+    offHandWeapon.unitId === attack.weapon.id
+    ? offHandWeapon.itemId
     : undefined;
 }
 
@@ -1273,9 +1285,10 @@ export function offHandWeaponItemIdForActor(
 ): string | undefined {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") return undefined;
-  return actor.origin.selectedLoadout.offHandWeapon?.unitId ===
-    offHand.weapon.id
-    ? actor.origin.selectedLoadout.offHandWeapon.itemId
+  const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
+  return offHandWeapon !== undefined &&
+    offHandWeapon.unitId === offHand.weapon.id
+    ? offHandWeapon.itemId
     : undefined;
 }
 

@@ -68,8 +68,15 @@ import {
 } from "./sheet-types.ts";
 
 const byKind = Match.discriminator("kind");
-const RANGER_TIRELESS_UNIT_ID = "ranger_tireless" as const;
-const RANGER_TIRELESS_DIE_SIZE = 8;
+
+type TirelessTemporaryHitPointsProfile = {
+  readonly resource: Extract<
+    CharacterSheetResourceState,
+    { readonly tag: "useCountResource" }
+  >;
+  readonly ability: "wis";
+  readonly dieSize: number;
+};
 
 export function characterSheetResources(
   sheet: CharacterSheet,
@@ -291,23 +298,30 @@ export function useRangerTirelessTemporaryHitPoints(input: {
   }
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
   if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right.find(
-    (candidate) =>
-      candidate.tag === "useCountResource" &&
-      candidate.unitId === RANGER_TIRELESS_UNIT_ID,
+  const profile = tirelessTemporaryHitPointsProfile(
+    resources.right,
+    input.unitLibrary,
   );
-  if (resource === undefined) {
-    return characterSheetIssue("Tireless requires the Ranger Tireless feature.");
+  if (Either.isLeft(profile)) return Either.left(profile.left);
+  if (profile.right === undefined) {
+    return characterSheetIssue(
+      "Tireless requires the Ranger Tireless feature.",
+    );
   }
+  const { resource } = profile.right;
   if (resource.expended + resourceCount(1) > resource.count) {
     return characterSheetIssue("Tireless has no remaining uses.");
   }
   const roll = Number(input.tirelessRoll);
-  if (roll < 1 || roll > RANGER_TIRELESS_DIE_SIZE) {
-    return characterSheetIssue("Tireless roll must be within d8.");
+  if (roll < 1 || roll > profile.right.dieSize) {
+    return characterSheetIssue(
+      `Tireless roll must be within d${profile.right.dieSize}.`,
+    );
   }
-  const wisdomModifier = abilityScoreToMod(input.sheet.build.abilityScores.wis);
-  const grantedTemporaryHitPoints = Hp(Math.max(1, roll + wisdomModifier));
+  const abilityModifier = abilityScoreToMod(
+    input.sheet.build.abilityScores[profile.right.ability],
+  );
+  const grantedTemporaryHitPoints = Hp(Math.max(1, roll + abilityModifier));
   return Either.right({
     ...input.sheet,
     hitPoints: {
@@ -319,10 +333,70 @@ export function useRangerTirelessTemporaryHitPoints(input: {
     },
     resourceExpenditures: replaceUseCountResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
-      unitId: RANGER_TIRELESS_UNIT_ID,
+      unitId: resource.unitId,
       expended: resourceCount(resource.expended + resourceCount(1)),
     }),
   });
+}
+
+function tirelessTemporaryHitPointsProfile(
+  resources: readonly CharacterSheetResourceState[],
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  TirelessTemporaryHitPointsProfile | undefined,
+  CharacterSheetIssue
+> {
+  const matches: TirelessTemporaryHitPointsProfile[] = [];
+  for (const resource of resources) {
+    if (resource.tag !== "useCountResource") continue;
+    const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (
+      unit.right.kind !== "class_feature" ||
+      unit.right.mechanics.family !== "activation"
+    ) {
+      continue;
+    }
+    const mechanics = unit.right.mechanics;
+    const [phase, ...extraPhases] = mechanics.phases;
+    if (
+      mechanics.activationCost.kind !== "standard_action" ||
+      mechanics.activationCost.action !== "magic" ||
+      mechanics.resource?.kind !== "use_count" ||
+      mechanics.resource.cap.kind !== "ability_modifier" ||
+      mechanics.resource.cap.ability !== "wis" ||
+      mechanics.resource.cap.minimum !== 1 ||
+      mechanics.resetCadence?.kind !== "long_rest" ||
+      phase?.kind !== "direct" ||
+      phase.attachment.kind !== "self" ||
+      extraPhases.length > 0
+    ) {
+      continue;
+    }
+    const [effect, ...extraEffects] = phase.effects ?? [];
+    if (
+      effect?.kind !== "grant_temp_hp" ||
+      effect.amount.kind !== "fixed" ||
+      effect.amount.expr.dice !== 1 ||
+      effect.amount.expr.dieSize !== 8 ||
+      effect.amount.expr.abilityModifier !== "wis" ||
+      extraEffects.length > 0
+    ) {
+      continue;
+    }
+    matches.push({
+      resource,
+      ability: effect.amount.expr.abilityModifier,
+      dieSize: effect.amount.expr.dieSize,
+    });
+  }
+  if (matches.length > 1) {
+    return characterSheetIssue(
+      "Tireless Temporary Hit Points requires one matching feature profile.",
+    );
+  }
+  const [profile] = matches;
+  return Either.right(profile);
 }
 
 export function resourceExpendituresFromInput(

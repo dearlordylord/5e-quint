@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -38,7 +39,7 @@ export function castTelekinesis(input: {
   const spell = telekinesisSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedTelekinesisAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Telekinesis requires prepared class Spell Access.",
     );
@@ -77,14 +78,6 @@ function telekinesisSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedTelekinesisAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === TELEKINESIS_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function telekinesisTargetIssue(
   target: CharacterSheetTelekinesisTarget,
 ): string | null {
@@ -103,7 +96,6 @@ function telekinesisInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetTelekinesisInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== TELEKINESIS_SPELL_ID ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "transmutation" ||
@@ -190,10 +182,8 @@ function isTelekinesisModeChoice(effect: unknown): boolean {
   }
   const options = effect.options;
   if (!Array.isArray(options)) return false;
-  return (
-    TELEKINESIS_MODE_IDS.every((id) =>
-      options.some((option) => isRecord(option) && option.id === id),
-    )
+  return TELEKINESIS_MODE_IDS.every((id) =>
+    options.some((option) => isRecord(option) && option.id === id),
   );
 }
 

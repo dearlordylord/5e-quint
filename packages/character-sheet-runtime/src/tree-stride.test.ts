@@ -21,10 +21,10 @@ import {
   storedAvailableSheetInput,
   unitLibrary,
 } from "./test-support.ts";
-import type {
-  CharacterSheetTreeStrideDestinationTree,
-  CharacterSheetTreeStrideTree,
-} from "./index.ts";
+import {
+  type CharacterSheetTreeStrideDestinationTree,
+  type CharacterSheetTreeStrideTree,
+} from "./sheet-types.ts";
 
 const treeStrideSelectedIdentityDriverSchema = {
   doCastTreeStride: {},
@@ -302,9 +302,7 @@ const entryTree = {
   atLeastCasterSize: true,
 } as const satisfies CharacterSheetTreeStrideTree;
 const destinationTree = {
-  treeId: requireRight(
-    characterSheetTreeStrideTreeId("tree:destination-oak"),
-  ),
+  treeId: requireRight(characterSheetTreeStrideTreeId("tree:destination-oak")),
   treeKind: oakKind,
   living: true,
   atLeastCasterSize: true,

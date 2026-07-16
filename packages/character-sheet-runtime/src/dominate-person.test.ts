@@ -19,16 +19,14 @@ import backgroundSoldierInput from "../../surface/content/background_soldier.jso
 import classWizardInput from "../../surface/content/class_wizard.json";
 import dominatePersonInput from "../../surface/content/dominate_person.json";
 import speciesOrcInput from "../../surface/content/species_orc.json";
+import { characterSheetId } from "./index.ts";
+import { castDominatePerson } from "./dominate-person.ts";
+import { characterSheetDominatePersonTargetId } from "./sheet-types.ts";
+import type { CharacterSheet } from "./index.ts";
 import {
-  castDominatePerson,
-  characterSheetDominatePersonTargetId,
-  characterSheetId,
-} from "./index.ts";
-import type {
-  CharacterSheet,
-  CharacterSheetDominatePersonSavingThrowOutcome,
-  CharacterSheetDominatePersonTarget,
-} from "./index.ts";
+  type CharacterSheetDominatePersonSavingThrowOutcome,
+  type CharacterSheetDominatePersonTarget,
+} from "./sheet-types.ts";
 
 const dominatePersonSelectedIdentityDriverSchema = {
   doCastDominatePerson: {},
@@ -283,12 +281,10 @@ function expectedDominatePersonProjection(): DominatePersonSelectedIdentityProje
   };
 }
 
-function dominatePersonTarget(
-  input: {
-    readonly savingThrowOutcome: CharacterSheetDominatePersonSavingThrowOutcome;
-    readonly fightingCasterOrAllies?: boolean;
-  },
-): CharacterSheetDominatePersonTarget {
+function dominatePersonTarget(input: {
+  readonly savingThrowOutcome: CharacterSheetDominatePersonSavingThrowOutcome;
+  readonly fightingCasterOrAllies?: boolean;
+}): CharacterSheetDominatePersonTarget {
   return {
     targetId: requireRight(
       characterSheetDominatePersonTargetId("dominate-person-target:humanoid"),

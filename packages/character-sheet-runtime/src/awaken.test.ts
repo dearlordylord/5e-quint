@@ -18,7 +18,7 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type { CharacterSheetAwakenTarget } from "./index.ts";
+import { type CharacterSheetAwakenTarget } from "./sheet-types.ts";
 
 const awakenSelectedIdentityDriverSchema = {
   doCastAwaken: {},
@@ -231,8 +231,8 @@ const awakenSelectedIdentityActions = {
         target: awakenNaturalPlantTarget(),
       }),
     );
-    const plantChange = result.invocation.transformation
-      .naturalPlantCreatureChange;
+    const plantChange =
+      result.invocation.transformation.naturalPlantCreatureChange;
     if (plantChange.applies !== true) {
       throw new Error("Expected Awaken replay to transform a natural Plant.");
     }

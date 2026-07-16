@@ -10,6 +10,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -55,8 +56,10 @@ export function castCreation(input: {
   const spell = creationSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedCreationAccess(input.sheet)) {
-    return characterSheetIssue("Creation requires prepared class Spell Access.");
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
+    return characterSheetIssue(
+      "Creation requires prepared class Spell Access.",
+    );
   }
 
   const castLevel = input.castLevel ?? CREATION_SPELL_LEVEL;
@@ -97,14 +100,6 @@ function creationSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedCreationAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === CREATION_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function creationObjectIssue(input: {
   readonly object: CharacterSheetCreationObject;
   readonly castLevel: SpellSlotLevel;
@@ -131,7 +126,6 @@ function creationInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetCreationInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== CREATION_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "point" ||
@@ -215,9 +209,11 @@ function shortestCreationObjectDuration(
   const shortest = CREATION_MATERIAL_DURATION_ORDER.find((material) =>
     materials.some((candidate) => candidate === material),
   );
-  const duration = timeSpanDuration(CREATION_MATERIAL_DURATIONS[
-    shortest ?? CREATION_MATERIAL_DURATION_ORDER[0]
-  ]);
+  const duration = timeSpanDuration(
+    CREATION_MATERIAL_DURATIONS[
+      shortest ?? CREATION_MATERIAL_DURATION_ORDER[0]
+    ],
+  );
   return Either.isRight(duration)
     ? Either.right(duration.right)
     : characterSheetIssue("Creation requires a supported object duration.");

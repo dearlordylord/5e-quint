@@ -130,7 +130,6 @@ describe("Character Sheet runtime / Commune", () => {
     expect(first.sheet.restFeatureUses).toEqual([
       {
         tag: "communeCastingSinceLongRest",
-        spellId: "commune",
         usedSinceLongRest: true,
         castCount: 1,
       },
@@ -149,7 +148,6 @@ describe("Character Sheet runtime / Commune", () => {
     expect(second.sheet.restFeatureUses).toEqual([
       {
         tag: "communeCastingSinceLongRest",
-        spellId: "commune",
         usedSinceLongRest: true,
         castCount: 2,
       },

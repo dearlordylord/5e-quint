@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -31,7 +32,7 @@ export function castTreeStride(input: {
   const spell = treeStrideSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedTreeStrideAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Tree Stride requires prepared class Spell Access.",
     );
@@ -78,9 +79,7 @@ export function resolveTreeStrideTransit(
       TREE_STRIDE_ENTRY_MOVEMENT_COST_FEET +
         TREE_STRIDE_DESTINATION_MOVEMENT_COST_FEET;
   return Either.right({
-    arrivalTree: canReachDestination
-      ? input.destinationTree
-      : input.entryTree,
+    arrivalTree: canReachDestination ? input.destinationTree : input.entryTree,
     movementSpentFeet: canReachDestination
       ? TREE_STRIDE_ENTRY_MOVEMENT_COST_FEET +
         TREE_STRIDE_DESTINATION_MOVEMENT_COST_FEET
@@ -101,19 +100,10 @@ function treeStrideSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedTreeStrideAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((spellId) => spellId === TREE_STRIDE_SPELL_ID),
-    ) ?? false
-  );
-}
-
 function treeStrideInvocationFromSpell(
   spell: SpellRecord,
 ): Either.Either<CharacterSheetTreeStrideInvocation, CharacterSheetIssue> {
   if (
-    spell.id !== TREE_STRIDE_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "self" ||
@@ -161,8 +151,7 @@ function treeStrideInvocationFromSpell(
       destinationSearchRadiusFeet: TREE_STRIDE_DESTINATION_SEARCH_RADIUS_FEET,
       usesPerTurn: 1,
       mustEndTurnOutsideTree: true,
-      destinationKindRequirement:
-        "same_kind_living_tree_at_least_caster_size",
+      destinationKindRequirement: "same_kind_living_tree_at_least_caster_size",
     },
   });
 }

@@ -6,6 +6,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -33,7 +34,7 @@ export function castModifyMemory(input: {
   const spell = modifyMemorySpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedModifyMemoryAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Modify Memory requires prepared class Spell Access.",
     );
@@ -74,16 +75,6 @@ function modifyMemorySpell(
     return characterSheetIssue("Modify Memory requires a Spell record.");
   }
   return Either.right(unit.right);
-}
-
-function hasPreparedModifyMemoryAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === MODIFY_MEMORY_SPELL_ID,
-      ),
-    ) ?? false
-  );
 }
 
 function modifyMemoryTargetIssue(
@@ -129,7 +120,6 @@ function modifyMemoryInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetModifyMemoryInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== MODIFY_MEMORY_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "enchantment" ||
@@ -214,9 +204,7 @@ function modifyMemoryInvocationFromSpell(input: {
   });
 }
 
-function isTargetTakesDamageEnd(trigger: {
-  readonly kind: string;
-}): boolean {
+function isTargetTakesDamageEnd(trigger: { readonly kind: string }): boolean {
   return trigger.kind === "target_takes_damage";
 }
 

@@ -17,7 +17,7 @@ import {
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.ts";
-import type { CharacterSheetCreationObject } from "./index.ts";
+import { type CharacterSheetCreationObject } from "./sheet-types.ts";
 
 const creationSelectedIdentityDriverSchema = {
   doCastCreation: {},
@@ -191,7 +191,9 @@ const creationSelectedIdentityActions = {
 >;
 
 const mixedGemAndVegetableObject = {
-  objectId: requireRight(characterSheetCreationObjectId("object:shadow-gem-box")),
+  objectId: requireRight(
+    characterSheetCreationObjectId("object:shadow-gem-box"),
+  ),
   materials: ["vegetable_matter", "gems"],
   formAndMaterialSeenByCaster: true,
   cubeSideFeet: 5,

@@ -9,6 +9,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
@@ -34,7 +35,7 @@ export function castDominatePerson(input: {
   const spell = dominatePersonSpell(input.unitLibrary);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  if (!hasPreparedDominatePersonAccess(input.sheet)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
     return characterSheetIssue(
       "Dominate Person requires prepared class Spell Access.",
     );
@@ -73,16 +74,6 @@ function dominatePersonSpell(
   return Either.right(unit.right);
 }
 
-function hasPreparedDominatePersonAccess(sheet: CharacterSheet): boolean {
-  return (
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (spellId) => spellId === DOMINATE_PERSON_SPELL_ID,
-      ),
-    ) ?? false
-  );
-}
-
 function dominatePersonTargetIssue(
   target: CharacterSheetDominatePersonTarget,
 ): string | null {
@@ -107,7 +98,6 @@ function dominatePersonInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetDominatePersonInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== DOMINATE_PERSON_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.school !== "enchantment" ||
@@ -148,7 +138,9 @@ function dominatePersonInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   if (Either.isLeft(duration)) {
-    return characterSheetIssue("Dominate Person requires a supported duration.");
+    return characterSheetIssue(
+      "Dominate Person requires a supported duration.",
+    );
   }
 
   return Either.right({

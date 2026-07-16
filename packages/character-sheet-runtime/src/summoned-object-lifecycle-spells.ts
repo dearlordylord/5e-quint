@@ -4,11 +4,7 @@ import {
   timeSpanDuration,
   type TimeSpanDuration,
 } from "@dnd/shared/elapsed-time";
-import {
-  Hp,
-  spellSlotLevel,
-  type SpellSlotLevel,
-} from "@dnd/shared/types";
+import { Hp, spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
@@ -62,7 +58,10 @@ export function castAnimateObjects(input: {
   const spell = spellRecord(input.unitLibrary, ANIMATE_OBJECTS_SPELL_ID);
   if (Either.isLeft(spell)) return Either.left(spell.left);
 
-  const accessIssue = preparedAccessIssue(input.sheet, ANIMATE_OBJECTS_SPELL_ID);
+  const accessIssue = preparedAccessIssue(
+    input.sheet,
+    ANIMATE_OBJECTS_SPELL_ID,
+  );
   if (accessIssue !== null) return characterSheetIssue(accessIssue);
 
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
@@ -210,7 +209,9 @@ function spellRecord(
   if (Either.isLeft(unit)) return Either.left(unit.left);
   return unit.right.kind === "spell"
     ? Either.right(unit.right)
-    : characterSheetIssue("Summoned/object lifecycle support requires a Spell record.");
+    : characterSheetIssue(
+        "Summoned/object lifecycle support requires a Spell record.",
+      );
 }
 
 function preparedAccessIssue(
@@ -219,7 +220,9 @@ function preparedAccessIssue(
 ): string | null {
   const hasAccess =
     sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some((preparedSpellId) => preparedSpellId === spellId),
+      source.preparedSpells.some(
+        (preparedSpellId) => preparedSpellId === spellId,
+      ),
     ) ?? false;
   return hasAccess
     ? null
@@ -258,7 +261,6 @@ function animateObjectsInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetAnimateObjectsInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== ANIMATE_OBJECTS_SPELL_ID ||
     spell.mechanics.family !== "templated_multi_spawn" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "point" ||
@@ -284,7 +286,9 @@ function animateObjectsInvocationFromSpell(input: {
   }
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   if (Either.isLeft(duration)) {
-    return characterSheetIssue("Animate Objects requires a supported duration.");
+    return characterSheetIssue(
+      "Animate Objects requires a supported duration.",
+    );
   }
 
   const animatedObjects = input.targets.map((target) =>
@@ -330,10 +334,12 @@ function conjureElementalInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly spirit: CharacterSheetConjureElementalSpirit;
   readonly castLevel: SpellSlotLevel;
-}): Either.Either<CharacterSheetConjureElementalInvocation, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetConjureElementalInvocation,
+  CharacterSheetIssue
+> {
   const spell = input.spell;
   if (
-    spell.id !== CONJURE_ELEMENTAL_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "point" ||
@@ -350,7 +356,9 @@ function conjureElementalInvocationFromSpell(input: {
   }
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   if (Either.isLeft(duration)) {
-    return characterSheetIssue("Conjure Elemental requires a supported duration.");
+    return characterSheetIssue(
+      "Conjure Elemental requires a supported duration.",
+    );
   }
   const damageDiceCount = 8 + (input.castLevel - LIFECYCLE_SPELL_LEVEL);
   const repeatDamageDiceCount = 4 + (input.castLevel - LIFECYCLE_SPELL_LEVEL);
@@ -398,7 +406,6 @@ function summonDragonInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetSummonDragonInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== SUMMON_DRAGON_SPELL_ID ||
     spell.mechanics.family !== "spawned_creature" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "point" ||
@@ -490,7 +497,6 @@ function planarBindingInvocationFromSpell(input: {
 }): Either.Either<CharacterSheetPlanarBindingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   if (
-    spell.id !== PLANAR_BINDING_SPELL_ID ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
     spell.mechanics.range.kind !== "point" ||
