@@ -1,7 +1,9 @@
 # Ralph graph-native orchestration: market and adoption alternatives
 
-Research date: 2026-07-17  
-Wayfinder map: [Ralph graph-native orchestration](https://github.com/dearlordylord/5e-quint/issues/175)  
+Research date: 2026-07-17
+
+Wayfinder map: [Ralph graph-native orchestration](https://github.com/dearlordylord/5e-quint/issues/175)
+
 Research ticket: [Evaluate Gas Town, Beads, and Agent Orchestrator as Ralph adoption alternatives](https://github.com/dearlordylord/5e-quint/issues/180)
 
 ## Conclusion
@@ -174,4 +176,3 @@ Before selecting this direction, prototype the three seams most likely to falsif
 - Strongest graph/claim prior art: **Beads/Gas Town and Agent Kanban**.
 - Strongest retry/review/quarantine prior art: **AIF Handoff**.
 - Implementation hypothesis to test: **clean Effect-based control plane with compatibility reuse of Ralph semantics**, not a predetermined final decision.
-
