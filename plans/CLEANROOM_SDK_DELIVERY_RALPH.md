@@ -529,7 +529,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 56,
       "id": "GH-165",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Give Stat Block procedures and limited-use pools typed execution references",
       "dependencies": []
     },
