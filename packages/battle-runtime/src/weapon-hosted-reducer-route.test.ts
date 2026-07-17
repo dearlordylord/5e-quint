@@ -5,6 +5,7 @@ import {
   resolveBattleSubject,
   spellId,
   type BattleActiveEffect,
+  type BattleCreatureState,
   type BattleFill,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
@@ -173,6 +174,24 @@ describe("weapon-hosted reducer route call segments", () => {
         owner: "battleHitPoint",
       },
     ]);
+    expect(
+      resolveBattleSubject({
+        state: damageResult.state,
+        subject: act.subject,
+        fills: [damageTypeFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "spellHostedWeaponAttack",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ],
+    });
 
     expect([
       startRoute,
@@ -189,10 +208,52 @@ describe("weapon-hosted reducer route call segments", () => {
         holes: ["damageTypeChoice", "targetChoice"],
         owner: "battleActionEconomy",
       },
-      ...(damageTypeResult.routeEvents ?? []),
-      ...(targetResult.routeEvents ?? []),
-      ...(attackResult.routeEvents ?? []),
-      ...(damageResult.routeEvents ?? []),
+      {
+        kind: "resolveBattleSubject",
+        subject: "spellHostedWeaponAttack",
+        fill: "damageTypeChoice",
+        holes: ["targetChoice"],
+        owner: "battleHoleFrontier",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "spellHostedWeaponAttack",
+        holes: ["targetChoice"],
+        owner: "battleTargetSelection",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "spellHostedWeaponAttack",
+        fill: "targetChoice",
+        holes: ["attackRoll"],
+        owner: "battleTargetSelection",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "spellHostedWeaponAttack",
+        holes: ["attackRoll"],
+        owner: "battleAttackRoll",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "spellHostedWeaponAttack",
+        fill: "attackRoll",
+        holes: ["rolledDice"],
+        owner: "battleAttackRoll",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "spellHostedWeaponAttack",
+        holes: ["rolledDice"],
+        owner: "battleHitPoint",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "spellHostedWeaponAttack",
+        fill: "rolledDice",
+        holes: [],
+        owner: "battleHitPoint",
+      },
     ]);
   });
 
@@ -217,6 +278,24 @@ describe("weapon-hosted reducer route call segments", () => {
         owner: "battleActiveEffect",
       },
     ]);
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: castAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "heldWeaponActiveEffect",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ],
+    });
 
     const quarterstaff = statBlockAttackAct(
       cast.state,
@@ -321,8 +400,26 @@ describe("weapon-hosted reducer route call segments", () => {
         holes: ["attackRoll"],
         owner: "battleActiveEffect",
       },
-      ...(quarterstaffAttackResult.routeEvents ?? []),
-      ...(quarterstaffDamageResult.routeEvents ?? []),
+      {
+        kind: "resolveBattleSubject",
+        subject: "heldWeaponActiveEffect",
+        fill: "attackRoll",
+        holes: ["rolledDice"],
+        owner: "battleAttackRoll",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "heldWeaponActiveEffect",
+        holes: ["rolledDice"],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "heldWeaponActiveEffect",
+        fill: "rolledDice",
+        holes: [],
+        owner: "battleHitPoint",
+      },
     ]);
 
     const unarmed = statBlockAttackAct(
@@ -388,6 +485,24 @@ describe("weapon-hosted reducer route call segments", () => {
         owner: "battleActiveEffect",
       },
     ]);
+    expect(
+      resolveBattleSubject({
+        state: divineCast.state,
+        subject: divineAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "weaponDamageRider",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ],
+    });
     const longswordSubject = weaponAttackSubject(divineCast.state, "Longsword");
     const targetHoleResult = requireNeedsHoles(
       resolveBattleSubject({
@@ -462,10 +577,105 @@ describe("weapon-hosted reducer route call segments", () => {
       ),
     ).toEqual([
       startRoute,
-      ...(divineAct.routeEvents ?? []),
-      ...(divineCast.routeEvents ?? []),
-      ...(longswordAttackResult.routeEvents ?? []),
-      ...(longswordDamageResult.routeEvents ?? []),
+      {
+        kind: "discoverBattleActs",
+        subject: "weaponDamageRider",
+        holes: [],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "weaponDamageRider",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "weaponDamageRider",
+        holes: ["rolledDice"],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "weaponDamageRider",
+        fill: "rolledDice",
+        holes: [],
+        owner: "battleHitPoint",
+      },
+    ]);
+
+    const unarmedDivineState = divineFavorBattleWithUnarmedDamageDie();
+    const unarmedDivineAct = bonusSpellAct({
+      state: unarmedDivineState,
+      spellId: divineFavorUnitId,
+    });
+    const unarmedDivineCast = requireResolved(
+      resolveBattleSubject({
+        state: unarmedDivineState,
+        subject: unarmedDivineAct.subject,
+        fills: [],
+      }),
+    );
+    const unarmedAct = statBlockAttackAct(
+      unarmedDivineCast.state,
+      spellCasterId,
+      "Unarmed Strike",
+    );
+    const unarmedTargetFill = attackTargetFill(
+      requireHole(unarmedAct.initialHoles, "targetChoice"),
+      spellCasterId,
+      spellTargetId,
+      "Unarmed Strike",
+    );
+    const unarmedTargetResult = requireNeedsHoles(
+      resolveBattleSubject({
+        state: unarmedDivineCast.state,
+        subject: unarmedAct.subject,
+        fills: [unarmedTargetFill],
+      }),
+    );
+    const unarmedAttackFill = attackRollFill(
+      requireHole(unarmedTargetResult.holes, "attackRoll"),
+      { total: 15, naturalD20: 10 },
+    );
+    const unarmedAttackResult = requireNeedsHoles(
+      resolveBattleSubject({
+        state: unarmedDivineCast.state,
+        subject: unarmedAct.subject,
+        fills: [unarmedTargetFill, unarmedAttackFill],
+      }),
+    );
+    expect(unarmedAttackResult.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "weaponAttack",
+        fill: "attackRoll",
+        holes: ["rolledDice"],
+        owner: "battleAttackRoll",
+      },
+    ]);
+    const unarmedDamageResult = requireResolved(
+      resolveBattleSubject({
+        state: unarmedDivineCast.state,
+        subject: unarmedAct.subject,
+        fills: [
+          unarmedTargetFill,
+          unarmedAttackFill,
+          damageRollFillWithGroups(
+            requireHole(unarmedAttackResult.holes, "rolledDice"),
+            [[3]],
+          ),
+        ],
+      }),
+    );
+    expect(unarmedDamageResult.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "weaponAttack",
+        fill: "rolledDice",
+        holes: [],
+        owner: "battleHitPoint",
+      },
     ]);
 
     const magicState = magicWeaponBattle();
@@ -478,20 +688,18 @@ describe("weapon-hosted reducer route call segments", () => {
       magicAct.initialHoles,
       "magicWeaponTargetItem",
     );
-    expect(
-      requireResolved(
-        resolveBattleSubject({
-          state: magicState,
-          subject: magicAct.subject,
-          fills: [
-            magicWeaponTargetItemFill(magicTarget, {
-              holderCombatantId: spellCasterId,
-              itemId: "main:weapon_longsword",
-            }),
-          ],
-        }),
-      ).routeEvents,
-    ).toEqual([
+    const magicFill = magicWeaponTargetItemFill(magicTarget, {
+      holderCombatantId: spellCasterId,
+      itemId: "main:weapon_longsword",
+    });
+    const magicResolution = requireResolved(
+      resolveBattleSubject({
+        state: magicState,
+        subject: magicAct.subject,
+        fills: [magicFill],
+      }),
+    );
+    expect(magicResolution.routeEvents).toEqual([
       {
         kind: "resolveBattleSubjectWithoutFill",
         subject: "weaponEnhancementItemTarget",
@@ -499,6 +707,24 @@ describe("weapon-hosted reducer route call segments", () => {
         owner: "battleActiveEffect",
       },
     ]);
+    expect(
+      resolveBattleSubject({
+        state: magicResolution.state,
+        subject: magicAct.subject,
+        fills: [magicFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "weaponEnhancementItemTarget",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ],
+    });
   });
 
   it("keeps marked, selected held, and weapon-rider contributions ordered", () => {
@@ -696,6 +922,44 @@ function divineFavorBattle(): BattleState {
     targetHp: 20,
     targetMaxHp: 20,
   });
+}
+
+function divineFavorBattleWithUnarmedDamageDie(): BattleState {
+  const state = divineFavorBattle();
+  const caster = requireCombatant(state, spellCasterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error(
+      "Expected the Divine Favor fixture caster to be a character.",
+    );
+  }
+  const casterWithUnarmedDamageDie: BattleCreatureState = {
+    ...caster,
+    origin: {
+      ...caster.origin,
+      unarmedStrike: {
+        ...caster.origin.unarmedStrike,
+        effect: {
+          kind: "damage",
+          damage: {
+            kind: "authoredReplacement",
+            sourceUnitId: spellId("synthetic_unarmed_damage_die"),
+            dice: 1,
+            dieSize: 4,
+            damageType: "bludgeoning",
+          },
+        },
+      },
+    },
+  };
+  return {
+    ...state,
+    combatants: new Map(
+      [...state.combatants].map(([combatantId, combatant]) => [
+        combatantId,
+        combatantId === spellCasterId ? casterWithUnarmedDamageDie : combatant,
+      ]),
+    ),
+  };
 }
 
 function magicWeaponBattle(): BattleState {

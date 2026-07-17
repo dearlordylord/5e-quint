@@ -2853,7 +2853,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: casterId,
         targetId,
-        attackName,
+        ...(hole.attack?.selection ?? { attackName }),
       },
     ],
   };

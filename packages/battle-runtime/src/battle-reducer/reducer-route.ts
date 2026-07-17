@@ -613,12 +613,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (afterHitDamageRiderDiscoveryRoute !== undefined) {
     return afterHitDamageRiderDiscoveryRoute;
   }
-  const markedDamageImmunityRoute = markedDamageImmunityRouteForDiscoveredAct(
-    state,
-    act,
-  );
-  if (markedDamageImmunityRoute !== undefined) {
-    return [markedDamageImmunityRoute];
+  const markedDamageAndConditionProtectionRoute =
+    markedDamageAndConditionProtectionRouteForDiscoveredAct(state, act);
+  if (markedDamageAndConditionProtectionRoute !== undefined) {
+    return [markedDamageAndConditionProtectionRoute];
   }
   if (isSubtleSpellComponentProjectionSubject(act.subject)) {
     return [
@@ -966,12 +964,10 @@ export function battleReducerRouteForResolution(
   if (scalarBuffRoute !== undefined) {
     return scalarBuffRoute;
   }
-  const markedDamageImmunityRoute = markedDamageImmunityRouteForResolution(
-    input,
-    result,
-  );
-  if (markedDamageImmunityRoute !== undefined) {
-    return markedDamageImmunityRoute;
+  const markedDamageAndConditionProtectionRoute =
+    markedDamageAndConditionProtectionRouteForResolution(input, result);
+  if (markedDamageAndConditionProtectionRoute !== undefined) {
+    return markedDamageAndConditionProtectionRoute;
   }
   const markedDamageRiderAbilityCheckRoute =
     markedDamageRiderAbilityCheckRollModeRouteForResolution(input, result);
@@ -2627,6 +2623,18 @@ function weaponHostedSpellRouteForResolution(
   const subject = weaponHostedSpellRouteSubject(input.subject);
   if (subject === undefined) {
     return undefined;
+  }
+  if (result.tag === "invalid") {
+    return result.reason === "staleSubject"
+      ? [
+          {
+            kind: "resolveBattleSubjectWithoutFill",
+            subject,
+            holes: [],
+            owner: "battleHoleFrontier",
+          },
+        ]
+      : undefined;
   }
   const fill = input.fills.at(-1);
   if (fill === undefined) {
@@ -4613,12 +4621,12 @@ function concentrationRouteForResolution(
           input.subject,
         )
           ? [
-              markedDamageImmunityResolveWithoutFillRoute(
+              markedDamageAndConditionProtectionResolveWithoutFillRoute(
                 "conditionImmunityTemporaryHitPointEffect",
                 holes,
                 "battleConcentration",
               ),
-              markedDamageImmunityResolveWithoutFillRoute(
+              markedDamageAndConditionProtectionResolveWithoutFillRoute(
                 "conditionImmunityTemporaryHitPointEffect",
                 holes,
                 "battleActiveEffect",
@@ -4631,12 +4639,12 @@ function concentrationRouteForResolution(
         "spellMarkedDamageRider",
       )
         ? [
-            markedDamageImmunityResolveWithoutFillRoute(
+            markedDamageAndConditionProtectionResolveWithoutFillRoute(
               "markedDamageRiderEffect",
               holes,
               "battleConcentration",
             ),
-            markedDamageImmunityResolveWithoutFillRoute(
+            markedDamageAndConditionProtectionResolveWithoutFillRoute(
               "markedDamageRiderEffect",
               holes,
               "battleActiveEffect",
@@ -6168,44 +6176,50 @@ function scalarBuffRouteForDiscoveredAct(
   };
 }
 
-type MarkedDamageImmunitySubject = Extract<
+type MarkedDamageAndConditionProtectionSubject = Extract<
   BattleReducerRouteSubjectFamily,
   "markedDamageRiderEffect" | "conditionImmunityTemporaryHitPointEffect"
 >;
 
-function markedDamageImmunityRouteForDiscoveredAct(
+function markedDamageAndConditionProtectionRouteForDiscoveredAct(
   state: BattleState,
   act: AvailableBattleAct,
 ): BattleReducerRouteEvent | undefined {
-  const subject = markedDamageImmunitySubject(state, act.subject);
+  const subject = markedDamageAndConditionProtectionSubject(state, act.subject);
   if (subject === undefined) {
     return undefined;
   }
   return {
     kind: "discoverBattleActs",
     subject,
-    holes: markedDamageImmunityDiscoveryHolesForAct(
+    holes: markedDamageAndConditionProtectionDiscoveryHolesForAct(
       state,
       subject,
       act.subject,
       act.initialHoles,
     ),
-    owner: markedDamageImmunityDiscoveryOwnerForAct(subject, act.subject),
+    owner: markedDamageAndConditionProtectionDiscoveryOwnerForAct(
+      subject,
+      act.subject,
+    ),
   };
 }
 
-function markedDamageImmunityRouteForResolution(
+function markedDamageAndConditionProtectionRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const subject = markedDamageImmunitySubject(input.state, input.subject);
+  const subject = markedDamageAndConditionProtectionSubject(
+    input.state,
+    input.subject,
+  );
   if (subject === undefined) {
     return undefined;
   }
   if (result.tag === "invalid") {
     return result.reason === "staleSubject"
       ? [
-          markedDamageImmunityResolveWithoutFillRoute(
+          markedDamageAndConditionProtectionResolveWithoutFillRoute(
             subject,
             [],
             "battleHoleFrontier",
@@ -6229,24 +6243,24 @@ function markedDamageImmunityRouteForResolution(
         subject,
         routeFill,
         holes,
-        markedDamageImmunityFillOwner(routeFill),
+        markedDamageAndConditionProtectionFillOwner(routeFill),
       ),
     );
   }
   if (
     result.tag === "needsHoles" &&
-    !markedDamageImmunitySuppressNextDiscovery(subject, holes)
+    !markedDamageAndConditionProtectionSuppressNextDiscovery(subject, holes)
   ) {
     route.push(
       effectRouteDiscover(
         subject,
         holes,
-        markedDamageImmunityNextDiscoveryOwner(holes),
+        markedDamageAndConditionProtectionNextDiscoveryOwner(holes),
       ),
     );
   }
   if (result.tag === "resolved") {
-    const resolvedOwners = markedDamageImmunityResolvedOwners(
+    const resolvedOwners = markedDamageAndConditionProtectionResolvedOwners(
       input.state,
       result.state,
       input.subject.actorId,
@@ -6264,17 +6278,21 @@ function markedDamageImmunityRouteForResolution(
             ),
         )
         .map((owner) =>
-          markedDamageImmunityResolveWithoutFillRoute(subject, [], owner),
+          markedDamageAndConditionProtectionResolveWithoutFillRoute(
+            subject,
+            [],
+            owner,
+          ),
         ),
     );
   }
   return nonEmptyRouteEvents(route);
 }
 
-function markedDamageImmunitySubject(
+function markedDamageAndConditionProtectionSubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
-): MarkedDamageImmunitySubject | undefined {
+): MarkedDamageAndConditionProtectionSubject | undefined {
   const invocation = spellInvocationForRouteSubject(state, subject);
   if (invocation?.procedure === "markedDamageRider") {
     return "markedDamageRiderEffect";
@@ -6287,8 +6305,8 @@ function markedDamageImmunitySubject(
   return undefined;
 }
 
-function markedDamageImmunityDiscoveryOwnerForAct(
-  subject: MarkedDamageImmunitySubject,
+function markedDamageAndConditionProtectionDiscoveryOwnerForAct(
+  subject: MarkedDamageAndConditionProtectionSubject,
   battleSubject: BattleResolutionInput["subject"],
 ): BattleReducerRouteOwnerGroup {
   if (
@@ -6301,9 +6319,9 @@ function markedDamageImmunityDiscoveryOwnerForAct(
   return "battleSpellSlotAndActionEconomy";
 }
 
-function markedDamageImmunityDiscoveryHolesForAct(
+function markedDamageAndConditionProtectionDiscoveryHolesForAct(
   state: BattleState,
-  subject: MarkedDamageImmunitySubject,
+  subject: MarkedDamageAndConditionProtectionSubject,
   battleSubject: BattleResolutionInput["subject"],
   initialHoles: readonly BattleHole[],
 ): readonly BattleReducerRouteHole[] {
@@ -6318,8 +6336,8 @@ function markedDamageImmunityDiscoveryHolesForAct(
   return [...new Set([...holes, "abilityChoice" as const])].sort();
 }
 
-function markedDamageImmunitySuppressNextDiscovery(
-  subject: MarkedDamageImmunitySubject,
+function markedDamageAndConditionProtectionSuppressNextDiscovery(
+  subject: MarkedDamageAndConditionProtectionSubject,
   holes: readonly BattleReducerRouteHole[],
 ): boolean {
   return (
@@ -6347,7 +6365,7 @@ function invocationHasChosenAbilityCheckDisadvantage(
   );
 }
 
-function markedDamageImmunityFillOwner(
+function markedDamageAndConditionProtectionFillOwner(
   fill: BattleReducerRouteFill,
 ): BattleReducerRouteOwnerGroup {
   if (fill === "targetChoice") {
@@ -6371,7 +6389,7 @@ function markedDamageImmunityFillOwner(
   return "battleSpellSlotAndActionEconomy";
 }
 
-function markedDamageImmunityNextDiscoveryOwner(
+function markedDamageAndConditionProtectionNextDiscoveryOwner(
   holes: readonly BattleReducerRouteHole[],
 ): BattleReducerRouteOwnerGroup {
   if (holes.includes("targetChoice")) {
@@ -6386,11 +6404,11 @@ function markedDamageImmunityNextDiscoveryOwner(
   return "battleSpellSlotAndActionEconomy";
 }
 
-function markedDamageImmunityResolvedOwners(
+function markedDamageAndConditionProtectionResolvedOwners(
   before: BattleState,
   after: BattleState,
   actorId: CombatantId,
-  subject: MarkedDamageImmunitySubject,
+  subject: MarkedDamageAndConditionProtectionSubject,
 ): readonly BattleReducerRouteOwnerGroup[] {
   const owners: BattleReducerRouteOwnerGroup[] = [];
   if (combatantsActiveEffectsChanged(before, after)) {
@@ -6416,7 +6434,9 @@ function markedDamageImmunityResolvedOwners(
 
 type RoutedActiveEffectSubject = Extract<
   BattleReducerRouteSubjectFamily,
-  MarkedDamageImmunitySubject | "heldWeaponActiveEffect" | "weaponDamageRider"
+  | MarkedDamageAndConditionProtectionSubject
+  | "heldWeaponActiveEffect"
+  | "weaponDamageRider"
 >;
 
 function effectRouteResolve(
@@ -6447,8 +6467,8 @@ function effectRouteDiscover(
   };
 }
 
-function markedDamageImmunityResolveWithoutFillRoute(
-  subject: MarkedDamageImmunitySubject,
+function markedDamageAndConditionProtectionResolveWithoutFillRoute(
+  subject: MarkedDamageAndConditionProtectionSubject,
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
@@ -6501,7 +6521,7 @@ function markedDamageRiderAbilityCheckRollModeRouteForResolution(
     return undefined;
   }
   return [
-    markedDamageImmunityResolveWithoutFillRoute(
+    markedDamageAndConditionProtectionResolveWithoutFillRoute(
       "markedDamageRiderEffect",
       [],
       "battleAbilityCheckRollMode",
@@ -6526,7 +6546,7 @@ function conditionImmunityTemporaryHitPointTurnBoundaryRouteForResolution(
       [],
       "battleTurnBoundary",
     ),
-    markedDamageImmunityResolveWithoutFillRoute(
+    markedDamageAndConditionProtectionResolveWithoutFillRoute(
       "conditionImmunityTemporaryHitPointEffect",
       [],
       "battleTemporaryHitPoint",
@@ -6555,7 +6575,7 @@ function markedDamageRiderTurnBoundaryRouteForResolution(
     return undefined;
   }
   return [
-    markedDamageImmunityResolveWithoutFillRoute(
+    markedDamageAndConditionProtectionResolveWithoutFillRoute(
       "markedDamageRiderEffect",
       [],
       "battleTurnBoundary",
@@ -8388,12 +8408,12 @@ function weaponAttackRouteForResolution(
     markedDamageRiderTransferBecameAvailable(input.state, result.state)
   ) {
     return [
-      markedDamageImmunityResolveWithoutFillRoute(
+      markedDamageAndConditionProtectionResolveWithoutFillRoute(
         "markedDamageRiderEffect",
         [],
         "battleHitPointAndZeroHpLifecycle",
       ),
-      markedDamageImmunityResolveWithoutFillRoute(
+      markedDamageAndConditionProtectionResolveWithoutFillRoute(
         "markedDamageRiderEffect",
         [],
         "battleActiveEffect",
@@ -8494,17 +8514,31 @@ function weaponHostedAttackCompositionRouteForResolution(input: {
   readonly holes: readonly BattleReducerRouteHole[];
   readonly result: Exclude<BattleResolutionResult, { readonly tag: "invalid" }>;
 }): BattleReducerRouteEvents | undefined {
-  const heldWeaponSubject = weaponHostedAttackRouteSubject(input);
+  const selectedAttack = attackActionOptionForSubject(
+    input.state,
+    input.subject,
+  );
+  const heldWeaponSubject =
+    selectedAttack !== undefined &&
+    weaponAttackUsesActiveSpellOverride(
+      input.state,
+      input.subject.actorId,
+      selectedAttack,
+    )
+      ? "heldWeaponActiveEffect"
+      : undefined;
   const hasMarkedDamageRider = battleCombatantHasActiveEffectKind(
     input.state,
     input.subject.actorId,
     "spellMarkedDamageRider",
   );
-  const hasWeaponDamageRider = battleCombatantHasActiveEffectKind(
-    input.state,
-    input.subject.actorId,
-    "spellWeaponDamageRider",
-  );
+  const hasWeaponDamageRider =
+    selectedAttack?.kind === "weapon" &&
+    battleCombatantHasActiveEffectKind(
+      input.state,
+      input.subject.actorId,
+      "spellWeaponDamageRider",
+    );
   if (
     heldWeaponSubject === undefined &&
     !hasMarkedDamageRider &&
@@ -8606,12 +8640,12 @@ function weaponHostedAttackCompositionRouteForResolution(input: {
         )
       ) {
         route.push(
-          markedDamageImmunityResolveWithoutFillRoute(
+          markedDamageAndConditionProtectionResolveWithoutFillRoute(
             "markedDamageRiderEffect",
             input.holes,
             "battleHitPointAndZeroHpLifecycle",
           ),
-          markedDamageImmunityResolveWithoutFillRoute(
+          markedDamageAndConditionProtectionResolveWithoutFillRoute(
             "markedDamageRiderEffect",
             input.holes,
             "battleActiveEffect",
@@ -8632,24 +8666,6 @@ function weaponHostedAttackCompositionRouteForResolution(input: {
     return nonEmptyRouteEvents(route);
   }
 
-  return undefined;
-}
-
-function weaponHostedAttackRouteSubject(input: {
-  readonly state: BattleState;
-  readonly subject: WeaponAttackResolutionSubject;
-}): "heldWeaponActiveEffect" | undefined {
-  const attack = attackActionOptionForSubject(input.state, input.subject);
-  if (
-    attack !== undefined &&
-    weaponAttackUsesActiveSpellOverride(
-      input.state,
-      input.subject.actorId,
-      attack,
-    )
-  ) {
-    return "heldWeaponActiveEffect";
-  }
   return undefined;
 }
 
