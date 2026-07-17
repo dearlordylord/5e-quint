@@ -38,6 +38,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { attackExecutionSelectionForSubjectForTest } from "./battle-runtime-test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -1093,13 +1094,7 @@ function attackTargetFact(
     kind: "attackTargetInMeleeReach" as const,
     actorId: attackerId,
     targetId,
-    procedureRef: attackSubject.procedureRef,
-    ...(attackSubject.attackAbility === undefined
-      ? {}
-      : { attackAbility: attackSubject.attackAbility }),
-    ...(attackSubject.attackDamageType === undefined
-      ? {}
-      : { attackDamageType: attackSubject.attackDamageType }),
+    ...attackExecutionSelectionForSubjectForTest(attackSubject),
   };
 }
 

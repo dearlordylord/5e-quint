@@ -82,14 +82,7 @@ describe("Shield Reaction spell", () => {
     const awaitingAttackRoll = resolveBattleSubject({
       state,
       subject: attackAct.subject,
-      fills: [
-        attackTargetFill(
-          targetHole,
-          spellTargetId,
-          spellCasterId,
-          attackAct.subject.procedureRef,
-        ),
-      ],
+      fills: [attackTargetFill(targetHole, spellTargetId, spellCasterId)],
     });
     expect(awaitingAttackRoll).toMatchObject({ tag: "needsHoles" });
     if (awaitingAttackRoll.tag !== "needsHoles") {
@@ -101,12 +94,7 @@ describe("Shield Reaction spell", () => {
       state,
       subject: attackAct.subject,
       fills: [
-        attackTargetFill(
-          targetHole,
-          spellTargetId,
-          spellCasterId,
-          attackAct.subject.procedureRef,
-        ),
+        attackTargetFill(targetHole, spellTargetId, spellCasterId),
         attackRollFill(attackRollHole, { total: 14, naturalD20: 10 }),
       ],
     });
