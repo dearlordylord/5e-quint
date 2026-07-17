@@ -61,7 +61,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     });
     const act = spellAct({ state, spellId: gustOfWindUnitId, slotLevel: 2 });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(gustOfWindUnitId, 2, "gustOfWindLine"),

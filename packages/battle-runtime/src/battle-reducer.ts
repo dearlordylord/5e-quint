@@ -164,6 +164,7 @@ import {
   type ActionSearchSubject,
   type BattleMovementSpeedKind,
   type BattleSubject,
+  type AdmittedBattleSubject,
   type BonusActionStandardActionSubject,
   type MonkFocusFlurryOfBlowsStrikeSubject,
   type MonkFocusOptionSubject,
@@ -174,6 +175,7 @@ import {
   type CharacterBattleResourceState,
   type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
+import type { CharacterExecutionState } from "./character-execution.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import type {
   BattleCompanionPlacement,
@@ -182,12 +184,13 @@ import type {
 } from "./companion-state.ts";
 import type {
   BattleAreaId,
+  BattleCharacterExecutionScopeRef,
   BattleDancingLightId,
   BattleLineDirectionId,
   BattleObjectId,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
-  BattleStatBlockExecutionScopeCursor,
+  BattleExecutionScopeCursor,
   BattleSpellEffectOccurrenceId,
   SpellId,
   BattleTablePositionId,
@@ -4416,6 +4419,7 @@ type BattleCreatureStateCommon = {
     | {
         readonly kind: "character";
         readonly characterId: CharacterId;
+        readonly execution: CharacterExecutionState;
         readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly classLevels: readonly CharacterBattleClassLevel[];
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
@@ -4567,9 +4571,9 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly statBlockExecutionScopeCursors: ReadonlyMap<
+  readonly executionScopeCursors: ReadonlyMap<
     CombatantId,
-    BattleStatBlockExecutionScopeCursor
+    BattleExecutionScopeCursor
   >;
   readonly companions: BattleCompanions;
   readonly objectOutlines: readonly BattleObjectOutline[];
@@ -7046,6 +7050,12 @@ export type BattleResolutionInput = {
   readonly fills: readonly BattleFill[];
   readonly statBlockCatalog?: StatBlockCatalog;
 };
+export type AdmittedBattleResolutionInput = Omit<
+  BattleResolutionInput,
+  "subject"
+> & {
+  readonly subject: AdmittedBattleSubject;
+};
 export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
   Omit<BattleResolutionInput, "subject"> & {
     readonly subject: TSubject;
@@ -7194,6 +7204,49 @@ export type DruidWildShapeBattleResolutionInput =
     Extract<BattleSubject, { readonly tag: "druidWildShape" }>
   >;
 
+type WithAdmittedSubject<
+  TInput extends BattleResolutionInput,
+  TTag extends AdmittedBattleSubject["tag"],
+> = Omit<TInput, "subject"> & {
+  readonly subject: Extract<AdmittedBattleSubject, { readonly tag: TTag }>;
+};
+
+export type AdmittedActionSpellBattleResolutionInput = WithAdmittedSubject<
+  ActionSpellBattleResolutionInput,
+  "actionSpell"
+>;
+export type AdmittedBonusActionSpellBattleResolutionInput = WithAdmittedSubject<
+  BonusActionSpellBattleResolutionInput,
+  "bonusActionSpell"
+>;
+export type AdmittedBonusActionDashSpellBattleResolutionInput =
+  WithAdmittedSubject<
+    BonusActionDashSpellBattleResolutionInput,
+    "bonusActionDashSpell"
+  >;
+export type AdmittedUnitFeatureBattleResolutionInput = WithAdmittedSubject<
+  UnitFeatureBattleResolutionInput,
+  "unitFeature"
+>;
+export type AdmittedUnitFeatureHeldWeaponActivationBattleResolutionInput =
+  WithAdmittedSubject<
+    UnitFeatureHeldWeaponActivationBattleResolutionInput,
+    "unitFeatureHeldWeaponActivation"
+  >;
+export type AdmittedMonkFocusOptionBattleResolutionInput = WithAdmittedSubject<
+  MonkFocusOptionBattleResolutionInput,
+  "monkFocusOption"
+>;
+export type AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
+  WithAdmittedSubject<
+    MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
+    "monkFocusFlurryOfBlowsStrike"
+  >;
+export type AdmittedDruidWildShapeBattleResolutionInput = WithAdmittedSubject<
+  DruidWildShapeBattleResolutionInput,
+  "druidWildShape"
+>;
+
 export const BATTLE_INVALID_REASON_CODES = [
   "staleSubject",
   "wrongActor",
@@ -7286,9 +7339,9 @@ export type BattleFallDamageLandingResult =
 
 export type BattleSnapshot = {
   readonly battleId: BattleId;
-  readonly statBlockExecutionScopeCursors: readonly {
+  readonly executionScopeCursors: readonly {
     readonly combatantId: CombatantId;
-    readonly nextScopeOrdinal: BattleStatBlockExecutionScopeCursor;
+    readonly nextScopeOrdinal: BattleExecutionScopeCursor;
   }[];
   readonly round: RoundType;
   readonly currentActorId: CombatantId;
@@ -7377,6 +7430,10 @@ export type BattleCreatureOriginSnapshot =
   | {
       readonly kind: "character";
       readonly characterId: CharacterId;
+      readonly execution: {
+        readonly scopeRef: BattleCharacterExecutionScopeRef;
+        readonly procedureRefs: readonly BattleProcedureExecutionRef[];
+      };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
       readonly druidWildShapeAvailableForms: readonly {
         readonly statBlockId: StatBlockRecord["id"];

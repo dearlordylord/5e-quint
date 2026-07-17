@@ -37,7 +37,7 @@ export const coneOfColdSelectedIdentityReplay = {
               spellId: coneOfColdUnitId,
               slotLevel: 5,
             });
-            expect(act.subject).toEqual({
+            expect(act.subject).toMatchObject({
               tag: "actionSpell",
               actorId: spellCasterId,
               invocation: spellSlotInvocationRef(
@@ -95,7 +95,7 @@ export const coneOfColdSelectedIdentityReplay = {
               spellId: flameStrikeUnitId,
               slotLevel: 5,
             });
-            expect(act.subject).toEqual({
+            expect(act.subject).toMatchObject({
               tag: "actionSpell",
               actorId: spellCasterId,
               invocation: spellSlotInvocationRef(
@@ -111,7 +111,8 @@ export const coneOfColdSelectedIdentityReplay = {
             );
             expect(savingThrow).toEqual(
               expect.objectContaining({
-                label: "Flame Strike point-origin Cylinder Saving Throw outcomes",
+                label:
+                  "Flame Strike point-origin Cylinder Saving Throw outcomes",
                 ability: "dex",
                 dc: { kind: "caster_spell_save_dc" },
               }),

@@ -45,6 +45,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "actionSpell",
           actorId: spellCasterId,
           invocation: spellSlotInvocationRef(

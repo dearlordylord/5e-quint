@@ -5,6 +5,7 @@
 import { describe, expect, test } from "vitest";
 import {
   applyCondition,
+  actionSurgeResource,
   attackRollFill,
   battleId,
   characterSeed,
@@ -32,6 +33,57 @@ import {
 } from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Monk's Focus battle options", () => {
+  test("rejects an execution ref bound to a different Unit procedure family", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-monk-focus-wrong-procedure-family"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk Fighter",
+          initiative: 20,
+          classLevels: [
+            { className: "monk", level: 2 },
+            { className: "fighter", level: 2 },
+          ],
+          attack: null,
+          resources: [
+            monksFocusResource({ usesRemaining: 2 }),
+            actionSurgeResource(),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "patientDefense" &&
+        candidate.mode === "freeDisengage",
+    );
+    if (subject.tag !== "monkFocusOption") {
+      throw new Error("Expected a Monk Focus option subject.");
+    }
+    const monk = state.combatants.get(fighterId);
+    if (monk?.origin.kind !== "character") {
+      throw new Error("Expected character Monk.");
+    }
+    const unrelatedProcedureRef = monk.origin.execution.procedureBindings.find(
+      (binding) => binding.procedureRef !== subject.procedureRef,
+    )?.procedureRef;
+    if (unrelatedProcedureRef === undefined) {
+      throw new Error("Expected a distinct Unit feature procedure binding.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: { ...subject, procedureRef: unrelatedProcedureRef },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("Patient Defense can take Disengage as a Bonus Action without spending Focus", () => {
     const state = monkFocusBattle({ usesRemaining: 2 });
     const subject = monkFocusSubject(
@@ -246,7 +298,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
       }),
     );
 
-    expect(resolved.snapshot.turn.heightenedStepOfTheWindCarriedCreatures).toEqual([
+    expect(
+      resolved.snapshot.turn.heightenedStepOfTheWindCarriedCreatures,
+    ).toEqual([
       {
         carrierId: fighterId,
         carriedCreatureId: goblinId,

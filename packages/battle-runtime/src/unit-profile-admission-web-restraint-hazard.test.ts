@@ -107,7 +107,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       slotLevel: 3,
     });
 
-    expect(secondLevelAct.subject).toEqual({
+    expect(secondLevelAct.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(webUnitId, 2, "webRestraintHazard"),

@@ -266,8 +266,7 @@ type HazardCastReplay = {
   readonly state: BattleState;
 };
 
-function replaySpikeGrowthMovementHazardRoute():
-  readonly BattleReducerRouteEvent[] {
+function replaySpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEvent[] {
   const cast = spikeGrowthHazardCastReplay();
   const route = [...cast.route];
   const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
@@ -458,8 +457,7 @@ function spikeGrowthMovementFill(
   });
 }
 
-function expectedSpikeGrowthMovementHazardRoute():
-  readonly BattleReducerRouteEvent[] {
+function expectedSpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEvent[] {
   return [
     ...expectedConcentrationBackedAreaHazardAdmissionRoute(),
     ...hazardMovementDamageRoute(),
@@ -477,8 +475,7 @@ function expectedWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
   ];
 }
 
-function expectedConcentrationBackedAreaHazardAdmissionRoute():
-  readonly BattleReducerRouteEvent[] {
+function expectedConcentrationBackedAreaHazardAdmissionRoute(): readonly BattleReducerRouteEvent[] {
   return [
     startRoute(),
     spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
@@ -506,8 +503,7 @@ function hazardMovementDamageRoute(): readonly BattleReducerRouteEvent[] {
   ];
 }
 
-function concentrationBreakHazardCleanupRoute():
-  readonly BattleReducerRouteEvent[] {
+function concentrationBreakHazardCleanupRoute(): readonly BattleReducerRouteEvent[] {
   return [
     spatialResolveWithoutFill("battleConcentration"),
     spatialResolveWithoutFill("battleAreaHazard"),
@@ -562,7 +558,9 @@ function routeEventsOfSubject(
   subject: BattleReducerRouteSubjectFamily = "spatialEffect",
 ): readonly BattleReducerRouteEvent[] {
   const events = (source.routeEvents ?? []).filter(
-    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+    (
+      event,
+    ): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
       event.kind !== "startBattle" && event.subject === subject,
   );
   if (events.length === 0) {
@@ -594,7 +592,7 @@ function recordDiscoveredInvocation(
     slotLevel: input.slotLevel,
   });
 
-  expect(act.subject).toEqual({
+  expect(act.subject).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(

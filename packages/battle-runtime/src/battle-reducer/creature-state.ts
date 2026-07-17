@@ -46,8 +46,9 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
+  battleExecutionScopeOrdinal,
   type BattleId,
-  type BattleStatBlockExecutionScopeOrdinal,
+  type BattleExecutionScopeOrdinal,
   type CombatantId,
   type InitiativeScore,
 } from "../identity.ts";
@@ -74,6 +75,7 @@ import {
   type CharacterBattleSpellcastingStateInit,
 } from "../character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
+import { characterExecutionFromUnits } from "../character-execution.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -184,10 +186,10 @@ export function isCharacterBattleCreatureState(
 export function battleCreatureStateAdmissionFromInit(
   battleId: BattleId,
   input: BattleCreatureInit,
-  startingScopeOrdinal: BattleStatBlockExecutionScopeOrdinal,
+  startingScopeOrdinal: BattleExecutionScopeOrdinal,
 ): {
   readonly creature: BattleCreatureState;
-  readonly nextScopeOrdinal: BattleStatBlockExecutionScopeOrdinal;
+  readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
 } {
   const creatureInit = input.creatureInit;
   assertCurrentHpWithinMaxHp(creatureInit);
@@ -219,11 +221,15 @@ export function battleCreatureStateAdmissionFromInit(
   };
 
   if (creatureInit.kind === "character") {
+    const characterScopeOrdinal = startingScopeOrdinal;
+    const nextScopeOrdinal = battleExecutionScopeOrdinal(
+      Number(characterScopeOrdinal) + 1,
+    );
     const executionCohort = statBlockExecutionAdmissionCohort(
       battleId,
       input.combatantId,
       creatureInit.druidWildShapeAvailableForms ?? [],
-      startingScopeOrdinal,
+      nextScopeOrdinal,
     );
     const classLevels = parseCharacterBattleClassLevels(
       creatureInit.classLevels,
@@ -244,6 +250,21 @@ export function battleCreatureStateAdmissionFromInit(
         origin: {
           kind: "character",
           characterId: creatureInit.characterId,
+          execution: characterExecutionFromUnits({
+            battleId,
+            combatantId: input.combatantId,
+            scopeOrdinal: characterScopeOrdinal,
+            units: [
+              ...(creatureInit.resources ?? []).map(
+                (resource) => resource.unit,
+              ),
+              ...(creatureInit.unitFeatures ?? []).map(
+                (feature) => feature.unit,
+              ),
+            ],
+            unitRefs: creatureInit.characterUnitRefs,
+            classLevels,
+          }),
           characterUnitRefs: creatureInit.characterUnitRefs,
           classLevels,
           knownLanguages: creatureInit.knownLanguages,
@@ -731,6 +752,12 @@ export function combatantOriginSnapshot(
     Match.when({ kind: "character" }, (origin) => ({
       kind: "character" as const,
       characterId: origin.characterId,
+      execution: {
+        scopeRef: origin.execution.scopeRef,
+        procedureRefs: origin.execution.procedureBindings.map(
+          (binding) => binding.procedureRef,
+        ),
+      },
       resources: origin.resources.map(characterResourceSnapshot),
       druidWildShapeAvailableForms: (
         origin.druidWildShapeAvailableForms ?? []

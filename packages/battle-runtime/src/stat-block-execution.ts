@@ -35,11 +35,11 @@ import {
   BattleStatBlockExecutionScopeRef,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
-  battleStatBlockExecutionScopeOrdinal,
+  battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
   battleStatBlockExecutionScopeRefBelongsToBattle,
   battleStatBlockExecutionScopeRefBelongsToCombatant,
-  type BattleStatBlockExecutionScopeOrdinal,
+  type BattleExecutionScopeOrdinal,
   type CombatantId,
 } from "./identity.ts";
 import {
@@ -156,7 +156,7 @@ type ExecutionReferenceAllocator = {
 type ExecutionScopeAllocator = {
   readonly battleId: BattleId;
   readonly combatantId: CombatantId;
-  scopeOrdinal: BattleStatBlockExecutionScopeOrdinal;
+  scopeOrdinal: BattleExecutionScopeOrdinal;
 };
 
 type AllocatedStatBlockExecution = {
@@ -243,10 +243,10 @@ export function statBlockExecutionAdmissionCohort<
   battleId: BattleId,
   combatantId: CombatantId,
   statBlocks: readonly TStatBlock[],
-  startingScopeOrdinal: BattleStatBlockExecutionScopeOrdinal,
+  startingScopeOrdinal: BattleExecutionScopeOrdinal,
 ): {
   readonly admissions: readonly StatBlockExecutionAdmission<TStatBlock>[];
-  readonly nextScopeOrdinal: BattleStatBlockExecutionScopeOrdinal;
+  readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
 } {
   const scopeAllocator: ExecutionScopeAllocator = {
     battleId,
@@ -1133,7 +1133,7 @@ function allocateExecutionScopeRef(
   allocator: ExecutionScopeAllocator,
 ): BattleStatBlockExecutionScopeRef {
   const ordinal = allocator.scopeOrdinal;
-  allocator.scopeOrdinal = battleStatBlockExecutionScopeOrdinal(ordinal + 1);
+  allocator.scopeOrdinal = battleExecutionScopeOrdinal(ordinal + 1);
   return battleStatBlockExecutionScopeRef(
     allocator.battleId,
     allocator.combatantId,

@@ -74,7 +74,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       slotLevel: 4,
     });
 
-    expect(secondLevelAct.subject).toEqual({
+    expect(secondLevelAct.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -135,7 +135,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "unsupportedSubject",
-      message: "Prepared Bonus Action spells must use the Bonus Action spell subject.",
+      message:
+        "Prepared Bonus Action spells must use the Bonus Action spell subject.",
     });
   });
 
@@ -584,7 +585,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null, turn: { bonusActionAvailable: false } },
+      snapshot: {
+        pendingInterrupt: null,
+        turn: { bonusActionAvailable: false },
+      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon cast to resolve.");
@@ -1271,7 +1275,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null, turn: { bonusActionAvailable: false } },
+      snapshot: {
+        pendingInterrupt: null,
+        turn: { bonusActionAvailable: false },
+      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon repeat to resolve.");
@@ -1652,11 +1659,7 @@ function spiritualWeaponWithExtraCompositeEffect(): SpellRecord {
   if (firstEffect === undefined) {
     throw new Error("Expected Spiritual Weapon repeat effect.");
   }
-  const effects = [
-    firstEffect,
-    ...laterEffects,
-    firstEffect,
-  ];
+  const effects = [firstEffect, ...laterEffects, firstEffect];
   const operation = {
     ...firstOperation,
     effect: {

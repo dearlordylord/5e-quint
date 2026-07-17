@@ -42,11 +42,19 @@ import type {
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
+function withoutExecutionReference(subject: BattleSubject) {
+  if (!("procedureRef" in subject)) return subject;
+  const { procedureRef: _procedureRef, ...selection } = subject;
+  return selection;
+}
+
 describe("battle runtime: spellcasting actions and slots", () => {
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     expect(
-      discoverBattleActs(magicMissileState).map((act) => act.subject),
+      discoverBattleActs(magicMissileState).map((act) =>
+        withoutExecutionReference(act.subject),
+      ),
     ).toEqual(
       expect.arrayContaining([
         { tag: "action", actorId: wizardId, action: "grapple" },
@@ -386,7 +394,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "unsupportedActOption",
+      reason: "staleSubject",
     });
 
     const slotTurnState = startBattleRight({
@@ -450,7 +458,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
       levelOnePlusSpellCastsThisTurn: [wizardId],
     });
     expect(
-      discoverBattleActs(afterSlotSpell).map((act) => act.subject),
+      discoverBattleActs(afterSlotSpell).map((act) =>
+        withoutExecutionReference(act.subject),
+      ),
     ).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -564,7 +574,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(discoverBattleActs(levelTwoState).map((act) => act.subject)).toEqual(
+    expect(
+      discoverBattleActs(levelTwoState).map((act) =>
+        withoutExecutionReference(act.subject),
+      ),
+    ).toEqual(
       expect.arrayContaining([
         {
           tag: "actionSpell",
@@ -961,7 +975,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+    expect(
+      discoverBattleActs(state).map((act) =>
+        withoutExecutionReference(act.subject),
+      ),
+    ).toEqual(
       expect.arrayContaining([
         {
           tag: "actionSpell",

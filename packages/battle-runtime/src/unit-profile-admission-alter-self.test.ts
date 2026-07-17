@@ -43,7 +43,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       "selfTransformationModeChoice",
     );
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

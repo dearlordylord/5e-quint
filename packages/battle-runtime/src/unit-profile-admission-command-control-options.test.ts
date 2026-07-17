@@ -62,7 +62,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 2,
     });
 
-    expect(levelOne.subject).toEqual({
+    expect(levelOne.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(commandUnitId, 1, "command"),

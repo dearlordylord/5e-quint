@@ -119,7 +119,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   test("cloudkill is admitted as a ten-minute point-origin Sphere hazard", () => {
     const { spell, act } = castCloudkill();
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

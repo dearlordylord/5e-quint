@@ -481,7 +481,10 @@ describe("Quickened Spell governor MBT parity", () => {
       invalidQuickenedRoute({
         state: initialRuntimeState({
           sorceryPoints: HIGH_SORCERY_POINTS,
-          knownOptions: [quickenedMetamagicOption(), empoweredMetamagicOption()],
+          knownOptions: [
+            quickenedMetamagicOption(),
+            empoweredMetamagicOption(),
+          ],
         }).battle,
         subject: {
           ...quickenedCureWoundsSubject(),
@@ -496,7 +499,10 @@ describe("Quickened Spell governor MBT parity", () => {
       invalidQuickenedRoute({
         state: initialRuntimeState({
           sorceryPoints: HIGH_SORCERY_POINTS,
-          knownOptions: [quickenedMetamagicOption(), heightenedMetamagicOption()],
+          knownOptions: [
+            quickenedMetamagicOption(),
+            heightenedMetamagicOption(),
+          ],
         }).battle,
         subject: {
           ...quickenedCureWoundsSubject(),
@@ -610,7 +616,7 @@ function resolveQuickenedRestoration(
   state: QuickenedSpellGovernorRuntimeState,
 ): QuickenedSpellGovernorRuntimeState {
   const act = quickenedCureWoundsAct(state.battle);
-  expect(act.subject).toEqual(quickenedCureWoundsSubject());
+  expect(act.subject).toMatchObject(quickenedCureWoundsSubject());
   const targetHole = findHole(act.initialHoles, "targetChoice");
   const target = targetFill(targetHole, fighterId, [
     {
@@ -909,10 +915,7 @@ function invalidQuickenedRoute(input: {
     fills: [],
   });
   expect(result.tag).toBe("invalid");
-  return [
-    battleReducerStartRouteEvent(),
-    ...(result.routeEvents ?? []),
-  ];
+  return [battleReducerStartRouteEvent(), ...(result.routeEvents ?? [])];
 }
 
 function observeQuickenedRestorationRoute(

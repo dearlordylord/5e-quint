@@ -57,6 +57,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "bonusActionSpell",
           actorId: spellCasterId,
           invocation: spellSlotInvocationRef(
@@ -154,7 +155,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       spellId: flameBladeUnitId,
     });
 
-    expect(attackAct.subject).toEqual({
+    expect(attackAct.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: {
@@ -393,7 +394,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       state: nextCasterTurn,
       spellId: flameBladeUnitId,
     });
-    expect(reEvokeAct.subject).toEqual({
+    expect(reEvokeAct.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: {

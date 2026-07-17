@@ -64,6 +64,9 @@ import {
   snapshotBattle,
   spellAttackRerollUnsupportedIssue,
   spellDamageRerollUnsupportedIssue,
+  type AdmittedActionSpellBattleResolutionInput,
+  type AdmittedBonusActionDashSpellBattleResolutionInput,
+  type AdmittedBonusActionSpellBattleResolutionInput,
   type ActionSpellBattleResolutionInput,
   type BattleAttackRollResult,
   type BattleCreatureState,
@@ -77,6 +80,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { spellId, type CombatantId } from "../identity.ts";
+import { characterSpellProcedure } from "../character-execution.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -147,7 +151,6 @@ import {
   spellObjectIgnitionFact,
   spellTargetHole,
   spellTargetIsLegal,
-  supportedSpellInvocationMatchesRef,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 import {
@@ -635,7 +638,7 @@ function spellDamageHoleWithEmpoweredOption(
 }
 
 export function resolveSpellAct(
-  input: ActionSpellBattleResolutionInput,
+  input: AdmittedActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
   return resolveSpellActInternal(input);
 }
@@ -688,7 +691,7 @@ function resolveSpellActInternal(
   ) {
     invocation = supportedActionSpellInvocationForSubject(
       actor,
-      stateForAntimagicSuppressedRepeatLookup(input.state),
+      input.state,
       subject,
     );
   }
@@ -2902,7 +2905,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
 }
 
 export function resolveBonusActionSpellAct(
-  input: BonusActionSpellBattleResolutionInput,
+  input: AdmittedBonusActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
@@ -3228,13 +3231,20 @@ function supportedActionSpellInvocationForSubject(
   state: BattleState,
   subject: ActionSpellBattleResolutionInput["subject"],
 ): SupportedSpellInvocation | undefined {
-  return supportedSpellActs(actor, state).find(
-    (candidate) =>
-      supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-      (candidate.procedure !== "spellHostedWeaponAttack" ||
-        (subject.componentWeaponItemId !== undefined &&
-          candidate.componentWeapon.itemId === subject.componentWeaponItemId)),
+  if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
+    return undefined;
+  }
+  const invocation = characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+    supportedSpellActs(actor, state),
   );
+  if (invocation === undefined) return undefined;
+  return invocation.procedure !== "spellHostedWeaponAttack" ||
+    (subject.componentWeaponItemId !== undefined &&
+      invocation.componentWeapon.itemId === subject.componentWeaponItemId)
+    ? invocation
+    : undefined;
 }
 
 function supportedBonusActionSpellInvocationForSubject(
@@ -3242,13 +3252,20 @@ function supportedBonusActionSpellInvocationForSubject(
   state: BattleState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
 ): SupportedSpellInvocation | undefined {
-  return supportedSpellActs(actor, state).find(
-    (candidate) =>
-      supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-      (candidate.procedure !== "weaponAttackOverride" ||
-        (subject.componentWeaponItemId !== undefined &&
-          candidate.attachedWeapon.itemId === subject.componentWeaponItemId)),
+  if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
+    return undefined;
+  }
+  const invocation = characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+    supportedSpellActs(actor, state),
   );
+  if (invocation === undefined) return undefined;
+  return invocation.procedure !== "weaponAttackOverride" ||
+    (subject.componentWeaponItemId !== undefined &&
+      invocation.attachedWeapon.itemId === subject.componentWeaponItemId)
+    ? invocation
+    : undefined;
 }
 
 function antimagicSuppressedInvocationForStaleSubject(
@@ -3263,30 +3280,7 @@ function antimagicSuppressedInvocationForStaleSubject(
   ) {
     return undefined;
   }
-  return supportedBonusActionSpellInvocationForSubject(
-    actor,
-    stateForAntimagicSuppressedRepeatLookup(state),
-    subject,
-  );
-}
-
-function stateForAntimagicSuppressedRepeatLookup(
-  state: BattleState,
-): BattleState {
-  return {
-    ...state,
-    combatants: new Map(
-      [...state.combatants].map(([combatantId, combatant]) => [
-        combatantId,
-        {
-          ...combatant,
-          activeEffects: combatant.activeEffects.filter(
-            (effect) => effect.kind !== "antimagicFieldOngoingSpellSuppression",
-          ),
-        },
-      ]),
-    ),
-  };
+  return supportedBonusActionSpellInvocationForSubject(actor, state, subject);
 }
 
 function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
@@ -3299,24 +3293,22 @@ function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
 }
 
 export function resolveBonusActionDashSpellAct(
-  input: BonusActionDashSpellBattleResolutionInput,
+  input: AdmittedBonusActionDashSpellBattleResolutionInput,
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find(
-          (
-            candidate,
-          ): candidate is Extract<
-            SupportedSpellInvocation,
-            { readonly procedure: "expeditiousRetreatDash" }
-          > =>
-            candidate.procedure === "expeditiousRetreatDash" &&
-            supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+      ? characterSpellProcedure(
+          actor.origin.execution,
+          subject.procedureRef,
+          supportedSpellActs(actor, input.state),
         )
       : undefined;
-  if (actor?.origin.kind !== "character" || invocation == null) {
+  if (
+    actor?.origin.kind !== "character" ||
+    invocation?.procedure !== "expeditiousRetreatDash"
+  ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",

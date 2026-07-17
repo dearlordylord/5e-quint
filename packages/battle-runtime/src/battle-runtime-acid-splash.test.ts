@@ -18,6 +18,7 @@ import {
   secondSkeletonId,
   statBlockCatalog,
   battleId,
+  battleSubjectSelection,
   discoverBattleActs,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -43,7 +44,9 @@ describe("battle runtime: Acid Splash", () => {
     });
 
     expect(
-      discoverBattleActs(unsupportedState).map((act) => act.subject),
+      discoverBattleActs(unsupportedState).map((act) =>
+        battleSubjectSelection(act.subject),
+      ),
     ).toEqual(
       expect.arrayContaining([
         { tag: "action", actorId: wizardId, action: "grapple" },

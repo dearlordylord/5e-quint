@@ -70,7 +70,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const damageType = requireHole(act.initialHoles, "damageTypeChoice");
     const target = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -331,11 +331,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite Unarmed Strike hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -462,11 +463,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -812,11 +814,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite critical hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -899,11 +902,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"

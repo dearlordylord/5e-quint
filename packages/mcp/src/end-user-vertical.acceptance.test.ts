@@ -1080,9 +1080,10 @@ describe("end-user MCP vertical", () => {
     });
 
     const lightAct = requireSpellAct(root, wizardCombatantId, selectedSpellId);
-    expect(lightAct.subject).toEqual(
+    expect(lightAct.subject).toMatchObject(
       cantripSubject(wizardCombatantId, selectedSpellId, "objectLight"),
     );
+    expect("procedureRef" in lightAct.subject).toBe(true);
     const objectTarget = requireHole(
       lightAct.initialHoles,
       "objectTargetChoice",

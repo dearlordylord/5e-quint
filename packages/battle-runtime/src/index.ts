@@ -1,5 +1,6 @@
 export {
   BattleCombatantSide,
+  BattleCharacterExecutionScopeRef,
   BattleDancingLightId,
   BattleId,
   BattleLineDirectionId,
@@ -12,6 +13,7 @@ export {
   SpellId,
   battleAreaId,
   battleCombatantSide,
+  battleCharacterExecutionScopeRef,
   battleDancingLightId,
   battleId,
   battleLineDirectionId,
@@ -28,6 +30,10 @@ export {
   type CharacterId,
   type InitiativeScore,
 } from "./identity.ts";
+export type {
+  CharacterExecutionState,
+  CharacterProcedureBinding,
+} from "./character-execution.ts";
 export type {
   StatBlockExecutionAdmission,
   StatBlockExecutionRestoreIssue,
@@ -196,6 +202,8 @@ export {
   armorOfShadowsSpellInvocationRef,
   cantripSpellInvocationRef,
   classFeatureFreeCastSpellInvocationRef,
+  sameAdmittedBattleSubject,
+  sameBattleExecutionSubject,
   sameBattleSubject,
   spellSlotInvocationRef,
   type BattleRuntimeCommand,

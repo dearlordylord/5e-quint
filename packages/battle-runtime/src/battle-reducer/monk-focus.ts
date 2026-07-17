@@ -22,6 +22,8 @@ import type {
 } from "../battle-action-options.ts";
 import type {
   AvailableBattleAct,
+  AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
+  AdmittedMonkFocusOptionBattleResolutionInput,
   BattleCreatureState,
   BattleFill,
   BattleRolledDiceFill,
@@ -31,7 +33,6 @@ import type {
   BattleTurnResources,
   BattleUnitFeatureRollHole,
   CharacterBattleCreatureState,
-  MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
   MonkFocusOptionBattleResolutionInput,
 } from "../battle-reducer.ts";
 import { SIZES } from "@dnd/shared/types";
@@ -226,7 +227,7 @@ function monkFocusFlurryOfBlowsStrikeActs(
 }
 
 export function resolveMonkFocusOption(
-  input: MonkFocusOptionBattleResolutionInput,
+  input: AdmittedMonkFocusOptionBattleResolutionInput,
 ): BattleResolutionResult {
   const focus = monkFocusResourceForActor(input.state, input.subject.actorId);
   if (
@@ -496,7 +497,8 @@ function heightenedPatientDefenseTemporaryHitPointsRollRequest(
         "Heightened Focus Patient Defense requires exactly one Temporary Hit Points roll.",
     };
   }
-  const expectedHole = heightenedPatientDefenseTemporaryHitPointsRollHole(focus);
+  const expectedHole =
+    heightenedPatientDefenseTemporaryHitPointsRollHole(focus);
   if (roll.holeId !== expectedHole.holeId) {
     return {
       tag: "invalid",
@@ -570,14 +572,15 @@ function heightenedPatientDefenseTemporaryHitPointsDiceExpr(
   const level = monkClassLevel(focus.actor);
   return {
     dice: 2,
-    dieSize:
-      level === null ? 6 : martialArtsSrdDieSizeAtClassLevel(level),
+    dieSize: level === null ? 6 : martialArtsSrdDieSizeAtClassLevel(level),
   };
 }
 
 function monkFocusFlurryOfBlowsStrikeCount(
   focus: MonkFocusResourceFact,
-): BattleMonkFocusBattleOptionsSupportProfile["flurryOfBlows"]["strikeCount"] | 3 {
+):
+  | BattleMonkFocusBattleOptionsSupportProfile["flurryOfBlows"]["strikeCount"]
+  | 3 {
   return monkHasHeightenedFocus(focus.actor)
     ? 3
     : focus.profile.flurryOfBlows.strikeCount;
@@ -763,8 +766,9 @@ function heightenedStepOfTheWindCarryHole(
 }
 
 function creatureSizeAtMostLarge(combatant: BattleCreatureState): boolean {
-  return SIZES.indexOf(combatantEffectiveSize(combatant)) <=
-    SIZES.indexOf("large");
+  return (
+    SIZES.indexOf(combatantEffectiveSize(combatant)) <= SIZES.indexOf("large")
+  );
 }
 
 function applyHeightenedStepOfTheWindCarry(
@@ -808,7 +812,7 @@ function applyStepOfTheWindJumpDistanceMultiplier(
 }
 
 export function resolveMonkFocusFlurryOfBlowsStrike(
-  input: MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
+  input: AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
 ): BattleResolutionResult {
   if (
     !combatantCanTakeActions(input.state.combatants.get(input.subject.actorId))

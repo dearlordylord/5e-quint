@@ -962,11 +962,12 @@ describe("MCP server route", () => {
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
+        expect.objectContaining({
           tag: "unitFeature",
           actorId: fighterId,
           unitId: "fighter_action_surge",
-        },
+          procedureRef: expect.any(String),
+        }),
       ]),
     );
   });

@@ -24,14 +24,22 @@ import {
   startBattleRight,
   statBlockCreatureInit,
   unitLibrary,
+  wizardId,
+  wizardVsSkeletonBattle,
 } from "./battle-runtime-test-support.ts";
 import {
+  BattleCharacterExecutionScopeRef,
+  BattleProcedureExecutionRef,
+  BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  battleCharacterExecutionScopeRef,
+  battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
-  battleStatBlockExecutionScopeOrdinal,
+  battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
   battleStatBlockExecutionScopeRefIsWellFormed,
   combatantId,
+  spellId,
   type BattleStatBlockExecutionScopeRef as BattleStatBlockExecutionScopeReference,
   type CombatantId,
 } from "./identity.ts";
@@ -61,7 +69,7 @@ function isolatedStatBlockAdmissions<TStatBlock extends StatBlockRecord>(
     isolatedExecutionBattleId,
     actorId,
     statBlocks,
-    battleStatBlockExecutionScopeOrdinal(0),
+    battleExecutionScopeOrdinal(0),
   ).admissions;
 }
 
@@ -77,6 +85,111 @@ function executionReferenceView(
 }
 
 describe("Stat Block execution references", () => {
+  test("allocates exact character procedure references without authored identity", () => {
+    const scopeRef = battleCharacterExecutionScopeRef(
+      battleId("battle-character-execution"),
+      combatantId("character-a"),
+      battleExecutionScopeOrdinal(0),
+    );
+    const first = battleProcedureExecutionRef(scopeRef, NonNegativeInteger(0));
+    const second = battleProcedureExecutionRef(scopeRef, NonNegativeInteger(1));
+
+    expect(BattleCharacterExecutionScopeRef.make(scopeRef)).toBe(scopeRef);
+    expect(() => BattleStatBlockExecutionScopeRef.make(scopeRef)).toThrow();
+    expect(BattleProcedureExecutionRef.make(first)).toBe(first);
+    expect(first).not.toBe(second);
+    const characterResourcePoolRef = JSON.stringify({
+      scopeRef,
+      kind: "resourcePool",
+      ordinal: 0,
+    });
+    expect(() =>
+      BattleResourcePoolExecutionRef.make(characterResourcePoolRef),
+    ).toThrow();
+    expect(JSON.parse(first)).toEqual({
+      scopeRef,
+      kind: "procedure",
+      ordinal: 0,
+    });
+    expect(() =>
+      BattleCharacterExecutionScopeRef.make(
+        JSON.stringify({
+          battleId: "battle-character-execution",
+          combatantId: "character-a",
+          kind: "characterExecution",
+          ordinal: 0,
+          authoredUnitId: "synthetic-feature",
+        }),
+      ),
+    ).toThrow();
+  });
+
+  test("binds spell discovery and replay to character procedure references", () => {
+    const state = wizardVsSkeletonBattle();
+    const spellActs = discoverBattleActs(state).flatMap((act) =>
+      act.subject.tag === "actionSpell"
+        ? [{ ...act, subject: act.subject }]
+        : [],
+    );
+    const magicMissileActs = spellActs.filter(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.invocation.spellId === "magic_missile",
+    );
+    const rayOfFrostActs = spellActs.filter(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.invocation.spellId === "ray_of_frost",
+    );
+    const magicMissileRef = magicMissileActs[0]?.subject.procedureRef;
+    const rayOfFrostRef = rayOfFrostActs[0]?.subject.procedureRef;
+
+    expect(magicMissileRef).toBeDefined();
+    expect(rayOfFrostRef).toBeDefined();
+    expect(magicMissileRef).not.toBe(rayOfFrostRef);
+    expect(
+      magicMissileActs.every(
+        (act) => act.subject.procedureRef === magicMissileRef,
+      ),
+    ).toBe(true);
+    const snapshot = Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(state)),
+    );
+    const wizardSnapshot = snapshot.combatants.find(
+      (combatant) => combatant.combatantId === wizardId,
+    );
+    expect(wizardSnapshot?.origin).toMatchObject({
+      kind: "character",
+      execution: {
+        procedureRefs: expect.arrayContaining([magicMissileRef, rayOfFrostRef]),
+      },
+    });
+
+    const castAct = magicMissileActs.find(
+      (act) => act.subject.mode.tag === "cast",
+    );
+    if (castAct === undefined || castAct.subject.procedureRef === undefined) {
+      throw new Error("Expected a bound Magic Missile cast act.");
+    }
+    const forgedAuthoredIdentity = {
+      ...castAct.subject,
+      invocation: {
+        ...castAct.subject.invocation,
+        spellId: spellId("synthetic-lookalike"),
+      },
+    };
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: forgedAuthoredIdentity,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      subject: { actorId: wizardId, procedureRef: magicMissileRef },
+    });
+  });
+
   test("rejects execution references with non-canonical extra fields", () => {
     const ownerBattleId = battleId("battle-execution-ref-forged-owner");
     const ownerId = combatantId("execution-ref-forged-owner");
@@ -101,7 +214,7 @@ describe("Stat Block execution references", () => {
     const canonicalScopeRef = battleStatBlockExecutionScopeRef(
       ownerBattleId,
       ownerId,
-      battleStatBlockExecutionScopeOrdinal(0),
+      battleExecutionScopeOrdinal(0),
     );
     const reorderedScopeRef = JSON.stringify({
       kind: "statBlockExecution",
@@ -206,7 +319,7 @@ describe("Stat Block execution references", () => {
       battleId: battleId("battle-stat-block-readmitted-execution-scope"),
       combatants: [actorInit, characterSeed({ initiative: 10 })],
     });
-    expect(battle.statBlockExecutionScopeCursors.has(fighterId)).toBe(false);
+    expect(battle.executionScopeCursors.has(fighterId)).toBe(true);
     const originalExecution = executionReferenceView(battle, actorId);
     const originalRef = originalExecution.procedureBindings[0]?.procedureRef;
     if (originalRef === undefined) {
@@ -223,17 +336,17 @@ describe("Stat Block execution references", () => {
       BattleSnapshotSchema,
     )(Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(removed.right)));
     const restoredScopeCursors = new Map(
-      serializedAfterRemoval.statBlockExecutionScopeCursors.map((cursor) => [
+      serializedAfterRemoval.executionScopeCursors.map((cursor) => [
         cursor.combatantId,
         cursor.nextScopeOrdinal,
       ]),
     );
     expect(restoredScopeCursors.get(actorId)).toBe(
-      removed.right.statBlockExecutionScopeCursors.get(actorId),
+      removed.right.executionScopeCursors.get(actorId),
     );
     const restoredAfterRemoval: BattleState = {
       ...removed.right,
-      statBlockExecutionScopeCursors: restoredScopeCursors,
+      executionScopeCursors: restoredScopeCursors,
     };
     const characterWithoutFormsId = combatantId(
       "execution-ref-character-without-forms",
@@ -249,10 +362,8 @@ describe("Stat Block execution references", () => {
       throw new Error("Expected a character without forms to be added.");
     }
     expect(
-      addedCharacter.right.statBlockExecutionScopeCursors.has(
-        characterWithoutFormsId,
-      ),
-    ).toBe(false);
+      addedCharacter.right.executionScopeCursors.has(characterWithoutFormsId),
+    ).toBe(true);
     const readmitted = addBattleCombatant({
       state: restoredAfterRemoval,
       combatant: actorInit,
@@ -274,6 +385,35 @@ describe("Stat Block execution references", () => {
     expect(
       statBlockProcedureBinding(readmittedExecution, originalRef),
     ).toBeUndefined();
+  });
+
+  test("does not reuse a character execution scope after re-admission", () => {
+    const battle = wizardVsSkeletonBattle();
+    const original = battle.combatants.get(wizardId);
+    if (original?.origin.kind !== "character") {
+      throw new Error("Expected an admitted character execution.");
+    }
+    const removed = removeBattleCombatants({
+      state: battle,
+      combatantIds: [wizardId],
+    });
+    if (Either.isLeft(removed)) {
+      throw new Error("Expected the character to be removed.");
+    }
+    const readmitted = addBattleCombatant({
+      state: removed.right,
+      combatant: characterSeed({ combatantId: wizardId, initiative: 20 }),
+    });
+    if (Either.isLeft(readmitted)) {
+      throw new Error("Expected the character to be re-admitted.");
+    }
+    const next = readmitted.right.combatants.get(wizardId);
+    if (next?.origin.kind !== "character") {
+      throw new Error("Expected a re-admitted character execution.");
+    }
+    expect(next.origin.execution.scopeRef).not.toBe(
+      original.origin.execution.scopeRef,
+    );
   });
 
   test("keeps identical procedure occurrences and their limited-use pools distinct", () => {

@@ -75,7 +75,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     });
     const act = spellAct({ state, spellId: falseLifeUnitId, slotLevel: 2 });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(falseLifeUnitId, 2, "scalarBuff"),
@@ -355,7 +355,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const act = bonusSpellAct({ state, spellId: shieldOfFaithUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(shieldOfFaithUnitId, 1, "scalarBuff"),
@@ -408,7 +408,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const act = bonusSpellAct({ state, spellId: barkskinUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(barkskinUnitId, 2, "scalarBuff"),
@@ -604,7 +604,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       "spellTargetList",
     );
 
-    expect(levelTwoAct.subject).toEqual({
+    expect(levelTwoAct.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(spiderClimbUnitId, 2, "scalarBuff"),
@@ -782,7 +782,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       "spellTargetList",
     );
 
-    expect(levelThreeAct.subject).toEqual({
+    expect(levelThreeAct.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(flyUnitId, 3, "scalarBuff"),
@@ -1277,7 +1277,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const act = spellAct({ state, spellId: aidUnitId, slotLevel: 3 });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(aidUnitId, 3, "scalarBuff"),
@@ -1698,7 +1698,7 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
     const act = spellAct({ state, spellId: heroismUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

@@ -65,6 +65,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "actionSpell",
           actorId: spellCasterId,
           invocation: spellSlotInvocationRef(

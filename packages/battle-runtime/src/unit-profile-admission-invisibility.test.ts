@@ -77,7 +77,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -113,12 +113,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         state,
         subject: act.subject,
         fills: [
-          spellTargetListFill(
-            targetList,
-            spellCasterId,
-            invisibilityUnitId,
-            [spellTargetId, extraTargetId],
-          ),
+          spellTargetListFill(targetList, spellCasterId, invisibilityUnitId, [
+            spellTargetId,
+            extraTargetId,
+          ]),
         ],
       }),
     );
@@ -730,7 +728,10 @@ function triggeredReactionSpellDecision(
 }
 
 function magicMissileTargetAllocationFill(input: {
-  readonly hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>;
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "spellTargetAllocation" }
+  >;
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
   readonly dartCount: number;

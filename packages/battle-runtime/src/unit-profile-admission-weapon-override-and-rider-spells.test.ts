@@ -66,6 +66,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "bonusActionSpell",
           actorId: spellCasterId,
           invocation: cantripSpellInvocationRef(
@@ -235,6 +236,22 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       }),
       clubAttack,
     );
+    const clubCastSubjects = discoverBattleActs(state).flatMap((candidate) =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === shillelaghUnitId
+        ? [candidate.subject]
+        : [],
+    );
+    const mainHandProcedureRef = clubCastSubjects.find(
+      (subject) => subject.componentWeaponItemId === "main:weapon_club",
+    )?.procedureRef;
+    const offHandProcedureRef = clubCastSubjects.find(
+      (subject) => subject.componentWeaponItemId === "off:weapon_club",
+    )?.procedureRef;
+    expect(mainHandProcedureRef).toBeDefined();
+    expect(offHandProcedureRef).toBeDefined();
+    expect(mainHandProcedureRef).not.toBe(offHandProcedureRef);
+
     const offHandCastAct = bonusSpellActForItem({
       state,
       spellId: shillelaghUnitId,
@@ -372,7 +389,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     });
     const act = bonusSpellAct({ state, spellId: divineFavorUnitId });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -686,7 +703,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

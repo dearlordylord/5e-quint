@@ -208,7 +208,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const state = metamagicBattle();
     const act = quickenedCureWoundsAct(state);
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: wizardId,
       invocation: spellSlotInvocationRef(
@@ -252,7 +252,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const state = metamagicBattle({ preparedSpells: ["false_life"] });
     const act = quickenedFalseLifeAct(state);
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: wizardId,
       invocation: spellSlotInvocationRef("false_life", 1, "scalarBuff"),
@@ -289,7 +289,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const act = quickenedBurningHandsAct(state);
 
-    expect(act.subject).toEqual(quickenedBurningHandsSubject());
+    expect(act.subject).toMatchObject(quickenedBurningHandsSubject());
 
     const awaitingDamage = resolveBattleSubject({
       state,
@@ -331,7 +331,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const act = quickenedRayOfFrostAct(state);
 
-    expect(act.subject).toEqual(quickenedRayOfFrostSubject());
+    expect(act.subject).toMatchObject(quickenedRayOfFrostSubject());
 
     const targetHole = findHole(act.initialHoles, "targetChoice");
     const target = targetFill(targetHole, skeletonId);
@@ -631,7 +631,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const act = quickenedRayOfFrostAct(state);
 
     expect(canSpendAction(state.currentTurnResources, "magic")).toBe(false);
-    expect(act.subject).toEqual(quickenedRayOfFrostSubject());
+    expect(act.subject).toMatchObject(quickenedRayOfFrostSubject());
 
     const targetHole = findHole(act.initialHoles, "targetChoice");
     const target = targetFill(targetHole, skeletonId);
@@ -689,7 +689,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const act = quickenedEldritchBlastAct(state);
 
     expect(canSpendAction(state.currentTurnResources, "magic")).toBe(false);
-    expect(act.subject).toEqual(quickenedEldritchBlastSubject());
+    expect(act.subject).toMatchObject(quickenedEldritchBlastSubject());
 
     const resolved = resolveQuickenedEldritchBlast(state);
 
@@ -746,7 +746,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       throw new Error("Expected Sorcerer character combatant.");
     }
 
-    expect(act.subject).toEqual(quickenedScorchingRaySubject());
+    expect(act.subject).toMatchObject(quickenedScorchingRaySubject());
     expect(resolved.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(canSpendAction(resolved.currentTurnResources, "magic")).toBe(true);
     expect(
@@ -1296,7 +1296,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       "Bless targets",
     );
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: wizardId,
       invocation: spellSlotInvocationRef("bless", 1, "rollModifier"),
@@ -3277,10 +3277,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     });
 
     expect(
-      hasHeightenedActionSpellAct(
-        gustOfWindState,
-        spellId("gust_of_wind"),
-      ),
+      hasHeightenedActionSpellAct(gustOfWindState, spellId("gust_of_wind")),
     ).toBe(true);
     expect(
       hasHeightenedActionSpellAct(
