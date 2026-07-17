@@ -537,12 +537,11 @@ function selectCharacterProcedureForResolution(
     procedureRef,
   };
   input = { ...input, subject: admittedSubject };
-  subject = admittedSubject;
   if (
-    subject.tag === "actionSpell" ||
-    subject.tag === "bonusActionSpell" ||
-    subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell"
+    admittedSubject.tag === "actionSpell" ||
+    admittedSubject.tag === "bonusActionSpell" ||
+    admittedSubject.tag === "bonusActionDashSpell" ||
+    admittedSubject.tag === "findFamiliarTouchSpell"
   ) {
     const invocation = characterSpellProcedure(
       execution,
@@ -556,13 +555,14 @@ function selectCharacterProcedureForResolution(
           input: {
             ...input,
             subject: {
-              ...subject,
+              ...admittedSubject,
               invocation: supportedSpellInvocationRef(invocation),
             },
           },
         };
   }
-  const unitProcedureQuery = characterUnitProcedureQueryForSubject(subject);
+  const unitProcedureQuery =
+    characterUnitProcedureQueryForSubject(admittedSubject);
   if (unitProcedureQuery === undefined) {
     return { tag: "invalid" };
   }
@@ -571,7 +571,10 @@ function selectCharacterProcedureForResolution(
     procedureRef,
     unitProcedureQuery,
   );
-  if (subject.tag === "bonusActionStandardAction" && unitId === undefined) {
+  if (
+    admittedSubject.tag === "bonusActionStandardAction" &&
+    unitId === undefined
+  ) {
     const invocation = characterSpellProcedure(
       execution,
       procedureRef,
@@ -582,7 +585,10 @@ function selectCharacterProcedureForResolution(
           tag: "selected",
           input: {
             ...input,
-            subject: { ...subject, sourceUnitId: invocation.spell.id },
+            subject: {
+              ...admittedSubject,
+              sourceUnitId: invocation.spell.id,
+            },
           },
         }
       : { tag: "invalid" };
@@ -590,32 +596,32 @@ function selectCharacterProcedureForResolution(
   if (unitId === undefined) {
     return { tag: "invalid" };
   }
-  if (subject.tag === "bonusActionStandardAction") {
+  if (admittedSubject.tag === "bonusActionStandardAction") {
     return {
       tag: "selected",
       input: {
         ...input,
-        subject: { ...subject, sourceUnitId: unitId },
+        subject: { ...admittedSubject, sourceUnitId: unitId },
       },
     };
   }
-  if (subject.tag === "monkFocusOption") {
+  if (admittedSubject.tag === "monkFocusOption") {
     return {
       tag: "selected",
       input: {
         ...input,
-        subject: { ...subject, resourceUnitId: unitId },
+        subject: { ...admittedSubject, resourceUnitId: unitId },
       },
     };
   }
   return {
     tag: "selected",
-    input: { ...input, subject: { ...subject, unitId } },
+    input: { ...input, subject: { ...admittedSubject, unitId } },
   };
 }
 
 function validateD20TestNaturalOneRerollFills(
-  input: BattleResolutionInput,
+  input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): D20TestNaturalOneRerollFillValidation {
   const actor = input.state.combatants.get(battleSubjectActorId(input.subject));
@@ -784,7 +790,7 @@ type D20TestNaturalOneRerollFillValidation =
     };
 
 function resolveD20TestNaturalOneRerollDecisionHole(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: Parameters<typeof resolveBattleSubjectInternal>[1];
   readonly decision: Extract<
     D20TestNaturalOneRerollFillValidation,
@@ -832,7 +838,7 @@ type D20TestNaturalOneRerollAbilityCheckHole = Extract<
 >;
 
 function abilityCheckHoleForFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
   readonly fill: Extract<BattleFill, { readonly kind: "abilityCheck" }>;
@@ -851,7 +857,7 @@ type D20TestNaturalOneRerollSavingThrowOutcomeHole = Extract<
 >;
 
 function savingThrowOutcomeHoleForFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
   readonly fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
@@ -872,7 +878,7 @@ function savingThrowOutcomeRollModeForTarget(
 }
 
 function concentrationSavingThrowHoleForFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
   readonly fill: Extract<
@@ -888,7 +894,7 @@ function concentrationSavingThrowHoleForFill(input: {
 }
 
 function pendingHolesBeforeFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
 }): readonly BattleHole[] {
@@ -5526,12 +5532,20 @@ export function resolveReplayContinuationFromState(
       fills,
     );
   }
-  const result = resolveBattleSubjectInternal(
-    {
+  const selected = selectCharacterProcedureForResolution({
+    state,
+    subject: continuation.subject,
+    fills,
+  });
+  if (selected.tag === "invalid") {
+    return invalidResult(
       state,
-      subject: continuation.subject,
-      fills,
-    },
+      "staleSubject",
+      "The interrupted character procedure reference is no longer bound to its actor.",
+    );
+  }
+  const result = resolveBattleSubjectInternal(
+    selected.input,
     {
       replayingInterruptedProcedure: true,
       handledInterruptTrigger,
