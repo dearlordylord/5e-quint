@@ -2641,7 +2641,12 @@ function assertLevelOneViciousMockery(input: {
       state: monsterTurn,
       subject: monsterAttack,
       fills: [
-        attackTargetFill(attackTarget, monsterId, input.casterId, "Shortsword"),
+        attackTargetFill(
+          attackTarget,
+          monsterId,
+          input.casterId,
+          monsterAttack,
+        ),
       ],
     }),
     "attackRoll",
@@ -8736,7 +8741,7 @@ function resolveOrdinaryAttackDamage(input: {
     target,
     input.subject.actorId,
     input.targetId,
-    input.subject.attackName,
+    input.subject,
   );
   const roll = requireHole(
     resolveBattleSubject({

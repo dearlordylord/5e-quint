@@ -23,8 +23,8 @@ import {
 import {
   spendStatBlockAttackResources,
   statBlockAttackActionOptions,
+  statBlockAttackProcedureSection,
 } from "./battle-reducer/statblock.ts";
-import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { findPresentFamiliarById } from "./find-familiar-state.ts";
 import type { CombatantId } from "./identity.ts";
 
@@ -125,10 +125,18 @@ function pactFamiliarAttackActionOptionForInput(
     return null;
   }
   return (
-    statBlockAttackActionOptions(actor.origin.statBlock).find(
+    statBlockAttackActionOptions(actor.origin).find(
       (attack): attack is StatBlockAttackActionOption =>
-        attack.part.section === "actions" &&
-        attackActionOptionName(attack) === input.subject.attackName,
+        statBlockAttackProcedureSection(
+          input.state,
+          input.subject.familiarId,
+          attack.procedureRef,
+        ) === "actions" &&
+        attack.procedureRef === input.subject.procedureRef &&
+        attack.damageNotation ===
+          (input.subject.statBlockDamageNotation === "static"
+            ? "static"
+            : "rolled"),
     ) ?? null
   );
 }

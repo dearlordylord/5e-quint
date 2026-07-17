@@ -3,7 +3,6 @@ import type {
   AttackBonus,
   DamageDieSize,
   ReadonlyNonEmptyArray,
-  ResourceCount,
 } from "@dnd/shared/types";
 import type {
   Ability,
@@ -16,6 +15,7 @@ import type {
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+import type { BattleProcedureExecutionRef } from "./identity.ts";
 
 export type BattleWeaponDamage = Extract<
   WeaponDamage,
@@ -205,6 +205,21 @@ export type SupportedStaticDamageCreatureNamedAttackRoll =
     readonly onHit: SupportedStaticStatBlockAttackEffectList;
   };
 
+export type CreatureAttackRollMechanics = Omit<
+  CreatureNamedAttackRoll,
+  "name" | "description" | "limitedUse"
+>;
+
+export type SupportedCreatureAttackRollMechanics = Omit<
+  SupportedCreatureNamedAttackRoll,
+  "name" | "description" | "limitedUse"
+>;
+
+export type SupportedStaticDamageCreatureAttackRollMechanics = Omit<
+  SupportedStaticDamageCreatureNamedAttackRoll,
+  "name" | "description" | "limitedUse"
+>;
+
 export const STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES = [
   "nonIncapacitatedAllyWithin5FeetOfTarget",
 ] as const;
@@ -217,16 +232,12 @@ export type StatBlockTraitAttackRollMode = {
   readonly predicate: StatBlockAttackRollAdvantagePredicate;
 };
 
-export type StatBlockPartSection =
-  | "actions"
-  | "bonusActions"
-  | "reactions"
-  | "legendaryActions";
-
-export type StatBlockPartKey = {
-  readonly section: StatBlockPartSection;
-  readonly name: string;
-};
+export const STAT_BLOCK_ATTACK_SECTIONS = [
+  "actions",
+  "legendaryActions",
+] as const;
+export type StatBlockAttackSection =
+  (typeof STAT_BLOCK_ATTACK_SECTIONS)[number];
 
 export const STAT_BLOCK_DAMAGE_NOTATIONS = ["rolled", "static"] as const;
 export type StatBlockDamageNotation =
@@ -234,16 +245,16 @@ export type StatBlockDamageNotation =
 
 export type RolledStatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
-  readonly attack: SupportedCreatureNamedAttackRoll;
-  readonly part: StatBlockPartKey;
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly attack: SupportedCreatureAttackRollMechanics;
   readonly damageNotation: "rolled";
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
 export type StaticStatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
-  readonly attack: SupportedStaticDamageCreatureNamedAttackRoll;
-  readonly part: StatBlockPartKey;
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly attack: SupportedStaticDamageCreatureAttackRollMechanics;
   readonly damageNotation: "static";
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
@@ -256,47 +267,6 @@ export type SupportedAttackActionOption =
   | CharacterAttackActionOption
   | StatBlockAttackActionOption;
 
-export type StatBlockLimitedUseSnapshot =
-  | {
-      readonly key: StatBlockPartKey;
-      readonly kind: "daily";
-      readonly usesMax: ResourceCount;
-      readonly usesRemaining: ResourceCount;
-    }
-  | {
-      readonly key: StatBlockPartKey;
-      readonly kind: "recharge";
-      readonly minimumRoll: number;
-      readonly available: boolean;
-    }
-  | {
-      readonly key: StatBlockPartKey;
-      readonly kind: "recharge_after_rest";
-      readonly available: boolean;
-    };
-
-export type StatBlockLegendaryActionResourceSnapshot = {
-  readonly usesMax: ResourceCount;
-  readonly usesRemaining: ResourceCount;
-};
-
-export type StatBlockResourceSnapshot = {
-  readonly legendaryActions: StatBlockLegendaryActionResourceSnapshot | null;
-  readonly limitedUses: readonly StatBlockLimitedUseSnapshot[];
-};
-
-export type StatBlockDailyUseState = {
-  readonly key: StatBlockPartKey;
-  readonly usesRemaining: ResourceCount;
-};
-
-export type StatBlockMutableResourceState = {
-  readonly legendaryActionUsesRemaining: ResourceCount;
-  readonly dailyUses: readonly StatBlockDailyUseState[];
-  readonly unavailableRechargeParts: readonly StatBlockPartKey[];
-  readonly unavailableRestRechargeParts: readonly StatBlockPartKey[];
-};
-
 export type StatBlockAttackDamageComponent = {
   readonly expr: DiceExpr;
   readonly static?: number;
@@ -306,4 +276,14 @@ export type StatBlockAttackDamageComponent = {
 export type StatBlockAttackDamage = {
   readonly baseComponents: ReadonlyNonEmptyArray<StatBlockAttackDamageComponent>;
   readonly advantageBonus?: StatBlockAttackDamageComponent;
+};
+
+export type StaticStatBlockAttackDamageComponent =
+  StatBlockAttackDamageComponent & {
+    readonly static: number;
+  };
+
+export type StaticStatBlockAttackDamage = {
+  readonly baseComponents: ReadonlyNonEmptyArray<StaticStatBlockAttackDamageComponent>;
+  readonly advantageBonus?: StaticStatBlockAttackDamageComponent;
 };

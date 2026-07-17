@@ -147,9 +147,13 @@ import {
 } from "./wild-shape-equipment.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
+import {
+  attackActionOptionPresentationName,
+  statBlockAttackProcedureSection,
+  statBlockSubjectPart,
+} from "./statblock.ts";
 
 import { attackTargetHole } from "./hole-helpers.ts";
-import { statBlockResourceState } from "./statblock.ts";
 
 import type {
   AvailableBattleAct,
@@ -650,18 +654,21 @@ export function druidWildShapeActsForResource(
   const assumeActs =
     resourceHasUsesRemaining(resource) &&
     !combatantShapeShiftingSuppressed(state, actor.combatantId)
-      ? (actor.origin.druidWildShapeAvailableForms ?? []).map((form) => ({
+      ? (actor.origin.druidWildShapeAvailableForms ?? []).map((admission) => ({
           subject: {
             tag: "druidWildShape" as const,
             actorId: actor.combatantId,
             unitId: unitFeature.unit.id,
             action: "assumeForm" as const,
-            formStatBlockId: form.id,
+            formStatBlockId: admission.statBlock.id,
           },
-          label: `${unitFeature.unit.name}: ${form.statBlock.displayName}`,
+          label: `${unitFeature.unit.name}: ${admission.statBlock.statBlock.displayName}`,
           summary:
             "Spend a Bonus Action and one use to assume this known Beast form.",
-          initialHoles: wildShapeInitialEquipmentDispositionHoles(actor, form),
+          initialHoles: wildShapeInitialEquipmentDispositionHoles(
+            actor,
+            admission.statBlock,
+          ),
         }))
       : [];
   const dismissAct =
@@ -1541,16 +1548,17 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape has no uses remaining.",
     );
   }
-  const form = actor.origin.druidWildShapeAvailableForms?.find(
-    (candidate) => candidate.id === subject.formStatBlockId,
+  const formAdmission = actor.origin.druidWildShapeAvailableForms?.find(
+    (candidate) => candidate.statBlock.id === subject.formStatBlockId,
   );
-  if (form === undefined) {
+  if (formAdmission === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Druid Wild Shape form is not battle-available.",
     );
   }
+  const form = formAdmission.statBlock;
   const equipmentCandidates = wildShapeLoadoutObjectRefs(
     actor.origin.selectedLoadout,
   );
@@ -1650,7 +1658,6 @@ export function resolveDruidWildShapeUnitFeature(
     equipmentDisposition: wildShapeActiveEquipmentDispositions(
       equipmentDisposition.dispositions,
     ),
-    formResources: statBlockResourceState(form.statBlock),
     profile: unitFeature,
   });
   return {
@@ -4260,8 +4267,7 @@ export function discoverLegendaryActionActs(
     if (
       !statBlockLegendaryActionWindowIsOpen(state, actorId) ||
       actor.origin.kind !== "statBlock" ||
-      !combatantCanTakeActions(actor) ||
-      actor.origin.resources.legendaryActionUsesRemaining <= 0
+      !combatantCanTakeActions(actor)
     ) {
       return [];
     }
@@ -4269,7 +4275,11 @@ export function discoverLegendaryActionActs(
       .filter(
         (attack) =>
           attack.kind === "statBlockAttack" &&
-          attack.part.section === "legendaryActions",
+          statBlockAttackProcedureSection(
+            state,
+            actorId,
+            attack.procedureRef,
+          ) === "legendaryActions",
       )
       .flatMap((attack) => {
         const targetHole = attackTargetHole(state, actorId, attack);
@@ -4281,11 +4291,12 @@ export function discoverLegendaryActionActs(
                   tag: "action" as const,
                   actorId,
                   action: "attack" as const,
-                  attackName: attackActionOptionName(attack),
-                  statBlockSection: "legendaryActions" as const,
+                  ...statBlockSubjectPart(attack),
                 },
                 label: "Legendary Action",
-                summary: `Take the Legendary Action ${attackActionOptionName(
+                summary: `Take the Legendary Action ${attackActionOptionPresentationName(
+                  state,
+                  actorId,
                   attack,
                 )}.`,
                 initialHoles: [targetHole],

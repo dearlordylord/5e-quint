@@ -737,9 +737,11 @@ function evasionUnitIdForReplay(unitId: string): EvasionUnitId | undefined {
   return undefined;
 }
 
-function createRuleCoreFeatureDriver(input: {
-  readonly evasionUnitId?: EvasionUnitId;
-} = {}) {
+function createRuleCoreFeatureDriver(
+  input: {
+    readonly evasionUnitId?: EvasionUnitId;
+  } = {},
+) {
   return defineDriver(driverSchema, () => {
     let state = featureBattle();
     let holes: readonly BattleHole[] = [];
@@ -825,6 +827,9 @@ function createRuleCoreFeatureDriver(input: {
       >["weaponDamageDiceRollChoice"];
     }): void {
       const subject = input.subject ?? actorAttackSubject("Longsword");
+      const attackName = subject.attackName;
+      if (attackName === undefined)
+        throw new Error("Expected weapon attack name.");
       const target = requireHole(
         resolveBattleSubject({ state: input.state, subject, fills: [] }),
         "targetChoice",
@@ -834,12 +839,7 @@ function createRuleCoreFeatureDriver(input: {
           state: input.state,
           subject,
           fills: [
-            attackTargetFill(
-              target,
-              subject.actorId,
-              targetId,
-              subject.attackName,
-            ),
+            attackTargetFill(target, subject.actorId, targetId, attackName),
           ],
         }),
         "attackRoll",
@@ -865,12 +865,7 @@ function createRuleCoreFeatureDriver(input: {
           state: input.state,
           subject,
           fills: [
-            attackTargetFill(
-              target,
-              subject.actorId,
-              targetId,
-              subject.attackName,
-            ),
+            attackTargetFill(target, subject.actorId, targetId, attackName),
             attackRollFill(attackRoll, rollValue),
           ],
         }),
@@ -880,12 +875,7 @@ function createRuleCoreFeatureDriver(input: {
         state: input.state,
         subject,
         fills: [
-          attackTargetFill(
-            target,
-            subject.actorId,
-            targetId,
-            subject.attackName,
-          ),
+          attackTargetFill(target, subject.actorId, targetId, attackName),
           attackRollFill(attackRoll, rollValue),
           damageRollFillWithGroups(
             damage,

@@ -12,13 +12,24 @@ import {
 } from "@dnd/shared/types";
 import {
   AbilitySchema,
+  CreatureNamedAttackRollSchema,
   DamageTypeSchema,
   DcSourceSchema,
   SizeSchema,
 } from "@dnd/surface/surface/schema";
 import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
-import { CombatantId } from "../identity.ts";
+import { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES,
+  STAT_BLOCK_DAMAGE_NOTATIONS,
+  type StatBlockAttackActionOption,
+} from "../battle-action-options.ts";
+import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
+import {
+  statBlockAttackDamageSupportsStaticNotation,
+  supportedStatBlockAttackDamage,
+} from "../statblock-attack-damage-support.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 import {
   ELDRITCH_BLAST_BEAM_COUNTS,
@@ -193,6 +204,44 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   ),
 });
 
+const SupportedCreatureAttackRollMechanicsSchema =
+  CreatureNamedAttackRollSchema.pipe(
+    Schema.omit("name", "description", "limitedUse"),
+    Schema.filter(creatureAttackRollMechanicsAreSupported, {
+      message: () => "Unsupported Stat Block attack mechanics.",
+    }),
+  );
+
+// Cast evidence: the attack mechanics pass the executable support refinement,
+// and the notation refinement below proves the static branch's stronger damage
+// fact.
+const StatBlockAttackActionOptionSchema = Schema.Struct({
+  kind: Schema.Literal("statBlockAttack"),
+  procedureRef: BattleProcedureExecutionRef,
+  attack: SupportedCreatureAttackRollMechanicsSchema,
+  damageNotation: Schema.Literal(...STAT_BLOCK_DAMAGE_NOTATIONS),
+  traitAttackRollModes: Schema.optionalWith(
+    Schema.NonEmptyArray(
+      Schema.Struct({
+        mode: Schema.Literal("advantage"),
+        predicate: Schema.Literal(
+          ...STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES,
+        ),
+      }),
+    ),
+    { exact: true },
+  ),
+}).pipe(
+  Schema.filter(
+    (option) =>
+      option.damageNotation === "rolled" ||
+      statBlockAttackDamageSupportsStaticNotation(
+        supportedStatBlockAttackDamage(option.attack),
+      ),
+    { message: () => "Static Stat Block damage requires static damage facts." },
+  ),
+) as unknown as Schema.Schema<StatBlockAttackActionOption>;
+
 export const SupportedAttackActionOptionSchema = Schema.Union(
   CharacterWeaponAttackActionOptionSchema,
   Schema.Struct({
@@ -220,10 +269,7 @@ export const SupportedAttackActionOptionSchema = Schema.Union(
     damageAbilityModifier: AbilityModifier,
     damageBonus: Schema.optionalWith(Schema.Number, { exact: true }),
   }),
-  Schema.Struct({
-    kind: Schema.Literal("statBlockAttack"),
-    attack: BattleRuntimeObjectSchema,
-  }),
+  StatBlockAttackActionOptionSchema,
 );
 
 export const PreparedSpellAccessSchema = Schema.Struct({
@@ -431,7 +477,10 @@ export const RollModifierSpellSaveGateSchema = Schema.NullOr(
 );
 
 export const RollModifierSpellInvocationBaseSchemaFields = {
-  access: Schema.Union(PreparedSpellAccessSchema, ClassCantripSpellAccessSchema),
+  access: Schema.Union(
+    PreparedSpellAccessSchema,
+    ClassCantripSpellAccessSchema,
+  ),
   resource: Schema.Union(
     SpellSlotInvocationResourceSchema,
     NoSpellInvocationResourceSchema,

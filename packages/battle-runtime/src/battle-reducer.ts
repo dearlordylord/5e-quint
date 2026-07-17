@@ -120,9 +120,6 @@ import { Brand } from "effect";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
-  StatBlockMutableResourceState,
-  StatBlockPartKey,
-  StatBlockResourceSnapshot,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import type {
@@ -154,6 +151,10 @@ import type {
   CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
 } from "./battle-init.ts";
+import type {
+  StatBlockExecutionAdmission,
+  StatBlockExecutionSnapshot,
+} from "./stat-block-execution.ts";
 import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
@@ -184,6 +185,9 @@ import type {
   BattleDancingLightId,
   BattleLineDirectionId,
   BattleObjectId,
+  BattleProcedureExecutionRef,
+  BattleResourcePoolExecutionRef,
+  BattleStatBlockExecutionScopeCursor,
   BattleSpellEffectOccurrenceId,
   SpellId,
   BattleTablePositionId,
@@ -315,7 +319,6 @@ export {
   isClassFeatureExtraAttackActionResource,
   isStatBlockBattleCreatureState,
   isStatBlockMultiattackActionResource,
-  isSupportedLiteralMultiattackDispatch,
   movementActs,
   releaseGrappleActs,
   spendTurnAction,
@@ -323,10 +326,7 @@ export {
   statBlockBonusActionOptionActs,
   statBlockMultiattackActs,
   subjectAllowedDuringStatBlockMultiattackDispatch,
-  supportedLiteralMultiattackDispatches,
-  supportedStatBlockBonusActionOptions,
   supportedStatBlockBonusActionStandardAction,
-  supportedStatBlockMultiattacks,
 } from "./battle-reducer/battle-discovery.ts";
 
 export {
@@ -1333,6 +1333,7 @@ export type BattleInterruptProcedureSelection = {
   | {
       readonly kind: "opportunityAttack";
       readonly reactorId: CombatantId;
+      readonly selection: BattleOpportunityAttackSelection;
     }
   | {
       readonly kind: "retaliationAttack";
@@ -1683,17 +1684,25 @@ export type BattleSpiritualWeaponForcePosition = {
       readonly moveDistanceFeet: MovementFeet;
     }
 );
+export type BattleAttackExecutionSelection =
+  | {
+      readonly attackName: string;
+      readonly procedureRef?: never;
+    }
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly attackName?: never;
+    };
+export type BattleOpportunityAttackSelection = BattleAttackExecutionSelection;
 export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
-  readonly attackName: string;
-};
+} & BattleOpportunityAttackSelection;
 export type BattleTargetSpatialFact =
-  | {
+  | ({
       readonly kind: "attackTargetInMeleeReach";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
-      readonly attackName: string;
-    }
+    } & BattleAttackExecutionSelection)
   | {
       readonly kind: "retaliationDamagerWithinFiveFeet";
       readonly damagedId: CombatantId;
@@ -1712,13 +1721,12 @@ export type BattleTargetSpatialFact =
       readonly attackName: string;
       readonly disposition: BattleShovePushDisposition;
     }
-  | {
+  | ({
       readonly kind: "attackTargetInRangedRange";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
-      readonly attackName: string;
       readonly rangeBand: BattleAttackRangeBand;
-    }
+    } & BattleAttackExecutionSelection)
   | {
       readonly kind: "attackAttackerCannotSeeTarget";
       readonly attackerId: CombatantId;
@@ -4412,7 +4420,7 @@ type BattleCreatureStateCommon = {
         readonly classLevels: readonly CharacterBattleClassLevel[];
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
         readonly d20Statistics: CharacterBattleD20Statistics;
-        readonly druidWildShapeAvailableForms?: readonly BattleDruidWildShapeKnownForm[];
+        readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
@@ -4544,11 +4552,7 @@ type BattleCreatureStateCommon = {
         >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
       }
-    | {
-        readonly kind: "statBlock";
-        readonly statBlock: StatBlockRecord;
-        readonly resources: StatBlockMutableResourceState;
-      };
+    | ({ readonly kind: "statBlock" } & StatBlockExecutionAdmission);
 };
 
 export type BattleCreatureState = BattleCreatureStateCommon &
@@ -4563,6 +4567,10 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+  readonly statBlockExecutionScopeCursors: ReadonlyMap<
+    CombatantId,
+    BattleStatBlockExecutionScopeCursor
+  >;
   readonly companions: BattleCompanions;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
@@ -4694,6 +4702,11 @@ export type BattleTargetChoiceHole = Extract<
 > & {
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact?: boolean;
+  readonly attack?: {
+    readonly actorId: CombatantId;
+    readonly selection: BattleAttackExecutionSelection;
+    readonly targetConstraint: "meleeReach" | "rangedRange";
+  };
 };
 export type BattleCreatureAttackRollHole = Extract<
   RuntimeHole,
@@ -6313,10 +6326,10 @@ export type BattleStatBlockRechargeRollHole = {
   readonly kind: "statBlockRechargeRoll";
   readonly label: string;
   readonly combatantId: CombatantId;
-  readonly rechargeTargets: readonly StatBlockPartKey[];
+  readonly rechargeTargets: readonly BattleResourcePoolExecutionRef[];
 };
 export type BattleStatBlockRechargeRollResult = {
-  readonly target: StatBlockPartKey;
+  readonly target: BattleResourcePoolExecutionRef;
   readonly roll: DieRollResult;
 };
 export type BattleConcentrationSavingThrowHole = {
@@ -7273,6 +7286,10 @@ export type BattleFallDamageLandingResult =
 
 export type BattleSnapshot = {
   readonly battleId: BattleId;
+  readonly statBlockExecutionScopeCursors: readonly {
+    readonly combatantId: CombatantId;
+    readonly nextScopeOrdinal: BattleStatBlockExecutionScopeCursor;
+  }[];
   readonly round: RoundType;
   readonly currentActorId: CombatantId;
   readonly turnOrder: readonly CombatantId[];
@@ -7361,6 +7378,10 @@ export type BattleCreatureOriginSnapshot =
       readonly kind: "character";
       readonly characterId: CharacterId;
       readonly resources: readonly BattleCharacterResourceSnapshot[];
+      readonly druidWildShapeAvailableForms: readonly {
+        readonly statBlockId: StatBlockRecord["id"];
+        readonly execution: StatBlockExecutionSnapshot;
+      }[];
       readonly spellcasting: {
         readonly spellSlots: CharacterBattleSpellcastingState["spellSlots"];
       } | null;
@@ -7368,7 +7389,7 @@ export type BattleCreatureOriginSnapshot =
   | {
       readonly kind: "statBlock";
       readonly statBlockId: StatBlockRecord["id"];
-      readonly resources: StatBlockResourceSnapshot;
+      readonly execution: StatBlockExecutionSnapshot;
     };
 
 export type BattleCharacterResourceSnapshot =
@@ -7471,10 +7492,7 @@ export {
   type HpDamageProjection,
   type ShoveFillSet,
   type StatBlockMultiattackActionResource,
-  type SupportedLiteralMultiattackDispatch,
-  type SupportedStatBlockBonusActionOption,
   type SupportedStatBlockBonusActionStandardAction,
-  type SupportedStatBlockMultiattack,
   type UnitFeatureRolledDiceFill,
 } from "./battle-reducer/battle-runtime-protocol.ts";
 
@@ -7487,4 +7505,5 @@ export {
   BattleObjectIgnitionOutcomeSchema,
   BattleShovePushOutcomeSchema,
   BattleSnapshotSchema,
+  StatBlockExecutionSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";

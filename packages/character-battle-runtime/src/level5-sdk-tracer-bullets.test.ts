@@ -775,7 +775,7 @@ describe("level 5 SDK tracer bullets", () => {
       target,
       monsterId,
       rogueId,
-      "Scimitar",
+      subject,
     );
     const roll = requireHole(
       resolveBattleSubject({
@@ -3463,12 +3463,7 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
     resolveBattleSubject({ state: monsterTurn, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    targetHole,
-    monsterId,
-    wardedId,
-    "Elemental Touch",
-  );
+  const targetFill = attackTargetFill(targetHole, monsterId, wardedId, subject);
   const attackRoll = requireHole(
     resolveBattleSubject({
       state: monsterTurn,

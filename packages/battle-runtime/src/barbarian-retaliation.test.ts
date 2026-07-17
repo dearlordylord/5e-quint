@@ -67,16 +67,19 @@ describe("battle runtime: Barbarian Retaliation", () => {
 
     const startedRetaliation = resolveBattleInterrupt({
       state: awaitingRetaliation.state,
-      fill: interruptDecisionFill(findHole(awaitingRetaliation.holes, "interruptDecision"), {
-        kind: "resolve",
-        responderId: fighterId,
-        choice: {
-          kind: "retaliationAttack",
-          reactorId: fighterId,
-          attackName: "Longsword",
-          fills: [],
+      fill: interruptDecisionFill(
+        findHole(awaitingRetaliation.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: fighterId,
+          choice: {
+            kind: "retaliationAttack",
+            reactorId: fighterId,
+            attackName: "Longsword",
+            fills: [],
+          },
         },
-      }),
+      ),
     });
 
     expect(startedRetaliation).toMatchObject({
@@ -156,17 +159,20 @@ function resolveGoblinScimitarDamage(input: {
   readonly state: BattleState;
   readonly includeRetaliationWitness: boolean;
 }) {
-  const subject = goblinAttackSubject("Scimitar");
+  const subject = goblinAttackSubject(input.state, "Scimitar");
   const target = requireHole(
     resolveBattleSubject({ state: input.state, subject, fills: [] }),
     "targetChoice",
   );
+  if (target.kind !== "targetChoice" || target.attack === undefined) {
+    throw new Error("Expected Stat Block attack target context.");
+  }
   const targetFacts = [
     {
       kind: "attackTargetInMeleeReach" as const,
       actorId: goblinId,
       targetId: fighterId,
-      attackName: "Scimitar",
+      ...target.attack.selection,
     },
     ...(input.includeRetaliationWitness
       ? [

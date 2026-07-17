@@ -709,7 +709,7 @@ describe("battle runtime: Sleep", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: slept, actorId: wizardId }),
     ).state;
-    const subject = goblinAttackSubject("Scimitar");
+    const subject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
       "targetChoice",

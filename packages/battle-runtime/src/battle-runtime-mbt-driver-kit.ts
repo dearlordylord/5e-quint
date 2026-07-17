@@ -83,6 +83,7 @@ import {
   initiativeScore,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  sameBattleSubject,
   snapshotBattle,
   spellSaveDcForCaster,
   spellSlotInvocationRef,
@@ -1417,8 +1418,7 @@ const SPATIAL_EFFECT_BATTLE_EFFECTS = [
   "areaHazardEffectAdmitted",
   "concentrationBackedEffect",
 ] as const;
-type SpatialEffectBattleEffect =
-  (typeof SPATIAL_EFFECT_BATTLE_EFFECTS)[number];
+type SpatialEffectBattleEffect = (typeof SPATIAL_EFFECT_BATTLE_EFFECTS)[number];
 const SPATIAL_EFFECT_LIGHTS = [
   "multiEmitterDimLightProjection",
   "emitterPositionMoved",
@@ -1439,8 +1439,7 @@ const SPATIAL_EFFECT_PRESENTATIONS = [
   "colorChoicePresentation",
   "visibleOutlinePresentation",
 ] as const;
-type SpatialEffectPresentation =
-  (typeof SPATIAL_EFFECT_PRESENTATIONS)[number];
+type SpatialEffectPresentation = (typeof SPATIAL_EFFECT_PRESENTATIONS)[number];
 const SPATIAL_EFFECT_OBJECTS = [
   "outlinedObjectWitness",
   "objectSightTargetWitness",
@@ -1484,8 +1483,7 @@ const SPATIAL_EFFECT_CLEANUP_OWNERS = [
   "battleObscurementProjection",
   "battleAreaHazard",
 ] as const;
-type SpatialEffectCleanupOwner =
-  (typeof SPATIAL_EFFECT_CLEANUP_OWNERS)[number];
+type SpatialEffectCleanupOwner = (typeof SPATIAL_EFFECT_CLEANUP_OWNERS)[number];
 export type SpatialEffectRouteFact =
   | {
       readonly kind: "battleEffect";
@@ -2748,17 +2746,17 @@ export function createBattleRuntimeDriver() {
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject();
+        subject = skeletonShortswordSubject(state);
         const target = requireHole(
           discoverAttackHoles(state, subject),
           "targetChoice",
@@ -2932,17 +2930,17 @@ export function createBattleRuntimeRouteDriver() {
         resolveWithoutFill();
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         resolveWithoutFill();
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         resolveWithoutFill();
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject();
+        subject = skeletonShortswordSubject(state);
         const act = discoverAttackAct(state, subject);
         appendRequiredRouteEvents({
           routeEvents: act.routeEvents,
@@ -11438,7 +11436,7 @@ export function createReducerSpineContractDriver() {
       },
       doDiscoverWeaponAttack: () => {
         state = requireStartedState();
-        const attackSubject = skeletonShortswordSubject();
+        const attackSubject = skeletonShortswordSubject(state);
         subject = attackSubject;
         fills = [];
         holes = discoverAttackHoles(state, attackSubject);
@@ -15647,10 +15645,10 @@ function discoverAttackAct(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === subject.attackName,
+      sameBattleSubject(candidate.subject, subject),
   );
   if (act == null) {
-    throw new Error(`Expected ${subject.attackName} attack act.`);
+    throw new Error("Expected the selected attack act.");
   }
 
   return act;
@@ -15847,28 +15845,47 @@ function rogueSteadyAimSubject(): Extract<
   };
 }
 
-function skeletonMultiattackSubject(): Extract<
+function skeletonMultiattackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "multiattack" }
 > {
-  return {
-    tag: "action",
-    actorId: skeletonId,
-    action: "multiattack",
-    multiattackName: "Multiattack",
-  };
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === skeletonId &&
+      candidate.subject.action === "multiattack",
+  );
+  if (act?.subject.tag !== "action" || act.subject.action !== "multiattack") {
+    throw new Error("Expected the Skeleton Multiattack act.");
+  }
+  return act.subject;
 }
 
-function skeletonShortswordSubject(): Extract<
+function skeletonShortswordSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: skeletonId,
-    action: "attack",
-    attackName: "Shortsword",
-  };
+  const matchingActs = discoverBattleActs(state).filter(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === skeletonId &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef !== undefined &&
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === "Take the Attack action with Shortsword.",
+  );
+  if (matchingActs.length !== 1) {
+    throw new Error("Expected one rolled Skeleton Shortsword attack act.");
+  }
+  const subject = matchingActs[0]?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error("Expected the Skeleton Shortsword attack subject.");
+  }
+  return subject;
 }
 
 function magicMissileSubject(): Extract<
@@ -17795,23 +17812,34 @@ function targetFill(
   hole: BattleHole,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected an attack target-choice hole.");
+  }
+  const attackSpatialFacts =
+    hole.attack === undefined
+      ? []
+      : [
+          hole.attack.targetConstraint === "meleeReach"
+            ? {
+                kind: "attackTargetInMeleeReach" as const,
+                actorId: hole.attack.actorId,
+                targetId,
+                ...hole.attack.selection,
+              }
+            : {
+                kind: "attackTargetInRangedRange" as const,
+                actorId: hole.attack.actorId,
+                targetId,
+                ...hole.attack.selection,
+                rangeBand: "normal" as const,
+              },
+        ];
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: fighterId,
-        targetId,
-        attackName: "Dagger",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: skeletonId,
-        targetId,
-        attackName: "Shortsword",
-      },
+      ...attackSpatialFacts,
       {
         kind: "attackerAllyWithin5FeetOfTarget",
         attackerId: fighterId,

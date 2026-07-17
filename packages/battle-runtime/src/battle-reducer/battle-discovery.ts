@@ -34,11 +34,6 @@ import {
 
 import { type StandardActionKind } from "@dnd/shared/game-facts";
 
-import type {
-  CreatureNamedMultiattack,
-  StatBlockRecord,
-} from "@dnd/surface/surface/types";
-
 import { Match } from "effect";
 
 import * as Either from "effect/Either";
@@ -139,12 +134,17 @@ import { attackActionOptionName } from "./statblock-attacks.ts";
 
 import {
   attackActionOptionIsOrdinaryAttackAction,
-  statBlockActionSectionAttackOptions,
-  statBlockAttackResourceAvailable,
-  statBlockLimitedUseForPart,
-  statBlockPartLimitedUseAvailable,
+  attackActionOptionPresentationName,
+  statBlockAttackActionOptions,
+  statBlockAttackProcedureSection,
   statBlockSubjectPart,
 } from "./statblock.ts";
+import {
+  statBlockBonusActionOptionBindings,
+  statBlockMultiattackBindings,
+  statBlockProcedurePresentations,
+  statBlockProcedureResourcesAvailable,
+} from "../stat-block-execution.ts";
 
 import {
   greaseGroundHazardSavingThrowOutcomeHole,
@@ -185,11 +185,8 @@ import type {
   ClassFeatureExtraAttackActionResource,
   StatBlockBattleCreatureState,
   StatBlockMultiattackActionResource,
-  SupportedLiteralMultiattackDispatch,
   SupportedSpellInvocation,
-  SupportedStatBlockBonusActionOption,
   SupportedStatBlockBonusActionStandardAction,
-  SupportedStatBlockMultiattack,
 } from "../battle-reducer.ts";
 
 type FogCloudObscurementEffect = Extract<
@@ -352,7 +349,9 @@ function discoverBattleActsWithoutRouteEvents(
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
-  ).filter(attackActionOptionIsOrdinaryAttackAction);
+  ).filter((attack) =>
+    attackActionOptionIsOrdinaryAttackAction(state, actorId, attack),
+  );
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
@@ -371,11 +370,10 @@ function discoverBattleActsWithoutRouteEvents(
                   tag: "action" as const,
                   actorId,
                   action: "attack" as const,
-                  attackName: attackActionOptionName(attack),
                   ...statBlockSubjectPart(attack),
                 },
                 label: "Attack",
-                summary: `Take the Attack action with ${attackActionOptionName(attack)}.`,
+                summary: `Take the Attack action with ${attackActionOptionPresentationName(state, actorId, attack)}.`,
                 initialHoles: [targetHole],
               },
             ];
@@ -1020,28 +1018,38 @@ function pactOfTheChainFamiliarAttackActs(
   ) {
     return [];
   }
-  return statBlockActionSectionAttackOptions(
-    "actions",
-    familiarCombatant.origin.statBlock.statBlock.actions,
-    familiarCombatant.origin.statBlock.statBlock.traits,
-  ).flatMap((attack) => {
-    const targetHole = attackTargetHole(state, familiarId, attack);
-    return targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "pactOfTheChainFamiliarAttack" as const,
-              actorId,
-              familiarId,
-              attackName: attackActionOptionName(attack),
+  return statBlockAttackActionOptions(familiarCombatant.origin).flatMap(
+    (attack) => {
+      if (
+        statBlockAttackProcedureSection(
+          state,
+          familiarId,
+          attack.procedureRef,
+        ) !== "actions"
+      ) {
+        return [];
+      }
+      const targetHole = attackTargetHole(state, familiarId, attack);
+      return targetHole.choices.length === 0
+        ? []
+        : [
+            {
+              subject: {
+                tag: "pactOfTheChainFamiliarAttack" as const,
+                actorId,
+                familiarId,
+                procedureRef: attack.procedureRef,
+                ...(attack.damageNotation === "static"
+                  ? { statBlockDamageNotation: "static" as const }
+                  : {}),
+              },
+              label: "Pact Familiar Attack",
+              summary: `Forgo one Attack-action attack for the familiar to attack with ${attackActionOptionPresentationName(state, familiarId, attack)}.`,
+              initialHoles: [targetHole],
             },
-            label: "Pact Familiar Attack",
-            summary: `Forgo one Attack-action attack for the familiar to attack with ${attackActionOptionName(attack)}.`,
-            initialHoles: [targetHole],
-          },
-        ];
-  });
+          ];
+    },
+  );
 }
 
 function endTurnAct(actorId: CombatantId): AvailableBattleAct {
@@ -1820,34 +1828,35 @@ export function statBlockMultiattackActs(
     return [];
   }
   const origin = actor.origin;
-  return supportedStatBlockMultiattacks(origin.statBlock).flatMap(
-    (multiattack) => {
-      if (
-        !multiattack.dispatches.every((dispatch) =>
-          statBlockAttackResourceAvailable(
-            origin.statBlock.statBlock,
-            origin.resources,
-            dispatch,
-          ),
-        )
-      ) {
-        return [];
-      }
-      return [
-        {
-          subject: {
-            tag: "action" as const,
-            actorId,
-            action: "multiattack" as const,
-            multiattackName: multiattack.multiattack.name,
-          },
-          label: multiattack.multiattack.name,
-          summary: `Take the Attack action using ${multiattack.multiattack.name}.`,
-          initialHoles: [],
+  const presentations = statBlockProcedurePresentations(origin);
+  return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
+    if (
+      !binding.procedure.dispatchProcedureRefs.every((procedureRef) =>
+        statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
+      )
+    ) {
+      return [];
+    }
+    const presentation = presentations.find(
+      (candidate) =>
+        candidate.kind === "multiattack" &&
+        candidate.procedureRef === binding.procedureRef,
+    );
+    if (presentation?.kind !== "multiattack") return [];
+    return [
+      {
+        subject: {
+          tag: "action" as const,
+          actorId,
+          action: "multiattack" as const,
+          procedureRef: binding.procedureRef,
         },
-      ];
-    },
-  );
+        label: presentation.label,
+        summary: `Take the Attack action using ${presentation.label}.`,
+        initialHoles: [],
+      },
+    ];
+  });
 }
 
 export function statBlockBonusActionOptionActs(
@@ -1863,15 +1872,15 @@ export function statBlockBonusActionOptionActs(
     return [];
   }
   const origin = actor.origin;
+  const presentations = statBlockProcedurePresentations(origin);
 
-  return supportedStatBlockBonusActionOptions(origin.statBlock).flatMap(
-    (option) =>
-      option.option.options.flatMap((standardAction) => {
+  return statBlockBonusActionOptionBindings(origin.execution).flatMap(
+    (binding) =>
+      binding.procedure.standardActions.flatMap((standardAction) => {
         if (
-          !statBlockPartLimitedUseAvailable(
-            origin.statBlock.statBlock,
-            origin.resources,
-            option.part,
+          !statBlockProcedureResourcesAvailable(
+            origin.execution,
+            binding.procedureRef,
           )
         ) {
           return [];
@@ -1882,17 +1891,23 @@ export function statBlockBonusActionOptionActs(
         ) {
           return [];
         }
+        const presentation = presentations.find(
+          (candidate) =>
+            candidate.kind === "bonusActionOption" &&
+            candidate.procedureRef === binding.procedureRef,
+        );
+        if (presentation?.kind !== "bonusActionOption") return [];
         return [
           {
             subject: {
               tag: "bonusAction" as const,
               actorId,
               action: "statBlockActionOption" as const,
-              optionName: option.option.name,
+              procedureRef: binding.procedureRef,
               standardAction,
             },
-            label: option.option.name,
-            summary: `Use ${option.option.name} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
+            label: presentation.label,
+            summary: `Use ${presentation.label} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
             initialHoles:
               standardAction === "hide"
                 ? [hideAbilityCheckHole(state, actorId)]
@@ -1900,94 +1915,6 @@ export function statBlockBonusActionOptionActs(
           },
         ];
       }),
-  );
-}
-
-export function supportedStatBlockMultiattacks(
-  statBlock: StatBlockRecord,
-): readonly SupportedStatBlockMultiattack[] {
-  const actionAttacks = statBlockActionSectionAttackOptions(
-    "actions",
-    statBlock.statBlock.actions,
-    statBlock.statBlock.traits,
-  );
-  return (
-    statBlock.statBlock.actions?.multiattacks?.flatMap((multiattack) => {
-      const literalDispatches =
-        supportedLiteralMultiattackDispatches(multiattack);
-      if (literalDispatches === null) return [];
-
-      const dispatches = literalDispatches.flatMap((dispatch) => {
-        const matchingAttacks = actionAttacks.filter(
-          (candidate) =>
-            candidate.attack.name === dispatch.name &&
-            candidate.damageNotation === "rolled",
-        );
-        const [attack] = matchingAttacks;
-        if (attack === undefined || matchingAttacks.length !== 1) return [];
-        if (
-          dispatch.count.value > 1 &&
-          statBlockLimitedUseForPart(statBlock.statBlock, attack.part) !==
-            undefined
-        ) {
-          return [];
-        }
-        return Array.from({ length: dispatch.count.value }, () => attack);
-      });
-      const dispatchCount = literalDispatches.reduce(
-        (count, dispatch) => count + dispatch.count.value,
-        0,
-      );
-      return dispatches.length === dispatchCount
-        ? [{ multiattack, dispatches }]
-        : [];
-    }) ?? []
-  );
-}
-
-export function supportedLiteralMultiattackDispatches(
-  multiattack: CreatureNamedMultiattack,
-): readonly SupportedLiteralMultiattackDispatch[] | null {
-  if (multiattack.dispatches.length === 0) return null;
-
-  const dispatches = multiattack.dispatches.filter(
-    isSupportedLiteralMultiattackDispatch,
-  );
-  return dispatches.length === multiattack.dispatches.length
-    ? dispatches
-    : null;
-}
-
-export function isSupportedLiteralMultiattackDispatch(
-  dispatch: CreatureNamedMultiattack["dispatches"][number],
-): dispatch is SupportedLiteralMultiattackDispatch {
-  return (
-    dispatch.count.kind === "literal" &&
-    dispatch.count.value >= 1 &&
-    Number.isInteger(dispatch.count.value)
-  );
-}
-
-export function supportedStatBlockBonusActionOptions(
-  statBlock: StatBlockRecord,
-): readonly SupportedStatBlockBonusActionOption[] {
-  return (
-    statBlock.statBlock.bonusActions?.actionOptions?.flatMap((option) => {
-      const supportedOptions = option.options.filter(
-        (
-          standardAction,
-        ): standardAction is SupportedStatBlockBonusActionStandardAction =>
-          supportedStatBlockBonusActionStandardAction(standardAction),
-      );
-      return supportedOptions.length === option.options.length
-        ? [
-            {
-              option: { ...option, options: supportedOptions },
-              part: { section: "bonusActions", name: option.name },
-            },
-          ]
-        : [];
-    }) ?? []
   );
 }
 
@@ -2079,8 +2006,8 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
   return state.currentTurnResources.actionResources.some(
     (resource): boolean =>
       isStatBlockMultiattackActionResource(resource, actorId) &&
-      resource.attackPart.name === subject.attackName &&
-      resource.attackPart.section === (subject.statBlockSection ?? "actions"),
+      subject.procedureRef !== undefined &&
+      resource.attackProcedureRef === subject.procedureRef,
   );
 }
 

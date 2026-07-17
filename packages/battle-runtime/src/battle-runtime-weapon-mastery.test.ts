@@ -296,6 +296,9 @@ describe("battle runtime: Weapon Mastery", () => {
       weaponMasteries: longswordWeaponMasterySelections(),
     });
     const subject = fighterAttackSubject();
+    const attackName = subject.attackName;
+    if (attackName === undefined)
+      throw new Error("Expected weapon attack name.");
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const damageHole = attackDamageHoleAfterHit(
@@ -329,7 +332,7 @@ describe("battle runtime: Weapon Mastery", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: hit.state, actorId: fighterId }),
     ).state;
-    const goblinSubject = goblinAttackSubject("Scimitar");
+    const goblinSubject = goblinAttackSubject(goblinTurn, "Scimitar");
     const goblinTarget = attackInitialTargetHole(goblinTurn, goblinSubject);
     const goblinRoll = attackRollHoleAfterTarget(
       goblinTurn,
@@ -468,6 +471,9 @@ describe("battle runtime: Weapon Mastery", () => {
       weaponMasteries: longswordWeaponMasterySelections(),
     });
     const subject = fighterAttackSubject();
+    const attackName = subject.attackName;
+    if (attackName === undefined)
+      throw new Error("Expected weapon attack name.");
     const targetHole = attackInitialTargetHole(state, subject);
     const pushDisposition = {
       kind: "pushed" as const,
@@ -479,13 +485,13 @@ describe("battle runtime: Weapon Mastery", () => {
       targetHole,
       subject.actorId,
       goblinId,
-      subject.attackName,
+      attackName,
       [
         {
           kind: "weaponMasteryPushDisposition" as const,
           attackerId: subject.actorId,
           targetId: goblinId,
-          attackName: subject.attackName,
+          attackName,
           disposition: pushDisposition,
         },
       ],
@@ -537,7 +543,9 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(hit.shovePushes).toEqual([
       { targetId: goblinId, disposition: pushDisposition },
     ]);
-    expect(hit.state.combatants.get(goblinId)?.activeEffects).not.toContainEqual(
+    expect(
+      hit.state.combatants.get(goblinId)?.activeEffects,
+    ).not.toContainEqual(
       expect.objectContaining({ sourceUnitId: "mastery_sap" }),
     );
   });
@@ -596,7 +604,9 @@ describe("battle runtime: Weapon Mastery", () => {
       deltaFeet: movementDeltaFeet(-10),
       expiresAt: { kind: "startOfTurn", combatantId: fighterId },
     });
-    expect(hit.state.combatants.get(goblinId)?.activeEffects).not.toContainEqual(
+    expect(
+      hit.state.combatants.get(goblinId)?.activeEffects,
+    ).not.toContainEqual(
       expect.objectContaining({ sourceUnitId: "mastery_sap" }),
     );
   });

@@ -592,7 +592,7 @@ describe("battle runtime: death saves and turns", () => {
 
   test("ranged attacks cannot carry Knock Out", () => {
     const state = goblinTurnBattle({ fighterHp: 3 });
-    const subject = goblinAttackSubject("Shortbow");
+    const subject = goblinAttackSubject(state, "Shortbow");
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

@@ -606,18 +606,16 @@ export async function verifyBaselineVertical(client: Client) {
 
   const read = await callTool(client, "read_battle_state", {});
   assert.equal(get(read, "snapshot.currentActorId"), "fighter");
-  assert.deepEqual(
-    actionLabels(await callTool(client, "discover_battle_acts", {})),
-    [
-      "Attack",
-      "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
-      "Adrenaline Rush",
-      "Second Wind",
-      "Move",
-      "End Turn",
-    ],
-  );
+  const fighterActs = await callTool(client, "discover_battle_acts", {});
+  assert.deepEqual(actionLabels(fighterActs), [
+    "Attack",
+    "Attack",
+    ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+    "Adrenaline Rush",
+    "Second Wind",
+    "Move",
+    "End Turn",
+  ]);
 
   await callTool(client, "fill_battle_hole", {
     subject: attackSubject("fighter", "Longsword"),
@@ -641,30 +639,29 @@ export async function verifyBaselineVertical(client: Client) {
     actorId: "fighter",
   });
   assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
-  assert.deepEqual(
-    actionLabels(await callTool(client, "discover_battle_acts", {})),
-    [
-      "Attack",
-      "Attack",
-      "Attack",
-      "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
-      "Nimble Escape",
-      "Move",
-      "End Turn",
-    ],
-  );
+  const goblinActs = await callTool(client, "discover_battle_acts", {});
+  assert.deepEqual(actionLabels(goblinActs), [
+    "Attack",
+    "Attack",
+    "Attack",
+    "Attack",
+    ...GENERIC_COMBAT_ACTION_LABELS,
+    "Nimble Escape",
+    "Move",
+    "End Turn",
+  ]);
+  const goblinAttack = attackSubjectFromActs(goblinActs, "goblin", "Scimitar");
 
   const goblinTarget = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("goblin", "Scimitar"),
-    fill: targetFill("fighter"),
+    subject: goblinAttack,
+    fill: attackTargetFill(goblinAttack, "fighter"),
   });
   const goblinAttackRoll = (
     get(goblinTarget, "result.holes") as JsonObject[]
   ).find((hole) => hole.kind === "attackRoll");
   assert.ok(goblinAttackRoll);
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("goblin", "Scimitar"),
+    subject: goblinAttack,
     fill: attackRollFill(
       20,
       18,
@@ -674,7 +671,7 @@ export async function verifyBaselineVertical(client: Client) {
     ),
   });
   const goblinDamage = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("goblin", "Scimitar"),
+    subject: goblinAttack,
     fill: rolledDiceFill("battle:attack:damage-result:1d6+2-slashing", [[5]]),
   });
   assert.equal(combatantHp(goblinDamage, "fighter"), 5);
@@ -873,17 +870,23 @@ export async function verifyWidthVertical(client: Client) {
     ),
     "skeleton-b",
   );
+  const skeletonActs = await callTool(client, "discover_battle_acts", {});
+  const skeletonAttack = attackSubjectFromActs(
+    skeletonActs,
+    "skeleton-b",
+    "Shortsword",
+  );
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("skeleton-b", "Shortsword"),
-    fill: targetFill("fighter"),
+    subject: skeletonAttack,
+    fill: attackTargetFill(skeletonAttack, "fighter"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("skeleton-b", "Shortsword"),
+    subject: skeletonAttack,
     fill: attackRollFill(20, 15),
   });
   const afterSkeletonAttack = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("skeleton-b", "Shortsword"),
+    subject: skeletonAttack,
     fill: rolledDiceFill("battle:attack:damage-result:1d6+3-piercing", [[1]]),
   });
   assert.equal(combatantHp(afterSkeletonAttack, "fighter"), 16);
@@ -1409,24 +1412,32 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
       "ice_knife",
     ],
   });
-  await createAndFinalizeElfWizardTwoWithSpells(client, iceKnifePrimaryDraftId, {
-    preparedSpells: [
-      "mage_armor",
-      "magic_missile",
-      "sleep",
-      "thunderwave",
-      "chromatic_orb",
-    ],
-  });
-  await createAndFinalizeElfWizardTwoWithSpells(client, iceKnifeSecondaryDraftId, {
-    preparedSpells: [
-      "mage_armor",
-      "magic_missile",
-      "sleep",
-      "thunderwave",
-      "chromatic_orb",
-    ],
-  });
+  await createAndFinalizeElfWizardTwoWithSpells(
+    client,
+    iceKnifePrimaryDraftId,
+    {
+      preparedSpells: [
+        "mage_armor",
+        "magic_missile",
+        "sleep",
+        "thunderwave",
+        "chromatic_orb",
+      ],
+    },
+  );
+  await createAndFinalizeElfWizardTwoWithSpells(
+    client,
+    iceKnifeSecondaryDraftId,
+    {
+      preparedSpells: [
+        "mage_armor",
+        "magic_missile",
+        "sleep",
+        "thunderwave",
+        "chromatic_orb",
+      ],
+    },
+  );
 
   const started = await callTool(client, "start_battle", {
     battleId: iceKnifeBattleId,
@@ -1461,10 +1472,16 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
     iceKnifeSecondaryCombatantId,
   ]);
   const primaryStartingHp = combatantHp(started, iceKnifePrimaryCombatantId);
-  const secondaryStartingHp = combatantHp(started, iceKnifeSecondaryCombatantId);
+  const secondaryStartingHp = combatantHp(
+    started,
+    iceKnifeSecondaryCombatantId,
+  );
 
   const casterActs = await callTool(client, "discover_battle_acts", {});
-  assert.equal(get(casterActs, "snapshot.currentActorId"), iceKnifeCasterCombatantId);
+  assert.equal(
+    get(casterActs, "snapshot.currentActorId"),
+    iceKnifeCasterCombatantId,
+  );
   const iceKnifeAct = battleActByLabel(casterActs, "Ice Knife");
   assert.ok(iceKnifeAct, "Missing Ice Knife act");
   const targetHole = singleInitialHoleOfKind(iceKnifeAct, "targetChoice");
@@ -1774,7 +1791,10 @@ export async function verifyLevelNineRangerExpertiseSheetScenario(
   assert.equal(get(ranger, "status"), "available");
   assert.equal(get(ranger, "displayName"), "Orc Soldier Ranger 9");
   assertLevelNineRangerExpertiseBuild(ranger, "build.proficiencyChoices");
-  assert.deepEqual(get(ranger, "spellSlots"), levelNineRangerUnexpendedSpellSlots);
+  assert.deepEqual(
+    get(ranger, "spellSlots"),
+    levelNineRangerUnexpendedSpellSlots,
+  );
 }
 
 export async function verifyLevelNineRangerExpertiseBattleHandoff(
@@ -1795,10 +1815,7 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
 
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   const rangerSheet = characterRow(listedBeforeBattle, characterId);
-  assertLevelNineRangerExpertiseBuild(
-    rangerSheet,
-    "build.proficiencyChoices",
-  );
+  assertLevelNineRangerExpertiseBuild(rangerSheet, "build.proficiencyChoices");
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
@@ -1843,7 +1860,10 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
     get(rangerActs, "snapshot.currentActorId"),
     levelNineRangerExpertiseCombatantId,
   );
-  assert.ok(battleActByLabel(rangerActs, "Attack"), "Missing Ranger Attack act");
+  assert.ok(
+    battleActByLabel(rangerActs, "Attack"),
+    "Missing Ranger Attack act",
+  );
   assert.ok(
     battleActByLabel(rangerActs, "Hunter's Mark"),
     "Missing Ranger Hunter's Mark act",
@@ -2624,7 +2644,10 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
   let current = await callTool(client, "fill_creation_holes", {
     draftId,
     expectedRevision: returnedDraftRevision(created),
-    fills: creationFillsForReturnedHoles(created, rangerNineCreationPreferences),
+    fills: creationFillsForReturnedHoles(
+      created,
+      rangerNineCreationPreferences,
+    ),
   });
   assert.equal(get(current, "result.tag"), "accepted");
 
@@ -2638,7 +2661,10 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
     current = await callTool(client, "fill_creation_holes", {
       draftId,
       expectedRevision: returnedDraftRevision(holes),
-      fills: creationFillsForReturnedHoles(holes, rangerNineCreationPreferences),
+      fills: creationFillsForReturnedHoles(
+        holes,
+        rangerNineCreationPreferences,
+      ),
     });
     assert.equal(
       get(current, "result.tag"),
@@ -2999,11 +3025,11 @@ function optionIdsForReturnedHole(
   return options.slice(0, max);
 }
 
-function rangerNinePreferredOptionIds(holeId: string): readonly string[] | undefined {
+function rangerNinePreferredOptionIds(
+  holeId: string,
+): readonly string[] | undefined {
   const choices: Readonly<Record<string, readonly string[]>> = {
-    "cc:draft:draft.progression.initial": [
-      levelNineRangerProgressionOptionId,
-    ],
+    "cc:draft:draft.progression.initial": [levelNineRangerProgressionOptionId],
     "cc:draft:draft.background": ["background_soldier"],
     "cc:draft:draft.species": ["species_orc"],
     "cc:draft:draft.languages": ["Dwarvish", "Goblin"],
@@ -3037,17 +3063,19 @@ function rangerNinePreferredOptionIds(holeId: string): readonly string[] | undef
       "guidance",
       "starry_wisp",
     ],
-    [unitHoleId("ranger_hunters_prey", "hunters_prey")]: [
-      "colossus_slayer",
-    ],
-    [unitHoleId("ranger_ability_score_improvement_l4", "class_feature_feat_choice")]:
-      ["feat_ability_score_improvement"],
+    [unitHoleId("ranger_hunters_prey", "hunters_prey")]: ["colossus_slayer"],
+    [unitHoleId(
+      "ranger_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+    )]: ["feat_ability_score_improvement"],
     [unitHoleId(
       "ranger_ability_score_improvement_l4",
       "class_feature_ability_score_increase_choice",
     )]: ["ability_score:dex:+2:max20"],
-    [unitHoleId("ranger_ability_score_improvement_l8", "class_feature_feat_choice")]:
-      ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "ranger_ability_score_improvement_l8",
+      "class_feature_feat_choice",
+    )]: ["feat_ability_score_improvement"],
     [unitHoleId(
       "ranger_ability_score_improvement_l8",
       "class_feature_ability_score_increase_choice",
@@ -3073,9 +3101,7 @@ function fighterTenPreferredOptionIds(
   holeId: string,
 ): readonly string[] | undefined {
   const choices: Readonly<Record<string, readonly string[]>> = {
-    "cc:draft:draft.progression.initial": [
-      levelTenFighterProgressionOptionId,
-    ],
+    "cc:draft:draft.progression.initial": [levelTenFighterProgressionOptionId],
     "cc:draft:draft.background": ["background_soldier"],
     "cc:draft:draft.species": ["species_orc"],
     "cc:draft:draft.languages": ["Dwarvish", "Goblin"],
@@ -3093,8 +3119,10 @@ function fighterTenPreferredOptionIds(
       "subclass_fighter_champion",
     ],
     [unitHoleId("class_fighter", "class_equipment_choice")]: ["option_c"],
-    [unitHoleId("fighter_ability_score_improvement_l4", "class_feature_feat_choice")]:
-      ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "fighter_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+    )]: ["feat_ability_score_improvement"],
     [unitHoleId(
       "fighter_ability_score_improvement_l4",
       "class_feature_ability_score_increase_choice",
@@ -3363,6 +3391,59 @@ function returnedDraftRevision(payload: JsonObject) {
 
 function attackSubject(actorId: string, attackName: string) {
   return { tag: "action", actorId, action: "attack", attackName };
+}
+
+function attackSubjectFromActs(
+  payload: JsonObject,
+  actorId: string,
+  attackName: string,
+): JsonObject {
+  const acts = jsonObjectArrayAt(payload, "snapshot.acts");
+  const matchingActs = acts.filter((candidate) => {
+    const subject = candidate.subject;
+    if (!isJsonObject(subject)) return false;
+    return (
+      subject.tag === "action" &&
+      subject.action === "attack" &&
+      subject.actorId === actorId &&
+      (subject.attackName === attackName ||
+        (candidate.summary === `Take the Attack action with ${attackName}.` &&
+          subject.statBlockDamageNotation === undefined))
+    );
+  });
+  assert.equal(
+    matchingActs.length,
+    1,
+    `Expected exactly one rolled ${actorId} ${attackName} Attack action.`,
+  );
+  const act = matchingActs[0];
+  assert.ok(act);
+  assert.ok(
+    isJsonObject(act.subject),
+    "Attack action subject must be an object.",
+  );
+  return act.subject;
+}
+
+function attackTargetFill(subject: JsonObject, value: string) {
+  assert.equal(typeof subject.actorId, "string");
+  const selection =
+    typeof subject.procedureRef === "string"
+      ? { procedureRef: subject.procedureRef }
+      : { attackName: subject.attackName };
+  return {
+    kind: "targetChoice",
+    holeId: "battle:attack:target",
+    value,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: subject.actorId,
+        targetId: value,
+        ...selection,
+      },
+    ],
+  };
 }
 
 function statBlockCombatant(
@@ -3688,7 +3769,10 @@ function assertLevelSixRogueExpertiseBuild(payload: JsonObject, path: string) {
   }
 }
 
-function assertLevelNineRangerExpertiseBuild(payload: JsonObject, path: string) {
+function assertLevelNineRangerExpertiseBuild(
+  payload: JsonObject,
+  path: string,
+) {
   const expertise = proficiencyChoiceSkills(payload, path, "skill_expertise");
   assert.deepEqual(
     [...expertise].sort(),

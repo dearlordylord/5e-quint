@@ -242,7 +242,7 @@ function combatantDruidWildShapeEquipmentWearsKind(
         kind,
       ) &&
       origin.druidWildShapeAvailableForms?.some(
-        (form) => form.id === effect.formStatBlockId,
+        (form) => form.statBlock.id === effect.formStatBlockId,
       ) === true,
   );
 }

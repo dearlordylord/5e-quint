@@ -25,11 +25,13 @@ import { describe, it } from "vitest";
 
 import { Hp, DieRollResult, movementFeet } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 
 import {
   battleCombatantSide,
   battleId,
   combatantId,
+  discoverBattleActs,
   initiativeScore,
   resolveBattleSubject,
   snapshotBattle,
@@ -113,12 +115,14 @@ function createRuleCoreStatBlockControlDriver() {
     let lastResult: RuleCoreStatBlockControlProjection["lastResult"] = "init";
     let lastInvalidReason: RuleCoreStatBlockControlProjection["lastInvalidReason"] =
       "none";
+    let bonusActionSubject = statBlockBonusActionSubject(state);
 
     function reset(): void {
       state = statBlockControlBattle();
       holes = [];
       lastResult = "init";
       lastInvalidReason = "none";
+      bonusActionSubject = statBlockBonusActionSubject(state);
     }
 
     function recordResult(result: BattleResolutionResult): void {
@@ -155,7 +159,7 @@ function createRuleCoreStatBlockControlDriver() {
     }
 
     function resolveDispatch(attackName: string): void {
-      const subject = attackSubject(attackName);
+      const subject = attackSubject(state, attackName);
       const target = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
         "targetChoice",
@@ -184,7 +188,7 @@ function createRuleCoreStatBlockControlDriver() {
     return {
       init: reset,
       doStartMultiattack: () => {
-        resolveSubject(multiattackSubject());
+        resolveSubject(multiattackSubject(state));
       },
       doMoveDuringDispatch: () => {
         const subject = moveSubject();
@@ -206,13 +210,7 @@ function createRuleCoreStatBlockControlDriver() {
         );
       },
       doRejectBonusActionDuringDispatch: () => {
-        resolveSubject({
-          tag: "bonusAction",
-          actorId,
-          action: "statBlockActionOption",
-          optionName: "Nimble Escape",
-          standardAction: "disengage",
-        });
+        resolveSubject(bonusActionSubject);
       },
       doRejectOrdinaryActionDuringDispatch: () => {
         resolveSubject({
@@ -340,30 +338,61 @@ function statBlockCreature(input: {
   };
 }
 
-function multiattackSubject(): Extract<
+function multiattackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "multiattack" }
 > {
-  return {
-    tag: "action",
-    actorId,
-    action: "multiattack",
-    multiattackName,
-  };
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "action" && act.subject.action === "multiattack",
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "multiattack") {
+    throw new Error("Expected Multiattack subject.");
+  }
+  return subject;
+}
+
+function statBlockBonusActionSubject(
+  state: BattleState,
+): Extract<
+  BattleSubject,
+  { readonly tag: "bonusAction"; readonly action: "statBlockActionOption" }
+> {
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "bonusAction" &&
+      act.subject.action === "statBlockActionOption" &&
+      act.subject.standardAction === "disengage",
+  )?.subject;
+  if (
+    subject?.tag !== "bonusAction" ||
+    subject.action !== "statBlockActionOption"
+  ) {
+    throw new Error("Expected Stat Block Bonus Action subject.");
+  }
+  return subject;
 }
 
 function attackSubject(
+  state: BattleState,
   attackName: string,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId,
-    action: "attack",
-    attackName,
-  };
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.summary.includes(attackName) &&
+      act.subject.statBlockDamageNotation === undefined,
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error(`Expected admitted ${attackName} subject.`);
+  }
+  return subject;
 }
 
 function moveSubject(): Extract<
@@ -391,6 +420,22 @@ function projectRuleCoreStatBlockControlState(input: {
       resource.source === "statBlockMultiattack" &&
       resource.sourceOwnerId === actorId,
   );
+  const stateActor = input.state.combatants.get(actorId);
+  if (stateActor?.origin.kind !== "statBlock") {
+    throw new Error("Expected rule-core Stat Block actor execution state.");
+  }
+  const origin = stateActor.origin;
+  const attackProcedureRef = (attackName: string) => {
+    const binding = statBlockProcedurePresentations(origin).find(
+      (candidate) =>
+        candidate.kind === "attack" && candidate.name === attackName,
+    );
+    if (binding === undefined)
+      throw new Error(`Missing ${attackName} binding.`);
+    return binding.procedureRef;
+  };
+  const primaryAttackRef = attackProcedureRef(primaryAttackName);
+  const secondaryAttackRef = attackProcedureRef(secondaryAttackName);
 
   return withRuleCoreComponentRoute(componentOwner, {
     attackActionAvailable: snapshot.turn.actionResources.some(
@@ -398,10 +443,10 @@ function projectRuleCoreStatBlockControlState(input: {
     ),
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
     pendingPrimaryDispatches: dispatches.filter(
-      (resource) => resource.attackPart.name === primaryAttackName,
+      (resource) => resource.attackProcedureRef === primaryAttackRef,
     ).length,
     pendingSecondaryDispatches: dispatches.filter(
-      (resource) => resource.attackPart.name === secondaryAttackName,
+      (resource) => resource.attackProcedureRef === secondaryAttackRef,
     ).length,
     movementSpentFeet: Number(actor.movement.spentFeet),
     movementRemainingFeet: Number(actor.movement.remainingFeet),
@@ -447,6 +492,9 @@ function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   attackName: string,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected Stat Block attack target context.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -458,7 +506,7 @@ function attackTargetFill(
               kind: "attackTargetInRangedRange",
               actorId,
               targetId,
-              attackName,
+              ...hole.attack.selection,
               rangeBand: "normal",
             },
           ]
@@ -467,7 +515,7 @@ function attackTargetFill(
               kind: "attackTargetInMeleeReach",
               actorId,
               targetId,
-              attackName,
+              ...hole.attack.selection,
             },
           ],
   };

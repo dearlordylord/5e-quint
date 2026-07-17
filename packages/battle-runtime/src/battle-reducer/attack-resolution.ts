@@ -51,10 +51,7 @@ import { Match } from "effect";
 
 import * as Either from "effect/Either";
 
-import type {
-  StatBlockPartKey,
-  SupportedAttackActionOption,
-} from "../battle-action-options.ts";
+import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 
 import type {
   BattleCreatureInit,
@@ -170,10 +167,13 @@ import {
 
 import {
   spendStatBlockAttackResources,
-  statBlockAttackResourceAvailable,
-  statBlockPartLimitedUseAvailable,
+  statBlockAttackProcedureSection,
   updateStatBlockActorResources,
 } from "./statblock.ts";
+import {
+  statBlockProcedureBinding,
+  statBlockProcedureResourcesAvailable,
+} from "../stat-block-execution.ts";
 
 import type {
   AttackDamageRider,
@@ -238,9 +238,7 @@ import {
   isStatBlockMultiattackActionResource,
   spendTurnAction,
   spellDamageRerollUnsupportedIssue,
-  supportedStatBlockBonusActionOptions,
   supportedStatBlockBonusActionStandardAction,
-  supportedStatBlockMultiattacks,
   zeroHpLifecycleIsTerminal,
 } from "../battle-reducer.ts";
 export function battleCreatureInitFromStatBlock(
@@ -959,10 +957,11 @@ export function resolveMultiattack(
     );
   }
   const origin = actor.origin;
-  const multiattack = supportedStatBlockMultiattacks(origin.statBlock).find(
-    (candidate) => candidate.multiattack.name === input.subject.multiattackName,
+  const multiattackBinding = statBlockProcedureBinding(
+    origin.execution,
+    input.subject.procedureRef,
   );
-  if (multiattack === undefined) {
+  if (multiattackBinding?.procedure.kind !== "multiattack") {
     return invalidResult(
       input.state,
       "unsupportedActOption",
@@ -970,12 +969,8 @@ export function resolveMultiattack(
     );
   }
   if (
-    !multiattack.dispatches.every((dispatch) =>
-      statBlockAttackResourceAvailable(
-        origin.statBlock.statBlock,
-        origin.resources,
-        dispatch,
-      ),
+    !multiattackBinding.procedure.dispatchProcedureRefs.every((procedureRef) =>
+      statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
     )
   ) {
     return invalidResult(
@@ -992,7 +987,8 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
-  const [consumedDispatch, ...pendingDispatches] = multiattack.dispatches;
+  const [consumedDispatch, ...pendingDispatches] =
+    multiattackBinding.procedure.dispatchProcedureRefs;
   const grantedPendingDispatches = combatantHasSlowActivePenalties(actor)
     ? []
     : pendingDispatches;
@@ -1006,7 +1002,7 @@ export function resolveMultiattack(
           kind: "action" as const,
           source: "statBlockMultiattack" as const,
           sourceOwnerId: input.subject.actorId,
-          attackPart: { section: "actions" as const, name: dispatch.part.name },
+          attackProcedureRef: dispatch,
           restriction: {
             kind: "exclude" as const,
             actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
@@ -1018,11 +1014,11 @@ export function resolveMultiattack(
   const nextState =
     consumedDispatch === undefined
       ? nextStateWithPendingDispatches
-      : spendStatBlockAttackResources({
-          state: nextStateWithPendingDispatches,
-          actorId: input.subject.actorId,
-          attack: consumedDispatch,
-        });
+      : updateStatBlockActorResources(
+          nextStateWithPendingDispatches,
+          actor,
+          consumedDispatch,
+        );
   return {
     tag: "resolved",
     state: nextState,
@@ -1189,14 +1185,16 @@ export function resolveStatBlockBonusActionOption(
   }
   const statBlockActor = actor;
   const origin = statBlockActor.origin;
-  const option = supportedStatBlockBonusActionOptions(origin.statBlock).find(
-    (candidate) =>
-      candidate.option.name === input.subject.optionName &&
-      candidate.option.options.some(
-        (standardAction) => standardAction === input.subject.standardAction,
-      ),
+  const optionBinding = statBlockProcedureBinding(
+    origin.execution,
+    input.subject.procedureRef,
   );
-  if (option === undefined) {
+  if (
+    optionBinding?.procedure.kind !== "bonusActionOption" ||
+    !optionBinding.procedure.standardActions.some(
+      (standardAction) => standardAction === input.subject.standardAction,
+    )
+  ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
@@ -1204,10 +1202,9 @@ export function resolveStatBlockBonusActionOption(
     );
   }
   if (
-    !statBlockPartLimitedUseAvailable(
-      origin.statBlock.statBlock,
-      origin.resources,
-      option.part,
+    !statBlockProcedureResourcesAvailable(
+      origin.execution,
+      optionBinding.procedureRef,
     )
   ) {
     return invalidResult(
@@ -1229,10 +1226,18 @@ export function resolveStatBlockBonusActionOption(
 
   return Match.value(standardAction).pipe(
     Match.when("disengage", () =>
-      resolveStatBlockBonusActionDisengage(input, statBlockActor, option.part),
+      resolveStatBlockBonusActionDisengage(
+        input,
+        statBlockActor,
+        optionBinding.procedureRef,
+      ),
     ),
     Match.when("hide", () =>
-      resolveStatBlockBonusActionHide(input, statBlockActor, option.part),
+      resolveStatBlockBonusActionHide(
+        input,
+        statBlockActor,
+        optionBinding.procedureRef,
+      ),
     ),
     Match.exhaustive,
   );
@@ -1241,7 +1246,7 @@ export function resolveStatBlockBonusActionOption(
 export function resolveStatBlockBonusActionDisengage(
   input: StatBlockBonusActionOptionBattleResolutionInput,
   actor: StatBlockBattleCreatureState,
-  part: StatBlockPartKey,
+  procedureRef: import("../identity.ts").BattleProcedureExecutionRef,
 ): BattleResolutionResult {
   if (input.fills.length > 0) {
     return invalidResult(
@@ -1266,7 +1271,7 @@ export function resolveStatBlockBonusActionDisengage(
       currentTurnResources: { ...spent.right, disengaged: true },
     },
     actor,
-    part,
+    procedureRef,
   );
   return {
     tag: "resolved",
@@ -1278,7 +1283,7 @@ export function resolveStatBlockBonusActionDisengage(
 export function resolveStatBlockBonusActionHide(
   input: StatBlockBonusActionOptionBattleResolutionInput,
   actor: StatBlockBattleCreatureState,
-  part: StatBlockPartKey,
+  procedureRef: import("../identity.ts").BattleProcedureExecutionRef,
 ): BattleResolutionResult {
   if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
     return invalidResult(
@@ -1326,7 +1331,7 @@ export function resolveStatBlockBonusActionHide(
       }),
     }),
     actor,
-    part,
+    procedureRef,
   );
   return {
     tag: "resolved",
@@ -2391,10 +2396,18 @@ export function spendAttackAction(
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (
-    attack.kind === "statBlockAttack" &&
-    attack.part.section === "legendaryActions"
-  ) {
+  const statBlockAttackSection =
+    attack.kind === "statBlockAttack"
+      ? statBlockAttackProcedureSection(state, actorId, attack.procedureRef)
+      : null;
+  if (attack.kind === "statBlockAttack" && statBlockAttackSection === null) {
+    return invalidResult(
+      state,
+      "staleSubject",
+      "Stat Block attack procedure is no longer admitted for the actor.",
+    );
+  }
+  if (statBlockAttackSection === "legendaryActions") {
     const nextState = spendStatBlockAttackResources({
       state,
       actorId,
@@ -2408,7 +2421,7 @@ export function spendAttackAction(
   }
 
   const multiattackResources =
-    attack.kind === "statBlockAttack" && attack.part.section === "actions"
+    attack.kind === "statBlockAttack" && statBlockAttackSection === "actions"
       ? state.currentTurnResources.actionResources.filter(
           (resource): resource is StatBlockMultiattackActionResource =>
             isStatBlockMultiattackActionResource(resource, actorId),
@@ -2419,15 +2432,15 @@ export function spendAttackAction(
   if (
     multiattackResources.length > 0 &&
     attack.kind === "statBlockAttack" &&
-    attack.part.section === "actions"
+    statBlockAttackSection === "actions"
   ) {
     const spent = spendMatchingActionResource(
       state.currentTurnResources,
       "attack",
       (resource) =>
         isStatBlockMultiattackActionResource(resource, actorId) &&
-        resource.attackPart.section === attack.part.section &&
-        resource.attackPart.name === attack.part.name,
+        attack.procedureRef !== undefined &&
+        resource.attackProcedureRef === attack.procedureRef,
     );
     if (Either.isLeft(spent)) {
       return invalidResult(

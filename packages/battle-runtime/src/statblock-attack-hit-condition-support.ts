@@ -1,11 +1,13 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { SIZES } from "@dnd/shared/types";
+import type { CreatureNamedAttackRoll, Size } from "@dnd/surface/surface/types";
 import type {
-  CreatureNamedAttackRoll,
-  Size,
-} from "@dnd/surface/surface/types";
-import type { SupportedCreatureNamedAttackRoll } from "./battle-action-options.ts";
+  SupportedCreatureAttackRollMechanics,
+  SupportedCreatureNamedAttackRoll,
+} from "./battle-action-options.ts";
+
+type CreatureAttackHitEffects = Pick<CreatureNamedAttackRoll, "onHit">;
 
 export type StatBlockAttackHitTargetSizeConditionRiderEffect = Extract<
   CreatureNamedAttackRoll["onHit"][number],
@@ -44,10 +46,13 @@ export function supportedStatBlockAttackHitConditionRiders(
   attack: SupportedCreatureNamedAttackRoll,
 ): readonly StatBlockAttackHitTargetSizeConditionRider[];
 export function supportedStatBlockAttackHitConditionRiders(
-  attack: CreatureNamedAttackRoll,
+  attack: SupportedCreatureAttackRollMechanics,
+): readonly StatBlockAttackHitTargetSizeConditionRider[];
+export function supportedStatBlockAttackHitConditionRiders(
+  attack: CreatureAttackHitEffects,
 ): readonly StatBlockAttackHitTargetSizeConditionRider[] | null;
 export function supportedStatBlockAttackHitConditionRiders(
-  attack: CreatureNamedAttackRoll,
+  attack: CreatureAttackHitEffects,
 ): readonly StatBlockAttackHitTargetSizeConditionRider[] | null {
   const riders: StatBlockAttackHitTargetSizeConditionRider[] = [];
   let conditionRiderSeen = false;

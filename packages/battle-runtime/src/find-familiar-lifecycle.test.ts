@@ -78,6 +78,7 @@ import {
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
+import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 
 const partySide = battleCombatantSide("party");
 const enemySide = battleCombatantSide("enemy");
@@ -746,6 +747,9 @@ function testBattleCreatureStateWithConditions(
 function familiarAttackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected familiar attack target context.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -755,7 +759,7 @@ function familiarAttackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: familiarId,
         targetId: enemyId,
-        attackName: "Scratch",
+        ...hole.attack.selection,
       },
     ],
   };
@@ -857,7 +861,7 @@ function companionReappearanceInitiativeFill(
 function pactScratchFilledAttackFills(
   state: BattleState,
 ): readonly BattleFill[] {
-  const subject = pactScratchSubject();
+  const subject = pactScratchSubject(state);
   const awaitingTarget = resolveBattleSubject({
     state,
     subject,
@@ -900,14 +904,26 @@ function pactScratchFilledAttackFills(
 }
 
 function pactScratchSubject(
+  state: BattleState,
   actorId = casterId,
   subjectFamiliarId = familiarId,
 ): PactOfTheChainFamiliarAttackSubject {
+  const familiar = state.combatants.get(familiarId);
+  if (familiar?.origin.kind !== "statBlock") {
+    throw new Error("Expected the committed familiar Stat Block admission.");
+  }
+  const procedureRef = statBlockProcedurePresentations(familiar.origin).find(
+    (presentation) =>
+      presentation.kind === "attack" && presentation.name === "Scratch",
+  )?.procedureRef;
+  if (procedureRef === undefined) {
+    throw new Error("Expected admitted Scratch procedure.");
+  }
   return {
     tag: "pactOfTheChainFamiliarAttack",
     actorId,
     familiarId: subjectFamiliarId,
-    attackName: "Scratch",
+    procedureRef,
   };
 }
 
@@ -1684,7 +1700,6 @@ describe("Find Familiar lifecycle", () => {
         actorId: familiarId,
         action: "attack",
         attackName: "Claws",
-        statBlockSection: "actions",
       },
       fills: [],
     });
@@ -2381,7 +2396,7 @@ describe("Find Familiar lifecycle", () => {
     expect(discoverBattleActs(cast.state)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: pactScratchSubject(),
+          subject: pactScratchSubject(cast.state),
           initialHoles: [expect.objectContaining({ kind: "targetChoice" })],
         }),
       ]),
@@ -2389,7 +2404,7 @@ describe("Find Familiar lifecycle", () => {
 
     const resolved = resolveBattleSubject({
       state: cast.state,
-      subject: pactScratchSubject(),
+      subject: pactScratchSubject(cast.state),
       fills: pactScratchFilledAttackFills(cast.state),
     });
     expect(resolved.tag).toBe("resolved");
@@ -2411,7 +2426,7 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
 
-    const subject = pactScratchSubject();
+    const subject = pactScratchSubject(cast.state);
     const awaitingTarget = resolveBattleSubject({
       state: cast.state,
       subject,
@@ -2434,10 +2449,7 @@ describe("Find Familiar lifecycle", () => {
     const naturalOneWithoutDecision = resolveBattleSubject({
       state: cast.state,
       subject,
-      fills: [
-        target,
-        attackRollFill(attackRoll, { total: 5, naturalD20: 1 }),
-      ],
+      fills: [target, attackRollFill(attackRoll, { total: 5, naturalD20: 1 })],
     });
     expect(naturalOneWithoutDecision).toMatchObject({ tag: "resolved" });
 
@@ -2477,7 +2489,7 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
 
-    const subject = pactScratchSubject();
+    const subject = pactScratchSubject(cast.state);
     const awaitingTarget = resolveBattleSubject({
       state: cast.state,
       subject,
@@ -2571,7 +2583,7 @@ describe("Find Familiar lifecycle", () => {
 
     const blocked = resolveBattleSubject({
       state: withoutOwnerAttack,
-      subject: pactScratchSubject(),
+      subject: pactScratchSubject(withoutOwnerAttack),
       fills: pactScratchFilledAttackFills(cast.state),
     });
 
@@ -2602,7 +2614,7 @@ describe("Find Familiar lifecycle", () => {
 
     const blockedByActionEligibility = resolveBattleSubject({
       state: unableToAct,
-      subject: pactScratchSubject(),
+      subject: pactScratchSubject(unableToAct),
       fills: [],
     });
     expect(blockedByActionEligibility).toMatchObject({
@@ -2615,7 +2627,7 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(shieldCast.tag).toBe("resolved");
     if (shieldCast.tag !== "resolved") return;
-    const subject = pactScratchSubject();
+    const subject = pactScratchSubject(shieldCast.state);
     const awaitingTarget = resolveBattleSubject({
       state: shieldCast.state,
       subject,
@@ -2653,7 +2665,7 @@ describe("Find Familiar lifecycle", () => {
     if (pendingInterrupt.tag !== "needsHoles") return;
     const blockedByInterrupt = resolveBattleSubject({
       state: pendingInterrupt.state,
-      subject: pactScratchSubject(),
+      subject: pactScratchSubject(pendingInterrupt.state),
       fills: [],
     });
     expect(blockedByInterrupt).toMatchObject({
@@ -2674,7 +2686,7 @@ describe("Find Familiar lifecycle", () => {
 
     const nonPactAttack = resolveBattleSubject({
       state: nonPactCast.state,
-      subject: pactScratchSubject(),
+      subject: pactScratchSubject(nonPactCast.state),
       fills: [],
     });
     expect(nonPactAttack.tag).toBe("invalid");
@@ -2698,7 +2710,7 @@ describe("Find Familiar lifecycle", () => {
     };
     const blocked = resolveBattleSubject({
       state: withoutReaction,
-      subject: pactScratchSubject(),
+      subject: pactScratchSubject(withoutReaction),
       fills: [],
     });
     expect(blocked.tag).toBe("invalid");
@@ -2707,6 +2719,69 @@ describe("Find Familiar lifecycle", () => {
     expect(withoutReaction.currentTurnResources.actionResources).toEqual([
       { kind: "action", source: "turn" },
     ]);
+  });
+
+  test("Pact familiar rolled and static projections replay distinct damage procedures", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle(),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const attackActs = discoverBattleActs(cast.state).filter(
+      (act) => act.subject.tag === "pactOfTheChainFamiliarAttack",
+    );
+    const rolledSubject = attackActs.find(
+      (act) =>
+        act.subject.tag === "pactOfTheChainFamiliarAttack" &&
+        act.subject.statBlockDamageNotation === undefined,
+    )?.subject;
+    const staticSubject = attackActs.find(
+      (act) =>
+        act.subject.tag === "pactOfTheChainFamiliarAttack" &&
+        act.subject.statBlockDamageNotation === "static",
+    )?.subject;
+    if (
+      rolledSubject?.tag !== "pactOfTheChainFamiliarAttack" ||
+      staticSubject?.tag !== "pactOfTheChainFamiliarAttack"
+    ) {
+      throw new Error("Expected rolled and static Pact familiar attack acts.");
+    }
+    const resolveHit = (subject: typeof rolledSubject) => {
+      const awaitingTarget = resolveBattleSubject({
+        state: cast.state,
+        subject,
+        fills: [],
+      });
+      if (awaitingTarget.tag !== "needsHoles") {
+        throw new Error("Expected Pact familiar target choice.");
+      }
+      const target = familiarAttackTargetFill(
+        requireHole(awaitingTarget.holes, "targetChoice"),
+      );
+      const awaitingRoll = resolveBattleSubject({
+        state: cast.state,
+        subject,
+        fills: [target],
+      });
+      if (awaitingRoll.tag !== "needsHoles") {
+        throw new Error("Expected Pact familiar attack roll.");
+      }
+      const attackRoll = attackRollFill(
+        requireHole(awaitingRoll.holes, "attackRoll"),
+        { naturalD20: 10, total: 14 },
+      );
+      return resolveBattleSubject({
+        state: cast.state,
+        subject,
+        fills: [target, attackRoll],
+      });
+    };
+
+    expect(resolveHit(rolledSubject)).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+    });
+    expect(resolveHit(staticSubject).tag).toBe("resolved");
   });
 
   test("Pact of the Chain familiar attack rejects and hides familiars that cannot take Reactions", () => {
@@ -2738,7 +2813,7 @@ describe("Find Familiar lifecycle", () => {
 
     const blocked = resolveBattleSubject({
       state: unableToReact,
-      subject: pactScratchSubject(),
+      subject: pactScratchSubject(unableToReact),
       fills: [],
     });
     expect(blocked).toMatchObject({ tag: "invalid", reason: "staleSubject" });
@@ -2759,7 +2834,7 @@ describe("Find Familiar lifecycle", () => {
 
     const wrongOwner = resolveBattleSubject({
       state: cast.state,
-      subject: pactScratchSubject(otherCombatantId),
+      subject: pactScratchSubject(cast.state, otherCombatantId),
       fills: [],
     });
 

@@ -211,6 +211,9 @@ export const CreatureId = Schema.NonEmptyTrimmedString.pipe(
 );
 export type CreatureId = typeof CreatureId.Type;
 
+export type BattleProcedureExecutionRef = string &
+  Brand.Brand<"BattleProcedureExecutionRef">;
+
 export const HP = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),

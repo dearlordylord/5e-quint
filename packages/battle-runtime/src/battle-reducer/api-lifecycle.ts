@@ -21,7 +21,13 @@ import * as Option from "effect/Option";
 
 import type { BattleCreatureInit } from "../battle-init.ts";
 
-import { BattleId, CombatantId } from "../identity.ts";
+import {
+  BattleId,
+  CombatantId,
+  battleStatBlockExecutionScopeCursor,
+  battleStatBlockExecutionScopeOrdinal,
+  type BattleStatBlockExecutionScopeCursor,
+} from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
@@ -31,7 +37,7 @@ import {
 } from "./creature-state-leaves.ts";
 
 import {
-  battleCreatureStateFromInit,
+  battleCreatureStateAdmissionFromInit,
   combatantInitiativeInsertionIndex,
   characterDruidWildShapeAvailableFormsInitIssue,
   characterResourceInitIssue,
@@ -146,6 +152,10 @@ export function startBattle(
   }
 
   const combatants = new Map<CombatantId, BattleCreatureState>();
+  const statBlockExecutionScopeCursors = new Map<
+    CombatantId,
+    BattleStatBlockExecutionScopeCursor
+  >();
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
       return battleStateInitIssue(
@@ -171,10 +181,18 @@ export function startBattle(
     if (characterSpellcastingIssue !== null) {
       return characterSpellcastingIssue;
     }
-    combatants.set(
-      combatant.combatantId,
-      battleCreatureStateFromInit(combatant),
+    const admission = battleCreatureStateAdmissionFromInit(
+      input.battleId,
+      combatant,
+      battleStatBlockExecutionScopeOrdinal(0),
     );
+    combatants.set(combatant.combatantId, admission.creature);
+    if (admission.nextScopeOrdinal > 0) {
+      statBlockExecutionScopeCursors.set(
+        combatant.combatantId,
+        battleStatBlockExecutionScopeCursor(admission.nextScopeOrdinal),
+      );
+    }
   }
   const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
     input.hidePrerequisites ?? new Map(),
@@ -191,6 +209,7 @@ export function startBattle(
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
+    statBlockExecutionScopeCursors,
     companions: new Map(),
     objectOutlines: [],
     lightEmitters: [],
@@ -383,9 +402,16 @@ export function addBattleCombatant(input: {
   if (characterSpellcastingIssue !== null) {
     return characterSpellcastingIssue;
   }
+  const admission = battleCreatureStateAdmissionFromInit(
+    input.state.battleId,
+    input.combatant,
+    input.state.statBlockExecutionScopeCursors.get(
+      input.combatant.combatantId,
+    ) ?? battleStatBlockExecutionScopeOrdinal(0),
+  );
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
-    battleCreatureStateFromInit(input.combatant),
+    admission.creature,
   );
   const insertionIndex = combatantInitiativeInsertionIndex(
     input.state,
@@ -400,11 +426,21 @@ export function addBattleCombatant(input: {
       initiative: input.combatant.initiative,
     },
   );
+  const statBlockExecutionScopeCursors = new Map(
+    input.state.statBlockExecutionScopeCursors,
+  );
+  if (admission.nextScopeOrdinal > 0) {
+    statBlockExecutionScopeCursors.set(
+      input.combatant.combatantId,
+      battleStatBlockExecutionScopeCursor(admission.nextScopeOrdinal),
+    );
+  }
 
   return Either.right({
     ...input.state,
     initiative,
     combatants: nextCombatants,
+    statBlockExecutionScopeCursors,
   });
 }
 
@@ -489,11 +525,10 @@ export function removeBattleCombatants(input: {
         ? resetBattleTurnResources(input.state.currentTurnResources)
         : input.state.currentTurnResources,
       hidePrerequisites: new Map(
-        [...input.state.hidePrerequisites].filter(
-          ([id, prerequisite]) =>
-            hidePrerequisiteReferencedCombatantIds(id, prerequisite).every(
-              (referencedId) => !removeIds.has(referencedId),
-            ),
+        [...input.state.hidePrerequisites].filter(([id, prerequisite]) =>
+          hidePrerequisiteReferencedCombatantIds(id, prerequisite).every(
+            (referencedId) => !removeIds.has(referencedId),
+          ),
         ),
       ),
       readiedSpells: new Map(

@@ -126,8 +126,10 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
       BattleFill,
       { readonly kind: "targetChoice" }
     > | null = null;
-    let attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }> | null =
-      null;
+    let attackRoll: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    > | null = null;
     let lastResult: MbtWitnessLastResult = "init";
 
     function reset(mode: StatBlockMultiDamageMode): void {
@@ -213,7 +215,7 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
       recordResult(
         resolveBattleSubject({
           state,
-          subject: attackSubject(damageMode),
+          subject: requireDiscoveredStatBlockAttackSubject(state, damageMode),
           fills: input.fills,
         }),
         input.routeFill,
@@ -372,21 +374,6 @@ describe("Stat Block multi-component damage focused MBT", () => {
   );
 });
 
-function attackSubject(
-  damageMode: StatBlockMultiDamageMode,
-): Extract<
-  BattleSubject,
-  { readonly tag: "action"; readonly action: "attack" }
-> {
-  return {
-    tag: "action",
-    actorId,
-    action: "attack",
-    attackName: multiDamageAttackName,
-    ...(damageMode === "static" ? { statBlockDamageNotation: "static" } : {}),
-  };
-}
-
 function requireDiscoveredStatBlockAttackSubject(
   state: BattleState,
   damageMode: StatBlockMultiDamageMode,
@@ -394,15 +381,13 @@ function requireDiscoveredStatBlockAttackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const expected = attackSubject(damageMode);
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.actorId === expected.actorId &&
-      candidate.subject.attackName === expected.attackName &&
-      (candidate.subject.statBlockDamageNotation ?? "rolled") ===
-        (expected.statBlockDamageNotation ?? "rolled"),
+      candidate.subject.actorId === actorId &&
+      candidate.summary.includes(multiDamageAttackName) &&
+      (candidate.subject.statBlockDamageNotation ?? "rolled") === damageMode,
   );
   if (
     act === undefined ||
@@ -556,6 +541,9 @@ function venomDartAttack(): StatBlockAttack {
 function targetChoiceFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack?.actorId !== actorId) {
+    throw new Error("Expected typed Stat Block attack target selection facts.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -565,7 +553,7 @@ function targetChoiceFill(
         kind: "attackTargetInRangedRange",
         actorId,
         targetId,
-        attackName: multiDamageAttackName,
+        ...hole.attack.selection,
         rangeBand: "normal",
       },
     ],
@@ -652,10 +640,7 @@ function holesOfKind<K extends BattleHole["kind"]>(
 }
 
 function requireTargetChoice(
-  targetChoice: Extract<
-    BattleFill,
-    { readonly kind: "targetChoice" }
-  > | null,
+  targetChoice: Extract<BattleFill, { readonly kind: "targetChoice" }> | null,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   if (targetChoice === null) {
     throw new Error("Expected selected Stat Block multi-damage target.");

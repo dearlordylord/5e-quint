@@ -34,7 +34,6 @@ import {
   resolveBattleSubject,
   resolveSuccessfulAbilityCheckReactionReduction,
 } from "./battle-runtime-test-support.ts";
-import type { BattleSubject } from "./battle-runtime-test-support.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer.ts";
 import { describe, expect, test } from "vitest";
 
@@ -67,12 +66,7 @@ describe("battle runtime: Cutting Words", () => {
         }),
       ],
     });
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-    };
+    const subject = goblinAttackSubject(state, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -164,7 +158,7 @@ describe("battle runtime: Cutting Words", () => {
         }),
       ],
     });
-    const subject = goblinAttackSubject("Scimitar");
+    const subject = goblinAttackSubject(state, "Scimitar");
     const target = attackInitialTargetHole(state, subject);
     const attackRoll = attackRollHoleAfterTarget(
       state,

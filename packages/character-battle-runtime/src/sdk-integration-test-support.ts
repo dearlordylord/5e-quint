@@ -8,6 +8,7 @@ import {
   spellSlotInvocationRef,
   startBattle,
   type AvailableBattleAct,
+  type BattleAttackExecutionSelection,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -1059,14 +1060,19 @@ export function attackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const act = discoverBattleActs(state).find(
+  const matchingActs = discoverBattleActs(state).filter(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.attackName === attackName,
+      candidate.subject.statBlockDamageNotation === undefined &&
+      (candidate.subject.attackName === attackName ||
+        (candidate.subject.procedureRef !== undefined &&
+          candidate.summary === `Take the Attack action with ${attackName}.`)),
   );
+  const [act] = matchingActs;
   if (
+    matchingActs.length !== 1 ||
     act === undefined ||
     act.subject.tag !== "action" ||
     act.subject.action !== "attack"
@@ -1109,12 +1115,18 @@ export function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
+  attack: string | BattleAttackExecutionSelection,
   extraSpatialFacts: Extract<
     BattleFill,
     { readonly kind: "targetChoice" }
   >["spatialFacts"] = [],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const selection =
+    typeof attack === "string"
+      ? { attackName: attack }
+      : attack.procedureRef === undefined
+        ? { attackName: attack.attackName }
+        : { procedureRef: attack.procedureRef };
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1124,7 +1136,7 @@ export function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName,
+        ...selection,
       },
       ...extraSpatialFacts,
     ],

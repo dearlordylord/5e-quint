@@ -8,9 +8,15 @@ import type {
 import type {
   StatBlockAttackDamage,
   StatBlockAttackDamageComponent,
+  StaticStatBlockAttackDamage,
+  SupportedCreatureAttackRollMechanics,
   SupportedCreatureNamedAttackRoll,
+  SupportedStaticDamageCreatureAttackRollMechanics,
+  SupportedStaticDamageCreatureNamedAttackRoll,
 } from "./battle-action-options.ts";
 import { supportedStatBlockAttackHitConditionRiderEffect } from "./statblock-attack-hit-condition-support.ts";
+
+type CreatureAttackHitEffects = Pick<CreatureNamedAttackRoll, "onHit">;
 
 type SupportedStatBlockAttackDamageEffect =
   | {
@@ -23,13 +29,22 @@ type SupportedStatBlockAttackDamageEffect =
     };
 
 export function supportedStatBlockAttackDamage(
+  attack: SupportedStaticDamageCreatureNamedAttackRoll,
+): StaticStatBlockAttackDamage;
+export function supportedStatBlockAttackDamage(
+  attack: SupportedStaticDamageCreatureAttackRollMechanics,
+): StaticStatBlockAttackDamage;
+export function supportedStatBlockAttackDamage(
   attack: SupportedCreatureNamedAttackRoll,
 ): StatBlockAttackDamage;
 export function supportedStatBlockAttackDamage(
-  attack: CreatureNamedAttackRoll,
+  attack: SupportedCreatureAttackRollMechanics,
+): StatBlockAttackDamage;
+export function supportedStatBlockAttackDamage(
+  attack: CreatureAttackHitEffects,
 ): StatBlockAttackDamage | null;
 export function supportedStatBlockAttackDamage(
-  attack: CreatureNamedAttackRoll,
+  attack: CreatureAttackHitEffects,
 ): StatBlockAttackDamage | null {
   const effects: SupportedStatBlockAttackDamageEffect[] = [];
   for (const effect of attack.onHit) {
@@ -67,10 +82,7 @@ export function supportedStatBlockAttackDamage(
   const advantageBonusIndex = effects.findIndex(
     (effect) => effect.kind === "advantageBonus",
   );
-  if (
-    advantageBonusIndex > 0 &&
-    advantageBonusIndex < effects.length - 1
-  ) {
+  if (advantageBonusIndex > 0 && advantageBonusIndex < effects.length - 1) {
     return null;
   }
 
@@ -132,13 +144,11 @@ function supportedStatBlockAdvantageBonusDamageEffect(
   };
 }
 
-function statBlockDamageNotationStaticAmount(
-  amount: {
-    readonly kind: "fixed";
-    readonly expr: DiceExpr;
-    readonly static?: number;
-  },
-): number | undefined {
+function statBlockDamageNotationStaticAmount(amount: {
+  readonly kind: "fixed";
+  readonly expr: DiceExpr;
+  readonly static?: number;
+}): number | undefined {
   return "static" in amount && typeof amount.static === "number"
     ? amount.static
     : undefined;
@@ -148,15 +158,15 @@ export function statBlockAttackDamageSupportsStaticNotation(
   damage: StatBlockAttackDamage,
 ): boolean {
   return (
-    damage.baseComponents.every((component) => component.static !== undefined) &&
+    damage.baseComponents.every(
+      (component) => component.static !== undefined,
+    ) &&
     (damage.advantageBonus === undefined ||
       damage.advantageBonus.static !== undefined)
   );
 }
 
-function nonEmpty<T>(
-  values: readonly T[],
-): ReadonlyNonEmptyArray<T> | null {
+function nonEmpty<T>(values: readonly T[]): ReadonlyNonEmptyArray<T> | null {
   const [first, ...rest] = values;
   return first === undefined ? null : [first, ...rest];
 }

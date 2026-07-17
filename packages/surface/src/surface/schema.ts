@@ -38,6 +38,7 @@ export {
   CreatureActionsSchema,
   CreatureLegendaryActionsSchema,
   CreatureLimitedUseSchema,
+  CreatureRechargeMinimumRollSchema,
   CreatureNamedActionOptionSchema,
   CreatureControlSchema,
   CreatureDismissalSchema,

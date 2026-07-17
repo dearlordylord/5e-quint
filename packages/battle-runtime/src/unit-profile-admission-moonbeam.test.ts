@@ -50,7 +50,6 @@ import {
   Hp,
   movementFeet,
   resolveBattleSubject,
-  resourceCount,
   spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
@@ -797,12 +796,6 @@ const syntheticDruidWildShapeEffect: Extract<
   formStatBlockId: "synthetic_beast_form",
   formLimbs: { kind: "cannotHandleObjects" },
   equipmentDisposition: [],
-  resources: {
-    legendaryActionUsesRemaining: resourceCount(0),
-    dailyUses: [],
-    unavailableRechargeParts: [],
-    unavailableRestRechargeParts: [],
-  },
   expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
 };
 

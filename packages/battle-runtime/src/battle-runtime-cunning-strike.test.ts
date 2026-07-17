@@ -35,6 +35,7 @@ import {
   interruptDecisionFill,
   movementFill,
   reactionChoiceWithSubject,
+  opportunityAttackProcedureSelectionForTest,
   requireHole,
   requireResolved,
   resolveBattleInterrupt,
@@ -121,10 +122,7 @@ describe("battle runtime: Cunning Strike", () => {
       subject: window.subject,
       fills: window.damageAppliedFills,
     });
-    const cover = requireHole(
-      needsCover,
-      "cunningStrikeEndTurnCoverFacts",
-    );
+    const cover = requireHole(needsCover, "cunningStrikeEndTurnCoverFacts");
     if (needsCover.tag !== "needsHoles") {
       throw new Error("Expected Cunning Strike Stealth Attack cover witness.");
     }
@@ -720,11 +718,7 @@ function cunningStrikeOpportunityAttackDamageWindow(
       {
         kind: "resolve",
         responderId: fighterId,
-        choice: {
-          kind: "opportunityAttack",
-          reactorId: fighterId,
-          fills: [],
-        },
+        choice: opportunityAttackProcedureSelectionForTest(choice),
       },
     ),
   });
@@ -858,7 +852,10 @@ function cunningStrikeBattle(
         displayName: "Cunning Strike Rogue",
         initiative: 20,
         classLevels: [
-          { className: "rogue", level: input.withSupremeSneak === true ? 9 : 5 },
+          {
+            className: "rogue",
+            level: input.withSupremeSneak === true ? 9 : 5,
+          },
         ],
         d20Statistics: testCharacterD20Statistics({ dex: 16 }),
         unitFeatures: [

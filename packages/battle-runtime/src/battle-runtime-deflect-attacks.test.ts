@@ -533,7 +533,7 @@ describe("battle runtime: Deflect Attacks", () => {
         }),
       ],
     });
-    const subject = goblinAttackSubject("Shortbow");
+    const subject = goblinAttackSubject(state, "Shortbow");
     const target = attackInitialTargetHole(state, subject);
     const attackRoll = attackRollHoleAfterTarget(
       state,

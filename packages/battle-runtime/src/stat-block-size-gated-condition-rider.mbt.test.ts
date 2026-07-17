@@ -35,6 +35,7 @@ import {
   combatantId,
   damageRollFill,
   DieRollResult,
+  discoverBattleActs,
   hasCondition,
   resolveBattleSubject,
   startBattleRight,
@@ -132,8 +133,10 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
       BattleFill,
       { readonly kind: "targetChoice" }
     > | null = null;
-    let attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }> | null =
-      null;
+    let attackRoll: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    > | null = null;
     let lastResult: MbtWitnessLastResult = "init";
 
     function reset(nextTargetSizeGate: TargetSizeGate): void {
@@ -143,7 +146,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
       attackRoll = null;
       const result = resolveBattleSubject({
         state,
-        subject: attackSubject(),
+        subject: attackSubject(state),
         fills: [],
       });
       if (result.tag !== "needsHoles") {
@@ -218,7 +221,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
       recordResult(
         resolveBattleSubject({
           state,
-          subject: attackSubject(),
+          subject: attackSubject(state),
           fills: input.fills,
         }),
         input.routeFill,
@@ -232,9 +235,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
       initMediumOrSmallerProneImmuneTarget: () =>
         reset("mediumOrSmallerProneImmune"),
       doFillTargetChoice: () => {
-        targetChoice = targetChoiceFill(
-          requireHole(holes, "targetChoice"),
-        );
+        targetChoice = targetChoiceFill(requireHole(holes, "targetChoice"));
         resolveCurrentSubject({
           fills: [targetChoice],
           routeFill: "targetChoice",
@@ -243,9 +244,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
       },
       doFillHitAttackRoll: () => {
         const selectedTargetChoice = requireTargetChoice(targetChoice);
-        attackRoll = attackRollFillForHit(
-          requireHole(holes, "attackRoll"),
-        );
+        attackRoll = attackRollFillForHit(requireHole(holes, "attackRoll"));
         resolveCurrentSubject({
           fills: [selectedTargetChoice, attackRoll],
           routeFill: "attackRoll",
@@ -318,9 +317,7 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
         backend: "typescript",
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(
-          sizeGatedConditionRiderDefaultMbtSteps,
-        ),
+        maxSteps: focusedMbtMaxSteps(sizeGatedConditionRiderDefaultMbtSteps),
         stateCheck: sizeGatedConditionRiderStateCheck,
       });
     },
@@ -341,9 +338,7 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
         backend: "typescript",
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(
-          sizeGatedConditionRiderDefaultMbtSteps,
-        ),
+        maxSteps: focusedMbtMaxSteps(sizeGatedConditionRiderDefaultMbtSteps),
         stateCheck: sizeGatedConditionRiderStateCheck,
       });
     },
@@ -364,9 +359,7 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
         backend: "typescript",
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(
-          sizeGatedConditionRiderDefaultMbtSteps,
-        ),
+        maxSteps: focusedMbtMaxSteps(sizeGatedConditionRiderDefaultMbtSteps),
         stateCheck: sizeGatedConditionRiderStateCheck,
       });
     },
@@ -387,9 +380,7 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
         backend: "typescript",
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(
-          sizeGatedConditionRiderDefaultMbtSteps,
-        ),
+        maxSteps: focusedMbtMaxSteps(sizeGatedConditionRiderDefaultMbtSteps),
         stateCheck: sizeGatedConditionRiderRouteStateCheck,
       });
     },
@@ -410,9 +401,7 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
         backend: "typescript",
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(
-          sizeGatedConditionRiderDefaultMbtSteps,
-        ),
+        maxSteps: focusedMbtMaxSteps(sizeGatedConditionRiderDefaultMbtSteps),
         stateCheck: sizeGatedConditionRiderRouteStateCheck,
       });
     },
@@ -433,9 +422,7 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
         backend: "typescript",
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(
-          sizeGatedConditionRiderDefaultMbtSteps,
-        ),
+        maxSteps: focusedMbtMaxSteps(sizeGatedConditionRiderDefaultMbtSteps),
         stateCheck: sizeGatedConditionRiderRouteStateCheck,
       });
     },
@@ -443,16 +430,29 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
   );
 });
 
-function attackSubject(): Extract<
+function attackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId,
-    action: "attack",
-    attackName: biteAttackName,
-  };
+  const matchingActs = discoverBattleActs(state).filter(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef !== undefined &&
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === `Take the Attack action with ${biteAttackName}.`,
+  );
+  if (matchingActs.length !== 1) {
+    throw new Error(`Expected one rolled ${biteAttackName} attack act.`);
+  }
+  const subject = matchingActs[0]?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error(`Expected the ${biteAttackName} attack subject.`);
+  }
+  return subject;
 }
 
 function sizeGatedConditionRiderBattle(
@@ -469,9 +469,7 @@ function sizeGatedConditionRiderBattle(
       }),
       statBlockCreatureInit({
         combatantId: targetId,
-        displayName: sizeGatedConditionRiderTargetDisplayName(
-          targetSizeGate,
-        ),
+        displayName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
         initiative: 10,
         statBlock: sizeGatedConditionRiderTargetStatBlock(targetSizeGate),
       }),
@@ -511,9 +509,7 @@ function sizeGatedConditionRiderTargetStatBlock(
     },
     statBlock: {
       ...base.statBlock,
-      displayName: sizeGatedConditionRiderTargetDisplayName(
-        targetSizeGate,
-      ),
+      displayName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
       hp: { kind: "literal", value: 20 },
       ...(targetSizeGate === "mediumOrSmallerProneImmune"
         ? { immunities: { conditions: ["prone"] } }
@@ -575,6 +571,9 @@ function biteAttack(): StatBlockAttack {
 function targetChoiceFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack?.actorId !== actorId) {
+    throw new Error("Expected typed Stat Block attack target selection facts.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -584,7 +583,7 @@ function targetChoiceFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName: biteAttackName,
+        ...hole.attack.selection,
       },
     ],
   };
@@ -612,10 +611,7 @@ function holesOfKind<K extends BattleHole["kind"]>(
 }
 
 function requireTargetChoice(
-  targetChoice: Extract<
-    BattleFill,
-    { readonly kind: "targetChoice" }
-  > | null,
+  targetChoice: Extract<BattleFill, { readonly kind: "targetChoice" }> | null,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   if (targetChoice === null) {
     throw new Error(

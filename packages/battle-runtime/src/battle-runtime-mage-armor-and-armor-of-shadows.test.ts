@@ -28,7 +28,6 @@ import {
   spellSlotInvocationRef,
   startBattle,
   statBlockCatalog,
-  resourceCount,
   unitLibrary,
   difficultyClass,
 } from "./battle-runtime-test-support.ts";
@@ -325,12 +324,6 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             formStatBlockId: "stat_block_cat",
             formLimbs: { kind: "cannotHandleObjects" },
             equipmentDisposition: [],
-            resources: {
-              legendaryActionUsesRemaining: resourceCount(0),
-              dailyUses: [],
-              unavailableRechargeParts: [],
-              unavailableRestRechargeParts: [],
-            },
             expiresAt: {
               kind: "duration" as const,
               durationTicks: elapsedTimeTicks(600),
@@ -434,12 +427,6 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             formStatBlockId: "missing_wild_shape_form",
             formLimbs: { kind: "cannotHandleObjects" },
             equipmentDisposition: [],
-            resources: {
-              legendaryActionUsesRemaining: resourceCount(0),
-              dailyUses: [],
-              unavailableRechargeParts: [],
-              unavailableRestRechargeParts: [],
-            },
             expiresAt: {
               kind: "duration" as const,
               durationTicks: elapsedTimeTicks(600),

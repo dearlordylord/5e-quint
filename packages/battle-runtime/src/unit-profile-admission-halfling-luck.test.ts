@@ -51,6 +51,7 @@ import {
   movementFill,
   oppositionSide,
   reactionChoiceWithSubject,
+  opportunityAttackProcedureSelectionForTest,
   requireHole,
   requireResolved,
   resolveBattleInterrupt,
@@ -1592,11 +1593,7 @@ function startOpportunityAttack(
       {
         kind: "resolve",
         responderId: goblinId,
-        choice: {
-          kind: "opportunityAttack",
-          reactorId: goblinId,
-          fills: [],
-        },
+        choice: opportunityAttackProcedureSelectionForTest(choice),
       },
     ),
   });
