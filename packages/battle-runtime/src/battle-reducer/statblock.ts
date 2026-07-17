@@ -2,13 +2,19 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 
-import { Match } from "effect";
 import type {
+  CharacterAttackExecutionSelection,
+  StatBlockAttackExecutionSelection,
+  BoundSupportedAttackActionOption,
   StatBlockAttackActionOption,
   StatBlockAttackSection,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
+import type {
+  BattleStatBlockProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import {
   type BattleState,
   type StatBlockBattleCreatureState,
@@ -47,7 +53,7 @@ export function attackActionOptionIsOrdinaryAttackAction(
 export function statBlockAttackProcedureSection(
   state: BattleState,
   actorId: CombatantId,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockAttackSection | null {
   const actor = state.combatants.get(actorId);
   const execution =
@@ -126,7 +132,7 @@ export function spendStatBlockAttackResources(input: {
 export function updateStatBlockActorResources(
   state: BattleState,
   actor: StatBlockBattleCreatureState,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): BattleState {
   const currentActor = state.combatants.get(actor.combatantId);
   if (currentActor?.origin.kind !== "statBlock") return state;
@@ -143,25 +149,19 @@ export function updateStatBlockActorResources(
   };
 }
 
-export function statBlockSubjectPart(attack: SupportedAttackActionOption):
-  | { readonly attackName: string }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
+export function attackSubjectPart(attack: BoundSupportedAttackActionOption):
+  | (CharacterAttackExecutionSelection & {
+      readonly statBlockDamageNotation?: never;
+    })
+  | (StatBlockAttackExecutionSelection & {
       readonly statBlockDamageNotation?: "static";
-    } {
-  return Match.value(attack).pipe(
-    Match.when({ kind: "weapon" }, (option) => ({
-      attackName: option.weapon.name,
-    })),
-    Match.when({ kind: "unarmedStrike" }, () => ({
-      attackName: "Unarmed Strike",
-    })),
-    Match.when({ kind: "statBlockAttack" }, (option) => ({
-      procedureRef: option.procedureRef,
-      ...(option.damageNotation === "static"
-        ? { statBlockDamageNotation: "static" as const }
-        : {}),
-    })),
-    Match.exhaustive,
-  );
+    }) {
+  return attack.kind === "statBlockAttack"
+    ? {
+        ...attackExecutionSelectionForOption(attack),
+        ...(attack.damageNotation === "static"
+          ? { statBlockDamageNotation: "static" as const }
+          : {}),
+      }
+    : attackExecutionSelectionForOption(attack);
 }

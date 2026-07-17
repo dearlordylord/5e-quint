@@ -29,8 +29,11 @@ import {
   elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
+  characterBonusAttackSubjectForTest,
   fighterId,
   goblinId,
+  goblinAttackSubject,
   hasCondition,
   interruptDecisionFill,
   movementFill,
@@ -456,7 +459,12 @@ describe("battle runtime: Cunning Strike", () => {
           movementFill(move, {
             movementCostFeet: 15,
             provokedOpportunityAttacks: [
-              { reactorId: goblinId, attackName: "Scimitar" },
+              {
+                reactorId: goblinId,
+                ...attackExecutionSelectionForSubjectForTest(
+                  goblinAttackSubject(window.state, "Scimitar"),
+                ),
+              },
             ],
           }),
         ],
@@ -540,7 +548,7 @@ function cunningStrikeDamagePreview(input: CunningStrikeBattleInput = {}): {
   readonly damage: BattleHole;
 } {
   const state = cunningStrikeBattle(input);
-  const subject = fighterAttackSubject("Dagger");
+  const subject = fighterAttackSubject(state, "Dagger");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject);
   const attackRoll = {
@@ -599,7 +607,7 @@ function cunningStrikeOffHandDamageWindow(
     withOffHandAttack: true,
     withSneakAttackAlly: true,
   });
-  const attackSubject = fighterAttackSubject("Shortsword");
+  const attackSubject = fighterAttackSubject(state, "Shortsword");
   const attackTarget = attackInitialTargetHole(state, attackSubject);
   const qualifyingAttackRoll = attackRollHoleAfterTarget(
     state,
@@ -620,12 +628,11 @@ function cunningStrikeOffHandDamageWindow(
       ],
     }),
   ).state;
-  const subject = {
-    tag: "bonusAction",
-    actorId: fighterId,
-    action: "offHandAttack",
-    attackName: "Dagger",
-  } as const;
+  const subject = characterBonusAttackSubjectForTest(
+    afterQualifyingAttack,
+    fighterId,
+    "offHandAttack",
+  );
   const target = requireHole(
     resolveBattleSubject({ state: afterQualifyingAttack, subject, fills: [] }),
     "targetChoice",
@@ -700,7 +707,12 @@ function cunningStrikeOpportunityAttackDamageWindow(
       movementFill(move, {
         movementCostFeet: 5,
         provokedOpportunityAttacks: [
-          { reactorId: fighterId, attackName: "Dagger" },
+          {
+            reactorId: fighterId,
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state, "Dagger"),
+            ),
+          },
         ],
       }),
     ],
@@ -723,7 +735,11 @@ function cunningStrikeOpportunityAttackDamageWindow(
     ),
   });
   if (startedReaction.tag !== "needsHoles") {
-    throw new Error("Expected Cunning Strike Opportunity Attack roll.");
+    throw new Error(
+      `Expected Cunning Strike Opportunity Attack roll, got ${startedReaction.tag}${
+        startedReaction.tag === "invalid" ? `: ${startedReaction.message}` : ""
+      }.`,
+    );
   }
   const subject = choice.subject;
   const roll = requireHole(startedReaction, "attackRoll");

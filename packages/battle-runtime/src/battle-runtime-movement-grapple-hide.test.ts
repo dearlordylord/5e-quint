@@ -11,6 +11,7 @@ import {
   fighterVsGoblinBattle,
   fighterGrapplesGoblin,
   fighterAttackSubject,
+  characterAttackSubjectForTest,
   goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
@@ -151,7 +152,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         },
       ],
     };
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, subject);
     const attackRoll = attackRollHoleAfterTarget(
       state,
@@ -170,7 +171,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const state = fighterVsGoblinBattle({
       characterUnitRefs: grapplerUnitRefs(),
     });
-    const subject = fighterAttackSubject("Unarmed Strike");
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(state, subject);
     const attackRoll = attackRollHoleAfterTarget(
       state,
@@ -295,7 +296,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     }
     expect(Number(beforePunch.expiresAt.round)).toBe(2);
 
-    const subject = fighterAttackSubject("Unarmed Strike");
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(fighterRoundTwo, subject);
     const attackRoll = attackRollHoleAfterTarget(
       fighterRoundTwo,
@@ -1281,12 +1282,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         actorId: goblinId,
       }),
     ).state;
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: wizardId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const attackSubject: BattleSubject = characterAttackSubjectForTest(
+      wizardTurn,
+      wizardId,
+      "Longsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({
         state: wizardTurn,
@@ -2553,7 +2553,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     const damageHoleResult = resolveBattleSubject({
       state: hiddenState,
-      subject: fighterAttackSubject(),
+      subject: fighterAttackSubject(state),
       fills: [
         targetFill(target, goblinId),
         attackRollFill(roll, {
@@ -2574,7 +2574,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const missed = requireResolved(
       resolveBattleSubject({
         state: hiddenState,
-        subject: fighterAttackSubject(),
+        subject: fighterAttackSubject(state),
         fills: [
           targetFill(target, goblinId),
           attackRollFill(roll, {

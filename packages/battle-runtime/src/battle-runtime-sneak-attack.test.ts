@@ -3,6 +3,8 @@ import {
   requireResolved,
   sneakAttackUnitRefs,
   fighterAttackSubject,
+  characterAttackSubjectForTest,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   attackDamageHoleAfterHit,
@@ -27,10 +29,7 @@ import {
   discoverBattleActs,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
-import type {
-  BattleState,
-  BattleSubject,
-} from "./battle-runtime-test-support.ts";
+import type { BattleState } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Sneak Attack", () => {
@@ -59,7 +58,7 @@ describe("battle runtime: Sneak Attack", () => {
         hidden: { discoveryDc: difficultyClass(16) },
       }),
     };
-    const attackSubject = fighterAttackSubject("Dagger");
+    const attackSubject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
     const damage = attackDamageHoleAfterHit(
@@ -136,7 +135,7 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject = fighterAttackSubject("Dagger");
+    const attackSubject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
     const damage = attackDamageHoleAfterHit(
@@ -168,7 +167,7 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject = fighterAttackSubject("Dagger");
+    const attackSubject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
     const damage = attackDamageHoleAfterHit(
@@ -203,7 +202,7 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 5 }),
       ],
     });
-    const longswordSubject = fighterAttackSubject("Longsword");
+    const longswordSubject = fighterAttackSubject(state, "Longsword");
     const target = attackInitialTargetHole(state, longswordSubject);
     const roll = attackRollHoleAfterTarget(state, target, longswordSubject);
     const longswordDamage = attackDamageHoleAfterHit(
@@ -215,27 +214,35 @@ describe("battle runtime: Sneak Attack", () => {
     );
     expect(longswordDamage).not.toHaveProperty("attackDamageRiders");
 
-    const rogue = state.combatants.get(fighterId);
-    if (rogue?.origin.kind !== "character") {
-      throw new Error("Expected rogue character.");
-    }
-    const finesseState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...rogue,
-        origin: {
-          ...rogue.origin,
+    const admittedFinesseState = startBattleRight({
+      battleId: battleId("battle-sneak-attack-rider-gates-finesse"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 1 }],
+          unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
-        },
-      }),
+        }),
+        characterSeed({
+          combatantId: allyId,
+          displayName: "Ally",
+          initiative: 10,
+          attack: null,
+        }),
+        statBlockCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const finesseState = {
+      ...admittedFinesseState,
       currentTurnResources: {
-        ...state.currentTurnResources,
+        ...admittedFinesseState.currentTurnResources,
         attackDamageRidersUsedThisTurn: [
           { attackerId: fighterId, unitId: "rogue_sneak_attack" },
         ],
       },
     } satisfies BattleState;
-    const daggerSubject = fighterAttackSubject("Dagger");
+    const daggerSubject = fighterAttackSubject(finesseState, "Dagger");
     const daggerTarget = attackInitialTargetHole(finesseState, daggerSubject);
     const daggerRoll = attackRollHoleAfterTarget(
       finesseState,
@@ -273,7 +280,7 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 5 }),
       ],
     });
-    const subject = fighterAttackSubject("Dagger");
+    const subject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
     const damage = attackDamageHoleAfterHit(
@@ -330,7 +337,7 @@ describe("battle runtime: Sneak Attack", () => {
           hidden: { discoveryDc: difficultyClass(17) },
         }),
     };
-    const subject = fighterAttackSubject("Dagger");
+    const subject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
     expect(roll).not.toHaveProperty("rollMode");
@@ -364,7 +371,7 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = fighterAttackSubject("Dagger");
+    const subject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject);
     const damage = attackDamageHoleAfterHit(
@@ -384,7 +391,7 @@ describe("battle runtime: Sneak Attack", () => {
             target,
             subject.actorId,
             goblinId,
-            subject.attackName,
+            attackExecutionSelectionForSubjectForTest(subject),
           ),
           attackRollFill(roll, {
             total: 15,
@@ -422,7 +429,7 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = fighterAttackSubject("Dagger");
+    const subject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject);
     const damage = attackDamageHoleAfterHit(
@@ -442,7 +449,7 @@ describe("battle runtime: Sneak Attack", () => {
             target,
             subject.actorId,
             goblinId,
-            subject.attackName,
+            attackExecutionSelectionForSubjectForTest(subject),
             [
               {
                 kind: "attackerAllyWithin5FeetOfTarget",
@@ -483,7 +490,7 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = fighterAttackSubject("Dagger");
+    const subject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, subject);
 
     const attackerCannotSeeTarget = requireHole(
@@ -491,13 +498,19 @@ describe("battle runtime: Sneak Attack", () => {
         state,
         subject,
         fills: [
-          attackTargetFill(target, fighterId, goblinId, subject.attackName, [
-            {
-              kind: "attackAttackerCannotSeeTarget",
-              attackerId: fighterId,
-              targetId: goblinId,
-            },
-          ]),
+          attackTargetFill(
+            target,
+            fighterId,
+            goblinId,
+            attackExecutionSelectionForSubjectForTest(subject),
+            [
+              {
+                kind: "attackAttackerCannotSeeTarget",
+                attackerId: fighterId,
+                targetId: goblinId,
+              },
+            ],
+          ),
         ],
       }),
       "attackRoll",
@@ -511,13 +524,19 @@ describe("battle runtime: Sneak Attack", () => {
         state,
         subject,
         fills: [
-          attackTargetFill(target, fighterId, goblinId, subject.attackName, [
-            {
-              kind: "attackTargetCannotSeeAttacker",
-              attackerId: fighterId,
-              targetId: goblinId,
-            },
-          ]),
+          attackTargetFill(
+            target,
+            fighterId,
+            goblinId,
+            attackExecutionSelectionForSubjectForTest(subject),
+            [
+              {
+                kind: "attackTargetCannotSeeAttacker",
+                attackerId: fighterId,
+                targetId: goblinId,
+              },
+            ],
+          ),
         ],
       }),
       "attackRoll",
@@ -529,18 +548,24 @@ describe("battle runtime: Sneak Attack", () => {
         state,
         subject,
         fills: [
-          attackTargetFill(target, fighterId, goblinId, subject.attackName, [
-            {
-              kind: "attackAttackerCannotSeeTarget",
-              attackerId: fighterId,
-              targetId: goblinId,
-            },
-            {
-              kind: "attackTargetCannotSeeAttacker",
-              attackerId: fighterId,
-              targetId: goblinId,
-            },
-          ]),
+          attackTargetFill(
+            target,
+            fighterId,
+            goblinId,
+            attackExecutionSelectionForSubjectForTest(subject),
+            [
+              {
+                kind: "attackAttackerCannotSeeTarget",
+                attackerId: fighterId,
+                targetId: goblinId,
+              },
+              {
+                kind: "attackTargetCannotSeeAttacker",
+                attackerId: fighterId,
+                targetId: goblinId,
+              },
+            ],
+          ),
         ],
       }),
       "attackRoll",
@@ -569,13 +594,13 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = fighterAttackSubject("Dagger");
+    const subject = fighterAttackSubject(state, "Dagger");
     const target = attackInitialTargetHole(state, subject);
     const targetFillWithSight = attackTargetFill(
       target,
       fighterId,
       goblinId,
-      subject.attackName,
+      attackExecutionSelectionForSubjectForTest(subject),
       [
         {
           kind: "attackAttackerCannotSeeTarget",
@@ -674,12 +699,11 @@ describe("battle runtime: Sneak Attack", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const secondRogueSubject = {
-      tag: "action",
-      actorId: secondRogueId,
-      action: "attack",
-      attackName: "Dagger",
-    } as const satisfies Extract<BattleSubject, { readonly tag: "action" }>;
+    const secondRogueSubject = characterAttackSubjectForTest(
+      state,
+      secondRogueId,
+      "Dagger",
+    );
     const usedByDifferentRogue = {
       ...state,
       currentTurnResources: {

@@ -3,6 +3,7 @@ import {
   addBattleCombatantRight,
   removeBattleCombatantsRight,
   fighterVsGoblinBattle,
+  fighterAttackSubject,
   requireHole,
   findHole,
   findAct,
@@ -388,24 +389,18 @@ describe("battle runtime: setup and discovery", () => {
   });
 
   test("discoverBattleActs exposes attack, movement, and endTurn for the current actor", () => {
-    const acts = discoverBattleActs(
-      startBattleRight({
-        battleId: battleId("battle-1"),
-        combatants: [
-          characterSeed({ initiative: 20 }),
-          statBlockCreatureInit({ initiative: 10 }),
-        ],
-      }),
-    );
+    const state = startBattleRight({
+      battleId: battleId("battle-1"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const acts = discoverBattleActs(state);
 
     expect(acts.map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        fighterAttackSubject(state, "Longsword"),
         { tag: "action", actorId: fighterId, action: "grapple" },
         { tag: "action", actorId: fighterId, action: "shove" },
         { tag: "runtimeCommand", actorId: fighterId, command: "move" },

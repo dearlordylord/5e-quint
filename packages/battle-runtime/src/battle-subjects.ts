@@ -18,13 +18,15 @@
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
-import { DamageTypeSchema } from "@dnd/surface/surface/schema";
+import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   BattleAreaId,
+  BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
-  CombatantId,
   BattleProcedureExecutionRef,
+  CombatantId,
+  BattleStatBlockProcedureExecutionRef,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -44,6 +46,7 @@ import {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
+import { attackExecutionSelectionKey } from "./battle-action-options.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -448,6 +451,30 @@ const SpellMetamagicSelectionsSchema = Schema.NonEmptyArray(
   SpellMetamagicSelectionSchema,
 );
 
+export const BattleAttackExecutionAbilitySchema = Schema.Union(
+  AbilitySchema,
+  Schema.Literal("spellcasting"),
+);
+
+export const BattleAttackExecutionSelectionSchema = Schema.Union(
+  Schema.Struct({
+    attackName: Schema.String,
+    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    procedureRef: BattleAttackProcedureExecutionRef,
+    attackAbility: BattleAttackExecutionAbilitySchema,
+    attackDamageType: DamageTypeSchema,
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+);
+
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
 // authored content, provenance, or a complete taxonomy of D&D actions.
@@ -456,8 +483,10 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("attack"),
-    attackName: BattleSubjectTextSchema,
-    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+    procedureRef: BattleAttackProcedureExecutionRef,
+    attackAbility: BattleAttackExecutionAbilitySchema,
+    attackDamageType: DamageTypeSchema,
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
@@ -465,7 +494,9 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("attack"),
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
@@ -476,7 +507,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
     actorId: CombatantId,
     familiarId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
     statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
       exact: true,
     }),
@@ -516,7 +547,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("multiattack"),
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -567,20 +598,24 @@ export const BattleSubjectSchema = Schema.Union(
       tag: Schema.Literal("bonusAction"),
       actorId: CombatantId,
       action: Schema.Literal("offHandAttack"),
-      attackName: BattleSubjectTextSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
     }),
     Schema.Struct({
       tag: Schema.Literal("bonusAction"),
       actorId: CombatantId,
       action: Schema.Literal("martialArtsUnarmedStrike"),
-      attackName: BattleSubjectTextSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
     }),
   ),
   Schema.Struct({
     tag: Schema.Literal("bonusAction"),
     actorId: CombatantId,
     action: Schema.Literal("statBlockActionOption"),
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
     standardAction: Schema.Literal(...STANDARD_ACTION_KINDS),
   }),
   Schema.Struct({
@@ -637,11 +672,8 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("monkFocusFlurryOfBlowsStrike"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
     resourceUnitId: BattleSubjectTextSchema,
-    attackName: BattleSubjectTextSchema,
+    procedureRef: BattleAttackProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -822,7 +854,20 @@ export const BattleSubjectSchema = Schema.Union(
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
+      procedureRef: BattleAttackProcedureExecutionRef,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("runtimeCommand"),
+      actorId: CombatantId,
+      command: Schema.Literal("opportunityAttack"),
+      reactorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
+      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     }),
   ),
@@ -1086,8 +1131,7 @@ export type CharacterProcedureBattleSubject = Extract<
       | "unitFeatureHeldWeaponActivation"
       | "druidWildShape"
       | "bonusActionStandardAction"
-      | "monkFocusOption"
-      | "monkFocusFlurryOfBlowsStrike";
+      | "monkFocusOption";
   }
 >;
 
@@ -1258,7 +1302,7 @@ function battleSubjectKey(
       subject.tag,
       subject.actorId,
       subject.action,
-      subject.attackName,
+      attackExecutionSelectionKey(subject),
     ]);
   }
   if (subject.tag === "monkFocusOption") {
@@ -1278,7 +1322,7 @@ function battleSubjectKey(
       subject.actorId,
       characterProcedureRefKey(subject, includeCharacterProcedureRef),
       subject.resourceUnitId,
-      subject.attackName,
+      subject.procedureRef,
     ]);
   }
   if (subject.tag === "druidWildShape") {
@@ -1337,7 +1381,7 @@ function battleSubjectKey(
         attack.tag,
         attack.actorId,
         attack.action,
-        "procedureRef" in attack ? attack.procedureRef : attack.attackName,
+        attackExecutionSelectionKey(attack),
         "statBlockDamageNotation" in attack
           ? (attack.statBlockDamageNotation ?? "rolled")
           : null,
@@ -1465,6 +1509,10 @@ function battleSubjectKey(
           : null,
         "attackName" in command ? command.attackName : null,
         "procedureRef" in command ? command.procedureRef : null,
+        "attackAbility" in command ? (command.attackAbility ?? null) : null,
+        "attackDamageType" in command
+          ? (command.attackDamageType ?? null)
+          : null,
         "sourceCombatantId" in command ? command.sourceCombatantId : null,
         "sourceSpellId" in command ? command.sourceSpellId : null,
         "condition" in command ? command.condition : null,

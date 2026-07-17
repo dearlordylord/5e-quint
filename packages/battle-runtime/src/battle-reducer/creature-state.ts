@@ -46,6 +46,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
+  battleAttackExecutionScopeRefForProcedureRef,
   battleExecutionScopeOrdinal,
   type BattleId,
   type BattleExecutionScopeOrdinal,
@@ -150,6 +151,7 @@ import {
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
+import { admitCharacterAttackExecution } from "../attack-execution.ts";
 
 export function ongoingFeatureSourceKey(
   source: OngoingFeatureSource,
@@ -222,14 +224,24 @@ export function battleCreatureStateAdmissionFromInit(
 
   if (creatureInit.kind === "character") {
     const characterScopeOrdinal = startingScopeOrdinal;
-    const nextScopeOrdinal = battleExecutionScopeOrdinal(
+    const attackScopeOrdinal = battleExecutionScopeOrdinal(
       Number(characterScopeOrdinal) + 1,
     );
+    const attackExecution = admitCharacterAttackExecution({
+      battleId,
+      combatantId: input.combatantId,
+      startingScopeOrdinal: attackScopeOrdinal,
+      attack: creatureInit.attack,
+      unarmedStrike: creatureInit.unarmedStrike,
+      ...(creatureInit.offHandAttack === undefined
+        ? {}
+        : { offHandAttack: creatureInit.offHandAttack }),
+    });
     const executionCohort = statBlockExecutionAdmissionCohort(
       battleId,
       input.combatantId,
       creatureInit.druidWildShapeAvailableForms ?? [],
-      nextScopeOrdinal,
+      attackExecution.nextScopeOrdinal,
     );
     const classLevels = parseCharacterBattleClassLevels(
       creatureInit.classLevels,
@@ -279,11 +291,11 @@ export function battleCreatureStateAdmissionFromInit(
           weaponMasteries: creatureInit.weaponMasteries ?? [],
           invocationFeatures: creatureInit.invocationFeatures ?? [],
           speed: creatureInit.speed,
-          attack: creatureInit.attack,
-          unarmedStrike: creatureInit.unarmedStrike,
-          ...(creatureInit.offHandAttack === undefined
+          attack: attackExecution.execution.attack,
+          unarmedStrike: attackExecution.execution.unarmedStrike,
+          ...(attackExecution.execution.offHandAttack === undefined
             ? {}
-            : { offHandAttack: creatureInit.offHandAttack }),
+            : { offHandAttack: attackExecution.execution.offHandAttack }),
           resources: (creatureInit.resources ?? []).map((resource) =>
             characterResourceState(resource, classLevels),
           ),
@@ -757,6 +769,14 @@ export function combatantOriginSnapshot(
         procedureRefs: origin.execution.procedureBindings.map(
           (binding) => binding.procedureRef,
         ),
+      },
+      attackExecution: {
+        scopeRef: battleAttackExecutionScopeRefForProcedureRef(
+          origin.unarmedStrike.procedureRef,
+        ),
+        attackProcedureRef: origin.attack?.procedureRef ?? null,
+        unarmedStrikeProcedureRef: origin.unarmedStrike.procedureRef,
+        offHandAttackProcedureRef: origin.offHandAttack?.procedureRef ?? null,
       },
       resources: origin.resources.map(characterResourceSnapshot),
       druidWildShapeAvailableForms: (

@@ -34,10 +34,7 @@ export function characterUnitProcedureQueryForSubject(
   if (subject.tag === "bonusActionStandardAction") {
     return BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY;
   }
-  if (
-    subject.tag === "monkFocusOption" ||
-    subject.tag === "monkFocusFlurryOfBlowsStrike"
-  ) {
+  if (subject.tag === "monkFocusOption") {
     return MONK_FOCUS_PROCEDURE_QUERY;
   }
   return undefined;

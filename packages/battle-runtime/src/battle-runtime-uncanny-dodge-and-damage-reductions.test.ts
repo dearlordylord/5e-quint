@@ -38,7 +38,6 @@ import { DieRollResult } from "@dnd/shared/types";
 import type {
   BattleInterruptCheckpoint,
   BattleState,
-  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
@@ -383,15 +382,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         }),
       ],
     });
-    const subject: Extract<
-      BattleSubject,
-      { readonly tag: "action"; readonly action: "attack" }
-    > = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-    };
+    const subject = goblinAttackSubject(state, "Scimitar");
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackDamage",
       eligibleResponders: [skeletonId, fighterId],

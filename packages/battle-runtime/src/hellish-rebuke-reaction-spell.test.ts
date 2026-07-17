@@ -738,7 +738,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === damagerId &&
-      act.subject.attackName === "Unarmed Strike",
+      act.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -791,7 +791,9 @@ function attackTargetFill(input: {
         kind: "attackTargetInMeleeReach",
         actorId: damagerId,
         targetId: spellCasterId,
-        attackName: "Unarmed Strike",
+        ...(input.hole.attack?.selection ?? {
+          attackName: "Unarmed Strike",
+        }),
       },
       ...(input.includeHellishRebukeTriggerFact
         ? [
@@ -839,7 +841,9 @@ function requireTopInterruptCheckpoint(
 ): BattleInterruptCheckpoint {
   const frame = state.interruptStack[state.interruptStack.length - 1];
   if (frame?.kind !== "interruptCheckpoint") {
-    throw new Error("Expected top interrupt frame to be an interrupt checkpoint.");
+    throw new Error(
+      "Expected top interrupt frame to be an interrupt checkpoint.",
+    );
   }
   return frame.frame;
 }

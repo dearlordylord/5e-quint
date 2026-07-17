@@ -840,7 +840,7 @@ function resolveAttackHitHp(
 ): number {
   const subject =
     attackName === "Longsword"
-      ? weaponAttackSubject("Longsword")
+      ? weaponAttackSubject(state, "Longsword")
       : attackActSubject(state, "Unarmed Strike");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
@@ -1041,7 +1041,7 @@ function attackActSubject(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === attackName,
+      candidate.summary === `Take the Attack action with ${attackName}.`,
   );
   expect(act).toBeDefined();
   if (act === undefined || act.subject.tag !== "action") {

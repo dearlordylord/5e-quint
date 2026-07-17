@@ -22,7 +22,10 @@ import {
 import type { SpellRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { CharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
+import type {
+  BoundCharacterWeaponAttackActionOption,
+  CharacterWeaponAttackActionOption,
+} from "../../battle-action-options.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -212,7 +215,7 @@ function shillelaghAttachedWeaponAttacks(actor: SpellAdmissionActor): readonly {
       held,
     ): held is {
       readonly itemId: string;
-      readonly attack: CharacterWeaponAttackActionOption;
+      readonly attack: BoundCharacterWeaponAttackActionOption;
       readonly unitId: WeaponRecord["id"];
     } =>
       held.attack.weapon.usage === "melee" &&

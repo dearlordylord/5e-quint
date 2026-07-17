@@ -35,7 +35,11 @@ import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  attackExecutionSelectionIdentitiesEqual,
+  boundAttackExecutionSelectionMatchesOption,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import {
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -564,9 +568,9 @@ export function attackExecutionSelectionMatchesOption(
   selection: BattleAttackExecutionSelection,
   attack: SupportedAttackActionOption,
 ): boolean {
-  return attack.kind === "statBlockAttack"
+  return "procedureRef" in attack
     ? selection.procedureRef !== undefined &&
-        attack.procedureRef === selection.procedureRef
+        boundAttackExecutionSelectionMatchesOption(selection, attack)
     : selection.procedureRef === undefined &&
         attackActionOptionName(attack) === selection.attackName;
 }
@@ -575,10 +579,7 @@ export function attackExecutionSelectionsEqual(
   left: BattleAttackExecutionSelection,
   right: BattleAttackExecutionSelection,
 ): boolean {
-  return (
-    left.procedureRef === right.procedureRef &&
-    left.attackName === right.attackName
-  );
+  return attackExecutionSelectionIdentitiesEqual(left, right);
 }
 
 export function meleeWeaponOrUnarmedStrikeOptionForReactor(

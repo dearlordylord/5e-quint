@@ -1,11 +1,13 @@
 export {
   BattleCombatantSide,
+  BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
   BattleDancingLightId,
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
   BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   BattleReplayStackDepth,
   BattleResourcePoolExecutionRef,
   BattleTablePositionId,

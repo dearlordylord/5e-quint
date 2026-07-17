@@ -304,6 +304,7 @@ import {
   attackActionOptionName,
   attackTargetConstraint,
 } from "./statblock-attacks.ts";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import type {
@@ -493,8 +494,7 @@ function isCharacterProcedureSubject(
     subject.tag === "unitFeatureHeldWeaponActivation" ||
     subject.tag === "druidWildShape" ||
     subject.tag === "bonusActionStandardAction" ||
-    subject.tag === "monkFocusOption" ||
-    subject.tag === "monkFocusFlurryOfBlowsStrike"
+    subject.tag === "monkFocusOption"
   );
 }
 
@@ -602,10 +602,7 @@ function selectCharacterProcedureForResolution(
       },
     };
   }
-  if (
-    subject.tag === "monkFocusOption" ||
-    subject.tag === "monkFocusFlurryOfBlowsStrike"
-  ) {
+  if (subject.tag === "monkFocusOption") {
     return {
       tag: "selected",
       input: {
@@ -6307,8 +6304,7 @@ function opportunityAttackThreatsEqual(
       return (
         other !== undefined &&
         threat.reactorId === other.reactorId &&
-        threat.attackName === other.attackName &&
-        threat.procedureRef === other.procedureRef
+        attackExecutionSelectionsEqual(threat, other)
       );
     })
   );
@@ -6916,8 +6912,8 @@ export function opportunityAttackReactionChoices(
           command: "opportunityAttack" as const,
           reactorId,
           targetId: moverId,
-          ...(attack.kind === "statBlockAttack"
-            ? { procedureRef: attack.procedureRef }
+          ...("procedureRef" in attack
+            ? attackExecutionSelectionForOption(attack)
             : { attackName: attackActionOptionName(attack) }),
         },
       },

@@ -26,6 +26,7 @@ import {
   type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import type {
+  BoundSupportedAttackActionOption,
   BattleWeaponDamage,
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -195,6 +196,12 @@ export function attackActionOptionName(
   );
 }
 
+export function attackActionVariantOptions(
+  attack: BoundSupportedAttackActionOption,
+): readonly BoundSupportedAttackActionOption[];
+export function attackActionVariantOptions(
+  attack: SupportedAttackActionOption,
+): readonly SupportedAttackActionOption[];
 export function attackActionVariantOptions(
   attack: SupportedAttackActionOption,
 ): readonly SupportedAttackActionOption[] {

@@ -151,7 +151,7 @@ import { attackActionOptionName } from "./statblock-attacks.ts";
 import {
   attackActionOptionPresentationName,
   statBlockAttackProcedureSection,
-  statBlockSubjectPart,
+  attackSubjectPart,
 } from "./statblock.ts";
 
 import { attackTargetHole } from "./hole-helpers.ts";
@@ -4306,7 +4306,7 @@ export function discoverLegendaryActionActs(
                   tag: "action" as const,
                   actorId,
                   action: "attack" as const,
-                  ...statBlockSubjectPart(attack),
+                  ...attackSubjectPart(attack),
                 },
                 label: "Legendary Action",
                 summary: `Take the Legendary Action ${attackActionOptionPresentationName(

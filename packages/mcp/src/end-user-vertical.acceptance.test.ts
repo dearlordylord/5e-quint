@@ -180,53 +180,26 @@ describe("end-user MCP vertical", () => {
       "Move",
       "End Turn",
     ]);
+    const fighterLongswordAttack = requireAttackAct(
+      root,
+      "fighter",
+      "Longsword",
+    ).subject;
 
-    callTool(root, "fill_battle_hole", {
-      subject: {
-        tag: "action",
-        actorId: "fighter",
-        action: "attack",
-        attackName: "Longsword",
-      },
-      fill: {
-        kind: "targetChoice",
-        holeId: "battle:attack:target",
-        value: "goblin",
-        spatialFacts: [
-          {
-            kind: "attackTargetInMeleeReach",
-            actorId: "fighter",
-            targetId: "goblin",
-            attackName: "Longsword",
-          },
-        ],
-      },
+    fillBattleSubject(root, fighterLongswordAttack, {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "goblin",
     });
-    callTool(root, "fill_battle_hole", {
-      subject: {
-        tag: "action",
-        actorId: "fighter",
-        action: "attack",
-        attackName: "Longsword",
-      },
-      fill: {
-        kind: "attackRoll",
-        holeId: "battle:attack:roll",
-        value: { total: 16, naturalD20: 14 },
-      },
+    fillBattleSubject(root, fighterLongswordAttack, {
+      kind: "attackRoll",
+      holeId: "battle:attack:roll",
+      value: { total: 16, naturalD20: 14 },
     });
-    const fighterDamage = callTool(root, "fill_battle_hole", {
-      subject: {
-        tag: "action",
-        actorId: "fighter",
-        action: "attack",
-        attackName: "Longsword",
-      },
-      fill: {
-        kind: "rolledDice",
-        holeId: "battle:attack:damage-result:1d8+3-slashing",
-        value: [{ results: [5] }],
-      },
+    const fighterDamage = fillBattleSubject(root, fighterLongswordAttack, {
+      kind: "rolledDice",
+      holeId: "battle:attack:damage-result:1d8+3-slashing",
+      value: [{ results: [5] }],
     });
     expect(fighterDamage.result.tag).toBe("resolved");
     expect(fighterDamage.snapshot.combatants).toEqual([
@@ -446,26 +419,27 @@ describe("end-user MCP vertical", () => {
       "Move",
       "End Turn",
     ]);
+    const fighterFlailAttack = requireAttackAct(
+      root,
+      "fighter",
+      "Flail",
+    ).subject;
 
-    fillBattleSubject(root, attackSubject("fighter", "Flail"), {
+    fillBattleSubject(root, fighterFlailAttack, {
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "skeleton-a",
     });
-    fillBattleSubject(root, attackSubject("fighter", "Flail"), {
+    fillBattleSubject(root, fighterFlailAttack, {
       kind: "attackRoll",
       holeId: "battle:attack:roll",
       value: { total: 18, naturalD20: 15 },
     });
-    const afterBludgeoning = fillBattleSubject(
-      root,
-      attackSubject("fighter", "Flail"),
-      {
-        kind: "rolledDice",
-        holeId: "battle:attack:damage-result:1d8+3-bludgeoning",
-        value: [{ results: [1] }],
-      },
-    );
+    const afterBludgeoning = fillBattleSubject(root, fighterFlailAttack, {
+      kind: "rolledDice",
+      holeId: "battle:attack:damage-result:1d8+3-bludgeoning",
+      value: [{ results: [1] }],
+    });
     expect(afterBludgeoning.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({ combatantId: "wizard", hp: 14 }),
@@ -502,20 +476,16 @@ describe("end-user MCP vertical", () => {
       "End Turn",
     ]);
 
-    fillBattleSubject(root, attackSubject("fighter", "Flail"), {
+    fillBattleSubject(root, fighterFlailAttack, {
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "skeleton-a",
     });
-    const afterSurgedAttack = fillBattleSubject(
-      root,
-      attackSubject("fighter", "Flail"),
-      {
-        kind: "attackRoll",
-        holeId: "battle:attack:roll",
-        value: { total: 1, naturalD20: 1 },
-      },
-    );
+    const afterSurgedAttack = fillBattleSubject(root, fighterFlailAttack, {
+      kind: "attackRoll",
+      holeId: "battle:attack:roll",
+      value: { total: 1, naturalD20: 1 },
+    });
     expect(afterSurgedAttack.result.tag).toBe("resolved");
     expect(afterSurgedAttack.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
@@ -1872,10 +1842,19 @@ type BattleActView = {
 };
 
 type BattleSubjectView =
-  | ReturnType<typeof attackSubject>
+  | BoundAttackSubjectView
   | ReturnType<typeof cantripSubject>
   | ReturnType<typeof spellSlotSubject>
   | ReturnType<typeof unitFeatureSubject>;
+
+type BoundAttackSubjectView = {
+  readonly tag: "action";
+  readonly actorId: string;
+  readonly action: "attack";
+  readonly procedureRef: string;
+  readonly attackAbility?: string;
+  readonly attackDamageType?: string;
+};
 
 type BattleHoleView = {
   readonly kind: string;
@@ -1912,9 +1891,7 @@ function requireAttackAct(
       act.subject.action === "attack" &&
       (!("statBlockDamageNotation" in act.subject) ||
         act.subject.statBlockDamageNotation === undefined) &&
-      (("attackName" in act.subject && act.subject.attackName === attackName) ||
-        ("procedureRef" in act.subject &&
-          act.summary === `Take the Attack action with ${attackName}.`)),
+      act.summary === `Take the Attack action with ${attackName}.`,
   );
   const [act] = matchingActs;
   if (matchingActs.length !== 1 || act === undefined) {
@@ -2204,10 +2181,6 @@ function endTurn(
   });
 }
 
-function attackSubject(actorId: string, attackName: string) {
-  return { tag: "action", actorId, action: "attack", attackName };
-}
-
 function cantripSubject(actorId: string, spellId: string, procedure: string) {
   return {
     tag: "actionSpell",
@@ -2243,7 +2216,7 @@ function unitFeatureSubject(actorId: string, unitId: string) {
 function fillBattleSubject(
   root: ReturnType<typeof createMcpCompositionRoot>,
   subject:
-    | ReturnType<typeof attackSubject>
+    | BoundAttackSubjectView
     | ReturnType<typeof cantripSubject>
     | ReturnType<typeof spellSlotSubject>
     | ReturnType<typeof unitFeatureSubject>,
@@ -2276,15 +2249,19 @@ function fillBattleSubject(
                     spellId,
                   },
                 ]
-              : "attackName" in subject || "procedureRef" in subject
+              : "procedureRef" in subject
                 ? [
                     {
                       kind: "attackTargetInMeleeReach",
                       actorId: subject.actorId,
                       targetId: String(fill.value),
-                      ...("procedureRef" in subject
-                        ? { procedureRef: subject.procedureRef }
-                        : { attackName: subject.attackName }),
+                      procedureRef: subject.procedureRef,
+                      ...(subject.attackAbility === undefined
+                        ? {}
+                        : { attackAbility: subject.attackAbility }),
+                      ...(subject.attackDamageType === undefined
+                        ? {}
+                        : { attackDamageType: subject.attackDamageType }),
                     },
                   ]
                 : [],

@@ -19,7 +19,10 @@ import {
 } from "@dnd/surface/surface/schema";
 import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
-import { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  BattleStatBlockProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import {
   STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES,
   STAT_BLOCK_DAMAGE_NOTATIONS,
@@ -217,7 +220,7 @@ const SupportedCreatureAttackRollMechanicsSchema =
 // fact.
 const StatBlockAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("statBlockAttack"),
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
   attack: SupportedCreatureAttackRollMechanicsSchema,
   damageNotation: Schema.Literal(...STAT_BLOCK_DAMAGE_NOTATIONS),
   traitAttackRollModes: Schema.optionalWith(

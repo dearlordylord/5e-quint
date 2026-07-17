@@ -9,6 +9,7 @@ import {
   characterSeed,
   damageRollFill,
   discoverBattleActs,
+  fighterAttackSubject,
   fighterId,
   goblinId,
   hasCondition,
@@ -194,12 +195,10 @@ describe("battle runtime: Open Hand Technique", () => {
   test("Open Hand Technique rejects non-Flurry and stale hit windows", () => {
     const flurry = openHandTechniqueHitWindow();
     const genericState = openHandTechniqueBattle();
-    const genericSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const genericSubject: BattleSubject = fighterAttackSubject(
+      genericState,
+      "Longsword",
+    );
     const genericTarget = requireHole(
       resolveBattleSubject({
         state: genericState,
@@ -288,9 +287,7 @@ describe("battle runtime: Open Hand Technique", () => {
 function resolveOpenHandSave(
   choice: "pushAwayOnFailedSave" | "applyConditionOnFailedSave",
   succeeded: boolean,
-  push?: NonNullable<
-    BattleShovePushOutcome
-  >,
+  push?: NonNullable<BattleShovePushOutcome>,
 ) {
   const window = openHandTechniqueHitWindow();
   const save = requireHole(
@@ -420,11 +417,11 @@ function openHandSubject(
 function openHandSavingThrowFill(
   hole: BattleHole,
   succeeded: boolean,
-  push?: NonNullable<
-    BattleShovePushOutcome
-  >,
+  push?: NonNullable<BattleShovePushOutcome>,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
-  const fill = savingThrowOutcomeFill(hole, [{ targetId: goblinId, succeeded }]);
+  const fill = savingThrowOutcomeFill(hole, [
+    { targetId: goblinId, succeeded },
+  ]);
   return push === undefined
     ? fill
     : { ...fill, value: { ...fill.value, openHandTechniquePush: push } };

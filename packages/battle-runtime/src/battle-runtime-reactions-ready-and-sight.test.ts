@@ -41,7 +41,7 @@ import { describe, expect, test } from "vitest";
 describe("battle runtime: reactions, Ready, and sight facts", () => {
   test("attack hit procedures open a typed reaction window and resume after decline", () => {
     const state = fighterTurnWithReadiedRay("attackHit");
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const fills = [
@@ -97,7 +97,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("resolved reactions execute the admitted readied-spell procedure before resuming attack replay", () => {
     const state = fighterTurnWithReadiedRay("attackHit");
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const fills = [
@@ -197,7 +197,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("nested reaction windows resume a released readied save spell before the interrupted attack", () => {
     const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const awaitingAttackReaction = resolveBattleSubject({
@@ -560,7 +560,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("after-damage reactions observe the post-damage battle state", () => {
     const state = fighterTurnWithReadiedRay("afterDamage");
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {

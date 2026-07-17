@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
 import { describe, expect, test } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
   faerieFireUnitId,
   spellCasterId,
@@ -171,12 +172,11 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     if (afterTargetTurn.tag !== "resolved") {
       throw new Error("Expected Faerie Fire target end turn to resolve.");
     }
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const attackSubject: BattleSubject = characterAttackSubjectForTest(
+      afterTargetTurn.state,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const targetHole = requireResultHole(
       resolveBattleSubject({
         state: afterTargetTurn.state,
@@ -251,12 +251,11 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     if (afterTargetTurn.tag !== "resolved") {
       throw new Error("Expected Faerie Fire target end turn to resolve.");
     }
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const attackSubject: BattleSubject = characterAttackSubjectForTest(
+      afterTargetTurn.state,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const targetHole = requireResultHole(
       resolveBattleSubject({
         state: afterTargetTurn.state,

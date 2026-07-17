@@ -103,7 +103,6 @@ import { attackFillSet } from "./attack-fill-set.ts";
 import { invalidResult } from "./result-helpers.ts";
 
 import {
-  attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   eligibleAttackDamageDieFloorUnitIds,
@@ -120,7 +119,10 @@ import type {
   OffHandAttackBattleResolutionInput,
 } from "../battle-reducer.ts";
 import { spellAttackRerollUnsupportedIssue } from "../battle-reducer.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  boundAttackExecutionSelectionMatchesOption,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   attackRollHitsWithCriticalThreshold,
@@ -136,9 +138,19 @@ export function resolveOffHandAttack(
     label: "Light Property Bonus Action Attack",
     unavailableMessage:
       "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
-    attackForInput: (state, actorId, attackName) =>
+    attackForInput: (
+      state,
+      actorId,
+      procedureRef,
+      attackAbility,
+      attackDamageType,
+    ) =>
       offHandAttackActionOptionsForActor(state, actorId).find(
-        (attack) => attackActionOptionName(attack) === attackName,
+        (attack) =>
+          boundAttackExecutionSelectionMatchesOption(
+            { procedureRef, attackAbility, attackDamageType },
+            attack,
+          ),
       ),
     prerequisiteMet: (state, actorId, attack) =>
       attack.kind === "weapon" &&
@@ -153,13 +165,22 @@ export function resolveMartialArtsBonusUnarmedStrike(
     label: "Martial Arts Bonus Unarmed Strike",
     unavailableMessage:
       "Martial Arts Bonus Unarmed Strike requires Martial Arts support and an unarmored, unshielded Monk loadout.",
-    attackForInput: (state, actorId, attackName) => {
+    attackForInput: (
+      state,
+      actorId,
+      procedureRef,
+      attackAbility,
+      attackDamageType,
+    ) => {
       const attack = martialArtsBonusUnarmedStrikeActionOptionForActor(
         state,
         actorId,
       );
       return attack !== undefined &&
-        attackActionOptionName(attack) === attackName
+        boundAttackExecutionSelectionMatchesOption(
+          { procedureRef, attackAbility, attackDamageType },
+          attack,
+        )
         ? attack
         : undefined;
     },
@@ -177,7 +198,9 @@ type BonusActionAttackConfig = {
   readonly attackForInput: (
     state: BattleState,
     actorId: BonusActionAttackBattleResolutionInput["subject"]["actorId"],
-    attackName: BonusActionAttackBattleResolutionInput["subject"]["attackName"],
+    procedureRef: BonusActionAttackBattleResolutionInput["subject"]["procedureRef"],
+    attackAbility: BonusActionAttackBattleResolutionInput["subject"]["attackAbility"],
+    attackDamageType: BonusActionAttackBattleResolutionInput["subject"]["attackDamageType"],
   ) => SupportedAttackActionOption | undefined;
   readonly prerequisiteMet: (
     state: BattleState,
@@ -197,7 +220,9 @@ function resolveBonusActionAttack(
   const attack = config.attackForInput(
     input.state,
     input.subject.actorId,
-    input.subject.attackName,
+    input.subject.procedureRef,
+    input.subject.attackAbility,
+    input.subject.attackDamageType,
   );
   if (
     attack == null ||

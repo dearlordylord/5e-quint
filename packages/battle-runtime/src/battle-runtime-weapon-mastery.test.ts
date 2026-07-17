@@ -12,6 +12,7 @@ import {
   longbowWeaponMasterySelections,
   quarterstaffWeaponMasterySelections,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
@@ -119,12 +120,7 @@ describe("battle runtime: Weapon Mastery", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [],
     });
 
@@ -155,12 +151,7 @@ describe("battle runtime: Weapon Mastery", () => {
     const state = fighterVsGoblinBattle();
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [],
     });
 
@@ -178,12 +169,10 @@ describe("battle runtime: Weapon Mastery", () => {
 
   test("attack replay asks for an attack roll after target selection", () => {
     const state = fighterVsGoblinBattle();
-    const subject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Longsword",
-    } as const satisfies Extract<BattleSubject, { readonly tag: "action" }>;
+    const subject = fighterAttackSubject(state, "Longsword") satisfies Extract<
+      BattleSubject,
+      { readonly tag: "action" }
+    >;
     const targetHole = requireHole(
       resolveBattleSubject({
         state,
@@ -197,12 +186,9 @@ describe("battle runtime: Weapon Mastery", () => {
       state,
       subject,
       fills: [
-        attackTargetFill(
-          targetHole,
-          subject.actorId,
-          goblinId,
-          subject.attackName,
-        ),
+        attackTargetFill(targetHole, subject.actorId, goblinId, {
+          ...attackExecutionSelectionForSubjectForTest(subject),
+        }),
       ],
     });
 
@@ -231,12 +217,7 @@ describe("battle runtime: Weapon Mastery", () => {
     const targetHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject(state, "Longsword"),
         fills: [],
       }),
       "targetChoice",
@@ -244,12 +225,7 @@ describe("battle runtime: Weapon Mastery", () => {
     const rollHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject(state, "Longsword"),
         fills: [targetFill(targetHole, goblinId)],
       }),
       "attackRoll",
@@ -257,12 +233,7 @@ describe("battle runtime: Weapon Mastery", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -295,10 +266,7 @@ describe("battle runtime: Weapon Mastery", () => {
       characterUnitRefs: masterySapUnitRefs(),
       weaponMasteries: longswordWeaponMasterySelections(),
     });
-    const subject = fighterAttackSubject();
-    const attackName = subject.attackName;
-    if (attackName === undefined)
-      throw new Error("Expected weapon attack name.");
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const damageHole = attackDamageHoleAfterHit(
@@ -420,9 +388,12 @@ describe("battle runtime: Weapon Mastery", () => {
   });
 
   test("Weapon Mastery Sap is gated by hit, selected mastery ownership, and Sap weapon property", () => {
-    const subject = fighterAttackSubject();
+    const hitWithoutSelectionState = fighterVsGoblinBattle({
+      characterUnitRefs: masterySapUnitRefs(),
+    });
+    const subject = fighterAttackSubject(hitWithoutSelectionState);
     const hitWithoutSelection = resolveLongswordHit(
-      fighterVsGoblinBattle({ characterUnitRefs: masterySapUnitRefs() }),
+      hitWithoutSelectionState,
       subject,
     );
     const missedWithSelection = resolveLongswordMiss(
@@ -470,10 +441,7 @@ describe("battle runtime: Weapon Mastery", () => {
       characterUnitRefs: tacticalMasterReplacementUnitRefs(),
       weaponMasteries: longswordWeaponMasterySelections(),
     });
-    const subject = fighterAttackSubject();
-    const attackName = subject.attackName;
-    if (attackName === undefined)
-      throw new Error("Expected weapon attack name.");
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const pushDisposition = {
       kind: "pushed" as const,
@@ -485,13 +453,13 @@ describe("battle runtime: Weapon Mastery", () => {
       targetHole,
       subject.actorId,
       goblinId,
-      attackName,
+      "Longsword",
       [
         {
           kind: "weaponMasteryPushDisposition" as const,
           attackerId: subject.actorId,
           targetId: goblinId,
-          attackName,
+          ...attackExecutionSelectionForSubjectForTest(subject),
           disposition: pushDisposition,
         },
       ],
@@ -555,13 +523,13 @@ describe("battle runtime: Weapon Mastery", () => {
       characterUnitRefs: tacticalMasterReplacementUnitRefs(),
       weaponMasteries: longswordWeaponMasterySelections(),
     });
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const target = attackTargetFill(
       targetHole,
       subject.actorId,
       goblinId,
-      subject.attackName,
+      attackExecutionSelectionForSubjectForTest(subject),
     );
     const replacementHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [target] }),
@@ -616,13 +584,13 @@ describe("battle runtime: Weapon Mastery", () => {
       characterUnitRefs: tacticalMasterReplacementUnitRefs(),
       weaponMasteries: longswordWeaponMasterySelections(),
     });
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const target = attackTargetFill(
       targetHole,
       subject.actorId,
       goblinId,
-      subject.attackName,
+      attackExecutionSelectionForSubjectForTest(subject),
     );
     const replacementHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [target] }),
@@ -672,7 +640,7 @@ describe("battle runtime: Weapon Mastery", () => {
       weaponMasteries: quarterstaffWeaponMasterySelections(),
       attack: testQuarterstaffAttack(),
     });
-    const subject = fighterAttackSubject("Quarterstaff");
+    const subject = fighterAttackSubject(state, "Quarterstaff");
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
 
@@ -707,7 +675,7 @@ describe("battle runtime: Weapon Mastery", () => {
       weaponMasteries: quarterstaffWeaponMasterySelections(),
       attack: testQuarterstaffAttack(),
     });
-    const subject = fighterAttackSubject("Quarterstaff");
+    const subject = fighterAttackSubject(state, "Quarterstaff");
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const hitFills = [
@@ -787,12 +755,12 @@ describe("battle runtime: Weapon Mastery", () => {
   });
 
   test("Weapon Mastery Topple is gated by hit, selected mastery ownership, Topple weapon property, and support profile", () => {
-    const subject = fighterAttackSubject("Quarterstaff");
     const eligibleState = fighterVsGoblinBattle({
       characterUnitRefs: masteryToppleUnitRefs(),
       weaponMasteries: quarterstaffWeaponMasterySelections(),
       attack: testQuarterstaffAttack(),
     });
+    const subject = fighterAttackSubject(eligibleState, "Quarterstaff");
     const targetHole = attackInitialTargetHole(eligibleState, subject);
     const rollHole = attackRollHoleAfterTarget(
       eligibleState,
@@ -847,15 +815,26 @@ describe("battle runtime: Weapon Mastery", () => {
         toppleSaveFill,
       ],
     });
+    const nonToppleWeaponState = fighterVsGoblinBattle({
+      characterUnitRefs: masteryToppleUnitRefs(),
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const nonToppleWeaponSubject = fighterAttackSubject(nonToppleWeaponState);
+    const nonToppleTargetHole = attackInitialTargetHole(
+      nonToppleWeaponState,
+      nonToppleWeaponSubject,
+    );
+    const nonToppleRollHole = attackRollHoleAfterTarget(
+      nonToppleWeaponState,
+      nonToppleTargetHole,
+      nonToppleWeaponSubject,
+    );
     const nonToppleWeapon = resolveBattleSubject({
-      state: fighterVsGoblinBattle({
-        characterUnitRefs: masteryToppleUnitRefs(),
-        weaponMasteries: longswordWeaponMasterySelections(),
-      }),
-      subject: fighterAttackSubject(),
+      state: nonToppleWeaponState,
+      subject: nonToppleWeaponSubject,
       fills: [
-        targetFill(targetHole, goblinId),
-        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        targetFill(nonToppleTargetHole, goblinId),
+        attackRollFill(nonToppleRollHole, { total: 15, naturalD20: 10 }),
         toppleSaveFill,
       ],
     });
@@ -892,7 +871,7 @@ describe("battle runtime: Weapon Mastery", () => {
         }),
       ],
     });
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -909,7 +888,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -932,7 +916,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const cleaveFacts = [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1028,7 +1016,7 @@ describe("battle runtime: Weapon Mastery", () => {
         }),
       ],
     });
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1045,7 +1033,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 4),
     ];
@@ -1062,7 +1055,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1144,7 +1141,7 @@ describe("battle runtime: Weapon Mastery", () => {
         },
       }),
     };
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1161,7 +1158,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1178,7 +1180,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1272,7 +1278,7 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
       skeletonId,
     );
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1289,7 +1295,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 20, naturalD20: 15 }),
       damageRollFill(primaryDamage, 8),
     ];
@@ -1326,7 +1337,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1424,7 +1439,7 @@ describe("battle runtime: Weapon Mastery", () => {
         }),
       ],
     });
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1441,7 +1456,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1458,7 +1478,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1559,7 +1583,7 @@ describe("battle runtime: Weapon Mastery", () => {
     const state = requireResolved(
       endTurn({ state: wizardReady.state, actorId: wizardId }),
     ).state;
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1576,7 +1600,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1641,7 +1670,7 @@ describe("battle runtime: Weapon Mastery", () => {
         }),
       ],
     });
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1658,7 +1687,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1679,7 +1713,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1758,7 +1796,7 @@ describe("battle runtime: Weapon Mastery", () => {
         }),
       ],
     });
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1775,7 +1813,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1792,7 +1835,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1889,7 +1936,7 @@ describe("battle runtime: Weapon Mastery", () => {
         }),
       ],
     });
-    const subject = fighterAttackSubject("Greataxe");
+    const subject = fighterAttackSubject(state, "Greataxe");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       state,
@@ -1906,7 +1953,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryDamageFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 10),
     ];
@@ -1936,7 +1988,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -2022,7 +2078,6 @@ describe("battle runtime: Weapon Mastery", () => {
   });
 
   test("Weapon Mastery Cleave rejects ineligible second-target facts and unsupported use", () => {
-    const subject = fighterAttackSubject("Greataxe");
     const eligibleState = startBattleRight({
       battleId: battleId("battle-weapon-mastery-cleave-rejection"),
       combatants: [
@@ -2040,6 +2095,7 @@ describe("battle runtime: Weapon Mastery", () => {
         }),
       ],
     });
+    const subject = fighterAttackSubject(eligibleState, "Greataxe");
     const primaryTarget = attackInitialTargetHole(eligibleState, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       eligibleState,
@@ -2056,7 +2112,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -2083,7 +2144,11 @@ describe("battle runtime: Weapon Mastery", () => {
         ...primaryFills,
         unitFeatureDecisionFill(decision, "use"),
         targetFill(target, skeletonId, [
-          attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+          attackTargetSpatialFact(
+            fighterId,
+            skeletonId,
+            attackExecutionSelectionForSubjectForTest(subject),
+          ),
         ]),
       ],
     });
@@ -2099,7 +2164,11 @@ describe("battle runtime: Weapon Mastery", () => {
         ...primaryFills,
         unitFeatureDecisionFill(decision, "use"),
         targetFill(target, goblinId, [
-          attackTargetSpatialFact(fighterId, goblinId, "Greataxe"),
+          attackTargetSpatialFact(
+            fighterId,
+            goblinId,
+            attackExecutionSelectionForSubjectForTest(subject),
+          ),
           {
             kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
             attackerId: fighterId,
@@ -2117,7 +2186,7 @@ describe("battle runtime: Weapon Mastery", () => {
 
     const noSelection = resolveBattleSubject({
       state: startBattleRight({
-        battleId: battleId("battle-weapon-mastery-cleave-no-selection"),
+        battleId: battleId("battle-weapon-mastery-cleave-rejection"),
         combatants: [
           characterSeed({
             initiative: 20,
@@ -2137,7 +2206,7 @@ describe("battle runtime: Weapon Mastery", () => {
     });
     const noCleaveSupport = resolveBattleSubject({
       state: startBattleRight({
-        battleId: battleId("battle-weapon-mastery-cleave-no-support"),
+        battleId: battleId("battle-weapon-mastery-cleave-rejection"),
         combatants: [
           characterSeed({
             initiative: 20,
@@ -2168,7 +2237,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
       ],
     });
-    const rangedSubject = fighterAttackSubject("Longbow");
+    const rangedSubject = fighterAttackSubject(rangedCleaveState, "Longbow");
     const rangedTarget = attackInitialTargetHole(
       rangedCleaveState,
       rangedSubject,

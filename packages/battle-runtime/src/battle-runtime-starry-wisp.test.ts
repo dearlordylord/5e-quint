@@ -11,6 +11,7 @@ import {
   attackRollFill,
   damageRollFillWithGroups,
   characterSeed,
+  characterAttackSubjectForTest,
   skeletonCreatureInit,
   wizardSpellcasting,
   spellRecord,
@@ -269,12 +270,11 @@ describe("battle runtime: Starry Wisp", () => {
     const allyTurn = requireResolved(
       endTurn({ state: hit.state, actorId: wizardId }),
     );
-    const allyAttack: BattleSubject = {
-      tag: "action",
-      actorId: allyId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const allyAttack: BattleSubject = characterAttackSubjectForTest(
+      allyTurn.state,
+      allyId,
+      "Longsword",
+    );
     const allyTarget = requireHole(
       resolveBattleSubject({
         state: allyTurn.state,

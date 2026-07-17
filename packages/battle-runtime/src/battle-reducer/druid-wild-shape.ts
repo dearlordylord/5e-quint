@@ -49,8 +49,8 @@ import type {
 } from "../battle-reducer.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "../unit-feature-support.ts";
 import type {
-  BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
 import { combatantHasUnendedDruidWildShapeEffect } from "./creature-state-leaves.ts";
@@ -405,7 +405,7 @@ function mapActiveDruidWildShapeExecution(
 
 export function spendActiveDruidWildShapeProcedureResources(
   combatant: BattleCreatureState,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): BattleCreatureState {
   return mapActiveDruidWildShapeExecution(combatant, (execution) =>
     spendStatBlockProcedureResources(execution, procedureRef),

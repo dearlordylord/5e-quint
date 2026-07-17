@@ -29,7 +29,10 @@ import type {
   BattleSubject,
   BonusActionStandardActionSubject,
 } from "../battle-subjects.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  attackExecutionSelectionForOption,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
@@ -670,8 +673,8 @@ export function attackTargetHole(
     attack: {
       actorId,
       selection:
-        attack.kind === "statBlockAttack"
-          ? { procedureRef: attack.procedureRef }
+        "procedureRef" in attack
+          ? attackExecutionSelectionForOption(attack)
           : { attackName: attackActionOptionName(attack) },
       targetConstraint: attackTargetConstraint(attack).kind,
     },

@@ -19,6 +19,8 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
 
+type CharacterSeedInput = Parameters<typeof characterSeed>[0];
+
 import {
   activeDruidWildShapeForm,
   activeDruidWildShapeEffect,
@@ -129,7 +131,7 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
         act.subject.tag === "actionSpell" ||
         (act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.attackName === "Longsword"),
+          act.summary === "Take the Attack action with Longsword."),
     ),
   ).toBe(false);
 
@@ -420,7 +422,7 @@ test("requires and validates Wild Shape equipment disposition fills for selected
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Quarterstaff",
+        act.summary === "Take the Attack action with Quarterstaff.",
     ),
   ).toBe(false);
 });
@@ -540,7 +542,7 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Quarterstaff",
+        act.summary === "Take the Attack action with Quarterstaff.",
     ),
   ).toBe(false);
 });
@@ -604,7 +606,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Longsword",
+        act.summary === "Take the Attack action with Longsword.",
     ),
   ).toBe(true);
 
@@ -612,7 +614,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
-      act.subject.attackName === "Longsword",
+      act.summary === "Take the Attack action with Longsword.",
   );
   if (longswordAct?.subject.tag !== "action") {
     throw new Error("Expected Longsword attack act.");
@@ -721,34 +723,24 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
   const activeActs = discoverBattleActs(battleReadyState);
   expect(
     activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.subject.attackName === "Shortsword",
+      (act) => act.summary === "Take the Attack action with Shortsword.",
     ),
   ).toBe(true);
   expect(
     activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.subject.attackName === "Dagger",
+      (act) => act.summary === "Take the Attack action with Dagger.",
     ),
   ).toBe(false);
   expect(
     activeActs.some(
       (act) =>
-        act.subject.tag === "bonusAction" &&
-        act.subject.action === "offHandAttack" &&
-        act.subject.attackName === "Dagger",
+        act.summary ===
+        "Make the Light property Bonus Action attack with Dagger.",
     ),
   ).toBe(false);
 
   const shortswordAct = activeActs.find(
-    (act) =>
-      act.subject.tag === "action" &&
-      act.subject.action === "attack" &&
-      act.subject.attackName === "Shortsword",
+    (act) => act.summary === "Take the Attack action with Shortsword.",
   );
   if (shortswordAct?.subject.tag !== "action") {
     throw new Error("Expected Shortsword attack act.");
@@ -786,17 +778,13 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
   const afterLightActs = discoverBattleActs(afterQualifyingAttack);
   expect(
     afterLightActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.subject.attackName === "Dagger",
+      (act) => act.summary === "Take the Attack action with Dagger.",
     ),
   ).toBe(false);
   const daggerAct = afterLightActs.find(
     (act) =>
-      act.subject.tag === "bonusAction" &&
-      act.subject.action === "offHandAttack" &&
-      act.subject.attackName === "Dagger",
+      act.summary ===
+      "Make the Light property Bonus Action attack with Dagger.",
   );
   if (daggerAct?.subject.tag !== "bonusAction") {
     throw new Error("Expected Dagger off-hand Bonus Action act.");
@@ -910,7 +898,7 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Longsword",
+        act.summary === "Take the Attack action with Longsword.",
     ),
   ).toBe(false);
 });
@@ -2124,8 +2112,8 @@ test("rounds odd-level duration down through the general division rule", () => {
 function druidWildShapeBattle(input?: {
   readonly druidLevel?: number;
   readonly armorClass?: ArmorClassState;
-  readonly attack?: CharacterBattleCreatureState["origin"]["attack"];
-  readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
+  readonly attack?: CharacterSeedInput["attack"];
+  readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
@@ -2155,8 +2143,8 @@ function druidWildShapeBattle(input?: {
 function druidWildShapeCreatureInit(input?: {
   readonly druidLevel?: number;
   readonly armorClass?: ArmorClassState;
-  readonly attack?: CharacterBattleCreatureState["origin"]["attack"];
-  readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
+  readonly attack?: CharacterSeedInput["attack"];
+  readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
@@ -2207,26 +2195,26 @@ function hasActionSpell(state: BattleState, spellId: string): boolean {
 }
 
 function weakTrueFormLongswordAttack(): NonNullable<
-  CharacterBattleCreatureState["origin"]["attack"]
+  CharacterSeedInput["attack"]
 > {
   return weakTrueFormWeaponAttack("weapon_longsword");
 }
 
 function weakTrueFormShortswordAttack(): NonNullable<
-  CharacterBattleCreatureState["origin"]["attack"]
+  CharacterSeedInput["attack"]
 > {
   return weakTrueFormWeaponAttack("weapon_shortsword");
 }
 
 function weakTrueFormDaggerAttack(): NonNullable<
-  CharacterBattleCreatureState["origin"]["offHandAttack"]
+  CharacterSeedInput["offHandAttack"]
 > {
   return weakTrueFormWeaponAttack("weapon_dagger");
 }
 
 function weakTrueFormWeaponAttack(
   unitId: "weapon_longsword" | "weapon_shortsword" | "weapon_dagger",
-): NonNullable<CharacterBattleCreatureState["origin"]["attack"]> {
+): NonNullable<CharacterSeedInput["attack"]> {
   const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
     throw new Error("Expected weapon Unit.");

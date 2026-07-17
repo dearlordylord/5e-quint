@@ -49,7 +49,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -253,7 +253,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -518,7 +518,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -648,7 +648,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -809,7 +809,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",

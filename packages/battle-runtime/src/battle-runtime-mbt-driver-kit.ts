@@ -101,6 +101,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
+  attackExecutionSelectionForSubjectForTest as interruptAttackExecutionSelectionForSubject,
   attackInitialTargetHole as interruptAttackInitialTargetHole,
   attackRollHoleAfterTarget as interruptAttackRollHoleAfterTarget,
   attackTargetFill as interruptAttackTargetFill,
@@ -2643,7 +2644,7 @@ function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
 export function createBattleRuntimeDriver() {
   return defineDriver(driverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    let subject: BattleSubject = fighterAttackSubject();
+    let subject: BattleSubject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverAttackHoles(state, subject);
     let lastResult: MbtProjection["lastResult"] = "init";
@@ -2651,7 +2652,7 @@ export function createBattleRuntimeDriver() {
 
     function reset(): void {
       state = fighterVsSkeletonBattle();
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       fills = [];
       holes = discoverAttackHoles(state, subject);
       lastResult = "init";
@@ -2684,7 +2685,7 @@ export function createBattleRuntimeDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject();
+        subject = fighterAttackSubject(state);
         holes = discoverAttackHoles(state, subject);
         lastResult = "needsHoles";
         lastInvalidReason = "";
@@ -2787,7 +2788,7 @@ export function createBattleRuntimeDriver() {
 export function createBattleRuntimeRouteDriver() {
   return defineDriver(driverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    let subject: BattleSubject = fighterAttackSubject();
+    let subject: BattleSubject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverAttackHoles(state, subject);
     let route: readonly ReducerRouteEvent[] = [];
@@ -2796,7 +2797,7 @@ export function createBattleRuntimeRouteDriver() {
 
     function reset(): void {
       state = fighterVsSkeletonBattle();
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       fills = [];
       const act = discoverAttackAct(state, subject);
       holes = act.initialHoles;
@@ -2862,7 +2863,7 @@ export function createBattleRuntimeRouteDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject();
+        subject = fighterAttackSubject(state);
         const act = discoverAttackAct(state, subject);
         holes = act.initialHoles;
         appendRequiredRouteEvents({
@@ -2988,7 +2989,7 @@ export function createBattleRuntimeRouteDriver() {
 export function createWeaponAttackOrderingDriver() {
   return defineDriver(weaponAttackOrderingDriverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: WeaponAttackOrderingProjection["stage"] = "actSelection";
@@ -3352,7 +3353,7 @@ export function createSaveGatedSpellOrderingDriver() {
 export function createWeaponAttackOrderingRouteDriver() {
   return defineDriver(weaponAttackOrderingDriverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -9795,7 +9796,7 @@ export function createInterruptStackResumeRouteDriver() {
       init: reset,
       doNestedDeclineResumesOuterInterrupt: () => {
         const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-        const subject = interruptFighterAttackSubject();
+        const subject = interruptFighterAttackSubject(state);
         const target = interruptAttackInitialTargetHole(state, subject);
         const attackRoll = interruptAttackRollHoleAfterTarget(
           state,
@@ -9811,7 +9812,7 @@ export function createInterruptStackResumeRouteDriver() {
               target,
               subject.actorId,
               interruptGoblinId,
-              subject.attackName,
+              interruptAttackExecutionSelectionForSubject(subject),
             ),
             attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
           ],
@@ -9963,7 +9964,7 @@ function publicReplayContinuationAfterAttackDeclines(): {
   >;
 } {
   const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-  const subject = interruptFighterAttackSubject();
+  const subject = interruptFighterAttackSubject(state);
   const target = interruptAttackInitialTargetHole(state, subject);
   const attackRoll = interruptAttackRollHoleAfterTarget(
     state,
@@ -9979,7 +9980,7 @@ function publicReplayContinuationAfterAttackDeclines(): {
         target,
         subject.actorId,
         interruptGoblinId,
-        subject.attackName,
+        interruptAttackExecutionSelectionForSubject(subject),
       ),
       attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
     ],
@@ -11060,14 +11061,14 @@ export function createExtraAttackDriver(
   return defineDriver(schema, () => {
     let state = extraAttackBattle(unitId);
     let currentUnitId = unitId;
-    let subject: BattleSubject = fighterAttackSubject();
+    let subject: BattleSubject = fighterAttackSubject(state);
     let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
 
     function resetUnit(nextUnitId: ExtraAttackMbtUnitId): void {
       currentUnitId = nextUnitId;
       state = extraAttackBattle(nextUnitId);
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -11089,7 +11090,7 @@ export function createExtraAttackDriver(
 
     function resolveAttackMiss(): void {
       recordExtraAttackBoundaryFromState(state, currentUnitId);
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       const target = requireHole(
         discoverAttackHoles(state, subject),
         "targetChoice",
@@ -11144,7 +11145,7 @@ export function createExtraAttackDriver(
       },
       doResolveSecondExtraAttackMiss: resolveAttackMiss,
       doRejectThirdExtraAttack: () => {
-        subject = fighterAttackSubject();
+        subject = fighterAttackSubject(state);
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
       },
       doEndTurnClosesExtraAttackSlot: () => {
@@ -12025,7 +12026,7 @@ export function createRogueSteadyAimDriver(
     }
 
     function resolveAttack(): void {
-      const subject = fighterAttackSubject();
+      const subject = fighterAttackSubject(state);
       const targetHole = requireHole(
         discoverAttackHoles(state, subject),
         "targetChoice",
@@ -15809,16 +15810,23 @@ function healingOrderingHolesAfterFills(
   return result.holes;
 }
 
-function fighterAttackSubject(): Extract<
+function fighterAttackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: fighterId,
-    action: "attack",
-    attackName: "Dagger",
-  };
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === fighterId &&
+      act.summary === "Take the Attack action with Dagger.",
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error("Expected discovered fighter Dagger attack.");
+  }
+  return subject;
 }
 
 function adrenalineRushDashSubject(): Extract<
@@ -16015,7 +16023,7 @@ function interruptShieldUnarmedStrikeAct(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === interruptShieldAttackerId &&
-      candidate.subject.attackName === "Unarmed Strike",
+      candidate.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (act === undefined) {
     throw new Error("Expected interrupt-stack Shield Unarmed Strike act.");

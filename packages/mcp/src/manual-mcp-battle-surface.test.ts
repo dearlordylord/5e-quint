@@ -206,7 +206,7 @@ describe("manual MCP battle surface coverage", () => {
         "battle:attack:target",
         "fighter",
         "goblin",
-        "Unarmed Strike",
+        act.subject,
       ),
     });
     const attackRoll = requireHole(afterTarget.result.holes, "attackRoll");
@@ -373,7 +373,7 @@ describe("manual MCP battle surface coverage", () => {
         secondTarget.holeId,
         "fighter",
         "ally",
-        "Greataxe",
+        afterDamage.result.subject,
         undefined,
         { firstTargetId: "goblin" },
       ),
@@ -1246,9 +1246,7 @@ function requireAct(root: Root, label: string, attackName?: string): Json {
       candidate.label === label &&
       (attackName === undefined ||
         (candidate.subject?.statBlockDamageNotation === undefined &&
-          (candidate.subject?.attackName === attackName ||
-            candidate.summary ===
-              `Take the Attack action with ${attackName}.`))),
+          candidate.summary === `Take the Attack action with ${attackName}.`)),
   );
   const [act] = matchingActs;
   if (matchingActs.length !== 1 || act === undefined) {
@@ -1276,16 +1274,19 @@ function attackTargetFill(
   holeId: string,
   actorId: string,
   targetId: string,
-  attack: string | Json,
+  attack: Json,
   cleaveSecondTargetId?: string,
   cleaveTargetFact?: { readonly firstTargetId: string },
 ) {
-  const selection =
-    typeof attack === "string"
-      ? { attackName: attack }
-      : attack.procedureRef === undefined
-        ? { attackName: attack.attackName }
-        : { procedureRef: attack.procedureRef };
+  const selection = {
+    procedureRef: attack.procedureRef,
+    ...(attack.attackAbility === undefined
+      ? {}
+      : { attackAbility: attack.attackAbility }),
+    ...(attack.attackDamageType === undefined
+      ? {}
+      : { attackDamageType: attack.attackDamageType }),
+  };
   return {
     kind: "targetChoice",
     holeId,
@@ -1373,7 +1374,7 @@ function resolveAttackThroughRoll(
       "battle:attack:target",
       "fighter",
       targetId,
-      attackName,
+      act.subject,
       options.cleaveSecondTargetId,
     ),
   });

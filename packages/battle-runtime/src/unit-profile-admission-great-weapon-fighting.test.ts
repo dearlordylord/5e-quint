@@ -14,6 +14,7 @@ import {
   attackTargetFill,
   damageRollFillWithGroups,
   requireResultHole,
+  weaponAttackSubject,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { greatWeaponFightingBattle } from "./unit-profile-admission-feature-fixture-support.ts";
@@ -32,7 +33,6 @@ import type {
   BattleCreatureInit,
   BattleFill,
   BattleState,
-  BattleSubject,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
 
@@ -312,17 +312,6 @@ function mainWeaponLoadout(
   };
 }
 
-function weaponAttackSubject(
-  attackName: string,
-): Extract<BattleSubject, { readonly tag: "action" }> {
-  return {
-    tag: "action",
-    actorId: spellCasterId,
-    action: "attack",
-    attackName,
-  };
-}
-
 function resolveWeaponHit(input: {
   readonly state: BattleState;
   readonly attackName: string;
@@ -335,7 +324,7 @@ function resolveWeaponHit(input: {
     >["attackDamageDieFloorChoice"]
   >["selection"];
 }) {
-  const subject = weaponAttackSubject(input.attackName);
+  const subject = weaponAttackSubject(input.state, input.attackName);
   const target = requireResultHole(
     resolveBattleSubject({ state: input.state, subject, fills: [] }),
     "targetChoice",

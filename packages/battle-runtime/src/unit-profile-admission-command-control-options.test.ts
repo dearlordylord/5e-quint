@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
 import { describe, expect, test } from "vitest";
+import { characterBonusAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
   commandLegendaryActorId,
   commandUnitId,
@@ -360,12 +361,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(
       resolveBattleSubject({
         state: targetTurn.state,
-        subject: {
-          tag: "bonusAction",
-          actorId: spellTargetId,
-          action: "offHandAttack",
-          attackName: "Shortsword",
-        },
+        subject: characterBonusAttackSubjectForTest(
+          targetTurn.state,
+          spellTargetId,
+          "martialArtsUnarmedStrike",
+        ),
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });

@@ -29,11 +29,11 @@ import {
   supportedStatBlockAttackDamage,
 } from "./statblock-attack-damage-support.ts";
 import {
-  BattleProcedureExecutionRef,
+  type BattleStatBlockProcedureExecutionRef,
   type BattleId,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
-  battleProcedureExecutionRef,
+  battleStatBlockProcedureExecutionRef,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
@@ -59,7 +59,7 @@ export type StatBlockAttackProcedure = {
 
 export type StatBlockMultiattackProcedure = {
   readonly kind: "multiattack";
-  readonly dispatchProcedureRefs: ReadonlyNonEmptyArray<BattleProcedureExecutionRef>;
+  readonly dispatchProcedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
 };
 
 export type StatBlockBonusActionOptionProcedure = {
@@ -70,7 +70,7 @@ export type StatBlockBonusActionOptionProcedure = {
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,
 > = {
-  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
   readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
   readonly procedure: TProcedure;
 };
@@ -165,23 +165,23 @@ type AllocatedStatBlockExecution = {
     | AdmittedAttackOccurrence
     | AdmittedMultiattackOccurrence
     | AdmittedBonusActionOccurrence,
-    BattleProcedureExecutionRef
+    BattleStatBlockProcedureExecutionRef
   >;
 };
 
 type StatBlockProcedurePresentation =
   | {
-      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
       readonly kind: "attack";
       readonly name: string;
     }
   | {
-      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
       readonly kind: "multiattack";
       readonly label: string;
     }
   | {
-      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
       readonly kind: "bonusActionOption";
       readonly label: string;
     };
@@ -440,7 +440,7 @@ function allocateStatBlockExecution(
     | AdmittedAttackOccurrence
     | AdmittedMultiattackOccurrence
     | AdmittedBonusActionOccurrence,
-    BattleProcedureExecutionRef
+    BattleStatBlockProcedureExecutionRef
   >();
   const legendaryUses = admitted.legendaryActionUses;
   const legendaryPool =
@@ -459,7 +459,7 @@ function allocateStatBlockExecution(
 
   const attackProcedureRefs = new Map<
     AdmittedAttackOccurrence,
-    BattleProcedureExecutionRef
+    BattleStatBlockProcedureExecutionRef
   >();
   for (const occurrence of admitted.attacks) {
     const limitedUsePool = statBlockLimitedUsePool(
@@ -625,9 +625,12 @@ function statBlockAttackSupportsStaticDamageNotation(
 }
 
 function requireAllocatedAttackRef(
-  refs: ReadonlyMap<AdmittedAttackOccurrence, BattleProcedureExecutionRef>,
+  refs: ReadonlyMap<
+    AdmittedAttackOccurrence,
+    BattleStatBlockProcedureExecutionRef
+  >,
   attack: AdmittedAttackOccurrence,
-): BattleProcedureExecutionRef {
+): BattleStatBlockProcedureExecutionRef {
   const procedureRef = refs.get(attack);
   if (procedureRef === undefined) {
     throw new Error("Every admitted multiattack dispatch must be allocated.");
@@ -637,7 +640,7 @@ function requireAllocatedAttackRef(
 
 export function statBlockProcedureResourcesAvailable(
   execution: StatBlockExecutionState,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): boolean {
   const binding = statBlockProcedureBinding(execution, procedureRef);
   return (
@@ -651,7 +654,7 @@ export function statBlockProcedureResourcesAvailable(
 
 export function spendStatBlockProcedureResources(
   execution: StatBlockExecutionState,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockExecutionState {
   const binding = statBlockProcedureBinding(execution, procedureRef);
   if (
@@ -739,7 +742,7 @@ function spendResourcePool(
 
 export function statBlockProcedureBinding(
   execution: StatBlockExecutionState,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockProcedureBinding | undefined {
   return execution.procedureBindings.find(
     (binding) => binding.procedureRef === procedureRef,
@@ -1115,10 +1118,10 @@ function statBlockLimitedUsePool(
 
 function allocateProcedureRef(
   allocator: ExecutionReferenceAllocator,
-): BattleProcedureExecutionRef {
+): BattleStatBlockProcedureExecutionRef {
   const ordinal = allocator.procedureOrdinal;
   allocator.procedureOrdinal = NonNegativeInteger(ordinal + 1);
-  return battleProcedureExecutionRef(allocator.scopeRef, ordinal);
+  return battleStatBlockProcedureExecutionRef(allocator.scopeRef, ordinal);
 }
 
 function allocateResourcePoolRef(
