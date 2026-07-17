@@ -20,7 +20,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
-  statBlockAttackSubjectForTest,
+  characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
 import {
   battleTablePositionId,
@@ -197,11 +197,10 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
             {
               reactorId: spellTargetId,
               ...attackExecutionSelectionForSubjectForTest(
-                statBlockAttackSubjectForTest(
+                characterAttackSubjectForTest(
                   state,
                   spellTargetId,
-                  "Scimitar",
-                  "actions",
+                  "Unarmed Strike",
                 ),
               ),
             },

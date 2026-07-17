@@ -577,7 +577,7 @@ export function attackExecutionSelectionMatchesOption(
         attackActionOptionName(attack) === selection.attackName;
 }
 
-function interruptAttackExecutionSelectionMatchesOption(
+export function interruptAttackExecutionSelectionMatchesOption(
   selection: BattleInterruptAttackExecutionSelection,
   attack: BoundSupportedAttackActionOption,
 ): boolean {
@@ -595,11 +595,7 @@ export function interruptAttackExecutionSelectionsEqual(
   left: BattleInterruptAttackExecutionSelection,
   right: BattleInterruptAttackExecutionSelection,
 ): boolean {
-  return (
-    left.procedureRef === right.procedureRef &&
-    left.attackAbility === right.attackAbility &&
-    left.attackDamageType === right.attackDamageType
-  );
+  return attackExecutionSelectionIdentitiesEqual(left, right);
 }
 
 export function meleeWeaponOrUnarmedStrikeOptionForReactor(
