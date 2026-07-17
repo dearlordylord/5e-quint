@@ -18,6 +18,7 @@ import {
   decodeCharacterBuildFact,
   decodeCharacterCreationBatchFact,
   decodeCreationFillFact,
+  decodeCreationFinalizationRejectionFact,
   decodeCreationFrontierFact,
   draftRevision,
   exactChoiceCardinality,
@@ -271,17 +272,139 @@ describe("Character Creation owner facts", () => {
         tag: "invalid",
         issues: [
           {
-            tag: "invalidChoiceOption",
-            code: "invalidChoiceOption",
-            optionId: "synthetic_option",
-            reason: "presentation reason",
-            message: "presentation message",
+            tag: "characterBuildProjection",
+            cause: {
+              tag: "invalidChoiceOption",
+              optionId: "synthetic_option",
+              reason: { tag: "invalidAbilityScoreIncreaseEncoding" },
+            },
           },
         ],
       }),
     ).toEqual({
       tag: "invalid",
-      issues: [{ tag: "invalidChoiceOption", optionId: "synthetic_option" }],
+      issues: [
+        {
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "invalidChoiceOption",
+            optionId: "synthetic_option",
+            reason: { tag: "invalidAbilityScoreIncreaseEncoding" },
+          },
+        },
+      ],
+    });
+  });
+
+  test("retains distinct structured finalization causes without prose", () => {
+    expect(
+      creationFinalizationFact({
+        tag: "invalid",
+        issues: [
+          {
+            tag: "illegalFinalization",
+            cause: { tag: "multiplePactMagicSlotPools" },
+          },
+          {
+            tag: "characterBuildProjection",
+            cause: {
+              tag: "abilityScoreCapExceeded",
+              source: "classFeature",
+              ability: "str",
+              score: 19,
+              increase: 2,
+              maximum: 20,
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          cause: { tag: "multiplePactMagicSlotPools" },
+        },
+        {
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "abilityScoreCapExceeded",
+            source: "classFeature",
+            ability: "str",
+            score: 19,
+            increase: 2,
+            maximum: 20,
+          },
+        },
+      ],
+    });
+  });
+
+  test("rejects presentation prose and excess fields inside structured causes", () => {
+    const rejection = {
+      tag: "characterBuildProjection",
+      cause: {
+        tag: "abilityScoreCapExceeded",
+        source: "background",
+        ability: "str",
+        score: 19,
+        increase: 2,
+        maximum: 20,
+      },
+    } as const;
+
+    expect(decodeCreationFinalizationRejectionFact(rejection)._tag).toBe(
+      "Right",
+    );
+    expect(
+      decodeCreationFinalizationRejectionFact({
+        ...rejection,
+        message: "presentation prose",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      decodeCreationFinalizationRejectionFact({
+        ...rejection,
+        cause: { ...rejection.cause, detail: "untyped detail" },
+      })._tag,
+    ).toBe("Left");
+  });
+
+  test("preserves ordered Surface reader issue details without prose", () => {
+    expect(
+      creationFinalizationFact({
+        tag: "invalid",
+        issues: [
+          {
+            tag: "characterBuildProjection",
+            cause: {
+              tag: "unreadableUnit",
+              role: "class",
+              unitId: "synthetic_class",
+              issues: [
+                { code: "unsupportedUnitKind" },
+                { code: "unsupportedUnitKind" },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "unreadableUnit",
+            role: "class",
+            unitId: "synthetic_class",
+            issues: [
+              { code: "unsupportedUnitKind" },
+              { code: "unsupportedUnitKind" },
+            ],
+          },
+        },
+      ],
     });
   });
 

@@ -24,13 +24,17 @@ import {
   parseCharacterEquipmentItemId,
   parseCreationHoleId,
   type CharacterBuild,
+  type CharacterBuildProjectionCause,
   type CharacterEquipmentItemIdText,
   type CharacterEquipmentItemSlot,
+  type CreationChoiceOptionDecodeCause,
   type CreationBatchFillIssue,
   type CreationBatchFillResult,
   type CreationFill,
   type CreationFinalizationIssue,
+  type CreationFinalizationIllegalCause,
   type CreationFinalizationResult,
+  type CreationFinalizationUnsupportedCause,
   type CreationHole,
   type CreationHoleIdText,
   type NonEmptyReadonlyArray,
@@ -448,18 +452,186 @@ export type CreationBatchRejectionFact = Schema.Schema.Type<
   typeof CreationBatchRejectionFactSchema
 >;
 
-export const CreationFinalizationRejectionFactSchema = Schema.Union(
+const CreationFinalizationIllegalCauseFactSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("draftIncomplete") }),
   Schema.Struct({
-    tag: Schema.Literal("illegalFinalization"),
+    tag: Schema.Literal("conflictingSpeciesChoiceSources"),
+    speciesUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("missingDraconicAncestrySource"),
+    speciesUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invalidDraconicAncestrySelection"),
+    speciesUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("multipleSpeciesLineageSources"),
+    speciesUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invalidSpeciesLineageSelection"),
+    traitUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({ tag: Schema.Literal("multipleSpellcastingSlotPools") }),
+  Schema.Struct({ tag: Schema.Literal("multiplePactMagicSlotPools") }),
+);
+type CreationFinalizationIllegalCauseFact = Schema.Schema.Type<
+  typeof CreationFinalizationIllegalCauseFactSchema
+>;
+
+const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("unsupportedAbility") }),
+  Schema.Struct({ tag: Schema.Literal("duplicateAbilities") }),
+  Schema.Struct({ tag: Schema.Literal("invalidAbilityScoreIncreaseEncoding") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedWeaponCategory") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedArmorCategory") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedToolProficiencyId") }),
+  Schema.Struct({ tag: Schema.Literal("invalidProficiencyEncoding") }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedCharacterBuildToolProficiencyId"),
+  }),
+);
+type CreationChoiceOptionDecodeCauseFact = Schema.Schema.Type<
+  typeof CreationChoiceOptionDecodeCauseFactSchema
+>;
+
+const SurfaceReadIssueFactSchema = Schema.Struct({
+  code: Schema.Literal("unsupportedUnitKind"),
+});
+
+const CharacterBuildProjectionCauseFactSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("missingStartingClassFacts"),
+    projection: Schema.Literal(
+      "characterBuild",
+      "hitPoints",
+      "proficiencies",
+      "armorTraining",
+    ),
+    classUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("missingClassFeatureUnit"),
+    featureUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("nonDeterministicHitPointMaximumBonus"),
+    featureUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedClassFeatureLanguage"),
+    featureUnitId: UnitIdSchema,
+    languageId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("duplicateClassFeatureLanguage"),
+    featureUnitId: UnitIdSchema,
+    language: Schema.Literal(...LANGUAGES),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("missingClassFeatureLanguageChoice"),
+    featureUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("classFeatureLanguageChoiceCountMismatch"),
+    featureUnitId: UnitIdSchema,
+    expectedCount: Schema.Number,
+    receivedCount: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedClassFeatureLanguageChoice"),
+    featureUnitId: UnitIdSchema,
+    optionId: CreationChoiceOptionIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("duplicateClassFeatureLanguageChoice"),
+    featureUnitId: UnitIdSchema,
+    language: Schema.Literal(...LANGUAGES),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unprojectableAbilityCheckBonus"),
+    featureUnitId: UnitIdSchema,
+    optionId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedEquipmentUnitId"),
+    equipmentUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unreadableUnit"),
+    role: Schema.Literal("class", "background", "species"),
+    unitId: UnitIdSchema,
+    issues: Schema.NonEmptyArray(SurfaceReadIssueFactSchema),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unknownUnit"),
+    role: Schema.Literal("class", "background", "species", "feat"),
+    unitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("abilityScoreCapExceeded"),
+    source: Schema.Literal("classFeature", "background"),
+    ability: AbilitySchema,
+    score: Schema.Number,
+    increase: Schema.Number,
+    maximum: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedToolProficiency"),
+    source: Schema.Literal("background", "surfaceGrant"),
+    toolId: Schema.String,
   }),
   Schema.Struct({
     tag: Schema.Literal("invalidChoiceOption"),
     optionId: Schema.String,
+    reason: CreationChoiceOptionDecodeCauseFactSchema,
+  }),
+);
+type CharacterBuildProjectionCauseFact = Schema.Schema.Type<
+  typeof CharacterBuildProjectionCauseFactSchema
+>;
+
+const CreationFinalizationUnsupportedCauseFactSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("unsupportedBackground") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedSpecies") }),
+  Schema.Struct({ tag: Schema.Literal("speciesSizeMismatch") }),
+  Schema.Struct({ tag: Schema.Literal("draconicAncestryMismatch") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedProgression") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedAbilityScoreGeneration") }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedBackgroundAbilityScoreIncrease"),
+  }),
+  Schema.Struct({ tag: Schema.Literal("manifestLanguagesMismatch") }),
+  Schema.Struct({ tag: Schema.Literal("manifestAlignmentMismatch") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedChoices") }),
+  Schema.Struct({ tag: Schema.Literal("selectedFeatPrerequisitesNotMet") }),
+  Schema.Struct({ tag: Schema.Literal("missingSpellcastingFacts") }),
+  Schema.Struct({ tag: Schema.Literal("preparedSpellSelectionMismatch") }),
+  Schema.Struct({ tag: Schema.Literal("duplicateWizardSpellbookSelection") }),
+  Schema.Struct({ tag: Schema.Literal("unsupportedEquipmentSelection") }),
+);
+type CreationFinalizationUnsupportedCauseFact = Schema.Schema.Type<
+  typeof CreationFinalizationUnsupportedCauseFactSchema
+>;
+
+export const CreationFinalizationIssueSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("illegalFinalization"),
+    cause: CreationFinalizationIllegalCauseFactSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("characterBuildProjection"),
+    cause: CharacterBuildProjectionCauseFactSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedFinalization"),
+    cause: CreationFinalizationUnsupportedCauseFactSchema,
   }),
 );
+export const CreationFinalizationRejectionFactSchema =
+  CreationFinalizationIssueSchema;
 export type CreationFinalizationRejectionFact = Schema.Schema.Type<
   typeof CreationFinalizationRejectionFactSchema
 >;
@@ -1157,36 +1329,384 @@ function creationBatchRejectionFact(
   );
 }
 
+const byTag = Match.discriminator("tag");
+
+function creationFinalizationIllegalCauseFact(
+  cause: CreationFinalizationIllegalCause,
+): CreationFinalizationIllegalCauseFact {
+  return Match.value(cause).pipe(
+    byTag("draftIncomplete", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag(
+      "conflictingSpeciesChoiceSources",
+      ({ tag, speciesUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, speciesUnitId };
+      },
+    ),
+    byTag(
+      "missingDraconicAncestrySource",
+      ({ tag, speciesUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, speciesUnitId };
+      },
+    ),
+    byTag(
+      "invalidDraconicAncestrySelection",
+      ({ tag, speciesUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, speciesUnitId };
+      },
+    ),
+    byTag(
+      "multipleSpeciesLineageSources",
+      ({ tag, speciesUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, speciesUnitId };
+      },
+    ),
+    byTag(
+      "invalidSpeciesLineageSelection",
+      ({ tag, traitUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, traitUnitId };
+      },
+    ),
+    byTag("multipleSpellcastingSlotPools", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("multiplePactMagicSlotPools", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function characterBuildProjectionCauseFact(
+  cause: CharacterBuildProjectionCause,
+): CharacterBuildProjectionCauseFact {
+  return Match.value(cause).pipe(
+    byTag(
+      "missingStartingClassFacts",
+      ({ tag, projection, classUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, projection, classUnitId };
+      },
+    ),
+    byTag(
+      "missingClassFeatureUnit",
+      ({ tag, featureUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId };
+      },
+    ),
+    byTag(
+      "nonDeterministicHitPointMaximumBonus",
+      ({ tag, featureUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId };
+      },
+    ),
+    byTag(
+      "unsupportedClassFeatureLanguage",
+      ({ tag, featureUnitId, languageId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId, languageId };
+      },
+    ),
+    byTag(
+      "duplicateClassFeatureLanguage",
+      ({ tag, featureUnitId, language, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId, language };
+      },
+    ),
+    byTag(
+      "missingClassFeatureLanguageChoice",
+      ({ tag, featureUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId };
+      },
+    ),
+    byTag(
+      "classFeatureLanguageChoiceCountMismatch",
+      ({
+        tag,
+        featureUnitId,
+        expectedCount,
+        receivedCount,
+        ...unprojected
+      }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId, expectedCount, receivedCount };
+      },
+    ),
+    byTag(
+      "unsupportedClassFeatureLanguageChoice",
+      ({ tag, featureUnitId, optionId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId, optionId };
+      },
+    ),
+    byTag(
+      "duplicateClassFeatureLanguageChoice",
+      ({ tag, featureUnitId, language, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId, language };
+      },
+    ),
+    Match.orElse(characterBuildProjectionCauseFactRemaining),
+  );
+}
+
+type RemainingCharacterBuildProjectionCause = Extract<
+  CharacterBuildProjectionCause,
+  {
+    readonly tag:
+      | "unprojectableAbilityCheckBonus"
+      | "unsupportedEquipmentUnitId"
+      | "unreadableUnit"
+      | "unknownUnit"
+      | "abilityScoreCapExceeded"
+      | "unsupportedToolProficiency"
+      | "invalidChoiceOption";
+  }
+>;
+
+function characterBuildProjectionCauseFactRemaining(
+  cause: RemainingCharacterBuildProjectionCause,
+): CharacterBuildProjectionCauseFact {
+  return Match.value(cause).pipe(
+    byTag(
+      "unprojectableAbilityCheckBonus",
+      ({ tag, featureUnitId, optionId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, featureUnitId, optionId };
+      },
+    ),
+    byTag(
+      "unsupportedEquipmentUnitId",
+      ({ tag, equipmentUnitId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, equipmentUnitId };
+      },
+    ),
+    byTag("unreadableUnit", ({ tag, role, unitId, issues, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return {
+        tag,
+        role,
+        unitId,
+        issues: surfaceReadIssueFacts(issues),
+      };
+    }),
+    byTag("unknownUnit", ({ tag, role, unitId, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, role, unitId };
+    }),
+    byTag(
+      "abilityScoreCapExceeded",
+      ({ tag, source, ability, score, increase, maximum, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, source, ability, score, increase, maximum };
+      },
+    ),
+    byTag(
+      "unsupportedToolProficiency",
+      ({ tag, source, toolId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, source, toolId };
+      },
+    ),
+    byTag(
+      "invalidChoiceOption",
+      ({ tag, optionId, reason, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return {
+          tag,
+          optionId,
+          reason: creationChoiceOptionDecodeCauseFact(reason),
+        };
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function surfaceReadIssueFacts(
+  issues: Extract<
+    CharacterBuildProjectionCause,
+    { tag: "unreadableUnit" }
+  >["issues"],
+): readonly [
+  Schema.Schema.Type<typeof SurfaceReadIssueFactSchema>,
+  ...Schema.Schema.Type<typeof SurfaceReadIssueFactSchema>[],
+] {
+  const [firstIssue, ...remainingIssues] = issues;
+  return [
+    surfaceReadIssueFact(firstIssue),
+    ...remainingIssues.map(surfaceReadIssueFact),
+  ];
+}
+
+function surfaceReadIssueFact(
+  issue: Extract<
+    CharacterBuildProjectionCause,
+    { tag: "unreadableUnit" }
+  >["issues"][number],
+): Schema.Schema.Type<typeof SurfaceReadIssueFactSchema> {
+  return Match.value(issue).pipe(
+    Match.when({ code: "unsupportedUnitKind" }, (unsupported) => {
+      const { code, ...unprojected } = unsupported;
+      noUnprojectedFields(unprojected);
+      return { code };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function creationChoiceOptionDecodeCauseFact(
+  cause: CreationChoiceOptionDecodeCause,
+): CreationChoiceOptionDecodeCauseFact {
+  return Match.value(cause).pipe(
+    byTag("unsupportedAbility", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("duplicateAbilities", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("invalidAbilityScoreIncreaseEncoding", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedWeaponCategory", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedArmorCategory", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedToolProficiencyId", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("invalidProficiencyEncoding", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag(
+      "unsupportedCharacterBuildToolProficiencyId",
+      ({ tag, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag };
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function creationFinalizationUnsupportedCauseFact(
+  cause: CreationFinalizationUnsupportedCause,
+): CreationFinalizationUnsupportedCauseFact {
+  return Match.value(cause).pipe(
+    byTag("unsupportedBackground", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedSpecies", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("speciesSizeMismatch", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("draconicAncestryMismatch", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedProgression", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedAbilityScoreGeneration", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag(
+      "unsupportedBackgroundAbilityScoreIncrease",
+      ({ tag, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag };
+      },
+    ),
+    byTag("manifestLanguagesMismatch", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("manifestAlignmentMismatch", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedChoices", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("selectedFeatPrerequisitesNotMet", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("missingSpellcastingFacts", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("preparedSpellSelectionMismatch", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("duplicateWizardSpellbookSelection", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("unsupportedEquipmentSelection", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    Match.exhaustive,
+  );
+}
+
 function creationFinalizationRejectionFact(
   issue: CreationFinalizationIssue,
 ): CreationFinalizationRejectionFact {
   return Match.value(issue).pipe(
     Match.when({ tag: "illegalFinalization" }, (illegal) => {
-      const { tag, code: _code, message: _message, ...unprojected } = illegal;
+      const { tag, cause, ...unprojected } = illegal;
       noUnprojectedFields(unprojected);
-      return { tag };
+      return { tag, cause: creationFinalizationIllegalCauseFact(cause) };
     }),
-    Match.when({ tag: "invalidChoiceOption" }, (invalidChoice) => {
-      const {
-        tag,
-        code: _code,
-        optionId,
-        reason: _reason,
-        message: _message,
-        ...unprojected
-      } = invalidChoice;
+    Match.when({ tag: "characterBuildProjection" }, (projection) => {
+      const { tag, cause, ...unprojected } = projection;
       noUnprojectedFields(unprojected);
-      return { tag, optionId };
+      return {
+        tag,
+        cause: characterBuildProjectionCauseFact(cause),
+      };
     }),
     Match.when({ tag: "unsupportedFinalization" }, (unsupported) => {
-      const {
-        tag,
-        code: _code,
-        message: _message,
-        ...unprojected
-      } = unsupported;
+      const { tag, cause, ...unprojected } = unsupported;
       noUnprojectedFields(unprojected);
-      return { tag };
+      return {
+        tag,
+        cause: creationFinalizationUnsupportedCauseFact(cause),
+      };
     }),
     Match.exhaustive,
   );

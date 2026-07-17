@@ -6,6 +6,7 @@
 import {
   characterBuildFeatureUnitIds,
   characterBuildProficiencies,
+  characterCreationIssueMessage,
   computeTotalLevel,
   type CharacterBuild,
   type UnitCatalog,
@@ -60,7 +61,7 @@ export function characterSheetAbilityCheckProficiencyBonus(
   );
   if (Either.isLeft(proficiencies)) {
     return characterSheetIssue(
-      proficiencies.left.map((issue) => issue.message).join("; "),
+      proficiencies.left.map(characterCreationIssueMessage).join("; "),
     );
   }
 

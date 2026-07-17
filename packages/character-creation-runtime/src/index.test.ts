@@ -74,6 +74,7 @@ import {
   eldritchInvocationId,
   fillCreationHoles,
   finalizeCharacterDraft,
+  characterCreationIssueMessage,
   fighterLevelGainWithFightingStyleReplacement,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
@@ -124,6 +125,8 @@ import { classUnitId } from "./character-progression-types.ts";
 import {
   applyBackgroundAbilityScoreIncrease,
   buildCharacterBuild,
+  executableSupportIssues,
+  finalizedSelections,
   finalizedBuildEquipment,
   supportedChoiceHolesBySource,
 } from "./finalization.ts";
@@ -4160,9 +4163,7 @@ describe("character creation finalization", () => {
       issues: [
         {
           tag: "unsupportedFinalization",
-          code: "unsupportedFinalization",
-          message:
-            "Finalized build species size selection must match the selected species Surface facts.",
+          cause: { tag: "speciesSizeMismatch" },
         },
       ],
     });
@@ -4196,9 +4197,7 @@ describe("character creation finalization", () => {
       issues: [
         {
           tag: "unsupportedFinalization",
-          code: "unsupportedFinalization",
-          message:
-            "Finalized build Draconic Ancestry selection must match the selected species Surface facts.",
+          cause: { tag: "draconicAncestryMismatch" },
         },
       ],
     });
@@ -4430,10 +4429,12 @@ describe("character creation finalization", () => {
       tag: "invalid",
       issues: [
         {
-          tag: "illegalFinalization",
-          code: "illegalFinalization",
-          message:
-            "Unsupported class-feature language id secret_tree_talk on Unit druid_druidic.",
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "unsupportedClassFeatureLanguage",
+            featureUnitId: "druid_druidic",
+            languageId: "secret_tree_talk",
+          },
         },
       ],
     });
@@ -5142,9 +5143,23 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({ tag: "invalid" });
     if (result.tag !== "invalid") return;
-    expect(result.issues.map((issue) => issue.message)).toContain(
-      "Finalized build must use a supported background ability-score increase.",
-    );
+    expect(result.issues).toEqual([
+      {
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "abilityScoreCapExceeded",
+          source: "background",
+          ability: "str",
+          score: 30,
+          increase: 2,
+          maximum: 20,
+        },
+      },
+      {
+        tag: "unsupportedFinalization",
+        cause: { tag: "unsupportedAbilityScoreGeneration" },
+      },
+    ]);
   });
 
   test("returns a typed issue instead of clamping over-cap background ability-score increases", () => {
@@ -5163,12 +5178,22 @@ describe("character creation finalization", () => {
 
     expect(result).toEqual(
       Either.left({
-        tag: "illegalFinalization",
-        code: "illegalFinalization",
-        message:
-          "Cannot apply background ability-score increase: str 30 + 2 would exceed 20.",
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "abilityScoreCapExceeded",
+          source: "background",
+          ability: "str",
+          score: 30,
+          increase: 2,
+          maximum: 20,
+        },
       }),
     );
+    if (Either.isLeft(result)) {
+      expect(characterCreationIssueMessage(result.left)).toBe(
+        "Cannot apply background ability-score increase: str 30 + 2 would exceed 20.",
+      );
+    }
   });
 
   test("accepts Fighter 2 through the runtime progression fill", () => {
@@ -6926,8 +6951,7 @@ describe("character creation finalization", () => {
       issues: expect.arrayContaining([
         expect.objectContaining({
           tag: "unsupportedFinalization",
-          message:
-            "Selected Grappler feat requires Level 4+ and Strength or Dexterity 13 before applying its feat Ability Score Increase.",
+          cause: { tag: "selectedFeatPrerequisitesNotMet" },
         }),
       ]),
     });
@@ -6979,8 +7003,7 @@ describe("character creation finalization", () => {
       issues: expect.arrayContaining([
         expect.objectContaining({
           tag: "unsupportedFinalization",
-          message:
-            "Selected Grappler feat requires Level 4+ and Strength or Dexterity 13 before applying its feat Ability Score Increase.",
+          cause: { tag: "selectedFeatPrerequisitesNotMet" },
         }),
       ]),
     });
@@ -7240,10 +7263,15 @@ describe("character creation finalization", () => {
         tag: "invalid",
         issues: [
           {
-            tag: "illegalFinalization",
-            code: "illegalFinalization",
-            message:
-              "Cannot apply class-feature ability-score increase: str 19 + 2 would exceed 20.",
+            tag: "characterBuildProjection",
+            cause: {
+              tag: "abilityScoreCapExceeded",
+              source: "classFeature",
+              ability: "str",
+              score: 19,
+              increase: 2,
+              maximum: 20,
+            },
           },
         ],
       });
@@ -8167,10 +8195,122 @@ describe("character creation finalization", () => {
 
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isRight(result)) return;
-    expect(result.left.map((issue) => issue.message)).toEqual([
-      "Cannot finalize unknown class Unit: class_missing_one",
-      "Cannot finalize unknown class Unit: class_missing_two",
+    expect(result.left.map(characterCreationIssueMessage)).toEqual([
+      "Cannot find class Unit: class_missing_one.",
+      "Cannot find class Unit: class_missing_two.",
     ]);
+  });
+
+  test("collects independent support dependency issues in owner order", () => {
+    const progression = expectRight(
+      parseCharacterProgressionShape({
+        startingClass: classUnitId("class_missing_one"),
+        advancements: [
+          {
+            classUnitId: classUnitId("class_missing_two"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      }),
+    );
+    const complete = completeManifestDraft();
+    const selections = finalizedSelections({
+      ...complete,
+      selections: {
+        ...complete.selections,
+        background: "background_missing",
+        progression,
+      },
+    });
+    if (selections === undefined) {
+      throw new Error("Expected complete synthetic selections.");
+    }
+
+    expect(
+      executableSupportIssues(selections, unitLibrary),
+    ).toEqual([
+      {
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "unknownUnit",
+          role: "background",
+          unitId: "background_missing",
+        },
+      },
+      {
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "unknownUnit",
+          role: "class",
+          unitId: "class_missing_one",
+        },
+      },
+      {
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "unknownUnit",
+          role: "class",
+          unitId: "class_missing_two",
+        },
+      },
+    ]);
+  });
+
+  test("preserves missing species and selected-feat Unit causes", () => {
+    const complete = completeManifestDraft();
+    const missingSpecies = finalizedSelections({
+      ...complete,
+      selections: { ...complete.selections, species: "species_missing" },
+    });
+    const missingFeat = finalizedSelections({
+      ...complete,
+      selections: {
+        ...complete.selections,
+        choices: [
+          ...complete.selections.choices,
+          selectedUnitChoice(
+            "fighter_ability_score_improvement_l4",
+            CLASS_FEATURE_FEAT_CHOICE_KEY,
+            "feat_missing",
+            "feat_grappler",
+          ),
+        ],
+      },
+    });
+    if (missingSpecies === undefined || missingFeat === undefined) {
+      throw new Error("Expected complete synthetic selections.");
+    }
+
+    expect(
+      executableSupportIssues(missingSpecies, unitLibrary).filter(
+        (issue) => issue.tag === "characterBuildProjection",
+      ),
+    ).toContainEqual({
+      tag: "characterBuildProjection",
+      cause: {
+        tag: "unknownUnit",
+        role: "species",
+        unitId: "species_missing",
+      },
+    });
+    expect(
+      executableSupportIssues(missingFeat, unitLibrary),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "unknownUnit",
+            role: "feat",
+            unitId: "feat_missing",
+          },
+        },
+        {
+          tag: "unsupportedFinalization",
+          cause: { tag: "selectedFeatPrerequisitesNotMet" },
+        },
+      ]),
+    );
   });
 
   test("collects malformed class-feature ability-score option issues while projecting a build", () => {
@@ -8201,10 +8341,19 @@ describe("character creation finalization", () => {
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isRight(result)) return;
     expect(result.left).toMatchObject([
-      { tag: "invalidChoiceOption", optionId: "ability_score:dex:2:max20" },
       {
-        tag: "invalidChoiceOption",
-        optionId: "ability_scores:str:+1;str:+1:max20",
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "invalidChoiceOption",
+          optionId: "ability_score:dex:2:max20",
+        },
+      },
+      {
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "invalidChoiceOption",
+          optionId: "ability_scores:str:+1;str:+1:max20",
+        },
       },
     ]);
   });
@@ -8237,8 +8386,14 @@ describe("character creation finalization", () => {
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isRight(result)) return;
     expect(result.left).toMatchObject([
-      { tag: "invalidChoiceOption", optionId: "proficiency:skill" },
-      { tag: "invalidChoiceOption", optionId: "proficiency:armor" },
+      {
+        tag: "characterBuildProjection",
+        cause: { tag: "invalidChoiceOption", optionId: "proficiency:skill" },
+      },
+      {
+        tag: "characterBuildProjection",
+        cause: { tag: "invalidChoiceOption", optionId: "proficiency:armor" },
+      },
     ]);
   });
 
@@ -8469,7 +8624,7 @@ describe("character creation finalization", () => {
         issues: [
           {
             tag: "unsupportedFinalization",
-            code: "unsupportedFinalization",
+            cause: { tag: "unsupportedChoices" },
           },
         ],
       });
@@ -8735,9 +8890,7 @@ describe("character creation finalization", () => {
       issues: expect.arrayContaining([
         {
           tag: "unsupportedFinalization",
-          code: "unsupportedFinalization",
-          message:
-            "Finalized build progression must match a supported progression profile.",
+          cause: { tag: "unsupportedProgression" },
         },
       ]),
     });
@@ -8813,9 +8966,7 @@ describe("character creation finalization", () => {
       issues: [
         {
           tag: "unsupportedFinalization",
-          code: "unsupportedFinalization",
-          message:
-            "Finalized build must carry exactly the supported choices for the selected progression.",
+          cause: { tag: "unsupportedChoices" },
         },
       ],
     });
@@ -8826,9 +8977,7 @@ describe("character creation finalization", () => {
       issues: [
         {
           tag: "unsupportedFinalization",
-          code: "unsupportedFinalization",
-          message:
-            "Finalized build must carry exactly the supported choices for the selected progression.",
+          cause: { tag: "unsupportedChoices" },
         },
       ],
     });

@@ -35,7 +35,7 @@ export type UnitReaderResult<T> =
   | { readonly tag: "readable"; readonly value: T }
   | {
       readonly tag: "unreadable";
-      readonly issues: readonly SurfaceReadIssue[];
+      readonly issues: readonly [SurfaceReadIssue, ...SurfaceReadIssue[]];
     };
 
 type CommonClassCreationFacts<TClassRecord extends ClassRecord> = {

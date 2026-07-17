@@ -18,6 +18,7 @@ import {
   MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
   toolProficiencyId,
   type CreationChoiceOption,
+  type CreationChoiceOptionDecodeCause,
   type CreationChoiceOptionId,
   type ToolProficiencyId,
 } from "./types.ts";
@@ -40,14 +41,18 @@ export type ParsedProficiencyGrantSubject =
 export type ChoiceOptionCodecIssue = {
   readonly tag: "choiceOptionCodecIssue";
   readonly optionId: string;
-  readonly message: string;
+  readonly cause: CreationChoiceOptionDecodeCause;
 };
 
 function choiceOptionCodecIssue(
   optionId: string,
-  message: string,
+  cause: CreationChoiceOptionDecodeCause,
 ): Either.Either<never, ChoiceOptionCodecIssue> {
-  return Either.left({ tag: "choiceOptionCodecIssue", optionId, message });
+  return Either.left({
+    tag: "choiceOptionCodecIssue",
+    optionId,
+    cause,
+  });
 }
 
 export function abilityScoreIncreaseOneScoreOptionId(input: {
@@ -93,7 +98,7 @@ export function decodeAbilityScoreIncreaseOptionId(
     if (!isOneOf(SURFACE_ABILITIES, ability)) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Ability Score Increase choice option encodes an unsupported ability score.",
+        { tag: "unsupportedAbility" },
       );
     }
 
@@ -118,13 +123,13 @@ export function decodeAbilityScoreIncreaseOptionId(
     ) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Ability Score Increase choice option encodes an unsupported ability score.",
+        { tag: "unsupportedAbility" },
       );
     }
     if (primary === secondary) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Ability Score Increase two-score choice option must encode two distinct ability scores.",
+        { tag: "duplicateAbilities" },
       );
     }
 
@@ -144,7 +149,7 @@ export function decodeAbilityScoreIncreaseOptionId(
 
   return choiceOptionCodecIssue(
     optionIdText,
-    "Ability Score Increase choice option does not encode an ability-score increase.",
+    { tag: "invalidAbilityScoreIncreaseEncoding" },
   );
 }
 
@@ -236,7 +241,7 @@ export function decodeProficiencyGrantSubjectOptionId(
         })
       : choiceOptionCodecIssue(
           optionIdText,
-          "Proficiency choice option encodes an unsupported weapon category.",
+          { tag: "unsupportedWeaponCategory" },
         );
   }
 
@@ -249,7 +254,7 @@ export function decodeProficiencyGrantSubjectOptionId(
         })
       : choiceOptionCodecIssue(
           optionIdText,
-          "Proficiency choice option encodes an unsupported armor category.",
+          { tag: "unsupportedArmorCategory" },
         );
   }
 
@@ -259,7 +264,7 @@ export function decodeProficiencyGrantSubjectOptionId(
     if (Either.isLeft(parsedToolId)) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Proficiency choice option encodes an unsupported tool proficiency id.",
+        { tag: "unsupportedToolProficiencyId" },
       );
     }
 
@@ -271,7 +276,7 @@ export function decodeProficiencyGrantSubjectOptionId(
 
   return choiceOptionCodecIssue(
     optionIdText,
-    "Proficiency choice option does not encode a proficiency grant subject.",
+    { tag: "invalidProficiencyEncoding" },
   );
 }
 
@@ -315,7 +320,7 @@ export function parseToolProficiencyId(
     ? Either.right(toolProficiencyId(value))
     : choiceOptionCodecIssue(
         value,
-        "Expected a supported Character Build tool proficiency id.",
+        { tag: "unsupportedCharacterBuildToolProficiencyId" },
       );
 }
 

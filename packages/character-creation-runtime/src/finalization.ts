@@ -17,6 +17,8 @@ import {
   readClassCreationFacts,
   readSpeciesCreationFacts,
   type ClassCreationFacts,
+  type SpeciesCreationFacts,
+  type SurfaceReadIssue,
   type UnitReaderResult,
   type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
@@ -168,6 +170,8 @@ import {
   type CharacterBuildLoadout,
   type CharacterBuildProficiencies,
   type CharacterBuildProficiencyChoiceSubject,
+  type CharacterBuildProjectionCause,
+  type CharacterBuildProjectionIssue,
   type CharacterBuildResource,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildSpellcasting,
@@ -175,13 +179,18 @@ import {
   type CharacterBuildSpellcastingSlotPool,
   type CharacterBuildSpellSlotCapacity,
   type CreationChoiceOption,
+  type CreationChoiceOptionDecodeCause,
   type CreationChoiceOptionId,
   type CharacterChoiceSelection,
   type ChoiceCreationHole,
   type CreationHole,
   type CharacterDraft,
   type CreationFinalizationIssue,
+  type CreationFinalizationIllegalCause,
   type CreationFinalizationResult,
+  type CreationFinalizationLookupUnitRole,
+  type CreationFinalizationReadableUnitRole,
+  type CreationFinalizationUnsupportedCause,
   type FinalizedCharacterSelections,
   type NonEmptyReadonlyArray,
   type ToolProficiencyId,
@@ -230,6 +239,7 @@ type BackgroundAbilityScoreIncreaseDelta = {
 
 type ClassFactsByUnitId = ReadonlyMap<UnitRecord["id"], ClassCreationFacts>;
 type FinalizationIssues = NonEmptyReadonlyArray<CreationFinalizationIssue>;
+type ProjectionIssues = NonEmptyReadonlyArray<CharacterBuildProjectionIssue>;
 type HitPointMaximumDelta = Extract<
   EffectAtom,
   { readonly kind: "modify_max_hp" }
@@ -254,7 +264,11 @@ export function finalizeCharacterDraft(input: {
   if (selections == null) {
     return {
       tag: "invalid",
-      issues: [illegalFinalizationIssue("Draft is incomplete.")],
+      issues: [
+        illegalFinalizationIssue(
+          { tag: "draftIncomplete" },
+        ),
+      ],
     };
   }
 
@@ -361,97 +375,258 @@ export function executableSupportIssues(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): readonly CreationFinalizationIssue[] {
+  const dependencies = executableSupportDependencies(selections, unitLibrary);
+
   return [
-    ...expectedValueIssue(
-      supportedBackgroundUnitIds().includes(selections.background),
-      "Finalized build must use a supported background.",
-    ),
-    ...expectedValueIssue(
-      finalizableSpeciesUnitIds().includes(selections.species),
-      "Finalized build must use a supported species.",
-    ),
-    ...expectedValueIssue(
-      speciesSizeSelectionMatchesSurface(selections, unitLibrary),
-      "Finalized build species size selection must match the selected species Surface facts.",
-    ),
-    ...expectedValueIssue(
-      draconicAncestrySelectionMatchesSurface(selections, unitLibrary),
-      "Finalized build Draconic Ancestry selection must match the selected species Surface facts.",
-    ),
-    ...expectedValueIssue(
-      isSupportedFinalizableProgression(selections),
-      "Finalized build progression must match a supported progression profile.",
-    ),
+    ...dependencyIssues(dependencies.background),
+    ...dependencyIssues(dependencies.species),
+    ...dependencies.classFactsByUnitId.issues,
+    ...dependencies.selectedFeatUnits.issues,
+    ...(Either.isRight(dependencies.background)
+      ? [
+          ...expectedValueIssue(
+            supportedBackgroundUnitIds().includes(selections.background),
+            { tag: "unsupportedBackground" },
+          ),
+          ...expectedValueIssue(
+            isSupportedBackgroundAbilityScoreIncrease(
+              selections.backgroundAbilityScoreIncrease,
+              unitLibrary,
+              selections.background,
+              selections.abilityScoreGeneration.assignedScores,
+            ),
+            { tag: "unsupportedBackgroundAbilityScoreIncrease" },
+          ),
+        ]
+      : []),
+    ...(Either.isRight(dependencies.species)
+      ? [
+          ...expectedValueIssue(
+            finalizableSpeciesUnitIds().includes(selections.species),
+            { tag: "unsupportedSpecies" },
+          ),
+          ...expectedValueIssue(
+            speciesSizeSelectionMatchesSurface(
+              selections,
+              dependencies.species.right.speciesFacts,
+            ),
+            { tag: "speciesSizeMismatch" },
+          ),
+          ...expectedValueIssue(
+            draconicAncestrySelectionMatchesSurface(
+              selections,
+              dependencies.species.right.speciesUnit,
+            ),
+            { tag: "draconicAncestryMismatch" },
+          ),
+        ]
+      : []),
+    ...(dependencies.classFactsByUnitId.issues.length === 0
+      ? expectedValueIssue(isSupportedFinalizableProgression(selections), {
+          tag: "unsupportedProgression",
+        })
+      : []),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
         selections.abilityScoreGeneration.method,
         selections.abilityScoreGeneration.assignedScores,
       ),
-      "Finalized build must use a supported ability-score generation method.",
-    ),
-    ...expectedValueIssue(
-      isSupportedBackgroundAbilityScoreIncrease(
-        selections.backgroundAbilityScoreIncrease,
-        unitLibrary,
-        selections.background,
-        selections.abilityScoreGeneration.assignedScores,
-      ),
-      "Finalized build must use a supported background ability-score increase.",
+      { tag: "unsupportedAbilityScoreGeneration" },
     ),
     ...expectedValueIssue(
       sameOptionIdMultiset(selections.languages, [
         ...CHARACTER_CREATION_SUPPORT_PROFILE.manifest.languages,
       ]),
-      "Finalized build must use the supported manifest languages.",
+      { tag: "manifestLanguagesMismatch" },
     ),
     ...expectedValueIssue(
       selections.alignment.morality ===
         CHARACTER_CREATION_SUPPORT_PROFILE.manifest.alignment.morality &&
         selections.alignment.order ===
           CHARACTER_CREATION_SUPPORT_PROFILE.manifest.alignment.order,
-      "Finalized build must use the supported manifest alignment.",
+      { tag: "manifestAlignmentMismatch" },
     ),
+    ...(Either.isRight(dependencies.background) &&
+    Either.isRight(dependencies.species) &&
+    dependencies.classFactsByUnitId.issues.length === 0 &&
+    dependencies.selectedFeatUnits.issues.length === 0
+      ? expectedValueIssue(
+          allFinalizedChoicesSupported(selections, unitLibrary),
+          { tag: "unsupportedChoices" },
+        )
+      : []),
+    ...(Either.isRight(dependencies.background)
+      ? expectedValueIssue(
+          selectedFeatPrerequisitesSupported(
+            selections,
+            dependencies.background.right.scoresAfterBackground,
+            dependencies.selectedFeatUnits.value,
+          ),
+          { tag: "selectedFeatPrerequisitesNotMet" },
+        )
+      : []),
     ...expectedValueIssue(
-      allFinalizedChoicesSupported(selections, unitLibrary),
-      "Finalized build must carry exactly the supported choices for the selected progression.",
+      spellcastingFactsAuthoredForSelectedClassLevels(
+        selections,
+        dependencies.classFactsByUnitId.value,
+      ),
+      { tag: "missingSpellcastingFacts" },
     ),
-    ...expectedValueIssue(
-      selectedFeatPrerequisitesSupported(selections, unitLibrary),
-      "Selected Grappler feat requires Level 4+ and Strength or Dexterity 13 before applying its feat Ability Score Increase.",
-    ),
-    ...expectedValueIssue(
-      spellcastingFactsAuthoredForSelectedClassLevels(selections, unitLibrary),
-      "Finalized build must have authored spellcasting facts for the selected class levels.",
-    ),
-    ...expectedValueIssue(
-      selectedPreparedSpellsAreInSelectedSpellbook(selections, unitLibrary),
-      "Finalized Wizard prepared spells must be selected from the spellbook and match available Spell Slot levels.",
-    ),
+    ...(dependencies.classFactsByUnitId.value.has(
+      startingClassUnitId(selections.progression),
+    )
+      ? expectedValueIssue(
+          selectedPreparedSpellsAreInSelectedSpellbook(
+            selections,
+            unitLibrary,
+          ),
+          { tag: "preparedSpellSelectionMismatch" },
+        )
+      : []),
     ...expectedValueIssue(
       finalizedWizardSpellbookSelectionsAreDistinct(selections),
-      "Finalized Wizard spellbook selections must be distinct across class and feature grants.",
+      { tag: "duplicateWizardSpellbookSelection" },
     ),
-    ...expectedValueIssue(
-      isSupportedEquipmentSelection(selections),
-      "Finalized build must own supported purchased equipment.",
-    ),
+    ...(dependencies.classFactsByUnitId.value.has(
+      startingClassUnitId(selections.progression),
+    )
+      ? expectedValueIssue(isSupportedEquipmentSelection(selections), {
+          tag: "unsupportedEquipmentSelection",
+        })
+      : []),
   ];
+}
+
+type ExecutableSupportDependencies = {
+  readonly background: Either.Either<
+    { readonly scoresAfterBackground: AbilityScoreAssignment },
+    ProjectionIssues
+  >;
+  readonly species: Either.Either<
+    { readonly speciesFacts: SpeciesCreationFacts; readonly speciesUnit: UnitRecord },
+    ProjectionIssues
+  >;
+  readonly classFactsByUnitId: SupportDependencyCollection<ClassFactsByUnitId>;
+  readonly selectedFeatUnits: SupportDependencyCollection<
+    ReadonlyMap<UnitRecord["id"], UnitRecord>
+  >;
+};
+
+type SupportDependencyCollection<T> = {
+  readonly value: T;
+  readonly issues: readonly CharacterBuildProjectionIssue[];
+};
+
+function executableSupportDependencies(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): ExecutableSupportDependencies {
+  return {
+    background: backgroundSupportDependencies(selections, unitLibrary),
+    species: speciesSupportDependencies(selections, unitLibrary),
+    classFactsByUnitId: classFactsForSupport(
+      selections.progression,
+      unitLibrary,
+    ),
+    selectedFeatUnits: selectedFeatUnitsForFinalization(
+      selections,
+      unitLibrary,
+    ),
+  };
+}
+
+function dependencyIssues<T>(
+  dependency: Either.Either<T, ProjectionIssues>,
+): readonly CharacterBuildProjectionIssue[] {
+  return Either.isLeft(dependency) ? dependency.left : [];
+}
+
+function backgroundSupportDependencies(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  { readonly scoresAfterBackground: AbilityScoreAssignment },
+  ProjectionIssues
+> {
+  const backgroundUnit = unitForFinalization(
+    unitLibrary,
+    selections.background,
+    "background",
+  );
+  if (Either.isLeft(backgroundUnit)) {
+    return Either.left([backgroundUnit.left]);
+  }
+  const backgroundFacts = readableForFinalization(
+    readBackgroundCreationFacts(backgroundUnit.right),
+    selections.background,
+    "background",
+  );
+  if (Either.isLeft(backgroundFacts)) {
+    return Either.left([backgroundFacts.left]);
+  }
+  const scoresAfterBackground = applyBackgroundAbilityScoreIncrease(
+    selections.abilityScoreGeneration.assignedScores,
+    selections.backgroundAbilityScoreIncrease,
+    backgroundFacts.right.abilityScoreIncrease.abilities,
+  );
+  if (Either.isLeft(scoresAfterBackground)) {
+    return Either.left([scoresAfterBackground.left]);
+  }
+  return Either.right({
+    scoresAfterBackground: scoresAfterBackground.right,
+  });
+}
+
+function speciesSupportDependencies(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  { readonly speciesFacts: SpeciesCreationFacts; readonly speciesUnit: UnitRecord },
+  ProjectionIssues
+> {
+  const speciesUnit = unitForFinalization(
+    unitLibrary,
+    selections.species,
+    "species",
+  );
+  if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
+  const speciesFacts = readableForFinalization(
+    readSpeciesCreationFacts(speciesUnit.right),
+    selections.species,
+    "species",
+  );
+  return Either.isLeft(speciesFacts)
+    ? Either.left([speciesFacts.left])
+    : Either.right({
+        speciesFacts: speciesFacts.right,
+        speciesUnit: speciesUnit.right,
+      });
+}
+
+function selectedFeatUnitsForFinalization(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): SupportDependencyCollection<ReadonlyMap<UnitRecord["id"], UnitRecord>> {
+  const units = new Map<UnitRecord["id"], UnitRecord>();
+  const issues: CharacterBuildProjectionIssue[] = [];
+  for (const selection of unitChoiceSelections(selections)) {
+    if (selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY) continue;
+    for (const option of selection.options) {
+      const featUnitId = option.unitRef?.unitId;
+      if (featUnitId === undefined || units.has(featUnitId)) continue;
+      const unit = unitForFinalization(unitLibrary, featUnitId, "feat");
+      if (Either.isLeft(unit)) issues.push(unit.left);
+      else units.set(featUnitId, unit.right);
+    }
+  }
+  return { value: units, issues };
 }
 
 function selectedFeatPrerequisitesSupported(
   selections: FinalizedCharacterSelections,
-  unitLibrary: UnitCatalog,
+  scoresAfterBackground: AbilityScoreAssignment,
+  selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
 ): boolean {
-  const backgroundUnit = unitLibrary.getUnit(selections.background);
-  if (Option.isNone(backgroundUnit)) return false;
-  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (backgroundFacts.tag !== "readable") return false;
-  const scoresAfterBackground = applyBackgroundAbilityScoreIncrease(
-    selections.abilityScoreGeneration.assignedScores,
-    selections.backgroundAbilityScoreIncrease,
-    backgroundFacts.value.abilityScoreIncrease.abilities,
-  );
-  if (Either.isLeft(scoresAfterBackground)) return false;
   return unitChoiceSelections(selections).every((selection) => {
     if (selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY) {
       return true;
@@ -459,18 +634,18 @@ function selectedFeatPrerequisitesSupported(
     return selection.options.every((option) => {
       const featUnitId = option.unitRef?.unitId;
       if (featUnitId === undefined) return true;
-      const featUnit = unitLibrary.getUnit(featUnitId);
-      if (Option.isNone(featUnit)) return false;
+      const featUnit = selectedFeatUnits.get(featUnitId);
+      if (featUnit === undefined) return true;
       if (
-        featUnit.value.kind !== "feat" ||
-        featUnit.value.mechanics.family !== "grappler"
+        featUnit.kind !== "feat" ||
+        featUnit.mechanics.family !== "grappler"
       ) {
         return true;
       }
       return (
         computeTotalLevel(selections.progression) >= 4 &&
-        (Number(scoresAfterBackground.right.str) >= 13 ||
-          Number(scoresAfterBackground.right.dex) >= 13)
+        (Number(scoresAfterBackground.str) >= 13 ||
+          Number(scoresAfterBackground.dex) >= 13)
       );
     });
   });
@@ -478,17 +653,9 @@ function selectedFeatPrerequisitesSupported(
 
 function spellcastingFactsAuthoredForSelectedClassLevels(
   selections: Pick<FinalizedCharacterSelections, "progression">,
-  unitLibrary: UnitCatalog,
+  classFactsByUnitId: ClassFactsByUnitId,
 ): boolean {
-  const classFactsByUnitId = allClassFactsForFinalization(
-    selections.progression,
-    unitLibrary,
-  );
-  if (Either.isLeft(classFactsByUnitId)) {
-    return false;
-  }
-
-  return [...classFactsByUnitId.right].every(([classUnitId, classFacts]) => {
+  return [...classFactsByUnitId].every(([classUnitId, classFacts]) => {
     const classLevel = classLevelForUnit(selections.progression, classUnitId);
     return (
       !("spellcasting" in classFacts) ||
@@ -615,26 +782,22 @@ function loadoutChoiceSelections(
 
 export function expectedValueIssue(
   condition: boolean,
-  message: string,
+  cause: CreationFinalizationUnsupportedCause,
 ): readonly CreationFinalizationIssue[] {
-  return condition ? [] : [unsupportedFinalizationIssue(message)];
+  return condition ? [] : [unsupportedFinalizationIssue(cause)];
 }
 
 function speciesSizeSelectionMatchesSurface(
   selections: Pick<FinalizedCharacterSelections, "species" | "speciesSize">,
-  unitLibrary: UnitCatalog,
+  facts: SpeciesCreationFacts,
 ): boolean {
-  const speciesUnit = unitLibrary.getUnit(selections.species);
-  if (Option.isNone(speciesUnit)) return false;
-  const facts = readSpeciesCreationFacts(speciesUnit.value);
-  if (facts.tag !== "readable") return false;
-  if (facts.value.size.kind === "fixed") {
+  if (facts.size.kind === "fixed") {
     return selections.speciesSize === undefined;
   }
 
   return (
     selections.speciesSize !== undefined &&
-    facts.value.size.options.some((size) => size === selections.speciesSize)
+    facts.size.options.some((size) => size === selections.speciesSize)
   );
 }
 
@@ -643,11 +806,9 @@ function draconicAncestrySelectionMatchesSurface(
     FinalizedCharacterSelections,
     "species" | "draconicAncestry"
   >,
-  unitLibrary: UnitCatalog,
+  speciesUnit: UnitRecord,
 ): boolean {
-  const speciesUnit = unitLibrary.getUnit(selections.species);
-  if (Option.isNone(speciesUnit)) return false;
-  const source = draconicAncestryDamageTypeSource(speciesUnit.value);
+  const source = draconicAncestryDamageTypeSource(speciesUnit);
   if (source === undefined) {
     return selections.draconicAncestry === undefined;
   }
@@ -685,7 +846,10 @@ function finalizedSpeciesChoiceFacts(
   if (draconicSource !== undefined && lineageSource.right !== undefined) {
     return Either.left([
       illegalFinalizationIssue(
-        `Cannot project multiple species choice source facts for species: ${species.id}.`,
+        {
+          tag: "conflictingSpeciesChoiceSources",
+          speciesUnitId: species.id,
+        },
       ),
     ]);
   }
@@ -704,7 +868,10 @@ function finalizedSpeciesChoiceFacts(
     ? Either.right(undefined)
     : Either.left([
         illegalFinalizationIssue(
-          `Cannot project Draconic Ancestry for species without a Draconic Ancestry source fact: ${species.id}.`,
+          {
+            tag: "missingDraconicAncestrySource",
+            speciesUnitId: species.id,
+          },
         ),
       ]);
 }
@@ -720,7 +887,10 @@ function finalizedDraconicAncestryChoiceFacts(
   if (selected === undefined || selections.draconicAncestry === undefined) {
     return Either.left([
       illegalFinalizationIssue(
-        `Cannot project selected Draconic Ancestry for species: ${species.id}.`,
+        {
+          tag: "invalidDraconicAncestrySelection",
+          speciesUnitId: species.id,
+        },
       ),
     ]);
   }
@@ -764,7 +934,10 @@ function speciesLineageChoiceSource(
   if (sources.length > 1) {
     return Either.left([
       illegalFinalizationIssue(
-        `Cannot project multiple species lineage choice source facts for species: ${species.id}.`,
+        {
+          tag: "multipleSpeciesLineageSources",
+          speciesUnitId: species.id,
+        },
       ),
     ]);
   }
@@ -784,7 +957,10 @@ function finalizedGnomishLineageChoiceFacts(
   if (lineageId === undefined || spellcastingAbility === undefined) {
     return Either.left([
       illegalFinalizationIssue(
-        `Cannot project selected Gnomish Lineage for species trait: ${source.traitUnitId}.`,
+        {
+          tag: "invalidSpeciesLineageSelection",
+          traitUnitId: source.traitUnitId,
+        },
       ),
     ]);
   }
@@ -843,35 +1019,334 @@ function selectedSingleUnitChoiceOptionId(
 }
 
 export function illegalFinalizationIssue(
-  message: string,
+  cause: CreationFinalizationIllegalCause,
 ): CreationFinalizationIssue {
   return {
     tag: "illegalFinalization",
-    code: "illegalFinalization",
-    message,
+    cause,
   };
 }
 
-function choiceOptionCodecFinalizationIssue(
+function choiceOptionCodecProjectionIssue(
   issue: ChoiceOptionCodecIssue,
-): CreationFinalizationIssue {
+): CharacterBuildProjectionIssue {
   return {
-    tag: "invalidChoiceOption",
-    code: "invalidChoiceOption",
-    optionId: issue.optionId,
-    reason: issue.message,
-    message: `${issue.message} Selected option: ${issue.optionId}`,
+    tag: "characterBuildProjection",
+    cause: {
+      tag: "invalidChoiceOption",
+      optionId: issue.optionId,
+      reason: issue.cause,
+    },
   };
 }
 
 export function unsupportedFinalizationIssue(
-  message: string,
+  cause: CreationFinalizationUnsupportedCause,
 ): CreationFinalizationIssue {
   return {
     tag: "unsupportedFinalization",
-    code: "unsupportedFinalization",
-    message,
+    cause,
   };
+}
+
+function characterBuildProjectionIssue(
+  cause: CharacterBuildProjectionCause,
+): CharacterBuildProjectionIssue {
+  return { tag: "characterBuildProjection", cause };
+}
+
+export function characterCreationIssueMessage(
+  issue: CreationFinalizationIssue,
+): string {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "illegalFinalization" }, ({ cause }) =>
+      illegalFinalizationCauseMessage(cause),
+    ),
+    Match.when({ tag: "unsupportedFinalization" }, ({ cause }) =>
+      unsupportedFinalizationCauseMessage(cause),
+    ),
+    Match.when({ tag: "characterBuildProjection" }, ({ cause }) =>
+      characterBuildProjectionCauseMessage(cause),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function illegalFinalizationCauseMessage(
+  cause: CreationFinalizationIllegalCause,
+): string {
+  return Match.value(cause).pipe(
+    Match.when({ tag: "draftIncomplete" }, () => "Draft is incomplete."),
+    Match.when(
+      { tag: "conflictingSpeciesChoiceSources" },
+      ({ speciesUnitId }) =>
+        `Cannot project multiple species choice source facts for species: ${speciesUnitId}.`,
+    ),
+    Match.when(
+      { tag: "missingDraconicAncestrySource" },
+      ({ speciesUnitId }) =>
+        `Cannot project Draconic Ancestry for species without a Draconic Ancestry source fact: ${speciesUnitId}.`,
+    ),
+    Match.when(
+      { tag: "invalidDraconicAncestrySelection" },
+      ({ speciesUnitId }) =>
+        `Cannot project selected Draconic Ancestry for species: ${speciesUnitId}.`,
+    ),
+    Match.when(
+      { tag: "multipleSpeciesLineageSources" },
+      ({ speciesUnitId }) =>
+        `Cannot project multiple species lineage choice source facts for species: ${speciesUnitId}.`,
+    ),
+    Match.when(
+      { tag: "invalidSpeciesLineageSelection" },
+      ({ traitUnitId }) =>
+        `Cannot project selected Gnomish Lineage for species trait: ${traitUnitId}.`,
+    ),
+    Match.when(
+      { tag: "multipleSpellcastingSlotPools" },
+      () =>
+        "Cannot finalize multiclass Spell Slot pools without a supported multiclass slot projection.",
+    ),
+    Match.when(
+      { tag: "multiplePactMagicSlotPools" },
+      () => "Cannot finalize multiple Pact Magic slot pools.",
+    ),
+    Match.exhaustive,
+  );
+}
+
+function unsupportedFinalizationCauseMessage(
+  cause: CreationFinalizationUnsupportedCause,
+): string {
+  return Match.value(cause).pipe(
+    Match.when(
+      { tag: "unsupportedBackground" },
+      () => "Finalized build must use a supported background.",
+    ),
+    Match.when(
+      { tag: "unsupportedSpecies" },
+      () => "Finalized build must use a supported species.",
+    ),
+    Match.when(
+      { tag: "speciesSizeMismatch" },
+      () =>
+        "Finalized build species size selection must match the selected species Surface facts.",
+    ),
+    Match.when(
+      { tag: "draconicAncestryMismatch" },
+      () =>
+        "Finalized build Draconic Ancestry selection must match the selected species Surface facts.",
+    ),
+    Match.when(
+      { tag: "unsupportedProgression" },
+      () =>
+        "Finalized build progression must match a supported progression profile.",
+    ),
+    Match.when(
+      { tag: "unsupportedAbilityScoreGeneration" },
+      () =>
+        "Finalized build must use a supported ability-score generation method.",
+    ),
+    Match.when(
+      { tag: "unsupportedBackgroundAbilityScoreIncrease" },
+      () =>
+        "Finalized build must use a supported background ability-score increase.",
+    ),
+    Match.when(
+      { tag: "manifestLanguagesMismatch" },
+      () => "Finalized build must use the supported manifest languages.",
+    ),
+    Match.when(
+      { tag: "manifestAlignmentMismatch" },
+      () => "Finalized build must use the supported manifest alignment.",
+    ),
+    Match.when(
+      { tag: "unsupportedChoices" },
+      () =>
+        "Finalized build must carry exactly the supported choices for the selected progression.",
+    ),
+    Match.when(
+      { tag: "selectedFeatPrerequisitesNotMet" },
+      () =>
+        "Selected feat prerequisites must be met before applying its Ability Score Increase.",
+    ),
+    Match.when(
+      { tag: "missingSpellcastingFacts" },
+      () =>
+        "Finalized build must have authored spellcasting facts for the selected class levels.",
+    ),
+    Match.when(
+      { tag: "preparedSpellSelectionMismatch" },
+      () =>
+        "Finalized prepared spells must be selected from the spellbook and match available Spell Slot levels.",
+    ),
+    Match.when(
+      { tag: "duplicateWizardSpellbookSelection" },
+      () =>
+        "Finalized spellbook selections must be distinct across class and feature grants.",
+    ),
+    Match.when(
+      { tag: "unsupportedEquipmentSelection" },
+      () => "Finalized build must own supported purchased equipment.",
+    ),
+    Match.exhaustive,
+  );
+}
+
+function characterBuildProjectionCauseMessage(
+  cause: CharacterBuildProjectionCause,
+): string {
+  return Match.value(cause).pipe(
+    Match.when(
+      { tag: "missingStartingClassFacts" },
+      ({ projection, classUnitId }) =>
+        `Cannot derive ${projection} without starting class facts: ${classUnitId}.`,
+    ),
+    Match.when(
+      { tag: "missingClassFeatureUnit" },
+      ({ featureUnitId }) =>
+        `Cannot derive Hit Point maximum bonus without class-feature Unit: ${featureUnitId}.`,
+    ),
+    Match.when(
+      { tag: "nonDeterministicHitPointMaximumBonus" },
+      ({ featureUnitId }) =>
+        `Class-feature Hit Point maximum bonus on Unit ${featureUnitId} must be a deterministic flat amount.`,
+    ),
+    Match.when(
+      { tag: "unsupportedClassFeatureLanguage" },
+      ({ featureUnitId, languageId }) =>
+        `Unsupported class-feature language id ${languageId} on Unit ${featureUnitId}.`,
+    ),
+    Match.when(
+      { tag: "duplicateClassFeatureLanguage" },
+      ({ featureUnitId, language }) =>
+        `Duplicate Character Build language ${language} from class feature Unit ${featureUnitId}.`,
+    ),
+    Match.when(
+      { tag: "missingClassFeatureLanguageChoice" },
+      ({ featureUnitId }) =>
+        `Missing class-feature language choice for Unit ${featureUnitId}.`,
+    ),
+    Match.when(
+      { tag: "classFeatureLanguageChoiceCountMismatch" },
+      ({ featureUnitId, expectedCount, receivedCount }) =>
+        `Class-feature language choice on Unit ${featureUnitId} expected ${expectedCount} selection(s), received ${receivedCount}.`,
+    ),
+    Match.when(
+      { tag: "unsupportedClassFeatureLanguageChoice" },
+      ({ featureUnitId, optionId }) =>
+        `Unsupported class-feature language choice option ${optionId} on Unit ${featureUnitId}.`,
+    ),
+    Match.when(
+      { tag: "duplicateClassFeatureLanguageChoice" },
+      ({ featureUnitId, language }) =>
+        `Duplicate Character Build language ${language} from class feature choice Unit ${featureUnitId}.`,
+    ),
+    Match.when(
+      { tag: "unprojectableAbilityCheckBonus" },
+      ({ featureUnitId, optionId }) =>
+        `Cannot project class-feature acquisition ability-check bonus for ${featureUnitId}:${optionId}.`,
+    ),
+    Match.when(
+      { tag: "unsupportedEquipmentUnitId" },
+      ({ equipmentUnitId }) =>
+        `Unsupported equipment Unit id for Character Build: ${equipmentUnitId}.`,
+    ),
+    Match.when({ tag: "unreadableUnit" }, ({ role, unitId, issues }) =>
+      [
+        `Cannot read ${role} Unit ${unitId}`,
+        ...issues.map(surfaceReadIssueCauseMessage),
+      ].join(": "),
+    ),
+    Match.when(
+      { tag: "unknownUnit" },
+      ({ role, unitId }) => `Cannot find ${role} Unit: ${unitId}.`,
+    ),
+    Match.when(
+      { tag: "abilityScoreCapExceeded" },
+      ({ source, ability, score, increase, maximum }) =>
+        `Cannot apply ${source} ability-score increase: ${ability} ${score} + ${increase} would exceed ${maximum}.`,
+    ),
+    Match.when(
+      { tag: "unsupportedToolProficiency" },
+      ({ source, toolId }) =>
+        `Unsupported ${source} tool proficiency for Character Build: ${toolId}.`,
+    ),
+    Match.orElse(characterBuildProjectionCauseMessageRemaining),
+  );
+}
+
+type RemainingCharacterBuildProjectionCause = Extract<
+  CharacterBuildProjectionCause,
+  { readonly tag: "invalidChoiceOption" }
+>;
+
+function characterBuildProjectionCauseMessageRemaining(
+  cause: RemainingCharacterBuildProjectionCause,
+): string {
+  return Match.value(cause).pipe(
+    Match.when(
+      { tag: "invalidChoiceOption" },
+      ({ optionId, reason }) =>
+        `${choiceOptionDecodeCauseMessage(reason)} Selected option: ${optionId}`,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function choiceOptionDecodeCauseMessage(
+  cause: CreationChoiceOptionDecodeCause,
+): string {
+  return Match.value(cause).pipe(
+    Match.when(
+      { tag: "unsupportedAbility" },
+      () => "Choice option encodes an unsupported ability score.",
+    ),
+    Match.when(
+      { tag: "duplicateAbilities" },
+      () => "Choice option must encode two distinct ability scores.",
+    ),
+    Match.when(
+      { tag: "invalidAbilityScoreIncreaseEncoding" },
+      () => "Choice option does not encode an ability-score increase.",
+    ),
+    Match.when(
+      { tag: "unsupportedWeaponCategory" },
+      () => "Choice option encodes an unsupported weapon category.",
+    ),
+    Match.when(
+      { tag: "unsupportedArmorCategory" },
+      () => "Choice option encodes an unsupported armor category.",
+    ),
+    Match.when(
+      { tag: "unsupportedToolProficiencyId" },
+      () => "Choice option encodes an unsupported tool proficiency id.",
+    ),
+    Match.when(
+      { tag: "invalidProficiencyEncoding" },
+      () => "Choice option does not encode a proficiency grant subject.",
+    ),
+    Match.when(
+      { tag: "unsupportedCharacterBuildToolProficiencyId" },
+      () => "Expected a supported Character Build tool proficiency id.",
+    ),
+    Match.exhaustive,
+  );
+}
+
+function surfaceReadIssueCauseMessage(
+  issue: Extract<
+    CharacterBuildProjectionCause,
+    { tag: "unreadableUnit" }
+  >["issues"][number],
+): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { code: "unsupportedUnitKind" },
+      () => "unsupported Unit kind",
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function isSupportedFinalizableProgression(
@@ -915,7 +1390,7 @@ export function isSupportedBackgroundAbilityScoreIncrease(
 function allClassFactsForFinalization(
   progression: CharacterProgression,
   unitLibrary: UnitCatalog,
-): Either.Either<ClassFactsByUnitId, FinalizationIssues> {
+): Either.Either<ClassFactsByUnitId, ProjectionIssues> {
   return Either.map(
     traverseValidation(progressionClassUnitIds(progression), (classUnitId) =>
       classFactsEntryForFinalization(unitLibrary, classUnitId),
@@ -924,17 +1399,32 @@ function allClassFactsForFinalization(
   );
 }
 
+function classFactsForSupport(
+  progression: CharacterProgression,
+  unitLibrary: UnitCatalog,
+): SupportDependencyCollection<ClassFactsByUnitId> {
+  const entries: Array<readonly [UnitRecord["id"], ClassCreationFacts]> = [];
+  const issues: CharacterBuildProjectionIssue[] = [];
+  for (const classUnitId of progressionClassUnitIds(progression)) {
+    const entry = classFactsEntryForFinalization(unitLibrary, classUnitId);
+    if (Either.isLeft(entry)) issues.push(entry.left);
+    else entries.push(entry.right);
+  }
+  return { value: new Map(entries), issues };
+}
+
 function classFactsEntryForFinalization(
   unitLibrary: UnitCatalog,
   classUnitId: UnitRecord["id"],
 ): Either.Either<
   readonly [UnitRecord["id"], ClassCreationFacts],
-  CreationFinalizationIssue
+  CharacterBuildProjectionIssue
 > {
   const classUnit = unitForFinalization(unitLibrary, classUnitId, "class");
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
   const facts = readableForFinalization(
     readClassCreationFacts(classUnit.right),
+    classUnitId,
     "class",
   );
   return Either.isLeft(facts)
@@ -986,8 +1476,12 @@ export function buildCharacterBuild(input: {
   const classFacts = classFactsByUnitId.right.get(selectedClassUnitId);
   if (classFacts == null) {
     return Either.left([
-      illegalFinalizationIssue(
-        `Cannot finalize class progression without starting class facts: ${selectedClassUnitId}`,
+      characterBuildProjectionIssue(
+        {
+          tag: "missingStartingClassFacts",
+          projection: "characterBuild",
+          classUnitId: selectedClassUnitId,
+        },
       ),
     ]);
   }
@@ -999,6 +1493,7 @@ export function buildCharacterBuild(input: {
   if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
   const backgroundFacts = readableForFinalization(
     readBackgroundCreationFacts(backgroundUnit.right),
+    selections.background,
     "background",
   );
   if (Either.isLeft(backgroundFacts))
@@ -1011,6 +1506,7 @@ export function buildCharacterBuild(input: {
   if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
   const speciesFacts = readableForFinalization(
     readSpeciesCreationFacts(speciesUnit.right),
+    selections.species,
     "species",
   );
   if (Either.isLeft(speciesFacts)) return Either.left([speciesFacts.left]);
@@ -1144,7 +1640,7 @@ function normalHitPointMaximum(facts: CharacterHitPointMaximumFacts): number {
 export function characterBuildHitPoints(
   build: Pick<CharacterBuild, "progression" | "abilityScores" | "features">,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuildHitPoints, FinalizationIssues> {
+): Either.Either<CharacterBuildHitPoints, ProjectionIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
     build.progression,
     unitLibrary,
@@ -1158,8 +1654,12 @@ export function characterBuildHitPoints(
   );
   if (startingClassFacts == null) {
     return Either.left([
-      illegalFinalizationIssue(
-        `Cannot derive hit points without starting class facts: ${startingClassUnitId(build.progression)}`,
+      characterBuildProjectionIssue(
+        {
+          tag: "missingStartingClassFacts",
+          projection: "hitPoints",
+          classUnitId: startingClassUnitId(build.progression),
+        },
       ),
     ]);
   }
@@ -1205,9 +1705,9 @@ export function characterBuildHitPoints(
 function classFeatureHitPointMaximumBonus(
   build: Pick<CharacterBuild, "progression" | "features">,
   unitLibrary: UnitCatalog,
-): Either.Either<number, FinalizationIssues> {
+): Either.Either<number, ProjectionIssues> {
   let total = 0;
-  const issues: CreationFinalizationIssue[] = [];
+  const issues: CharacterBuildProjectionIssue[] = [];
 
   for (const featureUnitId of characterBuildFeatureUnitIds(
     build,
@@ -1216,8 +1716,8 @@ function classFeatureHitPointMaximumBonus(
     const unit = unitLibrary.getUnit(featureUnitId);
     if (Option.isNone(unit)) {
       issues.push(
-        illegalFinalizationIssue(
-          `Cannot derive hit point maximum bonus without class-feature Unit: ${featureUnitId}.`,
+        characterBuildProjectionIssue(
+          { tag: "missingClassFeatureUnit", featureUnitId },
         ),
       );
       continue;
@@ -1245,8 +1745,11 @@ function classFeatureHitPointMaximumBonus(
         );
         if (bonus === undefined) {
           issues.push(
-            illegalFinalizationIssue(
-              `Class-feature Hit Point maximum bonus on Unit ${featureUnitId} must be a deterministic flat amount.`,
+            characterBuildProjectionIssue(
+              {
+                tag: "nonDeterministicHitPointMaximumBonus",
+                featureUnitId,
+              },
             ),
           );
           continue;
@@ -1301,7 +1804,7 @@ export function characterBuildProficiencies(
     "progression" | "background" | "proficiencyChoices"
   >,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuildProficiencies, FinalizationIssues> {
+): Either.Either<CharacterBuildProficiencies, ProjectionIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
     build.progression,
     unitLibrary,
@@ -1315,8 +1818,12 @@ export function characterBuildProficiencies(
   );
   if (startingClassFacts == null) {
     return Either.left([
-      illegalFinalizationIssue(
-        `Cannot derive proficiencies without starting class facts: ${startingClassUnitId(build.progression)}`,
+      characterBuildProjectionIssue(
+        {
+          tag: "missingStartingClassFacts",
+          projection: "proficiencies",
+          classUnitId: startingClassUnitId(build.progression),
+        },
       ),
     ]);
   }
@@ -1329,6 +1836,7 @@ export function characterBuildProficiencies(
   if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
   const backgroundFacts = readableForFinalization(
     readBackgroundCreationFacts(backgroundUnit.right),
+    build.background,
     "background",
   );
   if (Either.isLeft(backgroundFacts))
@@ -1396,7 +1904,7 @@ export function characterBuildProficiencies(
 export function characterBuildArmorTraining(
   build: Pick<CharacterBuild, "progression" | "proficiencyChoices">,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly ArmorTrainingCategory[], FinalizationIssues> {
+): Either.Either<readonly ArmorTrainingCategory[], ProjectionIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
     build.progression,
     unitLibrary,
@@ -1410,8 +1918,12 @@ export function characterBuildArmorTraining(
   );
   if (startingClassFacts == null) {
     return Either.left([
-      illegalFinalizationIssue(
-        `Cannot derive armor training without starting class facts: ${startingClassUnitId(build.progression)}`,
+      characterBuildProjectionIssue(
+        {
+          tag: "missingStartingClassFacts",
+          projection: "armorTraining",
+          classUnitId: startingClassUnitId(build.progression),
+        },
       ),
     ]);
   }
@@ -1516,9 +2028,9 @@ function finalizedClassFeatureLanguages(
   },
 ): Either.Either<
   readonly CharacterBuildClassFeatureLanguage[],
-  FinalizationIssues
+  ProjectionIssues
 > {
-  const issues: CreationFinalizationIssue[] = [];
+  const issues: CharacterBuildProjectionIssue[] = [];
   const classFeatureLanguages: CharacterBuildClassFeatureLanguage[] = [];
   const knownLanguages = new Set<
     CharacterBuildClassFeatureLanguage["language"]
@@ -1539,8 +2051,12 @@ function finalizedClassFeatureLanguages(
         const language = languageFromSurfaceLanguageId(grant.languageId);
         if (Either.isLeft(language)) {
           issues.push(
-            illegalFinalizationIssue(
-              `Unsupported class-feature language id ${grant.languageId} on Unit ${unitId}.`,
+            characterBuildProjectionIssue(
+              {
+                tag: "unsupportedClassFeatureLanguage",
+                featureUnitId: unitId,
+                languageId: grant.languageId,
+              },
             ),
           );
           continue;
@@ -1548,8 +2064,12 @@ function finalizedClassFeatureLanguages(
 
         if (knownLanguages.has(language.right)) {
           issues.push(
-            illegalFinalizationIssue(
-              `Duplicate Character Build language ${language.right} from class feature Unit ${unitId}.`,
+            characterBuildProjectionIssue(
+              {
+                tag: "duplicateClassFeatureLanguage",
+                featureUnitId: unitId,
+                language: language.right,
+              },
             ),
           );
           continue;
@@ -1574,8 +2094,11 @@ function finalizedClassFeatureLanguages(
       );
       if (selection === undefined) {
         issues.push(
-          illegalFinalizationIssue(
-            `Missing class-feature language choice for Unit ${unitId}.`,
+          characterBuildProjectionIssue(
+            {
+              tag: "missingClassFeatureLanguageChoice",
+              featureUnitId: unitId,
+            },
           ),
         );
         continue;
@@ -1583,8 +2106,13 @@ function finalizedClassFeatureLanguages(
 
       if (selection.options.length !== grant.count) {
         issues.push(
-          illegalFinalizationIssue(
-            `Class-feature language choice on Unit ${unitId} expected ${grant.count} selection(s), received ${selection.options.length}.`,
+          characterBuildProjectionIssue(
+            {
+              tag: "classFeatureLanguageChoiceCountMismatch",
+              featureUnitId: unitId,
+              expectedCount: grant.count,
+              receivedCount: selection.options.length,
+            },
           ),
         );
         continue;
@@ -1597,8 +2125,12 @@ function finalizedClassFeatureLanguages(
         const language = option.language;
         if (Either.isLeft(language)) {
           issues.push(
-            illegalFinalizationIssue(
-              `Unsupported class-feature language choice option ${option.optionId} on Unit ${unitId}.`,
+            characterBuildProjectionIssue(
+              {
+                tag: "unsupportedClassFeatureLanguageChoice",
+                featureUnitId: unitId,
+                optionId: option.optionId,
+              },
             ),
           );
           continue;
@@ -1606,8 +2138,12 @@ function finalizedClassFeatureLanguages(
 
         if (knownLanguages.has(language.right)) {
           issues.push(
-            illegalFinalizationIssue(
-              `Duplicate Character Build language ${language.right} from class feature choice Unit ${unitId}.`,
+            characterBuildProjectionIssue(
+              {
+                tag: "duplicateClassFeatureLanguageChoice",
+                featureUnitId: unitId,
+                language: language.right,
+              },
             ),
           );
           continue;
@@ -2185,7 +2721,9 @@ function selectedSpeciesTraitUnitsForFinalization(
   >,
 ): readonly Extract<UnitRecord, { readonly kind: "species_trait" }>[] {
   if (
-    !speciesUnitIdsWithSupportedTraitChoices().includes(input.selections.species)
+    !speciesUnitIdsWithSupportedTraitChoices().includes(
+      input.selections.species,
+    )
   ) {
     return [];
   }
@@ -2675,9 +3213,9 @@ function selectedSorcererMetamagicOptionFeatures(input: {
 function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
   unitChoices: readonly UnitChoiceSelection[],
   unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterBuildFeature[], FinalizationIssues> {
+): Either.Either<readonly CharacterBuildFeature[], ProjectionIssues> {
   const features: CharacterBuildFeature[] = [];
-  const issues: CreationFinalizationIssue[] = [];
+  const issues: CharacterBuildProjectionIssue[] = [];
   for (const selection of unitChoices) {
     const mechanics = classFeatureAcquisitionChoiceMechanicsForSelection(
       selection,
@@ -2704,8 +3242,12 @@ function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
         );
         if (projected === undefined) {
           issues.push(
-            illegalFinalizationIssue(
-              `Cannot project supported class-feature acquisition ability-check bonus for ${selection.source.unitId}:${option.id}.`,
+            characterBuildProjectionIssue(
+              {
+                tag: "unprojectableAbilityCheckBonus",
+                featureUnitId: selection.source.unitId,
+                optionId: option.id,
+              },
             ),
           );
           continue;
@@ -2763,7 +3305,7 @@ function fixedModifyRollAbilityFilter(
 export function finalizedBuildEquipment(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuildEquipment, FinalizationIssues> {
+): Either.Either<CharacterBuildEquipment, ProjectionIssues> {
   return finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections,
     loadoutChoiceSelections(selections),
@@ -2775,7 +3317,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
   selections: FinalizedCharacterSelections,
   loadoutChoices: readonly LoadoutChoiceSelection[],
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuildEquipment, FinalizationIssues> {
+): Either.Either<CharacterBuildEquipment, ProjectionIssues> {
   const loadout = loadoutChoices.reduce<CharacterBuildLoadout>(
     (equipment, selection) => {
       const loadoutChoice = supportedLoadoutChoiceForSource(selection.source);
@@ -2835,8 +3377,8 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
       const itemUnitId = characterEquipmentItemUnitId(unitId);
       return Either.isLeft(itemUnitId)
         ? Either.left(
-            illegalFinalizationIssue(
-              `Unsupported equipment Unit id for finalized Character Build: ${unitId}.`,
+            characterBuildProjectionIssue(
+              { tag: "unsupportedEquipmentUnitId", equipmentUnitId: unitId },
             ),
           )
         : Either.right({
@@ -3095,7 +3637,7 @@ function singleSpellcastingSlotPool(
 
   return Either.left(
     illegalFinalizationIssue(
-      "Cannot finalize multiclass Spell Slot pools without a supported multiclass slot projection.",
+      { tag: "multipleSpellcastingSlotPools" },
     ),
   );
 }
@@ -3120,7 +3662,9 @@ function singlePactMagicSlotPool(
   }
 
   return Either.left(
-    illegalFinalizationIssue("Cannot finalize multiple Pact Magic slot pools."),
+    illegalFinalizationIssue(
+      { tag: "multiplePactMagicSlotPools" },
+    ),
   );
 }
 
@@ -3207,32 +3751,57 @@ export function optionalUnitId(
 
 function readableForFinalization<T>(
   result: UnitReaderResult<T>,
-  label: string,
-): Either.Either<T, CreationFinalizationIssue> {
+  unitId: UnitRecord["id"],
+  role: CreationFinalizationReadableUnitRole,
+): Either.Either<T, CharacterBuildProjectionIssue> {
   if (result.tag === "unreadable") {
-    const issueText = result.issues.map((issue) => issue.message).join("; ");
+    const [firstIssue, ...remainingIssues] = result.issues;
     return Either.left(
-      illegalFinalizationIssue(
-        `Cannot finalize unreadable ${label} Unit: ${issueText}`,
-      ),
+      characterBuildProjectionIssue({
+        tag: "unreadableUnit",
+        role,
+        unitId,
+        issues: [
+          surfaceReadIssueCause(firstIssue),
+          ...remainingIssues.map(surfaceReadIssueCause),
+        ],
+      }),
     );
   }
 
   return Either.right(result.value);
 }
 
+function surfaceReadIssueCause(
+  issue: SurfaceReadIssue,
+): Extract<CharacterBuildProjectionCause, { tag: "unreadableUnit" }>["issues"][number] {
+  return Match.value(issue).pipe(
+    Match.when({ code: "unsupportedUnitKind" }, (unsupported) => {
+      const { code, unitId: _unitId, message: _message, ...unprojected } =
+        unsupported;
+      noUnprojectedSurfaceReadIssueFields(unprojected);
+      return { code };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function noUnprojectedSurfaceReadIssueFields(
+  fields: Readonly<Record<PropertyKey, never>>,
+): void {
+  void fields;
+}
+
 function unitForFinalization(
   unitLibrary: UnitCatalog,
   unitId: UnitRecord["id"],
-  label: string,
-): Either.Either<UnitRecord, CreationFinalizationIssue> {
+  role: CreationFinalizationLookupUnitRole,
+): Either.Either<UnitRecord, CharacterBuildProjectionIssue> {
   const unit = unitLibrary.getUnit(unitId);
   return Option.isSome(unit)
     ? Either.right(unit.value)
     : Either.left(
-        illegalFinalizationIssue(
-          `Cannot finalize unknown ${label} Unit: ${unitId}`,
-        ),
+        characterBuildProjectionIssue({ tag: "unknownUnit", role, unitId }),
       );
 }
 
@@ -3240,7 +3809,7 @@ export function applyBackgroundAbilityScoreIncrease(
   baseScores: AbilityScoreAssignment,
   selection: BackgroundAbilityScoreIncreaseSelection,
   eligibleAbilities: readonly Ability[],
-): Either.Either<AbilityScoreAssignment, CreationFinalizationIssue> {
+): Either.Either<AbilityScoreAssignment, CharacterBuildProjectionIssue> {
   const deltas = backgroundAbilityScoreIncreaseDeltas(
     selection,
     eligibleAbilities,
@@ -3272,9 +3841,9 @@ export function applyBackgroundAbilityScoreIncrease(
 function applyClassFeatureAbilityScoreIncreases(
   baseScores: AbilityScoreAssignment,
   selections: FinalizedCharacterSelections,
-): Either.Either<AbilityScoreAssignment, FinalizationIssues> {
+): Either.Either<AbilityScoreAssignment, ProjectionIssues> {
   const deltasWithCaps: AbilityScoreIncreaseDeltaWithCap[] = [];
-  const decodingIssues: CreationFinalizationIssue[] = [];
+  const decodingIssues: CharacterBuildProjectionIssue[] = [];
   for (const selection of selections.choices) {
     if (
       selection.kind !== "unitChoice" ||
@@ -3287,7 +3856,7 @@ function applyClassFeatureAbilityScoreIncreases(
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeAbilityScoreIncreaseOptionId(optionId);
       if (Either.isLeft(decoded)) {
-        decodingIssues.push(choiceOptionCodecFinalizationIssue(decoded.left));
+        decodingIssues.push(choiceOptionCodecProjectionIssue(decoded.left));
         continue;
       }
       deltasWithCaps.push(...decoded.right);
@@ -3298,16 +3867,21 @@ function applyClassFeatureAbilityScoreIncreases(
     return Either.left(collectedDecodingIssues);
   }
 
-  const capIssues: CreationFinalizationIssue[] = [];
+  const capIssues: CharacterBuildProjectionIssue[] = [];
   let scores = baseScores;
   for (const delta of deltasWithCaps) {
     const currentScore = scores[delta.ability];
     if (currentScore + delta.increase > delta.maxScore) {
       capIssues.push(
-        illegalFinalizationIssue(
-          `Cannot apply class-feature ability-score increase: ${delta.ability} ${
-            currentScore
-          } + ${delta.increase} would exceed ${delta.maxScore}.`,
+        characterBuildProjectionIssue(
+          {
+            tag: "abilityScoreCapExceeded",
+            source: "classFeature",
+            ability: delta.ability,
+            score: currentScore,
+            increase: delta.increase,
+            maximum: delta.maxScore,
+          },
         ),
       );
       continue;
@@ -3372,7 +3946,7 @@ function backgroundAbilityScoreIncreaseFitsCap(
 function backgroundAbilityScoreIncreaseCapIssue(
   baseScores: AbilityScoreAssignment,
   deltas: readonly BackgroundAbilityScoreIncreaseDelta[],
-): CreationFinalizationIssue | undefined {
+): CharacterBuildProjectionIssue | undefined {
   const overCapDelta = deltas.find(
     (delta) =>
       baseScores[delta.ability] + delta.increase >
@@ -3382,10 +3956,15 @@ function backgroundAbilityScoreIncreaseCapIssue(
     return undefined;
   }
 
-  return illegalFinalizationIssue(
-    `Cannot apply background ability-score increase: ${overCapDelta.ability} ${
-      baseScores[overCapDelta.ability]
-    } + ${overCapDelta.increase} would exceed ${BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE}.`,
+  return characterBuildProjectionIssue(
+    {
+      tag: "abilityScoreCapExceeded",
+      source: "background",
+      ability: overCapDelta.ability,
+      score: baseScores[overCapDelta.ability],
+      increase: overCapDelta.increase,
+      maximum: BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE,
+    },
   );
 }
 
@@ -3409,7 +3988,7 @@ function selectedBuildProficiencyChoiceSubjects(
   unitLibrary: UnitCatalog,
 ): Either.Either<
   readonly CharacterBuildProficiencyChoiceSubject[],
-  FinalizationIssues
+  ProjectionIssues
 > {
   const unitProficiencySubjects = decodedUnitProficiencySubjects(
     selections,
@@ -3477,7 +4056,7 @@ function fixedToolProficiencySubjects(
 
 function finalizedBuildToolProficiencies(
   selections: FinalizedCharacterSelections,
-): Either.Either<readonly ToolProficiencyId[], FinalizationIssues> {
+): Either.Either<readonly ToolProficiencyId[], ProjectionIssues> {
   const toolSelection = selections.choices.find(
     (selection) =>
       selection.kind === "unitChoice" &&
@@ -3492,14 +4071,18 @@ function finalizedBuildToolProficiencies(
     for (const optionId of choiceSelectionOptionIds(toolSelection)) {
       if (!isCharacterBuildToolProficiencyId(String(optionId))) {
         return Either.left([
-          illegalFinalizationIssue(
-            `Unsupported background tool proficiency for finalized Character Build: ${optionId}.`,
+          characterBuildProjectionIssue(
+            {
+              tag: "unsupportedToolProficiency",
+              source: "background",
+              toolId: String(optionId),
+            },
           ),
         ]);
       }
       const parsed = parseToolProficiencyId(String(optionId));
       if (Either.isLeft(parsed)) {
-        return Either.left([choiceOptionCodecFinalizationIssue(parsed.left)]);
+        return Either.left([choiceOptionCodecProjectionIssue(parsed.left)]);
       }
       backgroundToolIds.push(parsed.right);
     }
@@ -3510,20 +4093,24 @@ function finalizedBuildToolProficiencies(
 
 function finalizedBuildSurfaceToolProficiencyIds(
   subjects: readonly ProficiencyGrantSubject[],
-): Either.Either<readonly ToolProficiencyId[], FinalizationIssues> {
+): Either.Either<readonly ToolProficiencyId[], ProjectionIssues> {
   const toolIds: ToolProficiencyId[] = [];
   for (const subject of subjects) {
     if (subject.kind !== "tool") continue;
     if (!isCharacterBuildToolProficiencyId(subject.toolId)) {
       return Either.left([
-        illegalFinalizationIssue(
-          `Unsupported tool proficiency for finalized Character Build: ${subject.toolId}.`,
+        characterBuildProjectionIssue(
+          {
+            tag: "unsupportedToolProficiency",
+            source: "surfaceGrant",
+            toolId: subject.toolId,
+          },
         ),
       ]);
     }
     const parsed = parseToolProficiencyId(subject.toolId);
     if (Either.isLeft(parsed)) {
-      return Either.left([choiceOptionCodecFinalizationIssue(parsed.left)]);
+      return Either.left([choiceOptionCodecProjectionIssue(parsed.left)]);
     }
     toolIds.push(parsed.right);
   }
@@ -3535,10 +4122,10 @@ function decodedUnitProficiencySubjects(
   unitLibrary: UnitCatalog,
 ): Either.Either<
   readonly CharacterBuildProficiencyChoiceSubject[],
-  FinalizationIssues
+  ProjectionIssues
 > {
   const subjects: CharacterBuildProficiencyChoiceSubject[] = [];
-  const issues: CreationFinalizationIssue[] = [];
+  const issues: CharacterBuildProjectionIssue[] = [];
   for (const selection of selections.choices) {
     if (selection.kind !== "unitChoice") {
       continue;
@@ -3563,7 +4150,7 @@ function decodedUnitProficiencySubjects(
       for (const optionId of choiceSelectionOptionIds(selection)) {
         const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
         if (Either.isLeft(decoded)) {
-          issues.push(choiceOptionCodecFinalizationIssue(decoded.left));
+          issues.push(choiceOptionCodecProjectionIssue(decoded.left));
           continue;
         }
         subjects.push(decoded.right);
@@ -3593,7 +4180,7 @@ function decodedUnitProficiencySubjects(
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
       if (Either.isLeft(decoded)) {
-        issues.push(choiceOptionCodecFinalizationIssue(decoded.left));
+        issues.push(choiceOptionCodecProjectionIssue(decoded.left));
         continue;
       }
       subjects.push(decoded.right);
