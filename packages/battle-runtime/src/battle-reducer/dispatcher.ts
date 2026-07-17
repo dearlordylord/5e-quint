@@ -142,7 +142,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 
 import {
-  attackExecutionSelectionsEqual,
+  interruptAttackExecutionSelectionsEqual,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
@@ -4724,7 +4724,10 @@ export function sameInterruptProcedureChoice(
     return (
       choice.reactorId === decisionChoice.reactorId &&
       choice.subject.command === "opportunityAttack" &&
-      attackExecutionSelectionsEqual(choice.subject, decisionChoice.selection)
+      interruptAttackExecutionSelectionsEqual(
+        choice.subject,
+        decisionChoice.selection,
+      )
     );
   }
   if (
@@ -4734,7 +4737,10 @@ export function sameInterruptProcedureChoice(
     return (
       choice.reactorId === decisionChoice.reactorId &&
       choice.subject.command === "retaliationAttack" &&
-      attackExecutionSelectionsEqual(choice.subject, decisionChoice.selection)
+      interruptAttackExecutionSelectionsEqual(
+        choice.subject,
+        decisionChoice.selection,
+      )
     );
   }
   return false;
@@ -6108,7 +6114,7 @@ function opportunityAttackThreatsEqual(
     const matchingIndex = unmatched.findIndex(
       (other) =>
         threat.reactorId === other.reactorId &&
-        attackExecutionSelectionsEqual(threat, other),
+        interruptAttackExecutionSelectionsEqual(threat, other),
     );
     if (matchingIndex === -1) return false;
     unmatched.splice(matchingIndex, 1);

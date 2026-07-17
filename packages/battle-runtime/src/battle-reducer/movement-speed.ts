@@ -591,6 +591,17 @@ export function attackExecutionSelectionsEqual(
   return attackExecutionSelectionIdentitiesEqual(left, right);
 }
 
+export function interruptAttackExecutionSelectionsEqual(
+  left: BattleInterruptAttackExecutionSelection,
+  right: BattleInterruptAttackExecutionSelection,
+): boolean {
+  return (
+    left.procedureRef === right.procedureRef &&
+    left.attackAbility === right.attackAbility &&
+    left.attackDamageType === right.attackDamageType
+  );
+}
+
 export function meleeWeaponOrUnarmedStrikeOptionForReactor(
   state: BattleState,
   reactorId: CombatantId,

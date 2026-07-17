@@ -4,6 +4,7 @@ import {
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   wizardTurnWithReadiedRay,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   attackDamageHoleAfterHit,
@@ -646,6 +647,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("retaliation decisions carry one exact attack execution selection", () => {
+    const selection = attackExecutionSelectionForSubjectForTest(
+      fighterAttackSubject(fighterTurnWithReadiedRay("attackHit"), "Longsword"),
+    );
     const decision = {
       kind: "interruptDecision",
       holeId: "battle:interrupt:decision",
@@ -655,11 +659,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         choice: {
           kind: "retaliationAttack",
           reactorId: "synthetic-retaliator",
-          selection: {
-            procedureRef: "synthetic-retaliation-procedure",
-            attackAbility: "str",
-            attackDamageType: "slashing",
-          },
+          selection,
           fills: [],
         },
       },

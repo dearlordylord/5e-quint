@@ -79,7 +79,6 @@ import {
   attackKindForDeflectRedirect,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
-  attackExecutionSelectionMatchesOption,
 } from "./movement-speed.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
@@ -144,13 +143,6 @@ export function resolveOpportunityAttackCommand(
       input.state,
       "staleSubject",
       `${commandLabel} attack is no longer available.`,
-    );
-  }
-  if (!attackExecutionSelectionMatchesOption(subject, attack)) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      `${commandLabel} requires the selected melee attack option.`,
     );
   }
   const fillSet = attackFillSet(input.fills);
