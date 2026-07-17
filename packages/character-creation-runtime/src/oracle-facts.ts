@@ -496,7 +496,12 @@ const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("duplicateAbilities") }),
   Schema.Struct({
     tag: Schema.Literal("invalidAbilityScoreIncreaseValue"),
-    field: Schema.Literal("increase", "maximum"),
+    field: Schema.Literal("increase"),
+    reason: Schema.Literal("nonPositive", "unsafeInteger"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invalidAbilityScoreIncreaseValue"),
+    field: Schema.Literal("maximum"),
     reason: Schema.Literal(
       "nonPositive",
       "unsafeInteger",
@@ -1676,10 +1681,24 @@ function creationChoiceOptionDecodeCauseFact(
     }),
     byTag(
       "invalidAbilityScoreIncreaseValue",
-      ({ tag, field, reason, ...unprojected }) => {
-        noUnprojectedFields(unprojected);
-        return { tag, field, reason };
-      },
+      (invalidValue) =>
+        Match.value(invalidValue).pipe(
+          Match.when(
+            { field: "increase" },
+            ({ tag, field, reason, ...unprojected }) => {
+              noUnprojectedFields(unprojected);
+              return { tag, field, reason };
+            },
+          ),
+          Match.when(
+            { field: "maximum" },
+            ({ tag, field, reason, ...unprojected }) => {
+              noUnprojectedFields(unprojected);
+              return { tag, field, reason };
+            },
+          ),
+          Match.exhaustive,
+        ),
     ),
     byTag("invalidAbilityScoreIncreaseEncoding", ({ tag, ...unprojected }) => {
       noUnprojectedFields(unprojected);

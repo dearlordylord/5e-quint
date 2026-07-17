@@ -1159,11 +1159,13 @@ export type CreationChoiceOptionDecodeCause =
   | { readonly tag: "duplicateAbilities" }
   | {
       readonly tag: "invalidAbilityScoreIncreaseValue";
-      readonly field: "increase" | "maximum";
-      readonly reason:
-        | "nonPositive"
-        | "unsafeInteger"
-        | "maximumOutOfRange";
+      readonly field: "increase";
+      readonly reason: "nonPositive" | "unsafeInteger";
+    }
+  | {
+      readonly tag: "invalidAbilityScoreIncreaseValue";
+      readonly field: "maximum";
+      readonly reason: "nonPositive" | "unsafeInteger" | "maximumOutOfRange";
     }
   | { readonly tag: "invalidAbilityScoreIncreaseEncoding" }
   | { readonly tag: "unsupportedWeaponCategory" }

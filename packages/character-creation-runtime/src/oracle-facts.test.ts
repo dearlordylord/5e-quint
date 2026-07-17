@@ -398,6 +398,20 @@ describe("Character Creation owner facts", () => {
       decodeCreationFinalizationRejectionFact({
         tag: "characterBuildProjection",
         cause: {
+          tag: "invalidChoiceOption",
+          optionId: "synthetic_option",
+          reason: {
+            tag: "invalidAbilityScoreIncreaseValue",
+            field: "increase",
+            reason: "maximumOutOfRange",
+          },
+        },
+      })._tag,
+    ).toBe("Left");
+    expect(
+      decodeCreationFinalizationRejectionFact({
+        tag: "characterBuildProjection",
+        cause: {
           tag: "classFeatureLanguageChoiceCountMismatch",
           featureUnitId: "synthetic_feature",
           mismatch: {

@@ -198,7 +198,7 @@ function decodePositiveAbilityScoreIncreaseValue(
 ): Either.Either<PositiveIntegerType, ChoiceOptionCodecIssue> {
   const value = Number(token);
   if (!Number.isSafeInteger(value)) {
-    return invalidAbilityScoreIncreaseValueIssue(
+    return invalidPositiveAbilityScoreIncreaseValueIssue(
       optionId,
       field,
       "unsafeInteger",
@@ -206,7 +206,11 @@ function decodePositiveAbilityScoreIncreaseValue(
   }
   return value > 0
     ? Either.right(PositiveInteger(value))
-    : invalidAbilityScoreIncreaseValueIssue(optionId, field, "nonPositive");
+    : invalidPositiveAbilityScoreIncreaseValueIssue(
+        optionId,
+        field,
+        "nonPositive",
+      );
 }
 
 function decodeAbilityScoreMaximum(
@@ -223,24 +227,35 @@ function decodeAbilityScoreMaximum(
     ? Either.right(abilityScore(positive.right))
     : invalidAbilityScoreIncreaseValueIssue(
         optionId,
-        "maximum",
-        "maximumOutOfRange",
+        {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "maximum",
+          reason: "maximumOutOfRange",
+        },
       );
+}
+
+function invalidPositiveAbilityScoreIncreaseValueIssue(
+  optionId: string,
+  field: "increase" | "maximum",
+  reason: "nonPositive" | "unsafeInteger",
+): Either.Either<never, ChoiceOptionCodecIssue> {
+  return invalidAbilityScoreIncreaseValueIssue(
+    optionId,
+    field === "increase"
+      ? { tag: "invalidAbilityScoreIncreaseValue", field, reason }
+      : { tag: "invalidAbilityScoreIncreaseValue", field, reason },
+  );
 }
 
 function invalidAbilityScoreIncreaseValueIssue(
   optionId: string,
-  field: "increase" | "maximum",
-  reason: Extract<
+  cause: Extract<
     CreationChoiceOptionDecodeCause,
     { readonly tag: "invalidAbilityScoreIncreaseValue" }
-  >["reason"],
+  >,
 ): Either.Either<never, ChoiceOptionCodecIssue> {
-  return choiceOptionCodecIssue(optionId, {
-    tag: "invalidAbilityScoreIncreaseValue",
-    field,
-    reason,
-  });
+  return choiceOptionCodecIssue(optionId, cause);
 }
 
 export function proficiencyGrantSubjectOption(
