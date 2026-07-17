@@ -28,6 +28,7 @@ import {
   Index,
   NonNegativeInteger,
   PositiveInteger,
+  type AbilityScore as AbilityScoreValue,
   type HP,
   type Index as IndexType,
   type NonNegativeInteger as NonNegativeIntegerType,
@@ -1122,7 +1123,7 @@ export type CharacterBuildProjectionCause =
       readonly tag: "abilityScoreCapExceeded";
       readonly source: "classFeature";
       readonly ability: Ability;
-      readonly maximum: PositiveIntegerType;
+      readonly maximum: AbilityScoreValue;
       readonly excess: PositiveIntegerType;
     }
   | {
@@ -1157,8 +1158,12 @@ export type CreationChoiceOptionDecodeCause =
   | { readonly tag: "unsupportedAbility" }
   | { readonly tag: "duplicateAbilities" }
   | {
-      readonly tag: "nonPositiveAbilityScoreIncreaseValue";
+      readonly tag: "invalidAbilityScoreIncreaseValue";
       readonly field: "increase" | "maximum";
+      readonly reason:
+        | "nonPositive"
+        | "unsafeInteger"
+        | "maximumOutOfRange";
     }
   | { readonly tag: "invalidAbilityScoreIncreaseEncoding" }
   | { readonly tag: "unsupportedWeaponCategory" }

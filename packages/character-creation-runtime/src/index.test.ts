@@ -26,6 +26,7 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
+import { abilityScore, PositiveInteger } from "@dnd/shared/types";
 
 import {
   characterDraftId,
@@ -5399,8 +5400,9 @@ describe("character creation finalization", () => {
         tag: "choiceOptionCodecIssue",
         optionId: "ability_score:str:+1:max0",
         cause: {
-          tag: "nonPositiveAbilityScoreIncreaseValue",
+          tag: "invalidAbilityScoreIncreaseValue",
           field: "maximum",
+          reason: "nonPositive",
         },
       }),
     );
@@ -5411,8 +5413,9 @@ describe("character creation finalization", () => {
         tag: "choiceOptionCodecIssue",
         optionId: "ability_score:str:+0:max20",
         cause: {
-          tag: "nonPositiveAbilityScoreIncreaseValue",
+          tag: "invalidAbilityScoreIncreaseValue",
           field: "increase",
+          reason: "nonPositive",
         },
       }),
     );
@@ -5420,7 +5423,30 @@ describe("character creation finalization", () => {
       decodeAbilityScoreIncreaseOptionId(
         "ability_score:str:+9007199254740992:max20",
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toEqual(
+      Either.left({
+        tag: "choiceOptionCodecIssue",
+        optionId: "ability_score:str:+9007199254740992:max20",
+        cause: {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "increase",
+          reason: "unsafeInteger",
+        },
+      }),
+    );
+    expect(
+      decodeAbilityScoreIncreaseOptionId("ability_score:str:+1:max31"),
+    ).toEqual(
+      Either.left({
+        tag: "choiceOptionCodecIssue",
+        optionId: "ability_score:str:+1:max31",
+        cause: {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "maximum",
+          reason: "maximumOutOfRange",
+        },
+      }),
+    );
   });
 
   test("accepts Monk 2 Monk's Focus as shared Focus Point character facts", () => {
@@ -7037,9 +7063,13 @@ describe("character creation finalization", () => {
   test("represents two-score Ability Score Improvement choices as unordered pairs", () => {
     const optionIds = abilityScoreIncreaseChoiceOptions({
       abilityScope: { kind: "all_abilities" },
-      maxScore: 20,
+      maxScore: abilityScore(20),
       methods: [
-        { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
+        {
+          kind: "two_scores",
+          primaryIncrease: PositiveInteger(1),
+          secondaryIncrease: PositiveInteger(1),
+        },
       ],
     }).map((option) => option.optionId);
 
@@ -7051,10 +7081,14 @@ describe("character creation finalization", () => {
   test("decodes every generated Ability Score Improvement option", () => {
     const options = abilityScoreIncreaseChoiceOptions({
       abilityScope: { kind: "all_abilities" },
-      maxScore: 20,
+      maxScore: abilityScore(20),
       methods: [
-        { kind: "one_score", increase: 2 },
-        { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
+        { kind: "one_score", increase: PositiveInteger(2) },
+        {
+          kind: "two_scores",
+          primaryIncrease: PositiveInteger(1),
+          secondaryIncrease: PositiveInteger(1),
+        },
       ],
     });
 
@@ -7082,8 +7116,8 @@ describe("character creation finalization", () => {
   test("uses authored ability restrictions for feat ability score increase choices", () => {
     const optionIds = abilityScoreIncreaseChoiceOptions({
       abilityScope: { kind: "specific_abilities", abilities: ["str", "dex"] },
-      maxScore: 20,
-      methods: [{ kind: "one_score", increase: 1 }],
+      maxScore: abilityScore(20),
+      methods: [{ kind: "one_score", increase: PositiveInteger(1) }],
     }).map((option) => option.optionId);
 
     expect(optionIds).toEqual([

@@ -1342,9 +1342,9 @@ function choiceOptionDecodeCauseMessage(
       () => "Choice option must encode two distinct ability scores.",
     ),
     Match.when(
-      { tag: "nonPositiveAbilityScoreIncreaseValue" },
-      ({ field }) =>
-        `Choice option must encode a positive safe-integer ability-score ${field}.`,
+      { tag: "invalidAbilityScoreIncreaseValue" },
+      ({ field, reason }) =>
+        `Choice option has an invalid ability-score ${field}: ${reason}.`,
     ),
     Match.when(
       { tag: "invalidAbilityScoreIncreaseEncoding" },

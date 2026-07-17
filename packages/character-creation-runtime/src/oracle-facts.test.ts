@@ -315,7 +315,7 @@ describe("Character Creation owner facts", () => {
               tag: "abilityScoreCapExceeded",
               source: "classFeature",
               ability: "str",
-              maximum: PositiveInteger(20),
+              maximum: abilityScore(20),
               excess: PositiveInteger(1),
             },
           },

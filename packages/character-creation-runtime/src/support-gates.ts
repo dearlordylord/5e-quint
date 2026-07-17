@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice character-sheet.cleric-divine-intervention-session-invocation character-sheet.ranger-tireless
 import { Either } from "effect";
+import { abilityScore, PositiveInteger } from "@dnd/shared/types";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -747,24 +748,28 @@ function supportedAbilityScoreIncreaseOptionIds(): readonly CreationChoiceOption
   return [
     ...abilityScoreIncreaseChoiceOptionIds({
       abilityScope: { kind: "all_abilities" },
-      maxScore: 20,
+      maxScore: abilityScore(20),
       methods: [
-        { kind: "one_score", increase: 2 },
-        { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
+        { kind: "one_score", increase: PositiveInteger(2) },
+        {
+          kind: "two_scores",
+          primaryIncrease: PositiveInteger(1),
+          secondaryIncrease: PositiveInteger(1),
+        },
       ],
     }),
     ...abilityScoreIncreaseChoiceOptionIds({
       abilityScope: { kind: "all_abilities" },
-      maxScore: 30,
-      methods: [{ kind: "one_score", increase: 1 }],
+      maxScore: abilityScore(30),
+      methods: [{ kind: "one_score", increase: PositiveInteger(1) }],
     }),
     ...abilityScoreIncreaseChoiceOptionIds({
       abilityScope: {
         kind: "specific_abilities",
         abilities: ["str", "dex"],
       },
-      maxScore: 20,
-      methods: [{ kind: "one_score", increase: 1 }],
+      maxScore: abilityScore(20),
+      methods: [{ kind: "one_score", increase: PositiveInteger(1) }],
     }),
   ];
 }

@@ -495,8 +495,13 @@ const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("unsupportedAbility") }),
   Schema.Struct({ tag: Schema.Literal("duplicateAbilities") }),
   Schema.Struct({
-    tag: Schema.Literal("nonPositiveAbilityScoreIncreaseValue"),
+    tag: Schema.Literal("invalidAbilityScoreIncreaseValue"),
     field: Schema.Literal("increase", "maximum"),
+    reason: Schema.Literal(
+      "nonPositive",
+      "unsafeInteger",
+      "maximumOutOfRange",
+    ),
   }),
   Schema.Struct({ tag: Schema.Literal("invalidAbilityScoreIncreaseEncoding") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedWeaponCategory") }),
@@ -604,7 +609,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
     tag: Schema.Literal("abilityScoreCapExceeded"),
     source: Schema.Literal("classFeature"),
     ability: AbilitySchema,
-    maximum: PositiveIntegerSchema,
+    maximum: AbilityScore,
     excess: PositiveIntegerSchema,
   }),
   Schema.Struct({
@@ -1670,10 +1675,10 @@ function creationChoiceOptionDecodeCauseFact(
       return { tag };
     }),
     byTag(
-      "nonPositiveAbilityScoreIncreaseValue",
-      ({ tag, field, ...unprojected }) => {
+      "invalidAbilityScoreIncreaseValue",
+      ({ tag, field, reason, ...unprojected }) => {
         noUnprojectedFields(unprojected);
-        return { tag, field };
+        return { tag, field, reason };
       },
     ),
     byTag("invalidAbilityScoreIncreaseEncoding", ({ tag, ...unprojected }) => {

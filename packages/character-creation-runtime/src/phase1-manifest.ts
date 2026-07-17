@@ -24,7 +24,11 @@ import {
 import type { CharacterProgression } from "./character-progression-types.ts";
 import { Match } from "effect";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type {
+  AbilityScore,
+  PositiveInteger,
+  ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY as SURFACE_SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY } from "@dnd/surface/surface/schema";
 
@@ -308,12 +312,12 @@ const byKind = Match.discriminator("kind");
 type AbilityScoreIncreaseChoiceMethod =
   | {
       readonly kind: "one_score";
-      readonly increase: number;
+      readonly increase: PositiveInteger;
     }
   | {
       readonly kind: "two_scores";
-      readonly primaryIncrease: number;
-      readonly secondaryIncrease: number;
+      readonly primaryIncrease: PositiveInteger;
+      readonly secondaryIncrease: PositiveInteger;
     };
 
 type AbilityScoreIncreaseAbilityScope =
@@ -327,7 +331,7 @@ type AbilityScoreIncreaseAbilityScope =
 
 export type AbilityScoreIncreaseChoiceSpec = {
   readonly abilityScope: AbilityScoreIncreaseAbilityScope;
-  readonly maxScore: number;
+  readonly maxScore: AbilityScore;
   readonly methods: ReadonlyNonEmptyArray<AbilityScoreIncreaseChoiceMethod>;
 };
 

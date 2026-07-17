@@ -3,7 +3,9 @@ import { Match } from "effect";
 import * as Either from "effect/Either";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import {
+  abilityScore,
   PositiveInteger,
+  type AbilityScore as AbilityScoreType,
   type PositiveInteger as PositiveIntegerType,
 } from "@dnd/shared/types";
 import {
@@ -30,7 +32,7 @@ import {
 export type AbilityScoreIncreaseDeltaWithCap = {
   readonly ability: Ability;
   readonly increase: PositiveIntegerType;
-  readonly maxScore: PositiveIntegerType;
+  readonly maxScore: AbilityScoreType;
 };
 
 export type ParsedProficiencyGrantSubject =
@@ -61,8 +63,8 @@ function choiceOptionCodecIssue(
 
 export function abilityScoreIncreaseOneScoreOptionId(input: {
   readonly ability: Ability;
-  readonly increase: number;
-  readonly maxScore: number;
+  readonly increase: PositiveIntegerType;
+  readonly maxScore: AbilityScoreType;
 }): CreationChoiceOptionId {
   return creationChoiceOptionId(
     `ability_score:${input.ability}:+${input.increase}:max${input.maxScore}`,
@@ -71,10 +73,10 @@ export function abilityScoreIncreaseOneScoreOptionId(input: {
 
 export function requireAbilityScoreIncreaseTwoScoresOptionId(input: {
   readonly primary: Ability;
-  readonly primaryIncrease: number;
+  readonly primaryIncrease: PositiveIntegerType;
   readonly secondary: Ability;
-  readonly secondaryIncrease: number;
-  readonly maxScore: number;
+  readonly secondaryIncrease: PositiveIntegerType;
+  readonly maxScore: AbilityScoreType;
 }): CreationChoiceOptionId {
   if (input.primary === input.secondary) {
     throw new Error(
@@ -111,10 +113,9 @@ export function decodeAbilityScoreIncreaseOptionId(
       "increase",
     );
     if (Either.isLeft(increase)) return Either.left(increase.left);
-    const maximum = decodePositiveAbilityScoreIncreaseValue(
+    const maximum = decodeAbilityScoreMaximum(
       oneScore[3],
       optionIdText,
-      "maximum",
     );
     if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
@@ -164,10 +165,9 @@ export function decodeAbilityScoreIncreaseOptionId(
     if (Either.isLeft(secondaryIncrease)) {
       return Either.left(secondaryIncrease.left);
     }
-    const maximum = decodePositiveAbilityScoreIncreaseValue(
+    const maximum = decodeAbilityScoreMaximum(
       twoScores[5],
       optionIdText,
-      "maximum",
     );
     if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
@@ -197,12 +197,50 @@ function decodePositiveAbilityScoreIncreaseValue(
   field: "increase" | "maximum",
 ): Either.Either<PositiveIntegerType, ChoiceOptionCodecIssue> {
   const value = Number(token);
-  return Number.isSafeInteger(value) && value > 0
+  if (!Number.isSafeInteger(value)) {
+    return invalidAbilityScoreIncreaseValueIssue(
+      optionId,
+      field,
+      "unsafeInteger",
+    );
+  }
+  return value > 0
     ? Either.right(PositiveInteger(value))
-    : choiceOptionCodecIssue(optionId, {
-        tag: "nonPositiveAbilityScoreIncreaseValue",
-        field,
-      });
+    : invalidAbilityScoreIncreaseValueIssue(optionId, field, "nonPositive");
+}
+
+function decodeAbilityScoreMaximum(
+  token: string | undefined,
+  optionId: string,
+): Either.Either<AbilityScoreType, ChoiceOptionCodecIssue> {
+  const positive = decodePositiveAbilityScoreIncreaseValue(
+    token,
+    optionId,
+    "maximum",
+  );
+  if (Either.isLeft(positive)) return Either.left(positive.left);
+  return positive.right <= 30
+    ? Either.right(abilityScore(positive.right))
+    : invalidAbilityScoreIncreaseValueIssue(
+        optionId,
+        "maximum",
+        "maximumOutOfRange",
+      );
+}
+
+function invalidAbilityScoreIncreaseValueIssue(
+  optionId: string,
+  field: "increase" | "maximum",
+  reason: Extract<
+    CreationChoiceOptionDecodeCause,
+    { readonly tag: "invalidAbilityScoreIncreaseValue" }
+  >["reason"],
+): Either.Either<never, ChoiceOptionCodecIssue> {
+  return choiceOptionCodecIssue(optionId, {
+    tag: "invalidAbilityScoreIncreaseValue",
+    field,
+    reason,
+  });
 }
 
 export function proficiencyGrantSubjectOption(
