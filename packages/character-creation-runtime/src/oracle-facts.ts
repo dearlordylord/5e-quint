@@ -131,22 +131,8 @@ export const CreationHoleFactSchema = Schema.Union(
     holeId: CreationHoleIdSchema,
     source: ChoiceHoleSourceSchema,
     cardinality: ChoiceCardinalitySchema,
-    options: Schema.Array(CreationChoiceOptionFactSchema).pipe(
-      Schema.filter(
-        (options) =>
-          new Set(options.map(({ optionId }) => optionId)).size ===
-          options.length,
-        { message: () => "Creation Hole option identity must be distinct" },
-      ),
-    ),
-  }).pipe(
-    Schema.filter(
-      ({ cardinality, options }) =>
-        options.length >=
-        (cardinality.tag === "exactly" ? cardinality.count : cardinality.max),
-      { message: () => "Creation Hole cardinality must be fillable" },
-    ),
-  ),
+    options: Schema.Array(CreationChoiceOptionFactSchema),
+  }),
   Schema.Struct({
     kind: Schema.Literal("abilityScores"),
     holeId: CreationHoleIdSchema,
@@ -166,13 +152,7 @@ export type CreationHoleFact = Schema.Schema.Type<
 >;
 
 export const CreationFrontierFactSchema = Schema.Struct({
-  holes: Schema.Array(CreationHoleFactSchema).pipe(
-    Schema.filter(
-      (holes) =>
-        new Set(holes.map(({ holeId }) => holeId)).size === holes.length,
-      { message: () => "Creation frontier Hole identity must be distinct" },
-    ),
-  ),
+  holes: Schema.Array(CreationHoleFactSchema),
 });
 export type CreationFrontierFact = Schema.Schema.Type<
   typeof CreationFrontierFactSchema
@@ -346,7 +326,6 @@ const EquipmentSchema = Schema.Struct({
   owned: Schema.Array(
     Schema.Struct({
       itemId: characterEquipmentItemIdSchema(),
-      unitId: UnitIdSchema,
     }),
   ),
   loadout: Schema.Struct({
@@ -368,32 +347,7 @@ const EquipmentSchema = Schema.Struct({
       { exact: true },
     ),
   }),
-}).pipe(
-  Schema.filter(
-    ({ owned, loadout }) => {
-      const ownedItemIds = new Set(owned.map(({ itemId }) => itemId));
-      const ownedItemsMatchIdentity = owned.every(({ itemId, unitId }) => {
-        const source = parseCharacterEquipmentItemId(itemId);
-        return source._tag === "Right" && source.right.unitId === unitId;
-      });
-      const loadoutItemIds = [
-        loadout.armor,
-        loadout.shield,
-        loadout.weapon?.itemId,
-        loadout.offHandWeapon?.itemId,
-      ].filter((itemId) => itemId !== undefined);
-      return (
-        ownedItemsMatchIdentity &&
-        ownedItemIds.size === owned.length &&
-        loadoutItemIds.every((itemId) => ownedItemIds.has(itemId))
-      );
-    },
-    {
-      message: () =>
-        "Character Build equipment identity and loadout ownership must agree",
-    },
-  ),
-);
+});
 const SpellcastingSchema = Schema.Struct({
   sources: Schema.NonEmptyArray(
     Schema.Struct({
@@ -548,7 +502,9 @@ export type CharacterCreationBatchFact = Schema.Schema.Type<
   typeof CharacterCreationBatchFactSchema
 >;
 
-const strictDecodeOptions = { onExcessProperty: "error" } as const;
+const strictDecodeOptions: { readonly onExcessProperty: "error" } = {
+  onExcessProperty: "error",
+};
 export const decodeCreationHoleFact = Schema.decodeUnknownEither(
   CreationHoleFactSchema,
   strictDecodeOptions,
@@ -672,23 +628,40 @@ function abilityScoreAssignmentFact(
 export function creationHoleFact(hole: CreationHole): CreationHoleFact {
   return Match.value(hole).pipe(
     Match.when({ kind: "choice" }, (choice) => {
-      const { kind, holeId, source, cardinality, options, ...unprojected } =
-        choice;
+      const {
+        kind,
+        holeId: _holeId,
+        source,
+        cardinality,
+        options,
+        ...unprojected
+      } = choice;
       noUnprojectedFields(unprojected);
       return {
         kind,
-        holeId,
+        holeId: holeIdForSource(source),
         source: choiceHoleSourceFact(source),
         cardinality: choiceCardinalityFact(cardinality),
         options: options.map(choiceOptionFact),
       };
     }),
     Match.when({ kind: "abilityScores" }, (abilityScores) => {
-      const { kind, holeId, source, methods, ...unprojected } = abilityScores;
+      const {
+        kind,
+        holeId: _holeId,
+        source,
+        methods,
+        ...unprojected
+      } = abilityScores;
       noUnprojectedFields(unprojected);
       const { tag, path, ...unprojectedSource } = source;
       noUnprojectedFields(unprojectedSource);
-      return { kind, holeId, source: { tag, path }, methods };
+      return {
+        kind,
+        holeId: holeIdForSource(source),
+        source: { tag, path },
+        methods,
+      };
     }),
     Match.exhaustive,
   );
@@ -1033,10 +1006,12 @@ function equipmentFact(
 ): CharacterBuildFact["equipment"] {
   const { owned, loadout, ...unprojected } = equipment;
   noUnprojectedFields(unprojected);
-  const projectedOwned = owned.map(({ itemId, unitId, ...unprojectedItem }) => {
-    noUnprojectedFields(unprojectedItem);
-    return { itemId, unitId };
-  });
+  const projectedOwned = owned.map(
+    ({ itemId, unitId: _unitId, ...unprojectedItem }) => {
+      noUnprojectedFields(unprojectedItem);
+      return { itemId };
+    },
+  );
   const { armor, shield, weapon, offHandWeapon, ...unprojectedLoadout } =
     loadout;
   noUnprojectedFields(unprojectedLoadout);

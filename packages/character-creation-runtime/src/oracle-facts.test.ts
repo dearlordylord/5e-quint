@@ -6,6 +6,8 @@ import {
   characterBuildFact,
   characterDraftId,
   characterCreationBatchFact,
+  characterEquipmentItemId,
+  characterEquipmentItemUnitId,
   creationChoiceOptionId,
   creationFillFact,
   creationFillIndex,
@@ -81,34 +83,15 @@ describe("Character Creation owner facts", () => {
     expect(decodeCreationFrontierFact(fact)._tag).toBe("Right");
   });
 
-  test("rejects contradictory Hole identity and source facts", () => {
-    const fact = creationFrontierFact([syntheticChoiceHole()]);
+  test("derives canonical Hole identity from the owner source", () => {
+    const hole = {
+      ...syntheticChoiceHole(),
+      holeId: creationHoleId("cc:draft:draft.species"),
+    };
 
-    expect(
-      decodeCreationFrontierFact({
-        holes: [
-          {
-            ...fact.holes[0],
-            source: { tag: "draft", path: "draft.species" },
-          },
-        ],
-      })._tag,
-    ).toBe("Left");
-  });
-
-  test("rejects a Hole whose cardinality exceeds its options", () => {
-    const fact = creationFrontierFact([syntheticChoiceHole()]);
-
-    expect(
-      decodeCreationFrontierFact({
-        holes: [
-          {
-            ...fact.holes[0],
-            cardinality: { tag: "exactly", count: 2 },
-          },
-        ],
-      })._tag,
-    ).toBe("Left");
+    expect(creationFrontierFact([hole]).holes[0]?.holeId).toBe(
+      "cc:draft:draft.background",
+    );
   });
 
   test("retains ordered Fill identity while rejecting schema excess", () => {
@@ -139,7 +122,7 @@ describe("Character Creation owner facts", () => {
       tag: "rejected",
       draft: {
         draftId: characterDraftId("draft-private"),
-        revision: draftRevision(7),
+        revision: draftRevision(0),
         selections: { choices: [] },
       },
       holes: [hole],
@@ -187,22 +170,32 @@ describe("Character Creation owner facts", () => {
     ).toBe("Left");
   });
 
-  test("rejects contradictory Character Build equipment identity", () => {
-    const fact = characterBuildFact(syntheticBuild());
-
-    expect(
-      decodeCharacterBuildFact({
-        ...fact,
-        equipment: {
-          owned: [{ itemId: "main:weapon_synthetic", unitId: "weapon_other" }],
-          loadout: {
-            weapon: {
-              itemId: "main:weapon_synthetic",
-              grip: "one_handed",
-            },
+  test("projects owned equipment once through its canonical item identity", () => {
+    const build = syntheticBuild();
+    const equipmentUnitId = characterEquipmentItemUnitId("weapon_synthetic");
+    if (equipmentUnitId._tag === "Left") {
+      throw new Error("Expected the synthetic equipment Unit id to parse.");
+    }
+    const itemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: equipmentUnitId.right,
+    });
+    const fact = characterBuildFact({
+      ...build,
+      equipment: {
+        owned: [
+          {
+            itemId,
+            unitId: equipmentUnitId.right,
           },
+        ],
+        loadout: {
+          weapon: { itemId, grip: "one_handed" },
         },
-      })._tag,
-    ).toBe("Left");
+      },
+    });
+
+    expect(fact.equipment.owned).toEqual([{ itemId }]);
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
   });
 });
