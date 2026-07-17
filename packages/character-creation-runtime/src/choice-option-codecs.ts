@@ -3,6 +3,12 @@ import { Match } from "effect";
 import * as Either from "effect/Either";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import {
+  abilityScore,
+  PositiveInteger,
+  type AbilityScore as AbilityScoreType,
+  type PositiveInteger as PositiveIntegerType,
+} from "@dnd/shared/types";
+import {
   ARMOR_TRAINING_CATEGORIES,
   SKILLS,
   WEAPON_PROFICIENCY_CATEGORIES,
@@ -18,14 +24,15 @@ import {
   MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
   toolProficiencyId,
   type CreationChoiceOption,
+  type CreationChoiceOptionDecodeCause,
   type CreationChoiceOptionId,
   type ToolProficiencyId,
 } from "./types.ts";
 
 export type AbilityScoreIncreaseDeltaWithCap = {
   readonly ability: Ability;
-  readonly increase: number;
-  readonly maxScore: number;
+  readonly increase: PositiveIntegerType;
+  readonly maxScore: AbilityScoreType;
 };
 
 export type ParsedProficiencyGrantSubject =
@@ -40,20 +47,24 @@ export type ParsedProficiencyGrantSubject =
 export type ChoiceOptionCodecIssue = {
   readonly tag: "choiceOptionCodecIssue";
   readonly optionId: string;
-  readonly message: string;
+  readonly cause: CreationChoiceOptionDecodeCause;
 };
 
 function choiceOptionCodecIssue(
   optionId: string,
-  message: string,
+  cause: CreationChoiceOptionDecodeCause,
 ): Either.Either<never, ChoiceOptionCodecIssue> {
-  return Either.left({ tag: "choiceOptionCodecIssue", optionId, message });
+  return Either.left({
+    tag: "choiceOptionCodecIssue",
+    optionId,
+    cause,
+  });
 }
 
 export function abilityScoreIncreaseOneScoreOptionId(input: {
   readonly ability: Ability;
-  readonly increase: number;
-  readonly maxScore: number;
+  readonly increase: PositiveIntegerType;
+  readonly maxScore: AbilityScoreType;
 }): CreationChoiceOptionId {
   return creationChoiceOptionId(
     `ability_score:${input.ability}:+${input.increase}:max${input.maxScore}`,
@@ -62,10 +73,10 @@ export function abilityScoreIncreaseOneScoreOptionId(input: {
 
 export function requireAbilityScoreIncreaseTwoScoresOptionId(input: {
   readonly primary: Ability;
-  readonly primaryIncrease: number;
+  readonly primaryIncrease: PositiveIntegerType;
   readonly secondary: Ability;
-  readonly secondaryIncrease: number;
-  readonly maxScore: number;
+  readonly secondaryIncrease: PositiveIntegerType;
+  readonly maxScore: AbilityScoreType;
 }): CreationChoiceOptionId {
   if (input.primary === input.secondary) {
     throw new Error(
@@ -93,15 +104,26 @@ export function decodeAbilityScoreIncreaseOptionId(
     if (!isOneOf(SURFACE_ABILITIES, ability)) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Ability Score Increase choice option encodes an unsupported ability score.",
+        { tag: "unsupportedAbility" },
       );
     }
+    const increase = decodePositiveAbilityScoreIncreaseValue(
+      oneScore[2],
+      optionIdText,
+      "increase",
+    );
+    if (Either.isLeft(increase)) return Either.left(increase.left);
+    const maximum = decodeAbilityScoreMaximum(
+      oneScore[3],
+      optionIdText,
+    );
+    if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
     return Either.right([
       {
         ability,
-        increase: Number(oneScore[2]),
-        maxScore: Number(oneScore[3]),
+        increase: increase.right,
+        maxScore: maximum.right,
       },
     ]);
   }
@@ -118,34 +140,122 @@ export function decodeAbilityScoreIncreaseOptionId(
     ) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Ability Score Increase choice option encodes an unsupported ability score.",
+        { tag: "unsupportedAbility" },
       );
     }
     if (primary === secondary) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Ability Score Increase two-score choice option must encode two distinct ability scores.",
+        { tag: "duplicateAbilities" },
       );
     }
+    const primaryIncrease = decodePositiveAbilityScoreIncreaseValue(
+      twoScores[2],
+      optionIdText,
+      "increase",
+    );
+    if (Either.isLeft(primaryIncrease)) {
+      return Either.left(primaryIncrease.left);
+    }
+    const secondaryIncrease = decodePositiveAbilityScoreIncreaseValue(
+      twoScores[4],
+      optionIdText,
+      "increase",
+    );
+    if (Either.isLeft(secondaryIncrease)) {
+      return Either.left(secondaryIncrease.left);
+    }
+    const maximum = decodeAbilityScoreMaximum(
+      twoScores[5],
+      optionIdText,
+    );
+    if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
     return Either.right([
       {
         ability: primary,
-        increase: Number(twoScores[2]),
-        maxScore: Number(twoScores[5]),
+        increase: primaryIncrease.right,
+        maxScore: maximum.right,
       },
       {
         ability: secondary,
-        increase: Number(twoScores[4]),
-        maxScore: Number(twoScores[5]),
+        increase: secondaryIncrease.right,
+        maxScore: maximum.right,
       },
     ]);
   }
 
   return choiceOptionCodecIssue(
     optionIdText,
-    "Ability Score Increase choice option does not encode an ability-score increase.",
+    { tag: "invalidAbilityScoreIncreaseEncoding" },
   );
+}
+
+function decodePositiveAbilityScoreIncreaseValue(
+  token: string | undefined,
+  optionId: string,
+  field: "increase" | "maximum",
+): Either.Either<PositiveIntegerType, ChoiceOptionCodecIssue> {
+  const value = Number(token);
+  if (!Number.isSafeInteger(value)) {
+    return invalidPositiveAbilityScoreIncreaseValueIssue(
+      optionId,
+      field,
+      "unsafeInteger",
+    );
+  }
+  return value > 0
+    ? Either.right(PositiveInteger(value))
+    : invalidPositiveAbilityScoreIncreaseValueIssue(
+        optionId,
+        field,
+        "nonPositive",
+      );
+}
+
+function decodeAbilityScoreMaximum(
+  token: string | undefined,
+  optionId: string,
+): Either.Either<AbilityScoreType, ChoiceOptionCodecIssue> {
+  const positive = decodePositiveAbilityScoreIncreaseValue(
+    token,
+    optionId,
+    "maximum",
+  );
+  if (Either.isLeft(positive)) return Either.left(positive.left);
+  return positive.right <= 30
+    ? Either.right(abilityScore(positive.right))
+    : invalidAbilityScoreIncreaseValueIssue(
+        optionId,
+        {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "maximum",
+          reason: "maximumOutOfRange",
+        },
+      );
+}
+
+function invalidPositiveAbilityScoreIncreaseValueIssue(
+  optionId: string,
+  field: "increase" | "maximum",
+  reason: "nonPositive" | "unsafeInteger",
+): Either.Either<never, ChoiceOptionCodecIssue> {
+  return invalidAbilityScoreIncreaseValueIssue(
+    optionId,
+    field === "increase"
+      ? { tag: "invalidAbilityScoreIncreaseValue", field, reason }
+      : { tag: "invalidAbilityScoreIncreaseValue", field, reason },
+  );
+}
+
+function invalidAbilityScoreIncreaseValueIssue(
+  optionId: string,
+  cause: Extract<
+    CreationChoiceOptionDecodeCause,
+    { readonly tag: "invalidAbilityScoreIncreaseValue" }
+  >,
+): Either.Either<never, ChoiceOptionCodecIssue> {
+  return choiceOptionCodecIssue(optionId, cause);
 }
 
 export function proficiencyGrantSubjectOption(
@@ -236,7 +346,7 @@ export function decodeProficiencyGrantSubjectOptionId(
         })
       : choiceOptionCodecIssue(
           optionIdText,
-          "Proficiency choice option encodes an unsupported weapon category.",
+          { tag: "unsupportedWeaponCategory" },
         );
   }
 
@@ -249,7 +359,7 @@ export function decodeProficiencyGrantSubjectOptionId(
         })
       : choiceOptionCodecIssue(
           optionIdText,
-          "Proficiency choice option encodes an unsupported armor category.",
+          { tag: "unsupportedArmorCategory" },
         );
   }
 
@@ -259,7 +369,7 @@ export function decodeProficiencyGrantSubjectOptionId(
     if (Either.isLeft(parsedToolId)) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Proficiency choice option encodes an unsupported tool proficiency id.",
+        { tag: "unsupportedToolProficiencyId" },
       );
     }
 
@@ -271,7 +381,7 @@ export function decodeProficiencyGrantSubjectOptionId(
 
   return choiceOptionCodecIssue(
     optionIdText,
-    "Proficiency choice option does not encode a proficiency grant subject.",
+    { tag: "invalidProficiencyEncoding" },
   );
 }
 
@@ -315,7 +425,7 @@ export function parseToolProficiencyId(
     ? Either.right(toolProficiencyId(value))
     : choiceOptionCodecIssue(
         value,
-        "Expected a supported Character Build tool proficiency id.",
+        { tag: "unsupportedCharacterBuildToolProficiencyId" },
       );
 }
 

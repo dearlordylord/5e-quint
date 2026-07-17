@@ -36,6 +36,7 @@ import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
+  characterCreationIssueMessage,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   characterBuildUnitRefs,
@@ -208,7 +209,7 @@ export function battleCreatureInitFromCharacterBuild(
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
   if (Either.isLeft(hitPoints)) {
     return battleCreatureInitIssue(
-      hitPoints.left.map((issue) => issue.message).join("; "),
+      hitPoints.left.map(characterCreationIssueMessage).join("; "),
     );
   }
   const buildMaximumHp = Hp(hitPoints.right.maximum);
@@ -333,7 +334,7 @@ export function battleCreatureInitFromCharacterBuild(
   );
   if (Either.isLeft(proficiencies)) {
     return battleCreatureInitIssue(
-      proficiencies.left.map((issue) => issue.message).join("; "),
+      proficiencies.left.map(characterCreationIssueMessage).join("; "),
     );
   }
   const spellcasting =

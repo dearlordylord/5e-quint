@@ -3,6 +3,7 @@
 import {
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
+  characterCreationIssueMessage,
   characterEquipmentItemSourceFromId,
   type CharacterBuild,
   type UnitCatalog,
@@ -56,7 +57,7 @@ export function characterSheetArmorClassState(
   const armorTraining = characterBuildArmorTraining(build, unitLibrary);
   if (Either.isLeft(armorTraining)) {
     return characterSheetIssue(
-      armorTraining.left.map((issue) => issue.message).join("; "),
+      armorTraining.left.map(characterCreationIssueMessage).join("; "),
     );
   }
 

@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.fighter-heroic-warrior character-sheet.cleric-divine-intervention-session-invocation
 import { Schema } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
+import { AbilityScore } from "@dnd/shared/types";
 
 import {
   AbilitySchema,
@@ -104,6 +105,9 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
 );
+
+const AbilityScoreIncreasePositiveIntegerSchema =
+  PositiveIntegerSchema.pipe(Schema.brand("PositiveInteger"));
 
 const FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS = [
   1, 2, 3, 4, 5,
@@ -3590,17 +3594,17 @@ const FeatAbilityScoreIncreaseAbilityScopeSchema = Schema.Union(
 
 const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
   abilityScope: FeatAbilityScoreIncreaseAbilityScopeSchema,
-  maxScore: PositiveIntegerSchema,
+  maxScore: AbilityScore,
   methods: Schema.NonEmptyArray(
     Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("one_score"),
-        increase: PositiveIntegerSchema,
+        increase: AbilityScoreIncreasePositiveIntegerSchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("two_scores"),
-        primaryIncrease: PositiveIntegerSchema,
-        secondaryIncrease: PositiveIntegerSchema,
+        primaryIncrease: AbilityScoreIncreasePositiveIntegerSchema,
+        secondaryIncrease: AbilityScoreIncreasePositiveIntegerSchema,
       }),
     ),
   ),

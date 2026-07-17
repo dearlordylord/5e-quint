@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 import {
   characterBuildHitPoints,
+  characterCreationIssueMessage,
   type CharacterBuild,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
@@ -313,7 +314,7 @@ function characterSheetBuildNormalHitPointMaximum(input: {
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
   return Either.isLeft(hitPoints)
     ? characterSheetIssue(
-        hitPoints.left.map((issue) => issue.message).join("; "),
+        hitPoints.left.map(characterCreationIssueMessage).join("; "),
       )
     : Either.right(Hp(Number(hitPoints.right.maximum)));
 }

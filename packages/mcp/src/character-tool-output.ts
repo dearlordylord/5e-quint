@@ -1,6 +1,7 @@
 import {
   ABILITY_SCORE_GENERATION_DRAFT_PATH,
   CHARACTER_DRAFT_CHOICE_PATHS,
+  CreationFinalizationIssueSchema,
   LOADOUT_SLOTS,
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
@@ -100,11 +101,6 @@ const CreationHoleSchema = Schema.Union(
     methods: Schema.Array(Schema.Literal(...SUPPORTED_ABILITY_SCORE_METHODS)),
   }),
 );
-const CreationFinalizationIssueSchema = Schema.Struct({
-  tag: Schema.String,
-  code: Schema.String,
-  message: Schema.String,
-});
 export const CreationFinalizationSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("ready"),

@@ -21,6 +21,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildArmorTraining,
+  characterCreationIssueMessage,
   characterBuildFeatureUnitIds,
   characterBuildSpellcastingSlotCapacity,
   characterBuildUnitRefs,
@@ -685,7 +686,7 @@ function spellcastingAllowedByArmorTraining(
   const armorTraining = characterBuildArmorTraining(build, unitLibrary);
   if (Either.isLeft(armorTraining)) {
     return battleCreatureInitIssue(
-      armorTraining.left.map((issue) => issue.message).join("; "),
+      armorTraining.left.map(characterCreationIssueMessage).join("; "),
     );
   }
   return Either.right(

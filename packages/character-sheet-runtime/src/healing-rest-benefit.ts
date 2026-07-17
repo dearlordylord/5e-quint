@@ -8,6 +8,7 @@
 import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
+  characterCreationIssueMessage,
   classLevelForUnit,
   progressionClassUnitIds,
   type CharacterBuild,
@@ -485,7 +486,7 @@ export function characterBuildHitDice(
   const hitPoints = characterBuildHitPoints(build, unitLibrary);
   return Either.isLeft(hitPoints)
     ? characterSheetIssue(
-        hitPoints.left.map((issue) => issue.message).join("; "),
+        hitPoints.left.map(characterCreationIssueMessage).join("; "),
       )
     : Either.right(hitPoints.right.hitDice);
 }

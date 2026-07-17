@@ -28,12 +28,14 @@ import {
   Index,
   NonNegativeInteger,
   PositiveInteger,
+  type AbilityScore as AbilityScoreValue,
   type HP,
   type Index as IndexType,
   type NonNegativeInteger as NonNegativeIntegerType,
   type PositiveInteger as PositiveIntegerType,
 } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { SurfaceReadIssueCode } from "@dnd/surface/surface/character-creation-readers";
 import type {
   Ability,
   ActivationResource,
@@ -998,32 +1000,195 @@ export type CreationBatchIssue = {
   readonly message: string;
 };
 
-export const CREATION_FINALIZATION_ISSUE_CODES = [
-  "illegalFinalization",
-  "invalidChoiceOption",
-  "unsupportedFinalization",
-] as const;
-export type CreationFinalizationIssueCode =
-  (typeof CREATION_FINALIZATION_ISSUE_CODES)[number];
+export type CreationFinalizationReadableUnitRole =
+  | "class"
+  | "background"
+  | "species";
+export type CreationFinalizationLookupUnitRole =
+  | CreationFinalizationReadableUnitRole
+  | "feat";
+
+export type CreationFinalizationIllegalCause =
+  | { readonly tag: "draftIncomplete" }
+  | {
+      readonly tag: "conflictingSpeciesChoiceSources";
+      readonly speciesUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "missingDraconicAncestrySource";
+      readonly speciesUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "invalidDraconicAncestrySelection";
+      readonly speciesUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "multipleSpeciesLineageSources";
+      readonly speciesUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "invalidGnomishLineageSelection";
+      readonly traitUnitId: UnitRecord["id"];
+    }
+  | { readonly tag: "multipleSpellcastingSlotPools" }
+  | { readonly tag: "multiplePactMagicSlotPools" };
+
+export type CharacterBuildProjectionCause =
+  | {
+      readonly tag: "missingStartingClassFacts";
+      readonly projection:
+        | "characterBuild"
+        | "hitPoints"
+        | "proficiencies"
+        | "armorTraining";
+      readonly classUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "missingHitPointMaximumBonusFeatureUnit";
+      readonly featureUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "nonDeterministicHitPointMaximumBonus";
+      readonly featureUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "unsupportedClassFeatureLanguage";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly languageId: string;
+    }
+  | {
+      readonly tag: "duplicateClassFeatureLanguage";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly language: Language;
+    }
+  | {
+      readonly tag: "missingClassFeatureLanguageChoice";
+      readonly featureUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "classFeatureLanguageChoiceCountMismatch";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly mismatch:
+        | {
+            readonly tag: "missing";
+            readonly receivedCount: NonNegativeIntegerType;
+            readonly missingCount: PositiveIntegerType;
+          }
+        | {
+            readonly tag: "extra";
+            readonly expectedCount: PositiveIntegerType;
+            readonly extraCount: PositiveIntegerType;
+          };
+    }
+  | {
+      readonly tag: "unsupportedClassFeatureLanguageChoice";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly optionId: CreationChoiceOptionId;
+    }
+  | {
+      readonly tag: "duplicateClassFeatureLanguageChoice";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly language: Language;
+    }
+  | {
+      readonly tag: "unprojectableAbilityCheckBonus";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly optionId: string;
+    }
+  | {
+      readonly tag: "unsupportedEquipmentUnitId";
+      readonly equipmentUnitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "unreadableUnit";
+      readonly role: CreationFinalizationReadableUnitRole;
+      readonly unitId: UnitRecord["id"];
+      readonly issues: readonly [
+        { readonly code: SurfaceReadIssueCode },
+        ...{ readonly code: SurfaceReadIssueCode }[],
+      ];
+    }
+  | {
+      readonly tag: "unknownUnit";
+      readonly role: CreationFinalizationLookupUnitRole;
+      readonly unitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "abilityScoreCapExceeded";
+      readonly source: "background";
+      readonly ability: Ability;
+      readonly excess: PositiveIntegerType;
+    }
+  | {
+      readonly tag: "abilityScoreCapExceeded";
+      readonly source: "classFeature";
+      readonly ability: Ability;
+      readonly maximum: AbilityScoreValue;
+      readonly excess: PositiveIntegerType;
+    }
+  | {
+      readonly tag: "unsupportedToolProficiency";
+      readonly source: "background" | "surfaceGrant";
+      readonly toolId: string;
+    }
+  | {
+      readonly tag: "invalidChoiceOption";
+      readonly optionId: string;
+      readonly reason: CreationChoiceOptionDecodeCause;
+    };
+
+export type CreationFinalizationUnsupportedCause =
+  | { readonly tag: "unsupportedBackground" }
+  | { readonly tag: "unsupportedSpecies" }
+  | { readonly tag: "speciesSizeMismatch" }
+  | { readonly tag: "draconicAncestryMismatch" }
+  | { readonly tag: "unsupportedProgression" }
+  | { readonly tag: "unsupportedAbilityScoreGeneration" }
+  | { readonly tag: "unsupportedBackgroundAbilityScoreIncrease" }
+  | { readonly tag: "manifestLanguagesMismatch" }
+  | { readonly tag: "manifestAlignmentMismatch" }
+  | { readonly tag: "unsupportedChoices" }
+  | { readonly tag: "selectedFeatPrerequisitesNotMet" }
+  | { readonly tag: "missingSpellcastingFacts" }
+  | { readonly tag: "preparedSpellSelectionMismatch" }
+  | { readonly tag: "duplicateWizardSpellbookSelection" }
+  | { readonly tag: "unsupportedEquipmentSelection" };
+
+export type CreationChoiceOptionDecodeCause =
+  | { readonly tag: "unsupportedAbility" }
+  | { readonly tag: "duplicateAbilities" }
+  | {
+      readonly tag: "invalidAbilityScoreIncreaseValue";
+      readonly field: "increase";
+      readonly reason: "nonPositive" | "unsafeInteger";
+    }
+  | {
+      readonly tag: "invalidAbilityScoreIncreaseValue";
+      readonly field: "maximum";
+      readonly reason: "nonPositive" | "unsafeInteger" | "maximumOutOfRange";
+    }
+  | { readonly tag: "invalidAbilityScoreIncreaseEncoding" }
+  | { readonly tag: "unsupportedWeaponCategory" }
+  | { readonly tag: "unsupportedArmorCategory" }
+  | { readonly tag: "unsupportedToolProficiencyId" }
+  | { readonly tag: "invalidProficiencyEncoding" }
+  | { readonly tag: "unsupportedCharacterBuildToolProficiencyId" };
+
+export type CharacterBuildProjectionIssue = {
+  readonly tag: "characterBuildProjection";
+  readonly cause: CharacterBuildProjectionCause;
+};
 
 export type CreationFinalizationIssue =
   | {
       readonly tag: "illegalFinalization";
-      readonly code: "illegalFinalization";
-      readonly message: string;
-    }
-  | {
-      readonly tag: "invalidChoiceOption";
-      readonly code: "invalidChoiceOption";
-      readonly optionId: string;
-      readonly reason: string;
-      readonly message: string;
+      readonly cause: CreationFinalizationIllegalCause;
     }
   | {
       readonly tag: "unsupportedFinalization";
-      readonly code: "unsupportedFinalization";
-      readonly message: string;
-    };
+      readonly cause: CreationFinalizationUnsupportedCause;
+    }
+  | CharacterBuildProjectionIssue;
 
 export type CreationBatchFillIssue = CreationFillIssue | CreationBatchIssue;
 export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
