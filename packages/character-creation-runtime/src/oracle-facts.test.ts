@@ -1,13 +1,8 @@
-import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { abilityScore } from "@dnd/shared/types";
 
 import {
-  CharacterBuildFactSchema,
-  CharacterCreationBatchFactSchema,
-  CreationFillFactSchema,
-  CreationFrontierFactSchema,
   characterBuildFact,
   characterDraftId,
   characterCreationBatchFact,
@@ -16,15 +11,16 @@ import {
   creationFillIndex,
   creationFrontierFact,
   creationHoleId,
+  decodeCharacterBuildFact,
+  decodeCharacterCreationBatchFact,
+  decodeCreationFillFact,
+  decodeCreationFrontierFact,
   draftRevision,
   exactChoiceCardinality,
   type CharacterBuild,
   type CreationBatchFillResult,
   type CreationHole,
 } from "./index.ts";
-
-const decodeStrict = <A, I>(schema: Schema.Schema<A, I>) =>
-  Schema.decodeUnknownEither(schema, { onExcessProperty: "error" });
 
 function syntheticChoiceHole(): CreationHole {
   const cardinality = exactChoiceCardinality(1);
@@ -82,18 +78,33 @@ describe("Character Creation owner facts", () => {
         },
       ],
     });
-    expect(decodeStrict(CreationFrontierFactSchema)(fact)._tag).toBe("Right");
+    expect(decodeCreationFrontierFact(fact)._tag).toBe("Right");
   });
 
   test("rejects contradictory Hole identity and source facts", () => {
     const fact = creationFrontierFact([syntheticChoiceHole()]);
 
     expect(
-      decodeStrict(CreationFrontierFactSchema)({
+      decodeCreationFrontierFact({
         holes: [
           {
             ...fact.holes[0],
             source: { tag: "draft", path: "draft.species" },
+          },
+        ],
+      })._tag,
+    ).toBe("Left");
+  });
+
+  test("rejects a Hole whose cardinality exceeds its options", () => {
+    const fact = creationFrontierFact([syntheticChoiceHole()]);
+
+    expect(
+      decodeCreationFrontierFact({
+        holes: [
+          {
+            ...fact.holes[0],
+            cardinality: { tag: "exactly", count: 2 },
           },
         ],
       })._tag,
@@ -118,8 +129,7 @@ describe("Character Creation owner facts", () => {
       "background_synthetic_sage",
     ]);
     expect(
-      decodeStrict(CreationFillFactSchema)({ ...fact, label: "presentation" })
-        ._tag,
+      decodeCreationFillFact({ ...fact, label: "presentation" })._tag,
     ).toBe("Left");
   });
 
@@ -164,19 +174,35 @@ describe("Character Creation owner facts", () => {
       },
     });
     expect(fact).not.toHaveProperty("draft");
-    expect(decodeStrict(CharacterCreationBatchFactSchema)(fact)._tag).toBe(
-      "Right",
-    );
+    expect(decodeCharacterCreationBatchFact(fact)._tag).toBe("Right");
   });
 
   test("projects finalized Character Build facts through the strict schema", () => {
     const fact = characterBuildFact(syntheticBuild());
 
     expect(fact).toEqual(syntheticBuild());
-    expect(decodeStrict(CharacterBuildFactSchema)(fact)._tag).toBe("Right");
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
     expect(
-      decodeStrict(CharacterBuildFactSchema)({ ...fact, displayName: "Nope" })
-        ._tag,
+      decodeCharacterBuildFact({ ...fact, displayName: "Nope" })._tag,
+    ).toBe("Left");
+  });
+
+  test("rejects contradictory Character Build equipment identity", () => {
+    const fact = characterBuildFact(syntheticBuild());
+
+    expect(
+      decodeCharacterBuildFact({
+        ...fact,
+        equipment: {
+          owned: [{ itemId: "main:weapon_synthetic", unitId: "weapon_other" }],
+          loadout: {
+            weapon: {
+              itemId: "main:weapon_synthetic",
+              grip: "one_handed",
+            },
+          },
+        },
+      })._tag,
     ).toBe("Left");
   });
 });

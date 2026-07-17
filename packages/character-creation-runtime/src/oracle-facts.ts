@@ -139,7 +139,14 @@ export const CreationHoleFactSchema = Schema.Union(
         { message: () => "Creation Hole option identity must be distinct" },
       ),
     ),
-  }),
+  }).pipe(
+    Schema.filter(
+      ({ cardinality, options }) =>
+        options.length >=
+        (cardinality.tag === "exactly" ? cardinality.count : cardinality.max),
+      { message: () => "Creation Hole cardinality must be fillable" },
+    ),
+  ),
   Schema.Struct({
     kind: Schema.Literal("abilityScores"),
     holeId: CreationHoleIdSchema,
@@ -361,7 +368,32 @@ const EquipmentSchema = Schema.Struct({
       { exact: true },
     ),
   }),
-});
+}).pipe(
+  Schema.filter(
+    ({ owned, loadout }) => {
+      const ownedItemIds = new Set(owned.map(({ itemId }) => itemId));
+      const ownedItemsMatchIdentity = owned.every(({ itemId, unitId }) => {
+        const source = parseCharacterEquipmentItemId(itemId);
+        return source._tag === "Right" && source.right.unitId === unitId;
+      });
+      const loadoutItemIds = [
+        loadout.armor,
+        loadout.shield,
+        loadout.weapon?.itemId,
+        loadout.offHandWeapon?.itemId,
+      ].filter((itemId) => itemId !== undefined);
+      return (
+        ownedItemsMatchIdentity &&
+        ownedItemIds.size === owned.length &&
+        loadoutItemIds.every((itemId) => ownedItemIds.has(itemId))
+      );
+    },
+    {
+      message: () =>
+        "Character Build equipment identity and loadout ownership must agree",
+    },
+  ),
+);
 const SpellcastingSchema = Schema.Struct({
   sources: Schema.NonEmptyArray(
     Schema.Struct({
@@ -516,6 +548,41 @@ export type CharacterCreationBatchFact = Schema.Schema.Type<
   typeof CharacterCreationBatchFactSchema
 >;
 
+const strictDecodeOptions = { onExcessProperty: "error" } as const;
+export const decodeCreationHoleFact = Schema.decodeUnknownEither(
+  CreationHoleFactSchema,
+  strictDecodeOptions,
+);
+export const decodeCreationFrontierFact = Schema.decodeUnknownEither(
+  CreationFrontierFactSchema,
+  strictDecodeOptions,
+);
+export const decodeCreationFillFact = Schema.decodeUnknownEither(
+  CreationFillFactSchema,
+  strictDecodeOptions,
+);
+export const decodeCharacterBuildFact = Schema.decodeUnknownEither(
+  CharacterBuildFactSchema,
+  strictDecodeOptions,
+);
+export const decodeCreationBatchRejectionFact = Schema.decodeUnknownEither(
+  CreationBatchRejectionFactSchema,
+  strictDecodeOptions,
+);
+export const decodeCreationFinalizationRejectionFact =
+  Schema.decodeUnknownEither(
+    CreationFinalizationRejectionFactSchema,
+    strictDecodeOptions,
+  );
+export const decodeCreationFinalizationFact = Schema.decodeUnknownEither(
+  CreationFinalizationFactSchema,
+  strictDecodeOptions,
+);
+export const decodeCharacterCreationBatchFact = Schema.decodeUnknownEither(
+  CharacterCreationBatchFactSchema,
+  strictDecodeOptions,
+);
+
 function noUnprojectedFields(
   fields: Readonly<Record<PropertyKey, never>>,
 ): void {
@@ -529,6 +596,79 @@ function mapNonEmpty<A, B>(
   return [project(values[0]), ...values.slice(1).map(project)];
 }
 
+type ChoiceHole = Extract<CreationHole, { readonly kind: "choice" }>;
+type ChoiceHoleFact = Extract<CreationHoleFact, { readonly kind: "choice" }>;
+type ChoiceOption = ChoiceHole["options"][number];
+type ChoiceOptionFact = ChoiceHoleFact["options"][number];
+
+function choiceHoleSourceFact(
+  source: ChoiceHole["source"],
+): ChoiceHoleFact["source"] {
+  return Match.value(source).pipe(
+    Match.when({ tag: "draft" }, ({ tag, path, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, path };
+    }),
+    Match.when(
+      { tag: "unitChoice" },
+      ({ tag, unitId, choiceKey, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, unitId, choiceKey };
+      },
+    ),
+    Match.when(
+      { tag: "loadout" },
+      ({ tag, equipmentUnitId, slot, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, equipmentUnitId, slot };
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function choiceCardinalityFact(
+  cardinality: ChoiceHole["cardinality"],
+): ChoiceHoleFact["cardinality"] {
+  return Match.value(cardinality).pipe(
+    Match.when({ tag: "exactly" }, ({ tag, count, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, count };
+    }),
+    Match.when({ tag: "between" }, ({ tag, min, max, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, min, max };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function choiceOptionFact(option: ChoiceOption): ChoiceOptionFact {
+  const { optionId, unitRef, label: _label, ...unprojected } = option;
+  noUnprojectedFields(unprojected);
+  if (unitRef === undefined) return { optionId };
+
+  const { unitId, selectedOption, ...unprojectedUnitRef } = unitRef;
+  noUnprojectedFields(unprojectedUnitRef);
+  if (selectedOption === undefined) return { optionId, unitRef: { unitId } };
+
+  const { kind, selection, ...unprojectedSelectedOption } = selectedOption;
+  noUnprojectedFields(unprojectedSelectedOption);
+  return { optionId, unitRef: { unitId, selectedOption: { kind, selection } } };
+}
+
+function abilityScoreAssignmentFact(
+  assignment: Extract<
+    CreationFill,
+    { readonly kind: "abilityScores" }
+  >["value"] &
+    CharacterBuild["abilityScores"],
+): Extract<CreationFillFact, { readonly kind: "abilityScores" }>["value"] {
+  const { str, dex, con, int, wis, cha, ...unprojected } = assignment;
+  noUnprojectedFields(unprojected);
+  return { str, dex, con, int, wis, cha };
+}
+
 export function creationHoleFact(hole: CreationHole): CreationHoleFact {
   return Match.value(hole).pipe(
     Match.when({ kind: "choice" }, (choice) => {
@@ -538,20 +678,17 @@ export function creationHoleFact(hole: CreationHole): CreationHoleFact {
       return {
         kind,
         holeId,
-        source,
-        cardinality,
-        options: options.map(
-          ({ optionId, unitRef, label: _label, ...rest }) => {
-            noUnprojectedFields(rest);
-            return unitRef === undefined ? { optionId } : { optionId, unitRef };
-          },
-        ),
+        source: choiceHoleSourceFact(source),
+        cardinality: choiceCardinalityFact(cardinality),
+        options: options.map(choiceOptionFact),
       };
     }),
     Match.when({ kind: "abilityScores" }, (abilityScores) => {
       const { kind, holeId, source, methods, ...unprojected } = abilityScores;
       noUnprojectedFields(unprojected);
-      return { kind, holeId, source, methods };
+      const { tag, path, ...unprojectedSource } = source;
+      noUnprojectedFields(unprojectedSource);
+      return { kind, holeId, source: { tag, path }, methods };
     }),
     Match.exhaustive,
   );
@@ -573,10 +710,363 @@ export function creationFillFact(fill: CreationFill): CreationFillFact {
     Match.when({ kind: "abilityScores" }, (abilityScores) => {
       const { kind, holeId, method, value, ...unprojected } = abilityScores;
       noUnprojectedFields(unprojected);
-      return { kind, holeId, method, value };
+      return { kind, holeId, method, value: abilityScoreAssignmentFact(value) };
     }),
     Match.exhaustive,
   );
+}
+
+function progressionFact(
+  progression: CharacterBuild["progression"],
+): CharacterBuildFact["progression"] {
+  const { startingClass, advancements, ...unprojected } = progression;
+  noUnprojectedFields(unprojected);
+  return {
+    startingClass,
+    advancements: advancements.map((advancement) => {
+      const { classUnitId, hitPointRule, ...unprojectedAdvancement } =
+        advancement;
+      noUnprojectedFields(unprojectedAdvancement);
+      const { tag, ...unprojectedHitPointRule } = hitPointRule;
+      noUnprojectedFields(unprojectedHitPointRule);
+      return { classUnitId, hitPointRule: { tag } };
+    }),
+  };
+}
+
+function speciesChoiceFactsFact(
+  facts: NonNullable<CharacterBuild["speciesChoiceFacts"]>,
+): NonNullable<CharacterBuildFact["speciesChoiceFacts"]> {
+  if (facts.draconicAncestry !== undefined) {
+    const {
+      draconicAncestry,
+      gnomishLineage: _gnomishLineage,
+      ...unprojected
+    } = facts;
+    noUnprojectedFields(unprojected);
+    const { kind, ancestorId, ...unprojectedAncestry } = draconicAncestry;
+    noUnprojectedFields(unprojectedAncestry);
+    return { draconicAncestry: { kind, ancestorId } };
+  }
+
+  const {
+    gnomishLineage,
+    draconicAncestry: _draconicAncestry,
+    ...unprojected
+  } = facts;
+  noUnprojectedFields(unprojected);
+  const { kind, lineageId, spellcastingAbility, ...unprojectedLineage } =
+    gnomishLineage;
+  noUnprojectedFields(unprojectedLineage);
+  return { gnomishLineage: { kind, lineageId, spellcastingAbility } };
+}
+
+function classFeatureLanguageFact(
+  language: CharacterBuild["classFeatureLanguages"][number],
+): CharacterBuildFact["classFeatureLanguages"][number] {
+  const { kind, sourceUnitId, language: languageId, ...unprojected } = language;
+  noUnprojectedFields(unprojected);
+  return { kind, sourceUnitId, language: languageId };
+}
+
+function proficiencyChoiceFact(
+  choice: CharacterBuild["proficiencyChoices"][number],
+): CharacterBuildFact["proficiencyChoices"][number] {
+  return Match.value(choice).pipe(
+    Match.when({ kind: "skill" }, ({ kind, skill, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { kind, skill };
+    }),
+    Match.when(
+      { kind: "skill_expertise" },
+      ({ kind, skill, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { kind, skill };
+      },
+    ),
+    Match.when(
+      { kind: "weapon_category" },
+      ({ kind, category, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { kind, category };
+      },
+    ),
+    Match.when(
+      { kind: "armor_category" },
+      ({ kind, category, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { kind, category };
+      },
+    ),
+    Match.when({ kind: "tool" }, ({ kind, toolId, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { kind, toolId };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function eldritchInvocationSelectionFact(
+  selection: Extract<
+    CharacterBuild["features"][number],
+    { readonly kind: "selectedEldritchInvocation" }
+  >["selection"],
+): Extract<
+  CharacterBuildFact["features"][number],
+  { readonly kind: "selectedEldritchInvocation" }
+>["selection"] {
+  return Match.value(selection).pipe(
+    Match.when(
+      { kind: "nonRepeatable" },
+      ({ kind, invocationId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { kind, invocationId };
+      },
+    ),
+    Match.when(
+      { kind: "repeatable" },
+      ({ kind, invocationId, repeatableChoice, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        const projectedRepeatableChoice = Match.value(repeatableChoice).pipe(
+          Match.when(
+            { kind: "knownWarlockCantrip" },
+            ({ kind: repeatableKind, cantripId, ...unprojectedChoice }) => {
+              noUnprojectedFields(unprojectedChoice);
+              return { kind: repeatableKind, cantripId };
+            },
+          ),
+          Match.when(
+            { kind: "originFeat" },
+            ({ kind: repeatableKind, featUnitId, ...unprojectedChoice }) => {
+              noUnprojectedFields(unprojectedChoice);
+              return { kind: repeatableKind, featUnitId };
+            },
+          ),
+          Match.exhaustive,
+        );
+        return {
+          kind,
+          invocationId,
+          repeatableChoice: projectedRepeatableChoice,
+        };
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function featureFact(
+  feature: CharacterBuild["features"][number],
+): CharacterBuildFact["features"][number] {
+  return Match.value(feature).pipe(
+    Match.when(
+      { kind: "selectedClassChoice" },
+      ({
+        kind,
+        selectedFromUnitId,
+        unitId,
+        selectedOption,
+        ...unprojected
+      }) => {
+        noUnprojectedFields(unprojected);
+        if (selectedOption === undefined) {
+          return { kind, selectedFromUnitId, unitId };
+        }
+        const {
+          kind: selectedOptionKind,
+          selection,
+          ...unprojectedSelectedOption
+        } = selectedOption;
+        noUnprojectedFields(unprojectedSelectedOption);
+        return {
+          kind,
+          selectedFromUnitId,
+          unitId,
+          selectedOption: { kind: selectedOptionKind, selection },
+        };
+      },
+    ),
+    Match.when(
+      { kind: "selectedEldritchInvocation" },
+      ({ kind, selectedFromUnitId, selection, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return {
+          kind,
+          selectedFromUnitId,
+          selection: eldritchInvocationSelectionFact(selection),
+        };
+      },
+    ),
+    Match.when(
+      { kind: "selectedSorcererMetamagicOption" },
+      ({ kind, selectedFromUnitId, optionId, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { kind, selectedFromUnitId, optionId };
+      },
+    ),
+    Match.when(
+      { kind: "abilityCheckBonus" },
+      ({
+        kind,
+        selectedFromUnitId,
+        ability,
+        skills,
+        bonus,
+        ...unprojected
+      }) => {
+        noUnprojectedFields(unprojected);
+        const {
+          kind: bonusKind,
+          ability: bonusAbility,
+          minimum,
+          ...unprojectedBonus
+        } = bonus;
+        noUnprojectedFields(unprojectedBonus);
+        return {
+          kind,
+          selectedFromUnitId,
+          ability,
+          skills,
+          bonus: { kind: bonusKind, ability: bonusAbility, minimum },
+        };
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellcastingFact(
+  spellcasting: NonNullable<CharacterBuild["spellcasting"]>,
+): NonNullable<CharacterBuildFact["spellcasting"]> {
+  const { sources, slotPools, ...unprojected } = spellcasting;
+  noUnprojectedFields(unprojected);
+  const projectedSources = mapNonEmpty(sources, (source) => {
+    const {
+      sourceUnitId,
+      spellcastingAbility,
+      cantrips,
+      spellbook,
+      preparedSpells,
+      spellcastingFocuses,
+      bookOfShadows,
+      ...unprojectedSource
+    } = source;
+    noUnprojectedFields(unprojectedSource);
+    if (bookOfShadows === undefined) {
+      return {
+        sourceUnitId,
+        spellcastingAbility,
+        cantrips,
+        spellbook,
+        preparedSpells,
+        spellcastingFocuses,
+      };
+    }
+    const {
+      tag,
+      cantrips: bookCantrips,
+      ritualSpells,
+      spellcastingFocus,
+      ...unprojectedBook
+    } = bookOfShadows;
+    noUnprojectedFields(unprojectedBook);
+    return {
+      sourceUnitId,
+      spellcastingAbility,
+      cantrips,
+      spellbook,
+      preparedSpells,
+      spellcastingFocuses,
+      bookOfShadows: {
+        tag,
+        cantrips: bookCantrips,
+        ritualSpells,
+        spellcastingFocus,
+      },
+    };
+  });
+
+  const {
+    spellcasting: ordinarySlots,
+    pactMagic,
+    ...unprojectedSlotPools
+  } = slotPools;
+  noUnprojectedFields(unprojectedSlotPools);
+  const projectedOrdinarySlots =
+    ordinarySlots === undefined
+      ? undefined
+      : (() => {
+          const { kind, slots, ...unprojectedPool } = ordinarySlots;
+          noUnprojectedFields(unprojectedPool);
+          return {
+            kind,
+            slots: slots.map(({ spellLevel, count, ...unprojectedSlot }) => {
+              noUnprojectedFields(unprojectedSlot);
+              return { spellLevel, count };
+            }),
+          };
+        })();
+  const projectedPactMagic =
+    pactMagic === undefined
+      ? undefined
+      : (() => {
+          const { kind, slotLevel, count, ...unprojectedPool } = pactMagic;
+          noUnprojectedFields(unprojectedPool);
+          return { kind, slotLevel, count };
+        })();
+
+  return {
+    sources: projectedSources,
+    slotPools: {
+      ...(projectedOrdinarySlots === undefined
+        ? {}
+        : { spellcasting: projectedOrdinarySlots }),
+      ...(projectedPactMagic === undefined
+        ? {}
+        : { pactMagic: projectedPactMagic }),
+    },
+  };
+}
+
+function equipmentFact(
+  equipment: CharacterBuild["equipment"],
+): CharacterBuildFact["equipment"] {
+  const { owned, loadout, ...unprojected } = equipment;
+  noUnprojectedFields(unprojected);
+  const projectedOwned = owned.map(({ itemId, unitId, ...unprojectedItem }) => {
+    noUnprojectedFields(unprojectedItem);
+    return { itemId, unitId };
+  });
+  const { armor, shield, weapon, offHandWeapon, ...unprojectedLoadout } =
+    loadout;
+  noUnprojectedFields(unprojectedLoadout);
+  const projectedWeapon =
+    weapon === undefined
+      ? undefined
+      : (() => {
+          const { itemId, grip, ...unprojectedWeapon } = weapon;
+          noUnprojectedFields(unprojectedWeapon);
+          return { itemId, grip };
+        })();
+  const projectedOffHandWeapon =
+    offHandWeapon === undefined
+      ? undefined
+      : (() => {
+          const { itemId, ...unprojectedWeapon } = offHandWeapon;
+          noUnprojectedFields(unprojectedWeapon);
+          return { itemId };
+        })();
+  return {
+    owned: projectedOwned,
+    loadout: {
+      ...(armor === undefined ? {} : { armor }),
+      ...(shield === undefined ? {} : { shield }),
+      ...(projectedWeapon === undefined ? {} : { weapon: projectedWeapon }),
+      ...(projectedOffHandWeapon === undefined
+        ? {}
+        : { offHandWeapon: projectedOffHandWeapon }),
+    },
+  };
 }
 
 export function characterBuildFact(build: CharacterBuild): CharacterBuildFact {
@@ -598,19 +1088,27 @@ export function characterBuildFact(build: CharacterBuild): CharacterBuildFact {
   } = build;
   noUnprojectedFields(unprojected);
   return {
-    progression,
+    progression: progressionFact(progression),
     background,
     species,
     ...(speciesSize === undefined ? {} : { speciesSize }),
-    ...(speciesChoiceFacts === undefined ? {} : { speciesChoiceFacts }),
+    ...(speciesChoiceFacts === undefined
+      ? {}
+      : { speciesChoiceFacts: speciesChoiceFactsFact(speciesChoiceFacts) }),
     originLanguages,
-    classFeatureLanguages,
-    alignment,
-    abilityScores,
-    proficiencyChoices,
-    features,
-    ...(spellcasting === undefined ? {} : { spellcasting }),
-    equipment,
+    classFeatureLanguages: classFeatureLanguages.map(classFeatureLanguageFact),
+    alignment: (() => {
+      const { order, morality, ...unprojectedAlignment } = alignment;
+      noUnprojectedFields(unprojectedAlignment);
+      return { order, morality };
+    })(),
+    abilityScores: abilityScoreAssignmentFact(abilityScores),
+    proficiencyChoices: proficiencyChoices.map(proficiencyChoiceFact),
+    features: features.map(featureFact),
+    ...(spellcasting === undefined
+      ? {}
+      : { spellcasting: spellcastingFact(spellcasting) }),
+    equipment: equipmentFact(equipment),
   };
 }
 
