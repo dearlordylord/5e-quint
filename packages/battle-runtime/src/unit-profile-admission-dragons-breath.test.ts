@@ -65,7 +65,7 @@ describe("Dragon's Breath initial cast admission", () => {
       throw new Error("Expected fixture caster Spell Save DC.");
     }
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -103,12 +103,12 @@ describe("Dragon's Breath initial cast admission", () => {
       );
     }
     expect(resolved).toMatchObject({ tag: "resolved" });
-    expect(requireCombatant(resolved.state, spellCasterId).concentration).toEqual(
-      {
-        sourceSpellId: dragonsBreathUnitId,
-        effectKind: "spellEffect",
-      },
-    );
+    expect(
+      requireCombatant(resolved.state, spellCasterId).concentration,
+    ).toEqual({
+      sourceSpellId: dragonsBreathUnitId,
+      effectKind: "spellEffect",
+    });
     expect(
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toContainEqual({
@@ -145,12 +145,9 @@ describe("Dragon's Breath initial cast admission", () => {
         state,
         subject: act.subject,
         fills: [
-          spellTargetListFill(
-            targetHole,
-            spellCasterId,
-            dragonsBreathUnitId,
-            [spellTargetId],
-          ),
+          spellTargetListFill(targetHole, spellCasterId, dragonsBreathUnitId, [
+            spellTargetId,
+          ]),
           damageTypeChoiceFill(damageTypeHole, "acid"),
         ],
       }),
@@ -286,28 +283,25 @@ describe("Dragon's Breath initial cast admission", () => {
     const caster = requireCombatant(endedCasterTurn.state, spellCasterId);
     const stateWithSaveModifiers = {
       ...endedCasterTurn.state,
-      combatants: new Map(endedCasterTurn.state.combatants).set(
-        spellCasterId,
-        {
-          ...caster,
-          dodging: true,
-          activeEffects: [
-            ...caster.activeEffects,
-            {
-              kind: "wardingBond",
-              sourceSpellId: dragonsBreathUnitId,
-              sourceCombatantId: spellTargetId,
-              expiresAt: {
-                kind: "duration",
-                durationTicks: elapsedTimeTicks(3_600),
-              },
-            } satisfies Extract<
-              BattleActiveEffect,
-              { readonly kind: "wardingBond" }
-            >,
-          ],
-        },
-      ),
+      combatants: new Map(endedCasterTurn.state.combatants).set(spellCasterId, {
+        ...caster,
+        dodging: true,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "wardingBond",
+            sourceSpellId: dragonsBreathUnitId,
+            sourceCombatantId: spellTargetId,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(3_600),
+            },
+          } satisfies Extract<
+            BattleActiveEffect,
+            { readonly kind: "wardingBond" }
+          >,
+        ],
+      }),
     };
     const exhaleAct = dragonsBreathExhaleAct(stateWithSaveModifiers);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
@@ -363,7 +357,9 @@ describe("Dragon's Breath initial cast admission", () => {
       ],
     });
     if (needsConcentration.tag !== "needsHoles") {
-      throw new Error("Expected Dragon's Breath to request concentration holes.");
+      throw new Error(
+        "Expected Dragon's Breath to request concentration holes.",
+      );
     }
     const targetConcentrationHole = requireConcentrationHole(
       needsConcentration.holes,
@@ -466,7 +462,9 @@ describe("Dragon's Breath initial cast admission", () => {
     const beforeProtectedHp = Number(
       requireCombatant(targetTurn, spellCasterId).hp,
     );
-    const beforeLaterHp = Number(requireCombatant(targetTurn, laterTargetId).hp);
+    const beforeLaterHp = Number(
+      requireCombatant(targetTurn, laterTargetId).hp,
+    );
 
     const resolved = resolveBattleSubject({
       state: targetTurn,

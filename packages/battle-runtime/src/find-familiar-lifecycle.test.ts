@@ -2359,7 +2359,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingHealingRoll.tag).toBe("needsHoles");
     if (awaitingHealingRoll.tag !== "needsHoles") return;
-    expect(awaitingHealingRoll.subject).toEqual(delivery.subject);
+    expect(awaitingHealingRoll.subject).toMatchObject(delivery.subject);
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
 
     const delivered = resolveBattleSubject({

@@ -46,7 +46,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -114,7 +114,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -187,7 +187,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       spellId: rayOfFrostUnitId,
     });
 
-    expect(spellAttackAct.subject).toEqual({
+    expect(spellAttackAct.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -244,7 +244,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       spellId: acidSplashUnitId,
     });
 
-    expect(saveGatedAct.subject).toEqual({
+    expect(saveGatedAct.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
@@ -282,7 +282,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       spellId: mageArmorUnitId,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

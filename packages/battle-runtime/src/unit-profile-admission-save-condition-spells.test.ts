@@ -95,7 +95,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -231,7 +231,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         ),
       },
     );
-    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants).value;
+    const expiredCombatants = tickDurationEffects(
+      nearlyExpiredCombatants,
+    ).value;
     expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
     expect(expiredCombatants.get(spellTargetId)).toMatchObject({
       conditions: expect.not.objectContaining({ paralyzed: true }),
@@ -596,7 +598,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 5,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -651,8 +653,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       spellId: holdMonsterUnitId,
       slotLevel: 6,
     });
-    expect(requireHole(sixthLevelAct.initialHoles, "spellTargetList"))
-      .toEqual(expect.objectContaining({ minTargets: 1, maxTargets: 2 }));
+    expect(requireHole(sixthLevelAct.initialHoles, "spellTargetList")).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 2 }),
+    );
   });
 
   test("contagion is admitted as touch save damage with counted Poisoned lifecycle", () => {
@@ -667,14 +670,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 5,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        contagionUnitId,
-        5,
-        "saveGatedDamage",
-      ),
+      invocation: spellSlotInvocationRef(contagionUnitId, 5, "saveGatedDamage"),
       mode: { tag: "cast" },
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
@@ -907,7 +906,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1061,7 +1060,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1115,7 +1114,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef("entangle", 1, "saveGatedCondition"),
@@ -1171,7 +1170,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
@@ -1288,7 +1287,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     };
     const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

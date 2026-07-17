@@ -586,6 +586,9 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     sourceUnitId: BattleSubjectTextSchema,
     action: Schema.Literal("dash"),
     speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
@@ -593,6 +596,9 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     sourceUnitId: BattleSubjectTextSchema,
     action: Schema.Literal("disengage", "hide"),
   }),
@@ -600,12 +606,18 @@ export const BattleSubjectSchema = Schema.Union(
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
+      procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+        exact: true,
+      }),
       resourceUnitId: BattleSubjectTextSchema,
       option: Schema.Literal("flurryOfBlows"),
     }),
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
+      procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+        exact: true,
+      }),
       resourceUnitId: BattleSubjectTextSchema,
       option: Schema.Literal("patientDefense"),
       mode: Schema.Literal(...MONK_FOCUS_PATIENT_DEFENSE_MODES),
@@ -613,6 +625,9 @@ export const BattleSubjectSchema = Schema.Union(
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
+      procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+        exact: true,
+      }),
       resourceUnitId: BattleSubjectTextSchema,
       option: Schema.Literal("stepOfTheWind"),
       mode: Schema.Literal(...MONK_FOCUS_STEP_OF_THE_WIND_MODES),
@@ -622,12 +637,18 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("monkFocusFlurryOfBlowsStrike"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     resourceUnitId: BattleSubjectTextSchema,
     attackName: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     invocation: SpellInvocationRefSchema,
     mode: SpellSubjectModeSchema,
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
@@ -640,6 +661,9 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("bonusActionSpell"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     invocation: SpellInvocationRefSchema,
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
@@ -654,6 +678,9 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("bonusActionDashSpell"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     invocation: SpellInvocationRefSchema,
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
@@ -663,17 +690,26 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("unitFeature"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     unitId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("unitFeatureHeldWeaponActivation"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     unitId: BattleSubjectTextSchema,
     weaponItemId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     unitId: BattleSubjectTextSchema,
     action: Schema.Literal("assumeForm"),
     formStatBlockId: BattleSubjectTextSchema,
@@ -681,6 +717,9 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     unitId: BattleSubjectTextSchema,
     action: Schema.Literal("dismiss"),
   }),
@@ -701,6 +740,9 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("findFamiliarTouchSpell"),
     actorId: CombatantId,
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     companionId: CombatantId,
     spellAction: Schema.Literal("action", "bonusAction"),
     invocation: SpellInvocationRefSchema,
@@ -1032,6 +1074,38 @@ export const BattleSubjectSchema = Schema.Union(
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;
 
+export type CharacterProcedureBattleSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag:
+      | "actionSpell"
+      | "bonusActionSpell"
+      | "bonusActionDashSpell"
+      | "findFamiliarTouchSpell"
+      | "unitFeature"
+      | "unitFeatureHeldWeaponActivation"
+      | "druidWildShape"
+      | "bonusActionStandardAction"
+      | "monkFocusOption"
+      | "monkFocusFlurryOfBlowsStrike";
+  }
+>;
+
+type WithRequiredProcedureRef<TSubject> = TSubject extends {
+  readonly procedureRef?: BattleProcedureExecutionRef;
+}
+  ? Omit<TSubject, "procedureRef"> & {
+      readonly procedureRef: BattleProcedureExecutionRef;
+    }
+  : never;
+
+export type AdmittedCharacterProcedureBattleSubject =
+  WithRequiredProcedureRef<CharacterProcedureBattleSubject>;
+
+export type AdmittedBattleSubject =
+  | Exclude<BattleSubject, CharacterProcedureBattleSubject>
+  | AdmittedCharacterProcedureBattleSubject;
+
 export type ActionHideSubject = {
   readonly tag: "action";
   readonly actorId: CombatantId;
@@ -1068,7 +1142,29 @@ export function sameBattleSubject(
   left: BattleSubject,
   right: BattleSubject,
 ): boolean {
-  return battleSubjectKey(left) === battleSubjectKey(right);
+  return battleSubjectKey(left, false) === battleSubjectKey(right, false);
+}
+
+export function sameAdmittedBattleSubject(
+  left: AdmittedBattleSubject,
+  right: AdmittedBattleSubject,
+): boolean {
+  return battleSubjectKey(left, true) === battleSubjectKey(right, true);
+}
+
+export function sameBattleExecutionSubject(
+  left: BattleSubject,
+  right: BattleSubject,
+): boolean {
+  const bothCarryProcedureRefs =
+    "procedureRef" in left &&
+    left.procedureRef !== undefined &&
+    "procedureRef" in right &&
+    right.procedureRef !== undefined;
+  return (
+    battleSubjectKey(left, bothCarryProcedureRefs) ===
+    battleSubjectKey(right, bothCarryProcedureRefs)
+  );
 }
 
 function spellInvocationRefKey(ref: SpellInvocationRef): readonly unknown[] {
@@ -1127,7 +1223,10 @@ function spellMetamagicSelectionKey(
         .sort(([left], [right]) => String(left).localeCompare(String(right)));
 }
 
-function battleSubjectKey(subject: BattleSubject): string {
+function battleSubjectKey(
+  subject: BattleSubject,
+  includeCharacterProcedureRef: boolean,
+): string {
   if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
     return JSON.stringify([subject.tag, subject.actorId, subject.action]);
   }
@@ -1144,6 +1243,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     return JSON.stringify([
       subject.tag,
       subject.actorId,
+      characterProcedureRefKey(subject, includeCharacterProcedureRef),
       spellInvocationRefKey(subject.invocation),
       spellSubjectModeKey(subject.mode),
       subject.speedKind,
@@ -1165,6 +1265,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     return JSON.stringify([
       subject.tag,
       subject.actorId,
+      characterProcedureRefKey(subject, includeCharacterProcedureRef),
       subject.resourceUnitId,
       subject.option,
       "mode" in subject ? subject.mode : null,
@@ -1175,6 +1276,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     return JSON.stringify([
       subject.tag,
       subject.actorId,
+      characterProcedureRefKey(subject, includeCharacterProcedureRef),
       subject.resourceUnitId,
       subject.attackName,
     ]);
@@ -1183,6 +1285,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     return JSON.stringify([
       subject.tag,
       subject.actorId,
+      characterProcedureRefKey(subject, includeCharacterProcedureRef),
       subject.unitId,
       subject.action,
       "formStatBlockId" in subject ? subject.formStatBlockId : null,
@@ -1198,6 +1301,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     return JSON.stringify([
       subject.tag,
       subject.actorId,
+      characterProcedureRefKey(subject, includeCharacterProcedureRef),
       subject.companionId,
       subject.spellAction,
       spellInvocationRefKey(subject.invocation),
@@ -1210,6 +1314,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     return JSON.stringify([
       subject.tag,
       subject.actorId,
+      characterProcedureRefKey(subject, includeCharacterProcedureRef),
       subject.unitId,
       subject.weaponItemId,
     ]);
@@ -1308,6 +1413,7 @@ function battleSubjectKey(subject: BattleSubject): string {
       JSON.stringify([
         action.tag,
         action.actorId,
+        characterProcedureRefKey(action, includeCharacterProcedureRef),
         action.sourceUnitId,
         action.action,
         "speedKind" in action ? action.speedKind : null,
@@ -1317,6 +1423,7 @@ function battleSubjectKey(subject: BattleSubject): string {
       JSON.stringify([
         spell.tag,
         spell.actorId,
+        characterProcedureRefKey(spell, includeCharacterProcedureRef),
         spellInvocationRefKey(spell.invocation),
         spellSubjectModeKey(spell.mode),
         spellMetamagicSelectionKey(spell.metamagic),
@@ -1327,6 +1434,7 @@ function battleSubjectKey(subject: BattleSubject): string {
       JSON.stringify([
         spell.tag,
         spell.actorId,
+        characterProcedureRefKey(spell, includeCharacterProcedureRef),
         spellInvocationRefKey(spell.invocation),
         spellSubjectModeKey(spell.mode),
         spellMetamagicSelectionKey(spell.metamagic),
@@ -1334,7 +1442,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>
-      JSON.stringify([feature.tag, feature.actorId, feature.unitId]),
+      JSON.stringify([
+        feature.tag,
+        feature.actorId,
+        characterProcedureRefKey(feature, includeCharacterProcedureRef),
+        feature.unitId,
+      ]),
     ),
     Match.when({ tag: "runtimeCommand" }, (command) =>
       JSON.stringify([
@@ -1369,4 +1482,11 @@ function battleSubjectKey(subject: BattleSubject): string {
     ),
     Match.exhaustive,
   );
+}
+
+function characterProcedureRefKey(
+  subject: { readonly procedureRef?: BattleProcedureExecutionRef },
+  includeCharacterProcedureRef: boolean,
+): BattleProcedureExecutionRef | null {
+  return includeCharacterProcedureRef ? (subject.procedureRef ?? null) : null;
 }

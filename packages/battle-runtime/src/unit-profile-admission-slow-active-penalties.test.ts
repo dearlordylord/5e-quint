@@ -88,7 +88,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(slowUnitId, 3, "slowActivePenalties"),

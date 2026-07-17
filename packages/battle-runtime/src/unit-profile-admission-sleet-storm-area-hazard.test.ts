@@ -181,7 +181,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       slotLevel: 4,
     });
 
-    expect(thirdLevelAct.subject).toEqual({
+    expect(thirdLevelAct.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

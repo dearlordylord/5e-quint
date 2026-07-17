@@ -20,6 +20,7 @@ import {
   abilityModifier,
   armorOfShadowsSpellInvocationRef,
   battleId,
+  battleSubjectSelection,
   defaultArmorClassState,
   discoverBattleActs,
   Either,
@@ -63,7 +64,11 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
+    expect(
+      discoverBattleActs(state).map((act) =>
+        battleSubjectSelection(act.subject),
+      ),
+    ).toContainEqual({
       tag: "actionSpell",
       actorId: wizardId,
       invocation: spellSlotInvocationRef(

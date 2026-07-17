@@ -51,7 +51,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

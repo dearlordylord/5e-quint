@@ -84,11 +84,22 @@ import {
 } from "../find-familiar-state.ts";
 
 import {
-  sameBattleSubject,
+  sameBattleExecutionSubject,
+  type AdmittedCharacterProcedureBattleSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
   type BattleSubject,
 } from "../battle-subjects.ts";
+import {
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedure,
+  characterUnitProcedureId,
+} from "../character-execution.ts";
+import {
+  admitCharacterProcedureSelection,
+  characterUnitProcedureQueryForSubject,
+  type CharacterProcedureSelectionSubject,
+} from "../battle-composition-admission.ts";
 
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 
@@ -117,6 +128,7 @@ import {
   combatantCanTakeReactions,
   combatantSnapshot,
   consumeLegendaryActionWindow,
+  isCharacterBattleCreatureState,
   isLegendaryAttackSubject,
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
@@ -296,6 +308,7 @@ import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-sup
 
 import type {
   BattleAfterDamageEvent,
+  AdmittedBattleResolutionInput,
   BattleAttackRollResult,
   BattleAttackDamageContinuationCunningStrikeFrame,
   BattleAttackDamageContinuationConcentrationFrame,
@@ -306,6 +319,7 @@ import type {
   BattleDroppedObjectOutcome,
   BattleFill,
   BattleCreatureState,
+  CharacterBattleCreatureState,
   BattleFeatherFallLandingResult,
   BattleFallDamageLandingResult,
   BattleRawFallDamage,
@@ -422,9 +436,188 @@ type ResolveBattleSubjectInternalOptions = {
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  const result = resolveBattleSubjectInternal(input, {});
-  const routeEvents = battleReducerRouteForResolution(input, result);
+  const selected = selectCharacterProcedureForResolution(input);
+  if (selected.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The selected character procedure reference is not bound to this actor.",
+    );
+  }
+  const unresolvedResult = resolveBattleSubjectInternal(selected.input, {});
+  const result =
+    unresolvedResult.tag === "resolved"
+      ? resultWithCharacterSpellProcedureBindings(unresolvedResult)
+      : unresolvedResult;
+  const routeEvents = battleReducerRouteForResolution(selected.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
+}
+
+function resultWithCharacterSpellProcedureBindings(
+  result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  let nextState = result.state;
+  const combatants = new Map(nextState.combatants);
+  let changed = false;
+  for (const [combatantId, combatant] of nextState.combatants) {
+    if (!isCharacterBattleCreatureState(combatant)) continue;
+    const execution = characterExecutionWithSpellInvocations(
+      combatant.origin.execution,
+      supportedSpellActs(combatant, nextState),
+    );
+    if (execution === combatant.origin.execution) continue;
+    changed = true;
+    combatants.set(combatantId, {
+      ...combatant,
+      origin: { ...combatant.origin, execution },
+    });
+  }
+  if (!changed) return result;
+  nextState = { ...nextState, combatants };
+  return { ...result, state: nextState, snapshot: snapshotBattle(nextState) };
+}
+
+type SelectedCharacterProcedureInput =
+  | { readonly tag: "selected"; readonly input: AdmittedBattleResolutionInput }
+  | { readonly tag: "invalid" };
+
+function isCharacterProcedureSubject(
+  subject: BattleSubject,
+): subject is CharacterProcedureSelectionSubject {
+  return (
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "findFamiliarTouchSpell" ||
+    subject.tag === "unitFeature" ||
+    subject.tag === "unitFeatureHeldWeaponActivation" ||
+    subject.tag === "druidWildShape" ||
+    subject.tag === "bonusActionStandardAction" ||
+    subject.tag === "monkFocusOption" ||
+    subject.tag === "monkFocusFlurryOfBlowsStrike"
+  );
+}
+
+function selectCharacterProcedureForResolution(
+  input: BattleResolutionInput,
+): SelectedCharacterProcedureInput {
+  if (!isCharacterProcedureSubject(input.subject)) {
+    return {
+      tag: "selected",
+      input: { ...input, subject: input.subject },
+    };
+  }
+  let subject: CharacterProcedureSelectionSubject = input.subject;
+  const currentActor = input.state.combatants.get(subject.actorId);
+  if (!isCharacterBattleCreatureState(currentActor)) {
+    return { tag: "invalid" };
+  }
+  let actor: CharacterBattleCreatureState = currentActor;
+  const execution = characterExecutionWithSpellInvocations(
+    actor.origin.execution,
+    supportedSpellActs(actor, input.state),
+  );
+  if (execution !== actor.origin.execution) {
+    actor = { ...actor, origin: { ...actor.origin, execution } };
+    input = {
+      ...input,
+      state: {
+        ...input.state,
+        combatants: new Map(input.state.combatants).set(
+          actor.combatantId,
+          actor,
+        ),
+      },
+    };
+  }
+  const procedureRef =
+    subject.procedureRef ?? admitCharacterProcedureSelection(actor, subject);
+  if (procedureRef === undefined) {
+    return { tag: "invalid" };
+  }
+  const admittedSubject: AdmittedCharacterProcedureBattleSubject = {
+    ...subject,
+    procedureRef,
+  };
+  input = { ...input, subject: admittedSubject };
+  subject = admittedSubject;
+  if (
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "findFamiliarTouchSpell"
+  ) {
+    const invocation = characterSpellProcedure(
+      execution,
+      procedureRef,
+      supportedSpellActs(actor, input.state),
+    );
+    return invocation === undefined
+      ? { tag: "invalid" }
+      : {
+          tag: "selected",
+          input: {
+            ...input,
+            subject: {
+              ...subject,
+              invocation: supportedSpellInvocationRef(invocation),
+            },
+          },
+        };
+  }
+  const unitProcedureQuery = characterUnitProcedureQueryForSubject(subject);
+  if (unitProcedureQuery === undefined) {
+    return { tag: "invalid" };
+  }
+  const unitId = characterUnitProcedureId(
+    execution,
+    procedureRef,
+    unitProcedureQuery,
+  );
+  if (subject.tag === "bonusActionStandardAction" && unitId === undefined) {
+    const invocation = characterSpellProcedure(
+      execution,
+      procedureRef,
+      supportedSpellActs(actor, input.state),
+    );
+    return invocation?.procedure === "expeditiousRetreatDash"
+      ? {
+          tag: "selected",
+          input: {
+            ...input,
+            subject: { ...subject, sourceUnitId: invocation.spell.id },
+          },
+        }
+      : { tag: "invalid" };
+  }
+  if (unitId === undefined) {
+    return { tag: "invalid" };
+  }
+  if (subject.tag === "bonusActionStandardAction") {
+    return {
+      tag: "selected",
+      input: {
+        ...input,
+        subject: { ...subject, sourceUnitId: unitId },
+      },
+    };
+  }
+  if (
+    subject.tag === "monkFocusOption" ||
+    subject.tag === "monkFocusFlurryOfBlowsStrike"
+  ) {
+    return {
+      tag: "selected",
+      input: {
+        ...input,
+        subject: { ...subject, resourceUnitId: unitId },
+      },
+    };
+  }
+  return {
+    tag: "selected",
+    input: { ...input, subject: { ...subject, unitId } },
+  };
 }
 
 function validateD20TestNaturalOneRerollFills(
@@ -722,7 +915,7 @@ function pendingHolesBeforeFill(input: {
 }
 
 export function resolveBattleSubjectInternal(
-  input: BattleResolutionInput,
+  input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult {
   const normalizedInputState = normalizeEarlyEndedOngoingFeatures(input.state);
@@ -758,7 +951,7 @@ export function resolveBattleSubjectInternal(
     if (activeFrame !== null) {
       if (activeFrame.kind === "attackDamageContinuationConcentration") {
         if (
-          !sameBattleSubject(
+          !sameBattleExecutionSubject(
             input.subject,
             activeFrame.continuation.participant,
           )
@@ -778,7 +971,7 @@ export function resolveBattleSubjectInternal(
       }
       if (activeFrame.kind === "attackDamageContinuationCunningStrike") {
         if (
-          !sameBattleSubject(
+          !sameBattleExecutionSubject(
             input.subject,
             activeFrame.continuation.participant,
           )
@@ -798,7 +991,10 @@ export function resolveBattleSubjectInternal(
       }
       if (activeFrame.kind === "replayContinuation") {
         if (
-          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
+          !sameBattleExecutionSubject(
+            input.subject,
+            activeFrame.continuation.subject,
+          )
         ) {
           return invalidResult(
             input.state,
@@ -830,7 +1026,7 @@ export function resolveBattleSubjectInternal(
       const activeInterrupt = activeFrame.frame.activeInterrupt;
       if (
         activeInterrupt !== undefined &&
-        sameBattleSubject(input.subject, activeInterrupt.subject)
+        sameBattleExecutionSubject(input.subject, activeInterrupt.subject)
       ) {
         const interruptResult = resolveBattleSubjectInternal(input, {
           replayingInterruptedProcedure: true,
@@ -3628,7 +3824,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       frame?.trigger !== "creatureFalls") ||
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== input.subject.reactorId ||
-    !sameBattleSubject(activeInterrupt.subject, input.subject)
+    !sameBattleExecutionSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -4296,7 +4492,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     frame.continuation.kind !== "replay" ||
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== input.subject.casterId ||
-    !sameBattleSubject(activeInterrupt.subject, input.subject)
+    !sameBattleExecutionSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -5362,7 +5558,7 @@ export function resolveReplayContinuationFromState(
   )?.activeInterrupt;
   if (
     activeInterrupt !== undefined &&
-    sameBattleSubject(activeInterrupt.subject, continuation.subject)
+    sameBattleExecutionSubject(activeInterrupt.subject, continuation.subject)
   ) {
     const pendingState =
       activeInterruptWithReplayContinuationAttackDamageChanges(
@@ -6210,12 +6406,12 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
 
   return {
     battleId: state.battleId,
-    statBlockExecutionScopeCursors: [
-      ...state.statBlockExecutionScopeCursors,
-    ].map(([combatantId, nextScopeOrdinal]) => ({
-      combatantId,
-      nextScopeOrdinal,
-    })),
+    executionScopeCursors: [...state.executionScopeCursors].map(
+      ([combatantId, nextScopeOrdinal]) => ({
+        combatantId,
+        nextScopeOrdinal,
+      }),
+    ),
     round: state.initiative.round,
     currentActorId: currentActorId(state),
     turnOrder,

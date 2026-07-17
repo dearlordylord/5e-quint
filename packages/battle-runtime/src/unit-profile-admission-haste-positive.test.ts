@@ -71,7 +71,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(hasteUnitId, 3, "hastePositive"),

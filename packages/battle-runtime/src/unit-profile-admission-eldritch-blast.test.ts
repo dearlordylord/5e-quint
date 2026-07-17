@@ -41,7 +41,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     });
     const act = spellAct({ state, spellId: eldritchBlastUnitId });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(

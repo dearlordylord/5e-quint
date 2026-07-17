@@ -1706,11 +1706,19 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
     levelSixRogueSteadyAimActLabel,
   );
   assert.ok(steadyAimAct, `Missing ${levelSixRogueSteadyAimActLabel} act`);
-  assert.deepEqual(steadyAimAct.subject, {
-    tag: "unitFeature",
-    actorId: levelSixRogueExpertiseCombatantId,
-    unitId: levelSixRogueSteadyAimUnitId,
-  });
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(steadyAimAct.subject).filter(
+        ([key]) => key !== "procedureRef",
+      ),
+    ),
+    {
+      tag: "unitFeature",
+      actorId: levelSixRogueExpertiseCombatantId,
+      unitId: levelSixRogueSteadyAimUnitId,
+    },
+  );
+  assert.equal(typeof steadyAimAct.subject.procedureRef, "string");
   assert.deepEqual(steadyAimAct.initialHoles, []);
 
   const aimed = await callTool(client, "resolve_battle_act", {

@@ -24,6 +24,7 @@ import {
   resolveBattleSubject,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type BattleCreatureState,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -31,6 +32,8 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { characterExecutionWithSpellInvocations } from "./character-execution.ts";
+import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import {
   oppositionSide,
   partySide,
@@ -306,24 +309,38 @@ export function withSameClubMainAndOffHand(
   if (caster.origin.kind !== "character") {
     throw new Error("Expected character caster.");
   }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      origin: {
-        ...caster.origin,
-        selectedLoadout: {
-          weapon: {
-            itemId: "main:weapon_club",
-            unitId: "weapon_club",
-            grip: "one_handed",
-          },
-          offHandWeapon: {
-            itemId: "off:weapon_club",
-            unitId: "weapon_club",
-          },
+  const admittedCaster = {
+    ...caster,
+    origin: {
+      ...caster.origin,
+      selectedLoadout: {
+        weapon: {
+          itemId: "main:weapon_club",
+          unitId: "weapon_club",
+          grip: "one_handed",
         },
-        offHandAttack,
+        offHandWeapon: {
+          itemId: "off:weapon_club",
+          unitId: "weapon_club",
+        },
+      },
+      offHandAttack,
+    },
+  } satisfies BattleCreatureState;
+  const stateWithLoadout = {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, admittedCaster),
+  };
+  return {
+    ...stateWithLoadout,
+    combatants: new Map(stateWithLoadout.combatants).set(spellCasterId, {
+      ...admittedCaster,
+      origin: {
+        ...admittedCaster.origin,
+        execution: characterExecutionWithSpellInvocations(
+          admittedCaster.origin.execution,
+          supportedSpellActs(admittedCaster, stateWithLoadout),
+        ),
       },
     }),
   };

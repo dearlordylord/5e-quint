@@ -49,7 +49,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

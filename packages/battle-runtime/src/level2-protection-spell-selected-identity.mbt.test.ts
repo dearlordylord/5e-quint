@@ -268,7 +268,7 @@ function recordDiscoveredInvocation(
           slotLevel: 2,
         });
 
-  expect(act.subject).toEqual({
+  expect(act.subject).toMatchObject({
     tag: input.actionTag,
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(input.spellId, 2, input.procedure),
@@ -289,7 +289,7 @@ function resolveEnhanceAbilityHigherSlotPerTarget(): Level2ProtectionSpellSelect
     spellId: enhanceAbilityUnitId,
     slotLevel: 3,
   });
-  expect(act.subject).toEqual({
+  expect(act.subject).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(enhanceAbilityUnitId, 3, "rollModifier"),

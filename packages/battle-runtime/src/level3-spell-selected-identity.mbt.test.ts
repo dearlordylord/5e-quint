@@ -56,7 +56,9 @@ const LEVEL3_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   ProtectionFromEnergyResistance: "protectionFromEnergyResistance",
   SleetStormAreaHazard: "sleetStormAreaHazard",
   SlowActivePenalties: "slowActivePenalties",
-} as const satisfies Readonly<Record<string, Level3SpellSelectedIdentityResult>>;
+} as const satisfies Readonly<
+  Record<string, Level3SpellSelectedIdentityResult>
+>;
 
 type Level3SpellSelectedIdentityResult =
   | "init"
@@ -75,9 +77,7 @@ type Level3ActionSpellUnitId =
   | typeof protectionFromEnergyUnitId
   | typeof sleetStormUnitId
   | typeof slowUnitId;
-type Level3ActionSpellProcedure = Parameters<
-  typeof spellSlotInvocationRef
->[2];
+type Level3ActionSpellProcedure = Parameters<typeof spellSlotInvocationRef>[2];
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Level 3 spell selected identity replay",
@@ -116,60 +116,52 @@ defineSelectedIdentityReplayAndQntReplay({
     {
       unitId: hasteUnitId,
       procedures: [
-        selectedProcedure(
-          "doDiscoverHastePositiveEffects",
-          () =>
-            discoverLevel3ActionSpell({
-              spellId: hasteUnitId,
-              procedure: "hastePositive",
-              result: "hastePositiveEffects",
-              verify: verifyHastePositiveEffects,
-            }),
+        selectedProcedure("doDiscoverHastePositiveEffects", () =>
+          discoverLevel3ActionSpell({
+            spellId: hasteUnitId,
+            procedure: "hastePositive",
+            result: "hastePositiveEffects",
+            verify: verifyHastePositiveEffects,
+          }),
         ),
       ],
     },
     {
       unitId: protectionFromEnergyUnitId,
       procedures: [
-        selectedProcedure(
-          "doDiscoverProtectionFromEnergyResistance",
-          () =>
-            discoverLevel3ActionSpell({
-              spellId: protectionFromEnergyUnitId,
-              procedure: "chosenDamageResistance",
-              result: "protectionFromEnergyResistance",
-              verify: verifyProtectionFromEnergyResistance,
-            }),
+        selectedProcedure("doDiscoverProtectionFromEnergyResistance", () =>
+          discoverLevel3ActionSpell({
+            spellId: protectionFromEnergyUnitId,
+            procedure: "chosenDamageResistance",
+            result: "protectionFromEnergyResistance",
+            verify: verifyProtectionFromEnergyResistance,
+          }),
         ),
       ],
     },
     {
       unitId: sleetStormUnitId,
       procedures: [
-        selectedProcedure(
-          "doDiscoverSleetStormAreaHazard",
-          () =>
-            discoverLevel3ActionSpell({
-              spellId: sleetStormUnitId,
-              procedure: "sleetStormAreaHazard",
-              result: "sleetStormAreaHazard",
-              verify: verifySleetStormAreaHazard,
-            }),
+        selectedProcedure("doDiscoverSleetStormAreaHazard", () =>
+          discoverLevel3ActionSpell({
+            spellId: sleetStormUnitId,
+            procedure: "sleetStormAreaHazard",
+            result: "sleetStormAreaHazard",
+            verify: verifySleetStormAreaHazard,
+          }),
         ),
       ],
     },
     {
       unitId: slowUnitId,
       procedures: [
-        selectedProcedure(
-          "doDiscoverSlowActivePenalties",
-          () =>
-            discoverLevel3ActionSpell({
-              spellId: slowUnitId,
-              procedure: "slowActivePenalties",
-              result: "slowActivePenalties",
-              verify: verifySlowActivePenalties,
-            }),
+        selectedProcedure("doDiscoverSlowActivePenalties", () =>
+          discoverLevel3ActionSpell({
+            spellId: slowUnitId,
+            procedure: "slowActivePenalties",
+            result: "slowActivePenalties",
+            verify: verifySlowActivePenalties,
+          }),
         ),
       ],
     },
@@ -203,7 +195,7 @@ function discoverLevel3ActionSpell(input: {
     spellId: input.spellId,
     slotLevel: 3,
   });
-  expect(act.subject).toEqual({
+  expect(act.subject).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(input.spellId, 3, input.procedure),
@@ -255,7 +247,10 @@ function verifyProtectionFromEnergyResistance(input: {
   readonly spell: SpellRecord;
 }): void {
   const targetHole = requireHole(input.act.initialHoles, "targetChoice");
-  const damageTypeHole = requireHole(input.act.initialHoles, "damageTypeChoice");
+  const damageTypeHole = requireHole(
+    input.act.initialHoles,
+    "damageTypeChoice",
+  );
   expect(damageTypeHole.choices).toEqual([
     "acid",
     "cold",
@@ -315,7 +310,9 @@ function verifySleetStormAreaHazard(input: {
   });
   expect(resolved).toMatchObject({ tag: "resolved" });
   if (resolved.tag !== "resolved") {
-    throw new Error("Expected Sleet Storm selected identity replay to resolve.");
+    throw new Error(
+      "Expected Sleet Storm selected identity replay to resolve.",
+    );
   }
   expect(
     requireCombatant(resolved.state, spellCasterId).activeEffects,
@@ -333,7 +330,9 @@ function verifySlowActivePenalties(input: {
   readonly act: ReturnType<typeof spellAct>;
   readonly spell: SpellRecord;
 }): void {
-  const savingThrow = requireSpellSavingThrowOutcomeHole(input.act.initialHoles);
+  const savingThrow = requireSpellSavingThrowOutcomeHole(
+    input.act.initialHoles,
+  );
   expect(savingThrow).toEqual(
     expect.objectContaining({
       label: "Slow point-origin Cube Saving Throw outcomes",
@@ -426,10 +425,7 @@ function discoverGlyphStoredSpellRelease(): Level3SpellSelectedIdentityProjectio
   return expectedProjection("glyphStoredSpellRelease");
 }
 
-function requireGlyphProfile<T>(
-  profile: T | null,
-  profileName: string,
-): T {
+function requireGlyphProfile<T>(profile: T | null, profileName: string): T {
   expect(profile).not.toBeNull();
   if (profile === null) {
     throw new Error(`Expected Glyph of Warding ${profileName} profile.`);

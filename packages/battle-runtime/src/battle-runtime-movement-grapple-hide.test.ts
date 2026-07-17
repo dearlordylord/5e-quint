@@ -2803,7 +2803,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "unsupportedActOption",
+      reason: "staleSubject",
     });
     const noHidePrerequisiteState = startBattleRight({
       battleId: battleId("battle-rogue-cunning-action-no-hide-prerequisite"),

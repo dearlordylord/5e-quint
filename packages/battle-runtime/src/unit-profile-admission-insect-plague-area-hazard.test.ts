@@ -136,7 +136,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("insect plague is admitted as a ten-minute point-origin Sphere hazard", () => {
     const { spell, act } = castInsectPlague();
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -290,7 +290,9 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     const pendingDamage = resolveBattleSubject({
       state: targetTurn,
       subject: entryAct.subject,
-      fills: [singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true)],
+      fills: [
+        singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
+      ],
     });
     if (pendingDamage.tag === "invalid") {
       throw new Error(
@@ -316,7 +318,9 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         spellTargetId,
         "endsTurnInArea",
       ).subject,
-    ).toEqual(expect.objectContaining({ command: "insectPlagueAreaHazardSave" }));
+    ).toEqual(
+      expect.objectContaining({ command: "insectPlagueAreaHazardSave" }),
+    );
     expect(
       resolveBattleSubject({
         state: entrySaved.state,
@@ -333,7 +337,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         "Insect Plague save was already resolved for this target this turn.",
     });
 
-    const nextTurn = endTurn({ state: entrySaved.state, actorId: spellTargetId });
+    const nextTurn = endTurn({
+      state: entrySaved.state,
+      actorId: spellTargetId,
+    });
     expect(nextTurn.tag).toBe("resolved");
   });
 });

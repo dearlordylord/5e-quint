@@ -48,6 +48,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "bonusActionSpell",
           actorId: spellCasterId,
           invocation: cantripSpellInvocationRef(
@@ -129,7 +130,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     });
     const act = bonusSpellAct({ state, spellId: produceFlameUnitId });
 
-    expect(act.subject).toEqual(
+    expect(act.subject).toMatchObject(
       expect.objectContaining({
         tag: "bonusActionSpell",
         invocation: cantripSpellInvocationRef(produceFlameUnitId, "heldLight"),
@@ -330,7 +331,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
 
     const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
 
-    expect(hurl.subject).toEqual({
+    expect(hurl.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(

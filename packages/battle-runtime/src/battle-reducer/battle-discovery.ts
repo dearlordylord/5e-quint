@@ -40,9 +40,11 @@ import * as Either from "effect/Either";
 
 import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
 
-import {
-  type BattleMovementSpeedKind,
-  type BattleSubject,
+import type {
+  AdmittedCharacterProcedureBattleSubject,
+  BattleMovementSpeedKind,
+  BattleSubject,
+  CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
 
 import { CombatantId, spellId } from "../identity.ts";
@@ -203,14 +205,177 @@ import {
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./reducer-route.ts";
+import {
+  BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  MONK_FOCUS_PROCEDURE_QUERY,
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedureRef,
+  characterUnitProcedureRefs,
+  type CharacterExecutionState,
+} from "../character-execution.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 export function discoverBattleActs(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
+  const stateWithExecutionBindings =
+    battleStateWithCharacterExecutionBindings(state);
   return withReducerRouteEvents(
-    state,
-    discoverBattleActsWithoutRouteEvents(state),
+    stateWithExecutionBindings,
+    withCharacterExecutionReferences(
+      stateWithExecutionBindings,
+      discoverBattleActsWithoutRouteEvents(stateWithExecutionBindings),
+    ),
   );
+}
+
+function battleStateWithCharacterExecutionBindings(
+  state: BattleState,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  let changed = false;
+  for (const [combatantId, combatant] of state.combatants) {
+    if (combatant.origin.kind !== "character") continue;
+    const execution = characterExecutionWithSpellInvocations(
+      combatant.origin.execution,
+      supportedSpellActs(combatant, state),
+    );
+    if (execution === combatant.origin.execution) continue;
+    changed = true;
+    combatants.set(combatantId, {
+      ...combatant,
+      origin: { ...combatant.origin, execution },
+    });
+  }
+  return changed ? { ...state, combatants } : state;
+}
+
+function withCharacterExecutionReferences(
+  state: BattleState,
+  acts: readonly AvailableBattleAct[],
+): readonly AvailableBattleAct[] {
+  const contexts = new Map<
+    CombatantId,
+    {
+      readonly execution: CharacterExecutionState;
+      readonly invocations: readonly SupportedSpellInvocation[];
+    }
+  >();
+  for (const [combatantId, combatant] of state.combatants) {
+    if (combatant.origin.kind !== "character") continue;
+    const invocations = supportedSpellActs(combatant, state);
+    contexts.set(combatantId, {
+      execution: characterExecutionWithSpellInvocations(
+        combatant.origin.execution,
+        invocations,
+      ),
+      invocations,
+    });
+  }
+  return acts.flatMap((act) => {
+    const subject = act.subject;
+    const context = contexts.get(subject.actorId);
+    if (context === undefined) return [act];
+    const { execution, invocations } = context;
+    if (
+      subject.tag === "actionSpell" ||
+      subject.tag === "bonusActionSpell" ||
+      subject.tag === "bonusActionDashSpell" ||
+      subject.tag === "findFamiliarTouchSpell"
+    ) {
+      const componentWeaponItemId =
+        "componentWeaponItemId" in subject
+          ? subject.componentWeaponItemId
+          : undefined;
+      const invocation = invocations.find(
+        (candidate) =>
+          supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+          (candidate.procedure !== "spellHostedWeaponAttack" ||
+            componentWeaponItemId === candidate.componentWeapon.itemId) &&
+          (candidate.procedure !== "weaponAttackOverride" ||
+            componentWeaponItemId === candidate.attachedWeapon.itemId),
+      );
+      const procedureRef =
+        invocation === undefined
+          ? undefined
+          : characterSpellProcedureRef(execution, invocation);
+      return bindCharacterProcedureActs(
+        act,
+        subject,
+        procedureRef === undefined ? [] : [procedureRef],
+      );
+    }
+    if (
+      subject.tag === "unitFeature" ||
+      subject.tag === "unitFeatureHeldWeaponActivation"
+    ) {
+      const procedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.unitId,
+        CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+      );
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    if (subject.tag === "druidWildShape") {
+      const procedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.unitId,
+        DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+      );
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    if (subject.tag === "bonusActionStandardAction") {
+      const unitProcedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.sourceUnitId,
+        BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
+      );
+      const spellInvocation = invocations.find(
+        (candidate) =>
+          candidate.procedure === "expeditiousRetreatDash" &&
+          candidate.spell.id === subject.sourceUnitId,
+      );
+      const spellProcedureRef =
+        spellInvocation === undefined
+          ? undefined
+          : characterSpellProcedureRef(execution, spellInvocation);
+      const procedureRefs =
+        unitProcedureRefs.length > 0
+          ? unitProcedureRefs
+          : spellProcedureRef === undefined
+            ? []
+            : [spellProcedureRef];
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    if (
+      subject.tag === "monkFocusOption" ||
+      subject.tag === "monkFocusFlurryOfBlowsStrike"
+    ) {
+      const procedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.resourceUnitId,
+        MONK_FOCUS_PROCEDURE_QUERY,
+      );
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    return [act];
+  });
+}
+
+function bindCharacterProcedureActs(
+  act: AvailableBattleAct,
+  subject: CharacterProcedureBattleSubject,
+  procedureRefs: readonly BattleProcedureExecutionRef[],
+): readonly AvailableBattleAct[] {
+  return procedureRefs.map((procedureRef) => {
+    const admittedSubject: AdmittedCharacterProcedureBattleSubject = {
+      ...subject,
+      procedureRef,
+    };
+    return { ...act, subject: admittedSubject };
+  });
 }
 
 function discoverBattleActsWithoutRouteEvents(

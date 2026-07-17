@@ -36,7 +36,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { attackDamageByTypeEntries } from "./battle-reducer/damage-helpers.ts";
 import { statBlockAttackActionOptions } from "./battle-reducer/statblock.ts";
-import { battleStatBlockExecutionScopeOrdinal } from "./identity.ts";
+import { battleExecutionScopeOrdinal } from "./identity.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import {
   DieRollResult,
@@ -133,7 +133,7 @@ function admittedAttackOption(
     battleId("stat-block-action-ordering-isolated-admission"),
     goblinId,
     [statBlock],
-    battleStatBlockExecutionScopeOrdinal(0),
+    battleExecutionScopeOrdinal(0),
   ).admissions[0];
   if (admission === undefined) {
     throw new Error("Expected the driver Stat Block admission.");

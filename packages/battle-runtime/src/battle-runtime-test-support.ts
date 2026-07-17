@@ -1302,14 +1302,22 @@ export function findAct(
   state: BattleState,
   subject: BattleSubject,
 ): ReturnType<typeof discoverBattleActs>[number] {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      JSON.stringify(candidate.subject) === JSON.stringify(subject),
-  );
+  const act = discoverBattleActs(state).find((candidate) => {
+    return (
+      JSON.stringify(battleSubjectSelection(candidate.subject)) ===
+      JSON.stringify(battleSubjectSelection(subject))
+    );
+  });
   if (act === undefined) {
     throw new Error(`Expected discovered act ${JSON.stringify(subject)}.`);
   }
   return act;
+}
+
+export function battleSubjectSelection(subject: BattleSubject) {
+  if (!("procedureRef" in subject)) return subject;
+  const { procedureRef: _procedureRef, ...selection } = subject;
+  return selection;
 }
 
 type SleepShakeAwakeSubject = Extract<

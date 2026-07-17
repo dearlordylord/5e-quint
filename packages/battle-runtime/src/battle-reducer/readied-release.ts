@@ -2,7 +2,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
+import {
+  sameBattleExecutionSubject,
+  type BattleSubject,
+} from "../battle-subjects.ts";
 import { movementFeet } from "@dnd/shared/types";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { markMovementSpentForMovementActionBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
@@ -243,7 +246,7 @@ export function resolveReleaseReadiedMovementCommand(
   if (
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== readiedMovementActorId ||
-    !sameBattleSubject(activeInterrupt.subject, input.subject)
+    !sameBattleExecutionSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,

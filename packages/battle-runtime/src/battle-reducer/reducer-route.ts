@@ -42,11 +42,9 @@ import {
   conditionApplicationPreventedByCreatureTypeProtection,
   resolveBattlePossessionAttempt,
 } from "./spell-condition-effects-helpers.ts";
-import {
-  sameSpellInvocationRef,
-  supportedSpellInvocationMatchesRef,
-} from "./spells-invocation-ref.ts";
+import { sameSpellInvocationRef } from "./spells-invocation-ref.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
+import { characterSpellProcedure } from "../character-execution.ts";
 import {
   conditionSpellEndTurnRepeatSaveHoleIds,
   isCreatureSpaceTraversalMovementFactValidationMessage,
@@ -416,14 +414,15 @@ function passiveAbilityCheckRollModeRouteEvents(input: {
 }): BattleReducerRouteEvents | undefined {
   const hasPassiveAbilityCheckRollMode = [
     ...input.state.combatants.values(),
-  ].some((target) =>
-    target.origin.kind === "character" &&
-    [...target.origin.passiveAbilityCheckRollModeProfiles.values()].some(
-      (profile) =>
-        input.condition === undefined ||
-        (profile.abilityCheck.scope.kind === "endingCondition" &&
-          profile.abilityCheck.scope.condition === input.condition),
-    ),
+  ].some(
+    (target) =>
+      target.origin.kind === "character" &&
+      [...target.origin.passiveAbilityCheckRollModeProfiles.values()].some(
+        (profile) =>
+          input.condition === undefined ||
+          (profile.abilityCheck.scope.kind === "endingCondition" &&
+            profile.abilityCheck.scope.condition === input.condition),
+      ),
   );
   if (!hasPassiveAbilityCheckRollMode) {
     return undefined;
@@ -915,8 +914,10 @@ export function battleReducerRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const creatureStatProjectionRoute =
-    creatureStatProjectionRouteForResolution(input, result);
+  const creatureStatProjectionRoute = creatureStatProjectionRouteForResolution(
+    input,
+    result,
+  );
   if (creatureStatProjectionRoute !== undefined) {
     return creatureStatProjectionRoute;
   }
@@ -1417,7 +1418,9 @@ function passiveDamageAdjustmentRouteTail(
 function passiveAbilityCheckRollModeRouteTail(
   state: BattleState,
 ): BattleReducerRouteEvents | undefined {
-  return resolutionRouteEvents(passiveAbilityCheckRollModeRouteEvents({ state }));
+  return resolutionRouteEvents(
+    passiveAbilityCheckRollModeRouteEvents({ state }),
+  );
 }
 
 function resolutionRouteEvents(
@@ -2011,7 +2014,9 @@ function areaEffectBypassesWardedTargetInterdiction(
       );
     });
     const savingThrowHole = source.initialHoles.find(
-      (hole): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
+      (
+        hole,
+      ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
         hole.kind === "savingThrowOutcome",
     );
     return (
@@ -2038,7 +2043,9 @@ function areaEffectBypassesWardedTargetInterdiction(
     return false;
   }
   const savingThrowFill = source.fills.find(
-    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome",
   );
   if (savingThrowFill === undefined) {
@@ -2156,9 +2163,8 @@ function spellBaseArmorClassEffectExpired(
 function spellBaseArmorClassEffectCount(
   activeEffects: readonly BattleActiveEffect[],
 ): number {
-  return activeEffects.filter(
-    (effect) => effect.kind === "spellBaseArmorClass",
-  ).length;
+  return activeEffects.filter((effect) => effect.kind === "spellBaseArmorClass")
+    .length;
 }
 
 function spellAttackProcedureRouteForResolution(
@@ -2737,9 +2743,7 @@ function weaponHostedSpellDiscoveryHoles(
     : battleReducerRouteHoles(holes);
 }
 
-function spellHostedWeaponAttackRouteOwners(
-  fill: BattleReducerRouteFill,
-):
+function spellHostedWeaponAttackRouteOwners(fill: BattleReducerRouteFill):
   | {
       readonly currentHoles: readonly BattleReducerRouteHole[];
       readonly discoverOwner: BattleReducerRouteOwnerGroup;
@@ -5026,10 +5030,7 @@ function spatialEffectCompositionRouteForDiscoveredAct(
   ) {
     return undefined;
   }
-  const invocation = spellInvocationForRouteSubject(
-    state,
-    act.subject,
-  );
+  const invocation = spellInvocationForRouteSubject(state, act.subject);
   if (invocation === undefined) {
     return undefined;
   }
@@ -5222,10 +5223,7 @@ function spatialEffectCompositionRouteForResolution(
         "spatialEffect",
         "battleActiveEffect",
       ),
-      spatialCompositionResolveWithoutFill(
-        "spatialEffect",
-        "battleAreaHazard",
-      ),
+      spatialCompositionResolveWithoutFill("spatialEffect", "battleAreaHazard"),
       spatialCompositionResolveWithoutFill(
         "spatialEffect",
         "battleCreatureSpaceMovement",
@@ -5261,10 +5259,7 @@ function spatialEffectCompositionRouteForResolution(
             ),
           ]
         : []),
-      spatialCompositionResolveWithoutFill(
-        "spatialEffect",
-        "battleAreaHazard",
-      ),
+      spatialCompositionResolveWithoutFill("spatialEffect", "battleAreaHazard"),
       spatialCompositionResolveWithoutFill(
         "spatialEffect",
         "battleCreatureSpaceMovement",
@@ -5383,7 +5378,10 @@ function spatialEffectCompositionRuntimeRouteForResolution(
   if (input.subject.tag !== "runtimeCommand") {
     return undefined;
   }
-  if (input.subject.command === "disperseFogCloud" && result.tag === "resolved") {
+  if (
+    input.subject.command === "disperseFogCloud" &&
+    result.tag === "resolved"
+  ) {
     return [
       spatialCompositionResolveWithoutFill(
         "spatialEffect",
@@ -5419,10 +5417,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
       return undefined;
     }
     const areaDifficultTerrain = fill.value.areaDifficultTerrain;
-    if (
-      areaDifficultTerrain === undefined ||
-      areaDifficultTerrain === null
-    ) {
+    if (areaDifficultTerrain === undefined || areaDifficultTerrain === null) {
       return undefined;
     }
     if (
@@ -5434,7 +5429,9 @@ function spatialEffectCompositionRuntimeRouteForResolution(
         spatialCompositionResolve(
           "spatialEffect",
           "movement",
-          result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+          result.tag === "needsHoles"
+            ? battleReducerRouteHoles(result.holes)
+            : [],
           "battleMovementResource",
         ),
       ];
@@ -5457,10 +5454,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
         "spatialEffect",
         "battleTurnBoundary",
       ),
-      spatialCompositionResolveWithoutFill(
-        "spatialEffect",
-        "battleAreaHazard",
-      ),
+      spatialCompositionResolveWithoutFill("spatialEffect", "battleAreaHazard"),
       spatialCompositionResolveWithoutFill(
         "spatialEffect",
         "battleActiveEffect",
@@ -5472,7 +5466,10 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     input.subject.command === "webRestraintSave"
   ) {
     const fill = input.fills.at(-1);
-    if (fill === undefined || battleReducerRouteFill(fill) !== "savingThrowOutcome") {
+    if (
+      fill === undefined ||
+      battleReducerRouteFill(fill) !== "savingThrowOutcome"
+    ) {
       return undefined;
     }
     return [
@@ -5615,7 +5612,9 @@ function isThunderwavePostSaveAreaEffect(
   );
 }
 
-function battleHasActiveAreaDifficultTerrainHazard(state: BattleState): boolean {
+function battleHasActiveAreaDifficultTerrainHazard(
+  state: BattleState,
+): boolean {
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
@@ -5772,7 +5771,7 @@ function interruptStackResumeDiscoveryRouteForResolution(
     discoversInterruptDecision &&
     frame !== undefined &&
     isReactionSpellCastingTimeFrame(frame)
-      ? reactionInterruptPayloadRouteSubjectForFrame(frame) ?? "reactionSpell"
+      ? (reactionInterruptPayloadRouteSubjectForFrame(frame) ?? "reactionSpell")
       : "interruptStackResume";
   return {
     kind: "discoverBattleActs",
@@ -5786,13 +5785,18 @@ function reactionInterruptPayloadRouteSubjectForFrame(
   frame: BattleInterruptCheckpoint,
 ): ReactionInterruptPayloadRouteSubject | undefined {
   const subjects = new Set(
-    frame.choices.flatMap((choice): readonly ReactionInterruptPayloadRouteSubject[] => {
-      if (choice.kind !== "castTriggeredReactionSpell") {
-        return [];
-      }
-      const subject = reactionInterruptPayloadRouteSubjectForChoice(frame, choice);
-      return subject === undefined ? [] : [subject];
-    }),
+    frame.choices.flatMap(
+      (choice): readonly ReactionInterruptPayloadRouteSubject[] => {
+        if (choice.kind !== "castTriggeredReactionSpell") {
+          return [];
+        }
+        const subject = reactionInterruptPayloadRouteSubjectForChoice(
+          frame,
+          choice,
+        );
+        return subject === undefined ? [] : [subject];
+      },
+    ),
   );
   return subjects.size === 1 ? [...subjects][0] : undefined;
 }
@@ -5995,11 +5999,7 @@ function spellDamageReductionRouteForResolution(
   }
   if (routeFill === "damageTypeChoice" && result.tag === "resolved") {
     return [
-      spellDamageReductionResolveWithFill(
-        routeFill,
-        [],
-        "battleActiveEffect",
-      ),
+      spellDamageReductionResolveWithFill(routeFill, [], "battleActiveEffect"),
       spellDamageReductionResolveWithoutFill([], "battleConcentration"),
     ];
   }
@@ -6112,7 +6112,10 @@ function spellDamageReductionEffectsByProtocol(
 
 function spellDamageReductionEffectRouteKey(
   combatant: BattleCreatureState,
-  effect: Extract<BattleActiveEffect, { readonly kind: "spellDamageReduction" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellDamageReduction" }
+  >,
 ): string {
   return [
     combatant.combatantId,
@@ -7254,11 +7257,16 @@ function spellInvocationForRouteSubject(
     return undefined;
   }
   const actor = state.combatants.get(subject.actorId);
-  if (actor === undefined) {
+  if (
+    !isCharacterBattleCreatureState(actor) ||
+    subject.procedureRef === undefined
+  ) {
     return undefined;
   }
-  return supportedSpellActs(actor, state).find((candidate) =>
-    supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+  return characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+    supportedSpellActs(actor, state),
   );
 }
 
@@ -8586,7 +8594,10 @@ function creatureAttackRouteForResolution(
       kind: "resolveBattleSubject",
       subject: "creatureAttack",
       fill: routeFill,
-      holes: result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+      holes:
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : [],
       owner: "battleHitPoint",
     },
   ];
@@ -8761,9 +8772,7 @@ function weaponHostedAttackRouteSubject(input: {
   return undefined;
 }
 
-function weaponHostedAttackRouteOwners(
-  fill: BattleReducerRouteFill,
-):
+function weaponHostedAttackRouteOwners(fill: BattleReducerRouteFill):
   | {
       readonly currentHoles: readonly BattleReducerRouteHole[];
       readonly resolveOwner: BattleReducerRouteOwnerGroup;

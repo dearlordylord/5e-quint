@@ -104,11 +104,11 @@ describe("battle runtime: class action features", () => {
     } satisfies BattleState;
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual([
-      {
+      expect.objectContaining({
         tag: "unitFeature",
         actorId: fighterId,
         unitId: "fighter_action_surge",
-      },
+      }),
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
@@ -709,7 +709,7 @@ describe("battle runtime: class action features", () => {
       unitId: "barbarian_rage",
     };
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([rageSubject]),
+      expect.arrayContaining([expect.objectContaining(rageSubject)]),
     );
 
     const raging = resolveBattleSubject({
@@ -873,7 +873,7 @@ describe("battle runtime: class action features", () => {
         },
         fills: [],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("Rage breaking Concentration dissipates a held readied spell", () => {
@@ -1305,7 +1305,7 @@ describe("battle runtime: class action features", () => {
       }),
     ).state;
     expect(discoverBattleActs(nextRound).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([rageSubject]),
+      expect.arrayContaining([expect.objectContaining(rageSubject)]),
     );
     const extended = requireResolved(
       resolveBattleSubject({
@@ -1542,7 +1542,7 @@ describe("battle runtime: class action features", () => {
     };
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([subject]),
+      expect.arrayContaining([expect.objectContaining(subject)]),
     );
 
     const result = requireResolved(

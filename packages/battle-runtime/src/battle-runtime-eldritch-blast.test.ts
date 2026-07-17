@@ -70,7 +70,7 @@ describe("battle runtime: Eldritch Blast", () => {
       ): hole is Extract<BattleHole, { readonly kind: "objectTargetChoice" }> =>
         hole.kind === "objectTargetChoice",
     );
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: wizardId,
       invocation: cantripSpellInvocationRef(

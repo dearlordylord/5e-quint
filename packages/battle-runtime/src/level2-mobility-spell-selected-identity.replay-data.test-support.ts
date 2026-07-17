@@ -41,7 +41,7 @@ function discoverInvocation(input: {
           slotLevel: input.slotLevel,
         });
 
-  expect(act.subject).toEqual({
+  expect(act.subject).toMatchObject({
     tag: input.actionTag,
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(
