@@ -11,7 +11,12 @@ import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
-import { abilityScore, hp } from "@dnd/shared/types";
+import {
+  NonNegativeInteger,
+  PositiveInteger,
+  abilityScore,
+  hp,
+} from "@dnd/shared/types";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
@@ -958,7 +963,7 @@ function finalizedGnomishLineageChoiceFacts(
     return Either.left([
       illegalFinalizationIssue(
         {
-          tag: "invalidSpeciesLineageSelection",
+          tag: "invalidGnomishLineageSelection",
           traitUnitId: source.traitUnitId,
         },
       ),
@@ -1098,7 +1103,7 @@ function illegalFinalizationCauseMessage(
         `Cannot project multiple species lineage choice source facts for species: ${speciesUnitId}.`,
     ),
     Match.when(
-      { tag: "invalidSpeciesLineageSelection" },
+      { tag: "invalidGnomishLineageSelection" },
       ({ traitUnitId }) =>
         `Cannot project selected Gnomish Lineage for species trait: ${traitUnitId}.`,
     ),
@@ -1203,7 +1208,7 @@ function characterBuildProjectionCauseMessage(
         `Cannot derive ${projection} without starting class facts: ${classUnitId}.`,
     ),
     Match.when(
-      { tag: "missingClassFeatureUnit" },
+      { tag: "missingHitPointMaximumBonusFeatureUnit" },
       ({ featureUnitId }) =>
         `Cannot derive Hit Point maximum bonus without class-feature Unit: ${featureUnitId}.`,
     ),
@@ -1229,8 +1234,19 @@ function characterBuildProjectionCauseMessage(
     ),
     Match.when(
       { tag: "classFeatureLanguageChoiceCountMismatch" },
-      ({ featureUnitId, expectedCount, receivedCount }) =>
-        `Class-feature language choice on Unit ${featureUnitId} expected ${expectedCount} selection(s), received ${receivedCount}.`,
+      ({ featureUnitId, mismatch }) => {
+        const counts =
+          mismatch.tag === "missing"
+            ? {
+                expected: mismatch.receivedCount + mismatch.missingCount,
+                received: mismatch.receivedCount,
+              }
+            : {
+                expected: mismatch.expectedCount,
+                received: mismatch.expectedCount + mismatch.extraCount,
+              };
+        return `Class-feature language choice on Unit ${featureUnitId} expected ${counts.expected} selection(s), received ${counts.received}.`;
+      },
     ),
     Match.when(
       { tag: "unsupportedClassFeatureLanguageChoice" },
@@ -1264,8 +1280,8 @@ function characterBuildProjectionCauseMessage(
     ),
     Match.when(
       { tag: "abilityScoreCapExceeded" },
-      ({ source, ability, score, increase, maximum }) =>
-        `Cannot apply ${source} ability-score increase: ${ability} ${score} + ${increase} would exceed ${maximum}.`,
+      ({ source, ability, maximum, excess }) =>
+        `Cannot apply ${source} ability-score increase: ${ability} ${maximum + excess} would exceed ${maximum} by ${excess}.`,
     ),
     Match.when(
       { tag: "unsupportedToolProficiency" },
@@ -1717,7 +1733,10 @@ function classFeatureHitPointMaximumBonus(
     if (Option.isNone(unit)) {
       issues.push(
         characterBuildProjectionIssue(
-          { tag: "missingClassFeatureUnit", featureUnitId },
+          {
+            tag: "missingHitPointMaximumBonusFeatureUnit",
+            featureUnitId,
+          },
         ),
       );
       continue;
@@ -2110,8 +2129,24 @@ function finalizedClassFeatureLanguages(
             {
               tag: "classFeatureLanguageChoiceCountMismatch",
               featureUnitId: unitId,
-              expectedCount: grant.count,
-              receivedCount: selection.options.length,
+              mismatch:
+                selection.options.length < grant.count
+                  ? {
+                      tag: "missing",
+                      receivedCount: NonNegativeInteger(
+                        selection.options.length,
+                      ),
+                      missingCount: PositiveInteger(
+                        grant.count - selection.options.length,
+                      ),
+                    }
+                  : {
+                      tag: "extra",
+                      expectedCount: NonNegativeInteger(grant.count),
+                      extraCount: PositiveInteger(
+                        selection.options.length - grant.count,
+                      ),
+                    },
             },
           ),
         );
@@ -3878,9 +3913,10 @@ function applyClassFeatureAbilityScoreIncreases(
             tag: "abilityScoreCapExceeded",
             source: "classFeature",
             ability: delta.ability,
-            score: currentScore,
-            increase: delta.increase,
-            maximum: delta.maxScore,
+            maximum: NonNegativeInteger(delta.maxScore),
+            excess: PositiveInteger(
+              currentScore + delta.increase - delta.maxScore,
+            ),
           },
         ),
       );
@@ -3961,9 +3997,12 @@ function backgroundAbilityScoreIncreaseCapIssue(
       tag: "abilityScoreCapExceeded",
       source: "background",
       ability: overCapDelta.ability,
-      score: baseScores[overCapDelta.ability],
-      increase: overCapDelta.increase,
-      maximum: BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE,
+      maximum: NonNegativeInteger(BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE),
+      excess: PositiveInteger(
+        baseScores[overCapDelta.ability] +
+          overCapDelta.increase -
+          BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE,
+      ),
     },
   );
 }

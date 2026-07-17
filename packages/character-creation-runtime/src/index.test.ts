@@ -5150,9 +5150,8 @@ describe("character creation finalization", () => {
           tag: "abilityScoreCapExceeded",
           source: "background",
           ability: "str",
-          score: 30,
-          increase: 2,
           maximum: 20,
+          excess: 12,
         },
       },
       {
@@ -5183,15 +5182,14 @@ describe("character creation finalization", () => {
           tag: "abilityScoreCapExceeded",
           source: "background",
           ability: "str",
-          score: 30,
-          increase: 2,
           maximum: 20,
+          excess: 12,
         },
       }),
     );
     if (Either.isLeft(result)) {
       expect(characterCreationIssueMessage(result.left)).toBe(
-        "Cannot apply background ability-score increase: str 30 + 2 would exceed 20.",
+        "Cannot apply background ability-score increase: str 32 would exceed 20 by 12.",
       );
     }
   });
@@ -7268,9 +7266,8 @@ describe("character creation finalization", () => {
               tag: "abilityScoreCapExceeded",
               source: "classFeature",
               ability: "str",
-              score: 19,
-              increase: 2,
               maximum: 20,
+              excess: 1,
             },
           },
         ],

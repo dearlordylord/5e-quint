@@ -64,6 +64,16 @@ const ChoiceMinimumCountSchema = Schema.Number.pipe(
   Schema.brand("NonNegativeInteger"),
   Schema.brand("ChoiceMinimumCount"),
 );
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("NonNegativeInteger"),
+);
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.brand("PositiveInteger"),
+);
 const FillIndexSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
@@ -471,7 +481,7 @@ const CreationFinalizationIllegalCauseFactSchema = Schema.Union(
     speciesUnitId: UnitIdSchema,
   }),
   Schema.Struct({
-    tag: Schema.Literal("invalidSpeciesLineageSelection"),
+    tag: Schema.Literal("invalidGnomishLineageSelection"),
     traitUnitId: UnitIdSchema,
   }),
   Schema.Struct({ tag: Schema.Literal("multipleSpellcastingSlotPools") }),
@@ -513,7 +523,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
     classUnitId: UnitIdSchema,
   }),
   Schema.Struct({
-    tag: Schema.Literal("missingClassFeatureUnit"),
+    tag: Schema.Literal("missingHitPointMaximumBonusFeatureUnit"),
     featureUnitId: UnitIdSchema,
   }),
   Schema.Struct({
@@ -537,8 +547,18 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("classFeatureLanguageChoiceCountMismatch"),
     featureUnitId: UnitIdSchema,
-    expectedCount: Schema.Number,
-    receivedCount: Schema.Number,
+    mismatch: Schema.Union(
+      Schema.Struct({
+        tag: Schema.Literal("missing"),
+        receivedCount: NonNegativeIntegerSchema,
+        missingCount: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
+        tag: Schema.Literal("extra"),
+        expectedCount: NonNegativeIntegerSchema,
+        extraCount: PositiveIntegerSchema,
+      }),
+    ),
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedClassFeatureLanguageChoice"),
@@ -574,9 +594,8 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
     tag: Schema.Literal("abilityScoreCapExceeded"),
     source: Schema.Literal("classFeature", "background"),
     ability: AbilitySchema,
-    score: Schema.Number,
-    increase: Schema.Number,
-    maximum: Schema.Number,
+    maximum: NonNegativeIntegerSchema,
+    excess: PositiveIntegerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedToolProficiency"),
@@ -1368,7 +1387,7 @@ function creationFinalizationIllegalCauseFact(
       },
     ),
     byTag(
-      "invalidSpeciesLineageSelection",
+      "invalidGnomishLineageSelection",
       ({ tag, traitUnitId, ...unprojected }) => {
         noUnprojectedFields(unprojected);
         return { tag, traitUnitId };
@@ -1398,7 +1417,7 @@ function characterBuildProjectionCauseFact(
       },
     ),
     byTag(
-      "missingClassFeatureUnit",
+      "missingHitPointMaximumBonusFeatureUnit",
       ({ tag, featureUnitId, ...unprojected }) => {
         noUnprojectedFields(unprojected);
         return { tag, featureUnitId };
@@ -1434,15 +1453,9 @@ function characterBuildProjectionCauseFact(
     ),
     byTag(
       "classFeatureLanguageChoiceCountMismatch",
-      ({
-        tag,
-        featureUnitId,
-        expectedCount,
-        receivedCount,
-        ...unprojected
-      }) => {
+      ({ tag, featureUnitId, mismatch, ...unprojected }) => {
         noUnprojectedFields(unprojected);
-        return { tag, featureUnitId, expectedCount, receivedCount };
+        return { tag, featureUnitId, mismatch };
       },
     ),
     byTag(
@@ -1510,9 +1523,9 @@ function characterBuildProjectionCauseFactRemaining(
     }),
     byTag(
       "abilityScoreCapExceeded",
-      ({ tag, source, ability, score, increase, maximum, ...unprojected }) => {
+      ({ tag, source, ability, maximum, excess, ...unprojected }) => {
         noUnprojectedFields(unprojected);
-        return { tag, source, ability, score, increase, maximum };
+        return { tag, source, ability, maximum, excess };
       },
     ),
     byTag(

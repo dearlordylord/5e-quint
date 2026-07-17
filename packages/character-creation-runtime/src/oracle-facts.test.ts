@@ -1,7 +1,11 @@
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { abilityScore } from "@dnd/shared/types";
+import {
+  NonNegativeInteger,
+  PositiveInteger,
+  abilityScore,
+} from "@dnd/shared/types";
 
 import {
   characterBuildFact,
@@ -311,9 +315,8 @@ describe("Character Creation owner facts", () => {
               tag: "abilityScoreCapExceeded",
               source: "classFeature",
               ability: "str",
-              score: 19,
-              increase: 2,
-              maximum: 20,
+              maximum: NonNegativeInteger(20),
+              excess: PositiveInteger(1),
             },
           },
         ],
@@ -331,9 +334,8 @@ describe("Character Creation owner facts", () => {
             tag: "abilityScoreCapExceeded",
             source: "classFeature",
             ability: "str",
-            score: 19,
-            increase: 2,
             maximum: 20,
+            excess: 1,
           },
         },
       ],
@@ -347,9 +349,8 @@ describe("Character Creation owner facts", () => {
         tag: "abilityScoreCapExceeded",
         source: "background",
         ability: "str",
-        score: 19,
-        increase: 2,
-        maximum: 20,
+        maximum: NonNegativeInteger(20),
+        excess: PositiveInteger(1),
       },
     } as const;
 
@@ -360,6 +361,26 @@ describe("Character Creation owner facts", () => {
       decodeCreationFinalizationRejectionFact({
         ...rejection,
         message: "presentation prose",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      decodeCreationFinalizationRejectionFact({
+        ...rejection,
+        cause: { ...rejection.cause, excess: 0 },
+      })._tag,
+    ).toBe("Left");
+    expect(
+      decodeCreationFinalizationRejectionFact({
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "classFeatureLanguageChoiceCountMismatch",
+          featureUnitId: "synthetic_feature",
+          mismatch: {
+            tag: "missing",
+            receivedCount: 1,
+            missingCount: 0,
+          },
+        },
       })._tag,
     ).toBe("Left");
     expect(

@@ -1026,7 +1026,7 @@ export type CreationFinalizationIllegalCause =
       readonly speciesUnitId: UnitRecord["id"];
     }
   | {
-      readonly tag: "invalidSpeciesLineageSelection";
+      readonly tag: "invalidGnomishLineageSelection";
       readonly traitUnitId: UnitRecord["id"];
     }
   | { readonly tag: "multipleSpellcastingSlotPools" }
@@ -1043,7 +1043,7 @@ export type CharacterBuildProjectionCause =
       readonly classUnitId: UnitRecord["id"];
     }
   | {
-      readonly tag: "missingClassFeatureUnit";
+      readonly tag: "missingHitPointMaximumBonusFeatureUnit";
       readonly featureUnitId: UnitRecord["id"];
     }
   | {
@@ -1067,8 +1067,17 @@ export type CharacterBuildProjectionCause =
   | {
       readonly tag: "classFeatureLanguageChoiceCountMismatch";
       readonly featureUnitId: UnitRecord["id"];
-      readonly expectedCount: number;
-      readonly receivedCount: number;
+      readonly mismatch:
+        | {
+            readonly tag: "missing";
+            readonly receivedCount: NonNegativeIntegerType;
+            readonly missingCount: PositiveIntegerType;
+          }
+        | {
+            readonly tag: "extra";
+            readonly expectedCount: NonNegativeIntegerType;
+            readonly extraCount: PositiveIntegerType;
+          };
     }
   | {
       readonly tag: "unsupportedClassFeatureLanguageChoice";
@@ -1107,9 +1116,8 @@ export type CharacterBuildProjectionCause =
       readonly tag: "abilityScoreCapExceeded";
       readonly source: "classFeature" | "background";
       readonly ability: Ability;
-      readonly score: number;
-      readonly increase: number;
-      readonly maximum: number;
+      readonly maximum: NonNegativeIntegerType;
+      readonly excess: PositiveIntegerType;
     }
   | {
       readonly tag: "unsupportedToolProficiency";
