@@ -4,7 +4,7 @@ Research resolution for [Evaluate immutable task-graph representations for Ralph
 
 ## Decision
 
-Own a minimal, opaque Ralph `TaskDag` whose canonical in-memory representation is a persistent map from branded tracker `TaskId` to a task projection containing exactly one persistent set of prerequisite `TaskId`s. On Effect V4, use its immutable `HashMap` and `HashSet` as implementation primitives. Do not use Effect V4 `Graph`, Graphology, or Graphlib as the authoritative revision-scoped projection.
+Own a minimal, opaque Ralph `TaskDag` whose canonical in-memory representation is a persistent map from branded tracker `TaskId` to a task projection containing exactly one persistent set of prerequisite `TaskId`s. On Effect V4, use its immutable `HashMap` and `HashSet` as implementation primitives. Do not use Effect V4 `Graph`, `@thi.ng/dgraph`, Graphology, or Graphlib as the authoritative revision-scoped projection.
 
 This is a representation decision, not a second task ledger. The tracker remains authoritative. Each accepted `TaskDagSnapshot` is a value projected from one complete tracker revision; the durable journal may refer to its revision but does not mutate or reconstruct tracker task facts independently.
 
@@ -20,6 +20,7 @@ The current [registry beta](https://registry.npmjs.org/effect/4.0.0-beta.99) on 
 - [Effect V4 HashMap source at beta.98](https://github.com/Effect-TS/effect-smol/blob/3e4abbcb0d0e9a5e82b6b88c7ef7ab69900105ec/packages/effect/src/HashMap.ts)
 - [Effect V4 HashSet source at beta.98](https://github.com/Effect-TS/effect-smol/blob/3e4abbcb0d0e9a5e82b6b88c7ef7ab69900105ec/packages/effect/src/HashSet.ts)
 - [June 2026 Graph fixes and directed-neighbor API change](https://github.com/Effect-TS/effect-smol/commit/90ae23cf07284da5e1bcd9dffa882e85df7e617b)
+- [`@thi.ng/dgraph` README at the evaluated commit](https://codeberg.org/thi.ng/umbrella/src/commit/4fc0df9a97bec92742f288aa059c04e9ff24cf41/packages/dgraph/README.md) and [implementation](https://codeberg.org/thi.ng/umbrella/src/commit/4fc0df9a97bec92742f288aa059c04e9ff24cf41/packages/dgraph/src/index.ts)
 - [Graphology core](https://github.com/graphology/graphology/blob/249ec5e668ff5e89bf37a10330981579f8759525/src/graphology/src/graph.js) and [DAG topological sort](https://github.com/graphology/graphology/blob/249ec5e668ff5e89bf37a10330981579f8759525/src/dag/topological-sort.js)
 - [Graphlib graph](https://github.com/dagrejs/graphlib/blob/85afa4e6d30f308d445edcd51ca6b06f705a92c6/lib/graph.ts), [topological sort](https://github.com/dagrejs/graphlib/blob/85afa4e6d30f308d445edcd51ca6b06f705a92c6/lib/alg/topsort.ts), and [JSON projection](https://github.com/dagrejs/graphlib/blob/85afa4e6d30f308d445edcd51ca6b06f705a92c6/lib/json.ts)
 
@@ -146,6 +147,24 @@ This wire form is evidence and cache material, not a canonical task ledger. Rest
 | Revision identity       | Not modeled                                                               | Could be graph attributes, still mutable                                | Could be graph label, still mutable                | Branded revision in one snapshot wrapper                       |
 | Serialization           | `toJSON` reports only counts/type; diagram exporters are not state codecs | Export/import supported, requires canonical sorting and domain decoding | JSON read/write supported, uses untyped values     | Exact versioned Schema projection, sorted and revalidated      |
 | Surface area            | General directed/undirected algorithms and visualization                  | General multigraph ecosystem                                            | General graph algorithms and compound graphs       | Only Ralph DAG construction and queries                        |
+
+## Follow-up candidate: `@thi.ng/dgraph`
+
+[`@thi.ng/dgraph` 2.1.210](https://registry.npmjs.org/@thi.ng%2Fdgraph/2.1.210) is the closest surveyed library to Ralph's actual problem. It is a small, stable, production-used DAG package rather than a general graph toolkit. It accepts generic node values directly, detects cycles during dependency insertion, exposes immediate and transitive dependencies/dependants, identifies roots and leaves, and topologically sorts. A branded string `TaskId` could therefore remain the node key without an allocated-index registry. Its `addDependency(node, dependency)` orientation also maps directly to the canonical prerequisite set selected above.
+
+It nevertheless fails the authoritative snapshot requirements:
+
+- `DGraph` is mutable, and its `dependencies` and `dependents` maps are public mutable fields.
+- Each edge is stored in both maps. Library methods update them together, but the public representation can express contradictory directions and therefore does not make invalid states unrepresentable.
+- `copy()` deep-copies both maps and every adjacency set. `sort()` makes that full copy and destructively removes edges from the copy; there is no persistent structural sharing between revisions.
+- Cycle and self-edge detection throw an illegal-argument exception on the first offending insertion rather than returning accumulated typed projection issues with deterministic witnesses.
+- Traversal tie-breaking follows `EquivMap`/`ArraySet` iteration and insertion order; the API has no canonical comparator.
+- The core package has no revision identity or state serialization contract. Its companion serializer targets Graphviz DOT, not a round-trippable task snapshot.
+- `removeNode` deletes only the node's dependency-map entry; it does not remove the reverse entry or all incident relationships, so it is not the total graph-update operation Ralph would require.
+
+Wrapping `DGraph` would still require Ralph to own immutability, a non-duplicated canonical edge source, typed accumulated errors, deterministic ordering, revision identity, Schema serialization, and lifecycle-aware frontier logic. Those are nearly the entire Ralph-specific structure, while the package would also add five declared `@thi.ng` dependencies to an Effect control plane.
+
+Disposition: retain `@thi.ng/dgraph` as useful prior art for the domain vocabulary and compact dependency-query surface, and add it to the prototype comparison only if a mutable-copy baseline is informative. It does not change the decision to own the persistent DAG.
 
 ## Why Effect V4 Graph is not the domain representation
 
