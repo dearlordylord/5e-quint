@@ -4792,18 +4792,21 @@ function attackMeleeReachFact(
   >[number],
   { readonly kind: "attackTargetInMeleeReach" }
 > {
-  return {
-    kind: "attackTargetInMeleeReach",
-    actorId: subject.actorId,
-    targetId,
-    procedureRef: subject.procedureRef,
-    ...(subject.attackAbility === undefined
-      ? {}
-      : { attackAbility: subject.attackAbility }),
-    ...(subject.attackDamageType === undefined
-      ? {}
-      : { attackDamageType: subject.attackDamageType }),
-  };
+  return subject.attackAbility === undefined
+    ? {
+        kind: "attackTargetInMeleeReach",
+        actorId: subject.actorId,
+        targetId,
+        procedureRef: subject.procedureRef,
+      }
+    : {
+        kind: "attackTargetInMeleeReach",
+        actorId: subject.actorId,
+        targetId,
+        procedureRef: subject.procedureRef,
+        attackAbility: subject.attackAbility,
+        attackDamageType: subject.attackDamageType,
+      };
 }
 
 function requireResolvedBattleSubject(

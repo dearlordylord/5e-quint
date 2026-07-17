@@ -1246,7 +1246,7 @@ export function resolveStatBlockBonusActionOption(
 export function resolveStatBlockBonusActionDisengage(
   input: StatBlockBonusActionOptionBattleResolutionInput,
   actor: StatBlockBattleCreatureState,
-  procedureRef: import("../identity.ts").BattleProcedureExecutionRef,
+  procedureRef: import("../identity.ts").BattleStatBlockProcedureExecutionRef,
 ): BattleResolutionResult {
   if (input.fills.length > 0) {
     return invalidResult(
@@ -1283,7 +1283,7 @@ export function resolveStatBlockBonusActionDisengage(
 export function resolveStatBlockBonusActionHide(
   input: StatBlockBonusActionOptionBattleResolutionInput,
   actor: StatBlockBattleCreatureState,
-  procedureRef: import("../identity.ts").BattleProcedureExecutionRef,
+  procedureRef: import("../identity.ts").BattleStatBlockProcedureExecutionRef,
 ): BattleResolutionResult {
   if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
     return invalidResult(

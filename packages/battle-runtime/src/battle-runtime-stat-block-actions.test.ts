@@ -59,7 +59,7 @@ import type {
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
-  BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   spellId,
   type BattleResourcePoolExecutionRef,
   type CombatantId,
@@ -153,7 +153,7 @@ function resourcePoolRefForAttack(
 function procedureRefForAttack(
   state: BattleState,
   attackName: string,
-): ReturnType<typeof BattleProcedureExecutionRef.make> {
+): ReturnType<typeof BattleStatBlockProcedureExecutionRef.make> {
   const actor = state.combatants.get(goblinId);
   if (actor?.origin.kind !== "statBlock") {
     throw new Error("Expected Stat Block goblin.");
@@ -349,12 +349,12 @@ function procedureRefForStatBlockAttackSubject(
   if (subject.procedureRef === undefined) {
     throw new Error("Expected Stat Block attack procedure ref.");
   }
-  return subject.procedureRef;
+  return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
 }
 
 function biteMeleeReachFact(
   targetId: CombatantId,
-  procedureRef: ReturnType<typeof BattleProcedureExecutionRef.make>,
+  procedureRef: ReturnType<typeof BattleStatBlockProcedureExecutionRef.make>,
 ) {
   return [
     {

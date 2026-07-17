@@ -451,6 +451,8 @@ function resolveOffHandHit(input: {
   );
   const targetChoice = attackTargetFill(target, fighterId, goblinId, {
     procedureRef: subject.procedureRef,
+    attackAbility: subject.attackAbility,
+    attackDamageType: subject.attackDamageType,
   });
   const roll = requireHole(
     resolveBattleSubject({

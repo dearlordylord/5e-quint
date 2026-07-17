@@ -271,13 +271,19 @@ export function statBlockAttackAct(
   actorId: CombatantId,
   attackName: string,
 ): AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
 } {
   const matchingActs = discoverBattleActs(state).filter(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
-      readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "action"; readonly action: "attack" }
+      >;
     } =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&

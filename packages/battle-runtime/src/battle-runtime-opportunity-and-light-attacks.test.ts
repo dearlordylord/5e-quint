@@ -3,6 +3,7 @@ import {
   requireResolved,
   fighterVsGoblinBattle,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   characterBonusAttackSubjectForTest,
   criticalRange19UnitRefs,
   goblinAttackSubject,
@@ -47,13 +48,14 @@ import type {
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
+import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
 
 function goblinOpportunityAttackThreat(state: BattleState) {
-  const procedureRef = goblinAttackSubject(state, "Scimitar").procedureRef;
-  if (procedureRef === undefined) {
-    throw new Error("Expected admitted Scimitar procedure ref.");
-  }
-  return { reactorId: goblinId, procedureRef };
+  const subject = goblinAttackSubject(state, "Scimitar");
+  return {
+    reactorId: goblinId,
+    ...attackExecutionSelectionForSubjectForTest(subject),
+  };
 }
 
 function statBlockAttackProcedureRef(
@@ -65,7 +67,7 @@ function statBlockAttackProcedureRef(
   if (subject.procedureRef === undefined) {
     throw new Error("Expected Stat Block attack procedure ref.");
   }
-  return subject.procedureRef;
+  return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
 }
 
 describe("battle runtime: Light property and Opportunity Attacks", () => {

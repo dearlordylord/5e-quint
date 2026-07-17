@@ -213,6 +213,8 @@ export type CreatureId = typeof CreatureId.Type;
 
 export type BattleProcedureExecutionRef = string &
   Brand.Brand<"BattleProcedureExecutionRef">;
+export type BattleStatBlockProcedureExecutionRef = BattleProcedureExecutionRef &
+  Brand.Brand<"BattleStatBlockProcedureExecutionRef">;
 
 export const HP = Schema.Number.pipe(
   Schema.int(),

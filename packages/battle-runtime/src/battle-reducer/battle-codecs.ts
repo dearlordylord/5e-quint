@@ -86,7 +86,6 @@ import {
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
-  BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
@@ -158,19 +157,6 @@ import {
   BRUTAL_STRIKE_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
-const BattleAttackProcedureExecutionRefSchema =
-  BattleAttackProcedureExecutionRef as unknown as Schema.Schema<
-    BattleProcedureExecutionRef,
-    string,
-    never
-  >;
-const BattleStatBlockProcedureExecutionRefSchema =
-  BattleStatBlockProcedureExecutionRef as unknown as Schema.Schema<
-    BattleProcedureExecutionRef,
-    string,
-    never
-  >;
-
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("normalNamedForm"),
@@ -662,7 +648,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("attackTargetInMeleeReach"),
       actorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -671,7 +657,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("attackTargetInMeleeReach"),
       actorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
       attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
       attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -701,7 +687,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("weaponMasteryPushDisposition"),
       attackerId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -711,7 +697,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("weaponMasteryPushDisposition"),
       attackerId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
       attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
       attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -731,7 +717,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("attackTargetInRangedRange"),
       actorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -741,7 +727,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("attackTargetInRangedRange"),
       actorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
       attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
       attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -4455,14 +4441,14 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               reactorId: CombatantId,
-              procedureRef: BattleAttackProcedureExecutionRefSchema,
+              procedureRef: BattleAttackProcedureExecutionRef,
               attackAbility: BattleAttackExecutionAbilitySchema,
               attackDamageType: DamageTypeSchema,
               attackName: Schema.optionalWith(Schema.Never, { exact: true }),
             }),
             Schema.Struct({
               reactorId: CombatantId,
-              procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+              procedureRef: BattleStatBlockProcedureExecutionRef,
               attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
               attackDamageType: Schema.optionalWith(Schema.Never, {
                 exact: true,
@@ -4797,7 +4783,7 @@ const RuntimeActionResourceSchema = Schema.Union(
     kind: Schema.Literal("action"),
     source: Schema.Literal("statBlockMultiattack"),
     sourceOwnerId: Schema.String,
-    attackProcedureRef: BattleProcedureExecutionRef,
+    attackProcedureRef: BattleStatBlockProcedureExecutionRef,
     restriction: BattleActionRestrictionSchema,
   }),
   Schema.Struct({
@@ -4957,7 +4943,9 @@ const StatBlockProcedureSchema = Schema.Union(
   StatBlockAttackProcedureSchema,
   Schema.Struct({
     kind: Schema.Literal("multiattack"),
-    dispatchProcedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+    dispatchProcedureRefs: Schema.NonEmptyArray(
+      BattleStatBlockProcedureExecutionRef,
+    ),
   }),
   Schema.Struct({
     kind: Schema.Literal("bonusActionOption"),
@@ -4968,7 +4956,7 @@ const StatBlockProcedureSchema = Schema.Union(
 );
 
 const StatBlockProcedureBindingSnapshotSchema = Schema.Struct({
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
   procedure: StatBlockProcedureSchema,
   resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
 });
@@ -5111,10 +5099,10 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
 }
 
 function multiattackDispatchesRespectLimitedUse(
-  dispatchProcedureRefs: readonly BattleProcedureExecutionRef[],
-  limitedUseActionAttackRefs: ReadonlySet<BattleProcedureExecutionRef>,
+  dispatchProcedureRefs: readonly BattleStatBlockProcedureExecutionRef[],
+  limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>,
 ): boolean {
-  const seenLimitedUseRefs = new Set<BattleProcedureExecutionRef>();
+  const seenLimitedUseRefs = new Set<BattleStatBlockProcedureExecutionRef>();
   for (const procedureRef of dispatchProcedureRefs) {
     if (!limitedUseActionAttackRefs.has(procedureRef)) continue;
     if (seenLimitedUseRefs.has(procedureRef)) return false;
@@ -5130,12 +5118,12 @@ const BattleCreatureOriginSnapshotSchema = Schema.Union(
     attackExecution: Schema.Struct({
       scopeRef: BattleAttackExecutionScopeRef,
       attackProcedureRef: Schema.Union(
-        BattleProcedureExecutionRef,
+        BattleAttackProcedureExecutionRef,
         Schema.Null,
       ),
-      unarmedStrikeProcedureRef: BattleProcedureExecutionRef,
+      unarmedStrikeProcedureRef: BattleAttackProcedureExecutionRef,
       offHandAttackProcedureRef: Schema.Union(
-        BattleProcedureExecutionRef,
+        BattleAttackProcedureExecutionRef,
         Schema.Null,
       ),
     }),

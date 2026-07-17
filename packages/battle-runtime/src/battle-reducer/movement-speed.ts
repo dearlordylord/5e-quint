@@ -36,6 +36,7 @@ import {
   type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
 import {
+  attackExecutionSelectionIdentitiesEqual,
   boundAttackExecutionSelectionMatchesOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
@@ -578,14 +579,7 @@ export function attackExecutionSelectionsEqual(
   left: BattleAttackExecutionSelection,
   right: BattleAttackExecutionSelection,
 ): boolean {
-  return (
-    left.procedureRef === right.procedureRef &&
-    ("attackAbility" in left ? left.attackAbility : undefined) ===
-      ("attackAbility" in right ? right.attackAbility : undefined) &&
-    ("attackDamageType" in left ? left.attackDamageType : undefined) ===
-      ("attackDamageType" in right ? right.attackDamageType : undefined) &&
-    left.attackName === right.attackName
-  );
+  return attackExecutionSelectionIdentitiesEqual(left, right);
 }
 
 export function meleeWeaponOrUnarmedStrikeOptionForReactor(

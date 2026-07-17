@@ -120,7 +120,9 @@ import { Brand } from "effect";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
+  CharacterAttackExecutionSelection,
   CharacterWeaponAttackActionOption,
+  StatBlockAttackExecutionSelection,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import type {
@@ -184,10 +186,10 @@ import type {
 } from "./companion-state.ts";
 import type {
   BattleAreaId,
+  BattleAttackProcedureExecutionRef,
   BattleDancingLightId,
   BattleLineDirectionId,
   BattleObjectId,
-  BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleExecutionScopeCursor,
   BattleSpellEffectOccurrenceId,
@@ -1691,18 +1693,8 @@ export type BattleAttackExecutionSelection =
       readonly attackName: string;
       readonly procedureRef?: never;
     }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly attackAbility: import("./battle-action-options.ts").BattleAttackExecutionAbility;
-      readonly attackDamageType: DamageType;
-      readonly attackName?: never;
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly attackAbility?: never;
-      readonly attackDamageType?: never;
-      readonly attackName?: never;
-    };
+  | (CharacterAttackExecutionSelection & { readonly attackName?: never })
+  | (StatBlockAttackExecutionSelection & { readonly attackName?: never });
 export type BattleOpportunityAttackSelection = BattleAttackExecutionSelection;
 export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
@@ -7388,9 +7380,9 @@ export type BattleCreatureOriginSnapshot =
       readonly characterId: CharacterId;
       readonly attackExecution: {
         readonly scopeRef: BattleAttackExecutionScopeRef;
-        readonly attackProcedureRef: BattleProcedureExecutionRef | null;
-        readonly unarmedStrikeProcedureRef: BattleProcedureExecutionRef;
-        readonly offHandAttackProcedureRef: BattleProcedureExecutionRef | null;
+        readonly attackProcedureRef: BattleAttackProcedureExecutionRef | null;
+        readonly unarmedStrikeProcedureRef: BattleAttackProcedureExecutionRef;
+        readonly offHandAttackProcedureRef: BattleAttackProcedureExecutionRef | null;
       };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
       readonly druidWildShapeAvailableForms: readonly {

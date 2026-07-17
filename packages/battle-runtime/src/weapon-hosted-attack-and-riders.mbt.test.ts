@@ -36,6 +36,7 @@ import {
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import {
   divineFavorUnitId,
   magicWeaponUnitId,
@@ -152,12 +153,18 @@ type PendingInvocation =
     }
   | {
       readonly tag: "weaponTarget";
-      readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "action"; readonly action: "attack" }
+      >;
       readonly attackName: WeaponHostedAttackName;
     }
   | {
       readonly tag: "weaponAttackRoll";
-      readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "action"; readonly action: "attack" }
+      >;
       readonly targetFill: Extract<
         BattleFill,
         { readonly kind: "targetChoice" }
@@ -165,7 +172,10 @@ type PendingInvocation =
     }
   | {
       readonly tag: "weaponDamage";
-      readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "action"; readonly action: "attack" }
+      >;
       readonly targetFill: Extract<
         BattleFill,
         { readonly kind: "targetChoice" }
@@ -504,6 +514,12 @@ describe("Weapon-hosted attack and riders MBT parity", () => {
     if (targetChosen.pending.tag !== "weaponAttackRoll") {
       throw new Error("Expected pending unaffected weapon attack roll.");
     }
+    expect(
+      attackActionOptionForSubject(
+        targetChosen.battle,
+        targetChosen.pending.subject,
+      )?.kind,
+    ).toBe("unarmedStrike");
     const attack = requireHole(targetChosen.holes, "attackRoll");
     const result = requireResolved(
       resolveBattleSubject({
@@ -1287,7 +1303,10 @@ function discoverWeaponAttackAct(
   state: WeaponHostedRuntimeState,
   attackName: WeaponHostedAttackName,
 ): {
-  readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
   readonly initialHoles: readonly BattleHole[];
 } {
   if (state.scenario === "shillelaghHeldWeaponOverride") {

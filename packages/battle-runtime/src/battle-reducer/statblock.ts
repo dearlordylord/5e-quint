@@ -11,7 +11,10 @@ import type {
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type {
+  BattleStatBlockProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import {
   type BattleState,
   type StatBlockBattleCreatureState,
@@ -50,7 +53,7 @@ export function attackActionOptionIsOrdinaryAttackAction(
 export function statBlockAttackProcedureSection(
   state: BattleState,
   actorId: CombatantId,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockAttackSection | null {
   const actor = state.combatants.get(actorId);
   const execution =
@@ -129,7 +132,7 @@ export function spendStatBlockAttackResources(input: {
 export function updateStatBlockActorResources(
   state: BattleState,
   actor: StatBlockBattleCreatureState,
-  procedureRef: BattleProcedureExecutionRef,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
 ): BattleState {
   const currentActor = state.combatants.get(actor.combatantId);
   if (currentActor?.origin.kind !== "statBlock") return state;
@@ -146,16 +149,13 @@ export function updateStatBlockActorResources(
   };
 }
 
-export function attackSubjectPart(attack: BoundSupportedAttackActionOption): {
-  readonly procedureRef: BattleProcedureExecutionRef;
-} & (
+export function attackSubjectPart(attack: BoundSupportedAttackActionOption):
   | (CharacterAttackExecutionSelection & {
       readonly statBlockDamageNotation?: never;
     })
   | (StatBlockAttackExecutionSelection & {
       readonly statBlockDamageNotation?: "static";
-    })
-) {
+    }) {
   return attack.kind === "statBlockAttack"
     ? {
         ...attackExecutionSelectionForOption(attack),

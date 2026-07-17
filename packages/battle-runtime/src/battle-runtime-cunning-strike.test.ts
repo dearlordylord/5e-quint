@@ -461,8 +461,9 @@ describe("battle runtime: Cunning Strike", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
-                procedureRef: goblinAttackSubject(window.state, "Scimitar")
-                  .procedureRef,
+                ...attackExecutionSelectionForSubjectForTest(
+                  goblinAttackSubject(window.state, "Scimitar"),
+                ),
               },
             ],
           }),

@@ -25,7 +25,6 @@ import {
   BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
   CombatantId,
-  BattleProcedureExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   SpellId,
   spellId as makeSpellId,
@@ -46,6 +45,7 @@ import {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
+import { attackExecutionSelectionKey } from "./battle-action-options.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -455,32 +455,19 @@ export const BattleAttackExecutionAbilitySchema = Schema.Union(
   Schema.Literal("spellcasting"),
 );
 
-const BattleAttackProcedureExecutionRefSchema =
-  BattleAttackProcedureExecutionRef as unknown as Schema.Schema<
-    BattleProcedureExecutionRef,
-    string,
-    never
-  >;
-const BattleStatBlockProcedureExecutionRefSchema =
-  BattleStatBlockProcedureExecutionRef as unknown as Schema.Schema<
-    BattleProcedureExecutionRef,
-    string,
-    never
-  >;
-
 export const BattleAttackExecutionSelectionSchema = Schema.Union(
   Schema.Struct({
     attackName: Schema.String,
     procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
-    procedureRef: BattleAttackProcedureExecutionRefSchema,
+    procedureRef: BattleAttackProcedureExecutionRef,
     attackAbility: BattleAttackExecutionAbilitySchema,
     attackDamageType: DamageTypeSchema,
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
     attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
     attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -495,7 +482,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("attack"),
-    procedureRef: BattleAttackProcedureExecutionRefSchema,
+    procedureRef: BattleAttackProcedureExecutionRef,
     attackAbility: BattleAttackExecutionAbilitySchema,
     attackDamageType: DamageTypeSchema,
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -506,7 +493,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("attack"),
-    procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
     attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
     attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -519,7 +506,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
     actorId: CombatantId,
     familiarId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
     statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
       exact: true,
     }),
@@ -559,7 +546,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("multiattack"),
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -610,7 +597,7 @@ export const BattleSubjectSchema = Schema.Union(
       tag: Schema.Literal("bonusAction"),
       actorId: CombatantId,
       action: Schema.Literal("offHandAttack"),
-      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
     }),
@@ -618,7 +605,7 @@ export const BattleSubjectSchema = Schema.Union(
       tag: Schema.Literal("bonusAction"),
       actorId: CombatantId,
       action: Schema.Literal("martialArtsUnarmedStrike"),
-      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
     }),
@@ -627,7 +614,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("bonusAction"),
     actorId: CombatantId,
     action: Schema.Literal("statBlockActionOption"),
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
     standardAction: Schema.Literal(...STANDARD_ACTION_KINDS),
   }),
   Schema.Struct({
@@ -670,7 +657,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("monkFocusFlurryOfBlowsStrike"),
     actorId: CombatantId,
     resourceUnitId: BattleSubjectTextSchema,
-    procedureRef: BattleProcedureExecutionRef,
+    procedureRef: BattleAttackProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -827,7 +814,7 @@ export const BattleSubjectSchema = Schema.Union(
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -838,7 +825,7 @@ export const BattleSubjectSchema = Schema.Union(
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
       attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
       attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -1218,9 +1205,7 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.tag,
       subject.actorId,
       subject.action,
-      subject.procedureRef,
-      subject.attackAbility ?? null,
-      subject.attackDamageType ?? null,
+      attackExecutionSelectionKey(subject),
     ]);
   }
   if (subject.tag === "monkFocusOption") {
@@ -1294,9 +1279,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.tag,
         attack.actorId,
         attack.action,
-        attack.procedureRef,
-        attack.attackAbility ?? null,
-        attack.attackDamageType ?? null,
+        attackExecutionSelectionKey(attack),
         "statBlockDamageNotation" in attack
           ? (attack.statBlockDamageNotation ?? "rolled")
           : null,

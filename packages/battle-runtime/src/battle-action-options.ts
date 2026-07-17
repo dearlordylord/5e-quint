@@ -17,7 +17,7 @@ import type {
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 import type {
   BattleAttackProcedureExecutionRef,
-  BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
 
 export type BattleWeaponDamage = Extract<
@@ -262,7 +262,7 @@ export type StatBlockDamageNotation =
 
 export type RolledStatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
-  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
   readonly attack: SupportedCreatureAttackRollMechanics;
   readonly damageNotation: "rolled";
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
@@ -270,7 +270,7 @@ export type RolledStatBlockAttackActionOption = {
 
 export type StaticStatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
-  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
   readonly attack: SupportedStaticDamageCreatureAttackRollMechanics;
   readonly damageNotation: "static";
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
@@ -291,18 +291,25 @@ export type BoundSupportedAttackActionOption =
 export type BattleAttackExecutionAbility = Ability | "spellcasting";
 
 export type CharacterAttackExecutionSelection = {
-  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly procedureRef: BattleAttackProcedureExecutionRef;
   readonly attackAbility: BattleAttackExecutionAbility;
   readonly attackDamageType: DamageType;
 };
 export type StatBlockAttackExecutionSelection = {
-  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
   readonly attackAbility?: never;
   readonly attackDamageType?: never;
 };
 export type BoundAttackExecutionSelection =
   | CharacterAttackExecutionSelection
   | StatBlockAttackExecutionSelection;
+
+export type AttackExecutionSelectionIdentity =
+  | BoundAttackExecutionSelection
+  | {
+      readonly attackName: string;
+      readonly procedureRef?: never;
+    };
 
 export function attackExecutionAbility(
   attack: SupportedAttackActionOption,
@@ -361,11 +368,30 @@ export function boundAttackExecutionSelectionMatchesOption(
 export function boundAttackExecutionSelectionKey(
   selection: BoundAttackExecutionSelection,
 ): string {
+  return attackExecutionSelectionKey(selection);
+}
+
+export function attackExecutionSelectionKey(
+  selection: AttackExecutionSelectionIdentity,
+): string {
+  if (selection.procedureRef === undefined) {
+    return JSON.stringify(["authoredAttack", selection.attackName]);
+  }
   return JSON.stringify([
+    "boundAttack",
     selection.procedureRef,
     selection.attackAbility ?? null,
     selection.attackDamageType ?? null,
   ]);
+}
+
+export function attackExecutionSelectionIdentitiesEqual(
+  left: AttackExecutionSelectionIdentity,
+  right: AttackExecutionSelectionIdentity,
+): boolean {
+  return (
+    attackExecutionSelectionKey(left) === attackExecutionSelectionKey(right)
+  );
 }
 
 export type StatBlockAttackDamageComponent = {

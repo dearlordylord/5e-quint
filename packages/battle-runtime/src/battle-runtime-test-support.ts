@@ -83,7 +83,7 @@ import {
   resolveSuccessfulAbilityCheckReactionReduction,
   type BattleAreaId,
   type BattleAttackExecutionSelection,
-  type BattleProcedureExecutionRef,
+  type BattleAttackProcedureExecutionRef,
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
@@ -988,7 +988,7 @@ export function characterAttackSubjectForTest(
   readonly tag: "action";
   readonly actorId: CombatantId;
   readonly action: "attack";
-  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly procedureRef: BattleAttackProcedureExecutionRef;
   readonly attackAbility: import("./battle-action-options.ts").BattleAttackExecutionAbility;
   readonly attackDamageType: DamageType;
 } {
