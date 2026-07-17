@@ -1176,12 +1176,25 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         { reactorId, procedureRef: firstProcedureRef },
       ],
     });
+    const movementWithChangedMultiplicity = movementFill(moveHole, {
+      movementCostFeet: 5,
+      provokedOpportunityAttacks: [
+        { reactorId, procedureRef: firstProcedureRef },
+        { reactorId, procedureRef: firstProcedureRef },
+      ],
+    });
     expect(
       battleFillEquals(
         movementWithProcedureRefs,
         movementWithReorderedProcedureRefs,
       ),
     ).toBe(true);
+    expect(
+      battleFillEquals(
+        movementWithChangedMultiplicity,
+        movementWithProcedureRefs,
+      ),
+    ).toBe(false);
     const awaitingReaction = resolveBattleSubject({
       state,
       subject: moveSubject,

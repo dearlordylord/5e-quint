@@ -667,13 +667,16 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(BattleFillSchema)({
-          ...decision,
+          kind: "interruptDecision",
+          holeId: "battle:interrupt:decision",
           value: {
-            ...decision.value,
+            kind: "resolve",
+            responderId: "synthetic-retaliator",
             choice: {
-              ...decision.value.choice,
+              kind: "retaliationAttack",
+              reactorId: "synthetic-retaliator",
               attackName: "Synthetic Retaliation Strike",
-              selection: undefined,
+              fills: [],
             },
           },
         }),

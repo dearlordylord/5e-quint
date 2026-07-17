@@ -6102,16 +6102,18 @@ function opportunityAttackThreatsEqual(
   a: readonly BattleOpportunityAttackThreat[],
   b: readonly BattleOpportunityAttackThreat[],
 ): boolean {
-  return (
-    a.length === b.length &&
-    a.every((threat) =>
-      b.some(
-        (other) =>
-          threat.reactorId === other.reactorId &&
-          attackExecutionSelectionsEqual(threat, other),
-      ),
-    )
-  );
+  if (a.length !== b.length) return false;
+  const unmatched = [...b];
+  return a.every((threat) => {
+    const matchingIndex = unmatched.findIndex(
+      (other) =>
+        threat.reactorId === other.reactorId &&
+        attackExecutionSelectionsEqual(threat, other),
+    );
+    if (matchingIndex === -1) return false;
+    unmatched.splice(matchingIndex, 1);
+    return true;
+  });
 }
 
 function arrayValuesEqual<T>(a: readonly T[], b: readonly T[]): boolean {

@@ -458,6 +458,8 @@ export const BattleAttackExecutionSelectionSchema = Schema.Union(
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
 );
+export type BattleAttackExecutionSelection =
+  typeof BattleAttackExecutionSelectionSchema.Type;
 
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface

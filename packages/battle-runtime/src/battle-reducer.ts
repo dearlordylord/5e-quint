@@ -162,6 +162,7 @@ import {
 import {
   type ActionHideSubject,
   type ActionSearchSubject,
+  type BattleAttackExecutionSelection,
   type BattleMovementSpeedKind,
   type BattleSubject,
   type BonusActionStandardActionSubject,
@@ -169,6 +170,7 @@ import {
   type MonkFocusOptionSubject,
   type SpellInvocationRef,
 } from "./battle-subjects.ts";
+export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";
 import {
   type CharacterBattleMetamagicState,
   type CharacterBattleResourceState,
@@ -185,7 +187,6 @@ import type {
   BattleDancingLightId,
   BattleLineDirectionId,
   BattleObjectId,
-  BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeCursor,
   BattleSpellEffectOccurrenceId,
@@ -1684,15 +1685,6 @@ export type BattleSpiritualWeaponForcePosition = {
       readonly moveDistanceFeet: MovementFeet;
     }
 );
-export type BattleAttackExecutionSelection =
-  | {
-      readonly attackName: string;
-      readonly procedureRef?: never;
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly attackName?: never;
-    };
 export type BattleOpportunityAttackSelection = BattleAttackExecutionSelection;
 export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
