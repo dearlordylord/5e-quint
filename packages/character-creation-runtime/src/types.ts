@@ -1075,7 +1075,7 @@ export type CharacterBuildProjectionCause =
           }
         | {
             readonly tag: "extra";
-            readonly expectedCount: NonNegativeIntegerType;
+            readonly expectedCount: PositiveIntegerType;
             readonly extraCount: PositiveIntegerType;
           };
     }
@@ -1114,9 +1114,15 @@ export type CharacterBuildProjectionCause =
     }
   | {
       readonly tag: "abilityScoreCapExceeded";
-      readonly source: "classFeature" | "background";
+      readonly source: "background";
       readonly ability: Ability;
-      readonly maximum: NonNegativeIntegerType;
+      readonly excess: PositiveIntegerType;
+    }
+  | {
+      readonly tag: "abilityScoreCapExceeded";
+      readonly source: "classFeature";
+      readonly ability: Ability;
+      readonly maximum: PositiveIntegerType;
       readonly excess: PositiveIntegerType;
     }
   | {

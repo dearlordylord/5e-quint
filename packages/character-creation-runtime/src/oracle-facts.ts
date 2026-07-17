@@ -555,7 +555,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
       }),
       Schema.Struct({
         tag: Schema.Literal("extra"),
-        expectedCount: NonNegativeIntegerSchema,
+        expectedCount: PositiveIntegerSchema,
         extraCount: PositiveIntegerSchema,
       }),
     ),
@@ -592,9 +592,15 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("abilityScoreCapExceeded"),
-    source: Schema.Literal("classFeature", "background"),
+    source: Schema.Literal("background"),
     ability: AbilitySchema,
-    maximum: NonNegativeIntegerSchema,
+    excess: PositiveIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("abilityScoreCapExceeded"),
+    source: Schema.Literal("classFeature"),
+    ability: AbilitySchema,
+    maximum: PositiveIntegerSchema,
     excess: PositiveIntegerSchema,
   }),
   Schema.Struct({
@@ -1455,7 +1461,11 @@ function characterBuildProjectionCauseFact(
       "classFeatureLanguageChoiceCountMismatch",
       ({ tag, featureUnitId, mismatch, ...unprojected }) => {
         noUnprojectedFields(unprojected);
-        return { tag, featureUnitId, mismatch };
+        return {
+          tag,
+          featureUnitId,
+          mismatch: classFeatureLanguageChoiceCountMismatchFact(mismatch),
+        };
       },
     ),
     byTag(
@@ -1473,6 +1483,70 @@ function characterBuildProjectionCauseFact(
       },
     ),
     Match.orElse(characterBuildProjectionCauseFactRemaining),
+  );
+}
+
+type ClassFeatureLanguageChoiceCountMismatch = Extract<
+  CharacterBuildProjectionCause,
+  { readonly tag: "classFeatureLanguageChoiceCountMismatch" }
+>["mismatch"];
+
+type ClassFeatureLanguageChoiceCountMismatchFact = Extract<
+  CharacterBuildProjectionCauseFact,
+  { readonly tag: "classFeatureLanguageChoiceCountMismatch" }
+>["mismatch"];
+
+function classFeatureLanguageChoiceCountMismatchFact(
+  mismatch: ClassFeatureLanguageChoiceCountMismatch,
+): ClassFeatureLanguageChoiceCountMismatchFact {
+  return Match.value(mismatch).pipe(
+    byTag(
+      "missing",
+      ({ tag, receivedCount, missingCount, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, receivedCount, missingCount };
+      },
+    ),
+    byTag(
+      "extra",
+      ({ tag, expectedCount, extraCount, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, expectedCount, extraCount };
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
+type AbilityScoreCapExceededCause = Extract<
+  CharacterBuildProjectionCause,
+  { readonly tag: "abilityScoreCapExceeded" }
+>;
+
+type AbilityScoreCapExceededFact = Extract<
+  CharacterBuildProjectionCauseFact,
+  { readonly tag: "abilityScoreCapExceeded" }
+>;
+
+function abilityScoreCapExceededFact(
+  cause: AbilityScoreCapExceededCause,
+): AbilityScoreCapExceededFact {
+  return Match.value(cause).pipe(
+    Match.when(
+      { source: "background" },
+      ({ tag, source, ability, excess, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, source, ability, excess };
+      },
+    ),
+    Match.when(
+      { source: "classFeature" },
+      ({ tag, source, ability, maximum, excess, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, source, ability, maximum, excess };
+      },
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -1523,10 +1597,7 @@ function characterBuildProjectionCauseFactRemaining(
     }),
     byTag(
       "abilityScoreCapExceeded",
-      ({ tag, source, ability, maximum, excess, ...unprojected }) => {
-        noUnprojectedFields(unprojected);
-        return { tag, source, ability, maximum, excess };
-      },
+      abilityScoreCapExceededFact,
     ),
     byTag(
       "unsupportedToolProficiency",

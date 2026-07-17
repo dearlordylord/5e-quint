@@ -1280,8 +1280,7 @@ function characterBuildProjectionCauseMessage(
     ),
     Match.when(
       { tag: "abilityScoreCapExceeded" },
-      ({ source, ability, maximum, excess }) =>
-        `Cannot apply ${source} ability-score increase: ${ability} ${maximum + excess} would exceed ${maximum} by ${excess}.`,
+      (cap) => abilityScoreCapExceededMessage(cap),
     ),
     Match.when(
       { tag: "unsupportedToolProficiency" },
@@ -1305,6 +1304,26 @@ function characterBuildProjectionCauseMessageRemaining(
       { tag: "invalidChoiceOption" },
       ({ optionId, reason }) =>
         `${choiceOptionDecodeCauseMessage(reason)} Selected option: ${optionId}`,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function abilityScoreCapExceededMessage(
+  cause: Extract<
+    CharacterBuildProjectionCause,
+    { readonly tag: "abilityScoreCapExceeded" }
+  >,
+): string {
+  return Match.value(cause).pipe(
+    Match.when({ source: "background" }, ({ ability, excess }) => {
+      const maximum = BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE;
+      return `Cannot apply background ability-score increase: ${ability} ${maximum + excess} would exceed ${maximum} by ${excess}.`;
+    }),
+    Match.when(
+      { source: "classFeature" },
+      ({ ability, maximum, excess }) =>
+        `Cannot apply classFeature ability-score increase: ${ability} ${maximum + excess} would exceed ${maximum} by ${excess}.`,
     ),
     Match.exhaustive,
   );
@@ -2142,7 +2161,7 @@ function finalizedClassFeatureLanguages(
                     }
                   : {
                       tag: "extra",
-                      expectedCount: NonNegativeInteger(grant.count),
+                      expectedCount: PositiveInteger(grant.count),
                       extraCount: PositiveInteger(
                         selection.options.length - grant.count,
                       ),
@@ -3913,7 +3932,7 @@ function applyClassFeatureAbilityScoreIncreases(
             tag: "abilityScoreCapExceeded",
             source: "classFeature",
             ability: delta.ability,
-            maximum: NonNegativeInteger(delta.maxScore),
+            maximum: PositiveInteger(delta.maxScore),
             excess: PositiveInteger(
               currentScore + delta.increase - delta.maxScore,
             ),
@@ -3997,7 +4016,6 @@ function backgroundAbilityScoreIncreaseCapIssue(
       tag: "abilityScoreCapExceeded",
       source: "background",
       ability: overCapDelta.ability,
-      maximum: NonNegativeInteger(BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE),
       excess: PositiveInteger(
         baseScores[overCapDelta.ability] +
           overCapDelta.increase -

@@ -315,7 +315,7 @@ describe("Character Creation owner facts", () => {
               tag: "abilityScoreCapExceeded",
               source: "classFeature",
               ability: "str",
-              maximum: NonNegativeInteger(20),
+              maximum: PositiveInteger(20),
               excess: PositiveInteger(1),
             },
           },
@@ -349,7 +349,6 @@ describe("Character Creation owner facts", () => {
         tag: "abilityScoreCapExceeded",
         source: "background",
         ability: "str",
-        maximum: NonNegativeInteger(20),
         excess: PositiveInteger(1),
       },
     } as const;
@@ -367,6 +366,12 @@ describe("Character Creation owner facts", () => {
       decodeCreationFinalizationRejectionFact({
         ...rejection,
         cause: { ...rejection.cause, excess: 0 },
+      })._tag,
+    ).toBe("Left");
+    expect(
+      decodeCreationFinalizationRejectionFact({
+        ...rejection,
+        cause: { ...rejection.cause, maximum: 20 },
       })._tag,
     ).toBe("Left");
     expect(
@@ -389,6 +394,61 @@ describe("Character Creation owner facts", () => {
         cause: { ...rejection.cause, detail: "untyped detail" },
       })._tag,
     ).toBe("Left");
+    expect(
+      decodeCreationFinalizationRejectionFact({
+        tag: "characterBuildProjection",
+        cause: {
+          tag: "classFeatureLanguageChoiceCountMismatch",
+          featureUnitId: "synthetic_feature",
+          mismatch: {
+            tag: "extra",
+            expectedCount: 0,
+            extraCount: 1,
+          },
+        },
+      })._tag,
+    ).toBe("Left");
+  });
+
+  test("exhaustively projects nested count mismatch causes", () => {
+    const mismatchWithPresentation = {
+      tag: "missing" as const,
+      receivedCount: NonNegativeInteger(1),
+      missingCount: PositiveInteger(1),
+      label: "presentation",
+    };
+
+    expect(
+      creationFinalizationFact({
+        tag: "invalid",
+        issues: [
+          {
+            tag: "characterBuildProjection",
+            cause: {
+              tag: "classFeatureLanguageChoiceCountMismatch",
+              featureUnitId: "synthetic_feature",
+              mismatch: mismatchWithPresentation,
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "classFeatureLanguageChoiceCountMismatch",
+            featureUnitId: "synthetic_feature",
+            mismatch: {
+              tag: "missing",
+              receivedCount: 1,
+              missingCount: 1,
+            },
+          },
+        },
+      ],
+    });
   });
 
   test("preserves ordered Surface reader issue details without prose", () => {
