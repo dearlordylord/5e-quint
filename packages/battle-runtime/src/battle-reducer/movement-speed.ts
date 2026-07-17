@@ -33,11 +33,13 @@ import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
+  type BattleInterruptAttackExecutionSelection,
   type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
 import {
   attackExecutionSelectionIdentitiesEqual,
   boundAttackExecutionSelectionMatchesOption,
+  type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import {
@@ -541,7 +543,7 @@ export function opportunityAttackOptionForReactor(
   reactorId: CombatantId,
   targetId: CombatantId,
   selection: BattleOpportunityAttackSelection,
-): SupportedAttackActionOption | undefined {
+): BoundSupportedAttackActionOption | undefined {
   if (isPresentFindFamiliarCombatant(state, reactorId)) {
     return undefined;
   }
@@ -557,7 +559,7 @@ export function opportunityAttackOptionForReactor(
   return attackActionOptionsForActor(state, reactorId).find((attack) => {
     const constraint = attackTargetConstraint(attack);
     return (
-      attackExecutionSelectionMatchesOption(selection, attack) &&
+      interruptAttackExecutionSelectionMatchesOption(selection, attack) &&
       constraint.kind === "meleeReach" &&
       state.combatants.has(targetId)
     );
@@ -575,9 +577,23 @@ export function attackExecutionSelectionMatchesOption(
         attackActionOptionName(attack) === selection.attackName;
 }
 
+export function interruptAttackExecutionSelectionMatchesOption(
+  selection: BattleInterruptAttackExecutionSelection,
+  attack: BoundSupportedAttackActionOption,
+): boolean {
+  return boundAttackExecutionSelectionMatchesOption(selection, attack);
+}
+
 export function attackExecutionSelectionsEqual(
   left: BattleAttackExecutionSelection,
   right: BattleAttackExecutionSelection,
+): boolean {
+  return attackExecutionSelectionIdentitiesEqual(left, right);
+}
+
+export function interruptAttackExecutionSelectionsEqual(
+  left: BattleInterruptAttackExecutionSelection,
+  right: BattleInterruptAttackExecutionSelection,
 ): boolean {
   return attackExecutionSelectionIdentitiesEqual(left, right);
 }
@@ -586,13 +602,13 @@ export function meleeWeaponOrUnarmedStrikeOptionForReactor(
   state: BattleState,
   reactorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
-): SupportedAttackActionOption | undefined {
+  selection: BattleInterruptAttackExecutionSelection,
+): BoundSupportedAttackActionOption | undefined {
   return attackActionOptionsForActor(state, reactorId).find((attack) => {
     const constraint = attackTargetConstraint(attack);
     return (
       (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
-      attackActionOptionName(attack) === attackName &&
+      interruptAttackExecutionSelectionMatchesOption(selection, attack) &&
       constraint.kind === "meleeReach" &&
       state.combatants.has(targetId)
     );

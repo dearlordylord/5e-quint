@@ -2,7 +2,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME
 import { isDeepStrictEqual } from "node:util";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -213,7 +216,16 @@ function createRuleCoreReactionDriver() {
               movementFill(requireMovementHole(holes), {
                 movementCostFeet: movementResumeCostFeet,
                 provokedOpportunityAttacks: [
-                  { reactorId, attackName: ruleCoreReactionAttackName },
+                  {
+                    reactorId,
+                    ...attackExecutionSelectionForSubjectForTest(
+                      characterAttackSubjectForTest(
+                        state,
+                        reactorId,
+                        ruleCoreReactionAttackName,
+                      ),
+                    ),
+                  },
                 ],
               }),
             ],
@@ -547,10 +559,10 @@ function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {

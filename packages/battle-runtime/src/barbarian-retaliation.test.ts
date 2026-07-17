@@ -8,6 +8,8 @@ import {
   battleUnitSupportProfilesForUnit,
   characterSeed,
   fighterId,
+  fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   findHole,
   goblinAttackSubject,
   goblinId,
@@ -44,7 +46,8 @@ describe("battle runtime: Barbarian Retaliation", () => {
                 command: "retaliationAttack",
                 reactorId: fighterId,
                 targetId: goblinId,
-                attackName: "Longsword",
+                procedureRef: expect.any(String),
+                attackDamageType: "slashing",
               }),
             }),
             expect.objectContaining({
@@ -54,7 +57,8 @@ describe("battle runtime: Barbarian Retaliation", () => {
                 command: "retaliationAttack",
                 reactorId: fighterId,
                 targetId: goblinId,
-                attackName: "Unarmed Strike",
+                procedureRef: expect.any(String),
+                attackDamageType: "bludgeoning",
               }),
             }),
           ]),
@@ -64,6 +68,9 @@ describe("battle runtime: Barbarian Retaliation", () => {
     if (awaitingRetaliation.tag !== "needsHoles") {
       throw new Error("Expected Retaliation interrupt decision.");
     }
+    const longswordSelection = attackExecutionSelectionForSubjectForTest(
+      fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
+    );
 
     const startedRetaliation = resolveBattleInterrupt({
       state: awaitingRetaliation.state,
@@ -75,7 +82,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
           choice: {
             kind: "retaliationAttack",
             reactorId: fighterId,
-            attackName: "Longsword",
+            selection: longswordSelection,
             fills: [],
           },
         },
@@ -88,7 +95,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
         command: "retaliationAttack",
         reactorId: fighterId,
         targetId: goblinId,
-        attackName: "Longsword",
+        ...longswordSelection,
       }),
       holes: [{ kind: "attackRoll" }],
       snapshot: {

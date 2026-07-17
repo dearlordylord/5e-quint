@@ -154,7 +154,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 
 import {
-  attackExecutionSelectionsEqual,
+  interruptAttackExecutionSelectionsEqual,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
@@ -300,10 +300,7 @@ import {
 } from "./spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
-import {
-  attackActionOptionName,
-  attackTargetConstraint,
-} from "./statblock-attacks.ts";
+import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
@@ -4919,7 +4916,10 @@ export function sameInterruptProcedureChoice(
     return (
       choice.reactorId === decisionChoice.reactorId &&
       choice.subject.command === "opportunityAttack" &&
-      attackExecutionSelectionsEqual(choice.subject, decisionChoice.selection)
+      interruptAttackExecutionSelectionsEqual(
+        choice.subject,
+        decisionChoice.selection,
+      )
     );
   }
   if (
@@ -4929,7 +4929,10 @@ export function sameInterruptProcedureChoice(
     return (
       choice.reactorId === decisionChoice.reactorId &&
       choice.subject.command === "retaliationAttack" &&
-      choice.subject.attackName === decisionChoice.attackName
+      interruptAttackExecutionSelectionsEqual(
+        choice.subject,
+        decisionChoice.selection,
+      )
     );
   }
   return false;
@@ -6297,17 +6300,18 @@ function opportunityAttackThreatsEqual(
   a: readonly BattleOpportunityAttackThreat[],
   b: readonly BattleOpportunityAttackThreat[],
 ): boolean {
-  return (
-    a.length === b.length &&
-    a.every((threat, index) => {
-      const other = b[index];
-      return (
-        other !== undefined &&
+  if (a.length !== b.length) return false;
+  const unmatched = [...b];
+  return a.every((threat) => {
+    const matchingIndex = unmatched.findIndex(
+      (other) =>
         threat.reactorId === other.reactorId &&
-        attackExecutionSelectionsEqual(threat, other)
-      );
-    })
-  );
+        interruptAttackExecutionSelectionsEqual(threat, other),
+    );
+    if (matchingIndex === -1) return false;
+    unmatched.splice(matchingIndex, 1);
+    return true;
+  });
 }
 
 function arrayValuesEqual<T>(a: readonly T[], b: readonly T[]): boolean {
@@ -6912,9 +6916,7 @@ export function opportunityAttackReactionChoices(
           command: "opportunityAttack" as const,
           reactorId,
           targetId: moverId,
-          ...("procedureRef" in attack
-            ? attackExecutionSelectionForOption(attack)
-            : { attackName: attackActionOptionName(attack) }),
+          ...attackExecutionSelectionForOption(attack),
         },
       },
     ];
@@ -6953,7 +6955,7 @@ export function retaliationReactionAttackChoices(
     return [];
   }
   return attackActionOptionsForActor(state, reactorId).flatMap((attack) => {
-    const attackName = attackActionOptionName(attack);
+    const selection = attackExecutionSelectionForOption(attack);
     const eligibleAttack =
       (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
       attackTargetConstraint(attack).kind === "meleeReach" &&
@@ -6961,7 +6963,7 @@ export function retaliationReactionAttackChoices(
         state,
         reactorId,
         frame.damageSourceId,
-        attackName,
+        selection,
       ) !== undefined;
     return eligibleAttack
       ? [
@@ -6975,7 +6977,7 @@ export function retaliationReactionAttackChoices(
               command: "retaliationAttack" as const,
               reactorId,
               targetId: frame.damageSourceId,
-              attackName,
+              ...selection,
             },
           },
         ]

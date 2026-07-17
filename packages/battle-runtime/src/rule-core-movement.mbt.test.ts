@@ -48,6 +48,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 const ruleCoreMovementMbtHoles = [
   "Movement",
@@ -187,7 +191,18 @@ function createRuleCoreMovementDriver() {
             movementFill(hole, {
               movementCostFeet: input.costFeet,
               provokedOpportunityAttacks: input.provokesOpportunityAttack
-                ? [{ reactorId: observerId, attackName: "Unarmed Strike" }]
+                ? [
+                    {
+                      reactorId: observerId,
+                      ...attackExecutionSelectionForSubjectForTest(
+                        characterAttackSubjectForTest(
+                          state,
+                          observerId,
+                          "Unarmed Strike",
+                        ),
+                      ),
+                    },
+                  ]
                 : [],
             }),
           ],
@@ -477,10 +492,10 @@ function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {

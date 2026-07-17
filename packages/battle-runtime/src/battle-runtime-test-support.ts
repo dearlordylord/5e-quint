@@ -101,6 +101,7 @@ import {
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
 } from "./index.ts";
+import type { BattleInterruptAttackExecutionSelection } from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 export { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
@@ -1022,7 +1023,10 @@ export function attackExecutionSelectionForSubjectForTest(
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
-): BattleAttackExecutionSelection {
+): BattleInterruptAttackExecutionSelection {
+  if (subject.procedureRef === undefined) {
+    throw new Error("Expected attack procedure execution reference.");
+  }
   return subject.attackAbility === undefined ||
     subject.attackDamageType === undefined
     ? { procedureRef: subject.procedureRef }
@@ -3658,17 +3662,15 @@ export function opportunityAttackProcedureSelectionForTest(
   ) {
     throw new Error("Expected an Opportunity Attack reaction choice.");
   }
-  const selection: BattleAttackExecutionSelection =
-    choice.subject.procedureRef === undefined
-      ? { attackName: choice.subject.attackName }
-      : choice.subject.attackAbility === undefined ||
-          choice.subject.attackDamageType === undefined
-        ? { procedureRef: choice.subject.procedureRef }
-        : {
-            procedureRef: choice.subject.procedureRef,
-            attackAbility: choice.subject.attackAbility,
-            attackDamageType: choice.subject.attackDamageType,
-          };
+  const selection: BattleInterruptAttackExecutionSelection =
+    choice.subject.attackAbility === undefined ||
+    choice.subject.attackDamageType === undefined
+      ? { procedureRef: choice.subject.procedureRef }
+      : {
+          procedureRef: choice.subject.procedureRef,
+          attackAbility: choice.subject.attackAbility,
+          attackDamageType: choice.subject.attackDamageType,
+        };
   return {
     kind: "opportunityAttack",
     reactorId: choice.reactorId,

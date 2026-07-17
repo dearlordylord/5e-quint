@@ -456,24 +456,37 @@ export const BattleAttackExecutionAbilitySchema = Schema.Union(
   Schema.Literal("spellcasting"),
 );
 
+const CharacterAttackExecutionSelectionSchema = Schema.Struct({
+  procedureRef: BattleAttackProcedureExecutionRef,
+  attackAbility: BattleAttackExecutionAbilitySchema,
+  attackDamageType: DamageTypeSchema,
+  attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+});
+
+const StatBlockAttackExecutionSelectionSchema = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+  attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+  attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+});
+
 export const BattleAttackExecutionSelectionSchema = Schema.Union(
   Schema.Struct({
-    attackName: Schema.String,
+    attackName: BattleSubjectTextSchema,
     procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
-  Schema.Struct({
-    procedureRef: BattleAttackProcedureExecutionRef,
-    attackAbility: BattleAttackExecutionAbilitySchema,
-    attackDamageType: DamageTypeSchema,
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
+  CharacterAttackExecutionSelectionSchema,
+  StatBlockAttackExecutionSelectionSchema,
 );
+export type BattleAttackExecutionSelection =
+  typeof BattleAttackExecutionSelectionSchema.Type;
+
+export const BattleInterruptAttackExecutionSelectionSchema = Schema.Union(
+  CharacterAttackExecutionSelectionSchema,
+  StatBlockAttackExecutionSelectionSchema,
+);
+export type BattleInterruptAttackExecutionSelection =
+  typeof BattleInterruptAttackExecutionSelectionSchema.Type;
 
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
@@ -838,47 +851,26 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("releaseGrapple"),
     targetId: CombatantId,
   }),
-  Schema.Union(
+  Schema.extend(
     Schema.Struct({
       tag: Schema.Literal("runtimeCommand"),
       actorId: CombatantId,
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
-      attackName: BattleSubjectTextSchema,
-      procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
     }),
-    Schema.Struct({
-      tag: Schema.Literal("runtimeCommand"),
-      actorId: CombatantId,
-      command: Schema.Literal("opportunityAttack"),
-      reactorId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRef,
-      attackAbility: BattleAttackExecutionAbilitySchema,
-      attackDamageType: DamageTypeSchema,
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    }),
-    Schema.Struct({
-      tag: Schema.Literal("runtimeCommand"),
-      actorId: CombatantId,
-      command: Schema.Literal("opportunityAttack"),
-      reactorId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    }),
+    BattleInterruptAttackExecutionSelectionSchema,
   ),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("retaliationAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-    attackName: BattleSubjectTextSchema,
-  }),
+  Schema.extend(
+    Schema.Struct({
+      tag: Schema.Literal("runtimeCommand"),
+      actorId: CombatantId,
+      command: Schema.Literal("retaliationAttack"),
+      reactorId: CombatantId,
+      targetId: CombatantId,
+    }),
+    BattleInterruptAttackExecutionSelectionSchema,
+  ),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,

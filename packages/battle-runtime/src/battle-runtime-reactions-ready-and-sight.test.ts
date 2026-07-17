@@ -4,6 +4,7 @@ import {
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   wizardTurnWithReadiedRay,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   attackDamageHoleAfterHit,
@@ -643,6 +644,48 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
 
     expect(Either.isLeft(decoded)).toBe(true);
+  });
+
+  test("retaliation decisions carry one exact attack execution selection", () => {
+    const selection = attackExecutionSelectionForSubjectForTest(
+      fighterAttackSubject(fighterTurnWithReadiedRay("attackHit"), "Longsword"),
+    );
+    const decision = {
+      kind: "interruptDecision",
+      holeId: "battle:interrupt:decision",
+      value: {
+        kind: "resolve",
+        responderId: "synthetic-retaliator",
+        choice: {
+          kind: "retaliationAttack",
+          reactorId: "synthetic-retaliator",
+          selection,
+          fills: [],
+        },
+      },
+    };
+
+    expect(
+      Either.isRight(Schema.decodeUnknownEither(BattleFillSchema)(decision)),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "interruptDecision",
+          holeId: "battle:interrupt:decision",
+          value: {
+            kind: "resolve",
+            responderId: "synthetic-retaliator",
+            choice: {
+              kind: "retaliationAttack",
+              reactorId: "synthetic-retaliator",
+              attackName: "Synthetic Retaliation Strike",
+              fills: [],
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("attack sight spatial facts parse through target-choice fills", () => {

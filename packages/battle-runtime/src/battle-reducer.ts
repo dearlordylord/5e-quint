@@ -120,9 +120,7 @@ import { Brand } from "effect";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
-  CharacterAttackExecutionSelection,
   CharacterWeaponAttackActionOption,
-  StatBlockAttackExecutionSelection,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import type {
@@ -169,6 +167,8 @@ import {
 import {
   type ActionHideSubject,
   type ActionSearchSubject,
+  type BattleAttackExecutionSelection,
+  type BattleInterruptAttackExecutionSelection,
   type BattleMovementSpeedKind,
   type BattleSubject,
   type AdmittedBattleSubject,
@@ -177,6 +177,7 @@ import {
   type MonkFocusOptionSubject,
   type SpellInvocationRef,
 } from "./battle-subjects.ts";
+export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";
 import {
   type CharacterBattleMetamagicState,
   type CharacterBattleResourceState,
@@ -1348,7 +1349,7 @@ export type BattleInterruptProcedureSelection = {
   | {
       readonly kind: "retaliationAttack";
       readonly reactorId: CombatantId;
-      readonly attackName: string;
+      readonly selection: BattleInterruptAttackExecutionSelection;
     }
   | {
       readonly kind: "reactionRollOrDamageReduction";
@@ -1694,14 +1695,8 @@ export type BattleSpiritualWeaponForcePosition = {
       readonly moveDistanceFeet: MovementFeet;
     }
 );
-export type BattleAttackExecutionSelection =
-  | {
-      readonly attackName: string;
-      readonly procedureRef?: never;
-    }
-  | (CharacterAttackExecutionSelection & { readonly attackName?: never })
-  | (StatBlockAttackExecutionSelection & { readonly attackName?: never });
-export type BattleOpportunityAttackSelection = BattleAttackExecutionSelection;
+export type BattleOpportunityAttackSelection =
+  BattleInterruptAttackExecutionSelection;
 export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
 } & BattleOpportunityAttackSelection;

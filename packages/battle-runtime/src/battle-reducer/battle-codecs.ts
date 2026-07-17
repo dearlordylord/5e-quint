@@ -71,6 +71,7 @@ import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleAttackExecutionAbilitySchema,
   BattleAttackExecutionSelectionSchema,
+  BattleInterruptAttackExecutionSelectionSchema,
   BattleSubjectSchema,
   BattleSubjectTextSchema,
   SpellInvocationRefSchema,
@@ -2666,6 +2667,20 @@ type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded =
       };
     };
 
+type BattleInterruptAttackExecutionSelectionEncoded =
+  | {
+      readonly procedureRef: string;
+      readonly attackAbility: Ability | "spellcasting";
+      readonly attackDamageType: DamageType;
+      readonly attackName?: never;
+    }
+  | {
+      readonly procedureRef: string;
+      readonly attackAbility?: never;
+      readonly attackDamageType?: never;
+      readonly attackName?: never;
+    };
+
 type BattleFillEncoded =
   | {
       readonly kind: "targetChoice";
@@ -3469,29 +3484,13 @@ type BattleFillEncoded =
               | {
                   readonly kind: "opportunityAttack";
                   readonly reactorId: string;
-                  readonly selection:
-                    | {
-                        readonly attackName: string;
-                        readonly procedureRef?: never;
-                      }
-                    | {
-                        readonly procedureRef: string;
-                        readonly attackAbility: Ability | "spellcasting";
-                        readonly attackDamageType: DamageType;
-                        readonly attackName?: never;
-                      }
-                    | {
-                        readonly procedureRef: string;
-                        readonly attackAbility?: never;
-                        readonly attackDamageType?: never;
-                        readonly attackName?: never;
-                      };
+                  readonly selection: BattleInterruptAttackExecutionSelectionEncoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "retaliationAttack";
                   readonly reactorId: string;
-                  readonly attackName: string;
+                  readonly selection: BattleInterruptAttackExecutionSelectionEncoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -3513,27 +3512,9 @@ type BattleFillEncoded =
       readonly value: {
         readonly speedKind: BattleMovementSpeedKind;
         readonly movementCostFeet: number;
-        readonly provokedOpportunityAttacks: readonly (
-          | {
-              readonly reactorId: string;
-              readonly attackName: string;
-              readonly procedureRef?: never;
-            }
-          | {
-              readonly reactorId: string;
-              readonly procedureRef: string;
-              readonly attackAbility: Ability | "spellcasting";
-              readonly attackDamageType: DamageType;
-              readonly attackName?: never;
-            }
-          | {
-              readonly reactorId: string;
-              readonly procedureRef: string;
-              readonly attackAbility?: never;
-              readonly attackDamageType?: never;
-              readonly attackName?: never;
-            }
-        )[];
+        readonly provokedOpportunityAttacks: readonly ({
+          readonly reactorId: string;
+        } & BattleInterruptAttackExecutionSelectionEncoded)[];
         readonly acrobaticMovement?: {
           readonly kind: "acrobaticMovement";
           readonly paths: readonly [
@@ -4407,13 +4388,13 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("opportunityAttack"),
               reactorId: CombatantId,
-              selection: BattleAttackExecutionSelectionSchema,
+              selection: BattleInterruptAttackExecutionSelectionSchema,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
               kind: Schema.Literal("retaliationAttack"),
               reactorId: CombatantId,
-              attackName: BattleSubjectTextSchema,
+              selection: BattleInterruptAttackExecutionSelectionSchema,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
@@ -4439,28 +4420,9 @@ export const BattleFillSchema: Schema.Schema<
         speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
         movementCostFeet: MovementFeet,
         provokedOpportunityAttacks: Schema.Array(
-          Schema.Union(
-            Schema.Struct({
-              reactorId: CombatantId,
-              attackName: Schema.String,
-              procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-            }),
-            Schema.Struct({
-              reactorId: CombatantId,
-              procedureRef: BattleAttackProcedureExecutionRef,
-              attackAbility: BattleAttackExecutionAbilitySchema,
-              attackDamageType: DamageTypeSchema,
-              attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-            }),
-            Schema.Struct({
-              reactorId: CombatantId,
-              procedureRef: BattleStatBlockProcedureExecutionRef,
-              attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-              attackDamageType: Schema.optionalWith(Schema.Never, {
-                exact: true,
-              }),
-              attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-            }),
+          Schema.extend(
+            Schema.Struct({ reactorId: CombatantId }),
+            BattleInterruptAttackExecutionSelectionSchema,
           ),
         ),
         acrobaticMovement: Schema.optionalWith(

@@ -11021,7 +11021,12 @@ function createCommandOrderingDriverWithRoute<
           commandFleeMovementFill(movement, {
             movementCostFeet: 30,
             provokedOpportunityAttacks: [
-              { reactorId: fighterId, attackName: "Unarmed Strike" },
+              {
+                reactorId: fighterId,
+                ...interruptAttackExecutionSelectionForSubject(
+                  interruptFighterAttackSubject(state, "Unarmed Strike"),
+                ),
+              },
             ],
           }),
         ];
@@ -18083,10 +18088,10 @@ function commandFleeMovementFill(
   hole: BattleHole,
   value: {
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {

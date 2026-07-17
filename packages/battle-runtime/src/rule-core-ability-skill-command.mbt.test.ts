@@ -39,6 +39,8 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   abilityCheckFill,
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
   difficultyClass,
   fighterId,
   fighterVsGoblinBattle,
@@ -718,7 +720,16 @@ function commandFleeOpportunityAttackScenario(): Projection {
       commandFleeMovementFill(movement, {
         movementCostFeet: 30,
         provokedOpportunityAttacks: [
-          { reactorId: spellCasterId, attackName: "Unarmed Strike" },
+          {
+            reactorId: spellCasterId,
+            ...attackExecutionSelectionForSubjectForTest(
+              characterAttackSubjectForTest(
+                targetTurn,
+                spellCasterId,
+                "Unarmed Strike",
+              ),
+            ),
+          },
         ],
       }),
     ],

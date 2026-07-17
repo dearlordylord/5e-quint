@@ -266,14 +266,14 @@ describe("character attack execution references", () => {
 
   test("codecs preserve complete ranged and Opportunity Attack selections", () => {
     const state = identicalDaggerBattle();
-    const procedureRef = fighterOrigin(state).attack?.procedureRef;
-    if (procedureRef === undefined) {
+    const attack = fighterOrigin(state).attack;
+    if (attack === null) {
       throw new Error("Expected the bound fighter attack.");
     }
     const selection = {
-      procedureRef,
-      attackAbility: "cha" as const,
-      attackDamageType: "necrotic" as const,
+      procedureRef: attack.procedureRef,
+      attackAbility: attack.ability,
+      attackDamageType: attack.weapon.damage.damageType,
     };
 
     const ranged = Schema.decodeUnknownSync(BattleFillSchema)({

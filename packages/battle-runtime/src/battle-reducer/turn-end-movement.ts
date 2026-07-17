@@ -175,7 +175,7 @@ import {
   effectiveWalkSpeed,
   grappleTargetExemptFromDragCost,
   opportunityAttackThreatsForMovement,
-  attackExecutionSelectionMatchesOption,
+  interruptAttackExecutionSelectionMatchesOption,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 
@@ -8396,7 +8396,8 @@ export function parseBattleMovement(
       };
     }
     const attack = attackActionOptionsForActor(state, reactorId).find(
-      (option) => attackExecutionSelectionMatchesOption(threat, option),
+      (option) =>
+        interruptAttackExecutionSelectionMatchesOption(threat, option),
     );
     if (attack === undefined) {
       return {

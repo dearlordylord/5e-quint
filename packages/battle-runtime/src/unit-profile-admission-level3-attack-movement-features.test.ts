@@ -62,7 +62,10 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
 const remarkableAthleteTargetId = combatantId("remarkable-athlete-target");
@@ -921,7 +924,13 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: remarkableAthleteTargetId,
-                attackName: "Unarmed Strike",
+                ...attackExecutionSelectionForSubjectForTest(
+                  characterAttackSubjectForTest(
+                    state,
+                    remarkableAthleteTargetId,
+                    "Unarmed Strike",
+                  ),
+                ),
               },
             ],
           }),
