@@ -536,14 +536,14 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 57,
       "id": "GH-158",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Complete exact Character Creation Oracle facts from their owner",
       "dependencies": []
     },
     {
       "number": 58,
       "id": "GH-159",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Make fresh Character Sheet construction return exact facts and flat accumulated issues",
       "dependencies": []
     },
