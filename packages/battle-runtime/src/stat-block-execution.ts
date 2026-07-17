@@ -149,8 +149,8 @@ export type StatBlockExecutionAdmission<
 
 type ExecutionReferenceAllocator = {
   readonly scopeRef: BattleStatBlockExecutionScopeRef;
-  procedureOrdinal: number;
-  resourcePoolOrdinal: number;
+  procedureOrdinal: NonNegativeInteger;
+  resourcePoolOrdinal: NonNegativeInteger;
 };
 
 type ExecutionScopeAllocator = {
@@ -209,7 +209,7 @@ type AdmittedBonusActionOccurrence = {
 };
 
 type AdmittedStatBlockOccurrences = {
-  readonly legendaryActionUses?: number;
+  readonly legendaryActionUses?: PositiveInteger;
   readonly attacks: readonly AdmittedAttackOccurrence[];
   readonly multiattacks: readonly AdmittedMultiattackOccurrence[];
   readonly bonusActions: readonly AdmittedBonusActionOccurrence[];
@@ -366,7 +366,11 @@ function admitStatBlock(statBlock: StatBlockRecord): AdmittedStatBlock {
       ...(statBlock.statBlock.legendaryActions?.uses === undefined ||
       !attacks.some((attack) => attack.section === "legendaryActions")
         ? {}
-        : { legendaryActionUses: statBlock.statBlock.legendaryActions.uses }),
+        : {
+            legendaryActionUses: PositiveInteger(
+              statBlock.statBlock.legendaryActions.uses,
+            ),
+          }),
       attacks,
       multiattacks,
       bonusActions,
@@ -1113,22 +1117,16 @@ function allocateProcedureRef(
   allocator: ExecutionReferenceAllocator,
 ): BattleProcedureExecutionRef {
   const ordinal = allocator.procedureOrdinal;
-  allocator.procedureOrdinal += 1;
-  return battleProcedureExecutionRef(
-    allocator.scopeRef,
-    NonNegativeInteger(ordinal),
-  );
+  allocator.procedureOrdinal = NonNegativeInteger(ordinal + 1);
+  return battleProcedureExecutionRef(allocator.scopeRef, ordinal);
 }
 
 function allocateResourcePoolRef(
   allocator: ExecutionReferenceAllocator,
 ): BattleResourcePoolExecutionRef {
   const ordinal = allocator.resourcePoolOrdinal;
-  allocator.resourcePoolOrdinal += 1;
-  return battleResourcePoolExecutionRef(
-    allocator.scopeRef,
-    NonNegativeInteger(ordinal),
-  );
+  allocator.resourcePoolOrdinal = NonNegativeInteger(ordinal + 1);
+  return battleResourcePoolExecutionRef(allocator.scopeRef, ordinal);
 }
 
 function allocateExecutionScopeRef(
@@ -1146,5 +1144,9 @@ function allocateExecutionScopeRef(
 function executionReferenceAllocator(
   scopeRef: BattleStatBlockExecutionScopeRef,
 ): ExecutionReferenceAllocator {
-  return { scopeRef, procedureOrdinal: 0, resourcePoolOrdinal: 0 };
+  return {
+    scopeRef,
+    procedureOrdinal: NonNegativeInteger(0),
+    resourcePoolOrdinal: NonNegativeInteger(0),
+  };
 }
