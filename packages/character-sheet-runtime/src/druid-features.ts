@@ -3,11 +3,14 @@ import {
   characterBuildDruidWildShapeFacts,
   characterBuildFeatureUnitIds,
   classLevelForUnit,
+  messageForDruidWildShapeKnownFormIssue,
   replaceDruidWildShapeKnownForm,
-  validateDruidWildShapeKnownForms,
+  validateDruidWildShapeKnownFormIssues,
+  type DruidWildShapeKnownFormIssue,
   type CharacterBuild,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -19,7 +22,7 @@ import {
   type LandChoicePreparedSpellAccessGrant,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 
 import {
   characterSheetIssue,
@@ -31,6 +34,15 @@ import {
   type CharacterSheetIssue,
   type CharacterSheetLongRestInput,
 } from "./sheet-types.ts";
+
+type DruidWildShapeKnownFormsConstructionIssue =
+  | {
+      readonly code:
+        | "wildShapeKnownFormsUnexpected"
+        | "wildShapeKnownFormsRequired"
+        | "wildShapeKnownFormsInvalid";
+    }
+  | DruidWildShapeKnownFormIssue;
 
 const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
@@ -68,37 +80,78 @@ export function druidWildShapeKnownFormsFromInput(
   CharacterSheetDruidWildShapeKnownForms | undefined,
   CharacterSheetIssue
 > {
+  const result = druidWildShapeKnownFormsConstruction(input);
+  if (Either.isRight(result)) return Either.right(result.right);
+  const issue = result.left[0];
+  if ("statBlockId" in issue) {
+    return characterSheetIssue(messageForDruidWildShapeKnownFormIssue(issue));
+  }
+  return Match.value(issue.code).pipe(
+    Match.when("wildShapeKnownFormsUnexpected", () =>
+      characterSheetIssue(
+        "Wild Shape known forms require the Druid Wild Shape feature.",
+      ),
+    ),
+    Match.when("wildShapeKnownFormsRequired", () =>
+      characterSheetIssue(
+        "Wild Shape known forms require selected Beast Stat Block identities.",
+      ),
+    ),
+    Match.when("wildShapeKnownFormsInvalid", () =>
+      characterSheetIssue("Wild Shape known form state is invalid."),
+    ),
+    Match.when("wildShapeKnownFormCountMismatch", () =>
+      characterSheetIssue(
+        messageForDruidWildShapeKnownFormIssue({
+          code: "wildShapeKnownFormCountMismatch",
+        }),
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function druidWildShapeKnownFormsConstruction(
+  input: Pick<
+    CharacterSheetInput,
+    | "build"
+    | "unitLibrary"
+    | "druidWildShapeKnownFormStatBlockIds"
+    | "statBlockCatalog"
+  >,
+): Either.Either<
+  CharacterSheetDruidWildShapeKnownForms | undefined,
+  ReadonlyNonEmptyArray<DruidWildShapeKnownFormsConstructionIssue>
+> {
   const facts = characterBuildDruidWildShapeFacts({
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (Either.isLeft(facts)) {
+    return Either.left([{ code: "wildShapeKnownFormsInvalid" }]);
+  }
   if (facts.right === undefined) {
     return input.druidWildShapeKnownFormStatBlockIds === undefined
       ? Either.right(undefined)
-      : characterSheetIssue(
-          "Wild Shape known forms require the Druid Wild Shape feature.",
-        );
+      : Either.left([{ code: "wildShapeKnownFormsUnexpected" }]);
   }
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.statBlockCatalog,
   );
-  if (Either.isLeft(statBlockCatalog))
-    return Either.left(statBlockCatalog.left);
-  if (input.druidWildShapeKnownFormStatBlockIds === undefined) {
-    return characterSheetIssue(
-      "Wild Shape known forms require selected Beast Stat Block identities.",
-    );
+  if (Either.isLeft(statBlockCatalog)) {
+    return Either.left([{ code: "wildShapeKnownFormsInvalid" }]);
   }
-  const knownForms = validateDruidWildShapeKnownForms({
+  if (input.druidWildShapeKnownFormStatBlockIds === undefined) {
+    return Either.left([{ code: "wildShapeKnownFormsRequired" }]);
+  }
+  const knownFormIssues = validateDruidWildShapeKnownFormIssues({
     facts: facts.right,
     knownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds,
     statBlockCatalog: statBlockCatalog.right,
   });
-  if (Either.isLeft(knownForms))
-    return characterSheetIssue(knownForms.left.message);
+  if (knownFormIssues !== undefined) return Either.left(knownFormIssues);
   return Either.right({
-    statBlockIds: knownForms.right,
+    statBlockIds: input.druidWildShapeKnownFormStatBlockIds,
   });
 }
 
@@ -146,7 +199,7 @@ export function isDruidCircleLandChoice(
   );
 }
 
-function druidWildShapeStatBlockCatalogFromInput(
+export function druidWildShapeStatBlockCatalogFromInput(
   statBlockCatalog: StatBlockCatalog | undefined,
 ): Either.Either<StatBlockCatalog, CharacterSheetIssue> {
   if (statBlockCatalog !== undefined) return Either.right(statBlockCatalog);

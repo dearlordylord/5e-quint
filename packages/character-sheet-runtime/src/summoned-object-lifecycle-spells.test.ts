@@ -25,7 +25,7 @@ import {
   characterSheetId,
   characterSheetSpellLifecycleCreatureId,
   characterSheetSpellLifecycleObjectId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -484,7 +484,7 @@ function lifecycleWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:lifecycle-wizard-9"),
       build: {
         ...armorClassBuild({

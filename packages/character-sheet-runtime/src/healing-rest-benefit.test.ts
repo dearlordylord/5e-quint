@@ -19,7 +19,7 @@ import {
   characterSheetSpellSlots,
   characterSheetTempHp,
   completeLongRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   layOnHandsLongRestRecoveryTestName,
   layOnHandsRejectsDivergentPoolsTestName,
   layOnHandsSpendsHealingPoolTestName,
@@ -44,7 +44,7 @@ import type { PrayerOfHealingDirectPhase } from "./test-support.ts";
 describe("Character Sheet runtime / healing and rest benefit spells", () => {
   test(layOnHandsSpendsHealingPoolTestName, () => {
     const source = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin"),
         build: armorClassBuild({
           startingClass: "class_paladin",
@@ -56,7 +56,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
     const target = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
         currentHp: Hp(3),
@@ -96,7 +96,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
 
   test(layOnHandsRejectsDivergentPoolsTestName, () => {
     const target = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin-self"),
         build: armorClassBuild({ startingClass: "class_paladin" }),
         currentHp: Hp(6),
@@ -124,7 +124,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
 
   test(layOnHandsLongRestRecoveryTestName, () => {
     const source = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin-rest"),
         build: armorClassBuild({ startingClass: "class_paladin" }),
         currentHp: Hp(6),
@@ -161,7 +161,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
 
   test(prayerOfHealingRestBenefitApplicationTestName, () => {
     const caster = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-caster"),
         build: prayerOfHealingClericBuild(),
         currentHp: Hp(10),
@@ -173,7 +173,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
     const woundedWizard = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-wizard"),
         build: wizardWarlockBuild(),
         currentHp: Hp(3),
@@ -186,7 +186,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
     const woundedFighter = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-fighter"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
         currentHp: Hp(0),
@@ -195,7 +195,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
     const woundedSorcerer = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-sorcerer"),
         build: sorcererFontOfMagicBuild({ sorcererAdvancements: 4 }),
         currentHp: Hp(12),
@@ -349,7 +349,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
 
   test(prayerOfHealingRestBenefitAdmissionGateTestName, () => {
     const caster = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-admission-caster"),
         build: prayerOfHealingClericBuild(),
         currentHp: Hp(18),
@@ -358,7 +358,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
     const recipient = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-admission-target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
         currentHp: Hp(6),

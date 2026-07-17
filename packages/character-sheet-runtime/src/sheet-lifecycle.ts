@@ -7,7 +7,12 @@ import {
   type CharacterBuild,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
-import { resourceCount, type ResourceCount } from "@dnd/shared/types";
+import {
+  Hp,
+  resourceCount,
+  type ReadonlyNonEmptyArray,
+  type ResourceCount,
+} from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -32,6 +37,7 @@ import {
 } from "./spell-slots.ts";
 import {
   druidCircleLandFromInput,
+  druidWildShapeKnownFormsConstruction,
   druidWildShapeKnownFormsFromInput,
   storedBookOfShadowsDruidCircleLandSelectionIssue,
 } from "./druid-features.ts";
@@ -52,20 +58,27 @@ import {
   SPELL_RECIPIENT_REST_LOCKOUT_TAG,
   UNCANNY_METABOLISM_REST_FEATURE_TAG,
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
+  CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES,
   CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
   characterSheetId,
   characterSheetIssue,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetCondition,
+  type CharacterSheetConstructionIssue,
   type CharacterSheetExhaustionLevel,
   type CharacterSheetHeroicInspiration,
   type CharacterSheetInput,
+  type CharacterSheetHitPoints,
   type CharacterSheetIssue,
   type CharacterSheetRestFeatureUse,
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetSpentHitDiePool,
 } from "./sheet-types.ts";
+import {
+  freshCharacterSheet,
+  type FreshCharacterSheet,
+} from "./fresh-character-sheet.ts";
 import {
   characterBuildHasBookOfShadows,
   isNonSpellcastingBuild,
@@ -83,13 +96,235 @@ import {
   recordHasExactKeys,
 } from "./stored-sheet-parser.ts";
 
+// Hp validates the branded value; the assertion retains the proven literal zero.
+const FRESH_CHARACTER_SHEET_ZERO_HP = Hp(0) as Hp & 0;
+
 export function createFreshCharacterSheet(
   input: CharacterSheetInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  return createCharacterSheet(input);
+): Either.Either<
+  FreshCharacterSheet,
+  ReadonlyNonEmptyArray<CharacterSheetConstructionIssue>
+> {
+  const issues: CharacterSheetConstructionIssue[] = [];
+  const hitPoints = freshCharacterSheetHitPoints(input);
+  if (Either.isLeft(hitPoints)) {
+    issues.push({ code: "hitPointStateInvalid" });
+  }
+  if (input.tempHp !== 0) {
+    issues.push({ code: "temporaryHitPointsNotZero" });
+  }
+  if (input.hitPointMaximumReduction !== 0) {
+    issues.push({ code: "hitPointMaximumReductionNotZero" });
+  }
+  if ((input.exhaustionLevel ?? 0) !== 0) {
+    issues.push({ code: "exhaustionNotZero" });
+  }
+  if (input.conditions.length !== 0) {
+    issues.push({ code: "conditionsNotEmpty" });
+  }
+  if ((input.spentHitDice?.length ?? 0) !== 0) {
+    issues.push({ code: "spentHitDiceNotEmpty" });
+  }
+  if ((input.restFeatureUses?.length ?? 0) !== 0) {
+    issues.push({ code: "restFeatureUsesNotEmpty" });
+  }
+  if ((input.resourceExpenditures?.length ?? 0) !== 0) {
+    issues.push({ code: "resourceExpendituresNotEmpty" });
+  }
+  if (
+    input.heroicInspiration !== undefined &&
+    input.heroicInspiration.tag !== "none"
+  ) {
+    issues.push({ code: "heroicInspirationNotEmpty" });
+  }
+  if (input.companion !== undefined && input.companion.tag !== "none") {
+    issues.push({ code: "companionNotEmpty" });
+  }
+
+  const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
+  if (Either.isLeft(bookOfShadowsPresence)) {
+    issues.push({ code: "bookOfShadowsPresenceInvalid" });
+  }
+  const druidWildShapeKnownForms = druidWildShapeKnownFormsConstruction(input);
+  if (Either.isLeft(druidWildShapeKnownForms)) {
+    issues.push(...druidWildShapeKnownForms.left);
+  }
+  const druidCircleLand = druidCircleLandFromInput(input);
+  if (Either.isLeft(druidCircleLand)) {
+    issues.push({ code: "druidCircleLandInvalid" });
+  } else if (
+    Either.isLeft(
+      storedBookOfShadowsDruidCircleLandSelectionIssue({
+        build: input.build,
+        unitLibrary: input.unitLibrary,
+        circleLand: druidCircleLand.right,
+      }),
+    )
+  ) {
+    issues.push({ code: "druidCircleLandInvalid" });
+  }
+  const fiendishResilience = fiendishResilienceFromInput(input);
+  if (Either.isLeft(fiendishResilience)) {
+    issues.push({ code: "fiendishResilienceInvalid" });
+  }
+
+  const spellSlotState = isSpellcastingBuild(input.build)
+    ? spellSlotStateFromInput({
+        build: input.build,
+        unitLibrary: input.unitLibrary,
+        ...(input.spellSlotExpenditures === undefined
+          ? {}
+          : { spellSlotExpenditures: input.spellSlotExpenditures }),
+      })
+    : Either.right(undefined);
+  if (isNonSpellcastingBuild(input.build)) {
+    if (input.spellSlotExpenditures !== undefined) {
+      issues.push({ code: "spellSlotStateUnexpected" });
+    }
+    if (input.pactSlots !== undefined) {
+      issues.push({ code: "pactSlotStateUnexpected" });
+    }
+  } else {
+    if (
+      Either.isLeft(spellSlotState) ||
+      input.spellSlotExpenditures?.some(
+        (expenditure) => expenditure.expended !== 0,
+      ) === true
+    ) {
+      issues.push({ code: "spellSlotStateInvalid" });
+    }
+  }
+  const pactSlotExpenditure = isSpellcastingBuild(input.build)
+    ? pactSlotExpenditureFromInput({
+        build: input.build,
+        ...(input.pactSlots === undefined
+          ? {}
+          : { pactSlots: input.pactSlots }),
+      })
+    : Either.right(undefined);
+  if (
+    isSpellcastingBuild(input.build) &&
+    (Either.isLeft(pactSlotExpenditure) ||
+      (input.pactSlots?.expended ?? 0) !== 0)
+  ) {
+    issues.push({ code: "pactSlotStateInvalid" });
+  }
+
+  const firstIssue = issues[0];
+  if (firstIssue !== undefined) {
+    const orderedIssues = [...issues].sort(compareConstructionIssues);
+    const firstOrderedIssue = orderedIssues[0];
+    if (firstOrderedIssue === undefined) {
+      throw new Error("Character Sheet construction issue ordering failed.");
+    }
+    return Either.left([firstOrderedIssue, ...orderedIssues.slice(1)]);
+  }
+
+  const validHitPoints = requireFreshConstructionFact(hitPoints);
+  const knownForms = requireFreshConstructionFact(druidWildShapeKnownForms);
+  const circleLand = requireFreshConstructionFact(druidCircleLand);
+  const resilience = requireFreshConstructionFact(fiendishResilience);
+  const common = {
+    tag: "available" as const,
+    characterId: input.characterId,
+    hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
+    exhaustionLevel: 0 as const,
+    hitPoints: validHitPoints,
+    conditions: [] as const,
+    spentHitDice: [] as const,
+    restFeatureUses: [] as const,
+    resourceExpenditures: [] as const,
+    heroicInspiration: { tag: "none" as const },
+    companion: { tag: "none" as const },
+    ...(knownForms === undefined
+      ? {}
+      : { druidWildShapeKnownForms: knownForms }),
+    ...(circleLand === undefined ? {} : { druidCircleLand: circleLand }),
+    ...(resilience === undefined ? {} : { fiendishResilience: resilience }),
+  };
+  if (isNonSpellcastingBuild(input.build)) {
+    return Either.right(freshCharacterSheet({ ...common, build: input.build }));
+  }
+  if (!isSpellcastingBuild(input.build)) {
+    return Either.left([{ code: "spellSlotStateInvalid" }]);
+  }
+  return Either.right(
+    freshCharacterSheet({
+      ...common,
+      build: input.build,
+      bookOfShadowsPresence: requireFreshConstructionFact(
+        bookOfShadowsPresence,
+      ),
+      spellSlotExpenditures: [],
+      createdSpellSlots: [],
+      pactSlotExpenditure: undefined,
+    }),
+  );
 }
 
-function createCharacterSheet(
+type FreshCharacterSheetHitPoints = Extract<
+  CharacterSheetHitPoints,
+  { readonly tag: "positive" }
+> & { readonly tempHp: Hp & 0 };
+
+function freshCharacterSheetHitPoints(
+  input: CharacterSheetInput,
+): Either.Either<FreshCharacterSheetHitPoints, CharacterSheetIssue> {
+  const capacity = characterSheetHitPointCapacity(input);
+  if (
+    Either.isLeft(capacity) ||
+    capacity.right.currentHp !== capacity.right.hitPointMaximum
+  ) {
+    return characterSheetIssue(
+      "Fresh Character Sheet requires full current Hit Points.",
+    );
+  }
+  const hitPoints = characterSheetHitPoints({
+    ...input,
+    currentHp: capacity.right.currentHp,
+    tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
+  });
+  if (Either.isLeft(hitPoints) || hitPoints.right.tag !== "positive") {
+    return characterSheetIssue(
+      "Fresh Character Sheet requires positive conscious Hit Point state.",
+    );
+  }
+  return Either.right({
+    ...hitPoints.right,
+    tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
+  });
+}
+
+function compareConstructionIssues(
+  left: CharacterSheetConstructionIssue,
+  right: CharacterSheetConstructionIssue,
+): number {
+  if ("statBlockId" in left && "statBlockId" in right) {
+    const identityOrder =
+      left.statBlockId < right.statBlockId
+        ? -1
+        : left.statBlockId > right.statBlockId
+          ? 1
+          : 0;
+    return identityOrder !== 0
+      ? identityOrder
+      : CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(left.code) -
+          CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(right.code);
+  }
+  return (
+    CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(left.code) -
+    CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(right.code)
+  );
+}
+
+function requireFreshConstructionFact<Value, Error>(
+  result: Either.Either<Value, Error>,
+): Value {
+  if (Either.isRight(result)) return result.right;
+  throw new Error("Fresh Character Sheet facts were already accumulated.");
+}
+
+export function rebuildCharacterSheet(
   input: CharacterSheetInput,
   storedSpellSlotState?: CharacterSheetSpellSlotSourceState,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
@@ -346,7 +581,7 @@ export function parseCharacterSheet(
     return Either.left(fiendishResilience.left);
   }
 
-  return createCharacterSheet(
+  return rebuildCharacterSheet(
     {
       characterId: characterSheetId(value.characterId),
       build: build.right,

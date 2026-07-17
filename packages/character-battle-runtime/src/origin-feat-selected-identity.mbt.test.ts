@@ -433,7 +433,7 @@ function characterSheetForBuild(build: CharacterBuild) {
     unitLibrary,
   });
   if (Either.isLeft(sheet)) {
-    throw new Error(sheet.left.message);
+    throw new Error(JSON.stringify(sheet.left));
   }
   return sheet.right;
 }

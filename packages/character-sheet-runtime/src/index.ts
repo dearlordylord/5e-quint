@@ -1,7 +1,16 @@
 export {
   createFreshCharacterSheet,
   parseCharacterSheet,
+  rebuildCharacterSheet,
 } from "./sheet-lifecycle.ts";
+export {
+  FreshCharacterSheetProjectionSchema,
+  CharacterSheetConstructionIssueSchema,
+  CharacterSheetConstructionIssuesSchema,
+  characterSheetConstructionIssuesSummary,
+  freshCharacterSheetProjection,
+  isFreshSpellcastingCharacterSheet,
+} from "./fresh-character-sheet.ts";
 export {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
@@ -100,6 +109,7 @@ export {
 export { timePassed } from "./time-passage.ts";
 export type {
   CharacterPactSlotExpenditure,
+  CharacterSheetConstructionIssue,
   CharacterSheet,
   CharacterSheetAbilityCheckAbility,
   CharacterSheetAbilityCheckAbilityInput,
@@ -225,3 +235,9 @@ export type {
   CharacterSheetZeroHpLifecycleInput,
   CharacterSpellSlotExpenditure,
 } from "./sheet-types.ts";
+export type {
+  FreshCharacterSheet,
+  FreshNonSpellcastingCharacterSheet,
+  FreshCharacterSheetProjection,
+  FreshSpellcastingCharacterSheet,
+} from "./fresh-character-sheet.ts";

@@ -72,7 +72,7 @@ import {
   characterSheetTempHp,
   convertFontOfMagicSorceryPointsToSpellSlot,
   createRetainedFamiliarLikeCompanion,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   parseCharacterSheet,
   replaceCharacterSheetCompanion,
   useMonkUncannyMetabolismWhenRollingInitiative,
@@ -154,8 +154,8 @@ type CharacterSheetTestInput = Omit<
     >
   >;
 
-function createFreshCharacterSheet(input: CharacterSheetTestInput) {
-  return createFreshCharacterSheetCore({
+function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
+  return rebuildCharacterSheetCore({
     conditions: [],
     hitPointMaximumReduction: Hp(0),
     ...input,
@@ -166,7 +166,7 @@ describe("Character Sheet battle handoff", () => {
   test("composes sheet and stat block participants into battle runtime entry", () => {
     const characterCombatantId = combatantId("combatant:sheet-entry");
     const monsterCombatantId = combatantId("combatant:stat-block-entry");
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:sheet-entry"),
       build,
       currentHp: Hp(10),
@@ -280,7 +280,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects mismatched battle character identity", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:sheet"),
       build,
       currentHp: Hp(10),
@@ -305,7 +305,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects handoff maximum HP drift from the existing Character Sheet", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:sheet"),
       build,
       currentHp: Hp(10),
@@ -332,7 +332,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("preserves reduced Hit Point maximum during battle handoff", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:sheet-reduced-maximum"),
       build,
       hitPointMaximumReduction: Hp(3),
@@ -374,7 +374,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("preserves remaining Temporary Hit Points from battle handoff", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:sheet"),
       build,
       currentHp: Hp(10),
@@ -406,7 +406,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("preserves Druid Wild Shape known forms during battle handoff", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-wild-shape-handoff"),
       build: druidWildShapeBuild(),
       currentHp: Hp(15),
@@ -442,7 +442,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("creates retained Wild Companion state and spends a Wild Shape use", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:wild-companion-retained"),
         build: druidWildShapeBuild(),
         currentHp: Hp(15),
@@ -496,7 +496,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("creates retained ordinary companion state and spends a Spell Slot", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:slot-familiar-retained"),
         build: {
           ...trueStrikeWizardBuild(),
@@ -719,7 +719,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects forged retained normal-form proof before battle admission", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:forged-companion-form"),
         build: {
           ...trueStrikeWizardBuild(),
@@ -821,7 +821,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects forged retained Challenge Rating 0 Beast proof before battle admission", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:forged-companion-cr0-beast"),
         build: {
           ...trueStrikeWizardBuild(),
@@ -978,7 +978,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("ignores battle-only companions during retained companion handoff", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:battle-only-companion-handoff",
         ),
@@ -1043,7 +1043,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("passes the caller Stat Block catalog while preserving Wild Shape forms", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-wild-shape-catalog"),
       build: druidWildShapeBuild(),
       currentHp: Hp(15),
@@ -1082,7 +1082,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("threads Druid Wild Shape known forms into battle initialization", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-wild-shape-init"),
       build: druidWildShapeBuild(),
       currentHp: Hp(15),
@@ -1115,7 +1115,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("allows Druid Wild Shape battle initialization when selected form records are unavailable", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:druid-wild-shape-no-catalog"),
         build: druidWildShapeBuild(),
         currentHp: Hp(15),
@@ -1166,7 +1166,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("admits available supported selected Wild Shape forms without rejecting unsupported selected forms", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:druid-wild-shape-subset"),
         build: druidWildShapeBuild(),
         currentHp: Hp(15),
@@ -1234,7 +1234,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("projects reduced Character Sheet Hit Point maximum into battle initialization", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:reduced-maximum-init"),
       build,
       hitPointMaximumReduction: Hp(3),
@@ -1492,7 +1492,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("preserves Dragonborn Breath Weapon support after Character Sheet parsing", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:dragonborn-breath-parse"),
         build: dragonbornFighterBuild(),
         currentHp: Hp(10),
@@ -1639,7 +1639,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects duplicated persisted Dragonborn Draconic Ancestry damage type", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:dragonborn-breath-mismatch"),
         build: dragonbornFighterBuild(),
         currentHp: Hp(10),
@@ -1675,7 +1675,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("blocks active Wild Shape handoff and persists spent use after dismissal", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-wild-shape-resource"),
       build: druidWildShapeBuild(),
       currentHp: Hp(15),
@@ -1721,7 +1721,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects Wild Shape handoff when battle resource capacity drifts", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-wild-shape-drift"),
       build: druidWildShapeBuild(),
       currentHp: Hp(15),
@@ -1781,7 +1781,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects stable battle handoff when the sheet has in-progress Stable recovery time", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:stable"),
       build,
       currentHp: Hp(0),
@@ -1826,7 +1826,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("preserves non-battle sheet state while settling battle-owned HP and Spell Slots", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:rest-state"),
       build: wizardSpellcastingBuild(),
       currentHp: Hp(7),
@@ -1872,7 +1872,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects ordinary Spell Slot handoff when count capacity drifts", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ordinary-slot-count-drift"),
         build: wizardSpellcastingBuild(),
         currentHp: Hp(7),
@@ -1916,7 +1916,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects ordinary Spell Slot handoff when levels drift", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ordinary-slot-level-drift"),
         build: wizardSpellcastingBuild(),
         currentHp: Hp(7),
@@ -1992,7 +1992,7 @@ describe("Character Sheet battle handoff", () => {
   test("projects pure Pact Magic slot state from a Character Sheet into battle Spell Slots", () => {
     const combatantIdValue = combatantId("combatant:pure-pact-magic");
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:pure-pact-magic"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
         currentHp: Hp(8),
@@ -2032,7 +2032,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("settles pure Pact Magic battle Spell Slot expenditure back to Character Sheet Pact Slots", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:pure-pact-magic-spent"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
         currentHp: Hp(8),
@@ -2071,7 +2071,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects pure Pact Magic battle handoff when Pact Slot capacity drifts", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:pure-pact-magic-drift"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
         currentHp: Hp(8),
@@ -2161,7 +2161,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects pure Pact Magic battle handoff when expenditure moves below pre-battle Pact Slot state", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:pure-pact-magic-regression"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
         currentHp: Hp(8),
@@ -2200,7 +2200,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects battle Spell Slot handoff when the sheet has no Spell Slot or Pact Slot state", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:no-slot-state"),
         build: defenseBuild({ wearingArmor: false }),
         currentHp: Hp(8),
@@ -2249,7 +2249,7 @@ describe("Character Sheet battle handoff", () => {
       throw new Error("Expected Warlock fixture Pact Magic.");
     }
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:mixed-spell-pact"),
         build: {
           ...warlockBuild,
@@ -2318,7 +2318,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("carries Font of Magic created Spell Slots into battle and rejects source-ambiguous handoff", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-battle"),
         build: sorcererMetamagicBuild(),
         currentHp: Hp(24),
@@ -2461,7 +2461,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("keeps Font of Magic Spell Slot creation at the Character Sheet boundary during battle", () => {
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-battle-closed"),
         build: sorcererMetamagicBuild(),
         currentHp: Hp(24),
@@ -2531,7 +2531,7 @@ describe("Character Sheet battle handoff", () => {
     );
     const sorcererCombatantId = combatantId("combatant:sorcerer-metamagic");
     const sheet = expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetIdValue,
         build: sorcererMetamagicBuild(),
         currentHp: Hp(24),
@@ -2653,7 +2653,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("preserves sheet-owned healing resource expenditures", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:paladin-handoff"),
       build: paladinBuild(),
       currentHp: Hp(9),
@@ -2688,7 +2688,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("persists Favored Enemy free-cast spends for the next battle before Long Rest", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:ranger-handoff"),
       build: favoredEnemyRangerResourceBuild(),
       currentHp: Hp(1),
@@ -2747,7 +2747,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects Favored Enemy battle handoff when free-cast capacity drifts", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:ranger-free-cast-drift"),
       build: favoredEnemyRangerResourceBuild(),
       currentHp: Hp(1),
@@ -2800,7 +2800,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("hands shared Monk Focus use-count expenditures into and out of battle", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:monk-focus-handoff"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
       currentHp: Hp(15),
@@ -2870,7 +2870,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects Monk Focus battle handoff when use-count capacity drifts", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:monk-focus-capacity-drift"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
       currentHp: Hp(15),
@@ -2928,7 +2928,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("hands Uncanny Metabolism Focus recovery and HP restoration into battle", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:monk-uncanny-handoff"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
       currentHp: Hp(7),
@@ -3024,7 +3024,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects Sorcery Point handoff when point-pool capacity drifts", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:sorcery-point-capacity-drift"),
       build: sorcererMetamagicBuild(),
       currentHp: Hp(24),
@@ -3082,7 +3082,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:paladin-smite-handoff"),
       build: paladinsSmitePaladinBuild(),
       currentHp: Hp(1),
@@ -3143,7 +3143,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects Favored Enemy battle handoff when free-cast cap shape is unsupported", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:ranger-handoff-scaling"),
       build: favoredEnemyRangerResourceBuild(),
       currentHp: Hp(1),
@@ -6065,7 +6065,7 @@ function retainedOrdinaryCompanionSheet(input: {
   readonly tempHp: ReturnType<typeof Hp>;
 }): CharacterSheet {
   const sheet = expectRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId(input.characterIdValue),
       build: {
         ...trueStrikeWizardBuild(),

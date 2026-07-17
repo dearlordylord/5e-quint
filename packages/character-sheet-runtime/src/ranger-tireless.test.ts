@@ -10,7 +10,7 @@ import {
   characterSheetId,
   completeLongRest,
   completeShortRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   armorClassBuild,
   requireRight,
   resourceCount,
@@ -97,7 +97,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
 
   test(rangerTirelessTemporaryHitPointsTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-tireless"),
         build: rangerTirelessBuild(),
         currentHp: Hp(58),
@@ -137,7 +137,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
 
   test(rangerTirelessRestRecoveryTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-tireless-rest"),
         build: rangerTirelessBuild(),
         currentHp: Hp(58),
@@ -191,7 +191,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
 const rangerTirelessSelectedIdentityActions = {
   doUseRangerTireless: (): RangerTirelessSelectedIdentityProjection => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-tireless-replay"),
         build: rangerTirelessBuild(),
         currentHp: Hp(58),

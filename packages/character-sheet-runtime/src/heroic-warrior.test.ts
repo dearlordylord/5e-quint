@@ -10,7 +10,7 @@ import {
   Hp,
   armorClassBuild,
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   unitLibrary,
   useHeroicWarriorAtCombatTurnStart,
@@ -91,7 +91,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
 
   test(fighterHeroicWarriorCombatTurnStartTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior"),
         build: championFighterLevelTenBuild(),
         currentHp: Hp(60),
@@ -111,7 +111,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
 
   test(fighterHeroicWarriorCombatTurnStartGateTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior-gate"),
         build: championFighterLevelTenBuild(),
         currentHp: Hp(60),
@@ -132,7 +132,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
     });
 
     const noFeatureSheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior-no-feature"),
         build: armorClassBuild({
           startingClass: "class_fighter",
@@ -162,7 +162,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
 const fighterHeroicWarriorSelectedIdentityActions = {
   doUseHeroicWarrior: (): FighterHeroicWarriorSelectedIdentityProjection => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior-replay"),
         build: championFighterLevelTenBuild(),
         currentHp: Hp(60),

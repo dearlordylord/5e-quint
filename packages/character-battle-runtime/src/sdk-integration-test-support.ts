@@ -41,7 +41,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheet,
   type CharacterSheet,
   type CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
@@ -146,7 +146,7 @@ export function characterSheet(input: {
     combatantId: input.combatantId,
     initiative: input.initiative,
     sheet: requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheet({
         characterId: characterSheetId(input.characterIdText),
         build: input.build,
         hitPointMaximumReduction: Hp(0),

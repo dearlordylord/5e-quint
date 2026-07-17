@@ -29,7 +29,7 @@ import {
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetTempHp,
-  createFreshCharacterSheet,
+  rebuildCharacterSheet,
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
   replaceCharacterSheetSpellSlotSourceState,
@@ -613,7 +613,7 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     return Either.left(pactSlotExpenditure.left);
   }
 
-  const sheet = createFreshCharacterSheet({
+  const sheet = rebuildCharacterSheet({
     characterId: input.sheet.characterId,
     build: input.sheet.build,
     hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,

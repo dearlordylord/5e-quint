@@ -12,7 +12,7 @@ import {
   completeLongRest,
   convertFontOfMagicSorceryPointsToSpellSlot,
   convertFontOfMagicSpellSlotToSorceryPoints,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   parseCharacterSheet,
   requireRight,
   resourceCount,
@@ -31,7 +31,7 @@ import {
 describe("Character Sheet runtime / spell slots", () => {
   test("projects absent ordinary Spell Slot expenditure as zero against build capacity", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:wizard-zero-slots"),
         build: wizardBuild({ wizardAdvancements: 1 }),
         tempHp: Hp(0),
@@ -50,7 +50,7 @@ describe("Character Sheet runtime / spell slots", () => {
 
   test("projects absent Pact Slot expenditure as zero against build capacity", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:warlock-zero-pact"),
         build: warlockMagicalCunningBuild({
           warlockAdvancements: 0,
@@ -71,7 +71,7 @@ describe("Character Sheet runtime / spell slots", () => {
 
   test("projects level-10 Warlock Pact Slots without spell-level-6 access", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:warlock-level-10-pact"),
         build: warlockMagicalCunningBuild({
           warlockAdvancements: 9,
@@ -92,7 +92,7 @@ describe("Character Sheet runtime / spell slots", () => {
   });
 
   test("rejects nonzero ordinary Spell Slot expenditure above build capacity", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:wizard-slot-over-capacity"),
       build: wizardBuild({ wizardAdvancements: 1 }),
       tempHp: Hp(0),
@@ -166,7 +166,7 @@ describe("Character Sheet runtime / spell slots", () => {
       ],
     });
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-convert"),
         build: sorcererBuild,
         tempHp: Hp(0),
@@ -212,7 +212,7 @@ describe("Character Sheet runtime / spell slots", () => {
   test(sorcererFontOfMagicSlotConversionGateTestName, () => {
     const sorcererBuild = sorcererFontOfMagicBuild();
     const capped = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-capped"),
         build: sorcererBuild,
         tempHp: Hp(0),
@@ -236,7 +236,7 @@ describe("Character Sheet runtime / spell slots", () => {
     });
 
     const spentSlots = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-no-slot"),
         build: sorcererBuild,
         tempHp: Hp(0),
@@ -269,7 +269,7 @@ describe("Character Sheet runtime / spell slots", () => {
     });
 
     const wizard = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-wizard"),
         build: wizardBuild({ wizardAdvancements: 1 }),
         tempHp: Hp(0),
@@ -305,7 +305,7 @@ describe("Character Sheet runtime / spell slots", () => {
       ],
     });
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-create"),
         build: sorcererBuild,
         tempHp: Hp(0),
@@ -313,7 +313,7 @@ describe("Character Sheet runtime / spell slots", () => {
       }),
     );
     expect(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-aggregate"),
         build: sorcererBuild,
         tempHp: Hp(0),
@@ -462,7 +462,7 @@ describe("Character Sheet runtime / spell slots", () => {
 
   test(sorcererFontOfMagicSlotCreationGateTestName, () => {
     const levelTwoSorcerer = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-create-level"),
         build: sorcererFontOfMagicBuild(),
         tempHp: Hp(0),
@@ -485,7 +485,7 @@ describe("Character Sheet runtime / spell slots", () => {
     });
 
     const lowPoints = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-create-points"),
         build: sorcererFontOfMagicBuild({
           sorcererAdvancements: 2,

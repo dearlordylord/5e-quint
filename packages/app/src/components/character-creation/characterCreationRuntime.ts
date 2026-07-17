@@ -18,6 +18,7 @@ import {
 } from "@dnd/character-creation-runtime"
 import {
   type CharacterSheet,
+  characterSheetConstructionIssuesSummary,
   characterSheetCurrentHp,
   characterSheetHitDice,
   type CharacterSheetHitDieState,
@@ -111,7 +112,7 @@ export function createCharacterSheetFromDraft(
       : { druidWildShapeKnownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds })
   })
   return Either.isLeft(sheet)
-    ? characterSheetFromDraftIssue("characterSheetInvalid", sheet.left.message)
+    ? characterSheetFromDraftIssue("characterSheetInvalid", characterSheetConstructionIssuesSummary(sheet.left))
     : Either.right(sheet.right)
 }
 

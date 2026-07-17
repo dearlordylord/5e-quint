@@ -31,7 +31,7 @@ import {
   completeMagicalCunningRite,
   completeShortRest,
   completeShortRestArcaneRecoveryWithRoute,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   elapsedTimeTicks,
   expectRight,
   finishLongRest,
@@ -85,7 +85,7 @@ function unitLibraryWithoutResourcefulHumanTrait() {
 describe("Character Sheet runtime / rests", () => {
   test("rest start gates keep calendar wait separate from rest benefits", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rest-start"),
         build,
         tempHp: Hp(0),
@@ -93,7 +93,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
     const zeroHp = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rest-start-zero"),
         build,
         currentHp: Hp(0),
@@ -211,7 +211,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Long Rest restores HP, Hit Point Dice, maximum reduction, Spell Slots, Pact Slots, and Arcane Recovery use", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:long-rest"),
         build: wizardWarlockBuild(),
         currentHp: Hp(1),
@@ -268,7 +268,7 @@ describe("Character Sheet runtime / rests", () => {
       CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
     ] as const) {
       const sheet = requireRight(
-        createFreshCharacterSheet({
+        rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             `character:resourceful:${initialHeroicInspiration.tag}`,
           ),
@@ -294,7 +294,7 @@ describe("Character Sheet runtime / rests", () => {
       CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
     ] as const) {
       const sheet = requireRight(
-        createFreshCharacterSheet({
+        rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             `character:no-resourceful:${initialHeroicInspiration.tag}`,
           ),
@@ -319,7 +319,7 @@ describe("Character Sheet runtime / rests", () => {
       speciesSize: "medium",
     };
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:resourceful-missing-unit"),
         build: humanBuild,
         currentHp: Hp(6),
@@ -353,7 +353,7 @@ describe("Character Sheet runtime / rests", () => {
       speciesSize: "medium",
     };
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:resourceful-missing-unit-weapon-mastery-route",
         ),
@@ -425,7 +425,7 @@ describe("Character Sheet runtime / rests", () => {
 
     for (const testCase of cases) {
       const sheet = requireRight(
-        createFreshCharacterSheet({
+        rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             `character:${testCase.featureUnitId}:long-rest`,
           ),
@@ -465,7 +465,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("rejects Weapon Mastery Long Rest reselection above the Surface change count", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fighter-mastery-reject"),
         build: weaponMasteryBuild({
           startingClass: "class_fighter",
@@ -507,7 +507,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("uses the class-level Weapon Mastery count for Long Rest reselection", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fighter-level-4-mastery"),
         build: weaponMasteryBuild({
           startingClass: "class_fighter",
@@ -556,7 +556,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Short Rest restores Pact Slots without touching ordinary Spell Slots", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-pact"),
         build: wizardWarlockBuild(),
         tempHp: Hp(0),
@@ -582,7 +582,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Short Rest spends Hit Dice to restore HP without touching Spell Slots", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-hit-dice"),
         build: wizardBuild({ wizardAdvancements: 1 }),
         currentHp: Hp(7),
@@ -617,7 +617,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("rest interruptions apply only the RAW rest benefits they grant", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rest-interruption"),
         build: wizardBuild({ wizardAdvancements: 1 }),
         currentHp: Hp(7),
@@ -776,7 +776,7 @@ describe("Character Sheet runtime / rests", () => {
       ),
     };
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-minimum-hit-dice"),
         build: lowConWizardBuild,
         currentHp: Hp(7),
@@ -808,7 +808,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Short Rest rejects spending more Hit Dice than remain", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-spent-hit-dice"),
         build: wizardBuild({ wizardAdvancements: 0 }),
         currentHp: Hp(4),
@@ -834,7 +834,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Arcane Recovery refunds expended ordinary Spell Slots once per Long Rest", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:arcane-recovery"),
         build: wizardBuild({ wizardAdvancements: 3 }),
         tempHp: Hp(0),
@@ -885,7 +885,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Arcane Recovery route wrapper reports Feature Resource owner for use lockout rejection", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:arcane-recovery-route-lockout"),
         build: wizardBuild({ wizardAdvancements: 3 }),
         tempHp: Hp(0),
@@ -929,7 +929,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Long Rest Arcane Recovery route wrapper omits qRoute when no Arcane Recovery reset occurred", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:arcane-recovery-route-none"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
         tempHp: Hp(0),
@@ -951,7 +951,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test("Arcane Recovery rejects refunds above its level budget", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:arcane-recovery-budget"),
         build: wizardBuild({ wizardAdvancements: 1 }),
         tempHp: Hp(0),
@@ -981,7 +981,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("rejects Arcane Recovery use state for sheets without the feature", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:arcane-recovery-non-owner"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
       tempHp: Hp(0),
@@ -1005,7 +1005,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test(magicalCunningPactSlotRecoveryTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:magical-cunning"),
         build: warlockMagicalCunningBuild({
           warlockAdvancements: 1,
@@ -1053,7 +1053,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test(magicalCunningRoundUpTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:magical-cunning-round-up"),
         build: warlockMagicalCunningBuild({
           warlockAdvancements: 10,
@@ -1079,7 +1079,7 @@ describe("Character Sheet runtime / rests", () => {
 
   test(magicalCunningFeatureOwnershipTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:magical-cunning-level-one"),
         build: warlockMagicalCunningBuild({
           warlockAdvancements: 0,

@@ -17,7 +17,7 @@ import {
   characterSheetResources,
   completeLongRest,
   contactPatronSessionInvocationTestName,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   unitLibrary,
 } from "./test-support.ts";
@@ -104,7 +104,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
 
   test(contactPatronSessionInvocationTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:contact-patron-warlock-9"),
         build: {
           ...armorClassBuild({
@@ -274,7 +274,7 @@ function expectedContactPatronProjection(): ContactPatronSelectedIdentityProject
 
 function contactPatronWarlockSheet() {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:contact-patron-warlock-9"),
       build: {
         ...armorClassBuild({

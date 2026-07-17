@@ -1,10 +1,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.cleric-divine-intervention-session-invocation
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
+  DRUID_WILD_SHAPE_KNOWN_FORM_ISSUE_CODES,
   MONK_MONKS_FOCUS_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   type CharacterBuild,
   type CharacterBuildDruidWildShapeKnownFormReplacement,
+  type DruidWildShapeKnownFormIssue,
   type CharacterBuildHitDiePool,
   type CharacterBuildMonkUncannyMetabolismFacts,
   type CharacterBuildResource,
@@ -725,6 +727,42 @@ export type CharacterSheet =
       readonly createdSpellSlots?: never;
       readonly pactSlotExpenditure?: never;
     };
+
+export const CHARACTER_SHEET_CONSTRUCTION_ISSUE_NO_DETAIL_CODES = [
+  "hitPointStateInvalid",
+  "temporaryHitPointsNotZero",
+  "hitPointMaximumReductionNotZero",
+  "exhaustionNotZero",
+  "conditionsNotEmpty",
+  "spentHitDiceNotEmpty",
+  "restFeatureUsesNotEmpty",
+  "resourceExpendituresNotEmpty",
+  "heroicInspirationNotEmpty",
+  "companionNotEmpty",
+  "spellSlotStateUnexpected",
+  "spellSlotStateInvalid",
+  "pactSlotStateUnexpected",
+  "pactSlotStateInvalid",
+  "bookOfShadowsPresenceInvalid",
+  "wildShapeKnownFormsUnexpected",
+  "wildShapeKnownFormsRequired",
+  "wildShapeKnownFormsInvalid",
+  "druidCircleLandInvalid",
+  "fiendishResilienceInvalid",
+] as const;
+export const CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES = [
+  ...CHARACTER_SHEET_CONSTRUCTION_ISSUE_NO_DETAIL_CODES,
+  ...DRUID_WILD_SHAPE_KNOWN_FORM_ISSUE_CODES,
+] as const;
+
+export type CharacterSheetConstructionIssue =
+  | {
+      readonly code: Exclude<
+        (typeof CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES)[number],
+        DruidWildShapeKnownFormIssue["code"]
+      >;
+    }
+  | DruidWildShapeKnownFormIssue;
 
 export type CharacterSheetCondition = Exclude<Condition, "unconscious">;
 

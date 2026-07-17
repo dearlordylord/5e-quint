@@ -13,7 +13,7 @@ import {
   characterSheetId,
   characterSheetTeleportationCircleSigilSequenceId,
   completedTeleportationCircleCasting,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -233,7 +233,7 @@ function teleportationCircleBardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:teleportation-circle-bard-9"),
       build: {
         ...armorClassBuild({

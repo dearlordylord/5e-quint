@@ -33,7 +33,7 @@ import {
   characterSheetId,
   characterSheetResources,
   completeShortRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheet,
   finishShortRest,
   startShortRest,
 } from "@dnd/character-sheet-runtime";
@@ -2462,7 +2462,7 @@ describe("level 5 SDK tracer bullets", () => {
 
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheet({
         characterId: characterSheetId(
           "character:l5-tracer-sorcerous-restoration",
         ),

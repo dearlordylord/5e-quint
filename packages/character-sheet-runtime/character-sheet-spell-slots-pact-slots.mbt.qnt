@@ -132,7 +132,7 @@ module characterSheetSpellSlotsPactSlotsMbt {
     recordProjection(
       CharacterSheetSpellSlotsPactSlotsOrdinaryCapacityMismatchRejected,
       false,
-      "Spell Slot state does not match build capacity for level 1.",
+      "spellSlotStateInvalid",
       mismatchedOrdinaryLevel1Capacity,
       1,
     ),
@@ -144,7 +144,7 @@ module characterSheetSpellSlotsPactSlotsMbt {
     recordProjection(
       CharacterSheetSpellSlotsPactSlotsPactExpenditureOverCapacityRejected,
       false,
-      "Pact Slot state must match Pact Magic build capacity.",
+      "pactSlotStateInvalid",
       pactSlotExpendedOverCapacity,
       2,
     ),

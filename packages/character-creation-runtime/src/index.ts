@@ -239,13 +239,20 @@ export {
 } from "./weapon-mastery.ts";
 export {
   DRUID_WILD_SHAPE_UNIT_ID,
+  DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES,
+  DRUID_WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_ISSUE_CODES,
+  DRUID_WILD_SHAPE_KNOWN_FORM_ISSUE_CODES,
+  DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES,
   characterBuildDruidWildShapeFacts,
   replaceDruidWildShapeKnownForm,
+  messageForDruidWildShapeKnownFormIssue,
   validateDruidWildShapeKnownForms,
+  validateDruidWildShapeKnownFormIssues,
   validateDruidWildShapeKnownFormRecords,
   type CharacterBuildDruidWildShapeFacts,
   type CharacterBuildDruidWildShapeFactsIssue,
   type CharacterBuildDruidWildShapeKnownFormReplacement,
+  type DruidWildShapeKnownFormIssue,
 } from "./druid-wild-shape.ts";
 export {
   MONK_MONKS_FOCUS_UNIT_ID,

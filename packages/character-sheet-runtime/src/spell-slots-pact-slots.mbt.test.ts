@@ -35,6 +35,7 @@ import {
   completeShortRest,
   convertFontOfMagicSorceryPointsToSpellSlot,
   createFreshCharacterSheet,
+  rebuildCharacterSheet,
   finishLongRest,
   finishShortRest,
   interruptLongRest,
@@ -267,7 +268,7 @@ function rejectMismatchedOrdinarySpellSlotCapacityProjection(): SlotProjection {
   return projectFromParts({
     outcome: "ordinary-capacity-mismatch-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.left[0].code,
     ordinaryLevel1Capacity: 3,
     replayIndex: 1,
   });
@@ -292,7 +293,7 @@ function rejectPactSlotExpenditureOverCapacityProjection(): SlotProjection {
   return projectFromParts({
     outcome: "pact-expenditure-over-capacity-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.left[0].code,
     pactSlotLevel: 1,
     pactSlotCapacity: 2,
     pactSlotExpended: 3,
@@ -494,7 +495,7 @@ function completeLongRestForSheet(sheet: CharacterSheet) {
 
 function wizardWarlockSpentSheet(characterIdText: string): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId(characterIdText),
       build: wizardWarlockSlotBuild(),
       currentHp: Hp(12),
@@ -519,7 +520,7 @@ function arcaneRecoveryPactSheet(input: {
   readonly pactExpended: number;
 }): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId("character:arcane-recovery-pact"),
       build: wizard4BuildWithPactSlots(),
       currentHp: Hp(18),
@@ -544,7 +545,7 @@ function arcaneRecoveryPactSheet(input: {
 
 function sorcererWarlockLongRestSheet(): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId("character:long-rest-created-slot"),
       build: sorcererWarlockSlotBuild(),
       currentHp: Hp(18),
@@ -569,7 +570,7 @@ function warlockMagicalCunningSheet(input: {
   readonly pactExpended: number;
 }): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: warlockMagicalCunningBuild({
         warlockAdvancements: input.warlockAdvancements,

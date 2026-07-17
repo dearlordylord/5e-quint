@@ -19,6 +19,20 @@ projection and battle handoff settlement belong to
 
 Current executable state:
 
+- `createFreshCharacterSheet` is the production first-sheet boundary. It
+  establishes full current Hit Points, zero Temporary Hit Points and maximum
+  reduction, no conditions or spent Hit Dice, and unexpended ordinary and Pact
+  resources, then returns `FreshCharacterSheet`. Independent construction
+  failures are returned as one flat non-empty collection of structured
+  `CharacterSheetConstructionIssue` values; issues do not retain a joined
+  display message.
+- Fresh empty collections have one spelling: the sheet contains `[]` for
+  conditions, spent Hit Dice, rest-feature uses, resource expenditures, and
+  spellcasting slot-expenditure lists. Feature-owned state uses absence only
+  when the feature is inapplicable; an applicable Wild Shape roster is
+  non-empty, while absent Pact Slot expenditure means zero Pact Slots are
+  expended. `rebuildCharacterSheet` is the separate mutable-state reconstruction
+  boundary used by storage and battle settlement.
 - Hit Point Maximum is derived from `CharacterBuild` and the current
   `hitPointMaximumReduction` through `characterSheetHitPointMaximum`. The sheet
   does not store normal HP capacity; fresh sheets default current HP to the

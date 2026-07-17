@@ -13,7 +13,7 @@ import {
   characterSheetHallowAreaId,
   characterSheetId,
   completedHallowCasting,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -298,7 +298,7 @@ function hallowClericSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:hallow-cleric-9"),
       build: {
         ...armorClassBuild({

@@ -12,7 +12,7 @@ import {
   castTelepathicBond,
   characterSheetId,
   characterSheetTelepathicBondTargetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -253,7 +253,7 @@ function telepathicBondBardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:telepathic-bond-bard-9"),
       build: {
         ...armorClassBuild({

@@ -14,7 +14,7 @@ import {
   characterSheetDreamTargetId,
   characterSheetId,
   completedDreamCasting,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -375,7 +375,7 @@ function dreamWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:dream-wizard-9"),
       build: {
         ...armorClassBuild({

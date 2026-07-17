@@ -11,7 +11,7 @@ import {
   Hp,
   characterSheetId,
   completeLongRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   selectedClassChoiceUnitIds,
   unitLibrary,
@@ -439,7 +439,7 @@ function weaponMasterySheet(
   profile: WeaponMasteryClassLevelReselectionProfile,
 ): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId(
         `character:${profile.featureUnitId}:class-level-reselection`,
       ),

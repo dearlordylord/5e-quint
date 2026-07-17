@@ -12,7 +12,7 @@ import {
   castLegendLore,
   characterSheetId,
   completedLegendLoreCasting,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -248,7 +248,7 @@ function legendLoreClericSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:legend-lore-cleric-9"),
       build: {
         ...armorClassBuild({

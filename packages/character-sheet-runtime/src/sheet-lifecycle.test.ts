@@ -13,7 +13,7 @@ import {
   characterSheetHitPointMaximum,
   characterSheetId,
   characterSheetTempHp,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   druidLanguageBuild,
   parseCharacterSheet,
   requireRight,
@@ -33,7 +33,7 @@ export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
 
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   test("creates a fresh non-spellcasting Character Sheet at current HP", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:test"),
       build,
       currentHp: Hp(8),
@@ -52,7 +52,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("stores Temporary Hit Points as in-play HP state", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:test"),
       build,
       currentHp: Hp(8),
@@ -67,7 +67,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("rejects contradictory positive and zero-HP state", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:test"),
       build,
       currentHp: Hp(1),
@@ -83,7 +83,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("rejects current HP above sheet maximum HP", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:test"),
       build,
       currentHp: Hp(13),
@@ -95,7 +95,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("defaults omitted current HP to the derived effective maximum", () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:derived-current-hp"),
       build,
       tempHp: Hp(0),
@@ -302,7 +302,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
 
   test("creates fresh sheets without merging class-feature languages into origin languages", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rogue-language-sheet"),
         build: rogueLanguageBuild("Elvish"),
         tempHp: Hp(0),
