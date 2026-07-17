@@ -42,6 +42,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   attackInitialTargetHole,
+  attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   attackRollHoleAfterTarget,
   damageRollFill,
@@ -366,7 +367,7 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
   const state = shieldBattle(srdSpellRecord(shieldUnitId));
   const attackAct = unarmedStrikeAct(state);
   const target = requireHoleFromArray(attackAct.initialHoles, "targetChoice");
-  const targetFillForAttack = attackTargetFill(target);
+  const targetFillForAttack = attackTargetFill(target, attackAct.subject);
   const awaitingAttackRoll = resolveBattleSubject({
     state,
     subject: attackAct.subject,
@@ -599,6 +600,7 @@ function unarmedStrikeAct(state: BattleState): AttackAct {
 
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  subject: AttackAct["subject"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -609,7 +611,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: shieldAttackerId,
         targetId: shieldCasterId,
-        attackName: "Unarmed Strike",
+        ...attackExecutionSelectionForSubjectForTest(subject),
       },
     ],
   };
