@@ -97,6 +97,7 @@ import {
 import {
   attackTargetIsLegal,
   attackTargetRangeBand,
+  attackExecutionSelectionMatchesOption,
   effectiveWalkSpeed,
 } from "./movement-speed.ts";
 import {
@@ -923,7 +924,11 @@ export function tacticalMasterReplacementDecisionHole(
   attackerId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleUnitFeatureDecisionHole | null {
-  const selection = tacticalMasterReplacementSelection(state, attackerId, attack);
+  const selection = tacticalMasterReplacementSelection(
+    state,
+    attackerId,
+    attack,
+  );
   return selection === null
     ? null
     : {
@@ -1018,14 +1023,16 @@ export function applyWeaponMasteryPushOnHit(input: {
     };
   }
   const pushDisposition = input.targetSpatialFacts.find(
-    (fact): fact is Extract<
+    (
+      fact,
+    ): fact is Extract<
       BattleTargetSpatialFact,
       { readonly kind: "weaponMasteryPushDisposition" }
     > =>
       fact.kind === "weaponMasteryPushDisposition" &&
       fact.attackerId === input.attackerId &&
       fact.targetId === input.targetId &&
-      fact.attackName === attackActionOptionName(input.attack),
+      attackExecutionSelectionMatchesOption(fact, input.attack),
   )?.disposition;
   if (pushDisposition === undefined) {
     return {
@@ -1512,8 +1519,7 @@ function huntersPreyHordeBreakerSelection(
         (profile) =>
           typeof profile === "object" &&
           profile.kind === HUNTERS_PREY_SUPPORT_PROFILE &&
-          profile.huntersPrey.kind ===
-            "nearbyDifferentTargetSameWeaponAttack",
+          profile.huntersPrey.kind === "nearbyDifferentTargetSameWeaponAttack",
       ),
   );
   return unitRef === undefined ? null : { unitId: unitRef.unitId };
@@ -1620,10 +1626,7 @@ function tacticalMasterReplacementSelection(
   attackerId: CombatantId,
   attack: SupportedAttackActionOption,
 ): TacticalMasterReplacementSelection | null {
-  if (
-    attack.kind !== "weapon" ||
-    currentActorId(state) !== attackerId
-  ) {
+  if (attack.kind !== "weapon" || currentActorId(state) !== attackerId) {
     return null;
   }
   const attacker = state.combatants.get(attackerId);
@@ -1695,7 +1698,11 @@ function selectedWeaponMasteryProperty(input: {
 }): SelectedWeaponMasteryProperty | null {
   const attack = input.attack;
   const property = weaponMasteryPropertyForSupportProfile(input.supportProfile);
-  if (property === null || attack.kind !== "weapon" || attack.weapon.mastery !== property) {
+  if (
+    property === null ||
+    attack.kind !== "weapon" ||
+    attack.weapon.mastery !== property
+  ) {
     return null;
   }
   const attacker = input.state.combatants.get(input.attackerId);
@@ -1714,9 +1721,7 @@ function selectedWeaponMasteryProperty(input: {
       input.supportProfile,
     ),
   );
-  return unitRef === undefined
-    ? null
-    : { attack, unitId: unitRef.unitId };
+  return unitRef === undefined ? null : { attack, unitId: unitRef.unitId };
 }
 
 function weaponMasteryPropertySupportProfiles(

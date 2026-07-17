@@ -17,6 +17,7 @@ import {
   SIZES,
   characterLevel,
   proficiencyBonusForCharacterLevel,
+  type DieRollResult,
 } from "@dnd/shared/types";
 import { druidWildShapeDurationHoursForClassLevel } from "@dnd/surface/surface/druid-wild-shape-readers";
 import type {
@@ -32,7 +33,13 @@ import {
   activeEffectsWithShapeShiftOwnerReplaced,
   activeEffectsWithoutShapeShiftOwner,
 } from "../active-effect/lifecycle.ts";
-import type { StatBlockMutableResourceState } from "../battle-action-options.ts";
+import {
+  applyStatBlockRechargeRolls,
+  refreshStatBlockStartTurnExecution,
+  spendStatBlockProcedureResources,
+  type StatBlockExecutionAdmission,
+  type StatBlockExecutionState,
+} from "../stat-block-execution.ts";
 import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type {
   BattleActiveEffect,
@@ -41,7 +48,11 @@ import type {
   CharacterBattleCreatureState,
 } from "../battle-reducer.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "../unit-feature-support.ts";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  BattleResourcePoolExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import { combatantHasUnendedDruidWildShapeEffect } from "./creature-state-leaves.ts";
 import {
   activeCreatureSizeChangeEffect,
@@ -85,7 +96,7 @@ export type ActiveDruidWildShape = {
     BattleActiveEffect,
     { readonly kind: "druidWildShapeForm" }
   >;
-  readonly form: BattleDruidWildShapeKnownForm;
+  readonly admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
 };
 
 export function druidWildShapeAvailableFormsIssueForProfile(
@@ -113,7 +124,7 @@ export function combatantHasActiveDruidWildShape(
 export function activeDruidWildShapeForm(
   combatant: BattleCreatureState | undefined,
 ): BattleDruidWildShapeKnownForm | null {
-  return activeDruidWildShape(combatant)?.form ?? null;
+  return activeDruidWildShape(combatant)?.admission.statBlock ?? null;
 }
 
 export function activeDruidWildShape(
@@ -128,11 +139,12 @@ export function activeDruidWildShape(
   }
   for (const effect of combatant.activeEffects) {
     if (effect.kind !== "druidWildShapeForm") continue;
-    const form =
-      combatant.origin.druidWildShapeAvailableForms?.find(
-        (candidate) => candidate.id === effect.formStatBlockId,
-      ) ?? null;
-    if (form !== null) return { effect, form };
+    const admission = combatant.origin.druidWildShapeAvailableForms?.find(
+      (candidate) => candidate.statBlock.id === effect.formStatBlockId,
+    );
+    if (admission !== undefined) {
+      return { effect, admission };
+    }
   }
   return null;
 }
@@ -161,8 +173,10 @@ export function combatantDruidWildShapeArmorClassState(
   const active = activeDruidWildShape(combatant);
   if (active === null) return null;
   const formArmorClassState = {
-    ...statBlockArmorClassState(literalStatBlockArmorClass(active.form)),
-    abilityModifiers: statBlockAbilityModifiers(active.form),
+    ...statBlockArmorClassState(
+      literalStatBlockArmorClass(active.admission.statBlock),
+    ),
+    abilityModifiers: statBlockAbilityModifiers(active.admission.statBlock),
   };
   if (combatant.origin.kind !== "character") return formArmorClassState;
   const armorWorn = wildShapeEquipmentDispositionWearsKind(
@@ -318,7 +332,6 @@ export function assumeDruidWildShapeForm(input: {
   readonly form: BattleDruidWildShapeKnownForm;
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
-  readonly formResources: StatBlockMutableResourceState;
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
 }): BattleState {
   const durationTicks = elapsedTimeTicksFromHours(
@@ -326,6 +339,20 @@ export function assumeDruidWildShapeForm(input: {
   );
   if (Either.isLeft(durationTicks)) {
     throw new Error("Druid Wild Shape duration must use whole-hour ticks.");
+  }
+  const availableForms = input.actor.origin.druidWildShapeAvailableForms;
+  if (availableForms === undefined) {
+    throw new Error(
+      "Wild Shape form selection requires admitted available forms.",
+    );
+  }
+  const selectedAdmission = availableForms.find(
+    (admission) => admission.statBlock === input.form,
+  );
+  if (selectedAdmission === undefined) {
+    throw new Error(
+      "Wild Shape form selection must come from the admitted available forms.",
+    );
   }
   const nextActor: CharacterBattleCreatureState = {
     ...input.actor,
@@ -341,7 +368,6 @@ export function assumeDruidWildShapeForm(input: {
         formStatBlockId: input.form.id,
         formLimbs: input.formLimbs,
         equipmentDisposition: input.equipmentDisposition,
-        resources: input.formResources,
         expiresAt: { kind: "duration", durationTicks: durationTicks.right },
       },
     ),
@@ -355,18 +381,56 @@ export function assumeDruidWildShapeForm(input: {
   };
 }
 
-export function updateActiveDruidWildShapeResources(
+function mapActiveDruidWildShapeExecution(
   combatant: BattleCreatureState,
-  resources: StatBlockMutableResourceState,
+  update: (execution: StatBlockExecutionState) => StatBlockExecutionState,
 ): BattleCreatureState {
   const active = activeDruidWildShape(combatant);
   if (active === null) return combatant;
+  if (combatant.origin.kind !== "character") return combatant;
+  const admissions = combatant.origin.druidWildShapeAvailableForms;
+  if (admissions === undefined) return combatant;
   return {
     ...combatant,
-    activeEffects: combatant.activeEffects.map((effect) =>
-      effect === active.effect ? { ...active.effect, resources } : effect,
-    ),
+    origin: {
+      ...combatant.origin,
+      druidWildShapeAvailableForms: admissions.map((admission) =>
+        admission === active.admission
+          ? { ...admission, execution: update(admission.execution) }
+          : admission,
+      ),
+    },
   };
+}
+
+export function spendActiveDruidWildShapeProcedureResources(
+  combatant: BattleCreatureState,
+  procedureRef: BattleProcedureExecutionRef,
+): BattleCreatureState {
+  return mapActiveDruidWildShapeExecution(combatant, (execution) =>
+    spendStatBlockProcedureResources(execution, procedureRef),
+  );
+}
+
+export function applyActiveDruidWildShapeRechargeRolls(
+  combatant: BattleCreatureState,
+  rolls: readonly {
+    readonly target: BattleResourcePoolExecutionRef;
+    readonly roll: DieRollResult;
+  }[],
+): BattleCreatureState {
+  return mapActiveDruidWildShapeExecution(combatant, (execution) =>
+    applyStatBlockRechargeRolls(execution, rolls),
+  );
+}
+
+export function refreshActiveDruidWildShapeStartTurnExecution(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
+  return mapActiveDruidWildShapeExecution(
+    combatant,
+    refreshStatBlockStartTurnExecution,
+  );
 }
 
 export function dismissDruidWildShapeForm(input: {

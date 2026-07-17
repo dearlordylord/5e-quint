@@ -250,26 +250,11 @@ describe("end-user MCP vertical", () => {
       "End Turn",
     ]);
 
-    const goblinTarget = callTool(root, "fill_battle_hole", {
-      subject: {
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        attackName: "Scimitar",
-      },
-      fill: {
-        kind: "targetChoice",
-        holeId: "battle:attack:target",
-        value: "fighter",
-        spatialFacts: [
-          {
-            kind: "attackTargetInMeleeReach",
-            actorId: "goblin",
-            targetId: "fighter",
-            attackName: "Scimitar",
-          },
-        ],
-      },
+    const goblinAttack = requireAttackAct(root, "goblin", "Scimitar");
+    const goblinTarget = fillBattleSubject(root, goblinAttack.subject, {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "fighter",
     });
     const goblinAttackRoll = goblinTarget.result.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
@@ -277,37 +262,21 @@ describe("end-user MCP vertical", () => {
     if (goblinAttackRoll === undefined) {
       throw new Error("Expected Goblin attack roll hole.");
     }
-    callTool(root, "fill_battle_hole", {
-      subject: {
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        attackName: "Scimitar",
-      },
-      fill: {
-        kind: "attackRoll",
-        holeId: goblinAttackRoll.holeId,
-        value: {
-          total: 20,
-          naturalD20: 18,
-          ...("rollMode" in goblinAttackRoll
-            ? { rollMode: goblinAttackRoll.rollMode }
-            : {}),
-        },
+    fillBattleSubject(root, goblinAttack.subject, {
+      kind: "attackRoll",
+      holeId: goblinAttackRoll.holeId,
+      value: {
+        total: 20,
+        naturalD20: 18,
+        ...("rollMode" in goblinAttackRoll
+          ? { rollMode: goblinAttackRoll.rollMode }
+          : {}),
       },
     });
-    const goblinDamage = callTool(root, "fill_battle_hole", {
-      subject: {
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        attackName: "Scimitar",
-      },
-      fill: {
-        kind: "rolledDice",
-        holeId: "battle:attack:damage-result:1d6+2-slashing",
-        value: [{ results: [5] }],
-      },
+    const goblinDamage = fillBattleSubject(root, goblinAttack.subject, {
+      kind: "rolledDice",
+      holeId: "battle:attack:damage-result:1d6+2-slashing",
+      value: [{ results: [5] }],
     });
     expect(goblinDamage.result.tag).toBe("resolved");
     expect(goblinDamage.snapshot.combatants).toEqual([
@@ -640,13 +609,13 @@ describe("end-user MCP vertical", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
-          subject: attackSubject("skeleton-b", "Shortsword"),
+          subject: requireAttackAct(root, "skeleton-b", "Shortsword").subject,
         }),
       ]),
     );
     const skeletonTarget = fillBattleSubject(
       root,
-      attackSubject("skeleton-b", "Shortsword"),
+      requireAttackAct(root, "skeleton-b", "Shortsword").subject,
       {
         kind: "targetChoice",
         holeId: "battle:attack:target",
@@ -659,20 +628,24 @@ describe("end-user MCP vertical", () => {
     if (skeletonAttackRoll === undefined) {
       throw new Error("Expected Skeleton attack roll hole.");
     }
-    fillBattleSubject(root, attackSubject("skeleton-b", "Shortsword"), {
-      kind: "attackRoll",
-      holeId: skeletonAttackRoll.holeId,
-      value: {
-        total: 20,
-        naturalD20: 15,
-        ...("rollMode" in skeletonAttackRoll
-          ? { rollMode: skeletonAttackRoll.rollMode }
-          : {}),
+    fillBattleSubject(
+      root,
+      requireAttackAct(root, "skeleton-b", "Shortsword").subject,
+      {
+        kind: "attackRoll",
+        holeId: skeletonAttackRoll.holeId,
+        value: {
+          total: 20,
+          naturalD20: 15,
+          ...("rollMode" in skeletonAttackRoll
+            ? { rollMode: skeletonAttackRoll.rollMode }
+            : {}),
+        },
       },
-    });
+    );
     const afterSkeletonAttack = fillBattleSubject(
       root,
-      attackSubject("skeleton-b", "Shortsword"),
+      requireAttackAct(root, "skeleton-b", "Shortsword").subject,
       {
         kind: "rolledDice",
         holeId: "battle:attack:damage-result:1d6+3-piercing",
@@ -1892,6 +1865,7 @@ function requireHole(
 }
 
 type BattleActView = {
+  readonly summary: string;
   readonly subject: BattleSubjectView;
   readonly initialHoles: readonly BattleHoleView[];
 };
@@ -1925,15 +1899,27 @@ function requireAttackAct(
   actorId: string,
   attackName: string,
 ): BattleActView {
-  return requireBattleAct(
+  const matchingActs = callTool(
     root,
-    (act) =>
+    "discover_battle_acts",
+    {},
+  ).snapshot.acts.filter(
+    (act: BattleActView) =>
       act.subject.tag === "action" &&
       act.subject.actorId === actorId &&
-      "attackName" in act.subject &&
-      act.subject.attackName === attackName,
-    `${actorId} ${attackName}`,
+      "action" in act.subject &&
+      act.subject.action === "attack" &&
+      (!("statBlockDamageNotation" in act.subject) ||
+        act.subject.statBlockDamageNotation === undefined) &&
+      (("attackName" in act.subject && act.subject.attackName === attackName) ||
+        ("procedureRef" in act.subject &&
+          act.summary === `Take the Attack action with ${attackName}.`)),
   );
+  const [act] = matchingActs;
+  if (matchingActs.length !== 1 || act === undefined) {
+    throw new Error(`Expected one rolled battle act: ${actorId} ${attackName}`);
+  }
+  return act;
 }
 
 function requireUnitFeatureAct(
@@ -2289,13 +2275,15 @@ function fillBattleSubject(
                     spellId,
                   },
                 ]
-              : "attackName" in subject
+              : "attackName" in subject || "procedureRef" in subject
                 ? [
                     {
                       kind: "attackTargetInMeleeReach",
                       actorId: subject.actorId,
                       targetId: String(fill.value),
-                      attackName: subject.attackName,
+                      ...("procedureRef" in subject
+                        ? { procedureRef: subject.procedureRef }
+                        : { attackName: subject.attackName }),
                     },
                   ]
                 : [],

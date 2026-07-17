@@ -58,10 +58,9 @@ describe("battle runtime: Bardic Inspiration", () => {
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
+    const fighter = resolved.state.combatants.get(fighterId);
     expect(
-      resolved.state.combatants.get(fighterId)?.origin.kind === "character"
-        ? resolved.state.combatants.get(fighterId)?.origin.resources
-        : [],
+      fighter?.origin.kind === "character" ? fighter.origin.resources : [],
     ).toEqual([
       expect.objectContaining({
         unit: expect.objectContaining({ id: bardicInspiration.id }),

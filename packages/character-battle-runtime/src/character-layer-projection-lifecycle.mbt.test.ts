@@ -10,6 +10,7 @@ import {
   discoverBattleActs,
   resolveBattleSubject,
   startBattle,
+  statBlockProcedurePresentations,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -553,20 +554,33 @@ function resolveSkeletonShortswordAttack(state: BattleState): BattleState {
 }
 
 function requireSkeletonShortswordAct(state: BattleState): AttackBattleAct {
-  const act = discoverBattleActs(state).find(isSkeletonShortswordAttackAct);
+  const skeleton = state.combatants.get(lifecycleSkeletonCombatantId);
+  if (skeleton?.origin.kind !== "statBlock") {
+    throw new Error("Expected committed Skeleton Stat Block admission.");
+  }
+  const procedureRef = statBlockProcedurePresentations(skeleton.origin).find(
+    (presentation) =>
+      presentation.kind === "attack" && presentation.name === "Shortsword",
+  )?.procedureRef;
+  if (procedureRef === undefined) {
+    throw new Error("Expected admitted Skeleton Shortsword procedure.");
+  }
+  const acts = discoverBattleActs(state).filter(
+    (act): act is AttackBattleAct =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === lifecycleSkeletonCombatantId &&
+      act.subject.procedureRef === procedureRef &&
+      act.subject.statBlockDamageNotation === undefined,
+  );
+  if (acts.length !== 1) {
+    throw new Error("Expected exactly one rolled Skeleton Shortsword act.");
+  }
+  const [act] = acts;
   if (act === undefined) {
     throw new Error("Expected Skeleton Shortsword attack act.");
   }
   return act;
-}
-
-function isSkeletonShortswordAttackAct(act: BattleAct): act is AttackBattleAct {
-  return (
-    act.subject.tag === "action" &&
-    act.subject.action === "attack" &&
-    act.subject.actorId === lifecycleSkeletonCombatantId &&
-    act.subject.attackName === "Shortsword"
-  );
 }
 
 function targetChoiceFill(
@@ -588,7 +602,9 @@ function targetChoiceFill(
         kind: "attackTargetInMeleeReach",
         actorId: subject.actorId,
         targetId: lifecycleCharacterCombatantId,
-        attackName: subject.attackName,
+        ...(subject.procedureRef === undefined
+          ? { attackName: subject.attackName }
+          : { procedureRef: subject.procedureRef }),
       },
     ],
   };

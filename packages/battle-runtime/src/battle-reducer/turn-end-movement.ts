@@ -174,6 +174,7 @@ import {
   effectiveWalkSpeed,
   grappleTargetExemptFromDragCost,
   opportunityAttackThreatsForMovement,
+  attackExecutionSelectionMatchesOption,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 
@@ -211,7 +212,7 @@ import {
 import {
   activeDruidWildShape,
   combatantEffectiveSize,
-  updateActiveDruidWildShapeResources,
+  refreshActiveDruidWildShapeStartTurnExecution,
 } from "./druid-wild-shape.ts";
 import {
   ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
@@ -249,15 +250,9 @@ import {
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
 import { validateGustOfWindLineAreaPushFacts } from "./spells-resolve-save-gates.ts";
 
-import {
-  attackActionOptionName,
-  attackTargetConstraint,
-} from "./statblock-attacks.ts";
+import { attackTargetConstraint } from "./statblock-attacks.ts";
 
-import {
-  refreshStatBlockStartTurnResources,
-  sameStatBlockPartKey,
-} from "./statblock.ts";
+import { refreshStatBlockStartTurnExecution } from "../stat-block-execution.ts";
 
 import type {
   ActiveOngoingFeatureOccurrence,
@@ -307,6 +302,7 @@ import type {
   BattleJumpMovementReplacementFact,
   BattleMovementHole,
   BattleMovementFillValue,
+  BattleAttackExecutionSelection,
   BattleOpportunityAttackThreat,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
@@ -7850,8 +7846,7 @@ export function statBlockRechargeRollFillMatchesHole(
     if (result.roll < 1 || result.roll > 6) return false;
     const targetIndex = rechargeHole.rechargeTargets.findIndex(
       (target, index) =>
-        !matchedTargetIndexes.has(index) &&
-        sameStatBlockPartKey(target, result.target),
+        !matchedTargetIndexes.has(index) && target === result.target,
     );
     if (targetIndex === -1) return false;
     matchedTargetIndexes.add(targetIndex);
@@ -8400,7 +8395,7 @@ export function parseBattleMovement(
       };
     }
     const attack = attackActionOptionsForActor(state, reactorId).find(
-      (option) => attackActionOptionName(option) === threat.attackName,
+      (option) => attackExecutionSelectionMatchesOption(threat, option),
     );
     if (attack === undefined) {
       return {
@@ -8416,7 +8411,7 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat must name a melee attack option.",
       };
     }
-    const threatKey = `${reactorId}\u0000${threat.attackName}`;
+    const threatKey = opportunityAttackThreatIdentityKey(reactorId, threat);
     if (seen.has(threatKey)) {
       return {
         tag: "invalid",
@@ -8454,6 +8449,15 @@ export function parseBattleMovement(
         : { levitatedMovement: fill.value.levitatedMovement }),
     },
   };
+}
+
+function opportunityAttackThreatIdentityKey(
+  reactorId: CombatantId,
+  selection: BattleAttackExecutionSelection,
+): string {
+  return "procedureRef" in selection
+    ? JSON.stringify([reactorId, "procedure", selection.procedureRef])
+    : JSON.stringify([reactorId, "authoredAttack", selection.attackName]);
 }
 
 type SpikeGrowthHazardEffect = Extract<
@@ -9601,13 +9605,7 @@ export function resetStartOfTurnCombatant(
   };
   const wildShape = activeDruidWildShape(resetCombatant);
   if (wildShape !== null) {
-    return updateActiveDruidWildShapeResources(
-      resetCombatant,
-      refreshStatBlockStartTurnResources(
-        wildShape.effect.resources,
-        wildShape.form.statBlock,
-      ),
-    );
+    return refreshActiveDruidWildShapeStartTurnExecution(resetCombatant);
   }
   if (resetCombatant.origin.kind !== "statBlock") {
     return resetCombatant;
@@ -9616,9 +9614,8 @@ export function resetStartOfTurnCombatant(
     ...resetCombatant,
     origin: {
       ...resetCombatant.origin,
-      resources: refreshStatBlockStartTurnResources(
-        resetCombatant.origin.resources,
-        resetCombatant.origin.statBlock.statBlock,
+      execution: refreshStatBlockStartTurnExecution(
+        resetCombatant.origin.execution,
       ),
     },
   };

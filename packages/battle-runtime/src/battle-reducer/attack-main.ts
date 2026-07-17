@@ -125,6 +125,7 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
+  attackExecutionSelectionMatchesOption,
   attackTargetIsLegal,
   effectiveWalkSpeed,
   grappleLinkForTarget,
@@ -167,7 +168,6 @@ import { grapplerSupportProfileRefForCombatant } from "./grappler-support-profil
 
 import {
   attackCanCarryKnockOutChoice,
-  attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   eligibleAttackDamageDieFloorUnitIds,
@@ -554,13 +554,12 @@ function grappleFactsForUnarmedStrikeHit(input: {
   ) {
     return input.targetSpatialFacts;
   }
-  const attackName = attackActionOptionName(input.attack);
   return input.targetSpatialFacts.some(
     (fact) =>
       fact.kind === "attackTargetInMeleeReach" &&
       fact.actorId === input.attackerId &&
       fact.targetId === input.targetId &&
-      fact.attackName === attackName,
+      attackExecutionSelectionMatchesOption(fact, input.attack),
   )
     ? [
         ...input.targetSpatialFacts,

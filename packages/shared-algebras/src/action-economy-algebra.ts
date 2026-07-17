@@ -13,7 +13,10 @@ import {
   STANDARD_ACTION_KINDS,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
-import type { CreatureId } from "@dnd/shared/types";
+import type {
+  BattleProcedureExecutionRef,
+  CreatureId,
+} from "@dnd/shared/types";
 
 const STANDARD_ACTION_KIND_SET: ReadonlySet<string> = new Set(
   STANDARD_ACTION_KINDS,
@@ -39,10 +42,7 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "statBlockMultiattack";
       readonly sourceOwnerId: CreatureId;
-      readonly attackPart: {
-        readonly section: "actions";
-        readonly name: string;
-      };
+      readonly attackProcedureRef: BattleProcedureExecutionRef;
       readonly restriction: ActionRestriction;
     }
   | {

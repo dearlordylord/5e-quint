@@ -258,7 +258,7 @@ export function statBlockAttackAct(
 ): AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
 } {
-  const act = discoverBattleActs(state).find(
+  const matchingActs = discoverBattleActs(state).filter(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -267,11 +267,13 @@ export function statBlockAttackAct(
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === attackName,
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === `Take the Attack action with ${attackName}.`,
   );
-  expect(act).toBeDefined();
+  expect(matchingActs).toHaveLength(1);
+  const [act] = matchingActs;
   if (act === undefined) {
-    throw new Error(`Expected ${attackName} stat block attack act.`);
+    throw new Error(`Expected one rolled ${attackName} Stat Block attack act.`);
   }
   return act;
 }
@@ -545,19 +547,20 @@ export function attackTargetFill(
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [
+      hole.attack?.targetConstraint === "rangedRange" ||
       attackName === "Shortbow"
         ? {
             kind: "attackTargetInRangedRange",
             actorId,
             targetId,
-            attackName,
+            ...(hole.attack?.selection ?? { attackName }),
             rangeBand: "normal",
           }
         : {
             kind: "attackTargetInMeleeReach",
             actorId,
             targetId,
-            attackName,
+            ...(hole.attack?.selection ?? { attackName }),
           },
       ...extraSpatialFacts,
     ],
@@ -602,10 +605,10 @@ export function movementFill(
       { readonly kind: "movement" }
     >["value"]["speedKind"];
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
     readonly jumpMovementReplacement?: Extract<
       BattleFill,
       { readonly kind: "movement" }

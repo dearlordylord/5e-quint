@@ -343,12 +343,12 @@ describe("battle runtime: Concentration and readied spells", () => {
     }
     const target = attackInitialTargetHole(
       goblinTurn.state,
-      goblinAttackSubject("Scimitar"),
+      goblinAttackSubject(goblinTurn.state, "Scimitar"),
     );
     const roll = attackRollHoleAfterTarget(
       goblinTurn.state,
       target,
-      goblinAttackSubject("Scimitar"),
+      goblinAttackSubject(goblinTurn.state, "Scimitar"),
       wizardId,
     );
     const damage = attackDamageHoleAfterHit(
@@ -356,12 +356,12 @@ describe("battle runtime: Concentration and readied spells", () => {
       target,
       roll,
       { total: 14, naturalD20: 10 },
-      goblinAttackSubject("Scimitar"),
+      goblinAttackSubject(goblinTurn.state, "Scimitar"),
       wizardId,
     );
     const needsConcentration = resolveBattleSubject({
       state: goblinTurn.state,
-      subject: goblinAttackSubject("Scimitar"),
+      subject: goblinAttackSubject(goblinTurn.state, "Scimitar"),
       fills: [
         targetFill(target, wizardId),
         attackRollFill(roll, { total: 14, naturalD20: 10 }),
@@ -382,7 +382,7 @@ describe("battle runtime: Concentration and readied spells", () => {
 
     const failed = resolveBattleSubject({
       state: goblinTurn.state,
-      subject: goblinAttackSubject("Scimitar"),
+      subject: goblinAttackSubject(goblinTurn.state, "Scimitar"),
       fills: [
         targetFill(target, wizardId),
         attackRollFill(roll, { total: 14, naturalD20: 10 }),
@@ -438,12 +438,12 @@ describe("battle runtime: Concentration and readied spells", () => {
     );
     const target = attackInitialTargetHole(
       goblinTurn.state,
-      goblinAttackSubject("Scimitar"),
+      goblinAttackSubject(goblinTurn.state, "Scimitar"),
     );
     const roll = attackRollHoleAfterTarget(
       goblinTurn.state,
       target,
-      goblinAttackSubject("Scimitar"),
+      goblinAttackSubject(goblinTurn.state, "Scimitar"),
       wizardId,
     );
     const damage = attackDamageHoleAfterHit(
@@ -451,13 +451,13 @@ describe("battle runtime: Concentration and readied spells", () => {
       target,
       roll,
       { total: 14, naturalD20: 10 },
-      goblinAttackSubject("Scimitar"),
+      goblinAttackSubject(goblinTurn.state, "Scimitar"),
       wizardId,
     );
     const concentration = requireHole(
       resolveBattleSubject({
         state: goblinTurn.state,
-        subject: goblinAttackSubject("Scimitar"),
+        subject: goblinAttackSubject(goblinTurn.state, "Scimitar"),
         fills: [
           targetFill(target, wizardId),
           attackRollFill(roll, { total: 14, naturalD20: 10 }),
@@ -477,7 +477,7 @@ describe("battle runtime: Concentration and readied spells", () => {
     const maintained = requireResolved(
       resolveBattleSubject({
         state: goblinTurn.state,
-        subject: goblinAttackSubject("Scimitar"),
+        subject: goblinAttackSubject(goblinTurn.state, "Scimitar"),
         fills: [
           targetFill(target, wizardId),
           attackRollFill(roll, { total: 14, naturalD20: 10 }),
@@ -568,7 +568,7 @@ describe("battle runtime: Concentration and readied spells", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: readied.state, actorId: wizardId }),
     );
-    const subject = goblinAttackSubject("Scimitar");
+    const subject = goblinAttackSubject(goblinTurn.state, "Scimitar");
     const target = attackInitialTargetHole(goblinTurn.state, subject);
     const roll = attackRollHoleAfterTarget(
       goblinTurn.state,

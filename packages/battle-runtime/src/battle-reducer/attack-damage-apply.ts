@@ -65,11 +65,8 @@ import {
 } from "./statblock-attacks.ts";
 import { activeSelfTransformationNaturalWeaponsEffect } from "./spells-active-effects.ts";
 import { scoreModifier } from "./domain-helpers.ts";
-import {
-  statBlockAttackActionOptions,
-  statBlockAttackResourceAvailable,
-  statBlockSectionMatchesSubject,
-} from "./statblock.ts";
+import { statBlockAttackActionOptions } from "./statblock.ts";
+import { statBlockProcedureResourcesAvailable } from "../stat-block-execution.ts";
 import {
   activeDruidWildShape,
   activeDruidWildShapeEffect,
@@ -362,15 +359,20 @@ export function attackActionOptionForSubject(
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): SupportedAttackActionOption | undefined {
-  const damageNotation = subject.statBlockDamageNotation ?? "rolled";
-  return attackActionOptionsForActor(state, subject.actorId).find(
-    (attack) =>
+  return attackActionOptionsForActor(state, subject.actorId).find((attack) => {
+    if (attack.kind === "statBlockAttack") {
+      return (
+        subject.procedureRef !== undefined &&
+        attack.procedureRef === subject.procedureRef &&
+        attack.damageNotation === (subject.statBlockDamageNotation ?? "rolled")
+      );
+    }
+    return (
+      subject.procedureRef === undefined &&
       attackActionOptionName(attack) === subject.attackName &&
-      statBlockSectionMatchesSubject(attack, subject.statBlockSection) &&
-      (attack.kind === "statBlockAttack"
-        ? attack.damageNotation === damageNotation
-        : subject.statBlockDamageNotation === undefined),
-  );
+      subject.statBlockDamageNotation === undefined
+    );
+  });
 }
 
 export function attackActionOptionsForActor(
@@ -385,11 +387,10 @@ export function attackActionOptionsForActor(
     const wildShape = activeDruidWildShape(actor);
     if (wildShape !== null) {
       return [
-        ...statBlockAttackActionOptions(wildShape.form).filter((option) =>
-          statBlockAttackResourceAvailable(
-            wildShape.form.statBlock,
-            wildShape.effect.resources,
-            option,
+        ...statBlockAttackActionOptions(wildShape.admission).filter((option) =>
+          statBlockProcedureResourcesAvailable(
+            wildShape.admission.execution,
+            option.procedureRef,
           ),
         ),
         ...wildShapeWornWeaponAttackOptions(state, actor, wildShape.effect),
@@ -421,18 +422,19 @@ export function attackActionOptionsForActor(
         (resource): resource is StatBlockMultiattackActionResource =>
           isStatBlockMultiattackActionResource(resource, actorId),
       );
-    const multiattackAttackNames = multiattackResources.map(
-      (resource) => resource.attackPart.name,
+    const multiattackAttackProcedureRefs = multiattackResources.map(
+      (resource) => resource.attackProcedureRef,
     );
-    return statBlockAttackActionOptions(origin.statBlock).filter(
+    return statBlockAttackActionOptions(origin).filter(
       (option) =>
-        statBlockAttackResourceAvailable(
-          origin.statBlock.statBlock,
-          origin.resources,
-          option,
+        option.procedureRef !== undefined &&
+        statBlockProcedureResourcesAvailable(
+          origin.execution,
+          option.procedureRef,
         ) &&
-        (multiattackAttackNames.length === 0 ||
-          multiattackAttackNames.includes(option.attack.name)),
+        (multiattackAttackProcedureRefs.length === 0 ||
+          (option.procedureRef !== undefined &&
+            multiattackAttackProcedureRefs.includes(option.procedureRef))),
     );
   }
 
@@ -878,8 +880,7 @@ function weaponAttackCanUseActiveSpellOverride(
   attack: CharacterWeaponAttackActionOption,
 ): attack is SpellWeaponAttackOverrideShape {
   return (
-    attack.weapon.damage.kind === "dice" &&
-    attack.weapon.usage === "melee"
+    attack.weapon.damage.kind === "dice" && attack.weapon.usage === "melee"
   );
 }
 

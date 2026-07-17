@@ -142,6 +142,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 
 import {
+  attackExecutionSelectionsEqual,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
@@ -867,7 +868,7 @@ export function resolveBattleSubjectInternal(
   const actorId = battleSubjectActorId(input.subject);
   if (
     actorId !== currentActorId(input.state) &&
-    !isLegendaryAttackSubject(input.subject) &&
+    !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
     !isInsectPlagueAppearanceSaveSubject(input.subject) &&
     !isCloudkillAppearanceSaveSubject(input.subject)
@@ -879,7 +880,7 @@ export function resolveBattleSubjectInternal(
     );
   }
   if (
-    isLegendaryAttackSubject(input.subject) &&
+    isLegendaryAttackSubject(input.state, input.subject) &&
     !statBlockLegendaryActionWindowIsOpen(input.state, actorId)
   ) {
     return invalidResult(
@@ -992,7 +993,10 @@ export function resolveBattleSubjectInternal(
     );
   }
 
-  const standardActionKind = standardActionKindForSubject(input.subject);
+  const standardActionKind = standardActionKindForSubject(
+    input.state,
+    input.subject,
+  );
   if (
     isPresentFindFamiliarCombatant(input.state, actorId) &&
     subjectIsOrdinaryAttack(input.subject)
@@ -2769,12 +2773,13 @@ function subjectCanSpendStandardActionResource(
 }
 
 export function standardActionKindForSubject(
+  state: BattleState,
   subject: BattleSubject,
 ): StandardActionKind | null {
   if (subject.tag === "pactOfTheChainFamiliarAttack") {
     return "attack";
   }
-  if (subject.tag !== "action" || isLegendaryAttackSubject(subject)) {
+  if (subject.tag !== "action" || isLegendaryAttackSubject(state, subject)) {
     return null;
   }
   if (
@@ -2813,7 +2818,7 @@ export function consumeOrCloseLegendaryActionWindow(
       : { ...result, state: normalized, snapshot: snapshotBattle(normalized) };
   }
   const normalized = normalizeEarlyEndedOngoingFeatures(result.state);
-  const state = isLegendaryAttackSubject(subject)
+  const state = isLegendaryAttackSubject(normalized, subject)
     ? consumeLegendaryActionWindow(normalized)
     : closeLegendaryActionWindow(normalized);
   return state === result.state
@@ -4718,7 +4723,11 @@ export function sameInterruptProcedureChoice(
     choice.kind === "opportunityAttack" &&
     decisionChoice.kind === "opportunityAttack"
   ) {
-    return choice.reactorId === decisionChoice.reactorId;
+    return (
+      choice.reactorId === decisionChoice.reactorId &&
+      choice.subject.command === "opportunityAttack" &&
+      attackExecutionSelectionsEqual(choice.subject, decisionChoice.selection)
+    );
   }
   if (
     choice.kind === "retaliationAttack" &&
@@ -6102,7 +6111,8 @@ function opportunityAttackThreatsEqual(
       return (
         other !== undefined &&
         threat.reactorId === other.reactorId &&
-        threat.attackName === other.attackName
+        threat.attackName === other.attackName &&
+        threat.procedureRef === other.procedureRef
       );
     })
   );
@@ -6200,6 +6210,12 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
 
   return {
     battleId: state.battleId,
+    statBlockExecutionScopeCursors: [
+      ...state.statBlockExecutionScopeCursors,
+    ].map(([combatantId, nextScopeOrdinal]) => ({
+      combatantId,
+      nextScopeOrdinal,
+    })),
     round: state.initiative.round,
     currentActorId: currentActorId(state),
     turnOrder,
@@ -6690,7 +6706,7 @@ export function opportunityAttackReactionChoices(
       state,
       reactorId,
       moverId,
-      threat.attackName,
+      threat,
     );
     if (attack === undefined) return [];
     return [
@@ -6704,7 +6720,9 @@ export function opportunityAttackReactionChoices(
           command: "opportunityAttack" as const,
           reactorId,
           targetId: moverId,
-          attackName: attackActionOptionName(attack),
+          ...(attack.kind === "statBlockAttack"
+            ? { procedureRef: attack.procedureRef }
+            : { attackName: attackActionOptionName(attack) }),
         },
       },
     ];

@@ -308,7 +308,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
         candidate.subject.actorId === commandLegendaryActorId &&
-        candidate.subject.statBlockSection === "legendaryActions",
+        candidate.summary.includes("Tail Swipe"),
     );
     if (legendaryAct === undefined) {
       throw new Error("Expected Command Halt to leave Legendary Actions open.");
@@ -339,11 +339,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
           },
         }),
         expect.objectContaining({
-          subject: expect.objectContaining({
-            tag: "action",
-            actorId: commandLegendaryActorId,
-            statBlockSection: "legendaryActions",
-          }),
+          subject: legendaryAct.subject,
         }),
       ]),
     );

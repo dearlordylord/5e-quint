@@ -20,14 +20,6 @@ import {
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
-  CreatureNamedActionOption,
-  CreatureNamedMultiattack,
-} from "@dnd/surface/surface/types";
-import type {
-  StatBlockAttackActionOption,
-  StatBlockPartKey,
-} from "../battle-action-options.ts";
-import type {
   BattleAttackDamageDisposition,
   BattleAttackRollResult,
   BattleFill,
@@ -207,23 +199,6 @@ export const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
   "battle:reaction:modifier-roll",
 );
 export const HIDE_DC = difficultyClass(15);
-export type SupportedStatBlockBonusActionOption = {
-  readonly option: Omit<CreatureNamedActionOption, "options"> & {
-    readonly options: readonly SupportedStatBlockBonusActionStandardAction[];
-  };
-  readonly part: StatBlockPartKey;
-};
-export type SupportedStatBlockMultiattack = {
-  readonly multiattack: CreatureNamedMultiattack;
-  readonly dispatches: readonly StatBlockAttackActionOption[];
-};
-export type SupportedLiteralMultiattackDispatch =
-  CreatureNamedMultiattack["dispatches"][number] & {
-    readonly count: Extract<
-      CreatureNamedMultiattack["dispatches"][number]["count"],
-      { readonly kind: "literal" }
-    >;
-  };
 export type AttackFillSet =
   | {
       readonly tag: "ok";

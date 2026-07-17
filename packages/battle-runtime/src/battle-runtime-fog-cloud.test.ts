@@ -168,11 +168,14 @@ describe("battle runtime: Fog Cloud", () => {
   });
 
   test("Fog Cloud source zone does not impose attack-roll Disadvantage without a sight witness", () => {
-    const cast = castFogCloud("battle-fog-cloud-no-implicit-sight", battleAreaId("fog-1"));
+    const cast = castFogCloud(
+      "battle-fog-cloud-no-implicit-sight",
+      battleAreaId("fog-1"),
+    );
     const goblinTurn = requireResolved(
       endTurn({ state: cast.state, actorId: wizardId }),
     ).state;
-    const subject = goblinAttackSubject("Scimitar");
+    const subject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = attackInitialTargetHole(goblinTurn, subject);
     const roll = attackRollHoleAfterTarget(
       goblinTurn,

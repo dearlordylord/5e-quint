@@ -183,7 +183,7 @@ export function battleShapeShiftedRuntimeState(
         },
         replacementForm: {
           kind: "runtimeCreatureForm",
-          creatureSize: wildShape.form.statBlock.size,
+          creatureSize: wildShape.admission.statBlock.statBlock.size,
         },
         reversionOwner: {
           kind: "druidWildShapeActiveEffect",
@@ -260,12 +260,10 @@ function revertSpellShapeShiftRuntimeState(input: {
   };
 }
 
-export function spellShapeShiftedRuntimeState(
-  input: {
-    readonly targetCombatantId: CombatantId;
-    readonly effect: SpellShapeShiftedFormActiveEffect;
-  },
-): Extract<BattleShapeShiftedRuntimeState, { readonly kind: "shapeShifted" }> {
+export function spellShapeShiftedRuntimeState(input: {
+  readonly targetCombatantId: CombatantId;
+  readonly effect: SpellShapeShiftedFormActiveEffect;
+}): Extract<BattleShapeShiftedRuntimeState, { readonly kind: "shapeShifted" }> {
   return shapeShiftedRuntimeState({
     source: {
       kind: "spellEffect",

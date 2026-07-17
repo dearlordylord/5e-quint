@@ -66,15 +66,18 @@ const driverSchema = {
 const targetCharacterId = combatantId("attack-disposition-target");
 const componentOwner = "RuleCoreAttackDamageDispositionOwner";
 
-const initialProjection: Projection = withRuleCoreComponentRoute(componentOwner, {
-  lastScenario: "init",
-  accepted: true,
-  targetHp: 3,
-  targetUnconscious: false,
-  targetDead: false,
-  knockOutRecovery: false,
-  replayIndex: 0,
-});
+const initialProjection: Projection = withRuleCoreComponentRoute(
+  componentOwner,
+  {
+    lastScenario: "init",
+    accepted: true,
+    targetHp: 3,
+    targetUnconscious: false,
+    targetDead: false,
+    knockOutRecovery: false,
+    replayIndex: 0,
+  },
+);
 
 function createDriver() {
   return defineDriver(driverSchema, () => {
@@ -199,7 +202,7 @@ function resolveMeleeKnockOut(): Projection {
 
 function rejectRangedKnockOut(): Projection {
   const state = goblinTurnBattle({ fighterHp: 3 });
-  const subject = goblinAttackSubject("Shortbow");
+  const subject = goblinAttackSubject(state, "Shortbow");
   const targetHole = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",

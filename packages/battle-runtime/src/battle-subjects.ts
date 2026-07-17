@@ -24,6 +24,7 @@ import {
   BattleAreaId,
   BattleLineDirectionId,
   CombatantId,
+  BattleProcedureExecutionRef,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -43,7 +44,6 @@ import {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
-import { STAT_BLOCK_DAMAGE_NOTATIONS } from "./battle-action-options.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -457,25 +457,29 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     action: Schema.Literal("attack"),
     attackName: BattleSubjectTextSchema,
-    statBlockSection: Schema.optionalWith(
-      Schema.Literal(
-        "actions",
-        "bonusActions",
-        "reactions",
-        "legendaryActions",
-      ),
-      { exact: true },
-    ),
-    statBlockDamageNotation: Schema.optionalWith(
-      Schema.Literal(...STAT_BLOCK_DAMAGE_NOTATIONS),
-      { exact: true },
-    ),
+    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("attack"),
+    procedureRef: BattleProcedureExecutionRef,
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
     actorId: CombatantId,
     familiarId: CombatantId,
-    attackName: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("creatureAttack"),
@@ -512,7 +516,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("multiattack"),
-    multiattackName: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -529,46 +533,16 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("grapple"),
-    attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
-    statBlockSection: Schema.optionalWith(
-      Schema.Literal(
-        "actions",
-        "bonusActions",
-        "reactions",
-        "legendaryActions",
-      ),
-      { exact: true },
-    ),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("shove"),
-    attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
-    statBlockSection: Schema.optionalWith(
-      Schema.Literal(
-        "actions",
-        "bonusActions",
-        "reactions",
-        "legendaryActions",
-      ),
-      { exact: true },
-    ),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("escapeGrapple"),
-    attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
-    statBlockSection: Schema.optionalWith(
-      Schema.Literal(
-        "actions",
-        "bonusActions",
-        "reactions",
-        "legendaryActions",
-      ),
-      { exact: true },
-    ),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -606,7 +580,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("bonusAction"),
     actorId: CombatantId,
     action: Schema.Literal("statBlockActionOption"),
-    optionName: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
     standardAction: Schema.Literal(...STANDARD_ACTION_KINDS),
   }),
   Schema.Struct({
@@ -790,14 +764,26 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("releaseGrapple"),
     targetId: CombatantId,
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("opportunityAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-    attackName: BattleSubjectTextSchema,
-  }),
+  Schema.Union(
+    Schema.Struct({
+      tag: Schema.Literal("runtimeCommand"),
+      actorId: CombatantId,
+      command: Schema.Literal("opportunityAttack"),
+      reactorId: CombatantId,
+      targetId: CombatantId,
+      attackName: BattleSubjectTextSchema,
+      procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("runtimeCommand"),
+      actorId: CombatantId,
+      command: Schema.Literal("opportunityAttack"),
+      reactorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleProcedureExecutionRef,
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+    }),
+  ),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
@@ -1152,13 +1138,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     return JSON.stringify([subject.tag, subject.actorId, subject.action]);
   }
   if (subject.tag === "action" && subject.action === "shove") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.action,
-      subject.attackName ?? null,
-      subject.statBlockSection ?? null,
-    ]);
+    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
   }
   if (subject.tag === "bonusActionDashSpell") {
     return JSON.stringify([
@@ -1239,7 +1219,8 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.tag,
       subject.actorId,
       subject.familiarId,
-      subject.attackName,
+      subject.procedureRef,
+      subject.statBlockDamageNotation ?? "rolled",
     ]);
   }
   if (subject.tag === "creatureAttack") {
@@ -1251,9 +1232,10 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.tag,
         attack.actorId,
         attack.action,
-        attack.attackName,
-        attack.statBlockSection ?? null,
-        attack.statBlockDamageNotation ?? "rolled",
+        "procedureRef" in attack ? attack.procedureRef : attack.attackName,
+        "statBlockDamageNotation" in attack
+          ? (attack.statBlockDamageNotation ?? "rolled")
+          : null,
       ]),
     ),
     Match.when({ tag: "action", action: "dash" }, (action) =>
@@ -1281,7 +1263,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         action.tag,
         action.actorId,
         action.action,
-        action.multiattackName,
+        action.procedureRef,
       ]),
     ),
     Match.when({ tag: "action", action: "ready" }, (action) =>
@@ -1296,22 +1278,10 @@ function battleSubjectKey(subject: BattleSubject): string {
       JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "action", action: "grapple" }, (action) =>
-      JSON.stringify([
-        action.tag,
-        action.actorId,
-        action.action,
-        action.attackName ?? null,
-        action.statBlockSection ?? null,
-      ]),
+      JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "action", action: "escapeGrapple" }, (action) =>
-      JSON.stringify([
-        action.tag,
-        action.actorId,
-        action.action,
-        action.attackName ?? null,
-        action.statBlockSection ?? null,
-      ]),
+      JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "action", action: "escapeSpellRestraint" }, (action) =>
       JSON.stringify([
@@ -1330,7 +1300,7 @@ function battleSubjectKey(subject: BattleSubject): string {
           action.tag,
           action.actorId,
           action.action,
-          action.optionName,
+          action.procedureRef,
           action.standardAction,
         ]),
     ),
@@ -1381,6 +1351,7 @@ function battleSubjectKey(subject: BattleSubject): string {
           ? spellInvocationRefKey(command.invocation)
           : null,
         "attackName" in command ? command.attackName : null,
+        "procedureRef" in command ? command.procedureRef : null,
         "sourceCombatantId" in command ? command.sourceCombatantId : null,
         "sourceSpellId" in command ? command.sourceSpellId : null,
         "condition" in command ? command.condition : null,

@@ -766,7 +766,7 @@ describe("battle runtime: class action features", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: raging.state, actorId: fighterId }),
     ).state;
-    const scimitar = goblinAttackSubject("Scimitar");
+    const scimitar = goblinAttackSubject(goblinTurn, "Scimitar");
     const barbarianTarget = attackInitialTargetHole(goblinTurn, scimitar);
     const goblinRoll = attackRollHoleAfterTarget(
       goblinTurn,
@@ -1946,7 +1946,7 @@ describe("battle runtime: class action features", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: reckless.state, actorId: fighterId }),
     ).state;
-    const scimitar = goblinAttackSubject("Scimitar");
+    const scimitar = goblinAttackSubject(goblinTurn, "Scimitar");
     const barbarianTarget = attackInitialTargetHole(goblinTurn, scimitar);
     const incomingRoll = attackRollHoleAfterTarget(
       goblinTurn,

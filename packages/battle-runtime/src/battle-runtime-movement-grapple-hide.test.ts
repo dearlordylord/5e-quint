@@ -11,6 +11,7 @@ import {
   fighterVsGoblinBattle,
   fighterGrapplesGoblin,
   fighterAttackSubject,
+  goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   requireHole,
@@ -286,10 +287,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const fighterRoundTwo = requireResolved(
       endTurn({ state: goblinTurn, actorId: goblinId }),
     ).state;
-    const beforePunch =
-      fighterRoundTwo.combatants
-        .get(fighterId)
-        ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+    const beforePunch = fighterRoundTwo.combatants
+      .get(fighterId)
+      ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
     if (beforePunch?.kind !== "roundExtended") {
       throw new Error("Expected Rage to be active before Punch and Grab.");
     }
@@ -339,10 +339,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     );
 
-    const afterPunch =
-      result.state.combatants
-        .get(fighterId)
-        ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+    const afterPunch = result.state.combatants
+      .get(fighterId)
+      ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
     if (afterPunch?.kind !== "roundExtended") {
       throw new Error("Expected Rage to remain active after Punch and Grab.");
     }
@@ -542,9 +541,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const secondBlockerPositionId = battleTablePositionId(
       "large-blocker-back-space",
     );
-    const destinationPositionId = battleTablePositionId(
-      "beyond-large-blocker",
-    );
+    const destinationPositionId = battleTablePositionId("beyond-large-blocker");
     const state = startBattleRight({
       battleId: battleId("battle-halfling-nimbleness-route-derived-movement"),
       combatants: [
@@ -1159,13 +1156,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-      statBlockSection: "actions",
-    };
+    const attackSubject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({
         state: goblinTurn,
@@ -2177,7 +2168,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       command: "move",
     };
     const moveHole = requireHole(
-      resolveBattleSubject({ state: enlarged, subject: moveSubject, fills: [] }),
+      resolveBattleSubject({
+        state: enlarged,
+        subject: moveSubject,
+        fills: [],
+      }),
       "movement",
     );
     const grappleDrag = {
@@ -2245,13 +2240,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: grappled, actorId: fighterId }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-      statBlockSection: "actions",
-    };
+    const subject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
       "targetChoice",
@@ -2352,13 +2341,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: blindedDodger, actorId: fighterId }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-      statBlockSection: "actions",
-    };
+    const subject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
       "targetChoice",

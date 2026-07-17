@@ -123,7 +123,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         }),
       ],
     });
-    const subject = goblinAttackSubject("Shortbow");
+    const subject = goblinAttackSubject(state, "Shortbow");
     const target = attackInitialTargetHole(state, subject);
     const attackRoll = attackRollHoleAfterTarget(
       state,
@@ -278,12 +278,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       level: 5,
       unitId: "rogue_uncanny_dodge",
     });
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-    };
+    const subject = goblinAttackSubject(state, "Scimitar");
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackDamage",
       eligibleResponders: [fighterId],
@@ -396,7 +391,6 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       actorId: goblinId,
       action: "attack",
       attackName: "Scimitar",
-      statBlockSection: "actions",
     };
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackDamage",
@@ -504,15 +498,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       unitId: "rogue_uncanny_dodge",
       damageRoll: 6,
     });
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-    };
     if (afterReaction.tag !== "needsHoles") {
       throw new Error("Expected post-reaction Concentration save.");
     }
+    const subject = goblinAttackSubject(afterReaction.state, "Scimitar");
     expect(afterReaction.snapshot.pendingInterrupt).toBeNull();
     const concentration = findHole(
       afterReaction.holes,

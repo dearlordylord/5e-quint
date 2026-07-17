@@ -4,7 +4,9 @@ export {
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
+  BattleProcedureExecutionRef,
   BattleReplayStackDepth,
+  BattleResourcePoolExecutionRef,
   BattleTablePositionId,
   CombatantId,
   SpellId,
@@ -26,6 +28,21 @@ export {
   type CharacterId,
   type InitiativeScore,
 } from "./identity.ts";
+export type {
+  StatBlockExecutionAdmission,
+  StatBlockExecutionRestoreIssue,
+  StatBlockExecutionRestoration,
+  StatBlockExecutionSnapshot,
+  StatBlockExecutionState,
+  StatBlockProcedureBinding,
+  StatBlockProcedureBindingSnapshot,
+  StatBlockResourcePoolState,
+} from "./stat-block-execution.ts";
+export {
+  restoreStatBlockExecutionAdmission,
+  restoreStatBlockExecutionAdmissions,
+  statBlockExecutionSnapshot,
+} from "./stat-block-execution.ts";
 export type {
   CharacterZeroHpLifecycleInit,
   ZeroHpLifecycle,
@@ -150,6 +167,7 @@ export {
   type FindFamiliarWithin100FeetFact,
 } from "./find-familiar-telepathy.ts";
 export { type PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
+export { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 export {
   combatantPerceptionCommunicationProjection,
   type BattleCharacterSpeechProjection,
@@ -199,13 +217,6 @@ export type {
   CharacterWeaponAttackActionOption,
   CharacterWeaponAttackDamageTypeChoices,
   StatBlockAttackActionOption,
-  StatBlockDailyUseState,
-  StatBlockLegendaryActionResourceSnapshot,
-  StatBlockLimitedUseSnapshot,
-  StatBlockMutableResourceState,
-  StatBlockPartKey,
-  StatBlockPartSection,
-  StatBlockResourceSnapshot,
   SupportedAttackActionOption,
   SupportedCreatureNamedAttackRoll,
   UnarmedStrikeDamageEffect,
@@ -246,6 +257,7 @@ export {
   BattleObjectIgnitionOutcomeSchema,
   BattleShovePushOutcomeSchema,
   BattleSnapshotSchema,
+  StatBlockExecutionSnapshotSchema,
   addBattleCombatant,
   applyInitiativeSwap,
   finishInitialInitiativeSetup,
@@ -410,6 +422,7 @@ export {
   type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
+  type BattleAttackExecutionSelection,
   type BattleThaumaturgyActiveOneMinuteEffectCountHole,
   type BattleTrackedOngoingSpellLightEmitter,
   type BattleTurnResources,

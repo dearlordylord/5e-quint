@@ -257,7 +257,7 @@ describe("manual MCP battle surface coverage", () => {
         "battle:attack:target",
         "goblin",
         "fighter",
-        "Scimitar",
+        goblinAttack.subject,
       ),
     });
     expect(afterGoblinTarget.result).toMatchObject({
@@ -466,7 +466,7 @@ describe("manual MCP battle surface coverage", () => {
         "battle:attack:target",
         "goblin",
         "fighter",
-        "Scimitar",
+        goblinAttack.subject,
       ),
     });
     const attackRoll = requireHole(afterTarget.result.holes, "attackRoll");
@@ -566,7 +566,7 @@ describe("manual MCP battle surface coverage", () => {
             kind: "attackTargetInMeleeReach",
             actorId: "goblin",
             targetId: "fighter",
-            attackName: "Scimitar",
+            procedureRef: goblinAttack.subject.procedureRef,
           },
           {
             kind: "reactionSpellDamagerVisibleWithinRange",
@@ -1241,13 +1241,19 @@ function spellcasting(
 
 function requireAct(root: Root, label: string, attackName?: string): Json {
   const discovered = call(root, "discover_battle_acts", {});
-  const act = discovered.snapshot.acts.find(
+  const matchingActs = discovered.snapshot.acts.filter(
     (candidate: Json) =>
       candidate.label === label &&
       (attackName === undefined ||
-        candidate.subject?.attackName === attackName),
+        (candidate.subject?.statBlockDamageNotation === undefined &&
+          (candidate.subject?.attackName === attackName ||
+            candidate.summary ===
+              `Take the Attack action with ${attackName}.`))),
   );
-  if (act === undefined) throw new Error(`Expected MCP battle act: ${label}`);
+  const [act] = matchingActs;
+  if (matchingActs.length !== 1 || act === undefined) {
+    throw new Error(`Expected one MCP battle act: ${label}`);
+  }
   return act;
 }
 
@@ -1270,16 +1276,22 @@ function attackTargetFill(
   holeId: string,
   actorId: string,
   targetId: string,
-  attackName: string,
+  attack: string | Json,
   cleaveSecondTargetId?: string,
   cleaveTargetFact?: { readonly firstTargetId: string },
 ) {
+  const selection =
+    typeof attack === "string"
+      ? { attackName: attack }
+      : attack.procedureRef === undefined
+        ? { attackName: attack.attackName }
+        : { procedureRef: attack.procedureRef };
   return {
     kind: "targetChoice",
     holeId,
     value: targetId,
     spatialFacts: [
-      { kind: "attackTargetInMeleeReach", actorId, targetId, attackName },
+      { kind: "attackTargetInMeleeReach", actorId, targetId, ...selection },
       ...(cleaveSecondTargetId === undefined
         ? []
         : [

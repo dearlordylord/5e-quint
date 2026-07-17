@@ -43,6 +43,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleActiveEffect,
+  type BattleAttackExecutionSelection,
   type BattleCreatureInit,
   type BattleReducerRouteEvent,
   type BattleCreatureState,
@@ -169,7 +170,14 @@ type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 type StatBlockAttackAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "action";
+      readonly action: "attack";
+      readonly procedureRef: unknown;
+    }
+  >;
 };
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
@@ -561,14 +569,18 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
   );
   const attack = statBlockAttackAct(allyTurn, casterAllyId, "Scimitar");
   const targetHole = requireResultHole(
-    resolveBattleSubject({ state: allyTurn, subject: attack.subject, fills: [] }),
+    resolveBattleSubject({
+      state: allyTurn,
+      subject: attack.subject,
+      fills: [],
+    }),
     "targetChoice",
   );
   const targetFill = attackTargetFill(
     targetHole,
     casterAllyId,
     beastTargetId,
-    "Scimitar",
+    attack.subject,
   );
   const awaitingAttack = resolveBattleSubject({
     state: allyTurn,
@@ -618,10 +630,15 @@ function publicProtectionFromEvilAndGoodResolvedRoute(): readonly ReducerRouteEv
 
 function publicProtectionFromEvilAndGoodAttackRollModeRoute(): readonly ReducerRouteEvent[] {
   const protectedState = resolveProtectionFromEvilAndGoodWalk().resolved.state;
-  const undeadTurn = protectionFromEvilAndGoodUndeadAttackerTurn(protectedState);
+  const undeadTurn =
+    protectionFromEvilAndGoodUndeadAttackerTurn(protectedState);
   const attack = statBlockAttackAct(undeadTurn, undeadAttackerId, "Scimitar");
   const targetHole = requireResultHole(
-    resolveBattleSubject({ state: undeadTurn, subject: attack.subject, fills: [] }),
+    resolveBattleSubject({
+      state: undeadTurn,
+      subject: attack.subject,
+      fills: [],
+    }),
     "targetChoice",
   );
   const awaitingAttack = resolveBattleSubject({
@@ -632,7 +649,7 @@ function publicProtectionFromEvilAndGoodAttackRollModeRoute(): readonly ReducerR
         targetHole,
         undeadAttackerId,
         protectedTargetId,
-        "Scimitar",
+        attack.subject,
       ),
     ],
   });
@@ -723,8 +740,14 @@ function publicProtectionFromEvilAndGoodRelevantSaveRoute(): readonly ReducerRou
 
 type AnimalFriendshipFailedSaveWalk = {
   readonly act: ActionSpellAct;
-  readonly awaitingSave: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>;
-  readonly resolved: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+  readonly awaitingSave: Extract<
+    BattleResolutionResult,
+    { readonly tag: "needsHoles" }
+  >;
+  readonly resolved: Extract<
+    BattleResolutionResult,
+    { readonly tag: "resolved" }
+  >;
 };
 
 function resolveAnimalFriendshipFailedSaveWalk(
@@ -759,7 +782,10 @@ function resolveAnimalFriendshipFailedSaveWalk(
 
 type ProtectionFromEvilAndGoodWalk = {
   readonly act: ActionSpellAct;
-  readonly resolved: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+  readonly resolved: Extract<
+    BattleResolutionResult,
+    { readonly tag: "resolved" }
+  >;
 };
 
 function resolveProtectionFromEvilAndGoodWalk(): ProtectionFromEvilAndGoodWalk {
@@ -791,7 +817,10 @@ function protectionRelevantCharmSaveSubject(
   >,
 ): Extract<
   BattleSubject,
-  { readonly tag: "runtimeCommand"; readonly command: "protectionRelevantEffectSave" }
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "protectionRelevantEffectSave";
+  }
 > {
   return {
     tag: "runtimeCommand",
@@ -803,9 +832,9 @@ function protectionRelevantCharmSaveSubject(
   };
 }
 
-function routeEventsOf(
-  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
-): readonly ReducerRouteEvent[] {
+function routeEventsOf(source: {
+  readonly routeEvents?: readonly BattleReducerRouteEvent[];
+}): readonly ReducerRouteEvent[] {
   if (source.routeEvents === undefined || source.routeEvents.length === 0) {
     throw new Error("Expected public protection/charm route events.");
   }
@@ -1411,7 +1440,7 @@ function attackRollModeFor(
     resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [attackTargetFill(targetHole, actorId, targetId, attackName)],
+      fills: [attackTargetFill(targetHole, actorId, targetId, act.subject)],
     }),
     "attackRoll",
   );
@@ -1423,16 +1452,20 @@ function statBlockAttackAct(
   actorId: CombatantId,
   attackName: string,
 ): StatBlockAttackAct {
-  const act = discoverBattleActs(state).find(
+  const matchingActs = discoverBattleActs(state).filter(
     (candidate): candidate is StatBlockAttackAct =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === attackName,
+      candidate.subject.procedureRef !== undefined &&
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === `Take the Attack action with ${attackName}.`,
   );
-  if (act === undefined) {
-    throw new Error(`Expected ${attackName} stat block attack act.`);
+  if (matchingActs.length !== 1) {
+    throw new Error(`Expected one rolled ${attackName} stat block attack act.`);
   }
+  const act = matchingActs[0];
+  if (act === undefined) throw new Error("Expected one matching attack act.");
   return act;
 }
 
@@ -1553,7 +1586,7 @@ function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
+  selection: BattleAttackExecutionSelection,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -1564,7 +1597,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName,
+        ...selection,
       },
     ],
   };

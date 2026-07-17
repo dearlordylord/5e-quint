@@ -15,6 +15,7 @@ import {
   type BattleRolledDiceFill,
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
+import { attackExecutionSelectionsEqual } from "./movement-speed.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   isSourceDamageRollPenaltyRollFill,
@@ -844,7 +845,7 @@ export function validateUniqueAttackTargetRangeFacts(
         (previous) =>
           previous.actorId === fact.actorId &&
           previous.targetId === fact.targetId &&
-          previous.attackName === fact.attackName,
+          attackExecutionSelectionsEqual(previous, fact),
       ),
   );
   if (duplicate === undefined) {

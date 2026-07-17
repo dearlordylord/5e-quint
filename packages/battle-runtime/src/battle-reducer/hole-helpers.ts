@@ -92,6 +92,8 @@ import {
   representedMovementSpeedKinds,
   shoveForTarget,
 } from "./movement-speed.ts";
+import { attackActionOptionName } from "./statblock-attacks.ts";
+import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
@@ -665,6 +667,14 @@ export function attackTargetHole(
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
     label: "Attack target",
     requiresTableSpatialFact: true,
+    attack: {
+      actorId,
+      selection:
+        attack.kind === "statBlockAttack"
+          ? { procedureRef: attack.procedureRef }
+          : { attackName: attackActionOptionName(attack) },
+      targetConstraint: attackTargetConstraint(attack).kind,
+    },
     choices: attackTargetChoices(state, actorId, attack),
   };
 }

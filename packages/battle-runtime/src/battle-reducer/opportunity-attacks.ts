@@ -79,12 +79,12 @@ import {
   attackKindForDeflectRedirect,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
+  attackExecutionSelectionMatchesOption,
 } from "./movement-speed.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   eligibleAttackDamageDieFloorUnitIds,
@@ -137,7 +137,7 @@ export function resolveOpportunityAttackCommand(
           input.state,
           subject.reactorId,
           subject.targetId,
-          subject.attackName,
+          subject,
         );
   if (target === undefined || attack === undefined) {
     return invalidResult(
@@ -146,7 +146,10 @@ export function resolveOpportunityAttackCommand(
       `${commandLabel} attack is no longer available.`,
     );
   }
-  if (attackActionOptionName(attack) !== subject.attackName) {
+  if (
+    subject.command === "opportunityAttack" &&
+    !attackExecutionSelectionMatchesOption(subject, attack)
+  ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",

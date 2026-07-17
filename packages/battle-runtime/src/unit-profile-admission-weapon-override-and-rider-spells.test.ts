@@ -357,7 +357,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
         (candidate) =>
           candidate.subject.tag === "action" &&
           candidate.subject.action === "attack" &&
-          candidate.subject.attackName.startsWith("Quarterstaff ("),
+          candidate.subject.attackName?.startsWith("Quarterstaff (") === true,
       ),
     ).toBe(false);
   });

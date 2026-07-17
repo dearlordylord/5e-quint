@@ -56,6 +56,7 @@ import {
   initiativeScore,
   reappearTemporarilyDismissedFindFamiliar,
   resolveBattleSubject,
+  sameBattleSubject,
   shareFindFamiliarSenses,
   startBattle,
   temporarilyDismissFindFamiliar,
@@ -77,6 +78,7 @@ import {
   partySide,
   statBlockCatalog,
 } from "./unit-profile-admission-catalog-support.ts";
+import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
 type FamiliarStatus = (typeof FAMILIAR_STATUSES)[number];
@@ -610,7 +612,7 @@ function resolvePactFamiliarAttack(
 ): FindFamiliarCompanionRuntimeState {
   const result = resolveBattleSubject({
     state: state.battle,
-    subject: pactScratchSubject(),
+    subject: pactScratchSubject(state.battle),
     fills: pactScratchFilledAttackFills(state.battle),
   });
   return { battle: requireResolved(result), lastResult: "pactAttack" };
@@ -757,6 +759,7 @@ function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
 function pactFamiliarAttackAct(state: BattleState): AvailableBattleAct & {
   readonly subject: PactOfTheChainFamiliarAttackSubject;
 } {
+  const subject = pactScratchSubject(state);
   const act = discoverBattleActs(state).find(
     (
       candidate,
@@ -764,7 +767,7 @@ function pactFamiliarAttackAct(state: BattleState): AvailableBattleAct & {
       readonly subject: PactOfTheChainFamiliarAttackSubject;
     } =>
       candidate.subject.tag === "pactOfTheChainFamiliarAttack" &&
-      candidate.subject.attackName === "Scratch",
+      sameBattleSubject(candidate.subject, subject),
   );
   if (act === undefined) {
     throw new Error("Expected Pact familiar Scratch attack act.");
@@ -830,19 +833,32 @@ function healingRollFill(
   };
 }
 
-function pactScratchSubject(): PactOfTheChainFamiliarAttackSubject {
+function pactScratchSubject(
+  state: BattleState,
+): PactOfTheChainFamiliarAttackSubject {
+  const familiar = state.combatants.get(familiarId);
+  if (familiar?.origin.kind !== "statBlock") {
+    throw new Error("Expected the committed familiar Stat Block admission.");
+  }
+  const procedureRef = statBlockProcedurePresentations(familiar.origin).find(
+    (presentation) =>
+      presentation.kind === "attack" && presentation.name === "Scratch",
+  )?.procedureRef;
+  if (procedureRef === undefined) {
+    throw new Error("Expected admitted Scratch procedure.");
+  }
   return {
     tag: "pactOfTheChainFamiliarAttack",
     actorId: casterId,
     familiarId,
-    attackName: "Scratch",
+    procedureRef,
   };
 }
 
 function pactScratchFilledAttackFills(
   state: BattleState,
 ): readonly BattleFill[] {
-  const subject = pactScratchSubject();
+  const subject = pactScratchSubject(state);
   const awaitingTarget = resolveBattleSubject({ state, subject, fills: [] });
   if (awaitingTarget.tag !== "needsHoles") {
     throw new Error("Expected Pact familiar attack target hole.");
@@ -879,6 +895,9 @@ function pactScratchFilledAttackFills(
 function familiarAttackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected familiar attack target context.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -888,7 +907,7 @@ function familiarAttackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: familiarId,
         targetId,
-        attackName: "Scratch",
+        ...hole.attack.selection,
       },
     ],
   };
