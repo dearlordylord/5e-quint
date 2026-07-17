@@ -31,44 +31,46 @@ module battleRuntimeHeldWeaponActiveEffectRouteMbt {
     routeStartBattle(BattleActionEconomyOwner)
 
   pure def routeHeldWeaponWithResolve(
-    holes: Set[BattleHoleFamilyKind],
-    discoverOwner: ReducerRouteOwnerGroup,
     fill: BattleFillKind,
     nextHoles: Set[BattleHoleFamilyKind],
     resolveOwner: ReducerRouteOwnerGroup,
   ): List[ReducerRouteEvent] =
     List(
       startRoute,
-      routeDiscoverBattleActs(
-        HeldWeaponActiveEffectRouteSubject,
-        holes,
-        discoverOwner,
-      ),
       routeResolveBattleSubject(
         HeldWeaponActiveEffectRouteSubject,
         fill,
         nextHoles,
         resolveOwner,
       ),
+      routeDiscoverBattleActs(
+        HeldWeaponActiveEffectRouteSubject,
+        nextHoles,
+        BattleActiveEffectOwner,
+      ),
     )
 
   pure def routeHeldWeaponWithoutFill(
-    holes: Set[BattleHoleFamilyKind],
-    discoverOwner: ReducerRouteOwnerGroup,
     nextHoles: Set[BattleHoleFamilyKind],
     resolveOwner: ReducerRouteOwnerGroup,
   ): List[ReducerRouteEvent] =
     List(
       startRoute,
-      routeDiscoverBattleActs(
-        HeldWeaponActiveEffectRouteSubject,
-        holes,
-        discoverOwner,
-      ),
       routeResolveBattleSubjectWithoutFill(
         HeldWeaponActiveEffectRouteSubject,
         nextHoles,
         resolveOwner,
+      ),
+    )
+
+  pure def routeFinalHeldWeaponDamage: List[ReducerRouteEvent] =
+    List(
+      startRoute,
+      routeResolveBattleSubject(
+        HeldWeaponActiveEffectRouteSubject,
+        RolledDiceFillKind,
+        Set(),
+        BattleHitPointOwner,
       ),
     )
 
@@ -88,8 +90,6 @@ module battleRuntimeHeldWeaponActiveEffectRouteMbt {
       HeldWeaponActiveEffectRouteSurface,
       routeHeldWeaponWithoutFill(
         Set(),
-        BattleActionEconomyOwner,
-        Set(),
         BattleActiveEffectOwner,
       ),
     ),
@@ -100,8 +100,6 @@ module battleRuntimeHeldWeaponActiveEffectRouteMbt {
     recordSurface(
       HeldWeaponAttackRollRouteSurface,
       routeHeldWeaponWithResolve(
-        Set(AttackRollHoleKind),
-        BattleActiveEffectOwner,
         AttackRollFillKind,
         Set(RolledDiceHoleKind),
         BattleAttackRollOwner,
@@ -113,13 +111,7 @@ module battleRuntimeHeldWeaponActiveEffectRouteMbt {
     qSurface == HeldWeaponAttackRollRouteSurface,
     recordSurface(
       HeldWeaponDamageRouteSurface,
-      routeHeldWeaponWithResolve(
-        Set(RolledDiceHoleKind),
-        BattleActiveEffectOwner,
-        RolledDiceFillKind,
-        Set(),
-        BattleHitPointOwner,
-      ),
+      routeFinalHeldWeaponDamage,
     ),
   }
 
