@@ -1,3 +1,4 @@
+import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { abilityScore } from "@dnd/shared/types";
@@ -11,6 +12,7 @@ import {
   creationChoiceOptionId,
   creationFillFact,
   creationFillIndex,
+  creationFinalizationFact,
   creationFrontierFact,
   creationHoleId,
   decodeCharacterBuildFact,
@@ -20,11 +22,22 @@ import {
   draftRevision,
   exactChoiceCardinality,
   type CharacterBuild,
+  type CharacterCreationBatchFact,
   type CreationBatchFillResult,
   type CreationHole,
 } from "./index.ts";
 
-function syntheticChoiceHole(): CreationHole {
+function projectedBatchFact(
+  result: CreationBatchFillResult,
+): CharacterCreationBatchFact {
+  const projection = characterCreationBatchFact(result);
+  if (Either.isLeft(projection)) {
+    throw new Error("Expected the synthetic owner result to project.");
+  }
+  return projection.right;
+}
+
+function syntheticChoiceHole(): Extract<CreationHole, { kind: "choice" }> {
   const cardinality = exactChoiceCardinality(1);
   if (cardinality === undefined) {
     throw new Error("Expected the literal positive cardinality to parse.");
@@ -138,7 +151,7 @@ describe("Character Creation owner facts", () => {
       finalization: { tag: "incomplete", holes: [hole] },
     };
 
-    const fact = characterCreationBatchFact(result);
+    const fact = projectedBatchFact(result);
 
     expect(fact).toEqual({
       tag: "rejected",
@@ -153,11 +166,123 @@ describe("Character Creation owner facts", () => {
       ],
       finalization: {
         tag: "incomplete",
-        frontier: creationFrontierFact([hole]),
+        blockingHoleIds: ["cc:draft:draft.background"],
       },
     });
     expect(fact).not.toHaveProperty("draft");
     expect(decodeCharacterCreationBatchFact(fact)._tag).toBe("Right");
+    expect(
+      decodeCharacterCreationBatchFact({
+        ...fact,
+        finalization: {
+          tag: "incomplete",
+          blockingHoleIds: ["cc:draft:draft.species"],
+        },
+      })._tag,
+    ).toBe("Left");
+    expect(
+      decodeCharacterCreationBatchFact({
+        ...fact,
+        finalization: {
+          tag: "incomplete",
+          blockingHoleIds: [
+            "cc:draft:draft.background",
+            "cc:draft:draft.background",
+          ],
+        },
+      })._tag,
+    ).toBe("Left");
+  });
+
+  test("requires finalization blocker identity to follow frontier order", () => {
+    const backgroundHole = syntheticChoiceHole();
+    const speciesHoleTemplate = syntheticChoiceHole();
+    const speciesHole: CreationHole = {
+      ...speciesHoleTemplate,
+      holeId: creationHoleId("cc:draft:draft.species"),
+      source: { tag: "draft", path: "draft.species" },
+    };
+    const result: CreationBatchFillResult = {
+      tag: "accepted",
+      draft: {
+        draftId: characterDraftId("draft-private"),
+        revision: draftRevision(0),
+        selections: { choices: [] },
+      },
+      holes: [backgroundHole, speciesHole],
+      finalization: {
+        tag: "incomplete",
+        holes: [backgroundHole, speciesHole],
+      },
+    };
+    const fact = projectedBatchFact(result);
+
+    expect(decodeCharacterCreationBatchFact(fact)._tag).toBe("Right");
+    expect(
+      decodeCharacterCreationBatchFact({
+        ...fact,
+        finalization: {
+          tag: "incomplete",
+          blockingHoleIds: [
+            "cc:draft:draft.species",
+            "cc:draft:draft.background",
+          ],
+        },
+      })._tag,
+    ).toBe("Left");
+  });
+
+  test("returns a typed projection failure for inconsistent owner results", () => {
+    const frontierHole = syntheticChoiceHole();
+    const absentBlockingHole: Extract<CreationHole, { kind: "choice" }> = {
+      ...syntheticChoiceHole(),
+      holeId: creationHoleId("cc:draft:draft.species"),
+      source: { tag: "draft", path: "draft.species" },
+    };
+
+    expect(
+      characterCreationBatchFact({
+        tag: "accepted",
+        draft: {
+          draftId: characterDraftId("draft-private"),
+          revision: draftRevision(0),
+          selections: { choices: [] },
+        },
+        holes: [frontierHole],
+        finalization: { tag: "incomplete", holes: [absentBlockingHole] },
+      })._tag,
+    ).toBe("Left");
+  });
+
+  test("distinguishes finalization blockers from the fillable frontier", () => {
+    const hole = syntheticChoiceHole();
+
+    expect(
+      creationFinalizationFact({ tag: "incomplete", holes: [hole] }),
+    ).toEqual({
+      tag: "incomplete",
+      blockingHoles: creationFrontierFact([hole]).holes,
+    });
+  });
+
+  test("projects finalization rejections without duplicate codes or prose", () => {
+    expect(
+      creationFinalizationFact({
+        tag: "invalid",
+        issues: [
+          {
+            tag: "invalidChoiceOption",
+            code: "invalidChoiceOption",
+            optionId: "synthetic_option",
+            reason: "presentation reason",
+            message: "presentation message",
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      issues: [{ tag: "invalidChoiceOption", optionId: "synthetic_option" }],
+    });
   });
 
   test("projects finalized Character Build facts through the strict schema", () => {

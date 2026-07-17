@@ -1,4 +1,4 @@
-import { Match, Schema } from "effect";
+import { Either, Match, ParseResult, Schema } from "effect";
 
 import {
   ABILITIES,
@@ -451,16 +451,13 @@ export type CreationBatchRejectionFact = Schema.Schema.Type<
 export const CreationFinalizationRejectionFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("illegalFinalization"),
-    code: Schema.Literal("illegalFinalization"),
   }),
   Schema.Struct({
     tag: Schema.Literal("invalidChoiceOption"),
-    code: Schema.Literal("invalidChoiceOption"),
     optionId: Schema.String,
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedFinalization"),
-    code: Schema.Literal("unsupportedFinalization"),
   }),
 );
 export type CreationFinalizationRejectionFact = Schema.Schema.Type<
@@ -474,7 +471,7 @@ export const CreationFinalizationFactSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("incomplete"),
-    frontier: CreationFrontierFactSchema,
+    blockingHoles: Schema.NonEmptyArray(CreationHoleFactSchema),
   }),
   Schema.Struct({
     tag: Schema.Literal("invalid"),
@@ -485,18 +482,66 @@ export type CreationFinalizationFact = Schema.Schema.Type<
   typeof CreationFinalizationFactSchema
 >;
 
+const CreationBatchFinalizationFactSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("ready"),
+    build: CharacterBuildFactSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("incomplete"),
+    blockingHoleIds: Schema.NonEmptyArray(CreationHoleIdSchema),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invalid"),
+    issues: Schema.NonEmptyArray(CreationFinalizationRejectionFactSchema),
+  }),
+);
+type CreationBatchFinalizationFact = Schema.Schema.Type<
+  typeof CreationBatchFinalizationFactSchema
+>;
+
+function isOrderedBlockingHoleIdSubsequence(
+  frontier: CreationFrontierFact,
+  blockingHoleIds: NonEmptyReadonlyArray<CreationHoleIdText>,
+): boolean {
+  let frontierIndex = 0;
+  for (const blockingHoleId of blockingHoleIds) {
+    const matchingIndex = frontier.holes.findIndex(
+      (hole, index) => index >= frontierIndex && hole.holeId === blockingHoleId,
+    );
+    if (matchingIndex === -1) {
+      return false;
+    }
+    frontierIndex = matchingIndex + 1;
+  }
+  return true;
+}
+
 export const CharacterCreationBatchFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("accepted"),
     frontier: CreationFrontierFactSchema,
-    finalization: CreationFinalizationFactSchema,
+    finalization: CreationBatchFinalizationFactSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("rejected"),
     frontier: CreationFrontierFactSchema,
     issues: Schema.NonEmptyArray(CreationBatchRejectionFactSchema),
-    finalization: CreationFinalizationFactSchema,
+    finalization: CreationBatchFinalizationFactSchema,
   }),
+).pipe(
+  Schema.filter(
+    ({ frontier, finalization }) =>
+      finalization.tag !== "incomplete" ||
+      isOrderedBlockingHoleIdSubsequence(
+        frontier,
+        finalization.blockingHoleIds,
+      ),
+    {
+      message: () =>
+        "finalization blocker ids must be an ordered subsequence of the frontier",
+    },
+  ),
 );
 export type CharacterCreationBatchFact = Schema.Schema.Type<
   typeof CharacterCreationBatchFactSchema
@@ -1117,26 +1162,31 @@ function creationFinalizationRejectionFact(
 ): CreationFinalizationRejectionFact {
   return Match.value(issue).pipe(
     Match.when({ tag: "illegalFinalization" }, (illegal) => {
-      const { tag, code, message: _message, ...unprojected } = illegal;
+      const { tag, code: _code, message: _message, ...unprojected } = illegal;
       noUnprojectedFields(unprojected);
-      return { tag, code };
+      return { tag };
     }),
     Match.when({ tag: "invalidChoiceOption" }, (invalidChoice) => {
       const {
         tag,
-        code,
+        code: _code,
         optionId,
         reason: _reason,
         message: _message,
         ...unprojected
       } = invalidChoice;
       noUnprojectedFields(unprojected);
-      return { tag, code, optionId };
+      return { tag, optionId };
     }),
     Match.when({ tag: "unsupportedFinalization" }, (unsupported) => {
-      const { tag, code, message: _message, ...unprojected } = unsupported;
+      const {
+        tag,
+        code: _code,
+        message: _message,
+        ...unprojected
+      } = unsupported;
       noUnprojectedFields(unprojected);
-      return { tag, code };
+      return { tag };
     }),
     Match.exhaustive,
   );
@@ -1152,7 +1202,36 @@ export function creationFinalizationFact(
     }),
     Match.when({ tag: "incomplete" }, ({ tag, holes, ...unprojected }) => {
       noUnprojectedFields(unprojected);
-      return { tag, frontier: creationFrontierFact(holes) };
+      return { tag, blockingHoles: mapNonEmpty(holes, creationHoleFact) };
+    }),
+    Match.when({ tag: "invalid" }, ({ tag, issues, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return {
+        tag,
+        issues: mapNonEmpty(issues, creationFinalizationRejectionFact),
+      };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function creationBatchFinalizationFact(
+  result: CreationFinalizationResult,
+): CreationBatchFinalizationFact {
+  return Match.value(result).pipe(
+    Match.when({ tag: "ready" }, ({ tag, build, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, build: characterBuildFact(build) };
+    }),
+    Match.when({ tag: "incomplete" }, ({ tag, holes, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return {
+        tag,
+        blockingHoleIds: mapNonEmpty(
+          holes,
+          (hole) => creationHoleFact(hole).holeId,
+        ),
+      };
     }),
     Match.when({ tag: "invalid" }, ({ tag, issues, ...unprojected }) => {
       noUnprojectedFields(unprojected);
@@ -1167,8 +1246,8 @@ export function creationFinalizationFact(
 
 export function characterCreationBatchFact(
   result: CreationBatchFillResult,
-): CharacterCreationBatchFact {
-  return Match.value(result).pipe(
+): Either.Either<CharacterCreationBatchFact, ParseResult.ParseError> {
+  const candidate = Match.value(result).pipe(
     Match.when(
       { tag: "accepted" },
       ({ tag, holes, finalization, draft: _draft, ...unprojected }) => {
@@ -1176,7 +1255,7 @@ export function characterCreationBatchFact(
         return {
           tag,
           frontier: creationFrontierFact(holes),
-          finalization: creationFinalizationFact(finalization),
+          finalization: creationBatchFinalizationFact(finalization),
         };
       },
     ),
@@ -1188,10 +1267,11 @@ export function characterCreationBatchFact(
           tag,
           frontier: creationFrontierFact(holes),
           issues: mapNonEmpty(issues, creationBatchRejectionFact),
-          finalization: creationFinalizationFact(finalization),
+          finalization: creationBatchFinalizationFact(finalization),
         };
       },
     ),
     Match.exhaustive,
   );
+  return decodeCharacterCreationBatchFact(candidate);
 }
