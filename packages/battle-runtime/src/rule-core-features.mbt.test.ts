@@ -31,6 +31,7 @@
 // UNIT-IDENTITY-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
 // UNIT-IDENTITY-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
 import { isDeepStrictEqual } from "node:util";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -825,11 +826,16 @@ function createRuleCoreFeatureDriver(
         BattleFill,
         { readonly kind: "rolledDice" }
       >["weaponDamageDiceRollChoice"];
+      readonly attackName?:
+        | "Longsword"
+        | "Dagger"
+        | "Scimitar"
+        | "Shortbow"
+        | "Shortsword";
     }): void {
-      const subject = input.subject ?? actorAttackSubject("Longsword");
-      const attackName = subject.attackName;
-      if (attackName === undefined)
-        throw new Error("Expected weapon attack name.");
+      const attackName = input.attackName ?? "Longsword";
+      const subject =
+        input.subject ?? actorAttackSubject(input.state, attackName);
       const target = requireHole(
         resolveBattleSubject({ state: input.state, subject, fills: [] }),
         "targetChoice",
@@ -1027,7 +1033,8 @@ function createRuleCoreFeatureDriver(
         resetProjection();
         resolveActorAttack({
           state,
-          subject: actorAttackSubject("Dagger"),
+          subject: actorAttackSubject(state, "Dagger"),
+          attackName: "Dagger",
           damageRoll: 4,
           rollMode: "advantage",
           selectedAttackDamageRiderUnitIds: [
@@ -1087,7 +1094,7 @@ function createRuleCoreFeatureDriver(
       doZeroHitPointReplacement: () => {
         state = relentlessEnduranceBattle();
         resetProjection();
-        const subject = actorAttackSubject("Longsword");
+        const subject = actorAttackSubject(state, "Longsword");
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
           "targetChoice",
@@ -1246,7 +1253,7 @@ function createRuleCoreFeatureDriver(
           ],
         });
         resetProjection();
-        const subject = actorAttackSubject("Shortbow");
+        const subject = actorAttackSubject(state, "Shortbow");
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
           "targetChoice",
@@ -1421,7 +1428,7 @@ function createRuleCoreFeatureDriver(
       readonly reductionRoll?: number;
       readonly damageRoll: number;
     }): void {
-      const subject = actorAttackSubject("Shortsword", targetId);
+      const subject = actorAttackSubject(state, "Shortsword", targetId);
       const target = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
         "targetChoice",
@@ -2243,13 +2250,14 @@ function cuttingWordsResource(
 }
 
 function actorAttackSubject(
+  state: BattleState,
   attackName: "Longsword" | "Dagger" | "Scimitar" | "Shortbow" | "Shortsword",
   actor: CombatantId = actorId,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return { tag: "action", actorId: actor, action: "attack", attackName };
+  return characterAttackSubjectForTest(state, actor, attackName);
 }
 
 function unitFeatureSubject(
@@ -2655,7 +2663,7 @@ function incomingAttackAdvantage(state: BattleState): boolean {
   ) {
     return true;
   }
-  const subject = actorAttackSubject("Scimitar", targetId);
+  const subject = actorAttackSubject(state, "Scimitar", targetId);
   const target = resolveBattleSubject({ state, subject, fills: [] });
   if (target.tag !== "needsHoles") return false;
   const targetHole = target.holes.find((hole) => hole.kind === "targetChoice");

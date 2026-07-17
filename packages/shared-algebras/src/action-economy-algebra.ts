@@ -14,7 +14,7 @@ import {
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
 import type {
-  BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   CreatureId,
 } from "@dnd/shared/types";
 
@@ -42,7 +42,7 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "statBlockMultiattack";
       readonly sourceOwnerId: CreatureId;
-      readonly attackProcedureRef: BattleProcedureExecutionRef;
+      readonly attackProcedureRef: BattleStatBlockProcedureExecutionRef;
       readonly restriction: ActionRestriction;
     }
   | {

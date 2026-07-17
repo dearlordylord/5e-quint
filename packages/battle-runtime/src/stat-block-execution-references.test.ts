@@ -28,7 +28,7 @@ import {
 import {
   BattleStatBlockExecutionScopeRef,
   battleResourcePoolExecutionRef,
-  battleStatBlockExecutionScopeOrdinal,
+  battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
   battleStatBlockExecutionScopeRefIsWellFormed,
   combatantId,
@@ -61,7 +61,7 @@ function isolatedStatBlockAdmissions<TStatBlock extends StatBlockRecord>(
     isolatedExecutionBattleId,
     actorId,
     statBlocks,
-    battleStatBlockExecutionScopeOrdinal(0),
+    battleExecutionScopeOrdinal(0),
   ).admissions;
 }
 
@@ -101,7 +101,7 @@ describe("Stat Block execution references", () => {
     const canonicalScopeRef = battleStatBlockExecutionScopeRef(
       ownerBattleId,
       ownerId,
-      battleStatBlockExecutionScopeOrdinal(0),
+      battleExecutionScopeOrdinal(0),
     );
     const reorderedScopeRef = JSON.stringify({
       kind: "statBlockExecution",
@@ -206,7 +206,7 @@ describe("Stat Block execution references", () => {
       battleId: battleId("battle-stat-block-readmitted-execution-scope"),
       combatants: [actorInit, characterSeed({ initiative: 10 })],
     });
-    expect(battle.statBlockExecutionScopeCursors.has(fighterId)).toBe(false);
+    expect(battle.executionScopeCursors.has(fighterId)).toBe(true);
     const originalExecution = executionReferenceView(battle, actorId);
     const originalRef = originalExecution.procedureBindings[0]?.procedureRef;
     if (originalRef === undefined) {
@@ -223,17 +223,17 @@ describe("Stat Block execution references", () => {
       BattleSnapshotSchema,
     )(Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(removed.right)));
     const restoredScopeCursors = new Map(
-      serializedAfterRemoval.statBlockExecutionScopeCursors.map((cursor) => [
+      serializedAfterRemoval.executionScopeCursors.map((cursor) => [
         cursor.combatantId,
         cursor.nextScopeOrdinal,
       ]),
     );
     expect(restoredScopeCursors.get(actorId)).toBe(
-      removed.right.statBlockExecutionScopeCursors.get(actorId),
+      removed.right.executionScopeCursors.get(actorId),
     );
     const restoredAfterRemoval: BattleState = {
       ...removed.right,
-      statBlockExecutionScopeCursors: restoredScopeCursors,
+      executionScopeCursors: restoredScopeCursors,
     };
     const characterWithoutFormsId = combatantId(
       "execution-ref-character-without-forms",
@@ -249,10 +249,8 @@ describe("Stat Block execution references", () => {
       throw new Error("Expected a character without forms to be added.");
     }
     expect(
-      addedCharacter.right.statBlockExecutionScopeCursors.has(
-        characterWithoutFormsId,
-      ),
-    ).toBe(false);
+      addedCharacter.right.executionScopeCursors.has(characterWithoutFormsId),
+    ).toBe(true);
     const readmitted = addBattleCombatant({
       state: restoredAfterRemoval,
       combatant: actorInit,

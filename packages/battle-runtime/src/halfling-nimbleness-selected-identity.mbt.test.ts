@@ -15,6 +15,7 @@ import {
   discoverBattleActs,
   resolveBattleSubject,
   type BattleState,
+  type BattleFill,
   type BattleReducerRouteEvent,
   type BattleSubject,
 } from "./index.ts";
@@ -26,10 +27,13 @@ import {
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   characterSeed,
+  characterAttackSubjectForTest,
+  attackExecutionSelectionForSubjectForTest,
   movementFill,
   requireHole,
   startBattleRight,
 } from "./battle-runtime-test-support.ts";
+import { BattleAttackProcedureExecutionRef } from "./identity.ts";
 import * as Either from "effect/Either";
 
 type HalflingNimblenessLastResult =
@@ -106,7 +110,16 @@ it("observes selected Halfling Nimbleness qRoute through public reducer events",
         ),
       },
       provokedOpportunityAttacks: [
-        { reactorId: blockerId, attackName: "Longsword" },
+        {
+          reactorId: blockerId,
+          ...attackExecutionSelectionForSubjectForTest(
+            characterAttackSubjectForTest(
+              halflingNimblenessBattle({ selected: true }),
+              blockerId,
+              "Longsword",
+            ),
+          ),
+        },
       ],
     },
   );
@@ -148,7 +161,13 @@ it("observes selected Halfling Nimbleness qRoute through public reducer events",
         ),
       },
       provokedOpportunityAttacks: [
-        { reactorId: blockerId, attackName: "Missing Attack" },
+        {
+          reactorId: blockerId,
+          procedureRef:
+            BattleAttackProcedureExecutionRef.make("missing-attack"),
+          attackAbility: "str",
+          attackDamageType: "slashing",
+        },
       ],
     },
   );
@@ -449,10 +468,10 @@ function observeMovementRouteResult(
   state: BattleState,
   input: Parameters<typeof resolveMovement>[1] & {
     readonly movementCostFeet?: number;
-    readonly provokedOpportunityAttacks?: readonly {
-      readonly reactorId: typeof blockerId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): {
   readonly route: readonly BattleReducerRouteEvent[];

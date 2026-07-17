@@ -66,6 +66,7 @@ import {
   offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
 import { minimalCreatureAttackActs } from "./creature-attack.ts";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 
 import {
   helpAttackAllyChoices,
@@ -137,7 +138,7 @@ import {
   attackActionOptionPresentationName,
   statBlockAttackActionOptions,
   statBlockAttackProcedureSection,
-  statBlockSubjectPart,
+  attackSubjectPart,
 } from "./statblock.ts";
 import {
   statBlockBonusActionOptionBindings,
@@ -370,7 +371,7 @@ function discoverBattleActsWithoutRouteEvents(
                   tag: "action" as const,
                   actorId,
                   action: "attack" as const,
-                  ...statBlockSubjectPart(attack),
+                  ...attackSubjectPart(attack),
                 },
                 label: "Attack",
                 summary: `Take the Attack action with ${attackActionOptionPresentationName(state, actorId, attack)}.`,
@@ -606,7 +607,7 @@ function discoverBattleActsWithoutRouteEvents(
           tag: "bonusAction",
           actorId,
           action: "offHandAttack",
-          attackName: attackActionOptionName(offHand),
+          ...attackExecutionSelectionForOption(offHand),
         },
         label: "Light Property Bonus Action Attack",
         summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
@@ -627,7 +628,7 @@ function discoverBattleActsWithoutRouteEvents(
         tag: "bonusAction",
         actorId,
         action: "martialArtsUnarmedStrike",
-        attackName: attackActionOptionName(martialArtsUnarmedStrike),
+        ...attackExecutionSelectionForOption(martialArtsUnarmedStrike),
       },
       label: "Martial Arts Bonus Unarmed Strike",
       summary: "Make an Unarmed Strike as a Bonus Action.",

@@ -83,6 +83,7 @@ import {
   resolveSuccessfulAbilityCheckReactionReduction,
   type BattleAreaId,
   type BattleAttackExecutionSelection,
+  type BattleAttackProcedureExecutionRef,
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
@@ -100,6 +101,7 @@ import {
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
 } from "./index.ts";
+import type { BattleInterruptAttackExecutionSelection } from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 export { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
@@ -192,6 +194,7 @@ import spareTheDyingInput from "../../surface/content/spare_the_dying.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   AreaDirectEffectAtom,
+  DamageType,
   EffectAtom,
   SpellRecord,
   StatBlockRecord,
@@ -969,16 +972,106 @@ export function goblinTurnBattle(
 }
 
 export function fighterAttackSubject(
+  state: BattleState,
   attackName: string = "Longsword",
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
+  return characterAttackSubjectForTest(state, fighterId, attackName);
+}
+
+export function characterAttackSubjectForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  attackName: string,
+): {
+  readonly tag: "action";
+  readonly actorId: CombatantId;
+  readonly action: "attack";
+  readonly procedureRef: BattleAttackProcedureExecutionRef;
+  readonly attackAbility: import("./battle-action-options.ts").BattleAttackExecutionAbility;
+  readonly attackDamageType: DamageType;
+} {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  const attack = [actor.origin.attack, actor.origin.unarmedStrike].find(
+    (candidate) =>
+      candidate !== null && attackActionOptionName(candidate) === attackName,
+  );
+  if (attack === null || attack === undefined) {
+    throw new Error(`Expected discovered ${attackName} attack for ${actorId}.`);
+  }
   return {
     tag: "action",
-    actorId: fighterId,
+    actorId,
     action: "attack",
-    attackName,
+    procedureRef: attack.procedureRef,
+    attackAbility:
+      attack.kind === "weapon" ? attack.ability : attack.attackAbility,
+    attackDamageType:
+      attack.kind === "weapon"
+        ? attack.weapon.damage.damageType
+        : attack.effect.damage.damageType,
+  };
+}
+
+export function attackExecutionSelectionForSubjectForTest(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): BattleInterruptAttackExecutionSelection {
+  if (subject.procedureRef === undefined) {
+    throw new Error("Expected attack procedure execution reference.");
+  }
+  return subject.attackAbility === undefined ||
+    subject.attackDamageType === undefined
+    ? { procedureRef: subject.procedureRef }
+    : {
+        procedureRef: subject.procedureRef,
+        attackAbility: subject.attackAbility,
+        attackDamageType: subject.attackDamageType,
+      };
+}
+
+export function characterBonusAttackSubjectForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  action: "offHandAttack" | "martialArtsUnarmedStrike",
+  attackAbility?: import("./battle-action-options.ts").BattleAttackExecutionAbility,
+): Extract<
+  BattleSubject,
+  {
+    readonly tag: "bonusAction";
+    readonly action: "offHandAttack" | "martialArtsUnarmedStrike";
+  }
+> {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  const attack =
+    action === "offHandAttack"
+      ? actor.origin.offHandAttack
+      : actor.origin.unarmedStrike;
+  if (attack === undefined) {
+    throw new Error(`Expected admitted ${action} for ${actorId}.`);
+  }
+  return {
+    tag: "bonusAction",
+    actorId,
+    action,
+    procedureRef: attack.procedureRef,
+    attackAbility:
+      attackAbility ??
+      (attack.kind === "weapon" ? attack.ability : attack.attackAbility),
+    attackDamageType:
+      attack.kind === "weapon"
+        ? attack.weapon.damage.damageType
+        : attack.effect.damage.damageType,
   };
 }
 
@@ -989,7 +1082,7 @@ export function goblinAttackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return statBlockAttackSubjectForTest(state, attackName, "actions");
+  return statBlockAttackSubjectForTest(state, goblinId, attackName, "actions");
 }
 
 export function monsterAttackSubject(
@@ -1000,18 +1093,24 @@ export function monsterAttackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return statBlockAttackSubjectForTest(state, attackName, statBlockSection);
+  return statBlockAttackSubjectForTest(
+    state,
+    goblinId,
+    attackName,
+    statBlockSection,
+  );
 }
 
-function statBlockAttackSubjectForTest(
+export function statBlockAttackSubjectForTest(
   state: BattleState,
+  actorId: CombatantId,
   attackName: string,
   section: "actions" | "legendaryActions",
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const actor = state.combatants.get(goblinId);
+  const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "statBlock") {
     throw new Error("Expected Stat Block test actor.");
   }
@@ -1023,7 +1122,7 @@ function statBlockAttackSubjectForTest(
       candidate.procedureRef === procedureRef &&
       statBlockAttackProcedureSection(
         state,
-        goblinId,
+        actorId,
         candidate.procedureRef,
       ) === section &&
       candidate.damageNotation === "rolled",
@@ -1031,7 +1130,7 @@ function statBlockAttackSubjectForTest(
   if (option === undefined) throw new Error(`Expected ${attackName} attack.`);
   return {
     tag: "action",
-    actorId: goblinId,
+    actorId,
     action: "attack",
     procedureRef: option.procedureRef,
   };
@@ -1042,7 +1141,7 @@ export function attackInitialTargetHole(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  > = fighterAttackSubject(),
+  > = fighterAttackSubject(state),
 ): BattleHole {
   return requireHole(
     resolveBattleSubject({
@@ -1060,7 +1159,7 @@ export function attackRollHoleAfterTarget(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  > = fighterAttackSubject(),
+  > = fighterAttackSubject(state),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
     : goblinId,
@@ -1100,7 +1199,7 @@ export function attackDamageHoleAfterHit(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  > = fighterAttackSubject(),
+  > = fighterAttackSubject(state),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
     : goblinId,
@@ -1152,12 +1251,7 @@ export function criticalAttackDamageResult(
 
   return resolveBattleSubject({
     state,
-    subject: {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Longsword",
-    },
+    subject: fighterAttackSubject(state, "Longsword"),
     fills: [
       targetFill(targetHole, targetId),
       attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -1168,7 +1262,9 @@ export function criticalAttackDamageResult(
 
 export function resolveLongswordHit(
   state: BattleState,
-  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(),
+  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(
+    state,
+  ),
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
@@ -1204,7 +1300,9 @@ function resolveWeaponHit(
 
 export function resolveLongswordMiss(
   state: BattleState,
-  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(),
+  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(
+    state,
+  ),
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
@@ -1565,7 +1663,9 @@ export function attackTargetFill(
   hole: BattleHole,
   actorId: CombatantId,
   targetId: CombatantId,
-  attackName = defaultAttackNameForActor(actorId),
+  attackSelection:
+    | string
+    | BattleAttackExecutionSelection = defaultAttackNameForActor(actorId),
   extraFacts: Extract<
     BattleFill,
     { readonly kind: "targetChoice" }
@@ -1577,7 +1677,7 @@ export function attackTargetFill(
       targetId,
       hole.kind === "targetChoice" && hole.attack !== undefined
         ? hole.attack.selection
-        : attackName,
+        : attackSelection,
       hole.kind === "targetChoice" &&
         hole.attack?.targetConstraint === "rangedRange"
         ? "normal"
@@ -2220,11 +2320,15 @@ export function attackDamageDispositionHoleAfterDamage(
   targetId: CombatantId,
   damage: number,
 ): BattleHole {
-  return attackDamageDispositionHoleAfterFills(state, fighterAttackSubject(), [
-    targetFill(targetHole, targetId),
-    attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
-    damageRollFill(damageHole, damage),
-  ]);
+  return attackDamageDispositionHoleAfterFills(
+    state,
+    fighterAttackSubject(state),
+    [
+      targetFill(targetHole, targetId),
+      attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+      damageRollFill(damageHole, damage),
+    ],
+  );
 }
 
 export function attackDamageDispositionHoleAfterFills(
@@ -3550,10 +3654,15 @@ export function opportunityAttackProcedureSelectionForTest(
   ) {
     throw new Error("Expected an Opportunity Attack reaction choice.");
   }
-  const selection: BattleAttackExecutionSelection =
-    choice.subject.procedureRef === undefined
-      ? { attackName: choice.subject.attackName }
-      : { procedureRef: choice.subject.procedureRef };
+  const selection: BattleInterruptAttackExecutionSelection =
+    choice.subject.attackAbility === undefined ||
+    choice.subject.attackDamageType === undefined
+      ? { procedureRef: choice.subject.procedureRef }
+      : {
+          procedureRef: choice.subject.procedureRef,
+          attackAbility: choice.subject.attackAbility,
+          attackDamageType: choice.subject.attackDamageType,
+        };
   return {
     kind: "opportunityAttack",
     reactorId: choice.reactorId,

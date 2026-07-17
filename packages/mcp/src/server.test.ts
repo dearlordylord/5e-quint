@@ -359,20 +359,10 @@ describe("MCP server route", () => {
       currentActorId: fighterId,
     });
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+    expect(discoverBattleActs(state).map((act) => act.summary)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
-        {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Unarmed Strike",
-        },
+        "Take the Attack action with Longsword.",
+        "Take the Attack action with Unarmed Strike.",
       ]),
     );
   });
@@ -485,12 +475,9 @@ describe("MCP server route", () => {
         damageAbilityModifier: 3,
       },
     });
-    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    });
+    expect(discoverBattleActs(state).map((act) => act.summary)).toContain(
+      "Take the Attack action with Unarmed Strike.",
+    );
   });
 
   test("admits only supported authored critical-range Unit hooks at the battle support boundary", () => {
@@ -1037,14 +1024,9 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    expect(
-      discoverBattleActs(state).map((act) => act.subject),
-    ).not.toContainEqual({
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    });
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Make the Light property Bonus Action attack with Dagger.",
+    );
   });
 
   test("registers agent-facing content discovery tool names", () => {
@@ -1719,11 +1701,12 @@ describe("MCP server route", () => {
       acts: expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
+          summary: "Take the Attack action with Longsword.",
           subject: expect.objectContaining({
             tag: "action",
             actorId: "fighter",
             action: "attack",
-            attackName: "Longsword",
+            procedureRef: expect.any(String),
           }),
           initialHoles: [
             expect.objectContaining({
@@ -1759,15 +1742,19 @@ describe("MCP server route", () => {
         }),
       ]),
     });
+    const fighterAttackSubject = battleAttackSubjectForName(
+      root,
+      "fighter",
+      "Longsword",
+    );
+    const fighterAttackSelection = battleAttackSelection(
+      fighterAttackSubject,
+      "Longsword",
+    );
 
     const afterTarget = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "fighter",
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject,
         fill: {
           kind: "targetChoice",
           holeId: "battle:attack:target",
@@ -1777,7 +1764,7 @@ describe("MCP server route", () => {
               kind: "attackTargetInMeleeReach",
               actorId: "fighter",
               targetId: "goblin",
-              attackName: "Longsword",
+              ...fighterAttackSelection,
             },
           ],
         },
@@ -1788,12 +1775,9 @@ describe("MCP server route", () => {
       holes: [{ kind: "attackRoll", holeId: "battle:attack:roll" }],
     });
     expect(afterTarget.session.transientBattleFills).toMatchObject({
-      subject: {
-        tag: "action",
-        actorId: "fighter",
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: expect.objectContaining({
+        procedureRef: fighterAttackSubject.procedureRef,
+      }),
       fills: [{ kind: "targetChoice", value: "goblin" }],
     });
     expect(
@@ -1807,12 +1791,7 @@ describe("MCP server route", () => {
 
     const afterAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "fighter",
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject,
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
@@ -1834,12 +1813,7 @@ describe("MCP server route", () => {
 
     const afterDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "fighter",
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject,
         fill: {
           kind: "rolledDice",
           holeId: "battle:attack:damage-result:1d8+3-slashing",
@@ -3234,15 +3208,15 @@ describe("MCP server route", () => {
         code: "INVALID_ARGUMENTS",
       },
     });
+    const validAttackSubject = battleAttackSubjectForName(
+      root,
+      "fighter",
+      "Longsword",
+    );
     expect(
       readPayload(
         handleToolCall(root, "resolve_battle_act", {
-          subject: {
-            tag: "action",
-            actorId: "fighter",
-            action: "attack",
-            attackName: "Longsword",
-          },
+          subject: validAttackSubject,
         }),
       ),
     ).toMatchObject({
@@ -3472,11 +3446,12 @@ describe("MCP server route", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
+          summary: "Take the Attack action with Longsword.",
           subject: expect.objectContaining({
             tag: "action",
             actorId: "fighter",
             action: "attack",
-            attackName: "Longsword",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({
@@ -3531,7 +3506,10 @@ describe("MCP server route", () => {
       10,
     );
     expect(root.sessionStore.pendingBattleFills).toMatchObject({
-      subject: { actorId: "fighter", attackName: "Longsword" },
+      subject: {
+        actorId: "fighter",
+        procedureRef: expect.any(String),
+      },
       fills: [{ kind: "targetChoice", value: "goblin" }],
     });
 
@@ -6372,7 +6350,10 @@ function battleAttackSubjectForName(
   root: ReturnType<typeof createMcpCompositionRoot>,
   actorId: string,
   attackName: string,
-): BattleSubject {
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
   const matchingActs = readPayload(
     handleToolCall(root, "discover_battle_acts", {}),
   ).snapshot.acts.filter(
@@ -6384,8 +6365,7 @@ function battleAttackSubjectForName(
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.statBlockDamageNotation === undefined &&
-      (candidate.subject.attackName === attackName ||
-        candidate.summary === `Take the Attack action with ${attackName}.`),
+      candidate.summary === `Take the Attack action with ${attackName}.`,
   );
   const [act] = matchingActs;
   if (matchingActs.length !== 1 || act === undefined) {
@@ -6393,15 +6373,25 @@ function battleAttackSubjectForName(
       `Expected one rolled ${actorId} ${attackName} Attack action.`,
     );
   }
+  if (act.subject.tag !== "action" || act.subject.action !== "attack") {
+    throw new Error(`Expected ${attackName} Attack subject.`);
+  }
   return act.subject;
 }
 
 function battleAttackSelection(subject: BattleSubject, attackName: string) {
-  return subject.tag === "action" &&
-    subject.action === "attack" &&
-    subject.procedureRef !== undefined
-    ? { procedureRef: subject.procedureRef }
-    : { attackName };
+  if (subject.tag !== "action" || subject.action !== "attack") {
+    throw new Error(`Expected ${attackName} Attack subject.`);
+  }
+  return {
+    procedureRef: subject.procedureRef,
+    ...(subject.attackAbility === undefined
+      ? {}
+      : { attackAbility: subject.attackAbility }),
+    ...(subject.attackDamageType === undefined
+      ? {}
+      : { attackDamageType: subject.attackDamageType }),
+  };
 }
 
 function battleActionSubject(

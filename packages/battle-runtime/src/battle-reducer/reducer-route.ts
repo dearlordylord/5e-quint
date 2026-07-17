@@ -6624,19 +6624,17 @@ function levelOneBuffMarkSmiteResolvedOwners(
 
 function levelOneBuffMarkSmiteWeaponAttackSubject(
   state: BattleState,
-  subject: { readonly actorId: CombatantId },
+  subject: WeaponAttackResolutionSubject,
 ):
   | Extract<
       LevelOneBuffMarkSmiteSubstrateSubject,
       "heldWeaponActiveEffect" | "spellHostedWeaponAttack"
     >
   | undefined {
+  const attack = attackActionOptionForSubject(state, subject);
   if (
-    battleCombatantHasActiveEffectKind(
-      state,
-      subject.actorId,
-      "spellWeaponAttackOverride",
-    )
+    attack !== undefined &&
+    weaponAttackUsesActiveSpellOverride(state, subject.actorId, attack)
   ) {
     return "heldWeaponActiveEffect";
   }

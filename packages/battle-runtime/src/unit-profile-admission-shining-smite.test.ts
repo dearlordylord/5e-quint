@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
 import { describe, expect, test } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
   shiningSmiteUnitId,
   spellCasterId,
@@ -46,7 +47,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -205,12 +206,11 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     if (afterTargetTurn.tag !== "resolved") {
       throw new Error("Expected Shining Smite target turn to end.");
     }
-    const unarmedSubject: BattleSubject = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const unarmedSubject: BattleSubject = characterAttackSubjectForTest(
+      afterTargetTurn.state,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const unarmedTarget = requireResultHole(
       resolveBattleSubject({
         state: afterTargetTurn.state,
@@ -281,12 +281,11 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: null,
     });
-    const unarmedSubject: BattleSubject = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const unarmedSubject: BattleSubject = characterAttackSubjectForTest(
+      unarmedState,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const unarmedTarget = requireResultHole(
       resolveBattleSubject({
         state: unarmedState,
@@ -340,7 +339,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
     });
-    const rangedSubject = weaponAttackSubject("Shortbow");
+    const rangedSubject = weaponAttackSubject(rangedState, "Shortbow");
     const rangedTarget = requireResultHole(
       resolveBattleSubject({
         state: rangedState,

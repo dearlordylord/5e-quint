@@ -593,20 +593,27 @@ function targetChoiceFill(
   if (!hole.choices.includes(lifecycleCharacterCombatantId)) {
     throw new Error("Expected lifecycle character to be a target choice.");
   }
+  const spatialFact =
+    subject.attackAbility === undefined
+      ? {
+          kind: "attackTargetInMeleeReach" as const,
+          actorId: subject.actorId,
+          targetId: lifecycleCharacterCombatantId,
+          procedureRef: subject.procedureRef,
+        }
+      : {
+          kind: "attackTargetInMeleeReach" as const,
+          actorId: subject.actorId,
+          targetId: lifecycleCharacterCombatantId,
+          procedureRef: subject.procedureRef,
+          attackAbility: subject.attackAbility,
+          attackDamageType: subject.attackDamageType,
+        };
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: lifecycleCharacterCombatantId,
-    spatialFacts: [
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: subject.actorId,
-        targetId: lifecycleCharacterCombatantId,
-        ...(subject.procedureRef === undefined
-          ? { attackName: subject.attackName }
-          : { procedureRef: subject.procedureRef }),
-      },
-    ],
+    spatialFacts: [spatialFact],
   };
 }
 

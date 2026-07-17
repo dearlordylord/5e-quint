@@ -13,6 +13,7 @@
 // UNIT-IDENTITY-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
 // UNIT-IDENTITY-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
 import { isDeepStrictEqual } from "node:util";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -949,7 +950,7 @@ function createRuleCoreSpellDriver() {
           }),
           "rolledDice",
         );
-        const attackSubject = targetAttackSubject();
+        const attackSubject = targetAttackSubject(state);
         const attackTarget = requireHole(
           resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
           "targetChoice",
@@ -1487,7 +1488,10 @@ describe("rule-core Spell focused MBT", () => {
     "replays QCORE10 damage spell procedure family through battle-runtime reducers",
     async () => {
       await run({
-        spec: mbtSpecPath(import.meta.dirname, "rule-core-spell-damage.mbt.qnt"),
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-spell-damage.mbt.qnt",
+        ),
         init: "init",
         step: "step",
         driver: createRuleCoreSpellDriver(),
@@ -1781,16 +1785,13 @@ function actionSpellSubject(
   };
 }
 
-function targetAttackSubject(): Extract<
+function targetAttackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: targetId,
-    action: "attack",
-    attackName: "Unarmed Strike",
-  };
+  return characterAttackSubjectForTest(state, targetId, "Unarmed Strike");
 }
 
 function healingSpellSubject(

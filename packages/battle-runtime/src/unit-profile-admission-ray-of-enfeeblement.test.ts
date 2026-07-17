@@ -334,7 +334,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.subject.attackName === "Longsword",
+        candidate.summary === "Take the Attack action with Longsword.",
     );
     expect(attackAct).toBeDefined();
     if (attackAct === undefined) return;
@@ -490,7 +490,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.subject.attackName === "Longsword",
+        candidate.summary === "Take the Attack action with Longsword.",
     );
     expect(attackAct).toBeDefined();
     if (attackAct === undefined) return;

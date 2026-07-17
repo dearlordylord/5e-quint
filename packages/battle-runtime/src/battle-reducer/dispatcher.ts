@@ -142,7 +142,6 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 
 import {
-  attackExecutionSelectionForOption,
   attackExecutionSelectionsEqual,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
@@ -290,6 +289,7 @@ import {
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
 import { attackTargetConstraint } from "./statblock-attacks.ts";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import type {
@@ -6208,12 +6208,12 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
 
   return {
     battleId: state.battleId,
-    statBlockExecutionScopeCursors: [
-      ...state.statBlockExecutionScopeCursors,
-    ].map(([combatantId, nextScopeOrdinal]) => ({
-      combatantId,
-      nextScopeOrdinal,
-    })),
+    executionScopeCursors: [...state.executionScopeCursors].map(
+      ([combatantId, nextScopeOrdinal]) => ({
+        combatantId,
+        nextScopeOrdinal,
+      }),
+    ),
     round: state.initiative.round,
     currentActorId: currentActorId(state),
     turnOrder,

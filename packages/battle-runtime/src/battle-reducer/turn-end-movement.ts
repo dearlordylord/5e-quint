@@ -87,6 +87,7 @@ import {
   type BattleSubject,
 } from "../battle-subjects.ts";
 import { characterBattleResourceIsUseCount } from "../character-battle-resources.ts";
+import { attackExecutionSelectionKey } from "../battle-action-options.ts";
 
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 
@@ -8455,9 +8456,7 @@ function opportunityAttackThreatIdentityKey(
   reactorId: CombatantId,
   selection: BattleAttackExecutionSelection,
 ): string {
-  return "procedureRef" in selection
-    ? JSON.stringify([reactorId, "procedure", selection.procedureRef])
-    : JSON.stringify([reactorId, "authoredAttack", selection.attackName]);
+  return JSON.stringify([reactorId, attackExecutionSelectionKey(selection)]);
 }
 
 type SpikeGrowthHazardEffect = Extract<

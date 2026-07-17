@@ -22,7 +22,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
-import type { CharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
+import type {
+  BoundCharacterWeaponAttackActionOption,
+  CharacterWeaponAttackActionOption,
+} from "../../battle-action-options.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type AttackSpellDamageAddition,
@@ -184,7 +187,7 @@ function spellHostedWeaponAttacks(ctx: SpellAdmissionContext): readonly {
           {
             itemId:
               origin.selectedLoadout.weapon?.itemId ?? origin.attack.weapon.id,
-            attack: origin.attack,
+            attack: spellHostedWeaponComponentAttack(origin.attack),
           },
         ]),
     ...(origin.offHandAttack === undefined ||
@@ -203,10 +206,17 @@ function spellHostedWeaponAttacks(ctx: SpellAdmissionContext): readonly {
             itemId:
               origin.selectedLoadout.offHandWeapon?.itemId ??
               origin.offHandAttack.weapon.id,
-            attack: origin.offHandAttack,
+            attack: spellHostedWeaponComponentAttack(origin.offHandAttack),
           },
         ]),
   ].filter(({ attack }) => attack.weapon.costGp >= 0.01);
+}
+
+function spellHostedWeaponComponentAttack(
+  attack: BoundCharacterWeaponAttackActionOption,
+): CharacterWeaponAttackActionOption {
+  const { procedureRef: _procedureRef, ...componentAttack } = attack;
+  return componentAttack;
 }
 
 const byKind = Match.discriminator("kind");

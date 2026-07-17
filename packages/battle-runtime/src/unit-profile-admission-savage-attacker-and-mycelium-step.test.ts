@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 import { describe, expect, test } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
   rogueSneakAttackUnitId,
   savageAttackerUnitId,
@@ -35,7 +36,6 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleState,
-  BattleSubject,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
 
@@ -71,7 +71,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
     const state = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -135,7 +135,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
     const state = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -206,7 +206,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       ],
       unitFeatures: [{ unit: unitLibrary.requireUnit(rogueSneakAttackUnitId) }],
     });
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -290,7 +290,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
     const weaponState = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(weaponState, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: weaponState, subject, fills: [] }),
       "targetChoice",
@@ -337,12 +337,11 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
 
     const unarmedState = savageAttackerBattle({ attack: null });
-    const unarmedSubject = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    } as const satisfies Extract<BattleSubject, { readonly tag: "action" }>;
+    const unarmedSubject = characterAttackSubjectForTest(
+      unarmedState,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const unarmedTarget = requireResultHole(
       resolveBattleSubject({
         state: unarmedState,
@@ -402,7 +401,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         ],
       },
     };
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

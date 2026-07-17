@@ -14,6 +14,7 @@
 // - UBIQUITOUS_LANGUAGE.md: Mastery Property, Weapon Mastery, Attack Roll,
 //   Saving Throw, Condition, Rider, and Hit Points.
 import { it } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import {
   defineDriver,
@@ -517,7 +518,7 @@ function initialWeaponMasteryRouteWalk(
   readonly awaitingAttackRoll: BattleResolutionResult;
   readonly route: readonly BattleReducerRouteEvent[];
 } {
-  const subject = attackSubject(attackName);
+  const subject = attackSubject(state, attackName);
   const act = attackAct(state, subject);
   const target = requireHole(act.initialHoles, "targetChoice");
   const targetChoice = targetFill({
@@ -576,7 +577,7 @@ function initialProjection(
 function resolveSapMasteryPropertyHit(): WeaponMasteryProjection {
   const state = weaponMasteryBattle("mastery_sap");
   const scenario = weaponMasteryPropertyScenarios.mastery_sap;
-  const subject = attackSubject(scenario.attackName);
+  const subject = attackSubject(state, scenario.attackName);
   return resultProjection(
     resolveBattleSubject({
       state,
@@ -594,7 +595,7 @@ function resolveSapMasteryPropertyHit(): WeaponMasteryProjection {
 function resolveToppleMasteryPropertyFailedSavingThrow(): WeaponMasteryProjection {
   const state = weaponMasteryBattle("mastery_topple");
   const scenario = weaponMasteryPropertyScenarios.mastery_topple;
-  const subject = attackSubject(scenario.attackName);
+  const subject = attackSubject(state, scenario.attackName);
   const target = requireHole(
     discoverAttackHoles(state, subject),
     "targetChoice",
@@ -631,7 +632,7 @@ function resolveToppleMasteryPropertyFailedSavingThrow(): WeaponMasteryProjectio
 function resolveCleaveMasteryPropertySecondTargetHit(): WeaponMasteryProjection {
   const state = weaponMasteryBattle("mastery_cleave");
   const scenario = weaponMasteryPropertyScenarios.mastery_cleave;
-  const subject = attackSubject(scenario.attackName);
+  const subject = attackSubject(state, scenario.attackName);
   const primaryFills = primaryHitFills({
     state,
     subject,
@@ -867,17 +868,13 @@ function baseUnarmedStrike(): Extract<
 }
 
 function attackSubject(
+  state: BattleState,
   attackName: string,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: attackerId,
-    action: "attack",
-    attackName,
-  };
+  return characterAttackSubjectForTest(state, attackerId, attackName);
 }
 
 function discoverAttackHoles(
@@ -902,10 +899,10 @@ function attackAct(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.attackName === subject.attackName,
+      candidate.subject.procedureRef === subject.procedureRef,
   );
   if (act == null) {
-    throw new Error(`Expected ${subject.attackName} attack act.`);
+    throw new Error("Expected attack act for admitted procedure reference.");
   }
   return act;
 }

@@ -819,7 +819,7 @@ describe("battle runtime: Sleep", () => {
         ],
       }),
     ).state;
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const target = requireHole(
       resolveBattleSubject({ state: fighterTurn, subject, fills: [] }),
       "targetChoice",

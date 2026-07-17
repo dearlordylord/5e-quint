@@ -2,6 +2,9 @@ import {
   startBattleRight,
   requireResolved,
   fighterVsGoblinBattle,
+  fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
+  characterBonusAttackSubjectForTest,
   criticalRange19UnitRefs,
   goblinAttackSubject,
   requireHole,
@@ -46,13 +49,14 @@ import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import { battleFillEquals } from "./battle-reducer.ts";
+import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
 
 function goblinOpportunityAttackThreat(state: BattleState) {
-  const procedureRef = goblinAttackSubject(state, "Scimitar").procedureRef;
-  if (procedureRef === undefined) {
-    throw new Error("Expected admitted Scimitar procedure ref.");
-  }
-  return { reactorId: goblinId, procedureRef };
+  const subject = goblinAttackSubject(state, "Scimitar");
+  return {
+    reactorId: goblinId,
+    ...attackExecutionSelectionForSubjectForTest(subject),
+  };
 }
 
 function statBlockAttackProcedureRef(
@@ -64,7 +68,7 @@ function statBlockAttackProcedureRef(
   if (subject.procedureRef === undefined) {
     throw new Error("Expected Stat Block attack procedure ref.");
   }
-  return subject.procedureRef;
+  return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
 }
 
 describe("battle runtime: Light property and Opportunity Attacks", () => {
@@ -91,12 +95,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
 
     expect(
       discoverBattleActs(state).map((act) => act.subject),
@@ -106,12 +109,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       reason: "unsupportedActOption",
     });
 
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -210,12 +211,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -243,12 +242,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       fighterId,
       goblinId,
     );
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
     const target = requireHole(
       resolveBattleSubject({ state: weakenedFighter, subject, fills: [] }),
       "targetChoice",
@@ -360,12 +358,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -388,12 +384,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         ],
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
     const target = requireHole(
       resolveBattleSubject({
         state: afterQualifyingAttack,
@@ -498,12 +493,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -526,12 +519,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         ],
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
     const target = requireHole(
       resolveBattleSubject({
         state: afterQualifyingAttack,
@@ -607,12 +599,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Dagger",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(state, "Dagger");
     const target = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -638,12 +625,13 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(
       discoverBattleActs(afterMainDagger).map((act) => act.subject),
-    ).toContainEqual({
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    });
+    ).toContainEqual(
+      characterBonusAttackSubjectForTest(
+        afterMainDagger,
+        fighterId,
+        "offHandAttack",
+      ),
+    );
   });
 
   test("table-provided reach-exit movement facts open an Opportunity Attack window", () => {
@@ -921,7 +909,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           movementFill(hole, {
             movementCostFeet: 5,
             provokedOpportunityAttacks: [
-              { reactorId: goblinId, attackName: "Shortbow" },
+              {
+                reactorId: goblinId,
+                ...attackExecutionSelectionForSubjectForTest(
+                  goblinAttackSubject(state, "Shortbow"),
+                ),
+              },
             ],
           }),
         ],

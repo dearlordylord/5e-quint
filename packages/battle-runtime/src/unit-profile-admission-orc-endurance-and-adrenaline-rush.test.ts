@@ -92,7 +92,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: weaponAttackSubject("Longsword"),
+      subject: weaponAttackSubject(state, "Longsword"),
       fills: [
         ...disposition.prefixFills,
         attackDamageDispositionFill(disposition, {
@@ -273,7 +273,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: weaponAttackSubject("Longsword"),
+      subject: weaponAttackSubject(state, "Longsword"),
       fills: [
         ...disposition.prefixFills,
         attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
@@ -340,7 +340,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     expect(
       resolveBattleSubject({
         state,
-        subject: weaponAttackSubject("Longsword"),
+        subject: weaponAttackSubject(state, "Longsword"),
         fills: [
           ...disposition.prefixFills,
           attackDamageDispositionFill(disposition, {

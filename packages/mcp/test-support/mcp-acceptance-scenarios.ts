@@ -616,20 +616,25 @@ export async function verifyBaselineVertical(client: Client) {
     "Move",
     "End Turn",
   ]);
+  const longswordSubject = attackSubjectFromActs(
+    fighterActs,
+    "fighter",
+    "Longsword",
+  );
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Longsword"),
-    fill: targetFill("goblin"),
+    subject: longswordSubject,
+    fill: attackTargetFill(longswordSubject, "goblin"),
   });
   await expectToolError(client, "end_turn", { actorId: "fighter" });
   await expectToolError(client, "end_battle", {});
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Longsword"),
+    subject: longswordSubject,
     fill: attackRollFill(16, 14),
   });
   const fighterDamage = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Longsword"),
+    subject: longswordSubject,
     fill: rolledDiceFill("battle:attack:damage-result:1d8+3-slashing", [[5]]),
   });
   assert.equal(get(fighterDamage, "result.tag"), "resolved");
@@ -778,30 +783,29 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(combatantHp(started, "skeleton-b"), 13);
   assert.equal(combatantHp(started, "goblin"), 10);
 
-  assert.deepEqual(
-    actionLabels(await callTool(client, "discover_battle_acts", {})),
-    [
-      "Attack",
-      "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-      "Adrenaline Rush",
-      "Second Wind",
-      "Action Surge",
-      "Move",
-      "End Turn",
-    ],
-  );
+  const fighterActs = await callTool(client, "discover_battle_acts", {});
+  assert.deepEqual(actionLabels(fighterActs), [
+    "Attack",
+    "Attack",
+    ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+    "Adrenaline Rush",
+    "Second Wind",
+    "Action Surge",
+    "Move",
+    "End Turn",
+  ]);
+  const flailSubject = attackSubjectFromActs(fighterActs, "fighter", "Flail");
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
-    fill: targetFill("skeleton-a"),
+    subject: flailSubject,
+    fill: attackTargetFill(flailSubject, "skeleton-a"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
+    subject: flailSubject,
     fill: attackRollFill(18, 15),
   });
   const afterBludgeoning = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
+    subject: flailSubject,
     fill: rolledDiceFill("battle:attack:damage-result:1d8+3-bludgeoning", [
       [1],
     ]),
@@ -816,11 +820,11 @@ export async function verifyWidthVertical(client: Client) {
     },
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
-    fill: targetFill("skeleton-a"),
+    subject: flailSubject,
+    fill: attackTargetFill(flailSubject, "skeleton-a"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
+    subject: flailSubject,
     fill: attackRollFill(1, 1),
   });
   assert.equal(combatantHp(afterBludgeoning, "skeleton-a"), 5);
@@ -3389,10 +3393,6 @@ function returnedDraftRevision(payload: JsonObject) {
   return revision;
 }
 
-function attackSubject(actorId: string, attackName: string) {
-  return { tag: "action", actorId, action: "attack", attackName };
-}
-
 function attackSubjectFromActs(
   payload: JsonObject,
   actorId: string,
@@ -3406,9 +3406,8 @@ function attackSubjectFromActs(
       subject.tag === "action" &&
       subject.action === "attack" &&
       subject.actorId === actorId &&
-      (subject.attackName === attackName ||
-        (candidate.summary === `Take the Attack action with ${attackName}.` &&
-          subject.statBlockDamageNotation === undefined))
+      candidate.summary === `Take the Attack action with ${attackName}.` &&
+      subject.statBlockDamageNotation === undefined
     );
   });
   assert.equal(
@@ -3427,10 +3426,16 @@ function attackSubjectFromActs(
 
 function attackTargetFill(subject: JsonObject, value: string) {
   assert.equal(typeof subject.actorId, "string");
-  const selection =
-    typeof subject.procedureRef === "string"
-      ? { procedureRef: subject.procedureRef }
-      : { attackName: subject.attackName };
+  assert.equal(typeof subject.procedureRef, "string");
+  const selection = {
+    procedureRef: subject.procedureRef,
+    ...(typeof subject.attackAbility === "string"
+      ? { attackAbility: subject.attackAbility }
+      : {}),
+    ...(typeof subject.attackDamageType === "string"
+      ? { attackDamageType: subject.attackDamageType }
+      : {}),
+  };
   return {
     kind: "targetChoice",
     holeId: "battle:attack:target",
@@ -3501,36 +3506,6 @@ function targetFill(value: string) {
     holeId: "battle:attack:target",
     value,
     spatialFacts: [
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "fighter",
-        targetId: value,
-        attackName: "Longsword",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "fighter",
-        targetId: value,
-        attackName: "Flail",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "goblin",
-        targetId: value,
-        attackName: "Scimitar",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "skeleton-a",
-        targetId: value,
-        attackName: "Shortsword",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "skeleton-b",
-        targetId: value,
-        attackName: "Shortsword",
-      },
       {
         kind: "spellTarget",
         casterId: "wizard",

@@ -24,9 +24,9 @@ import type { BattleCreatureInit } from "../battle-init.ts";
 import {
   BattleId,
   CombatantId,
-  battleStatBlockExecutionScopeCursor,
-  battleStatBlockExecutionScopeOrdinal,
-  type BattleStatBlockExecutionScopeCursor,
+  battleExecutionScopeCursor,
+  battleExecutionScopeOrdinal,
+  type BattleExecutionScopeCursor,
 } from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
@@ -152,9 +152,9 @@ export function startBattle(
   }
 
   const combatants = new Map<CombatantId, BattleCreatureState>();
-  const statBlockExecutionScopeCursors = new Map<
+  const executionScopeCursors = new Map<
     CombatantId,
-    BattleStatBlockExecutionScopeCursor
+    BattleExecutionScopeCursor
   >();
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
@@ -184,13 +184,13 @@ export function startBattle(
     const admission = battleCreatureStateAdmissionFromInit(
       input.battleId,
       combatant,
-      battleStatBlockExecutionScopeOrdinal(0),
+      battleExecutionScopeOrdinal(0),
     );
     combatants.set(combatant.combatantId, admission.creature);
     if (admission.nextScopeOrdinal > 0) {
-      statBlockExecutionScopeCursors.set(
+      executionScopeCursors.set(
         combatant.combatantId,
-        battleStatBlockExecutionScopeCursor(admission.nextScopeOrdinal),
+        battleExecutionScopeCursor(admission.nextScopeOrdinal),
       );
     }
   }
@@ -209,7 +209,7 @@ export function startBattle(
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
-    statBlockExecutionScopeCursors,
+    executionScopeCursors,
     companions: new Map(),
     objectOutlines: [],
     lightEmitters: [],
@@ -405,9 +405,8 @@ export function addBattleCombatant(input: {
   const admission = battleCreatureStateAdmissionFromInit(
     input.state.battleId,
     input.combatant,
-    input.state.statBlockExecutionScopeCursors.get(
-      input.combatant.combatantId,
-    ) ?? battleStatBlockExecutionScopeOrdinal(0),
+    input.state.executionScopeCursors.get(input.combatant.combatantId) ??
+      battleExecutionScopeOrdinal(0),
   );
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
@@ -426,13 +425,11 @@ export function addBattleCombatant(input: {
       initiative: input.combatant.initiative,
     },
   );
-  const statBlockExecutionScopeCursors = new Map(
-    input.state.statBlockExecutionScopeCursors,
-  );
+  const executionScopeCursors = new Map(input.state.executionScopeCursors);
   if (admission.nextScopeOrdinal > 0) {
-    statBlockExecutionScopeCursors.set(
+    executionScopeCursors.set(
       input.combatant.combatantId,
-      battleStatBlockExecutionScopeCursor(admission.nextScopeOrdinal),
+      battleExecutionScopeCursor(admission.nextScopeOrdinal),
     );
   }
 
@@ -440,7 +437,7 @@ export function addBattleCombatant(input: {
     ...input.state,
     initiative,
     combatants: nextCombatants,
-    statBlockExecutionScopeCursors,
+    executionScopeCursors,
   });
 }
 

@@ -19,6 +19,10 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  attackExecutionSelectionForSubjectForTest,
+  statBlockAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
+import {
   battleTablePositionId,
   combatantId,
   discoverBattleActs,
@@ -190,7 +194,17 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
           speedKind: "walk",
           movementCostFeet: movementFeet(30),
           provokedOpportunityAttacks: [
-            { reactorId: spellTargetId, attackName: "Scimitar" },
+            {
+              reactorId: spellTargetId,
+              ...attackExecutionSelectionForSubjectForTest(
+                statBlockAttackSubjectForTest(
+                  state,
+                  spellTargetId,
+                  "Scimitar",
+                  "actions",
+                ),
+              ),
+            },
           ],
         },
       };

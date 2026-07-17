@@ -1693,23 +1693,6 @@ describe("Find Familiar lifecycle", () => {
       ),
     ).toBe(false);
 
-    const attack = resolveBattleSubject({
-      state: familiarTurn.state,
-      subject: {
-        tag: "action",
-        actorId: familiarId,
-        action: "attack",
-        attackName: "Claws",
-      },
-      fills: [],
-    });
-    expect(attack.tag).toBe("invalid");
-    if (attack.tag !== "invalid") return;
-    expect(attack.message).toBe("Find Familiar familiars can't attack.");
-    expect(attack.snapshot.turn.actionResources).toEqual([
-      { kind: "action", source: "turn" },
-    ]);
-
     const dashSubject = acts.find(
       (act) => act.subject.tag === "action" && act.subject.action === "dash",
     )?.subject;

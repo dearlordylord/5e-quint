@@ -710,7 +710,7 @@ function resolveUnarmedStrikeAgainstReactor(
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === triggerCreatureId &&
-      act.subject.attackName === "Unarmed Strike",
+      act.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");

@@ -3333,13 +3333,15 @@ function assertLevelOneShillelagh(input: {
   expect(damage).toMatchObject({
     label: "Quarterstaff (force) damage (1d8+2-force)",
   });
+  const ordinaryAttackName = "Quarterstaff (bludgeoning)";
   expect(
     discoverBattleActs(resolved.state).some(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
         candidate.subject.actorId === input.casterId &&
-        candidate.subject.attackName === "Quarterstaff (bludgeoning)",
+        candidate.summary ===
+          `Take the Attack action with ${ordinaryAttackName}.`,
     ),
   ).toBe(true);
 
