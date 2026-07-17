@@ -645,6 +645,42 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     expect(Either.isLeft(decoded)).toBe(true);
   });
 
+  test("retaliation decisions carry one exact attack execution selection", () => {
+    const decision = {
+      kind: "interruptDecision",
+      holeId: "battle:interrupt:decision",
+      value: {
+        kind: "resolve",
+        responderId: "synthetic-retaliator",
+        choice: {
+          kind: "retaliationAttack",
+          reactorId: "synthetic-retaliator",
+          selection: { attackName: "Synthetic Retaliation Strike" },
+          fills: [],
+        },
+      },
+    };
+
+    expect(
+      Either.isRight(Schema.decodeUnknownEither(BattleFillSchema)(decision)),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          ...decision,
+          value: {
+            ...decision.value,
+            choice: {
+              ...decision.value.choice,
+              attackName: "Synthetic Retaliation Strike",
+              selection: undefined,
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("attack sight spatial facts parse through target-choice fills", () => {
     const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
       kind: "targetChoice",

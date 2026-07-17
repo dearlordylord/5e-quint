@@ -448,6 +448,17 @@ const SpellMetamagicSelectionsSchema = Schema.NonEmptyArray(
   SpellMetamagicSelectionSchema,
 );
 
+export const BattleAttackExecutionSelectionSchema = Schema.Union(
+  Schema.Struct({
+    attackName: BattleSubjectTextSchema,
+    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    procedureRef: BattleProcedureExecutionRef,
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+);
+
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
 // authored content, provenance, or a complete taxonomy of D&D actions.
@@ -764,34 +775,26 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("releaseGrapple"),
     targetId: CombatantId,
   }),
-  Schema.Union(
+  Schema.extend(
     Schema.Struct({
       tag: Schema.Literal("runtimeCommand"),
       actorId: CombatantId,
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
-      attackName: BattleSubjectTextSchema,
-      procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
     }),
-    Schema.Struct({
-      tag: Schema.Literal("runtimeCommand"),
-      actorId: CombatantId,
-      command: Schema.Literal("opportunityAttack"),
-      reactorId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    }),
+    BattleAttackExecutionSelectionSchema,
   ),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("retaliationAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-    attackName: BattleSubjectTextSchema,
-  }),
+  Schema.extend(
+    Schema.Struct({
+      tag: Schema.Literal("runtimeCommand"),
+      actorId: CombatantId,
+      command: Schema.Literal("retaliationAttack"),
+      reactorId: CombatantId,
+      targetId: CombatantId,
+    }),
+    BattleAttackExecutionSelectionSchema,
+  ),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,

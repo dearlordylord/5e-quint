@@ -571,6 +571,14 @@ export function attackExecutionSelectionMatchesOption(
         attackActionOptionName(attack) === selection.attackName;
 }
 
+export function attackExecutionSelectionForOption(
+  attack: SupportedAttackActionOption,
+): BattleAttackExecutionSelection {
+  return attack.kind === "statBlockAttack"
+    ? { procedureRef: attack.procedureRef }
+    : { attackName: attackActionOptionName(attack) };
+}
+
 export function attackExecutionSelectionsEqual(
   left: BattleAttackExecutionSelection,
   right: BattleAttackExecutionSelection,
@@ -585,13 +593,13 @@ export function meleeWeaponOrUnarmedStrikeOptionForReactor(
   state: BattleState,
   reactorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
+  selection: BattleAttackExecutionSelection,
 ): SupportedAttackActionOption | undefined {
   return attackActionOptionsForActor(state, reactorId).find((attack) => {
     const constraint = attackTargetConstraint(attack);
     return (
       (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
-      attackActionOptionName(attack) === attackName &&
+      attackExecutionSelectionMatchesOption(selection, attack) &&
       constraint.kind === "meleeReach" &&
       state.combatants.has(targetId)
     );

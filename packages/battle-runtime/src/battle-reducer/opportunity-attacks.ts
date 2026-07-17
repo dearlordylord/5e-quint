@@ -131,7 +131,7 @@ export function resolveOpportunityAttackCommand(
           input.state,
           subject.reactorId,
           subject.targetId,
-          subject.attackName,
+          subject,
         )
       : opportunityAttackOptionForReactor(
           input.state,
@@ -146,10 +146,7 @@ export function resolveOpportunityAttackCommand(
       `${commandLabel} attack is no longer available.`,
     );
   }
-  if (
-    subject.command === "opportunityAttack" &&
-    !attackExecutionSelectionMatchesOption(subject, attack)
-  ) {
+  if (!attackExecutionSelectionMatchesOption(subject, attack)) {
     return invalidResult(
       input.state,
       "unsupportedActOption",

@@ -1338,7 +1338,7 @@ export type BattleInterruptProcedureSelection = {
   | {
       readonly kind: "retaliationAttack";
       readonly reactorId: CombatantId;
-      readonly attackName: string;
+      readonly selection: BattleAttackExecutionSelection;
     }
   | {
       readonly kind: "reactionRollOrDamageReduction";

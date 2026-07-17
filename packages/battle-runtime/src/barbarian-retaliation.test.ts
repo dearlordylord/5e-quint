@@ -75,7 +75,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
           choice: {
             kind: "retaliationAttack",
             reactorId: fighterId,
-            attackName: "Longsword",
+            selection: { attackName: "Longsword" },
             fills: [],
           },
         },

@@ -69,6 +69,7 @@ import {
 } from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
+  BattleAttackExecutionSelectionSchema,
   BattleSubjectSchema,
   BattleSubjectTextSchema,
   SpellInvocationRefSchema,
@@ -1191,17 +1192,6 @@ const BattleOngoingSpellTargetWithinRangeFactSchema = Schema.Struct({
   target: BattleOngoingSpellTargetSchema,
   rangeFeet: MovementFeet,
 });
-
-const BattleAttackExecutionSelectionSchema = Schema.Union(
-  Schema.Struct({
-    attackName: Schema.String,
-    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    procedureRef: BattleProcedureExecutionRef,
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-);
 
 export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
@@ -3434,7 +3424,15 @@ type BattleFillEncoded =
               | {
                   readonly kind: "retaliationAttack";
                   readonly reactorId: string;
-                  readonly attackName: string;
+                  readonly selection:
+                    | {
+                        readonly attackName: string;
+                        readonly procedureRef?: never;
+                      }
+                    | {
+                        readonly procedureRef: string;
+                        readonly attackName?: never;
+                      };
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -4347,7 +4345,7 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("retaliationAttack"),
               reactorId: CombatantId,
-              attackName: BattleSubjectTextSchema,
+              selection: BattleAttackExecutionSelectionSchema,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({

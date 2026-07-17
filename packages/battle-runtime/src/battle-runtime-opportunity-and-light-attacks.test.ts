@@ -45,6 +45,7 @@ import type {
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
+import { battleFillEquals } from "./battle-reducer.ts";
 
 function goblinOpportunityAttackThreat(state: BattleState) {
   const procedureRef = goblinAttackSubject(state, "Scimitar").procedureRef;
@@ -1161,18 +1162,30 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
       "movement",
     );
+    const movementWithProcedureRefs = movementFill(moveHole, {
+      movementCostFeet: 5,
+      provokedOpportunityAttacks: [
+        { reactorId, procedureRef: firstProcedureRef },
+        { reactorId, procedureRef: secondProcedureRef },
+      ],
+    });
+    const movementWithReorderedProcedureRefs = movementFill(moveHole, {
+      movementCostFeet: 5,
+      provokedOpportunityAttacks: [
+        { reactorId, procedureRef: secondProcedureRef },
+        { reactorId, procedureRef: firstProcedureRef },
+      ],
+    });
+    expect(
+      battleFillEquals(
+        movementWithProcedureRefs,
+        movementWithReorderedProcedureRefs,
+      ),
+    ).toBe(true);
     const awaitingReaction = resolveBattleSubject({
       state,
       subject: moveSubject,
-      fills: [
-        movementFill(moveHole, {
-          movementCostFeet: 5,
-          provokedOpportunityAttacks: [
-            { reactorId, procedureRef: firstProcedureRef },
-            { reactorId, procedureRef: secondProcedureRef },
-          ],
-        }),
-      ],
+      fills: [movementWithProcedureRefs],
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected an Opportunity Attack interrupt window.");
