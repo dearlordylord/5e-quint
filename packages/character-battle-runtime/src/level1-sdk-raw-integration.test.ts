@@ -8648,10 +8648,10 @@ function walkMovementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["movementCostFeet"];
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
