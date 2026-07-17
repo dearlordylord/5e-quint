@@ -1156,6 +1156,10 @@ export type CreationFinalizationUnsupportedCause =
 export type CreationChoiceOptionDecodeCause =
   | { readonly tag: "unsupportedAbility" }
   | { readonly tag: "duplicateAbilities" }
+  | {
+      readonly tag: "nonPositiveAbilityScoreIncreaseValue";
+      readonly field: "increase" | "maximum";
+    }
   | { readonly tag: "invalidAbilityScoreIncreaseEncoding" }
   | { readonly tag: "unsupportedWeaponCategory" }
   | { readonly tag: "unsupportedArmorCategory" }

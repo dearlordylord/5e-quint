@@ -1342,6 +1342,11 @@ function choiceOptionDecodeCauseMessage(
       () => "Choice option must encode two distinct ability scores.",
     ),
     Match.when(
+      { tag: "nonPositiveAbilityScoreIncreaseValue" },
+      ({ field }) =>
+        `Choice option must encode a positive safe-integer ability-score ${field}.`,
+    ),
+    Match.when(
       { tag: "invalidAbilityScoreIncreaseEncoding" },
       () => "Choice option does not encode an ability-score increase.",
     ),
@@ -3932,7 +3937,7 @@ function applyClassFeatureAbilityScoreIncreases(
             tag: "abilityScoreCapExceeded",
             source: "classFeature",
             ability: delta.ability,
-            maximum: PositiveInteger(delta.maxScore),
+            maximum: delta.maxScore,
             excess: PositiveInteger(
               currentScore + delta.increase - delta.maxScore,
             ),

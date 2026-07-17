@@ -5392,6 +5392,35 @@ describe("character creation finalization", () => {
         }),
       ),
     ).toBe(true);
+    expect(
+      decodeAbilityScoreIncreaseOptionId("ability_score:str:+1:max0"),
+    ).toEqual(
+      Either.left({
+        tag: "choiceOptionCodecIssue",
+        optionId: "ability_score:str:+1:max0",
+        cause: {
+          tag: "nonPositiveAbilityScoreIncreaseValue",
+          field: "maximum",
+        },
+      }),
+    );
+    expect(
+      decodeAbilityScoreIncreaseOptionId("ability_score:str:+0:max20"),
+    ).toEqual(
+      Either.left({
+        tag: "choiceOptionCodecIssue",
+        optionId: "ability_score:str:+0:max20",
+        cause: {
+          tag: "nonPositiveAbilityScoreIncreaseValue",
+          field: "increase",
+        },
+      }),
+    );
+    expect(
+      decodeAbilityScoreIncreaseOptionId(
+        "ability_score:str:+9007199254740992:max20",
+      ),
+    ).toMatchObject({ _tag: "Left" });
   });
 
   test("accepts Monk 2 Monk's Focus as shared Focus Point character facts", () => {

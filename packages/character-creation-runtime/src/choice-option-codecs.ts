@@ -3,6 +3,10 @@ import { Match } from "effect";
 import * as Either from "effect/Either";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import {
+  PositiveInteger,
+  type PositiveInteger as PositiveIntegerType,
+} from "@dnd/shared/types";
+import {
   ARMOR_TRAINING_CATEGORIES,
   SKILLS,
   WEAPON_PROFICIENCY_CATEGORIES,
@@ -25,8 +29,8 @@ import {
 
 export type AbilityScoreIncreaseDeltaWithCap = {
   readonly ability: Ability;
-  readonly increase: number;
-  readonly maxScore: number;
+  readonly increase: PositiveIntegerType;
+  readonly maxScore: PositiveIntegerType;
 };
 
 export type ParsedProficiencyGrantSubject =
@@ -101,12 +105,24 @@ export function decodeAbilityScoreIncreaseOptionId(
         { tag: "unsupportedAbility" },
       );
     }
+    const increase = decodePositiveAbilityScoreIncreaseValue(
+      oneScore[2],
+      optionIdText,
+      "increase",
+    );
+    if (Either.isLeft(increase)) return Either.left(increase.left);
+    const maximum = decodePositiveAbilityScoreIncreaseValue(
+      oneScore[3],
+      optionIdText,
+      "maximum",
+    );
+    if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
     return Either.right([
       {
         ability,
-        increase: Number(oneScore[2]),
-        maxScore: Number(oneScore[3]),
+        increase: increase.right,
+        maxScore: maximum.right,
       },
     ]);
   }
@@ -132,17 +148,39 @@ export function decodeAbilityScoreIncreaseOptionId(
         { tag: "duplicateAbilities" },
       );
     }
+    const primaryIncrease = decodePositiveAbilityScoreIncreaseValue(
+      twoScores[2],
+      optionIdText,
+      "increase",
+    );
+    if (Either.isLeft(primaryIncrease)) {
+      return Either.left(primaryIncrease.left);
+    }
+    const secondaryIncrease = decodePositiveAbilityScoreIncreaseValue(
+      twoScores[4],
+      optionIdText,
+      "increase",
+    );
+    if (Either.isLeft(secondaryIncrease)) {
+      return Either.left(secondaryIncrease.left);
+    }
+    const maximum = decodePositiveAbilityScoreIncreaseValue(
+      twoScores[5],
+      optionIdText,
+      "maximum",
+    );
+    if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
     return Either.right([
       {
         ability: primary,
-        increase: Number(twoScores[2]),
-        maxScore: Number(twoScores[5]),
+        increase: primaryIncrease.right,
+        maxScore: maximum.right,
       },
       {
         ability: secondary,
-        increase: Number(twoScores[4]),
-        maxScore: Number(twoScores[5]),
+        increase: secondaryIncrease.right,
+        maxScore: maximum.right,
       },
     ]);
   }
@@ -151,6 +189,20 @@ export function decodeAbilityScoreIncreaseOptionId(
     optionIdText,
     { tag: "invalidAbilityScoreIncreaseEncoding" },
   );
+}
+
+function decodePositiveAbilityScoreIncreaseValue(
+  token: string | undefined,
+  optionId: string,
+  field: "increase" | "maximum",
+): Either.Either<PositiveIntegerType, ChoiceOptionCodecIssue> {
+  const value = Number(token);
+  return Number.isSafeInteger(value) && value > 0
+    ? Either.right(PositiveInteger(value))
+    : choiceOptionCodecIssue(optionId, {
+        tag: "nonPositiveAbilityScoreIncreaseValue",
+        field,
+      });
 }
 
 export function proficiencyGrantSubjectOption(

@@ -494,6 +494,10 @@ type CreationFinalizationIllegalCauseFact = Schema.Schema.Type<
 const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("unsupportedAbility") }),
   Schema.Struct({ tag: Schema.Literal("duplicateAbilities") }),
+  Schema.Struct({
+    tag: Schema.Literal("nonPositiveAbilityScoreIncreaseValue"),
+    field: Schema.Literal("increase", "maximum"),
+  }),
   Schema.Struct({ tag: Schema.Literal("invalidAbilityScoreIncreaseEncoding") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedWeaponCategory") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedArmorCategory") }),
@@ -1665,6 +1669,13 @@ function creationChoiceOptionDecodeCauseFact(
       noUnprojectedFields(unprojected);
       return { tag };
     }),
+    byTag(
+      "nonPositiveAbilityScoreIncreaseValue",
+      ({ tag, field, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, field };
+      },
+    ),
     byTag("invalidAbilityScoreIncreaseEncoding", ({ tag, ...unprojected }) => {
       noUnprojectedFields(unprojected);
       return { tag };
