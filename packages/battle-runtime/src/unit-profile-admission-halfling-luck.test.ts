@@ -43,6 +43,9 @@ import {
   deathSavingThrowFill,
   endTurn,
   fighterId,
+  fighterAttackSubject,
+  characterAttackSubjectForTest,
+  characterBonusAttackSubjectForTest,
   findAct,
   goblinId,
   hidePrerequisites,
@@ -159,7 +162,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
   test("Attack Rolls use the new d20 result after a selected natural-1 reroll", () => {
     const state = halflingLuckFighterBattle();
-    const subject = attackSubject();
+    const subject = attackSubject(state);
     const target = requireTypedHole(
       resolveAttack(state, subject, []),
       "targetChoice",
@@ -224,7 +227,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
   test("Advantage and Disadvantage raw d20 rolls choose one natural-1 die for replacement", () => {
     const state = halflingLuckFighterBattle();
-    const subject = attackSubject();
+    const subject = attackSubject(state);
     const target = requireTypedHole(
       resolveAttack(state, subject, []),
       "targetChoice",
@@ -487,12 +490,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const qualifyingAttack: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const qualifyingAttack: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const qualifyingTarget = requireTypedHole(
       resolveBattleSubject({ state, subject: qualifyingAttack, fills: [] }),
       "targetChoice",
@@ -515,12 +516,11 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         ],
       }),
     ).state;
-    const offHandAttack: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const offHandAttack: BattleSubject = characterBonusAttackSubjectForTest(
+      afterQualifyingAttack,
+      fighterId,
+      "offHandAttack",
+    );
     const target = requireTypedHole(
       resolveBattleSubject({
         state: afterQualifyingAttack,
@@ -992,7 +992,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
   test("D20 Test natural-1 reroll decisions require the selected profile and a natural 1", () => {
     const state = halflingLuckFighterBattle();
-    const subject = attackSubject();
+    const subject = attackSubject(state);
     const target = requireTypedHole(
       resolveAttack(state, subject, []),
       "targetChoice",
@@ -1044,9 +1044,21 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const unselected = resolveAttack(unselectedState, subject, [
-      targetSelection,
-      attackRollFill(roll, {
+    const unselectedSubject = attackSubject(unselectedState);
+    const unselectedTarget = requireTypedHole(
+      resolveAttack(unselectedState, unselectedSubject, []),
+      "targetChoice",
+    );
+    const unselectedTargetSelection = targetFill(unselectedTarget, goblinId);
+    const unselectedRoll = requireTypedHole(
+      resolveAttack(unselectedState, unselectedSubject, [
+        unselectedTargetSelection,
+      ]),
+      "attackRoll",
+    );
+    const unselected = resolveAttack(unselectedState, unselectedSubject, [
+      unselectedTargetSelection,
+      attackRollFill(unselectedRoll, {
         total: 2,
         naturalD20: 1,
         d20TestNaturalOneReroll: rerollRoll({ total: 15, naturalD20: 12 }),
@@ -1059,10 +1071,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
     const unselectedContradictoryRawDice = resolveAttack(
       unselectedState,
-      subject,
+      unselectedSubject,
       [
-        targetSelection,
-        attackRollFill(roll, {
+        unselectedTargetSelection,
+        attackRollFill(unselectedRoll, {
           total: 6,
           naturalD20: 1,
           rollMode: "advantage",
@@ -1444,13 +1456,10 @@ function halflingLuckSelection() {
   return { unit, unitRef: unitRef.right };
 }
 
-function attackSubject(): Extract<BattleSubject, { readonly tag: "action" }> {
-  return {
-    tag: "action",
-    actorId: fighterId,
-    action: "attack",
-    attackName: "Longsword",
-  };
+function attackSubject(
+  state: Parameters<typeof resolveBattleSubject>[0]["state"],
+): Extract<BattleSubject, { readonly tag: "action" }> {
+  return fighterAttackSubject(state, "Longsword");
 }
 
 function resolveAttack(
@@ -1576,7 +1585,16 @@ function startOpportunityAttack(
     fills: [
       movementFill(movement, {
         movementCostFeet: 5,
-        provokedOpportunityAttacks: [{ reactorId: goblinId, attackName }],
+        provokedOpportunityAttacks: [
+          {
+            reactorId: goblinId,
+            procedureRef: characterAttackSubjectForTest(
+              state,
+              goblinId,
+              attackName,
+            ).procedureRef,
+          },
+        ],
       }),
     ],
   });
@@ -1598,7 +1616,11 @@ function startOpportunityAttack(
     ),
   });
   if (startedReaction.tag !== "needsHoles") {
-    throw new Error("Expected Opportunity Attack roll hole.");
+    throw new Error(
+      `Expected Opportunity Attack roll hole, got ${startedReaction.tag}${
+        startedReaction.tag === "invalid" ? `: ${startedReaction.message}` : ""
+      }.`,
+    );
   }
   return {
     state: startedReaction.state,
@@ -1791,7 +1813,7 @@ function replayHalflingLuckNaturalOneReroll(): {
   readonly outcome: "damageRequested";
 } {
   const state = halflingLuckFighterBattle();
-  const subject = attackSubject();
+  const subject = attackSubject(state);
   const target = requireTypedHole(
     resolveAttack(state, subject, []),
     "targetChoice",
@@ -1831,7 +1853,7 @@ function replayHalflingLuckRawD20RerollChoice(): {
   readonly outcome: "damageRequested";
 } {
   const state = halflingLuckFighterBattle();
-  const subject = attackSubject();
+  const subject = attackSubject(state);
   const target = requireTypedHole(
     resolveAttack(state, subject, []),
     "targetChoice",

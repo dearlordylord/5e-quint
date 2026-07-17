@@ -511,7 +511,7 @@ function unarmedStrikeAttackProjection(battle: BattleState) {
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === "Unarmed Strike",
+      candidate.summary === "Take the Attack action with Unarmed Strike.",
   );
   expect(unarmedStrike).toBeDefined();
   if (unarmedStrike === undefined) {
@@ -680,7 +680,6 @@ function isNaturalWeaponDamageType(
 ): value is NaturalWeaponDamageTypeProjection {
   return NATURAL_WEAPON_DAMAGE_TYPE_SET.has(value);
 }
-
 
 function selfTransformationUnexpectedHole(raw: unknown): never {
   throw new Error(

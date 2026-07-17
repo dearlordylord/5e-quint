@@ -3634,18 +3634,12 @@ describe("Character Build battle projection", () => {
       ]),
     });
 
-    const subject = {
-      tag: "action" as const,
-      actorId: fighterId,
-      action: "attack" as const,
-      attackName: "Longsword",
-    };
-    const meleeReachFact = {
-      kind: "attackTargetInMeleeReach" as const,
-      actorId: fighterId,
-      targetId,
-      attackName: "Longsword",
-    };
+    const subject = requireDiscoveredAttackSubject(
+      state,
+      fighterId,
+      "Take the Attack action with Longsword.",
+    );
+    const meleeReachFact = attackMeleeReachFact(subject, targetId);
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -3762,18 +3756,12 @@ describe("Character Build battle projection", () => {
       ]),
     });
 
-    const subject = {
-      tag: "action" as const,
-      actorId: fighterId,
-      action: "attack" as const,
-      attackName: "Quarterstaff",
-    };
-    const meleeReachFact = {
-      kind: "attackTargetInMeleeReach" as const,
-      actorId: fighterId,
-      targetId,
-      attackName: "Quarterstaff",
-    };
+    const subject = requireDiscoveredAttackSubject(
+      state,
+      fighterId,
+      "Take the Attack action with Quarterstaff.",
+    );
+    const meleeReachFact = attackMeleeReachFact(subject, targetId);
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -3841,18 +3829,12 @@ describe("Character Build battle projection", () => {
       ]),
     });
 
-    const subject = {
-      tag: "action" as const,
-      actorId: fighterId,
-      action: "attack" as const,
-      attackName: "Greataxe",
-    };
-    const meleeReachFact = {
-      kind: "attackTargetInMeleeReach" as const,
-      actorId: fighterId,
-      targetId,
-      attackName: "Greataxe",
-    };
+    const subject = requireDiscoveredAttackSubject(
+      state,
+      fighterId,
+      "Take the Attack action with Greataxe.",
+    );
+    const meleeReachFact = attackMeleeReachFact(subject, targetId);
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -4048,32 +4030,22 @@ describe("Character Build battle projection", () => {
       }),
     );
     const attackName = "Longsword (Charisma) (necrotic)";
-    const subject = {
-      tag: "action" as const,
+    const subject = requireDiscoveredAttackSubject(
+      state,
       actorId,
-      action: "attack" as const,
-      attackName,
-    };
-    const meleeReachFact = {
-      kind: "attackTargetInMeleeReach" as const,
-      actorId,
-      targetId,
-      attackName,
-    };
-    expect(
-      discoverBattleActs(state).map((act) =>
-        "attackName" in act.subject ? act.subject.attackName : undefined,
-      ),
-    ).toEqual(
+      `Take the Attack action with ${attackName}.`,
+    );
+    const meleeReachFact = attackMeleeReachFact(subject, targetId);
+    expect(discoverBattleActs(state).map((act) => act.summary)).toEqual(
       expect.arrayContaining([
-        "Longsword (slashing)",
-        "Longsword (necrotic)",
-        "Longsword (psychic)",
-        "Longsword (radiant)",
-        "Longsword (Charisma) (slashing)",
-        "Longsword (Charisma) (necrotic)",
-        "Longsword (Charisma) (psychic)",
-        "Longsword (Charisma) (radiant)",
+        "Take the Attack action with Longsword (slashing).",
+        "Take the Attack action with Longsword (necrotic).",
+        "Take the Attack action with Longsword (psychic).",
+        "Take the Attack action with Longsword (radiant).",
+        "Take the Attack action with Longsword (Charisma) (slashing).",
+        "Take the Attack action with Longsword (Charisma) (necrotic).",
+        "Take the Attack action with Longsword (Charisma) (psychic).",
+        "Take the Attack action with Longsword (Charisma) (radiant).",
       ]),
     );
     const target = requireHole(
@@ -4150,13 +4122,12 @@ describe("Character Build battle projection", () => {
         unitLibrary,
       }),
     );
-    const mainAttackName = "Shortsword";
-    const mainSubject = {
-      tag: "action" as const,
+    const mainSubject = requireDiscoveredAttackSubject(
+      state,
       actorId,
-      action: "attack" as const,
-      attackName: mainAttackName,
-    };
+      "Take the Attack action with Shortsword.",
+    );
+    const mainMeleeReachFact = attackMeleeReachFact(mainSubject, targetId);
     const mainTarget = requireHole(
       resolveBattleSubject({ state, subject: mainSubject, fills: [] }),
       "targetChoice",
@@ -4165,16 +4136,7 @@ describe("Character Build battle projection", () => {
       resolveBattleSubject({
         state,
         subject: mainSubject,
-        fills: [
-          targetFill(mainTarget, targetId, [
-            {
-              kind: "attackTargetInMeleeReach" as const,
-              actorId,
-              targetId,
-              attackName: mainAttackName,
-            },
-          ]),
-        ],
+        fills: [targetFill(mainTarget, targetId, [mainMeleeReachFact])],
       }),
       "attackRoll",
     );
@@ -4183,36 +4145,30 @@ describe("Character Build battle projection", () => {
         state,
         subject: mainSubject,
         fills: [
-          targetFill(mainTarget, targetId, [
-            {
-              kind: "attackTargetInMeleeReach" as const,
-              actorId,
-              targetId,
-              attackName: mainAttackName,
-            },
-          ]),
+          targetFill(mainTarget, targetId, [mainMeleeReachFact]),
           attackRollFill(mainRoll, { total: 1, naturalD20: 1 }),
         ],
       }),
     ).state;
 
     const offHandAttackName = "Dagger (Charisma) (radiant)";
-    const offHandSubject = {
-      tag: "bonusAction" as const,
+    const offHandSubject = requireDiscoveredAttackSubject(
+      afterMainAttack,
       actorId,
-      action: "offHandAttack" as const,
-      attackName: offHandAttackName,
-    };
+      `Make the Light property Bonus Action attack with ${offHandAttackName}.`,
+    );
+    const offHandMeleeReachFact = attackMeleeReachFact(
+      offHandSubject,
+      targetId,
+    );
     expect(
-      discoverBattleActs(afterMainAttack).map((act) =>
-        "attackName" in act.subject ? act.subject.attackName : undefined,
-      ),
+      discoverBattleActs(afterMainAttack).map((act) => act.summary),
     ).toEqual(
       expect.arrayContaining([
-        "Dagger (piercing)",
-        "Dagger (radiant)",
-        "Dagger (Charisma) (piercing)",
-        offHandAttackName,
+        "Make the Light property Bonus Action attack with Dagger (piercing).",
+        "Make the Light property Bonus Action attack with Dagger (radiant).",
+        "Make the Light property Bonus Action attack with Dagger (Charisma) (piercing).",
+        `Make the Light property Bonus Action attack with ${offHandAttackName}.`,
       ]),
     );
     const offHandTarget = requireHole(
@@ -4227,16 +4183,7 @@ describe("Character Build battle projection", () => {
       resolveBattleSubject({
         state: afterMainAttack,
         subject: offHandSubject,
-        fills: [
-          targetFill(offHandTarget, targetId, [
-            {
-              kind: "attackTargetInMeleeReach" as const,
-              actorId,
-              targetId,
-              attackName: offHandAttackName,
-            },
-          ]),
-        ],
+        fills: [targetFill(offHandTarget, targetId, [offHandMeleeReachFact])],
       }),
       "attackRoll",
     );
@@ -4245,14 +4192,7 @@ describe("Character Build battle projection", () => {
         state: afterMainAttack,
         subject: offHandSubject,
         fills: [
-          targetFill(offHandTarget, targetId, [
-            {
-              kind: "attackTargetInMeleeReach" as const,
-              actorId,
-              targetId,
-              attackName: offHandAttackName,
-            },
-          ]),
+          targetFill(offHandTarget, targetId, [offHandMeleeReachFact]),
           attackRollFill(offHandRoll, { total: 15, naturalD20: 10 }),
         ],
       }),
@@ -4266,14 +4206,7 @@ describe("Character Build battle projection", () => {
         state: afterMainAttack,
         subject: offHandSubject,
         fills: [
-          targetFill(offHandTarget, targetId, [
-            {
-              kind: "attackTargetInMeleeReach" as const,
-              actorId,
-              targetId,
-              attackName: offHandAttackName,
-            },
-          ]),
+          targetFill(offHandTarget, targetId, [offHandMeleeReachFact]),
           attackRollFill(offHandRoll, { total: 15, naturalD20: 10 }),
           rolledDiceFill(offHandDamage, 4),
         ],
@@ -4818,6 +4751,59 @@ function requireHole<K extends BattleHole["kind"]>(
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
+}
+
+type BoundAttackSubject =
+  | Extract<
+      BattleSubject,
+      { readonly tag: "action"; readonly action: "attack" }
+    >
+  | Extract<
+      BattleSubject,
+      { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
+    >;
+
+function requireDiscoveredAttackSubject(
+  state: BattleState,
+  actorId: ReturnType<typeof combatantId>,
+  summary: string,
+): BoundAttackSubject {
+  const subject = discoverBattleActs(state).find(
+    (act) => act.subject.actorId === actorId && act.summary === summary,
+  )?.subject;
+  if (
+    subject === undefined ||
+    !(
+      (subject.tag === "action" && subject.action === "attack") ||
+      (subject.tag === "bonusAction" && subject.action === "offHandAttack")
+    )
+  ) {
+    throw new Error(`Expected discovered bound attack: ${summary}`);
+  }
+  return subject;
+}
+
+function attackMeleeReachFact(
+  subject: BoundAttackSubject,
+  targetId: ReturnType<typeof combatantId>,
+): Extract<
+  NonNullable<
+    Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+  >[number],
+  { readonly kind: "attackTargetInMeleeReach" }
+> {
+  return {
+    kind: "attackTargetInMeleeReach",
+    actorId: subject.actorId,
+    targetId,
+    procedureRef: subject.procedureRef,
+    ...(subject.attackAbility === undefined
+      ? {}
+      : { attackAbility: subject.attackAbility }),
+    ...(subject.attackDamageType === undefined
+      ? {}
+      : { attackDamageType: subject.attackDamageType }),
+  };
 }
 
 function requireResolvedBattleSubject(

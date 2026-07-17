@@ -456,7 +456,7 @@ function targetLongswordAct(state: BattleState): AvailableBattleAct & {
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === spellTargetId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === "Longsword",
+      candidate.summary === "Take the Attack action with Longsword.",
   );
   if (act === undefined) {
     throw new Error("Expected target Longsword attack act.");

@@ -2,6 +2,8 @@ import {
   startBattleRight,
   requireResolved,
   fighterVsGoblinBattle,
+  fighterAttackSubject,
+  characterBonusAttackSubjectForTest,
   criticalRange19UnitRefs,
   goblinAttackSubject,
   requireHole,
@@ -90,12 +92,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
 
     expect(
       discoverBattleActs(state).map((act) => act.subject),
@@ -105,12 +106,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       reason: "unsupportedActOption",
     });
 
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -209,12 +208,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -242,12 +239,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       fighterId,
       goblinId,
     );
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
     const target = requireHole(
       resolveBattleSubject({ state: weakenedFighter, subject, fills: [] }),
       "targetChoice",
@@ -359,12 +355,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -387,12 +381,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         ],
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
     const target = requireHole(
       resolveBattleSubject({
         state: afterQualifyingAttack,
@@ -497,12 +490,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Shortsword",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(
+      state,
+      "Shortsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -525,12 +516,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         ],
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    };
+    const subject: BattleSubject = characterBonusAttackSubjectForTest(
+      state,
+      fighterId,
+      "offHandAttack",
+    );
     const target = requireHole(
       resolveBattleSubject({
         state: afterQualifyingAttack,
@@ -606,12 +596,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Dagger",
-    };
+    const attackSubject: BattleSubject = fighterAttackSubject(state, "Dagger");
     const target = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -637,12 +622,13 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(
       discoverBattleActs(afterMainDagger).map((act) => act.subject),
-    ).toContainEqual({
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    });
+    ).toContainEqual(
+      characterBonusAttackSubjectForTest(
+        afterMainDagger,
+        fighterId,
+        "offHandAttack",
+      ),
+    );
   });
 
   test("table-provided reach-exit movement facts open an Opportunity Attack window", () => {

@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement
 import { describe, expect, test } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
   boonOfCombatProwessUnitId,
   combatProwessSupportProfile,
@@ -34,10 +35,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
-import type {
-  BattleSubject,
-  UnitRecord,
-} from "./unit-profile-admission-test-support.ts";
+import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
 describe("QMBT56 deterministic Combat Prowess profile slice", () => {
   test("boon of combat prowess is admitted as an attack-roll miss-to-hit replacement", () => {
@@ -65,7 +63,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     const state = combatProwessBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -135,7 +133,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       targetPreparedSpells: [spellRecord(shieldUnitId)],
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -238,7 +236,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       cantrips: [spell],
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -327,7 +325,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     const state = combatProwessBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -357,12 +355,11 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
 
   test("peerless aim applies to Unarmed Strike and spell attack misses", () => {
     const unarmedState = combatProwessBattle({ attack: null });
-    const unarmedSubject: Extract<BattleSubject, { readonly tag: "action" }> = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const unarmedSubject = characterAttackSubjectForTest(
+      unarmedState,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const unarmedTarget = requireResultHole(
       resolveBattleSubject({
         state: unarmedState,
@@ -476,7 +473,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     const state = combatProwessBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

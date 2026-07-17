@@ -11,6 +11,7 @@ import {
   fighterGrapplesGoblin,
   goblinTurnBattle,
   fighterAttackSubject,
+  characterAttackSubjectForTest,
   goblinAttackSubject,
   monsterAttackSubject,
   attackInitialTargetHole,
@@ -807,15 +808,8 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
-      expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Bite",
-        },
-      ]),
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Take the Attack action with Bite.",
     );
   });
 
@@ -838,15 +832,8 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
-      expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Bite",
-        },
-      ]),
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Take the Attack action with Bite.",
     );
   });
 
@@ -866,15 +853,8 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
-      expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Bite",
-        },
-      ]),
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Take the Attack action with Bite.",
     );
   });
 
@@ -1089,19 +1069,6 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    expect(
-      resolveBattleSubject({
-        state: multiattackState,
-        subject: {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Dagger",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-
     const shortbow = discoverBattleActs(multiattackState).find(
       (act) =>
         act.subject.tag === "action" &&
@@ -1435,30 +1402,6 @@ describe("battle runtime: Stat Block actions", () => {
           act.summary === "Take the Attack action with Counter Snap.",
       ),
     ).toBe(false);
-    expect(
-      resolveBattleSubject({
-        state: goblinTurn,
-        subject: {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Swift Bite",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
-    expect(
-      resolveBattleSubject({
-        state: goblinTurn,
-        subject: {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Counter Snap",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
   });
 
   test("Recharge attacks spend availability and use a start-turn d6 roll to return", () => {
@@ -1844,12 +1787,11 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const distantSubject: BattleSubject = {
-      tag: "action",
-      actorId: distantFighterId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const distantSubject = characterAttackSubjectForTest(
+      state,
+      distantFighterId,
+      "Longsword",
+    );
     const targetHole = attackInitialTargetHole(state, distantSubject);
     const rollHole = attackRollHoleAfterTarget(
       state,
@@ -1874,7 +1816,7 @@ describe("battle runtime: Stat Block actions", () => {
             targetHole,
             distantSubject.actorId,
             goblinId,
-            distantSubject.attackName,
+            "Longsword",
           ),
           attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
           damageRollFillWithGroups(damageHole, [[2]]),
@@ -2296,7 +2238,7 @@ describe("battle runtime: Stat Block actions", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const flailSubject = fighterAttackSubject("Flail");
+    const flailSubject = fighterAttackSubject(state, "Flail");
     const targetHole = attackInitialTargetHole(state, flailSubject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, flailSubject);
     const damageHole = attackDamageHoleAfterHit(
@@ -2335,7 +2277,7 @@ describe("battle runtime: Stat Block actions", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const poisonSubject = fighterAttackSubject("Flail");
+    const poisonSubject = fighterAttackSubject(poisonState, "Flail");
     const poisonTarget = attackInitialTargetHole(poisonState, poisonSubject);
     const poisonRoll = attackRollHoleAfterTarget(
       poisonState,

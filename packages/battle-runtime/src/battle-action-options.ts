@@ -82,6 +82,20 @@ export type CharacterAttackActionOption =
   | CharacterWeaponAttackActionOption
   | CharacterUnarmedStrikeActionOption;
 
+export type BoundCharacterWeaponAttackActionOption =
+  CharacterWeaponAttackActionOption & {
+    readonly procedureRef: BattleProcedureExecutionRef;
+  };
+
+export type BoundCharacterUnarmedStrikeActionOption =
+  CharacterUnarmedStrikeActionOption & {
+    readonly procedureRef: BattleProcedureExecutionRef;
+  };
+
+export type BoundCharacterAttackActionOption =
+  | BoundCharacterWeaponAttackActionOption
+  | BoundCharacterUnarmedStrikeActionOption;
+
 type LiteralStatBlockValue = Extract<
   StatBlockValue,
   { readonly kind: "literal" }
@@ -266,6 +280,28 @@ export type StatBlockAttackActionOption =
 export type SupportedAttackActionOption =
   | CharacterAttackActionOption
   | StatBlockAttackActionOption;
+
+export type BoundSupportedAttackActionOption =
+  | BoundCharacterAttackActionOption
+  | StatBlockAttackActionOption;
+
+export type BattleAttackExecutionAbility = Ability | "spellcasting";
+
+export function attackExecutionAbility(
+  attack: SupportedAttackActionOption,
+): BattleAttackExecutionAbility | undefined {
+  if (attack.kind === "weapon") return attack.ability;
+  if (attack.kind === "unarmedStrike") return attack.attackAbility;
+  return undefined;
+}
+
+export function attackExecutionDamageType(
+  attack: SupportedAttackActionOption,
+): DamageType | undefined {
+  if (attack.kind === "weapon") return attack.weapon.damage.damageType;
+  if (attack.kind === "unarmedStrike") return attack.effect.damage.damageType;
+  return undefined;
+}
 
 export type StatBlockAttackDamageComponent = {
   readonly expr: DiceExpr;

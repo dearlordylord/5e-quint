@@ -35,7 +35,11 @@ import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  attackExecutionAbility,
+  attackExecutionDamageType,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import {
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -564,9 +568,14 @@ export function attackExecutionSelectionMatchesOption(
   selection: BattleAttackExecutionSelection,
   attack: SupportedAttackActionOption,
 ): boolean {
-  return attack.kind === "statBlockAttack"
-    ? selection.procedureRef !== undefined &&
-        attack.procedureRef === selection.procedureRef
+  return "procedureRef" in attack
+    ? selection.procedureRef === attack.procedureRef &&
+        (!("attackAbility" in selection) ||
+          selection.attackAbility === undefined ||
+          selection.attackAbility === attackExecutionAbility(attack)) &&
+        (!("attackDamageType" in selection) ||
+          selection.attackDamageType === undefined ||
+          selection.attackDamageType === attackExecutionDamageType(attack))
     : selection.procedureRef === undefined &&
         attackActionOptionName(attack) === selection.attackName;
 }
@@ -577,6 +586,10 @@ export function attackExecutionSelectionsEqual(
 ): boolean {
   return (
     left.procedureRef === right.procedureRef &&
+    ("attackAbility" in left ? left.attackAbility : undefined) ===
+      ("attackAbility" in right ? right.attackAbility : undefined) &&
+    ("attackDamageType" in left ? left.attackDamageType : undefined) ===
+      ("attackDamageType" in right ? right.attackDamageType : undefined) &&
     left.attackName === right.attackName
   );
 }

@@ -62,6 +62,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
 const remarkableAthleteTargetId = combatantId("remarkable-athlete-target");
@@ -139,12 +140,11 @@ function remarkableAthleteSelectedUnit() {
 function remarkableAthleteAttackPrefix(
   state: ReturnType<typeof remarkableAthleteRuntimeBattle>,
 ) {
-  const subject = {
-    tag: "action",
-    actorId: remarkableAthleteActorId,
-    action: "attack",
-    attackName: "Unarmed Strike",
-  } as const;
+  const subject = characterAttackSubjectForTest(
+    state,
+    remarkableAthleteActorId,
+    "Unarmed Strike",
+  );
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",

@@ -33,6 +33,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -108,6 +109,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
+      attack.subject.procedureRef,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded,
@@ -152,6 +154,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
+      attack.subject.procedureRef,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded,
@@ -188,6 +191,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
+      attack.subject.procedureRef,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded,
@@ -210,7 +214,9 @@ describe("Sanctuary targeting interdiction", () => {
             outcome: {
               kind: "newTarget",
               targetId: replacementId,
-              spatialFacts: [attackTargetFact(replacementId)],
+              spatialFacts: [
+                attackTargetFact(replacementId, attack.subject.procedureRef),
+              ],
             },
           },
         ),
@@ -804,6 +810,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
+      attack.subject.procedureRef,
     );
     const needsAttackRoll = resolveBattleSubject({
       state: selfWarded,
@@ -960,7 +967,10 @@ function endTurnFor(state: BattleState, actorId: CombatantId): BattleState {
   return resolved.state;
 }
 
-function attackAct(state: BattleState, targetId = wardedId) {
+function attackAct(
+  state: BattleState,
+  targetId = wardedId,
+): AvailableAttackAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
@@ -969,11 +979,22 @@ function attackAct(state: BattleState, targetId = wardedId) {
         targetId,
       ),
   );
-  if (act === undefined || act.subject.tag !== "action") {
+  if (
+    act === undefined ||
+    act.subject.tag !== "action" ||
+    act.subject.action !== "attack"
+  ) {
     throw new Error("Expected attacker Attack act.");
   }
-  return act;
+  return { ...act, subject: act.subject };
 }
+
+type AvailableAttackAct = ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+};
 
 function sanctuaryTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
@@ -992,12 +1013,16 @@ function sanctuaryTargetListFill(
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
+  procedureRef: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >["procedureRef"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
-    spatialFacts: [attackTargetFact(targetId)],
+    spatialFacts: [attackTargetFact(targetId, procedureRef)],
   };
 }
 
@@ -1059,12 +1084,18 @@ function spellDamageTypeChoiceFill(
   return { kind: "damageTypeChoice", holeId: hole.holeId, value };
 }
 
-function attackTargetFact(targetId: CombatantId) {
+function attackTargetFact(
+  targetId: CombatantId,
+  procedureRef: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >["procedureRef"],
+) {
   return {
     kind: "attackTargetInMeleeReach" as const,
     actorId: attackerId,
     targetId,
-    attackName: "Unarmed Strike",
+    procedureRef,
   };
 }
 

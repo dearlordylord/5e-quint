@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME
 import { isDeepStrictEqual } from "node:util";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -247,7 +248,7 @@ function createRuleCoreReactionDriver() {
         recordResult(endTurn({ state, actorId: reactorId }));
       },
       doOfferReadiedMovement: () => {
-        const subject = interruptedAttackSubject();
+        const subject = interruptedAttackSubject(state);
         const target = requireTargetChoiceHole(
           resolveSubject(subject).tag === "needsHoles" ? holes : [],
         );
@@ -472,16 +473,17 @@ function reactionCreature(input: {
   };
 }
 
-function interruptedAttackSubject(): Extract<
+function interruptedAttackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: interruptedId,
-    action: "attack",
-    attackName: ruleCoreReactionAttackName,
-  };
+  return characterAttackSubjectForTest(
+    state,
+    interruptedId,
+    ruleCoreReactionAttackName,
+  );
 }
 
 function withReactorConcentration(state: BattleState): BattleState {

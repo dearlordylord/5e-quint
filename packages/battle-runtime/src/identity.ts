@@ -104,7 +104,7 @@ export type BattleResourcePoolExecutionRef =
 
 export const BattleStatBlockExecutionScopeRef =
   Schema.NonEmptyTrimmedString.pipe(
-    Schema.filter(battleExecutionScopeReferenceIsCanonical, {
+    Schema.filter(statBlockExecutionScopeReferenceIsCanonical, {
       message: () => "Invalid canonical Battle Stat Block execution scope ref.",
     }),
     Schema.brand("BattleStatBlockExecutionScopeRef"),
@@ -112,34 +112,48 @@ export const BattleStatBlockExecutionScopeRef =
 export type BattleStatBlockExecutionScopeRef =
   typeof BattleStatBlockExecutionScopeRef.Type;
 
-export const BattleStatBlockExecutionScopeOrdinal = Schema.Number.pipe(
+export const BattleAttackExecutionScopeRef = Schema.NonEmptyTrimmedString.pipe(
+  Schema.filter(
+    (reference) =>
+      battleOwnedExecutionScopeReferenceIsCanonical(
+        reference,
+        "attackExecution",
+      ),
+    { message: () => "Invalid canonical Battle attack execution scope ref." },
+  ),
+  Schema.brand("BattleAttackExecutionScopeRef"),
+);
+export type BattleAttackExecutionScopeRef =
+  typeof BattleAttackExecutionScopeRef.Type;
+
+export type BattleExecutionScopeRef =
+  | BattleStatBlockExecutionScopeRef
+  | BattleAttackExecutionScopeRef;
+
+export const BattleExecutionScopeOrdinal = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
-  Schema.brand("BattleStatBlockExecutionScopeOrdinal"),
+  Schema.brand("BattleExecutionScopeOrdinal"),
 );
-export type BattleStatBlockExecutionScopeOrdinal =
-  typeof BattleStatBlockExecutionScopeOrdinal.Type;
-export const battleStatBlockExecutionScopeOrdinal: (
+export type BattleExecutionScopeOrdinal =
+  typeof BattleExecutionScopeOrdinal.Type;
+export const battleExecutionScopeOrdinal: (
   value: number,
-) => BattleStatBlockExecutionScopeOrdinal =
-  BattleStatBlockExecutionScopeOrdinal.make;
+) => BattleExecutionScopeOrdinal = BattleExecutionScopeOrdinal.make;
 
-export const BattleStatBlockExecutionScopeCursor =
-  BattleStatBlockExecutionScopeOrdinal.pipe(
-    Schema.greaterThan(0),
-    Schema.brand("BattleStatBlockExecutionScopeCursor"),
-  );
-export type BattleStatBlockExecutionScopeCursor =
-  typeof BattleStatBlockExecutionScopeCursor.Type;
-export const battleStatBlockExecutionScopeCursor: (
-  value: BattleStatBlockExecutionScopeOrdinal,
-) => BattleStatBlockExecutionScopeCursor =
-  BattleStatBlockExecutionScopeCursor.make;
+export const BattleExecutionScopeCursor = BattleExecutionScopeOrdinal.pipe(
+  Schema.greaterThan(0),
+  Schema.brand("BattleExecutionScopeCursor"),
+);
+export type BattleExecutionScopeCursor = typeof BattleExecutionScopeCursor.Type;
+export const battleExecutionScopeCursor: (
+  value: BattleExecutionScopeOrdinal,
+) => BattleExecutionScopeCursor = BattleExecutionScopeCursor.make;
 
 export function battleStatBlockExecutionScopeRef(
   battleId: BattleId,
   combatantId: CombatantId,
-  ordinal: BattleStatBlockExecutionScopeOrdinal,
+  ordinal: BattleExecutionScopeOrdinal,
 ): BattleStatBlockExecutionScopeRef {
   return BattleStatBlockExecutionScopeRef.make(
     JSON.stringify({
@@ -151,12 +165,59 @@ export function battleStatBlockExecutionScopeRef(
   );
 }
 
+export function battleAttackExecutionScopeRef(
+  battleId: BattleId,
+  combatantId: CombatantId,
+  ordinal: BattleExecutionScopeOrdinal,
+): BattleAttackExecutionScopeRef {
+  return BattleAttackExecutionScopeRef.make(
+    JSON.stringify({
+      battleId,
+      combatantId,
+      kind: "attackExecution",
+      ordinal,
+    }),
+  );
+}
+
 export function battleProcedureExecutionRef(
-  scopeRef: BattleStatBlockExecutionScopeRef,
+  scopeRef: BattleExecutionScopeRef,
   ordinal: NonNegativeInteger,
 ): BattleProcedureExecutionRef {
   return BattleProcedureExecutionRef.make(
     JSON.stringify({ scopeRef, kind: "procedure", ordinal }),
+  );
+}
+
+export function battleAttackExecutionScopeRefBelongsToCombatant(
+  scopeRef: BattleAttackExecutionScopeRef,
+  combatantId: CombatantId,
+): boolean {
+  return battleOwnedExecutionScopeRefBelongsToCombatant(
+    scopeRef,
+    combatantId,
+    "attackExecution",
+  );
+}
+
+export function battleAttackExecutionScopeRefBelongsToBattle(
+  scopeRef: BattleAttackExecutionScopeRef,
+  battleId: BattleId,
+): boolean {
+  return battleOwnedExecutionScopeRefBelongsToBattle(
+    scopeRef,
+    battleId,
+    "attackExecution",
+  );
+}
+
+export function battleAttackExecutionScopeRefOrdinalIsBefore(
+  scopeRef: BattleAttackExecutionScopeRef,
+  nextScopeOrdinal: BattleExecutionScopeCursor | undefined,
+): boolean {
+  return battleOwnedExecutionScopeRefOrdinalIsBefore(
+    scopeRef,
+    nextScopeOrdinal,
   );
 }
 
@@ -217,7 +278,7 @@ export function battleStatBlockExecutionScopeRefIsWellFormed(
 
 export function battleStatBlockExecutionScopeRefOrdinalIsBefore(
   scopeRef: BattleStatBlockExecutionScopeRef,
-  nextScopeOrdinal: BattleStatBlockExecutionScopeCursor | undefined,
+  nextScopeOrdinal: BattleExecutionScopeCursor | undefined,
 ): boolean {
   if (nextScopeOrdinal === undefined) return false;
   const decoded = parseExecutionReference(scopeRef);
@@ -230,7 +291,7 @@ export function battleStatBlockExecutionScopeRefOrdinalIsBefore(
 
 export function battleProcedureExecutionRefBelongsToScope(
   procedureRef: BattleProcedureExecutionRef,
-  scopeRef: BattleStatBlockExecutionScopeRef,
+  scopeRef: BattleExecutionScopeRef,
 ): boolean {
   return executionReferenceBelongsToScope(procedureRef, "procedure", scopeRef);
 }
@@ -249,7 +310,7 @@ export function battleResourcePoolExecutionRefBelongsToScope(
 function executionReferenceBelongsToScope(
   reference: string,
   kind: "procedure" | "resourcePool",
-  scopeRef: BattleStatBlockExecutionScopeRef,
+  scopeRef: BattleExecutionScopeRef,
 ): boolean {
   const decoded = parseExecutionReference(reference);
   return (
@@ -261,9 +322,53 @@ function executionReferenceBelongsToScope(
   );
 }
 
+function battleOwnedExecutionScopeRefBelongsToCombatant(
+  scopeRef: string,
+  combatantId: CombatantId,
+  kind: "attackExecution",
+): boolean {
+  const decoded = parseExecutionReference(scopeRef);
+  return (
+    decoded !== null &&
+    hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
+    decoded.kind === kind &&
+    decoded.combatantId === combatantId &&
+    scopeReferenceEncodingIsCanonical(scopeRef, decoded, kind)
+  );
+}
+
+function battleOwnedExecutionScopeRefBelongsToBattle(
+  scopeRef: string,
+  battleId: BattleId,
+  kind: "attackExecution",
+): boolean {
+  const decoded = parseExecutionReference(scopeRef);
+  return (
+    decoded !== null &&
+    hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
+    decoded.kind === kind &&
+    decoded.battleId === battleId &&
+    scopeReferenceEncodingIsCanonical(scopeRef, decoded, kind)
+  );
+}
+
+function battleOwnedExecutionScopeRefOrdinalIsBefore(
+  scopeRef: string,
+  nextScopeOrdinal: BattleExecutionScopeCursor | undefined,
+): boolean {
+  if (nextScopeOrdinal === undefined) return false;
+  const decoded = parseExecutionReference(scopeRef);
+  return (
+    decoded !== null &&
+    nonNegativeIntegerProperty(decoded, "ordinal") &&
+    Number(decoded.ordinal) < nextScopeOrdinal
+  );
+}
+
 function scopeReferenceEncodingIsCanonical(
   reference: string,
   decoded: Readonly<Record<string, unknown>>,
+  kind: "statBlockExecution" | "attackExecution" = "statBlockExecution",
 ): boolean {
   return (
     typeof decoded.battleId === "string" &&
@@ -273,9 +378,28 @@ function scopeReferenceEncodingIsCanonical(
       JSON.stringify({
         battleId: decoded.battleId,
         combatantId: decoded.combatantId,
-        kind: "statBlockExecution",
+        kind,
         ordinal: decoded.ordinal,
       })
+  );
+}
+
+function battleOwnedExecutionScopeReferenceIsCanonical(
+  reference: string,
+  kind: "attackExecution",
+): boolean {
+  const decoded = parseExecutionReference(reference);
+  return (
+    decoded !== null &&
+    hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
+    decoded.kind === kind &&
+    typeof decoded.battleId === "string" &&
+    decoded.battleId.trim() === decoded.battleId &&
+    decoded.battleId.length > 0 &&
+    typeof decoded.combatantId === "string" &&
+    decoded.combatantId.trim() === decoded.combatantId &&
+    decoded.combatantId.length > 0 &&
+    scopeReferenceEncodingIsCanonical(reference, decoded, kind)
   );
 }
 
@@ -296,7 +420,9 @@ function nestedReferenceEncodingIsCanonical(
   );
 }
 
-function battleExecutionScopeReferenceIsCanonical(reference: string): boolean {
+function statBlockExecutionScopeReferenceIsCanonical(
+  reference: string,
+): boolean {
   const decoded = parseExecutionReference(reference);
   return (
     decoded !== null &&
@@ -322,7 +448,12 @@ function nestedExecutionReferenceIsCanonical(
     hasExactKeys(decoded, ["scopeRef", "kind", "ordinal"]) &&
     decoded.kind === kind &&
     typeof decoded.scopeRef === "string" &&
-    battleExecutionScopeReferenceIsCanonical(decoded.scopeRef) &&
+    (statBlockExecutionScopeReferenceIsCanonical(decoded.scopeRef) ||
+      (kind === "procedure" &&
+        battleOwnedExecutionScopeReferenceIsCanonical(
+          decoded.scopeRef,
+          "attackExecution",
+        ))) &&
     nestedReferenceEncodingIsCanonical(reference, decoded, kind)
   );
 }

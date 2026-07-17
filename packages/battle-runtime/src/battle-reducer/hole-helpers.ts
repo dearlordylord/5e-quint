@@ -29,7 +29,11 @@ import type {
   BattleSubject,
   BonusActionStandardActionSubject,
 } from "../battle-subjects.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  attackExecutionAbility,
+  attackExecutionDamageType,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
@@ -661,6 +665,8 @@ export function attackTargetHole(
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleTargetChoiceHole {
+  const executionAbility = attackExecutionAbility(attack);
+  const executionDamageType = attackExecutionDamageType(attack);
   return {
     kind: "targetChoice",
     holeId: ATTACK_TARGET_HOLE_ID,
@@ -670,8 +676,16 @@ export function attackTargetHole(
     attack: {
       actorId,
       selection:
-        attack.kind === "statBlockAttack"
-          ? { procedureRef: attack.procedureRef }
+        "procedureRef" in attack
+          ? {
+              procedureRef: attack.procedureRef,
+              ...(executionAbility === undefined
+                ? {}
+                : { attackAbility: executionAbility }),
+              ...(executionDamageType === undefined
+                ? {}
+                : { attackDamageType: executionDamageType }),
+            }
           : { attackName: attackActionOptionName(attack) },
       targetConstraint: attackTargetConstraint(attack).kind,
     },

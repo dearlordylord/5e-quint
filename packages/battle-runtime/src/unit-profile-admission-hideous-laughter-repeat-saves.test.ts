@@ -577,7 +577,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         activeEffects: [hideousLaughterEffect],
       }),
     };
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const targetHole = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

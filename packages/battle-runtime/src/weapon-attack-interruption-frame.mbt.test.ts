@@ -137,7 +137,7 @@ function initialRuntimeState(): RuntimeState {
 }
 
 function offerWeaponAttackInterruption(state: RuntimeState): RuntimeState {
-  const subject = fighterAttackSubject();
+  const subject = fighterAttackSubject(state.battle);
   const target = attackInitialTargetHole(state.battle, subject);
   const targetChoice = targetFill(target, goblinId);
   const attackRoll = attackRollHoleAfterTarget(

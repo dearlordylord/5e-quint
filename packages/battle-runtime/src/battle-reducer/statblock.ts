@@ -4,10 +4,13 @@
 
 import { Match } from "effect";
 import type {
+  BattleAttackExecutionAbility,
+  BoundSupportedAttackActionOption,
   StatBlockAttackActionOption,
   StatBlockAttackSection,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
+import type { DamageType } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   type BattleState,
@@ -143,18 +146,22 @@ export function updateStatBlockActorResources(
   };
 }
 
-export function statBlockSubjectPart(attack: SupportedAttackActionOption):
-  | { readonly attackName: string }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly statBlockDamageNotation?: "static";
-    } {
+export function attackSubjectPart(attack: BoundSupportedAttackActionOption): {
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly attackAbility?: BattleAttackExecutionAbility;
+  readonly attackDamageType?: DamageType;
+  readonly statBlockDamageNotation?: "static";
+} {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (option) => ({
-      attackName: option.weapon.name,
+      procedureRef: option.procedureRef,
+      attackAbility: option.ability,
+      attackDamageType: option.weapon.damage.damageType,
     })),
-    Match.when({ kind: "unarmedStrike" }, () => ({
-      attackName: "Unarmed Strike",
+    Match.when({ kind: "unarmedStrike" }, (option) => ({
+      procedureRef: option.procedureRef,
+      attackAbility: option.attackAbility,
+      attackDamageType: option.effect.damage.damageType,
     })),
     Match.when({ kind: "statBlockAttack" }, (option) => ({
       procedureRef: option.procedureRef,

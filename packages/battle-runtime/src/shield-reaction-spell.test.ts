@@ -72,7 +72,7 @@ describe("Shield Reaction spell", () => {
       (act): act is AttackAct =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Unarmed Strike",
+        act.summary === "Take the Attack action with Unarmed Strike.",
     );
     expect(attackAct).toBeDefined();
     if (attackAct === undefined) {
@@ -82,7 +82,14 @@ describe("Shield Reaction spell", () => {
     const awaitingAttackRoll = resolveBattleSubject({
       state,
       subject: attackAct.subject,
-      fills: [attackTargetFill(targetHole, spellTargetId, spellCasterId)],
+      fills: [
+        attackTargetFill(
+          targetHole,
+          spellTargetId,
+          spellCasterId,
+          attackAct.subject.procedureRef,
+        ),
+      ],
     });
     expect(awaitingAttackRoll).toMatchObject({ tag: "needsHoles" });
     if (awaitingAttackRoll.tag !== "needsHoles") {
@@ -94,7 +101,12 @@ describe("Shield Reaction spell", () => {
       state,
       subject: attackAct.subject,
       fills: [
-        attackTargetFill(targetHole, spellTargetId, spellCasterId),
+        attackTargetFill(
+          targetHole,
+          spellTargetId,
+          spellCasterId,
+          attackAct.subject.procedureRef,
+        ),
         attackRollFill(attackRollHole, { total: 14, naturalD20: 10 }),
       ],
     });
@@ -241,7 +253,13 @@ describe("Shield Reaction spell", () => {
         movementFill(moveHole, {
           movementCostFeet: 5,
           provokedOpportunityAttacks: [
-            { reactorId: attackerThreeId, attackName: "Unarmed Strike" },
+            {
+              reactorId: attackerThreeId,
+              procedureRef: unarmedStrikeProcedureRef(
+                casterTurn,
+                attackerThreeId,
+              ),
+            },
           ],
         }),
       ],
@@ -274,7 +292,13 @@ describe("Shield Reaction spell", () => {
       },
     });
     if (startedOpportunityAttack.tag !== "needsHoles") {
-      throw new Error("Expected Opportunity Attack to ask for an Attack Roll.");
+      throw new Error(
+        `Expected Opportunity Attack to ask for an Attack Roll, got ${startedOpportunityAttack.tag}${
+          startedOpportunityAttack.tag === "invalid"
+            ? `: ${startedOpportunityAttack.message}`
+            : ""
+        }.`,
+      );
     }
     const opportunityAttackRoll = requireHole(
       startedOpportunityAttack.holes,
@@ -870,7 +894,7 @@ function resolveAttackRollOnly(input: {
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === input.attackerId &&
-      act.subject.attackName === "Unarmed Strike",
+      act.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -880,6 +904,7 @@ function resolveAttackRollOnly(input: {
     targetHole,
     input.attackerId,
     input.targetId,
+    attackAct.subject.procedureRef,
   );
   const awaitingAttackRoll = resolveBattleSubject({
     state: input.state,
@@ -923,6 +948,7 @@ function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
+  procedureRef: AttackAct["subject"]["procedureRef"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -933,7 +959,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName: "Unarmed Strike",
+        procedureRef,
       },
     ],
   };
@@ -964,10 +990,10 @@ function movementFill(
       { readonly kind: "movement" }
     >["value"]["speedKind"];
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -979,6 +1005,17 @@ function movementFill(
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };
+}
+
+function unarmedStrikeProcedureRef(
+  state: BattleState,
+  actorId: CombatantId,
+): AttackAct["subject"]["procedureRef"] {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  return actor.origin.unarmedStrike.procedureRef;
 }
 
 function spellTargetFill(

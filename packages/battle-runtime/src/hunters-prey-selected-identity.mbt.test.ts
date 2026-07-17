@@ -160,7 +160,7 @@ function projectColossusSlayer(): HuntersPreyProjection {
       statBlockCreatureInit({ initiative: 10, currentHp: 6 }),
     ],
   });
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
   const damage = attackDamageHoleAfterHit(
@@ -223,7 +223,7 @@ function projectSkipThenUseColossusSlayer(): HuntersPreyProjection {
       }),
     ],
   });
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const firstTarget = attackInitialTargetHole(state, subject);
   const firstRoll = attackRollHoleAfterTarget(
     state,
@@ -367,7 +367,7 @@ function projectSecondHordeBreakerUnavailable(): HuntersPreyProjection {
       ],
     },
   };
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
   const damage = attackDamageHoleAfterHit(
@@ -450,7 +450,7 @@ function resolveHordeBreakerUse(input: { readonly primaryHit?: boolean } = {}) {
 
 function hordeBreakerWindow(input: { readonly primaryHit?: boolean } = {}) {
   const state = hordeBreakerBattle();
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const primaryTarget = attackInitialTargetHole(state, subject);
   const primaryAttackRoll =
     input.primaryHit === false

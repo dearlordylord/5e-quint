@@ -1303,7 +1303,7 @@ function paladinFreeCastBattle(): BattleState {
 }
 
 function discoverWeaponHit(state: AfterHitRuntimeState): AfterHitRuntimeState {
-  const subject = weaponAttackSubject("Longsword");
+  const subject = weaponAttackSubject(state.battle, "Longsword");
   const result = resolveBattleSubject({
     state: state.battle,
     subject,

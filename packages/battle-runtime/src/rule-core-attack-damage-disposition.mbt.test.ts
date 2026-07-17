@@ -145,7 +145,7 @@ function resolveMeleeKnockOut(): Projection {
       }),
     ],
   });
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const targetHole = attackInitialTargetHole(state, subject);
   const rollHole = attackRollHoleAfterTarget(
     state,

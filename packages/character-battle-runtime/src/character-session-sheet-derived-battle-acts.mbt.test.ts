@@ -33,7 +33,12 @@ import {
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
-import { DieRollResult, Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -68,8 +73,7 @@ type SheetDerivedOutcome = (typeof sheetDerivedOutcomes)[number];
 
 const sheetDerivedOutcomeByVariant = {
   SheetDerivedBattleActsInit: "init",
-  SheetDerivedMissingWieldedWeaponRejected:
-    "missing-wielded-weapon-rejected",
+  SheetDerivedMissingWieldedWeaponRejected: "missing-wielded-weapon-rejected",
   SheetDerivedMissingSelectedSpellRejected: "missing-selected-spell-rejected",
   SheetDerivedWeaponAttackCapabilityProjected:
     "weapon-attack-capability-projected",
@@ -225,7 +229,9 @@ function createSheetDerivedBattleActsDriver(input: {
   return defineDriver(driverSchema, () => {
     let projection = initialProjection();
     let session: SheetDerivedSession | undefined;
-    let spellSubject: Extract<BattleSubject, { readonly tag: "actionSpell" }> | undefined;
+    let spellSubject:
+      | Extract<BattleSubject, { readonly tag: "actionSpell" }>
+      | undefined;
     let acceptedSpellFills: readonly BattleFill[] = [];
     let acceptedState: BattleState | undefined;
     let settledSheet: CharacterSheet | undefined;
@@ -257,7 +263,7 @@ function createSheetDerivedBattleActsDriver(input: {
           tag: "action",
           actorId: characterCombatantId,
           action: "attack",
-          attackName: "Dagger",
+          procedureRef: expect.any(String),
         });
         projection = {
           outcome: "weapon-attack-capability-projected",
@@ -435,7 +441,9 @@ function createSheetDerivedBattleActsDriver(input: {
           fills: [],
         });
         expect(result).toMatchObject({ tag: "invalid" });
-        expect(levelOneSlotsRemaining(requireCharacterCombatant(state))).toBe(1);
+        expect(levelOneSlotsRemaining(requireCharacterCombatant(state))).toBe(
+          1,
+        );
         projection = {
           outcome: "stale-open-action-rejected-after-invocation",
           accepted: false,
@@ -461,7 +469,9 @@ function createSheetDerivedBattleActsDriver(input: {
           fills: acceptedSpellFills,
         });
         expect(result).toMatchObject({ tag: "invalid" });
-        expect(levelOneSlotsRemaining(requireCharacterCombatant(state))).toBe(1);
+        expect(levelOneSlotsRemaining(requireCharacterCombatant(state))).toBe(
+          1,
+        );
         projection = {
           outcome: "stale-spell-fill-rejected-without-second-spend",
           accepted: false,
@@ -513,10 +523,9 @@ function createSheetDerivedBattleActsDriver(input: {
         };
       },
       doRejectExhaustedSlotRediscovery: () => {
-        const exhausted = startSheetDerivedSession(
-          sheetDerivedBuild(),
-          { levelOneSlotsExpended: 2 },
-        );
+        const exhausted = startSheetDerivedSession(sheetDerivedBuild(), {
+          levelOneSlotsExpended: 2,
+        });
         expect(findRayOfSicknessAct(exhausted.state)).toBeUndefined();
         expect(settledSheet).not.toBeUndefined();
         projection = {
@@ -640,7 +649,9 @@ function sheetDerivedBuild(input?: {
   readonly wieldedWeapon?: boolean;
   readonly preparedSpell?: boolean;
 }): CharacterBuild {
-  const daggerUnitId = expectRight(characterEquipmentItemUnitId("weapon_dagger"));
+  const daggerUnitId = expectRight(
+    characterEquipmentItemUnitId("weapon_dagger"),
+  );
   const daggerItemId = characterEquipmentItemId({
     slot: "main",
     unitId: daggerUnitId,
@@ -670,7 +681,9 @@ function sheetDerivedBuild(input?: {
     proficiencyChoices: [],
     features: [],
     equipment: {
-      owned: wieldedWeapon ? [{ itemId: daggerItemId, unitId: daggerUnitId }] : [],
+      owned: wieldedWeapon
+        ? [{ itemId: daggerItemId, unitId: daggerUnitId }]
+        : [],
       loadout: wieldedWeapon
         ? { weapon: { itemId: daggerItemId, grip: "one_handed" } }
         : {},
@@ -705,7 +718,7 @@ function findWeaponAttackAct(
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === characterCombatantId &&
-      act.subject.attackName === "Dagger",
+      act.summary === "Take the Attack action with Dagger.",
   );
 }
 
@@ -717,11 +730,11 @@ function requireWeaponAttackAct(state: BattleState): AvailableBattleAct {
   return act;
 }
 
-function findRayOfSicknessAct(
-  state: BattleState,
-): (AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
-}) | undefined {
+function findRayOfSicknessAct(state: BattleState):
+  | (AvailableBattleAct & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    })
+  | undefined {
   return discoverBattleActs(state).find(
     (
       act,
@@ -731,14 +744,14 @@ function findRayOfSicknessAct(
       act.subject.tag === "actionSpell" &&
       act.subject.actorId === characterCombatantId &&
       JSON.stringify(act.subject.invocation) ===
-        JSON.stringify(spellSlotInvocationRef("ray_of_sickness", 1, "spellAttackDamage")) &&
+        JSON.stringify(
+          spellSlotInvocationRef("ray_of_sickness", 1, "spellAttackDamage"),
+        ) &&
       act.subject.mode.tag === "cast",
   );
 }
 
-function requireRayOfSicknessAct(
-  state: BattleState,
-): AvailableBattleAct & {
+function requireRayOfSicknessAct(state: BattleState): AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
   const act = findRayOfSicknessAct(state);
@@ -750,7 +763,9 @@ function requireRayOfSicknessAct(
 
 function levelOneSlotsRemaining(combatant: CharacterBattleCombatant): number {
   const spellcasting = requireCharacterSpellcasting(combatant);
-  const slot = spellcasting.spellSlots.find((candidate) => candidate.spellLevel === 1);
+  const slot = spellcasting.spellSlots.find(
+    (candidate) => candidate.spellLevel === 1,
+  );
   if (slot === undefined) return 0;
   return slot.count - slot.expended;
 }
@@ -765,7 +780,9 @@ function requireCharacterSpellcasting(
   return spellcasting;
 }
 
-function requireCharacterCombatant(state: BattleState): CharacterBattleCombatant {
+function requireCharacterCombatant(
+  state: BattleState,
+): CharacterBattleCombatant {
   const combatant = state.combatants.get(characterCombatantId);
   if (!isCharacterBattleCombatant(combatant)) {
     throw new Error("Expected character combatant.");
@@ -828,7 +845,10 @@ function requireHole(
 function targetFill(
   hole: BattleHole,
   targetId: typeof targetCombatantId,
-  spatialFacts?: Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"],
+  spatialFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"],
 ): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
@@ -934,7 +954,10 @@ function normalizeFacts(raw: unknown): SheetDerivedFacts {
       facts.manualSubjectProfileHandoff,
       "facts.manualSubjectProfileHandoff",
     ),
-    actionAvailable: booleanField(facts.actionAvailable, "facts.actionAvailable"),
+    actionAvailable: booleanField(
+      facts.actionAvailable,
+      "facts.actionAvailable",
+    ),
     spellSlotActAvailable: booleanField(
       facts.spellSlotActAvailable,
       "facts.spellSlotActAvailable",

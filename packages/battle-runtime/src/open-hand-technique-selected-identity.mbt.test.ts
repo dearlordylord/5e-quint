@@ -12,7 +12,7 @@ import {
   battleId,
   characterSeed,
   discoverBattleActs,
-  fighterId,
+  fighterAttackSubject,
   goblinId,
   hasCondition,
   monksFocusResource,
@@ -222,12 +222,7 @@ function projectSaveChoice(
 function projectRejectNonFlurry(): OpenHandTechniqueProjection {
   const flurry = openHandTechniqueHitWindow();
   const state = openHandTechniqueBattle();
-  const subject: BattleSubject = {
-    tag: "action",
-    actorId: fighterId,
-    action: "attack",
-    attackName: "Longsword",
-  };
+  const subject: BattleSubject = fighterAttackSubject(state, "Longsword");
   const target = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",

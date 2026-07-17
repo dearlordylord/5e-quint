@@ -553,7 +553,7 @@ export function relentlessEnduranceDisposition(
 ): Extract<BattleHole, { readonly kind: "attackDamageDisposition" }> & {
   readonly prefixFills: readonly BattleFill[];
 } {
-  const subject = weaponAttackSubject("Longsword");
+  const subject = weaponAttackSubject(state, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -593,7 +593,7 @@ export function relentlessEnduranceDamageResult(
   state: BattleState,
   damageRoll: number,
 ): ReturnType<typeof resolveBattleSubject> {
-  const subject = weaponAttackSubject("Longsword");
+  const subject = weaponAttackSubject(state, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",

@@ -16,6 +16,7 @@ import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Size } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -107,7 +108,6 @@ const CREATURE_SIZE_CHANGE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   ConcentrationBroken: "concentrationBroken",
   DurationExpired: "durationExpired",
 } as const;
-
 
 type CreatureSizeChangeHole = "SavingThrowOutcome";
 
@@ -503,18 +503,7 @@ function resolveAfterConcentrationSave(input: {
 function targetLongswordSubject(
   state: BattleState,
 ): ReturnType<typeof weaponAttackSubject> {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "action" &&
-      candidate.subject.actorId === spellTargetId &&
-      candidate.subject.action === "attack" &&
-      candidate.subject.attackName === "Longsword",
-  );
-  expect(act).toBeDefined();
-  if (act === undefined || act.subject.tag !== "action") {
-    throw new Error("Expected affected target Longsword attack act.");
-  }
-  return act.subject;
+  return characterAttackSubjectForTest(state, spellTargetId, "Longsword");
 }
 
 function breakSizeChangeConcentration(

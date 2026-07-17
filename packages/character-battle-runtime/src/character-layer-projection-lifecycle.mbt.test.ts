@@ -602,9 +602,13 @@ function targetChoiceFill(
         kind: "attackTargetInMeleeReach",
         actorId: subject.actorId,
         targetId: lifecycleCharacterCombatantId,
-        ...(subject.procedureRef === undefined
-          ? { attackName: subject.attackName }
-          : { procedureRef: subject.procedureRef }),
+        procedureRef: subject.procedureRef,
+        ...(subject.attackAbility === undefined
+          ? {}
+          : { attackAbility: subject.attackAbility }),
+        ...(subject.attackDamageType === undefined
+          ? {}
+          : { attackDamageType: subject.attackDamageType }),
       },
     ],
   };

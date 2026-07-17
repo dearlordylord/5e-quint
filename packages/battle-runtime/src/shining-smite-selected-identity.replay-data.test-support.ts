@@ -50,7 +50,7 @@ export const shiningSmiteSelectedIdentityReplay = {
               targetHp: 30,
               targetMaxHp: 30,
             });
-            const subject = weaponAttackSubject("Longsword");
+            const subject = weaponAttackSubject(state, "Longsword");
             const target = requireResultHole(
               resolveBattleSubject({ state, subject, fills: [] }),
               "targetChoice",

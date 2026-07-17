@@ -23,6 +23,7 @@
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -2738,12 +2739,12 @@ function resolveWeaponHitWithAttackRoll(input: {
   readonly afterAttackRoll: BattleResolutionResult;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const subject = weaponAttackSubject(input.attackName);
+  const subject = weaponAttackSubject(input.state, input.attackName);
   const act = discoverBattleActs(input.state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === input.attackName,
+      candidate.subject.procedureRef === subject.procedureRef,
   );
   const awaitingTarget = resolveBattleSubject({
     state: input.state,
@@ -2817,14 +2818,10 @@ function zeroAbilityWeaponAttack(
 }
 
 function weaponAttackSubject(
+  state: BattleState,
   attackName: Level1WeaponAttackName,
-): Extract<BattleSubject, { readonly tag: "action" }> {
-  return {
-    tag: "action",
-    actorId: casterId,
-    action: "attack",
-    attackName,
-  };
+): ReturnType<typeof characterAttackSubjectForTest> {
+  return characterAttackSubjectForTest(state, casterId, attackName);
 }
 
 function attackTargetFill(

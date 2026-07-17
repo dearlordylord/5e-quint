@@ -907,8 +907,7 @@ function actionAct(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === action &&
       (attackName === undefined ||
-        ("attackName" in candidate.subject &&
-          candidate.subject.attackName === attackName)),
+        candidate.summary === `Take the Attack action with ${attackName}.`),
   );
   if (act === undefined) {
     throw new Error(`Expected ${action} act for ${actorId}.`);

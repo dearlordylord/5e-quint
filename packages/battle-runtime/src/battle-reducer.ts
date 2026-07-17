@@ -118,7 +118,8 @@ import type {
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Brand } from "effect";
 import type {
-  CharacterUnarmedStrikeActionOption,
+  BoundCharacterUnarmedStrikeActionOption,
+  BoundCharacterWeaponAttackActionOption,
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
@@ -155,6 +156,7 @@ import type {
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution.ts";
+import type { BattleAttackExecutionScopeRef } from "./identity.ts";
 import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
@@ -187,7 +189,7 @@ import type {
   BattleObjectId,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
-  BattleStatBlockExecutionScopeCursor,
+  BattleExecutionScopeCursor,
   BattleSpellEffectOccurrenceId,
   SpellId,
   BattleTablePositionId,
@@ -1691,6 +1693,10 @@ export type BattleAttackExecutionSelection =
     }
   | {
       readonly procedureRef: BattleProcedureExecutionRef;
+      /** Absent when this selection does not narrow an ability projection. */
+      readonly attackAbility?: import("./battle-action-options.ts").BattleAttackExecutionAbility;
+      /** Absent when this selection does not narrow a damage-type projection. */
+      readonly attackDamageType?: DamageType;
       readonly attackName?: never;
     };
 export type BattleOpportunityAttackSelection = BattleAttackExecutionSelection;
@@ -1714,13 +1720,12 @@ export type BattleTargetSpatialFact =
       readonly firstTargetId: CombatantId;
       readonly secondTargetId: CombatantId;
     }
-  | {
+  | ({
       readonly kind: "weaponMasteryPushDisposition";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
-      readonly attackName: string;
       readonly disposition: BattleShovePushDisposition;
-    }
+    } & BattleAttackExecutionSelection)
   | ({
       readonly kind: "attackTargetInRangedRange";
       readonly actorId: CombatantId;
@@ -4426,9 +4431,10 @@ type BattleCreatureStateCommon = {
         readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
         readonly invocationFeatures: readonly CharacterBattleInvocationFeature[];
         readonly speed: BattleWalkSpeed;
-        readonly attack: CharacterWeaponAttackActionOption | null;
-        readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
-        readonly offHandAttack?: CharacterWeaponAttackActionOption;
+        readonly attackExecutionScopeRef: BattleAttackExecutionScopeRef;
+        readonly attack: BoundCharacterWeaponAttackActionOption | null;
+        readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
+        readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
         readonly metamagic?: CharacterBattleMetamagicState;
         readonly ongoingFeatureProfiles: ReadonlyMap<
@@ -4567,9 +4573,9 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly statBlockExecutionScopeCursors: ReadonlyMap<
+  readonly executionScopeCursors: ReadonlyMap<
     CombatantId,
-    BattleStatBlockExecutionScopeCursor
+    BattleExecutionScopeCursor
   >;
   readonly companions: BattleCompanions;
   readonly objectOutlines: readonly BattleObjectOutline[];
@@ -7286,9 +7292,9 @@ export type BattleFallDamageLandingResult =
 
 export type BattleSnapshot = {
   readonly battleId: BattleId;
-  readonly statBlockExecutionScopeCursors: readonly {
+  readonly executionScopeCursors: readonly {
     readonly combatantId: CombatantId;
-    readonly nextScopeOrdinal: BattleStatBlockExecutionScopeCursor;
+    readonly nextScopeOrdinal: BattleExecutionScopeCursor;
   }[];
   readonly round: RoundType;
   readonly currentActorId: CombatantId;
@@ -7377,6 +7383,12 @@ export type BattleCreatureOriginSnapshot =
   | {
       readonly kind: "character";
       readonly characterId: CharacterId;
+      readonly attackExecution: {
+        readonly scopeRef: BattleAttackExecutionScopeRef;
+        readonly attackProcedureRef: BattleProcedureExecutionRef | null;
+        readonly unarmedStrikeProcedureRef: BattleProcedureExecutionRef;
+        readonly offHandAttackProcedureRef: BattleProcedureExecutionRef | null;
+      };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
       readonly druidWildShapeAvailableForms: readonly {
         readonly statBlockId: StatBlockRecord["id"];

@@ -19,6 +19,7 @@ import {
   wizardSpellcasting,
   spellRecord,
   fighterId,
+  fighterAttackSubject,
   goblinId,
   unitLibrary,
   battleId,
@@ -385,7 +386,7 @@ describe("battle runtime: Paladin's Smite", () => {
   test("Paladin's Smite casts Divine Smite after a melee hit without expending a Spell Slot", () => {
     const paladinsSmite = paladinsSmiteResource();
     const state = paladinsSmiteBattleState(paladinsSmite);
-    const subject = paladinLongswordAttackSubject();
+    const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
       "targetChoice",
@@ -413,12 +414,13 @@ describe("battle runtime: Paladin's Smite", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Paladin's Smite attack-hit window.");
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === fighterId &&
-        choice.invocation.tag === "classFeatureFreeCast",
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === fighterId &&
+          choice.invocation.tag === "classFeatureFreeCast",
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -514,7 +516,7 @@ describe("battle runtime: Paladin's Smite", () => {
     const state = paladinsSmiteBattleState(
       paladinsSmiteResource({ usesRemaining: 0 }),
     );
-    const subject = paladinLongswordAttackSubject();
+    const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
       "targetChoice",
@@ -573,7 +575,7 @@ describe("battle runtime: Paladin's Smite", () => {
         levelOnePlusSpellCastsThisTurn: [fighterId],
       },
     };
-    const subject = paladinLongswordAttackSubject();
+    const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
       "targetChoice",
@@ -677,11 +679,6 @@ function paladinsSmiteBattleState(
   });
 }
 
-function paladinLongswordAttackSubject() {
-  return {
-    tag: "action" as const,
-    actorId: fighterId,
-    action: "attack" as const,
-    attackName: "Longsword",
-  };
+function paladinLongswordAttackSubject(state: BattleState) {
+  return fighterAttackSubject(state, "Longsword");
 }

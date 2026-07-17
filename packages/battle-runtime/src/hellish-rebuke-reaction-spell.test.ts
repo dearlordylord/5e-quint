@@ -738,7 +738,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === damagerId &&
-      act.subject.attackName === "Unarmed Strike",
+      act.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -746,6 +746,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
   const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
   const targetFill = attackTargetFill({
     hole: targetHole,
+    procedureRef: attackAct.subject.procedureRef,
     includeHellishRebukeTriggerFact: input.includeHellishRebukeTriggerFact,
     hellishRebukeFactRangeFeet: input.hellishRebukeFactRangeFeet,
     includeReciprocalHellishRebukeTriggerFact:
@@ -776,6 +777,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
 
 function attackTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "targetChoice" }>;
+  readonly procedureRef: AttackAct["subject"]["procedureRef"];
   readonly includeHellishRebukeTriggerFact: boolean;
   readonly hellishRebukeFactRangeFeet?:
     | ReturnType<typeof movementFeet>
@@ -791,7 +793,7 @@ function attackTargetFill(input: {
         kind: "attackTargetInMeleeReach",
         actorId: damagerId,
         targetId: spellCasterId,
-        attackName: "Unarmed Strike",
+        procedureRef: input.procedureRef,
       },
       ...(input.includeHellishRebukeTriggerFact
         ? [
@@ -839,7 +841,9 @@ function requireTopInterruptCheckpoint(
 ): BattleInterruptCheckpoint {
   const frame = state.interruptStack[state.interruptStack.length - 1];
   if (frame?.kind !== "interruptCheckpoint") {
-    throw new Error("Expected top interrupt frame to be an interrupt checkpoint.");
+    throw new Error(
+      "Expected top interrupt frame to be an interrupt checkpoint.",
+    );
   }
   return frame.frame;
 }

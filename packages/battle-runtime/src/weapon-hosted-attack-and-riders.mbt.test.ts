@@ -278,9 +278,7 @@ const WEAPON_HOSTED_ROUTE_SPEC_FILES = {
     "battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt",
 } as const;
 type WeaponHostedRouteSpecFile =
-  (typeof WEAPON_HOSTED_ROUTE_SPEC_FILES)[
-    keyof typeof WEAPON_HOSTED_ROUTE_SPEC_FILES
-  ];
+  (typeof WEAPON_HOSTED_ROUTE_SPEC_FILES)[keyof typeof WEAPON_HOSTED_ROUTE_SPEC_FILES];
 
 const SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT =
   "spellHostedWeaponAttack" satisfies ReducerRouteSubjectFamily;
@@ -533,7 +531,9 @@ describe("Weapon-hosted attack and riders MBT parity", () => {
       },
     ]);
     expect(route).not.toContainEqual(
-      expect.objectContaining({ subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT }),
+      expect.objectContaining({
+        subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      }),
     );
   });
 
@@ -979,7 +979,10 @@ function routeHeldWeaponReleaseCleanup(): readonly ReducerRouteEvent[] {
     endTurn({ state: letGoState, actorId: spellCasterId }),
     "Expected Shillelagh let-go cleanup to resolve.",
   );
-  return weaponHostedRouteFromResult(result, WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT);
+  return weaponHostedRouteFromResult(
+    result,
+    WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
+  );
 }
 
 function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
@@ -1022,7 +1025,10 @@ function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
     endTurn({ state: casterTurn.state, actorId: spellTargetId }),
     "Expected Divine Favor duration cleanup to resolve.",
   );
-  return weaponHostedRouteFromResult(result, WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT);
+  return weaponHostedRouteFromResult(
+    result,
+    WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
+  );
 }
 
 function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
@@ -1055,7 +1061,10 @@ function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
     endTurn({ state: casterTurn.state, actorId: spellTargetId }),
     "Expected Magic Weapon duration cleanup to resolve.",
   );
-  return weaponHostedRouteFromResult(result, WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT);
+  return weaponHostedRouteFromResult(
+    result,
+    WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
+  );
 }
 
 function weaponHostedRouteFromResult(
@@ -1063,12 +1072,11 @@ function weaponHostedRouteFromResult(
   subject: ReducerRouteSubjectFamily,
 ): readonly ReducerRouteEvent[] {
   if (result.routeEvents === undefined || result.routeEvents.length === 0) {
-    throw new Error(`Expected public weapon-hosted route events for ${subject}.`);
+    throw new Error(
+      `Expected public weapon-hosted route events for ${subject}.`,
+    );
   }
-  return [
-    WEAPON_HOSTED_ROUTE_START,
-    ...result.routeEvents,
-  ];
+  return [WEAPON_HOSTED_ROUTE_START, ...result.routeEvents];
 }
 
 function radiantDamageTypeChoiceFill(
@@ -1288,7 +1296,10 @@ function discoverWeaponAttackAct(
   if (attackName !== "Longsword") {
     throw new Error("Expected Divine Favor to use the Longsword attack.");
   }
-  return { subject: weaponAttackSubject(attackName), initialHoles: [] };
+  return {
+    subject: weaponAttackSubject(state.battle, attackName),
+    initialHoles: [],
+  };
 }
 
 function fillWeaponTarget(

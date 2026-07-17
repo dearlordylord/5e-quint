@@ -1066,9 +1066,7 @@ export function attackSubject(
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.statBlockDamageNotation === undefined &&
-      (candidate.subject.attackName === attackName ||
-        (candidate.subject.procedureRef !== undefined &&
-          candidate.summary === `Take the Attack action with ${attackName}.`)),
+      candidate.summary === `Take the Attack action with ${attackName}.`,
   );
   const [act] = matchingActs;
   if (
@@ -1122,11 +1120,10 @@ export function attackTargetFill(
   >["spatialFacts"] = [],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const selection =
-    typeof attack === "string"
-      ? { attackName: attack }
-      : attack.procedureRef === undefined
-        ? { attackName: attack.attackName }
-        : { procedureRef: attack.procedureRef };
+    typeof attack === "string" ? hole.attack?.selection : attack;
+  if (selection === undefined) {
+    throw new Error(`Expected ${attack} attack selection on target hole.`);
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,

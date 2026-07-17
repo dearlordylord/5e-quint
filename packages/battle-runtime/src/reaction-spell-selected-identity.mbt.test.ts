@@ -524,7 +524,8 @@ const reactionPayloadRouteBySurface = {
   reactionArmorClassEffect: resolveShieldReactionSpellHitRoute,
   afterDamageSaveDamage: resolveHellishRebukeFailedSavingThrowRoute,
   spellInterruptionEnded: resolveCounterspellHigherLevelMagicMissileEndedRoute,
-  spellInterruptionResumed: resolveCounterspellHigherLevelMagicMissileResumedRoute,
+  spellInterruptionResumed:
+    resolveCounterspellHigherLevelMagicMissileResumedRoute,
 } as const satisfies Record<
   ReplayableReactionInterruptPayloadRouteSurface,
   () => readonly ReducerRouteEvent[]
@@ -565,7 +566,9 @@ function createReactionPayloadRouteReplayDriver(
       ),
       doRouteAfterDamageSaveDamage: recordSurface("afterDamageSaveDamage"),
       doRouteSpellInterruptionEnded: recordSurface("spellInterruptionEnded"),
-      doRouteSpellInterruptionResumed: recordSurface("spellInterruptionResumed"),
+      doRouteSpellInterruptionResumed: recordSurface(
+        "spellInterruptionResumed",
+      ),
       step: recordSurface(surface),
       getState: () => projection,
     };
@@ -657,9 +660,11 @@ function reactionSpellBattle(spell: SpellRecord): BattleState {
   return result.right;
 }
 
-function counterspellBattle(input: {
-  readonly magicMissileSlotLevel?: number | undefined;
-} = {}): BattleState {
+function counterspellBattle(
+  input: {
+    readonly magicMissileSlotLevel?: number | undefined;
+  } = {},
+): BattleState {
   const triggerSpellSlotLevel =
     input.magicMissileSlotLevel ?? magicMissileSlotLevel;
   const result = startBattle({
@@ -878,7 +883,7 @@ function resolveAttackRollOnly(input: {
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === triggerCreatureId &&
-      act.subject.attackName === "Unarmed Strike",
+      act.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");

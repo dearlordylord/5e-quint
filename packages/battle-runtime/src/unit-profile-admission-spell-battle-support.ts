@@ -46,6 +46,14 @@ export function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
+  readonly offHandAttack?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["offHandAttack"];
+  readonly selectedLoadout?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["selectedLoadout"];
   readonly spellSlots?: readonly {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
     readonly count: number;
@@ -134,6 +142,12 @@ export function spellBattle(input: {
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
         ...(input.attack === undefined ? {} : { attack: input.attack }),
+        ...(input.offHandAttack === undefined
+          ? {}
+          : { offHandAttack: input.offHandAttack }),
+        ...(input.selectedLoadout === undefined
+          ? {}
+          : { selectedLoadout: input.selectedLoadout }),
         classLevels: casterClassLevels,
         ...(input.casterWeaponProficiencies === undefined
           ? {}

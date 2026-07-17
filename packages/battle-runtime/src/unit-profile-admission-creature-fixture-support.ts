@@ -31,6 +31,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
   oppositionSide,
   partySide,
@@ -65,6 +66,10 @@ export function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
+  readonly offHandAttack?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["offHandAttack"];
   readonly characterUnitRefs?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -136,9 +141,17 @@ export function characterCreature(input: {
       armorClass:
         input.armorClass !== undefined
           ? input.armorClass
-          : attack === null
-            ? defaultArmorClassState()
-            : { ...defaultArmorClassState(), rightHandUse: "mainWeapon" },
+          : {
+              ...defaultArmorClassState(),
+              leftHandUse:
+                selectedLoadout.shield !== undefined
+                  ? "shield"
+                  : selectedLoadout.offHandWeapon !== undefined
+                    ? "offWeapon"
+                    : "free",
+              rightHandUse:
+                selectedLoadout.weapon === undefined ? "free" : "mainWeapon",
+            },
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),
@@ -146,6 +159,9 @@ export function characterCreature(input: {
       tempHp: Hp(input.tempHp ?? 0),
       selectedLoadout,
       attack,
+      ...(input.offHandAttack === undefined
+        ? {}
+        : { offHandAttack: input.offHandAttack }),
       ...(input.unitFeatures === undefined
         ? {}
         : { unitFeatures: input.unitFeatures }),
@@ -298,45 +314,49 @@ export function zeroAbilityWeaponAttack(
   };
 }
 
-export function withSameClubMainAndOffHand(
-  state: BattleState,
-  offHandAttack: ReturnType<typeof zeroAbilityWeaponAttack>,
-): BattleState {
-  const caster = requireCombatant(state, spellCasterId);
-  if (caster.origin.kind !== "character") {
-    throw new Error("Expected character caster.");
-  }
+export function sameClubMainAndOffHandLoadout(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["selectedLoadout"]
+> {
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      origin: {
-        ...caster.origin,
-        selectedLoadout: {
-          weapon: {
-            itemId: "main:weapon_club",
-            unitId: "weapon_club",
-            grip: "one_handed",
-          },
-          offHandWeapon: {
-            itemId: "off:weapon_club",
-            unitId: "weapon_club",
-          },
-        },
-        offHandAttack,
-      },
-    }),
+    weapon: {
+      itemId: "main:weapon_club",
+      unitId: "weapon_club",
+      grip: "one_handed",
+    },
+    offHandWeapon: {
+      itemId: "off:weapon_club",
+      unitId: "weapon_club",
+    },
   };
 }
 
 export function weaponAttackSubject(
-  attackName: "Longsword" | "Shortbow",
-): Extract<BattleSubject, { readonly tag: "action" }> {
+  state: BattleState,
+  attackName: string,
+): {
+  readonly tag: "action";
+  readonly actorId: CombatantId;
+  readonly action: "attack";
+  readonly procedureRef: BattleProcedureExecutionRef;
+} {
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === spellCasterId &&
+      act.summary === `Take the Attack action with ${attackName}.`,
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error(`Expected discovered ${attackName} attack.`);
+  }
   return {
     tag: "action",
     actorId: spellCasterId,
     action: "attack",
-    attackName,
+    procedureRef: subject.procedureRef,
   };
 }
 
@@ -358,10 +378,12 @@ export function requireResultHole<K extends BattleHole["kind"]>(
   result: ReturnType<typeof resolveBattleSubject>,
   kind: K,
 ): Extract<BattleHole, { readonly kind: K }> {
-  expect(result).toMatchObject({ tag: "needsHoles" });
   if (result.tag !== "needsHoles") {
-    throw new Error(`Expected ${kind} hole result.`);
+    throw new Error(
+      `Expected ${kind} hole result, got ${result.tag}: ${"message" in result ? result.message : "no message"}.`,
+    );
   }
+  expect(result).toMatchObject({ tag: "needsHoles" });
   return requireHole(result.holes, kind);
 }
 
@@ -386,12 +408,16 @@ export function weaponAttackRollHole(input: {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
 }): Extract<BattleHole, { readonly kind: "attackRoll" }> {
-  const subject: BattleSubject = {
-    tag: "action",
-    actorId: input.actorId,
-    action: "attack",
-    attackName: input.attackName,
-  };
+  const subject = discoverBattleActs(input.state).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === input.actorId &&
+      act.summary === `Take the Attack action with ${input.attackName}.`,
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error(`Expected discovered ${input.attackName} attack.`);
+  }
   const targetHole = requireResultHole(
     resolveBattleSubject({ state: input.state, subject, fills: [] }),
     "targetChoice",
@@ -458,7 +484,7 @@ export function resolveWeaponAttack(
   state: BattleState,
   attackName: "Longsword" | "Shortbow",
 ): ReturnType<typeof resolveBattleSubject> {
-  const subject = weaponAttackSubject(attackName);
+  const subject = weaponAttackSubject(state, attackName);
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -499,7 +525,7 @@ export function completedWeaponDamageInput(state: BattleState): {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
 } {
-  const subject = weaponAttackSubject("Longsword");
+  const subject = weaponAttackSubject(state, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",

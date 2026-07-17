@@ -292,6 +292,10 @@ import {
   attackActionOptionName,
   attackTargetConstraint,
 } from "./statblock-attacks.ts";
+import {
+  attackExecutionAbility,
+  attackExecutionDamageType,
+} from "../battle-action-options.ts";
 import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import type {
@@ -6111,8 +6115,7 @@ function opportunityAttackThreatsEqual(
       return (
         other !== undefined &&
         threat.reactorId === other.reactorId &&
-        threat.attackName === other.attackName &&
-        threat.procedureRef === other.procedureRef
+        attackExecutionSelectionsEqual(threat, other)
       );
     })
   );
@@ -6210,12 +6213,12 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
 
   return {
     battleId: state.battleId,
-    statBlockExecutionScopeCursors: [
-      ...state.statBlockExecutionScopeCursors,
-    ].map(([combatantId, nextScopeOrdinal]) => ({
-      combatantId,
-      nextScopeOrdinal,
-    })),
+    executionScopeCursors: [...state.executionScopeCursors].map(
+      ([combatantId, nextScopeOrdinal]) => ({
+        combatantId,
+        nextScopeOrdinal,
+      }),
+    ),
     round: state.initiative.round,
     currentActorId: currentActorId(state),
     turnOrder,
@@ -6709,6 +6712,8 @@ export function opportunityAttackReactionChoices(
       threat,
     );
     if (attack === undefined) return [];
+    const executionAbility = attackExecutionAbility(attack);
+    const executionDamageType = attackExecutionDamageType(attack);
     return [
       {
         kind: "opportunityAttack" as const,
@@ -6720,8 +6725,16 @@ export function opportunityAttackReactionChoices(
           command: "opportunityAttack" as const,
           reactorId,
           targetId: moverId,
-          ...(attack.kind === "statBlockAttack"
-            ? { procedureRef: attack.procedureRef }
+          ...("procedureRef" in attack
+            ? {
+                procedureRef: attack.procedureRef,
+                ...(executionAbility === undefined
+                  ? {}
+                  : { attackAbility: executionAbility }),
+                ...(executionDamageType === undefined
+                  ? {}
+                  : { attackDamageType: executionDamageType }),
+              }
             : { attackName: attackActionOptionName(attack) }),
         },
       },

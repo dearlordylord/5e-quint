@@ -77,6 +77,7 @@ import {
 } from "../battle-subjects.ts";
 import {
   BattleAreaId,
+  BattleAttackExecutionScopeRef,
   BattleCombatantSide,
   BattleDancingLightId,
   BattleId,
@@ -85,8 +86,11 @@ import {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
-  BattleStatBlockExecutionScopeCursor,
+  BattleExecutionScopeCursor,
   battleProcedureExecutionRefBelongsToScope,
+  battleAttackExecutionScopeRefBelongsToBattle,
+  battleAttackExecutionScopeRefBelongsToCombatant,
+  battleAttackExecutionScopeRefOrdinalIsBefore,
   battleResourcePoolExecutionRefBelongsToScope,
   battleStatBlockExecutionScopeRefBelongsToBattle,
   battleStatBlockExecutionScopeRefBelongsToCombatant,
@@ -627,6 +631,26 @@ const BattleObjectIgnitionDispositionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("wornOrCarried") }),
 );
 
+const BattleAttackExecutionAbilitySchema = Schema.Union(
+  AbilitySchema,
+  Schema.Literal("spellcasting"),
+);
+
+const BattleAttackExecutionSelectionSchema = Schema.Union(
+  Schema.Struct({
+    attackName: Schema.String,
+    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    procedureRef: BattleProcedureExecutionRef,
+    attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
+      exact: true,
+    }),
+    attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+);
+
 const BattleTargetSpatialFactSchema = Schema.Union(
   Schema.Union(
     Schema.Struct({
@@ -641,6 +665,10 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       actorId: CombatantId,
       targetId: CombatantId,
       procedureRef: BattleProcedureExecutionRef,
+      attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
+        exact: true,
+      }),
+      attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     }),
   ),
@@ -655,13 +683,28 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     firstTargetId: CombatantId,
     secondTargetId: CombatantId,
   }),
-  Schema.Struct({
-    kind: Schema.Literal("weaponMasteryPushDisposition"),
-    attackerId: CombatantId,
-    targetId: CombatantId,
-    attackName: Schema.String,
-    disposition: BattleThunderwavePushDispositionSchema,
-  }),
+  Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("weaponMasteryPushDisposition"),
+      attackerId: CombatantId,
+      targetId: CombatantId,
+      attackName: Schema.String,
+      procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+      disposition: BattleThunderwavePushDispositionSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("weaponMasteryPushDisposition"),
+      attackerId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleProcedureExecutionRef,
+      attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
+        exact: true,
+      }),
+      attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+      disposition: BattleThunderwavePushDispositionSchema,
+    }),
+  ),
   Schema.Union(
     Schema.Struct({
       kind: Schema.Literal("attackTargetInRangedRange"),
@@ -1191,17 +1234,6 @@ const BattleOngoingSpellTargetWithinRangeFactSchema = Schema.Struct({
   target: BattleOngoingSpellTargetSchema,
   rangeFeet: MovementFeet,
 });
-
-const BattleAttackExecutionSelectionSchema = Schema.Union(
-  Schema.Struct({
-    attackName: Schema.String,
-    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    procedureRef: BattleProcedureExecutionRef,
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-);
 
 export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
@@ -5042,6 +5074,18 @@ const BattleCreatureOriginSnapshotSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("character"),
     characterId: Schema.String,
+    attackExecution: Schema.Struct({
+      scopeRef: BattleAttackExecutionScopeRef,
+      attackProcedureRef: Schema.Union(
+        BattleProcedureExecutionRef,
+        Schema.Null,
+      ),
+      unarmedStrikeProcedureRef: BattleProcedureExecutionRef,
+      offHandAttackProcedureRef: Schema.Union(
+        BattleProcedureExecutionRef,
+        Schema.Null,
+      ),
+    }),
     resources: Schema.Array(BattleCharacterResourceSnapshotSchema),
     druidWildShapeAvailableForms: Schema.Array(
       Schema.Struct({
@@ -5099,26 +5143,47 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
   }),
 }).pipe(
   Schema.filter(
-    (snapshot) =>
-      snapshot.origin.kind === "statBlock"
-        ? battleStatBlockExecutionScopeRefBelongsToCombatant(
-            snapshot.origin.execution.scopeRef,
+    (snapshot) => {
+      if (snapshot.origin.kind === "statBlock") {
+        return battleStatBlockExecutionScopeRefBelongsToCombatant(
+          snapshot.origin.execution.scopeRef,
+          snapshot.combatantId,
+        );
+      }
+      const characterOrigin = snapshot.origin;
+      const attackProcedureRefs = [
+        characterOrigin.attackExecution.attackProcedureRef,
+        characterOrigin.attackExecution.unarmedStrikeProcedureRef,
+        characterOrigin.attackExecution.offHandAttackProcedureRef,
+      ].filter((reference) => reference !== null);
+      return (
+        battleAttackExecutionScopeRefBelongsToCombatant(
+          characterOrigin.attackExecution.scopeRef,
+          snapshot.combatantId,
+        ) &&
+        attackProcedureRefs.every((procedureRef) =>
+          battleProcedureExecutionRefBelongsToScope(
+            procedureRef,
+            characterOrigin.attackExecution.scopeRef,
+          ),
+        ) &&
+        new Set(attackProcedureRefs).size === attackProcedureRefs.length &&
+        characterOrigin.druidWildShapeAvailableForms.every((form) =>
+          battleStatBlockExecutionScopeRefBelongsToCombatant(
+            form.execution.scopeRef,
             snapshot.combatantId,
-          )
-        : snapshot.origin.druidWildShapeAvailableForms.every((form) =>
-            battleStatBlockExecutionScopeRefBelongsToCombatant(
-              form.execution.scopeRef,
-              snapshot.combatantId,
-            ),
-          ) &&
-          new Set(
-            snapshot.origin.druidWildShapeAvailableForms.map(
-              (form) => form.execution.scopeRef,
-            ),
-          ).size === snapshot.origin.druidWildShapeAvailableForms.length,
+          ),
+        ) &&
+        new Set(
+          characterOrigin.druidWildShapeAvailableForms.map(
+            (form) => form.execution.scopeRef,
+          ),
+        ).size === characterOrigin.druidWildShapeAvailableForms.length
+      );
+    },
     {
       message: () =>
-        "Stat Block execution scopes must be unique and owned by their combatant.",
+        "Execution scopes and procedure refs must be unique and owned by their combatant.",
     },
   ),
 );
@@ -5477,10 +5542,10 @@ const BattleCompanionSnapshotSchema = Schema.Union(
 
 export const BattleSnapshotSchema = Schema.Struct({
   battleId: BattleId,
-  statBlockExecutionScopeCursors: Schema.Array(
+  executionScopeCursors: Schema.Array(
     Schema.Struct({
       combatantId: CombatantId,
-      nextScopeOrdinal: BattleStatBlockExecutionScopeCursor,
+      nextScopeOrdinal: BattleExecutionScopeCursor,
     }),
   ),
   round: Schema.Number,
@@ -5508,9 +5573,12 @@ export const BattleSnapshotSchema = Schema.Struct({
         const executionScopes = snapshot.combatants.flatMap((combatant) =>
           (combatant.origin.kind === "statBlock"
             ? [combatant.origin.execution.scopeRef]
-            : combatant.origin.druidWildShapeAvailableForms.map(
-                (form) => form.execution.scopeRef,
-              )
+            : [
+                combatant.origin.attackExecution.scopeRef,
+                ...combatant.origin.druidWildShapeAvailableForms.map(
+                  (form) => form.execution.scopeRef,
+                ),
+              ]
           ).map((scopeRef) => ({
             combatantId: combatant.combatantId,
             scopeRef,
@@ -5520,7 +5588,7 @@ export const BattleSnapshotSchema = Schema.Struct({
           (executionScope) => executionScope.scopeRef,
         );
         const cursorByCombatant = new Map(
-          snapshot.statBlockExecutionScopeCursors.map((cursor) => [
+          snapshot.executionScopeCursors.map((cursor) => [
             cursor.combatantId,
             cursor.nextScopeOrdinal,
           ]),
@@ -5529,20 +5597,29 @@ export const BattleSnapshotSchema = Schema.Struct({
           new Set(snapshot.combatants.map((combatant) => combatant.combatantId))
             .size === snapshot.combatants.length &&
           new Set(executionScopeRefs).size === executionScopeRefs.length &&
-          cursorByCombatant.size ===
-            snapshot.statBlockExecutionScopeCursors.length &&
-          executionScopes.every((executionScope) =>
-            battleStatBlockExecutionScopeRefOrdinalIsBefore(
+          cursorByCombatant.size === snapshot.executionScopeCursors.length &&
+          executionScopes.every((executionScope) => {
+            const cursor = cursorByCombatant.get(executionScope.combatantId);
+            return Schema.is(BattleAttackExecutionScopeRef)(
               executionScope.scopeRef,
-              cursorByCombatant.get(executionScope.combatantId),
-            ),
-          ) &&
-          executionScopeRefs.every((scopeRef) =>
-            battleStatBlockExecutionScopeRefBelongsToBattle(
-              scopeRef,
-              snapshot.battleId,
-            ),
-          )
+            )
+              ? battleAttackExecutionScopeRefOrdinalIsBefore(
+                  executionScope.scopeRef,
+                  cursor,
+                ) &&
+                  battleAttackExecutionScopeRefBelongsToBattle(
+                    executionScope.scopeRef,
+                    snapshot.battleId,
+                  )
+              : battleStatBlockExecutionScopeRefOrdinalIsBefore(
+                  executionScope.scopeRef,
+                  cursor,
+                ) &&
+                  battleStatBlockExecutionScopeRefBelongsToBattle(
+                    executionScope.scopeRef,
+                    snapshot.battleId,
+                  );
+          })
         );
       },
       {

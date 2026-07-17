@@ -191,7 +191,7 @@ function projectAttackAdvantageAgainstGrappledTarget(): GrapplerProjection {
       },
     ],
   };
-  const subject = fighterAttackSubject();
+  const subject = fighterAttackSubject(state);
   const target = attackInitialTargetHole(state, subject);
   const attackRoll = attackRollHoleAfterTarget(
     state,
@@ -214,7 +214,7 @@ function projectPunchAndGrabFailedSaveGrapple(): GrapplerProjection {
   const state = fighterVsGoblinBattle({
     characterUnitRefs: grapplerUnitRefs(),
   });
-  const subject = fighterAttackSubject("Unarmed Strike");
+  const subject = fighterAttackSubject(state, "Unarmed Strike");
   const target = attackInitialTargetHole(state, subject);
   const attackRoll = attackRollHoleAfterTarget(
     state,

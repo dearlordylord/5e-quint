@@ -14,6 +14,8 @@ import {
   slotAttackDamageSpell,
   spellRecord,
   magicSubject,
+  fighterAttackSubject,
+  characterAttackSubjectForTest,
   oppositionSide,
   fighterId,
   goblinId,
@@ -223,7 +225,14 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           movementFill(move, {
             movementCostFeet: 5,
             provokedOpportunityAttacks: [
-              { reactorId: skeletonId, attackName: "Longsword" },
+              {
+                reactorId: skeletonId,
+                procedureRef: characterAttackSubjectForTest(
+                  fighterTurn,
+                  skeletonId,
+                  "Longsword",
+                ).procedureRef,
+              },
             ],
           }),
         ],
@@ -568,12 +577,10 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     if (fighterTurn.tag !== "resolved") {
       throw new Error("Expected Fighter turn after Guiding Bolt.");
     }
-    const fighterAttack: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const fighterAttack: BattleSubject = fighterAttackSubject(
+      state,
+      "Longsword",
+    );
     const fighterTarget = requireHole(
       resolveBattleSubject({
         state: fighterTurn.state,
@@ -658,12 +665,11 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     if (afterFighter.tag !== "resolved") {
       throw new Error("Expected Skeleton turn after Vicious Mockery.");
     }
-    const skeletonAttack: BattleSubject = {
-      tag: "action",
-      actorId: skeletonId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const skeletonAttack: BattleSubject = characterAttackSubjectForTest(
+      afterFighter.state,
+      skeletonId,
+      "Longsword",
+    );
     const skeletonTarget = requireHole(
       resolveBattleSubject({
         state: afterFighter.state,
