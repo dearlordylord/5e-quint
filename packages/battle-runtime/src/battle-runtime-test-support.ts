@@ -1023,15 +1023,14 @@ export function attackExecutionSelectionForSubjectForTest(
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): BattleAttackExecutionSelection {
-  return {
-    procedureRef: subject.procedureRef,
-    ...(subject.attackAbility === undefined
-      ? {}
-      : { attackAbility: subject.attackAbility }),
-    ...(subject.attackDamageType === undefined
-      ? {}
-      : { attackDamageType: subject.attackDamageType }),
-  };
+  return subject.attackAbility === undefined ||
+    subject.attackDamageType === undefined
+    ? { procedureRef: subject.procedureRef }
+    : {
+        procedureRef: subject.procedureRef,
+        attackAbility: subject.attackAbility,
+        attackDamageType: subject.attackDamageType,
+      };
 }
 
 export function characterBonusAttackSubjectForTest(
@@ -3654,15 +3653,14 @@ export function opportunityAttackProcedureSelectionForTest(
   const selection: BattleAttackExecutionSelection =
     choice.subject.procedureRef === undefined
       ? { attackName: choice.subject.attackName }
-      : {
-          procedureRef: choice.subject.procedureRef,
-          ...(choice.subject.attackAbility === undefined
-            ? {}
-            : { attackAbility: choice.subject.attackAbility }),
-          ...(choice.subject.attackDamageType === undefined
-            ? {}
-            : { attackDamageType: choice.subject.attackDamageType }),
-        };
+      : choice.subject.attackAbility === undefined ||
+          choice.subject.attackDamageType === undefined
+        ? { procedureRef: choice.subject.procedureRef }
+        : {
+            procedureRef: choice.subject.procedureRef,
+            attackAbility: choice.subject.attackAbility,
+            attackDamageType: choice.subject.attackDamageType,
+          };
   return {
     kind: "opportunityAttack",
     reactorId: choice.reactorId,

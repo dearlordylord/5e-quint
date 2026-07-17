@@ -15,7 +15,10 @@ import type {
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
-import type { BattleProcedureExecutionRef } from "./identity.ts";
+import type {
+  BattleAttackProcedureExecutionRef,
+  BattleProcedureExecutionRef,
+} from "./identity.ts";
 
 export type BattleWeaponDamage = Extract<
   WeaponDamage,
@@ -84,12 +87,12 @@ export type CharacterAttackActionOption =
 
 export type BoundCharacterWeaponAttackActionOption =
   CharacterWeaponAttackActionOption & {
-    readonly procedureRef: BattleProcedureExecutionRef;
+    readonly procedureRef: BattleAttackProcedureExecutionRef;
   };
 
 export type BoundCharacterUnarmedStrikeActionOption =
   CharacterUnarmedStrikeActionOption & {
-    readonly procedureRef: BattleProcedureExecutionRef;
+    readonly procedureRef: BattleAttackProcedureExecutionRef;
   };
 
 export type BoundCharacterAttackActionOption =
@@ -287,6 +290,20 @@ export type BoundSupportedAttackActionOption =
 
 export type BattleAttackExecutionAbility = Ability | "spellcasting";
 
+export type CharacterAttackExecutionSelection = {
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly attackAbility: BattleAttackExecutionAbility;
+  readonly attackDamageType: DamageType;
+};
+export type StatBlockAttackExecutionSelection = {
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly attackAbility?: never;
+  readonly attackDamageType?: never;
+};
+export type BoundAttackExecutionSelection =
+  | CharacterAttackExecutionSelection
+  | StatBlockAttackExecutionSelection;
+
 export function attackExecutionAbility(
   attack: SupportedAttackActionOption,
 ): BattleAttackExecutionAbility | undefined {
@@ -301,6 +318,54 @@ export function attackExecutionDamageType(
   if (attack.kind === "weapon") return attack.weapon.damage.damageType;
   if (attack.kind === "unarmedStrike") return attack.effect.damage.damageType;
   return undefined;
+}
+
+export function attackExecutionSelectionForOption(
+  attack: BoundCharacterAttackActionOption,
+): CharacterAttackExecutionSelection;
+export function attackExecutionSelectionForOption(
+  attack: StatBlockAttackActionOption,
+): StatBlockAttackExecutionSelection;
+export function attackExecutionSelectionForOption(
+  attack: BoundSupportedAttackActionOption,
+): BoundAttackExecutionSelection;
+export function attackExecutionSelectionForOption(
+  attack: BoundSupportedAttackActionOption,
+): BoundAttackExecutionSelection {
+  if (attack.kind === "statBlockAttack") {
+    return { procedureRef: attack.procedureRef };
+  }
+  return {
+    procedureRef: attack.procedureRef,
+    attackAbility:
+      attack.kind === "weapon" ? attack.ability : attack.attackAbility,
+    attackDamageType:
+      attack.kind === "weapon"
+        ? attack.weapon.damage.damageType
+        : attack.effect.damage.damageType,
+  };
+}
+
+export function boundAttackExecutionSelectionMatchesOption(
+  selection: BoundAttackExecutionSelection,
+  attack: BoundSupportedAttackActionOption,
+): boolean {
+  if (selection.procedureRef !== attack.procedureRef) return false;
+  return attack.kind === "statBlockAttack"
+    ? selection.attackAbility === undefined &&
+        selection.attackDamageType === undefined
+    : selection.attackAbility === attackExecutionAbility(attack) &&
+        selection.attackDamageType === attackExecutionDamageType(attack);
+}
+
+export function boundAttackExecutionSelectionKey(
+  selection: BoundAttackExecutionSelection,
+): string {
+  return JSON.stringify([
+    selection.procedureRef,
+    selection.attackAbility ?? null,
+    selection.attackDamageType ?? null,
+  ]);
 }
 
 export type StatBlockAttackDamageComponent = {

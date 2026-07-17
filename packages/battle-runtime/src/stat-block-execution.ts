@@ -33,7 +33,7 @@ import {
   type BattleId,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
-  battleProcedureExecutionRef,
+  battleStatBlockProcedureExecutionRef,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
@@ -1118,7 +1118,7 @@ function allocateProcedureRef(
 ): BattleProcedureExecutionRef {
   const ordinal = allocator.procedureOrdinal;
   allocator.procedureOrdinal = NonNegativeInteger(ordinal + 1);
-  return battleProcedureExecutionRef(allocator.scopeRef, ordinal);
+  return battleStatBlockProcedureExecutionRef(allocator.scopeRef, ordinal);
 }
 
 function allocateResourcePoolRef(

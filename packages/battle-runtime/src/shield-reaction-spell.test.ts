@@ -255,10 +255,7 @@ describe("Shield Reaction spell", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: attackerThreeId,
-              procedureRef: unarmedStrikeProcedureRef(
-                casterTurn,
-                attackerThreeId,
-              ),
+              ...unarmedStrikeSelection(casterTurn, attackerThreeId),
             },
           ],
         }),
@@ -904,7 +901,6 @@ function resolveAttackRollOnly(input: {
     targetHole,
     input.attackerId,
     input.targetId,
-    attackAct.subject.procedureRef,
   );
   const awaitingAttackRoll = resolveBattleSubject({
     state: input.state,
@@ -948,7 +944,6 @@ function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
-  procedureRef: AttackAct["subject"]["procedureRef"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -959,7 +954,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        procedureRef,
+        ...(hole.attack?.selection ?? { attackName: "Unarmed Strike" }),
       },
     ],
   };
@@ -1007,15 +1002,16 @@ function movementFill(
   };
 }
 
-function unarmedStrikeProcedureRef(
-  state: BattleState,
-  actorId: CombatantId,
-): AttackAct["subject"]["procedureRef"] {
+function unarmedStrikeSelection(state: BattleState, actorId: CombatantId) {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     throw new Error(`Expected character combatant ${actorId}.`);
   }
-  return actor.origin.unarmedStrike.procedureRef;
+  return {
+    procedureRef: actor.origin.unarmedStrike.procedureRef,
+    attackAbility: actor.origin.unarmedStrike.attackAbility,
+    attackDamageType: actor.origin.unarmedStrike.effect.damage.damageType,
+  };
 }
 
 function spellTargetFill(

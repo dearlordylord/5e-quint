@@ -44,6 +44,7 @@ import {
   endTurn,
   fighterId,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
   characterBonusAttackSubjectForTest,
   findAct,
@@ -1588,11 +1589,9 @@ function startOpportunityAttack(
         provokedOpportunityAttacks: [
           {
             reactorId: goblinId,
-            procedureRef: characterAttackSubjectForTest(
-              state,
-              goblinId,
-              attackName,
-            ).procedureRef,
+            ...attackExecutionSelectionForSubjectForTest(
+              characterAttackSubjectForTest(state, goblinId, attackName),
+            ),
           },
         ],
       }),

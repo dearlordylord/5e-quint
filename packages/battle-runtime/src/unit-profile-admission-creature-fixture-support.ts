@@ -336,12 +336,10 @@ export function sameClubMainAndOffHandLoadout(): NonNullable<
 export function weaponAttackSubject(
   state: BattleState,
   attackName: string,
-): {
-  readonly tag: "action";
-  readonly actorId: CombatantId;
-  readonly action: "attack";
-  readonly procedureRef: BattleProcedureExecutionRef;
-} {
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
   const subject = discoverBattleActs(state).find(
     (act) =>
       act.subject.tag === "action" &&
@@ -352,12 +350,7 @@ export function weaponAttackSubject(
   if (subject?.tag !== "action" || subject.action !== "attack") {
     throw new Error(`Expected discovered ${attackName} attack.`);
   }
-  return {
-    tag: "action",
-    actorId: spellCasterId,
-    action: "attack",
-    procedureRef: subject.procedureRef,
-  };
+  return subject;
 }
 
 export function requireHole<K extends BattleHole["kind"]>(

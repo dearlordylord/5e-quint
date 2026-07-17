@@ -10,6 +10,7 @@ import {
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
+  attackExecutionSelectionForSubjectForTest,
   characterBonusAttackSubjectForTest,
   characterAttackSubjectForTest,
   concentrationSavingThrowFill,
@@ -471,7 +472,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         spellTargetId,
       ]),
     );
-    const clubProcedureRef = weaponAttackSubject(state, "Club").procedureRef;
+    const clubAttack = weaponAttackSubject(state, "Club");
     const subject: Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
@@ -481,7 +482,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       command: "opportunityAttack",
       reactorId: spellCasterId,
       targetId: spellTargetId,
-      procedureRef: clubProcedureRef,
+      ...attackExecutionSelectionForSubjectForTest(clubAttack),
     };
     const attackRoll = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),

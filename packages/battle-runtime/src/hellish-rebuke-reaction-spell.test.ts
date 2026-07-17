@@ -746,7 +746,6 @@ function resolveUnarmedStrikeAgainstCaster(input: {
   const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
   const targetFill = attackTargetFill({
     hole: targetHole,
-    procedureRef: attackAct.subject.procedureRef,
     includeHellishRebukeTriggerFact: input.includeHellishRebukeTriggerFact,
     hellishRebukeFactRangeFeet: input.hellishRebukeFactRangeFeet,
     includeReciprocalHellishRebukeTriggerFact:
@@ -777,7 +776,6 @@ function resolveUnarmedStrikeAgainstCaster(input: {
 
 function attackTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "targetChoice" }>;
-  readonly procedureRef: AttackAct["subject"]["procedureRef"];
   readonly includeHellishRebukeTriggerFact: boolean;
   readonly hellishRebukeFactRangeFeet?:
     | ReturnType<typeof movementFeet>
@@ -793,7 +791,9 @@ function attackTargetFill(input: {
         kind: "attackTargetInMeleeReach",
         actorId: damagerId,
         targetId: spellCasterId,
-        procedureRef: input.procedureRef,
+        ...(input.hole.attack?.selection ?? {
+          attackName: "Unarmed Strike",
+        }),
       },
       ...(input.includeHellishRebukeTriggerFact
         ? [

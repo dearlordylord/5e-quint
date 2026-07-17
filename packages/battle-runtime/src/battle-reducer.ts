@@ -1693,10 +1693,14 @@ export type BattleAttackExecutionSelection =
     }
   | {
       readonly procedureRef: BattleProcedureExecutionRef;
-      /** Absent when this selection does not narrow an ability projection. */
-      readonly attackAbility?: import("./battle-action-options.ts").BattleAttackExecutionAbility;
-      /** Absent when this selection does not narrow a damage-type projection. */
-      readonly attackDamageType?: DamageType;
+      readonly attackAbility: import("./battle-action-options.ts").BattleAttackExecutionAbility;
+      readonly attackDamageType: DamageType;
+      readonly attackName?: never;
+    }
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly attackAbility?: never;
+      readonly attackDamageType?: never;
       readonly attackName?: never;
     };
 export type BattleOpportunityAttackSelection = BattleAttackExecutionSelection;
@@ -4431,7 +4435,6 @@ type BattleCreatureStateCommon = {
         readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
         readonly invocationFeatures: readonly CharacterBattleInvocationFeature[];
         readonly speed: BattleWalkSpeed;
-        readonly attackExecutionScopeRef: BattleAttackExecutionScopeRef;
         readonly attack: BoundCharacterWeaponAttackActionOption | null;
         readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;

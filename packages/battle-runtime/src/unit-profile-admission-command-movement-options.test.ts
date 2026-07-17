@@ -1,6 +1,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-approach-route spell.invocation-command-flee-route
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 import {
   commandUnitId,
   spellCasterId,
@@ -637,11 +640,13 @@ describe("QMBT14 deterministic Command movement option admission", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: spellCasterId,
-              procedureRef: characterAttackSubjectForTest(
-                targetTurn.state,
-                spellCasterId,
-                "Unarmed Strike",
-              ).procedureRef,
+              ...attackExecutionSelectionForSubjectForTest(
+                characterAttackSubjectForTest(
+                  targetTurn.state,
+                  spellCasterId,
+                  "Unarmed Strike",
+                ),
+              ),
             },
           ],
         }),

@@ -3,16 +3,16 @@ import { describe, expect, test } from "vitest";
 import { combatantId, sameBattleSubject, type BattleSubject } from "./index.ts";
 import {
   battleAttackExecutionScopeRef,
+  battleAttackProcedureExecutionRef,
   battleExecutionScopeOrdinal,
   battleId,
-  battleProcedureExecutionRef,
 } from "./identity.ts";
 import { NonNegativeInteger } from "@dnd/shared/types";
 
 describe("BattleSubject identity", () => {
   test("attack ability projections of one bound procedure remain distinct", () => {
     const actorId = combatantId("ability-choice-attacker");
-    const procedureRef = battleProcedureExecutionRef(
+    const procedureRef = battleAttackProcedureExecutionRef(
       battleAttackExecutionScopeRef(
         battleId("ability-choice-battle"),
         actorId,
@@ -26,6 +26,7 @@ describe("BattleSubject identity", () => {
       action: "attack",
       procedureRef,
       attackAbility: "str",
+      attackDamageType: "slashing",
     } satisfies BattleSubject;
     const dexterityAttack = {
       ...strengthAttack,

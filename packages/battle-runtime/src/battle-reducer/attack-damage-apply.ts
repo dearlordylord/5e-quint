@@ -22,8 +22,7 @@ import type { CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import {
-  attackExecutionAbility,
-  attackExecutionDamageType,
+  boundAttackExecutionSelectionMatchesOption,
 } from "../battle-action-options.ts";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
@@ -368,11 +367,7 @@ export function attackActionOptionForSubject(
 ): SupportedAttackActionOption | undefined {
   return attackActionOptionsForActor(state, subject.actorId).find((attack) => {
     return (
-      attack.procedureRef === subject.procedureRef &&
-      (subject.attackAbility === undefined ||
-        subject.attackAbility === attackExecutionAbility(attack)) &&
-      (subject.attackDamageType === undefined ||
-        subject.attackDamageType === attackExecutionDamageType(attack)) &&
+      boundAttackExecutionSelectionMatchesOption(subject, attack) &&
       (attack.kind === "statBlockAttack"
         ? attack.damageNotation ===
           (subject.statBlockDamageNotation ?? "rolled")

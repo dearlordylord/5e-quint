@@ -91,6 +91,27 @@ export const BattleProcedureExecutionRef = Schema.NonEmptyTrimmedString.pipe(
 export type BattleProcedureExecutionRef =
   typeof BattleProcedureExecutionRef.Type;
 
+export const BattleAttackProcedureExecutionRef =
+  BattleProcedureExecutionRef.pipe(
+    Schema.filter(attackProcedureExecutionReferenceIsCanonical, {
+      message: () => "Invalid canonical Battle attack procedure execution ref.",
+    }),
+    Schema.brand("BattleAttackProcedureExecutionRef"),
+  );
+export type BattleAttackProcedureExecutionRef =
+  typeof BattleAttackProcedureExecutionRef.Type;
+
+export const BattleStatBlockProcedureExecutionRef =
+  BattleProcedureExecutionRef.pipe(
+    Schema.filter(statBlockProcedureExecutionReferenceIsCanonical, {
+      message: () =>
+        "Invalid canonical Battle Stat Block procedure execution ref.",
+    }),
+    Schema.brand("BattleStatBlockProcedureExecutionRef"),
+  );
+export type BattleStatBlockProcedureExecutionRef =
+  typeof BattleStatBlockProcedureExecutionRef.Type;
+
 export const BattleResourcePoolExecutionRef = Schema.NonEmptyTrimmedString.pipe(
   Schema.filter(
     (reference) =>
@@ -187,6 +208,32 @@ export function battleProcedureExecutionRef(
   return BattleProcedureExecutionRef.make(
     JSON.stringify({ scopeRef, kind: "procedure", ordinal }),
   );
+}
+
+export function battleStatBlockProcedureExecutionRef(
+  scopeRef: BattleStatBlockExecutionScopeRef,
+  ordinal: NonNegativeInteger,
+): BattleStatBlockProcedureExecutionRef {
+  return BattleStatBlockProcedureExecutionRef.make(
+    JSON.stringify({ scopeRef, kind: "procedure", ordinal }),
+  );
+}
+
+export function battleAttackProcedureExecutionRef(
+  scopeRef: BattleAttackExecutionScopeRef,
+  ordinal: NonNegativeInteger,
+): BattleAttackProcedureExecutionRef {
+  return BattleAttackProcedureExecutionRef.make(
+    JSON.stringify({ scopeRef, kind: "procedure", ordinal }),
+  );
+}
+
+export function battleAttackExecutionScopeRefForProcedureRef(
+  procedureRef: BattleAttackProcedureExecutionRef,
+): BattleAttackExecutionScopeRef {
+  const decoded = parseExecutionReference(procedureRef);
+  // The branded procedure reference establishes this nested attack scope.
+  return BattleAttackExecutionScopeRef.make(decoded?.scopeRef as string);
 }
 
 export function battleAttackExecutionScopeRefBelongsToCombatant(
@@ -455,6 +502,33 @@ function nestedExecutionReferenceIsCanonical(
           "attackExecution",
         ))) &&
     nestedReferenceEncodingIsCanonical(reference, decoded, kind)
+  );
+}
+
+function attackProcedureExecutionReferenceIsCanonical(
+  reference: string,
+): boolean {
+  const decoded = parseExecutionReference(reference);
+  return (
+    decoded !== null &&
+    nestedExecutionReferenceIsCanonical(reference, "procedure") &&
+    typeof decoded.scopeRef === "string" &&
+    battleOwnedExecutionScopeReferenceIsCanonical(
+      decoded.scopeRef,
+      "attackExecution",
+    )
+  );
+}
+
+function statBlockProcedureExecutionReferenceIsCanonical(
+  reference: string,
+): boolean {
+  const decoded = parseExecutionReference(reference);
+  return (
+    decoded !== null &&
+    nestedExecutionReferenceIsCanonical(reference, "procedure") &&
+    typeof decoded.scopeRef === "string" &&
+    statBlockExecutionScopeReferenceIsCanonical(decoded.scopeRef)
   );
 }
 

@@ -7,16 +7,14 @@ import type {
 } from "./battle-action-options.ts";
 import {
   battleAttackExecutionScopeRef,
-  battleProcedureExecutionRef,
+  battleAttackProcedureExecutionRef,
   battleExecutionScopeOrdinal,
-  type BattleAttackExecutionScopeRef,
   type BattleId,
   type BattleExecutionScopeOrdinal,
   type CombatantId,
 } from "./identity.ts";
 
 export type CharacterAttackExecution = {
-  readonly scopeRef: BattleAttackExecutionScopeRef;
   readonly attack: BoundCharacterWeaponAttackActionOption | null;
   readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
@@ -42,10 +40,10 @@ export function admitCharacterAttackExecution(input: {
   const bind = <T extends object>(
     procedure: T,
   ): T & {
-    readonly procedureRef: ReturnType<typeof battleProcedureExecutionRef>;
+    readonly procedureRef: ReturnType<typeof battleAttackProcedureExecutionRef>;
   } => ({
     ...procedure,
-    procedureRef: battleProcedureExecutionRef(
+    procedureRef: battleAttackProcedureExecutionRef(
       scopeRef,
       NonNegativeInteger(procedureOrdinal++),
     ),
@@ -53,7 +51,6 @@ export function admitCharacterAttackExecution(input: {
 
   return {
     execution: {
-      scopeRef,
       attack: input.attack === null ? null : bind(input.attack),
       unarmedStrike: bind(input.unarmedStrike),
       ...(input.offHandAttack === undefined

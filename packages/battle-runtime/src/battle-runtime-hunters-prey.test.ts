@@ -11,6 +11,7 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   attackTargetFill,
+  attackExecutionSelectionForSubjectForTest,
   attackTargetSpatialFact,
   battleId,
   characterSeed,
@@ -117,9 +118,12 @@ function resolveHordeBreakerUse(
     goblinId,
   );
   const primaryFills = [
-    attackTargetFill(primaryTarget, fighterId, goblinId, {
-      procedureRef: subject.procedureRef,
-    }),
+    attackTargetFill(
+      primaryTarget,
+      fighterId,
+      goblinId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    ),
     attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
     damageRollFillWithGroups(primaryDamage, [[1]]),
   ];
@@ -136,9 +140,11 @@ function resolveHordeBreakerUse(
     "targetChoice",
   );
   const secondTargetFill = targetFill(target, skeletonId, [
-    attackTargetSpatialFact(fighterId, skeletonId, {
-      procedureRef: subject.procedureRef,
-    }),
+    attackTargetSpatialFact(
+      fighterId,
+      skeletonId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    ),
     {
       kind: "hordeBreakerSecondTargetEligible",
       attackerId: fighterId,
@@ -334,9 +340,12 @@ describe("battle runtime: Hunter's Prey", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFillWithGroups(primaryDamage, [[1]]),
     ];
@@ -359,9 +368,11 @@ describe("battle runtime: Hunter's Prey", () => {
       "targetChoice",
     );
     const secondTargetFill = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
@@ -482,9 +493,12 @@ describe("battle runtime: Hunter's Prey", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 5, naturalD20: 2 }),
     ];
     const decision = requireHole(
@@ -500,9 +514,11 @@ describe("battle runtime: Hunter's Prey", () => {
       "targetChoice",
     );
     const secondTargetFill = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
@@ -584,9 +600,12 @@ describe("battle runtime: Hunter's Prey", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 5, naturalD20: 2 }),
     ];
     const decision = requireHole(
@@ -645,9 +664,12 @@ describe("battle runtime: Hunter's Prey", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 5, naturalD20: 2 }),
     ];
     const decision = requireHole(
@@ -663,9 +685,11 @@ describe("battle runtime: Hunter's Prey", () => {
       "targetChoice",
     );
     const secondTargetFill = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
@@ -766,9 +790,12 @@ describe("battle runtime: Hunter's Prey", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 5, naturalD20: 2 }),
     ];
     const decision = requireHole(
@@ -792,9 +819,11 @@ describe("battle runtime: Hunter's Prey", () => {
           ...primaryFills,
           unitFeatureDecisionFill(decision, "use"),
           targetFill(target, goblinId, [
-            attackTargetSpatialFact(fighterId, goblinId, {
-              procedureRef: subject.procedureRef,
-            }),
+            attackTargetSpatialFact(
+              fighterId,
+              goblinId,
+              attackExecutionSelectionForSubjectForTest(subject),
+            ),
             {
               kind: "hordeBreakerSecondTargetEligible",
               attackerId: fighterId,
@@ -870,9 +899,12 @@ describe("battle runtime: Hunter's Prey", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 5, naturalD20: 2 }),
     ];
     const decision = requireHole(
@@ -892,9 +924,11 @@ describe("battle runtime: Hunter's Prey", () => {
       "targetChoice",
     );
     const secondTargetFill = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,

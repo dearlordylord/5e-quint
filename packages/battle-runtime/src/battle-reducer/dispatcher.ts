@@ -292,10 +292,7 @@ import {
   attackActionOptionName,
   attackTargetConstraint,
 } from "./statblock-attacks.ts";
-import {
-  attackExecutionAbility,
-  attackExecutionDamageType,
-} from "../battle-action-options.ts";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import type {
@@ -6712,8 +6709,6 @@ export function opportunityAttackReactionChoices(
       threat,
     );
     if (attack === undefined) return [];
-    const executionAbility = attackExecutionAbility(attack);
-    const executionDamageType = attackExecutionDamageType(attack);
     return [
       {
         kind: "opportunityAttack" as const,
@@ -6726,15 +6721,7 @@ export function opportunityAttackReactionChoices(
           reactorId,
           targetId: moverId,
           ...("procedureRef" in attack
-            ? {
-                procedureRef: attack.procedureRef,
-                ...(executionAbility === undefined
-                  ? {}
-                  : { attackAbility: executionAbility }),
-                ...(executionDamageType === undefined
-                  ? {}
-                  : { attackDamageType: executionDamageType }),
-              }
+            ? attackExecutionSelectionForOption(attack)
             : { attackName: attackActionOptionName(attack) }),
         },
       },

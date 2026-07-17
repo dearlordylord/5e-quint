@@ -2,15 +2,15 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 
-import { Match } from "effect";
 import type {
-  BattleAttackExecutionAbility,
+  CharacterAttackExecutionSelection,
+  StatBlockAttackExecutionSelection,
   BoundSupportedAttackActionOption,
   StatBlockAttackActionOption,
   StatBlockAttackSection,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
-import type { DamageType } from "@dnd/surface/surface/types";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   type BattleState,
@@ -148,27 +148,20 @@ export function updateStatBlockActorResources(
 
 export function attackSubjectPart(attack: BoundSupportedAttackActionOption): {
   readonly procedureRef: BattleProcedureExecutionRef;
-  readonly attackAbility?: BattleAttackExecutionAbility;
-  readonly attackDamageType?: DamageType;
-  readonly statBlockDamageNotation?: "static";
-} {
-  return Match.value(attack).pipe(
-    Match.when({ kind: "weapon" }, (option) => ({
-      procedureRef: option.procedureRef,
-      attackAbility: option.ability,
-      attackDamageType: option.weapon.damage.damageType,
-    })),
-    Match.when({ kind: "unarmedStrike" }, (option) => ({
-      procedureRef: option.procedureRef,
-      attackAbility: option.attackAbility,
-      attackDamageType: option.effect.damage.damageType,
-    })),
-    Match.when({ kind: "statBlockAttack" }, (option) => ({
-      procedureRef: option.procedureRef,
-      ...(option.damageNotation === "static"
-        ? { statBlockDamageNotation: "static" as const }
-        : {}),
-    })),
-    Match.exhaustive,
-  );
+} & (
+  | (CharacterAttackExecutionSelection & {
+      readonly statBlockDamageNotation?: never;
+    })
+  | (StatBlockAttackExecutionSelection & {
+      readonly statBlockDamageNotation?: "static";
+    })
+) {
+  return attack.kind === "statBlockAttack"
+    ? {
+        ...attackExecutionSelectionForOption(attack),
+        ...(attack.damageNotation === "static"
+          ? { statBlockDamageNotation: "static" as const }
+          : {}),
+      }
+    : attackExecutionSelectionForOption(attack);
 }

@@ -22,9 +22,11 @@ import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   BattleAreaId,
+  BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
   CombatantId,
   BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -448,9 +450,41 @@ const SpellMetamagicSelectionsSchema = Schema.NonEmptyArray(
   SpellMetamagicSelectionSchema,
 );
 
-const BattleAttackExecutionAbilitySchema = Schema.Union(
+export const BattleAttackExecutionAbilitySchema = Schema.Union(
   AbilitySchema,
   Schema.Literal("spellcasting"),
+);
+
+const BattleAttackProcedureExecutionRefSchema =
+  BattleAttackProcedureExecutionRef as unknown as Schema.Schema<
+    BattleProcedureExecutionRef,
+    string,
+    never
+  >;
+const BattleStatBlockProcedureExecutionRefSchema =
+  BattleStatBlockProcedureExecutionRef as unknown as Schema.Schema<
+    BattleProcedureExecutionRef,
+    string,
+    never
+  >;
+
+export const BattleAttackExecutionSelectionSchema = Schema.Union(
+  Schema.Struct({
+    attackName: Schema.String,
+    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    procedureRef: BattleAttackProcedureExecutionRefSchema,
+    attackAbility: BattleAttackExecutionAbilitySchema,
+    attackDamageType: DamageTypeSchema,
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
 );
 
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
@@ -461,11 +495,20 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("attack"),
-    procedureRef: BattleProcedureExecutionRef,
-    attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
-      exact: true,
-    }),
-    attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+    procedureRef: BattleAttackProcedureExecutionRefSchema,
+    attackAbility: BattleAttackExecutionAbilitySchema,
+    attackDamageType: DamageTypeSchema,
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("attack"),
+    procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
@@ -567,21 +610,17 @@ export const BattleSubjectSchema = Schema.Union(
       tag: Schema.Literal("bonusAction"),
       actorId: CombatantId,
       action: Schema.Literal("offHandAttack"),
-      procedureRef: BattleProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
-        exact: true,
-      }),
-      attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
     }),
     Schema.Struct({
       tag: Schema.Literal("bonusAction"),
       actorId: CombatantId,
       action: Schema.Literal("martialArtsUnarmedStrike"),
-      procedureRef: BattleProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
-        exact: true,
-      }),
-      attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
     }),
   ),
   Schema.Struct({
@@ -788,11 +827,20 @@ export const BattleSubjectSchema = Schema.Union(
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
-        exact: true,
-      }),
-      attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("runtimeCommand"),
+      actorId: CombatantId,
+      command: Schema.Literal("opportunityAttack"),
+      reactorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     }),
   ),

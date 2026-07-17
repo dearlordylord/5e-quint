@@ -46,6 +46,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
+  battleAttackExecutionScopeRefForProcedureRef,
   type BattleId,
   type BattleExecutionScopeOrdinal,
   type CombatantId,
@@ -254,7 +255,6 @@ export function battleCreatureStateAdmissionFromInit(
         size: creatureInit.size,
         origin: {
           kind: "character",
-          attackExecutionScopeRef: attackExecution.execution.scopeRef,
           characterId: creatureInit.characterId,
           characterUnitRefs: creatureInit.characterUnitRefs,
           classLevels,
@@ -744,7 +744,9 @@ export function combatantOriginSnapshot(
       kind: "character" as const,
       characterId: origin.characterId,
       attackExecution: {
-        scopeRef: origin.attackExecutionScopeRef,
+        scopeRef: battleAttackExecutionScopeRefForProcedureRef(
+          origin.unarmedStrike.procedureRef,
+        ),
         attackProcedureRef: origin.attack?.procedureRef ?? null,
         unarmedStrikeProcedureRef: origin.unarmedStrike.procedureRef,
         offHandAttackProcedureRef: origin.offHandAttack?.procedureRef ?? null,

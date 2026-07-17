@@ -109,7 +109,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
-      attack.subject.procedureRef,
+      attack.subject,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded,
@@ -154,7 +154,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
-      attack.subject.procedureRef,
+      attack.subject,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded,
@@ -191,7 +191,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
-      attack.subject.procedureRef,
+      attack.subject,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded,
@@ -214,9 +214,7 @@ describe("Sanctuary targeting interdiction", () => {
             outcome: {
               kind: "newTarget",
               targetId: replacementId,
-              spatialFacts: [
-                attackTargetFact(replacementId, attack.subject.procedureRef),
-              ],
+              spatialFacts: [attackTargetFact(replacementId, attack.subject)],
             },
           },
         ),
@@ -810,7 +808,7 @@ describe("Sanctuary targeting interdiction", () => {
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
-      attack.subject.procedureRef,
+      attack.subject,
     );
     const needsAttackRoll = resolveBattleSubject({
       state: selfWarded,
@@ -1013,16 +1011,16 @@ function sanctuaryTargetListFill(
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
-  procedureRef: Extract<
+  attackSubject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  >["procedureRef"],
+  >,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
-    spatialFacts: [attackTargetFact(targetId, procedureRef)],
+    spatialFacts: [attackTargetFact(targetId, attackSubject)],
   };
 }
 
@@ -1086,16 +1084,22 @@ function spellDamageTypeChoiceFill(
 
 function attackTargetFact(
   targetId: CombatantId,
-  procedureRef: Extract<
+  attackSubject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  >["procedureRef"],
+  >,
 ) {
   return {
     kind: "attackTargetInMeleeReach" as const,
     actorId: attackerId,
     targetId,
-    procedureRef,
+    procedureRef: attackSubject.procedureRef,
+    ...(attackSubject.attackAbility === undefined
+      ? {}
+      : { attackAbility: attackSubject.attackAbility }),
+    ...(attackSubject.attackDamageType === undefined
+      ? {}
+      : { attackDamageType: attackSubject.attackDamageType }),
   };
 }
 

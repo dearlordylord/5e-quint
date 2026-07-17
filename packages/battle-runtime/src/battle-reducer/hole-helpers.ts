@@ -30,8 +30,7 @@ import type {
   BonusActionStandardActionSubject,
 } from "../battle-subjects.ts";
 import {
-  attackExecutionAbility,
-  attackExecutionDamageType,
+  attackExecutionSelectionForOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
@@ -665,8 +664,6 @@ export function attackTargetHole(
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleTargetChoiceHole {
-  const executionAbility = attackExecutionAbility(attack);
-  const executionDamageType = attackExecutionDamageType(attack);
   return {
     kind: "targetChoice",
     holeId: ATTACK_TARGET_HOLE_ID,
@@ -677,15 +674,7 @@ export function attackTargetHole(
       actorId,
       selection:
         "procedureRef" in attack
-          ? {
-              procedureRef: attack.procedureRef,
-              ...(executionAbility === undefined
-                ? {}
-                : { attackAbility: executionAbility }),
-              ...(executionDamageType === undefined
-                ? {}
-                : { attackDamageType: executionDamageType }),
-            }
+          ? attackExecutionSelectionForOption(attack)
           : { attackName: attackActionOptionName(attack) },
       targetConstraint: attackTargetConstraint(attack).kind,
     },

@@ -2,7 +2,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV52 dissonant_whispers
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-forced-reaction-movement
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 import {
   dissonantWhispersUnitId,
   spellCasterId,
@@ -706,11 +709,13 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
           provokedOpportunityAttacks: [
             {
               reactorId: spellCasterId,
-              procedureRef: characterAttackSubjectForTest(
-                state,
-                spellCasterId,
-                "Unarmed Strike",
-              ).procedureRef,
+              ...attackExecutionSelectionForSubjectForTest(
+                characterAttackSubjectForTest(
+                  state,
+                  spellCasterId,
+                  "Unarmed Strike",
+                ),
+              ),
             },
           ],
         }),

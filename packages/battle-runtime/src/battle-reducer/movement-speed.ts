@@ -36,8 +36,7 @@ import {
   type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
 import {
-  attackExecutionAbility,
-  attackExecutionDamageType,
+  boundAttackExecutionSelectionMatchesOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import {
@@ -569,13 +568,8 @@ export function attackExecutionSelectionMatchesOption(
   attack: SupportedAttackActionOption,
 ): boolean {
   return "procedureRef" in attack
-    ? selection.procedureRef === attack.procedureRef &&
-        (!("attackAbility" in selection) ||
-          selection.attackAbility === undefined ||
-          selection.attackAbility === attackExecutionAbility(attack)) &&
-        (!("attackDamageType" in selection) ||
-          selection.attackDamageType === undefined ||
-          selection.attackDamageType === attackExecutionDamageType(attack))
+    ? selection.procedureRef !== undefined &&
+        boundAttackExecutionSelectionMatchesOption(selection, attack)
     : selection.procedureRef === undefined &&
         attackActionOptionName(attack) === selection.attackName;
 }

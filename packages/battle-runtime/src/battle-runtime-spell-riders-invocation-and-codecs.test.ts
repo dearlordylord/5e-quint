@@ -16,6 +16,7 @@ import {
   magicSubject,
   fighterAttackSubject,
   characterAttackSubjectForTest,
+  attackExecutionSelectionForSubjectForTest,
   oppositionSide,
   fighterId,
   goblinId,
@@ -227,11 +228,13 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: skeletonId,
-                procedureRef: characterAttackSubjectForTest(
-                  fighterTurn,
-                  skeletonId,
-                  "Longsword",
-                ).procedureRef,
+                ...attackExecutionSelectionForSubjectForTest(
+                  characterAttackSubjectForTest(
+                    fighterTurn,
+                    skeletonId,
+                    "Longsword",
+                  ),
+                ),
               },
             ],
           }),

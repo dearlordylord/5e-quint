@@ -12,6 +12,7 @@ import {
   longbowWeaponMasterySelections,
   quarterstaffWeaponMasterySelections,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
@@ -186,7 +187,7 @@ describe("battle runtime: Weapon Mastery", () => {
       subject,
       fills: [
         attackTargetFill(targetHole, subject.actorId, goblinId, {
-          procedureRef: subject.procedureRef,
+          ...attackExecutionSelectionForSubjectForTest(subject),
         }),
       ],
     });
@@ -458,7 +459,7 @@ describe("battle runtime: Weapon Mastery", () => {
           kind: "weaponMasteryPushDisposition" as const,
           attackerId: subject.actorId,
           targetId: goblinId,
-          procedureRef: subject.procedureRef,
+          ...attackExecutionSelectionForSubjectForTest(subject),
           disposition: pushDisposition,
         },
       ],
@@ -524,9 +525,12 @@ describe("battle runtime: Weapon Mastery", () => {
     });
     const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
-    const target = attackTargetFill(targetHole, subject.actorId, goblinId, {
-      procedureRef: subject.procedureRef,
-    });
+    const target = attackTargetFill(
+      targetHole,
+      subject.actorId,
+      goblinId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    );
     const replacementHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [target] }),
       "unitFeatureDecision",
@@ -582,9 +586,12 @@ describe("battle runtime: Weapon Mastery", () => {
     });
     const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
-    const target = attackTargetFill(targetHole, subject.actorId, goblinId, {
-      procedureRef: subject.procedureRef,
-    });
+    const target = attackTargetFill(
+      targetHole,
+      subject.actorId,
+      goblinId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    );
     const replacementHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [target] }),
       "unitFeatureDecision",
@@ -881,9 +888,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -906,9 +916,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const cleaveFacts = [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1021,9 +1033,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 4),
     ];
@@ -1040,9 +1055,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1141,9 +1158,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1160,9 +1180,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1273,9 +1295,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 20, naturalD20: 15 }),
       damageRollFill(primaryDamage, 8),
     ];
@@ -1312,9 +1337,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1429,9 +1456,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1448,9 +1478,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1568,9 +1600,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1652,9 +1687,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1675,9 +1713,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1773,9 +1813,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -1792,9 +1835,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -1908,9 +1953,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryDamageFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 10),
     ];
@@ -1940,9 +1988,11 @@ describe("battle runtime: Weapon Mastery", () => {
       "targetChoice",
     );
     const targetFillValue = targetFill(target, skeletonId, [
-      attackTargetSpatialFact(fighterId, skeletonId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
         attackerId: fighterId,
@@ -2062,9 +2112,12 @@ describe("battle runtime: Weapon Mastery", () => {
       goblinId,
     );
     const primaryFills = [
-      attackTargetFill(primaryTarget, fighterId, goblinId, {
-        procedureRef: subject.procedureRef,
-      }),
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
       damageRollFill(primaryDamage, 1),
     ];
@@ -2091,9 +2144,11 @@ describe("battle runtime: Weapon Mastery", () => {
         ...primaryFills,
         unitFeatureDecisionFill(decision, "use"),
         targetFill(target, skeletonId, [
-          attackTargetSpatialFact(fighterId, skeletonId, {
-            procedureRef: subject.procedureRef,
-          }),
+          attackTargetSpatialFact(
+            fighterId,
+            skeletonId,
+            attackExecutionSelectionForSubjectForTest(subject),
+          ),
         ]),
       ],
     });
@@ -2109,9 +2164,11 @@ describe("battle runtime: Weapon Mastery", () => {
         ...primaryFills,
         unitFeatureDecisionFill(decision, "use"),
         targetFill(target, goblinId, [
-          attackTargetSpatialFact(fighterId, goblinId, {
-            procedureRef: subject.procedureRef,
-          }),
+          attackTargetSpatialFact(
+            fighterId,
+            goblinId,
+            attackExecutionSelectionForSubjectForTest(subject),
+          ),
           {
             kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
             attackerId: fighterId,

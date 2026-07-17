@@ -10,7 +10,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection spell.invocation-chosen-damage-resistance
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
@@ -1550,11 +1553,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       command: "opportunityAttack",
       reactorId: spellCasterId,
       targetId: spellTargetId,
-      procedureRef: characterAttackSubjectForTest(
-        state,
-        spellCasterId,
-        "Longsword",
-      ).procedureRef,
+      ...attackExecutionSelectionForSubjectForTest(
+        characterAttackSubjectForTest(state, spellCasterId, "Longsword"),
+      ),
     };
     const attack = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),

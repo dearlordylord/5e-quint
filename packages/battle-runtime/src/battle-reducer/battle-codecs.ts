@@ -69,6 +69,8 @@ import {
 } from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
+  BattleAttackExecutionAbilitySchema,
+  BattleAttackExecutionSelectionSchema,
   BattleSubjectSchema,
   BattleSubjectTextSchema,
   SpellInvocationRefSchema,
@@ -77,6 +79,7 @@ import {
 } from "../battle-subjects.ts";
 import {
   BattleAreaId,
+  BattleAttackProcedureExecutionRef,
   BattleAttackExecutionScopeRef,
   BattleCombatantSide,
   BattleDancingLightId,
@@ -86,6 +89,7 @@ import {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  BattleStatBlockProcedureExecutionRef,
   BattleExecutionScopeCursor,
   battleProcedureExecutionRefBelongsToScope,
   battleAttackExecutionScopeRefBelongsToBattle,
@@ -116,6 +120,7 @@ import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
+
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
   BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
@@ -153,6 +158,19 @@ import {
   BRUTAL_STRIKE_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
+const BattleAttackProcedureExecutionRefSchema =
+  BattleAttackProcedureExecutionRef as unknown as Schema.Schema<
+    BattleProcedureExecutionRef,
+    string,
+    never
+  >;
+const BattleStatBlockProcedureExecutionRefSchema =
+  BattleStatBlockProcedureExecutionRef as unknown as Schema.Schema<
+    BattleProcedureExecutionRef,
+    string,
+    never
+  >;
+
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("normalNamedForm"),
@@ -631,26 +649,6 @@ const BattleObjectIgnitionDispositionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("wornOrCarried") }),
 );
 
-const BattleAttackExecutionAbilitySchema = Schema.Union(
-  AbilitySchema,
-  Schema.Literal("spellcasting"),
-);
-
-const BattleAttackExecutionSelectionSchema = Schema.Union(
-  Schema.Struct({
-    attackName: Schema.String,
-    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    procedureRef: BattleProcedureExecutionRef,
-    attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
-      exact: true,
-    }),
-    attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-);
-
 const BattleTargetSpatialFactSchema = Schema.Union(
   Schema.Union(
     Schema.Struct({
@@ -664,11 +662,18 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("attackTargetInMeleeReach"),
       actorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
-        exact: true,
-      }),
-      attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("attackTargetInMeleeReach"),
+      actorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     }),
   ),
@@ -696,11 +701,19 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("weaponMasteryPushDisposition"),
       attackerId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(BattleAttackExecutionAbilitySchema, {
-        exact: true,
-      }),
-      attackDamageType: Schema.optionalWith(DamageTypeSchema, { exact: true }),
+      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+      disposition: BattleThunderwavePushDispositionSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("weaponMasteryPushDisposition"),
+      attackerId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
       disposition: BattleThunderwavePushDispositionSchema,
     }),
@@ -718,7 +731,19 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("attackTargetInRangedRange"),
       actorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
+      procedureRef: BattleAttackProcedureExecutionRefSchema,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+      rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("attackTargetInRangedRange"),
+      actorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
       rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
     }),
@@ -3459,6 +3484,14 @@ type BattleFillEncoded =
                       }
                     | {
                         readonly procedureRef: string;
+                        readonly attackAbility: Ability | "spellcasting";
+                        readonly attackDamageType: DamageType;
+                        readonly attackName?: never;
+                      }
+                    | {
+                        readonly procedureRef: string;
+                        readonly attackAbility?: never;
+                        readonly attackDamageType?: never;
                         readonly attackName?: never;
                       };
                   readonly fills: readonly BattleFillEncoded[];
@@ -3497,6 +3530,15 @@ type BattleFillEncoded =
           | {
               readonly reactorId: string;
               readonly procedureRef: string;
+              readonly attackAbility: Ability | "spellcasting";
+              readonly attackDamageType: DamageType;
+              readonly attackName?: never;
+            }
+          | {
+              readonly reactorId: string;
+              readonly procedureRef: string;
+              readonly attackAbility?: never;
+              readonly attackDamageType?: never;
               readonly attackName?: never;
             }
         )[];
@@ -4413,7 +4455,18 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               reactorId: CombatantId,
-              procedureRef: BattleProcedureExecutionRef,
+              procedureRef: BattleAttackProcedureExecutionRefSchema,
+              attackAbility: BattleAttackExecutionAbilitySchema,
+              attackDamageType: DamageTypeSchema,
+              attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+            }),
+            Schema.Struct({
+              reactorId: CombatantId,
+              procedureRef: BattleStatBlockProcedureExecutionRefSchema,
+              attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+              attackDamageType: Schema.optionalWith(Schema.Never, {
+                exact: true,
+              }),
               attackName: Schema.optionalWith(Schema.Never, { exact: true }),
             }),
           ),

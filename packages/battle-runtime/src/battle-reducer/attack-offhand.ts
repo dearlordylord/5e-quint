@@ -119,7 +119,10 @@ import type {
   OffHandAttackBattleResolutionInput,
 } from "../battle-reducer.ts";
 import { spellAttackRerollUnsupportedIssue } from "../battle-reducer.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  boundAttackExecutionSelectionMatchesOption,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   attackRollHitsWithCriticalThreshold,
@@ -144,10 +147,10 @@ export function resolveOffHandAttack(
     ) =>
       offHandAttackActionOptionsForActor(state, actorId).find(
         (attack) =>
-          attack.procedureRef === procedureRef &&
-          (attackAbility === undefined || attack.ability === attackAbility) &&
-          (attackDamageType === undefined ||
-            attack.weapon.damage.damageType === attackDamageType),
+          boundAttackExecutionSelectionMatchesOption(
+            { procedureRef, attackAbility, attackDamageType },
+            attack,
+          ),
       ),
     prerequisiteMet: (state, actorId, attack) =>
       attack.kind === "weapon" &&
@@ -174,11 +177,10 @@ export function resolveMartialArtsBonusUnarmedStrike(
         actorId,
       );
       return attack !== undefined &&
-        attack.procedureRef === procedureRef &&
-        (attackAbility === undefined ||
-          attack.attackAbility === attackAbility) &&
-        (attackDamageType === undefined ||
-          attack.effect.damage.damageType === attackDamageType)
+        boundAttackExecutionSelectionMatchesOption(
+          { procedureRef, attackAbility, attackDamageType },
+          attack,
+        )
         ? attack
         : undefined;
     },

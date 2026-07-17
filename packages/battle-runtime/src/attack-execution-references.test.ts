@@ -3,7 +3,9 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
+  BattleFillSchema,
   BattleSnapshotSchema,
+  BattleSubjectSchema,
   discoverBattleActs,
   snapshotBattle,
 } from "./index.ts";
@@ -25,10 +27,12 @@ import {
   characterSeed,
 } from "./battle-runtime-test-support.ts";
 import {
+  battleAttackExecutionScopeRefForProcedureRef,
   battleAttackExecutionScopeRefBelongsToBattle,
   battleAttackExecutionScopeRefBelongsToCombatant,
   battleProcedureExecutionRefBelongsToScope,
 } from "./identity.ts";
+import { boundAttackExecutionSelectionKey } from "./battle-action-options.ts";
 
 function identicalDaggerBattle(name = "Dagger") {
   const attack = testDaggerAttack();
@@ -68,6 +72,12 @@ function fighterOrigin(state: ReturnType<typeof identicalDaggerBattle>) {
   return fighter.origin;
 }
 
+function fighterAttackScope(state: ReturnType<typeof identicalDaggerBattle>) {
+  return battleAttackExecutionScopeRefForProcedureRef(
+    fighterOrigin(state).unarmedStrike.procedureRef,
+  );
+}
+
 describe("character attack execution references", () => {
   test("allocates deterministic, distinct references for identical attack occurrences", () => {
     const first = identicalDaggerBattle();
@@ -84,9 +94,7 @@ describe("character attack execution references", () => {
     expect(new Set(references).size).toBe(3);
     expect(firstOrigin.attack?.weapon.id).toBe("weapon_dagger");
     expect(firstOrigin.offHandAttack?.weapon.id).toBe("weapon_dagger");
-    expect(firstOrigin.attackExecutionScopeRef).toBe(
-      secondOrigin.attackExecutionScopeRef,
-    );
+    expect(fighterAttackScope(first)).toBe(fighterAttackScope(second));
     expect(firstOrigin.attack?.procedureRef).toBe(
       secondOrigin.attack?.procedureRef,
     );
@@ -95,13 +103,13 @@ describe("character attack execution references", () => {
     );
     expect(
       battleAttackExecutionScopeRefBelongsToBattle(
-        firstOrigin.attackExecutionScopeRef,
+        fighterAttackScope(first),
         first.battleId,
       ),
     ).toBe(true);
     expect(
       battleAttackExecutionScopeRefBelongsToCombatant(
-        firstOrigin.attackExecutionScopeRef,
+        fighterAttackScope(first),
         fighterId,
       ),
     ).toBe(true);
@@ -110,7 +118,7 @@ describe("character attack execution references", () => {
         reference !== undefined &&
           battleProcedureExecutionRefBelongsToScope(
             reference,
-            firstOrigin.attackExecutionScopeRef,
+            fighterAttackScope(first),
           ),
       ).toBe(true);
     }
@@ -216,7 +224,7 @@ describe("character attack execution references", () => {
       expect.objectContaining({
         kind: "character",
         attackExecution: {
-          scopeRef: origin.attackExecutionScopeRef,
+          scopeRef: fighterAttackScope(state),
           attackProcedureRef: origin.attack?.procedureRef,
           unarmedStrikeProcedureRef: origin.unarmedStrike.procedureRef,
           offHandAttackProcedureRef: origin.offHandAttack?.procedureRef,
@@ -254,5 +262,87 @@ describe("character attack execution references", () => {
     expect(
       Either.isLeft(Schema.decodeUnknownEither(BattleSnapshotSchema)(forged)),
     ).toBe(true);
+  });
+
+  test("codecs preserve complete ranged and Opportunity Attack selections", () => {
+    const state = identicalDaggerBattle();
+    const procedureRef = fighterOrigin(state).attack?.procedureRef;
+    if (procedureRef === undefined) {
+      throw new Error("Expected the bound fighter attack.");
+    }
+    const selection = {
+      procedureRef,
+      attackAbility: "cha" as const,
+      attackDamageType: "necrotic" as const,
+    };
+
+    const ranged = Schema.decodeUnknownSync(BattleFillSchema)({
+      kind: "targetChoice",
+      holeId: "battle:test:ranged-selection",
+      value: goblinId,
+      spatialFacts: [
+        {
+          kind: "attackTargetInRangedRange",
+          actorId: fighterId,
+          targetId: goblinId,
+          ...selection,
+          rangeBand: "normal",
+        },
+      ],
+    });
+    expect(ranged).toMatchObject({
+      spatialFacts: [expect.objectContaining(selection)],
+    });
+
+    const movement = Schema.decodeUnknownSync(BattleFillSchema)({
+      kind: "movement",
+      holeId: "battle:test:opportunity-selection",
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 5,
+        provokedOpportunityAttacks: [{ reactorId: fighterId, ...selection }],
+      },
+    });
+    expect(movement).toMatchObject({
+      value: {
+        provokedOpportunityAttacks: [expect.objectContaining(selection)],
+      },
+    });
+  });
+
+  test("rejects partial bound character attack replay keys", () => {
+    const subject = fighterAttackSubject(identicalDaggerBattle(), "Dagger");
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSubjectSchema)({
+          tag: subject.tag,
+          actorId: subject.actorId,
+          action: subject.action,
+          procedureRef: subject.procedureRef,
+          attackAbility: subject.attackAbility,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps projected Opportunity Attack threat identities distinct", () => {
+    const procedureRef = fighterOrigin(identicalDaggerBattle()).attack
+      ?.procedureRef;
+    if (procedureRef === undefined) {
+      throw new Error("Expected the bound fighter attack.");
+    }
+    expect(
+      boundAttackExecutionSelectionKey({
+        procedureRef,
+        attackAbility: "str",
+        attackDamageType: "piercing",
+      }),
+    ).not.toBe(
+      boundAttackExecutionSelectionKey({
+        procedureRef,
+        attackAbility: "cha",
+        attackDamageType: "necrotic",
+      }),
+    );
   });
 });

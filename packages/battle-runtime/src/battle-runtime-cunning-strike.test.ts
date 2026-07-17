@@ -29,6 +29,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   characterBonusAttackSubjectForTest,
   fighterId,
   goblinId,
@@ -707,7 +708,9 @@ function cunningStrikeOpportunityAttackDamageWindow(
         provokedOpportunityAttacks: [
           {
             reactorId: fighterId,
-            procedureRef: fighterAttackSubject(state, "Dagger").procedureRef,
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state, "Dagger"),
+            ),
           },
         ],
       }),
