@@ -1293,6 +1293,23 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(
       Either.isRight(Schema.decodeUnknownEither(BattleHoleSchema)(target)),
     ).toBe(true);
+    const distantEnemyDecision = helpAttackEnemyDecisionFill(
+      target,
+      goblinId,
+      false,
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleFillSchema)(distantEnemyDecision),
+      ),
+    ).toBe(true);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [allyDecision, distantEnemyDecision],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     const enemyDecision = helpAttackEnemyDecisionFill(target, goblinId);
     expect(
       Either.isRight(

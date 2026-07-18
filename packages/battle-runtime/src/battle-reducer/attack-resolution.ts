@@ -679,6 +679,7 @@ export function resolveHelpAttack(
   }
   const targetEnemyId = targetFillValue.targetEnemyId;
   if (
+    !targetFillValue.targetWithinFiveFeetOfHelper ||
     !helpAttackTargetChoices(
       input.state,
       input.subject.actorId,

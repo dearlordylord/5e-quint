@@ -6810,7 +6810,7 @@ export type BattleFill =
       readonly kind: "helpAttackEnemyDecision";
       readonly holeId: BattleHoleId;
       readonly targetEnemyId: CombatantId;
-      readonly targetWithinFiveFeetOfHelper: true;
+      readonly targetWithinFiveFeetOfHelper: boolean;
     }
   | {
       readonly kind: "attackRoll";

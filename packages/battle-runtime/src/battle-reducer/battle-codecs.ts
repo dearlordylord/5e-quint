@@ -2685,7 +2685,7 @@ type BattleFillEncoded =
       readonly kind: "helpAttackEnemyDecision";
       readonly holeId: string;
       readonly targetEnemyId: string;
-      readonly targetWithinFiveFeetOfHelper: true;
+      readonly targetWithinFiveFeetOfHelper: boolean;
     }
   | {
       readonly kind: "targetChoice";
@@ -3718,7 +3718,7 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("helpAttackEnemyDecision"),
       holeId: BattleHoleIdSchema,
       targetEnemyId: CombatantId,
-      targetWithinFiveFeetOfHelper: Schema.Literal(true),
+      targetWithinFiveFeetOfHelper: Schema.Boolean,
     }),
     Schema.Struct({
       kind: Schema.Literal("targetChoice"),

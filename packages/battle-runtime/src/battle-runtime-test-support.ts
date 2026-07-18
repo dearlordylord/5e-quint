@@ -1720,6 +1720,7 @@ export function helpAttackAllyDecisionFill(
 export function helpAttackEnemyDecisionFill(
   hole: BattleHole,
   targetEnemyId: CombatantId,
+  targetWithinFiveFeetOfHelper = true,
 ): Extract<BattleFill, { readonly kind: "helpAttackEnemyDecision" }> {
   if (hole.kind !== "helpAttackEnemyDecision") {
     throw new Error("Expected helpAttackEnemyDecision hole.");
@@ -1728,7 +1729,7 @@ export function helpAttackEnemyDecisionFill(
     kind: "helpAttackEnemyDecision",
     holeId: hole.holeId,
     targetEnemyId,
-    targetWithinFiveFeetOfHelper: true,
+    targetWithinFiveFeetOfHelper,
   };
 }
 
