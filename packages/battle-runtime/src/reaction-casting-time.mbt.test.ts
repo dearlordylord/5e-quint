@@ -51,7 +51,6 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -146,8 +145,6 @@ const counterspellUnitId = "counterspell";
 const hellishRebukeUnitId = "hellish_rebuke";
 const triggerCreatureId = combatantId("reaction-casting-time-trigger-creature");
 const reactorId = combatantId("reaction-casting-time-reactor");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const initialHp = 30;
 const counterspellSlotLevel = 3;
 const hellishRebukeSlotLevel = 2;
@@ -530,7 +527,6 @@ function reactionCastingTimeBattle(input: {
         displayName: "Trigger creature",
         className: "wizard",
         initiative: 20,
-        side: oppositionSide,
         spellcasting: characterSpellcasting({
           sourceClassName: "wizard",
           preparedSpells: input.triggerCreaturePreparedSpells,
@@ -542,7 +538,6 @@ function reactionCastingTimeBattle(input: {
         displayName: "Reaction spellcaster",
         className: input.reactorClassName ?? "wizard",
         initiative: 10,
-        side: partySide,
         spellcasting: characterSpellcasting({
           sourceClassName: input.reactorClassName ?? "wizard",
           preparedSpells: input.reactorPreparedSpells,
@@ -581,14 +576,12 @@ function reactionCastingTimeCreature(input: {
   readonly displayName: string;
   readonly className: CharacterSpellcastingInit["sourceClassName"];
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting: CharacterSpellcastingInit;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

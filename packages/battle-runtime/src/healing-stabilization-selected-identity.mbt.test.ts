@@ -21,7 +21,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   cantripSpellInvocationRef,
@@ -90,8 +89,6 @@ type ActionSpellAct = AvailableBattleAct & {
 
 const casterId = combatantId("healing-stabilization-caster");
 const targetId = combatantId("healing-stabilization-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const dyingTargetTemporaryHp = 3;
 
 const zeroHitPointStabilizationRouteReplayDriverSchema = {
@@ -239,7 +236,6 @@ function spareTheDyingBattle(): BattleState {
         combatantId: casterId,
         displayName: "Spare the Dying caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "cleric",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -257,7 +253,6 @@ function spareTheDyingBattle(): BattleState {
         combatantId: targetId,
         displayName: "Dying target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: 0,
         temporaryHp: dyingTargetTemporaryHp,
         conditions: ["unconscious"],
@@ -283,7 +278,6 @@ function healingCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly currentHp?: number;
   readonly temporaryHp?: number;
   readonly conditions?: Extract<
@@ -303,7 +297,6 @@ function healingCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

@@ -17,8 +17,6 @@ import {
   clericPreserveLifeUnitId,
   cureWoundsUnitId,
   heatMetalUnitId,
-  oppositionSide,
-  partySide,
   spellCasterId,
   spellTargetId,
   unitLibrary,
@@ -99,90 +97,95 @@ const antimagicMagicalEffectInterdictionDriverSchema = {
 } as const;
 
 describe("Antimagic Field magical-effect interdiction MBT", () => {
-  it("replays magical-effect target and delivery interdiction", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAntimagicMagicalEffectInterdictionDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(3),
-      stateCheck: antimagicMagicalEffectInterdictionStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays magical-effect target and delivery interdiction",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAntimagicMagicalEffectInterdictionDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: antimagicMagicalEffectInterdictionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createAntimagicMagicalEffectInterdictionDriver() {
-  return defineDriver(
-    antimagicMagicalEffectInterdictionDriverSchema,
-    () => {
-      let projection = initProjection();
-      const actionHandlers = {
-        doAllowOutsideAura() {
-          projection = {
-            spellTargetAllowed:
-              !spellTargetInterdicted(outsideAuraSpellTargetState()),
-            spellAreaDeliveryAllowed:
-              !spellAreaDeliveryInterdicted(outsideAuraSpellAreaState()),
-            objectContactDeliveryAllowed:
-              !objectContactDeliveryInterdicted(outsideAuraObjectContactState()),
-            otherMagicalEffectTargetAllowed:
-              !otherMagicalEffectTargetInterdicted(
-                outsideAuraOtherMagicalEffectState(),
-              ),
-            lastResult: "resolved",
-          };
-        },
-        doRejectSpellTargetInsideAura() {
-          projection = {
-            ...initProjection(),
-            spellTargetAllowed:
-              !spellTargetInterdicted(insideAuraSpellTargetState()),
-            lastResult: "invalid",
-          };
-        },
-        doRejectSpellAreaDeliveryInsideAura() {
-          projection = {
-            ...initProjection(),
-            spellAreaDeliveryAllowed:
-              !spellAreaDeliveryInterdicted(insideAuraSpellAreaState()),
-            lastResult: "invalid",
-          };
-        },
-        doRejectObjectContactDeliveryInsideAura() {
-          projection = {
-            ...initProjection(),
-            objectContactDeliveryAllowed:
-              !objectContactDeliveryInterdicted(insideAuraObjectContactState()),
-            lastResult: "invalid",
-          };
-        },
-        doRejectOtherMagicalEffectTargetInsideAura() {
-          projection = {
-            ...initProjection(),
-            otherMagicalEffectTargetAllowed:
-              !otherMagicalEffectTargetInterdicted(
-                insideAuraOtherMagicalEffectState(),
-              ),
-            lastResult: "invalid",
-          };
-        },
-      } as const;
+  return defineDriver(antimagicMagicalEffectInterdictionDriverSchema, () => {
+    let projection = initProjection();
+    const actionHandlers = {
+      doAllowOutsideAura() {
+        projection = {
+          spellTargetAllowed: !spellTargetInterdicted(
+            outsideAuraSpellTargetState(),
+          ),
+          spellAreaDeliveryAllowed: !spellAreaDeliveryInterdicted(
+            outsideAuraSpellAreaState(),
+          ),
+          objectContactDeliveryAllowed: !objectContactDeliveryInterdicted(
+            outsideAuraObjectContactState(),
+          ),
+          otherMagicalEffectTargetAllowed: !otherMagicalEffectTargetInterdicted(
+            outsideAuraOtherMagicalEffectState(),
+          ),
+          lastResult: "resolved",
+        };
+      },
+      doRejectSpellTargetInsideAura() {
+        projection = {
+          ...initProjection(),
+          spellTargetAllowed: !spellTargetInterdicted(
+            insideAuraSpellTargetState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+      doRejectSpellAreaDeliveryInsideAura() {
+        projection = {
+          ...initProjection(),
+          spellAreaDeliveryAllowed: !spellAreaDeliveryInterdicted(
+            insideAuraSpellAreaState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+      doRejectObjectContactDeliveryInsideAura() {
+        projection = {
+          ...initProjection(),
+          objectContactDeliveryAllowed: !objectContactDeliveryInterdicted(
+            insideAuraObjectContactState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+      doRejectOtherMagicalEffectTargetInsideAura() {
+        projection = {
+          ...initProjection(),
+          otherMagicalEffectTargetAllowed: !otherMagicalEffectTargetInterdicted(
+            insideAuraOtherMagicalEffectState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+    } as const;
 
-      return {
-        init: () => {
-          projection = initProjection();
-        },
-        ...actionHandlers,
-        step: () => {},
-        getState: () => projection,
-      };
-    },
-  );
+    return {
+      init: () => {
+        projection = initProjection();
+      },
+      ...actionHandlers,
+      step: () => {},
+      getState: () => projection,
+    };
+  });
 }
 
 const antimagicMagicalEffectInterdictionStateCheck = stateCheck(
@@ -490,7 +493,6 @@ function preserveLifeBattle(): BattleState {
         combatantId: spellCasterId,
         displayName: "Life Cleric",
         initiative: 20,
-        side: partySide,
         classLevels: [{ className: "cleric", level: classLevel(3) }],
         currentHp: Hp(20),
         maxHp: Hp(20),
@@ -502,7 +504,6 @@ function preserveLifeBattle(): BattleState {
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: Hp(2),
         maxHp: Hp(20),
       }),
@@ -510,7 +511,6 @@ function preserveLifeBattle(): BattleState {
         combatantId: otherTargetId,
         displayName: "Other Target",
         initiative: 9,
-        side: oppositionSide,
         currentHp: Hp(3),
         maxHp: Hp(20),
       }),

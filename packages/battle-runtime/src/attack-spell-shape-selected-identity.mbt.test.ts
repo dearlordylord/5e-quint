@@ -23,7 +23,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -95,8 +94,6 @@ type ActionSpellAct = AvailableBattleAct & {
 
 const casterId = combatantId("attack-spell-shape-caster");
 const targetId = combatantId("attack-spell-shape-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -745,7 +742,6 @@ function attackSpellShapeBattle(
         combatantId: casterId,
         displayName: "Attack spell caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: input.sourceClassName ?? "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -763,7 +759,6 @@ function attackSpellShapeBattle(
         combatantId: targetId,
         displayName: "Attack spell target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -777,7 +772,6 @@ function attackSpellShapeCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -787,7 +781,6 @@ function attackSpellShapeCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

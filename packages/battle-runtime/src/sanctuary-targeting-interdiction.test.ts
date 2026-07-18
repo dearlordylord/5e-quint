@@ -20,7 +20,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -61,8 +60,6 @@ const casterId = combatantId("sanctuary-caster");
 const wardedId = combatantId("sanctuary-warded");
 const attackerId = combatantId("sanctuary-attacker");
 const replacementId = combatantId("sanctuary-replacement");
-const partySide = battleCombatantSide("party");
-const enemySide = battleCombatantSide("enemy");
 
 describe("Sanctuary targeting interdiction", () => {
   test("casts as a Bonus Action and wards one creature", () => {
@@ -899,7 +896,6 @@ function battleWithSanctuary(
         casterId,
         "Caster",
         20,
-        partySide,
         {
           sourceClassName: "cleric",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -925,9 +921,9 @@ function battleWithSanctuary(
         },
         input.casterLevel,
       ),
-      characterCreature(wardedId, "Warded", 15, partySide),
-      characterCreature(attackerId, "Attacker", 10, enemySide),
-      characterCreature(replacementId, "Replacement", 9, partySide),
+      characterCreature(wardedId, "Warded", 15),
+      characterCreature(attackerId, "Attacker", 10),
+      characterCreature(replacementId, "Replacement", 9),
     ],
   });
   expect(Either.isRight(result)).toBe(true);
@@ -1256,7 +1252,6 @@ function characterCreature(
   combatantIdValue: CombatantId,
   displayName: string,
   initiative: number,
-  side: ReturnType<typeof battleCombatantSide>,
   spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1267,7 +1262,6 @@ function characterCreature(
     combatantId: combatantIdValue,
     displayName,
     initiative: initiativeScore(initiative),
-    side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${combatantIdValue}-character`),

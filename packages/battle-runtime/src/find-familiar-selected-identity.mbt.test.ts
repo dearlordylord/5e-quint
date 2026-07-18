@@ -24,8 +24,6 @@ import {
 import {
   cureWoundsUnitId,
   healingWordUnitId,
-  oppositionSide,
-  partySide,
   statBlockCatalog,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -202,7 +200,9 @@ function observeDismissAndReappearFindFamiliarRoute(): readonly BattleReducerRou
 }
 
 function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
-  const state = requireResolved(castCatFamiliar(startSpellcasterFixtureBattle()));
+  const state = requireResolved(
+    castCatFamiliar(startSpellcasterFixtureBattle()),
+  );
   const act = touchDeliveryAct(state);
   const targetFill = selectedTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
@@ -418,7 +418,6 @@ function startSpellcasterFixtureBattle(): BattleState {
         combatantId: casterId,
         displayName: "Caster",
         initiative: 12,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -436,7 +435,6 @@ function startSpellcasterFixtureBattle(): BattleState {
         combatantId: targetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: 1,
         maxHp: 12,
       }),
@@ -557,7 +555,9 @@ function routeEventsOf(
 
 function requireResolved(result: BattleResolutionResult): BattleState {
   if (result.tag !== "resolved") {
-    throw new Error(`Expected Find Familiar result to resolve, got ${result.tag}.`);
+    throw new Error(
+      `Expected Find Familiar result to resolve, got ${result.tag}.`,
+    );
   }
   return result.state;
 }

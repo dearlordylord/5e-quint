@@ -39,7 +39,6 @@ import {
 } from "@dnd/shared/types";
 
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -99,8 +98,6 @@ type RuleCoreReactionProjection = RuleCoreComponentRoutedProjection & {
 
 const reactorId = combatantId("rule-core-reactor");
 const interruptedId = combatantId("rule-core-interrupted");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const movementResumeCostFeet = 10;
 const readiedMovementShortCostFeet = 5;
 const readiedMovementFillCostFeet = 10;
@@ -398,14 +395,12 @@ function ruleCoreReactionBattle(): BattleState {
         characterId: "rule-core-interrupted-character",
         displayName: "Rule Core Interrupted",
         initiative: 20,
-        side: oppositionSide,
       }),
       reactionCreature({
         combatantId: reactorId,
         characterId: "rule-core-reactor-character",
         displayName: "Rule Core Reactor",
         initiative: 10,
-        side: partySide,
       }),
     ],
   });
@@ -420,14 +415,12 @@ function ruleCoreReadiedMovementBattle(): BattleState {
         characterId: "rule-core-reactor-character",
         displayName: "Rule Core Reactor",
         initiative: 20,
-        side: partySide,
       }),
       reactionCreature({
         combatantId: interruptedId,
         characterId: "rule-core-interrupted-character",
         displayName: "Rule Core Interrupted",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -448,13 +441,11 @@ function reactionCreature(input: {
   readonly characterId: string;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(input.characterId),

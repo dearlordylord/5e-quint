@@ -22,12 +22,7 @@ import {
   unitChoiceSourceHoleIdText,
   unitChoiceSourceUnitId,
 } from "@dnd/character-creation-runtime";
-import {
-  battleCombatantSide,
-  battleId,
-  combatantId,
-  initiativeScore,
-} from "@dnd/battle-runtime";
+import { battleId, combatantId, initiativeScore } from "@dnd/battle-runtime";
 import {
   characterSheetId,
   createFreshCharacterSheet,
@@ -375,7 +370,6 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     combatantId: combatantId("combatant:origin-feat-retention"),
     displayName: "Origin Feat Retention",
     initiative: alertInitiativeScoreForBuild(build),
-    side: battleCombatantSide("party"),
   });
   if (Either.isLeft(projection)) {
     throw new Error(projection.left.issue.message);
@@ -398,13 +392,11 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
       combatantId: combatantId("combatant:origin-feat-runtime-entry"),
       displayName: "Origin Feat Runtime Entry",
       initiative: alertInitiativeScoreForBuild(build),
-      side: battleCombatantSide("party"),
     },
     statBlockBattleInput: {
       combatantId: combatantId("combatant:origin-feat-skeleton"),
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       initiative: initiativeScore(10),
-      side: battleCombatantSide("monsters"),
     },
   });
   if (Either.isLeft(entry)) {

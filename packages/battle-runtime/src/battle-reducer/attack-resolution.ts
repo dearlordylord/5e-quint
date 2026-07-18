@@ -93,9 +93,7 @@ import {
   grappledBy,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
-import {
-  parseSavingThrowRelationshipFacts,
-} from "./roll-trigger-relationship-facts.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -256,7 +254,6 @@ export function battleCreatureInitFromStatBlock(
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: input.initiative,
-    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,

@@ -396,7 +396,6 @@
         "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
         "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt",
         "packages/battle-runtime/battle-runtime-hunters-prey.qnt",
-        "packages/battle-runtime/battle-runtime-combatant-side.qnt",
         "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
         "packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt",
         "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt",
@@ -4860,7 +4859,7 @@
         "UBIQUITOUS_LANGUAGE.md#Table Decisions",
         "UBIQUITOUS_LANGUAGE.md#Equipment"
       ],
-      "title": "Battle Help ally/enemy decisions and Cleave second-creature discovery are procedure-local and independent of Encounter Side"
+      "title": "Battle Help ally/enemy decisions and Cleave second-creature discovery are procedure-local and independent of global relationship partitions"
     }
   ],
   "battleHoleFrontier": [
@@ -10245,14 +10244,6 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-combatant-side.qnt carries actor-side support used by registered feature procedure owners.",
-      "obligationIds": [
-        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-combatant-side.qnt",
-      "role": "proof-only"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-feature-bridge.qnt projects rule-core feature procedure facts into the battle runtime shape for registered feature obligations.",
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
@@ -10942,11 +10933,6 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-combat-holes.qnt",
-      "role": "proof-only"
-    },
-    {
-      "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-combatant-side.qnt",
       "role": "proof-only"
     },
     {

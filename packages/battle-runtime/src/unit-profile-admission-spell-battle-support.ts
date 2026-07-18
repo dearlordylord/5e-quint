@@ -17,8 +17,6 @@ import {
 } from "./index.ts";
 import {
   animalFriendshipUnitId,
-  oppositionSide,
-  partySide,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -115,7 +113,6 @@ export function spellBattle(input: {
     readonly combatantId: CombatantId;
     readonly statBlock: StatBlockRecord;
     readonly initiative: number;
-    readonly side?: typeof partySide | typeof oppositionSide;
   }[];
 }): BattleState {
   const casterClassLevels = input.casterClassLevels ?? [
@@ -128,7 +125,6 @@ export function spellBattle(input: {
         combatantId: spellCasterId,
         displayName: "Spellcaster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: singleSpellcastingSourceClassName(casterClassLevels),
           spellcastingAbilityModifier: abilityModifier(3),
@@ -171,7 +167,6 @@ export function spellBattle(input: {
               combatantId: spellTargetId,
               displayName: "Target",
               initiative: 10,
-              side: oppositionSide,
               ...(input.targetAttack === undefined
                 ? {}
                 : { attack: input.targetAttack }),
@@ -217,7 +212,6 @@ export function spellBattle(input: {
               combatantId: spellTargetId,
               statBlock: input.targetStatBlock,
               initiative: 10,
-              side: oppositionSide,
             }),
           ]),
       ...(input.extraTargetIds ?? []).map((combatantId, index) =>
@@ -225,7 +219,6 @@ export function spellBattle(input: {
           combatantId,
           displayName: `Target ${index + 2}`,
           initiative: 9 - index,
-          side: oppositionSide,
           ...(input.extraTargetHp === undefined
             ? {}
             : { currentHp: input.extraTargetHp }),
@@ -239,7 +232,6 @@ export function spellBattle(input: {
           combatantId: target.combatantId,
           statBlock: target.statBlock,
           initiative: target.initiative,
-          ...(target.side === undefined ? {} : { side: target.side }),
         }),
       ),
     ],

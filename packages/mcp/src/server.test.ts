@@ -6,7 +6,6 @@ import {
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleId,
-  battleCombatantSide,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -268,8 +267,6 @@ function retainedCompanionId(value: string) {
 
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 describe("MCP server route", () => {
   test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
@@ -317,7 +314,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter",
         build: fighterCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -325,7 +321,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -400,7 +395,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter / Wizard",
         build: multiclassBuild,
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -408,7 +402,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -446,7 +439,6 @@ describe("MCP server route", () => {
           },
         },
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -454,7 +446,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -504,7 +495,6 @@ describe("MCP server route", () => {
         displayName: "Champion Fighter",
         build: supportedBuild,
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -512,7 +502,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: supportedLibrary,
     });
@@ -554,7 +543,6 @@ describe("MCP server route", () => {
           displayName: "Unsupported Critical Range Fighter",
           build: unsupportedBuild,
           initiative: initiativeScore(12),
-          side: partySide,
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -562,7 +550,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(11),
-          side: oppositionSide,
         },
         unitLibrary: unsupportedLibrary,
       }),
@@ -583,7 +570,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: rogueBuild,
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -591,7 +577,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: supportedLibrary,
     });
@@ -629,7 +614,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: rogueBuild,
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -637,7 +621,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: rogueBattleUnitLibrary(root),
     });
@@ -671,7 +654,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: rogueCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -679,7 +661,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: rogueBattleUnitLibrary(root),
     });
@@ -702,7 +683,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: buildWithoutCunningAction,
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -710,7 +690,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: rogueBattleUnitLibrary(root),
     });
@@ -738,7 +717,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: evasionBuild,
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -746,7 +724,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: rogueBattleUnitLibrary(root),
     });
@@ -784,7 +761,6 @@ describe("MCP server route", () => {
           displayName: "Unsupported Evasion Rogue",
           build: evasionBuild,
           initiative: initiativeScore(12),
-          side: partySide,
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -792,7 +768,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(11),
-          side: oppositionSide,
         },
         unitLibrary: rogueBattleUnitLibrary(root, {
           evasionUnit: unsupportedEvasionUnit,
@@ -814,7 +789,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: rogueBuild,
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -822,7 +796,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: rogueBattleUnitLibrary(root),
     });
@@ -876,7 +849,6 @@ describe("MCP server route", () => {
           displayName: "Unsupported Rogue",
           build: unsupportedBuild,
           initiative: initiativeScore(12),
-          side: partySide,
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -884,7 +856,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(11),
-          side: oppositionSide,
         },
         unitLibrary: rogueBattleUnitLibrary(root, {
           uncannyDodgeUnit: unsupportedUnit,
@@ -934,7 +905,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter 2",
         build: fighterTwoCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -942,7 +912,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -969,13 +938,11 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter",
         build: fighterCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
         statBlock: goblinWarriorMultiattackStatBlock(root),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -1012,7 +979,6 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter",
         build: fighterTwoLightWeaponBuild(root.unitLibrary),
         initiative: initiativeScore(12),
-        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -1020,7 +986,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -1256,14 +1221,12 @@ describe("MCP server route", () => {
           characterId: testCharacterId(draftId),
           combatantId: "fighter",
           initiative: 18,
-          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
-          side: "opposition",
           admissionSource: { kind: "encounterParticipant" },
           currentHp: 0,
         },
@@ -1396,14 +1359,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: multiattackStatBlock.id,
             combatantId: "goblin",
             initiative: 7,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -1496,14 +1457,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -1549,14 +1508,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(firstDraftId),
             combatantId: "first-fighter",
             initiative: 11,
-            side: "party",
           },
           {
             kind: "characterSession",
             characterId: testCharacterId(secondDraftId),
             combatantId: "second-fighter",
             initiative: 17,
-            side: "party",
           },
         ],
       }),
@@ -1601,14 +1558,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(firstDraftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -1626,14 +1581,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(secondDraftId),
             combatantId: "second-fighter",
             initiative: 16,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -1680,14 +1633,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -1966,7 +1917,6 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(7),
-          side: partySide,
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -1974,7 +1924,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(18),
-          side: oppositionSide,
         },
         unitLibrary: root.unitLibrary,
       });
@@ -2041,7 +1990,6 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(7),
-          side: partySide,
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -2049,7 +1997,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(18),
-          side: oppositionSide,
         },
         unitLibrary: root.unitLibrary,
       });
@@ -2111,7 +2058,6 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Rogue",
           build: rogueCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(18),
-          side: partySide,
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -2119,7 +2065,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(7),
-          side: oppositionSide,
         },
         unitLibrary: rogueBattleUnitLibrary(root),
       });
@@ -2219,13 +2164,11 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -2257,7 +2200,6 @@ describe("MCP server route", () => {
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
-          side: "opposition",
           admissionSource: { kind: "encounterParticipant" },
         },
       ],
@@ -2285,7 +2227,6 @@ describe("MCP server route", () => {
               characterId: testCharacterId(draftId),
               combatantId: "fighter",
               initiative: 18,
-              side: "party",
               characterDisplayName: "Contradictory Caller Name",
             },
           ],
@@ -2318,7 +2259,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "characterSession",
@@ -2327,21 +2267,18 @@ describe("MCP server route", () => {
             ),
             combatantId: "second-fighter",
             initiative: 16,
-            side: "party",
           },
           {
             kind: "characterSession",
             characterId: testCharacterId("draft:mcp-missing-additional-third"),
             combatantId: "third-fighter",
             initiative: 14,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -2386,7 +2323,6 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "first-goblin",
             initiative: 11,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
           {
@@ -2394,7 +2330,6 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -2437,7 +2372,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 12,
-            side: "party",
           },
         ],
         companionAdmissions: [
@@ -2528,7 +2462,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
-            side: "party",
           },
         ],
         companionAdmissions: [
@@ -2662,7 +2595,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
@@ -2670,7 +2602,6 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             currentHp: 1,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -2809,7 +2740,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 12,
-            side: "party",
           },
         ],
         companionAdmissions: [
@@ -2963,7 +2893,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
-            side: "party",
           },
         ],
         companionAdmissions: [
@@ -2999,7 +2928,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
-            side: "party",
           },
         ],
         companionAdmissions: [
@@ -3064,7 +2992,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
-            side: "party",
           },
         ],
         // No companionAdmissions: the retained companion stays out of battle, so
@@ -3103,7 +3030,6 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 18,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -3173,14 +3099,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -3247,14 +3171,12 @@ describe("MCP server route", () => {
           characterId: testCharacterId(firstDraftId),
           combatantId: "fighter",
           initiative: 18,
-          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
-          side: "opposition",
           admissionSource: { kind: "encounterParticipant" },
         },
       ],
@@ -3264,7 +3186,6 @@ describe("MCP server route", () => {
       characterId: testCharacterId(secondDraftId),
       combatantId: "second-fighter",
       initiative: 16,
-      side: "party",
     } as const;
 
     expect(
@@ -3418,14 +3339,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -3728,7 +3647,6 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(18),
-          side: partySide,
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -3736,7 +3654,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(7),
-          side: oppositionSide,
         },
         unitLibrary: root.unitLibrary,
       });
@@ -3819,14 +3736,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -3920,14 +3835,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -4047,14 +3960,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -4111,14 +4022,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -4198,7 +4107,6 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
           {
@@ -4206,7 +4114,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 10,
-            side: "party",
           },
         ],
       }),
@@ -4262,7 +4169,6 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
           {
@@ -4270,7 +4176,6 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 10,
-            side: "party",
           },
         ],
       }),
@@ -4366,14 +4271,12 @@ describe("MCP server route", () => {
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
-            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
-            side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
           },
         ],
@@ -4649,7 +4552,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Orc Soldier Fighter",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           equipment: {
@@ -4676,7 +4578,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -4697,7 +4598,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Armored Spellcaster",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -4721,7 +4621,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -4748,7 +4647,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Shield Spellcaster",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -4774,7 +4672,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -4800,7 +4697,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Acid Splash Spellcaster",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -4826,7 +4722,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -4915,7 +4810,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Fire Bolt Spellcaster",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -4941,7 +4835,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -5071,7 +4964,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Sorcerous Burst Spellcaster",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           progression: characterBuildForClassProgression({
@@ -5124,7 +5016,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -5302,14 +5193,12 @@ describe("MCP server route", () => {
             characterId: "spare-the-dying-caster-character",
             combatantId: "fighter",
             initiative: 18,
-            side: "party",
           },
           {
             kind: "characterSession",
             characterId: "spare-the-dying-target-character",
             combatantId: "dying-ally",
             initiative: 7,
-            side: "party",
           },
         ],
       }),
@@ -5418,7 +5307,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Starry Wisp Spellcaster",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -5444,7 +5332,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -5555,7 +5442,6 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Readied Spell Fighter",
         initiative: initiativeScore(12),
-        side: partySide,
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -5581,7 +5467,6 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
-        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -5808,7 +5693,6 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(12),
-          side: partySide,
           currentHp: Hp(13),
         },
         statBlockBattleInput: {
@@ -5817,7 +5701,6 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(10),
-          side: oppositionSide,
         },
         unitLibrary: root.unitLibrary,
       }),

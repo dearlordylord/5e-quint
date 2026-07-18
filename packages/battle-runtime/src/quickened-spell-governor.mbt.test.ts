@@ -64,7 +64,6 @@ import {
   damageRollFillWithGroups,
   fighterId,
   findHole,
-  partySide,
   requireResolved,
   savingThrowOutcomeFill,
   skeletonId,
@@ -1138,7 +1137,6 @@ function metamagicBattle(input?: {
         combatantId: wizardId,
         displayName: "Sorcerer",
         initiative: 20,
-        side: partySide,
         attack: null,
         classLevels: [{ className: "sorcerer", level: 5 }],
         resources: [
@@ -1179,7 +1177,6 @@ function metamagicBattle(input?: {
         combatantId: fighterId,
         displayName: "Wounded Ally",
         initiative: 10,
-        side: partySide,
         currentHp: INITIAL_TARGET_HP,
         maxHp: 20,
       }),

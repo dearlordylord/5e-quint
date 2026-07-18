@@ -33,7 +33,6 @@ import {
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   battleCreatureInitFromStatBlock,
-  battleCombatantSide,
   battleId,
   characterBattleResourceIsPointPool,
   characterBattleResourceForUnit,
@@ -185,13 +184,11 @@ describe("Character Sheet battle handoff", () => {
         combatantId: characterCombatantId,
         displayName: "Character",
         initiative: initiativeScore(20),
-        side: battleCombatantSide("party"),
       },
       statBlockBattleInput: {
         combatantId: monsterCombatantId,
         statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("monsters"),
       },
     });
 
@@ -202,12 +199,12 @@ describe("Character Sheet battle handoff", () => {
       characterCombatantId,
       monsterCombatantId,
     ]);
-    expect(entry.right.state.combatants.get(characterCombatantId)?.side).toBe(
-      battleCombatantSide("party"),
-    );
-    expect(entry.right.state.combatants.get(monsterCombatantId)?.side).toBe(
-      battleCombatantSide("monsters"),
-    );
+    expect(
+      entry.right.state.combatants.get(characterCombatantId),
+    ).not.toHaveProperty("side");
+    expect(
+      entry.right.state.combatants.get(monsterCombatantId),
+    ).not.toHaveProperty("side");
     expect(
       entry.right.state.initiative.stillToAct.map((turn) => turn.creature),
     ).toEqual([characterCombatantId, monsterCombatantId]);
@@ -224,7 +221,6 @@ describe("Character Sheet battle handoff", () => {
         kind: "composeBattleEncounter",
         subject: "handoffParticipantMembership",
         facts: [
-          "encounterSideRelationshipOwnership",
           "nonSheetParticipantMembership",
           "sheetDerivedParticipantCandidate",
         ],
@@ -789,7 +785,6 @@ describe("Character Sheet battle handoff", () => {
             combatantId: ownerId,
             statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
             initiative: initiativeScore(12),
-            side: battleCombatantSide("party"),
           }),
         ],
       }),
@@ -895,7 +890,6 @@ describe("Character Sheet battle handoff", () => {
             combatantId: ownerId,
             statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
             initiative: initiativeScore(12),
-            side: battleCombatantSide("party"),
           }),
         ],
       }),
@@ -946,7 +940,6 @@ describe("Character Sheet battle handoff", () => {
             combatantId: ownerId,
             statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
             initiative: initiativeScore(12),
-            side: battleCombatantSide("party"),
           }),
         ],
       }),
@@ -998,7 +991,6 @@ describe("Character Sheet battle handoff", () => {
         combatantId: ownerId,
         displayName: "Owner",
         initiative: initiativeScore(12),
-        side: battleCombatantSide("party"),
       }),
     );
     const state = expectRight(
@@ -1100,7 +1092,6 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Druid",
         sheet: sheet.right,
         initiative: initiativeScore(20),
-        side: battleCombatantSide("party"),
         unitLibrary,
         statBlockCatalog,
       }),
@@ -1132,7 +1123,6 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Druid",
         sheet,
         initiative: initiativeScore(20),
-        side: battleCombatantSide("party"),
         unitLibrary,
         statBlockCatalog: emptyStatBlockCatalog(),
       }),
@@ -1146,7 +1136,6 @@ describe("Character Sheet battle handoff", () => {
             combatantId: combatantId("combatant:no-catalog-skeleton"),
             statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
             initiative: initiativeScore(10),
-            side: battleCombatantSide("monsters"),
           }),
         ],
       }),
@@ -1188,7 +1177,6 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Druid",
         sheet,
         initiative: initiativeScore(20),
-        side: battleCombatantSide("party"),
         unitLibrary,
         statBlockCatalog,
       }),
@@ -1202,7 +1190,6 @@ describe("Character Sheet battle handoff", () => {
             combatantId: combatantId("combatant:wild-shape-subset-skeleton"),
             statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
             initiative: initiativeScore(10),
-            side: battleCombatantSide("monsters"),
           }),
         ],
       }),
@@ -1251,7 +1238,6 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Fighter",
         sheet: sheet.right,
         initiative: initiativeScore(20),
-        side: battleCombatantSide("party"),
         unitLibrary,
         statBlockCatalog,
       }),
@@ -1268,7 +1254,6 @@ describe("Character Sheet battle handoff", () => {
       displayName: "Fighter",
       build,
       initiative: initiativeScore(20),
-      side: battleCombatantSide("party"),
       unitLibrary,
       hitPointMaximum: Hp(13),
     });
@@ -1304,7 +1289,6 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         initiative: initiativeScore(20),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -1322,7 +1306,6 @@ describe("Character Sheet battle handoff", () => {
       displayName: "Druid",
       build: druidWildShapeBuild(),
       initiative: initiativeScore(20),
-      side: battleCombatantSide("party"),
       unitLibrary,
       druidWildShapeAvailableForms: [
         statBlockCatalog.requireStatBlock("stat_block_rat"),
@@ -1350,7 +1333,6 @@ describe("Character Sheet battle handoff", () => {
       displayName: "Druid",
       build: druidWildShapeBuild(),
       initiative: initiativeScore(20),
-      side: battleCombatantSide("party"),
       unitLibrary,
     });
 
@@ -1507,7 +1489,6 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Dragonborn",
         sheet: parsed,
         initiative: initiativeScore(20),
-        side: battleCombatantSide("party"),
         unitLibrary,
         statBlockCatalog,
       }),
@@ -2009,7 +1990,6 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantIdValue,
         displayName: "Warlock",
         initiative: initiativeScore(12),
-        side: battleCombatantSide("party"),
       }),
     );
     if (init.creatureInit.kind !== "character") {
@@ -2281,7 +2261,6 @@ describe("Character Sheet battle handoff", () => {
       combatantId: combatantIdValue,
       displayName: "Wizard/Warlock",
       initiative: initiativeScore(12),
-      side: battleCombatantSide("party"),
     });
 
     expect(init).toMatchObject({
@@ -2342,7 +2321,6 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantId("combatant:sorcerer-font-battle"),
         displayName: "Sorcerer",
         initiative: initiativeScore(12),
-        side: battleCombatantSide("party"),
       }),
     );
     if (init.creatureInit.kind !== "character") {
@@ -2487,7 +2465,6 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantIdValue,
         displayName: "Sorcerer",
         initiative: initiativeScore(12),
-        side: battleCombatantSide("party"),
       }),
     );
     const state = expectRight(
@@ -2501,7 +2478,6 @@ describe("Character Sheet battle handoff", () => {
             ),
             statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
             initiative: initiativeScore(10),
-            side: battleCombatantSide("monsters"),
           }),
         ],
       }),
@@ -2555,7 +2531,6 @@ describe("Character Sheet battle handoff", () => {
         combatantId: sorcererCombatantId,
         displayName: "Sorcerer",
         initiative: initiativeScore(12),
-        side: battleCombatantSide("party"),
       }),
     );
     if (characterInit.creatureInit.kind !== "character") {
@@ -2602,7 +2577,6 @@ describe("Character Sheet battle handoff", () => {
             combatantId: combatantId("combatant:skeleton-metamagic"),
             statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
             initiative: initiativeScore(10),
-            side: battleCombatantSide("monsters"),
           }),
         ],
       }),
@@ -2971,7 +2945,6 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantId("combatant:monk-uncanny-handoff"),
         displayName: "Monk",
         initiative: initiativeScore(16),
-        side: battleCombatantSide("party"),
       }),
     );
     if (init.creatureInit.kind !== "character") {
@@ -3243,7 +3216,6 @@ describe("Character Build battle projection", () => {
         displayName: "Barbarian Monk",
         build: multiclassUnarmoredDefenseBuild(),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
         armorClassBaseChoice: {
           kind: "class_feature",
@@ -3269,7 +3241,6 @@ describe("Character Build battle projection", () => {
         displayName: "Fighter With Sheet Resource",
         build: fighterWithLayOnHandsResourceBuild(),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -3293,13 +3264,11 @@ describe("Character Build battle projection", () => {
           displayName: "True Strike Wizard",
           build: trueStrikeWizardBuild(),
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -3569,13 +3538,11 @@ describe("Character Build battle projection", () => {
           displayName: "Eldritch Mind Warlock",
           build: eldritchMindInvocationBuild(),
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -3611,13 +3578,11 @@ describe("Character Build battle projection", () => {
           displayName: "Weapon Mastery Fighter",
           build: weaponMasteryLongswordFighterBuild(),
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -3733,13 +3698,11 @@ describe("Character Build battle projection", () => {
           displayName: "Weapon Mastery Topple Fighter",
           build: weaponMasteryQuarterstaffFighterBuild(),
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -3806,13 +3769,11 @@ describe("Character Build battle projection", () => {
           displayName: "Weapon Mastery Cleave Fighter",
           build: weaponMasteryGreataxeFighterBuild(),
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -3885,7 +3846,6 @@ describe("Character Build battle projection", () => {
         displayName: "Martial Arts Dagger Monk",
         build: monkBuild({ weaponUnitId: "weapon_dagger", str: 12, dex: 16 }),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -3929,7 +3889,6 @@ describe("Character Build battle projection", () => {
         displayName: "Pact Blade Character",
         build,
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
         pactBladeBondedWeaponItemId: bondedItemId,
       }),
@@ -3972,7 +3931,6 @@ describe("Character Build battle projection", () => {
         displayName: "Strong Pact Blade Character",
         build,
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
         pactBladeBondedWeaponItemId: bondedItemId,
       }),
@@ -4015,7 +3973,6 @@ describe("Character Build battle projection", () => {
           displayName: "Pact Blade Character",
           build,
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
           pactBladeBondedWeaponItemId: bondedItemId,
         },
         statBlockBattleInput: {
@@ -4024,7 +3981,6 @@ describe("Character Build battle projection", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -4108,7 +4064,6 @@ describe("Character Build battle projection", () => {
           displayName: "Pact Blade Off-Hand Character",
           build,
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
           pactBladeBondedWeaponItemId: bondedItemId,
         },
         statBlockBattleInput: {
@@ -4117,7 +4072,6 @@ describe("Character Build battle projection", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -4224,7 +4178,6 @@ describe("Character Build battle projection", () => {
         displayName: "Unbonded Blade Warlock",
         build: meleeBuild,
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -4258,7 +4211,6 @@ describe("Character Build battle projection", () => {
           displayName: "No Invocation Character",
           build: noInvocationBuild,
           initiative: initiativeScore(10),
-          side: battleCombatantSide("party"),
           unitLibrary,
           pactBladeBondedWeaponItemId: noInvocationItemId,
         }),
@@ -4278,7 +4230,6 @@ describe("Character Build battle projection", () => {
           displayName: "Ranged Blade Character",
           build: rangedBuild,
           initiative: initiativeScore(10),
-          side: battleCombatantSide("party"),
           unitLibrary,
           pactBladeBondedWeaponItemId: rangedItemId,
         }),
@@ -4297,7 +4248,6 @@ describe("Character Build battle projection", () => {
           displayName: "Invalid Bond Character",
           build: pactBladeInvocationBuild("weapon_longsword"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("party"),
           unitLibrary,
           pactBladeBondedWeaponItemId: arbitraryItemId,
         }),
@@ -4313,7 +4263,6 @@ describe("Character Build battle projection", () => {
         displayName: "Ranged Blade Warlock",
         build: pactBladeInvocationBuild("weapon_shortbow"),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -4350,7 +4299,6 @@ describe("Character Build battle projection", () => {
             dex: 16,
           }),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("party"),
           unitLibrary,
         }),
       );
@@ -4389,7 +4337,6 @@ describe("Character Build battle projection", () => {
         displayName: "Strength Monk",
         build: monkBuild({ weaponUnitId: "weapon_dagger", str: 16, dex: 12 }),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -4424,7 +4371,6 @@ describe("Character Build battle projection", () => {
           dex: 16,
         }),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -4439,7 +4385,6 @@ describe("Character Build battle projection", () => {
           dex: 16,
         }),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -4455,7 +4400,6 @@ describe("Character Build battle projection", () => {
           dex: 16,
         }),
         initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
         unitLibrary,
       }),
     );
@@ -4488,13 +4432,11 @@ describe("Character Build battle projection", () => {
           displayName: "Grappling Monk",
           build: monkBuild({ level: 5, str: 12, dex: 16 }),
           initiative: initiativeScore(20),
-          side: battleCombatantSide("party"),
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         },
         unitLibrary,
       }),
@@ -4828,7 +4770,6 @@ function startDruidWildShapeSheetBattle(sheet: CharacterSheet): BattleState {
       displayName: "Druid",
       sheet,
       initiative: initiativeScore(20),
-      side: battleCombatantSide("party"),
       unitLibrary,
       statBlockCatalog,
     }),
@@ -4842,7 +4783,6 @@ function startDruidWildShapeSheetBattle(sheet: CharacterSheet): BattleState {
           combatantId: combatantId("skeleton"),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         }),
       ],
     }),
@@ -6186,7 +6126,6 @@ function handoffBranchState(combatant: BattleCreatureState): BattleState {
           combatantId: combatant.combatantId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         }),
       ],
     }),

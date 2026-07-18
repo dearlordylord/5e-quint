@@ -67,8 +67,6 @@ import {
   elapsedTimeTicks,
   endTurn,
   movementFeet,
-  oppositionSide,
-  partySide,
   resolveBattleInterrupt,
   resolveBattleSubject,
   Schema,
@@ -575,7 +573,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -643,7 +640,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Large Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "large",
         }),
       ],
@@ -730,7 +726,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -793,7 +788,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -873,7 +867,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -961,7 +954,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -1022,7 +1014,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Small Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "small",
         }),
       ],
@@ -1324,17 +1315,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
   });
 
-  test("Help attack consumes procedure-local ally and enemy decisions without stored side equality", () => {
+  test("Help attack consumes procedure-local ally and enemy decisions", () => {
     const state = startBattleRight({
       battleId: battleId("battle-help-attack"),
       combatants: [
         characterSeed({ initiative: 20 }),
-        statBlockCreatureInit({ initiative: 10, side: partySide }),
+        statBlockCreatureInit({ initiative: 10 }),
         characterSeed({
           combatantId: wizardId,
           displayName: "Wizard",
           initiative: 5,
-          side: oppositionSide,
         }),
       ],
     });

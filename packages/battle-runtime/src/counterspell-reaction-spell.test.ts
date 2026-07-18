@@ -22,7 +22,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -59,8 +58,6 @@ const shieldUnitId = "shield";
 const casterId = combatantId("counterspell-triggering-caster");
 const counterspellerId = combatantId("counterspell-reactor");
 const secondCounterspellerId = combatantId("counterspell-second-reactor");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 describe("Counterspell Reaction spell", () => {
   test("ends a lower-level spell automatically without expending the triggering slot", () => {
@@ -800,7 +797,6 @@ function battleWithCounterspell(
         combatantId: casterId,
         displayName: "Triggering caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -820,7 +816,6 @@ function battleWithCounterspell(
         combatantId: counterspellerId,
         displayName: "Counterspell reactor",
         initiative: 10,
-        side: oppositionSide,
         spellcasting:
           input.counterspellerPreparedSpells === undefined &&
           input.counterspellerSlots === undefined
@@ -840,7 +835,6 @@ function battleWithCounterspell(
               combatantId: secondCounterspellerId,
               displayName: "Second Counterspell reactor",
               initiative: 5,
-              side: oppositionSide,
               spellcasting: counterspellSpellcasting(counterspell),
             }),
           ]
@@ -886,14 +880,12 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting: CharacterSpellcastingInit;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

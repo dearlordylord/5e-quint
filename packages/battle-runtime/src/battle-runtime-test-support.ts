@@ -41,7 +41,6 @@ import {
   BattleFillSchema,
   BattleHoleSchema,
   BattleSnapshotSchema,
-  battleCombatantSide,
   BattleSubjectSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
   addBattleCombatant,
@@ -302,9 +301,6 @@ export function removeBattleCombatantsRight(
   }
   return result.right;
 }
-
-export const partySide = battleCombatantSide("party");
-export const oppositionSide = battleCombatantSide("opposition");
 export const fighterId = combatantId("fighter");
 export const goblinId = combatantId("goblin");
 export const skeletonId = combatantId("skeleton");
@@ -1575,7 +1571,6 @@ export function battleAfterFailedSleepInitialSave(input: {
         combatantId: goblinId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
         ...(input.targetConditions === undefined
           ? {}
           : { conditions: input.targetConditions }),
@@ -2612,7 +2607,6 @@ export function characterSeed(input: {
   readonly combatantId?: CombatantId;
   readonly displayName?: string;
   readonly initiative: number;
-  readonly side?: typeof partySide | typeof oppositionSide;
   readonly classLevel?: number;
   readonly classLevels?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -2747,7 +2741,6 @@ export function characterSeed(input: {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
     initiative: initiativeScore(input.initiative),
-    side: input.side ?? partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
@@ -2991,7 +2984,6 @@ export function statBlockCreatureInit(input: {
   readonly displayName?: string;
   readonly statBlock?: StatBlockRecord;
   readonly initiative: number;
-  readonly side?: typeof partySide | typeof oppositionSide;
   readonly currentHp?: number;
   readonly tempHp?: number;
 }): BattleCreatureInit {
@@ -3006,7 +2998,6 @@ export function statBlockCreatureInit(input: {
     combatantId: input.combatantId ?? goblinId,
     displayName: input.displayName ?? statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side ?? oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock,
@@ -3180,7 +3171,6 @@ export function skeletonCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Skeleton",
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
@@ -3204,7 +3194,6 @@ export function resistantSkeletonCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Slashing Resistant Skeleton",
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: {

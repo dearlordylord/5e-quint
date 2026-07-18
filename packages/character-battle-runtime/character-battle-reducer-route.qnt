@@ -31,7 +31,6 @@ module characterBattleReducerRoute {
   type CharacterBattleRouteCompositionFactFamily =
     | SheetDerivedParticipantCandidateRouteFact
     | NonSheetParticipantMembershipRouteFact
-    | EncounterSideRelationshipOwnershipRouteFact
     | SubjectProfileAvailabilityOwnershipRouteFact
     | InitiativeCountOwnershipRouteFact
     | StableInitiativeOrderOwnershipRouteFact

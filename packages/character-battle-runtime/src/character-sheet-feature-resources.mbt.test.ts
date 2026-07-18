@@ -2,7 +2,6 @@
 import * as path from "node:path";
 
 import {
-  battleCombatantSide,
   battleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
@@ -724,7 +723,6 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
       combatantId: sorcererCombatantId,
       displayName: "Sorcerer",
       initiative: initiativeScore(12),
-      side: battleCombatantSide("party"),
     }),
   );
   if (characterInit.creatureInit.kind !== "character") {
@@ -747,7 +745,6 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
           combatantId: combatantId("combatant:metamagic-skeleton"),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         }),
       ],
     }),

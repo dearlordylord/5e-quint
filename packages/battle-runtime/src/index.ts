@@ -1,5 +1,4 @@
 export {
-  BattleCombatantSide,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
   BattleDancingLightId,
@@ -14,7 +13,6 @@ export {
   CombatantId,
   SpellId,
   battleAreaId,
-  battleCombatantSide,
   battleCharacterExecutionScopeRef,
   battleDancingLightId,
   battleId,

@@ -56,8 +56,6 @@ import {
 import {
   moonbeamAreaId,
   moonbeamUnitId,
-  oppositionSide,
-  partySide,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -808,7 +806,6 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
         combatantId: spellTargetId,
         displayName: "Shape-shifted Target",
         initiative: 20,
-        side: oppositionSide,
         classLevels: [{ className: "druid", level: 2 }],
         resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
         druidWildShapeAvailableForms: [
@@ -824,7 +821,6 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
         combatantId: spellCasterId,
         displayName: "Moonbeam Caster",
         initiative: 10,
-        side: partySide,
         classLevels: [{ className: "druid", level: 3 }],
         spellcasting: {
           ...wizardSpellcasting({
@@ -918,7 +914,6 @@ function moonbeamCastOverSpellShapeShiftedTarget(
         combatantId: spellTargetId,
         displayName: "Spell Shape-shifted Target",
         initiative: 20,
-        side: oppositionSide,
         currentHp: 30,
         maxHp: 30,
       }),
@@ -926,7 +921,6 @@ function moonbeamCastOverSpellShapeShiftedTarget(
         combatantId: spellCasterId,
         displayName: "Moonbeam Caster",
         initiative: 10,
-        side: partySide,
         classLevels: [{ className: "druid", level: 3 }],
         spellcasting: {
           ...wizardSpellcasting({

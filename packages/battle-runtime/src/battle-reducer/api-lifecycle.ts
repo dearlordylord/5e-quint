@@ -307,6 +307,7 @@ export function applyInitiativeSwap(input: {
   readonly setup: InitialInitiativeSetup;
   readonly sourceId: CombatantId;
   readonly allyId: CombatantId;
+  readonly allyInSameCombat: boolean;
   readonly allyWilling: boolean;
 }): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
   const state = input.setup.state;
@@ -347,7 +348,7 @@ export function applyInitiativeSwap(input: {
       "Initiative Swap source lacks an admitted Initiative swap support profile.",
     );
   }
-  if (source.side !== ally.side) {
+  if (!input.allyInSameCombat) {
     return battleStateInitIssue(
       "Initiative Swap requires an ally in the same combat.",
     );

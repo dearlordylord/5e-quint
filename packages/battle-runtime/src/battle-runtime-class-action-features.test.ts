@@ -52,7 +52,6 @@ import {
   endTurn,
   movementFeet,
   movementDeltaFeet,
-  partySide,
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
@@ -1336,7 +1335,7 @@ describe("battle runtime: class action features", () => {
           classLevels: [{ className: "barbarian", level: 1 }],
           resources: [rageResource()],
         }),
-        { ...statBlockCreatureInit({ initiative: 10 }), side: partySide },
+        statBlockCreatureInit({ initiative: 10 }),
       ],
     });
     const raging = requireResolved(
@@ -1424,7 +1423,7 @@ describe("battle runtime: class action features", () => {
     });
   });
 
-  test("Rage attack-roll extension consumes the procedure enemy fact instead of Encounter Side", () => {
+  test("Rage attack-roll extension consumes the procedure enemy fact", () => {
     const state = startBattleRight({
       battleId: battleId("battle-rage-attack-roll-relationship-fact"),
       combatants: [
@@ -1433,7 +1432,7 @@ describe("battle runtime: class action features", () => {
           classLevels: [{ className: "barbarian", level: 1 }],
           resources: [rageResource()],
         }),
-        { ...statBlockCreatureInit({ initiative: 10 }), side: partySide },
+        statBlockCreatureInit({ initiative: 10 }),
       ],
     });
     const raging = requireResolved(

@@ -9,7 +9,7 @@ module battleRuntimeDarkOnesBlessingMbt {
 
   type WitnessHole = | DarkOnesBlessing
 
-  type DarkOnesBlessingScenarioOutcome = | Init | SelfKill | NearbyOtherKill | SameSideOtherKill | OutOfRangeRejected | NonEnemyRejected | MinimumTemporaryHitPoints | TemporaryHitPointReplacement
+  type DarkOnesBlessingScenarioOutcome = | Init | SelfKill | NearbyOtherKill | OutOfRangeRejected | NonEnemyRejected | MinimumTemporaryHitPoints | TemporaryHitPointReplacement
 
 
   type WitnessState = {
@@ -62,13 +62,6 @@ module battleRuntimeDarkOnesBlessingMbt {
   ),
   }
 
-  action doSameSideOtherKill = all {
-    qScenarioOutcome == Init,
-    recordProjection(witnessedTemporaryHitPoints, 0, SameSideOtherKill,
-    witnessResolved(DarkOnesBlessing),
-  ),
-  }
-
   action doRejectOutOfRangeOtherKill = all {
     qScenarioOutcome == Init,
     recordProjection(0, 0, OutOfRangeRejected,
@@ -100,7 +93,6 @@ module battleRuntimeDarkOnesBlessingMbt {
   action step = any {
     doSelfKill,
     doNearbyOtherKill,
-    doSameSideOtherKill,
     doRejectOutOfRangeOtherKill,
     doRejectNonEnemyKill,
     doMinimumTemporaryHitPoints,

@@ -32,7 +32,6 @@ import {
   endTurn,
   fighterId,
   findHole,
-  partySide,
   requireResolved,
   secondSkeletonId,
   skeletonId,
@@ -1243,7 +1242,6 @@ function sorcererMetamagicBattleWithOptions(
         combatantId: wizardId,
         displayName: "Sorcerer",
         initiative: 20,
-        side: partySide,
         attack: null,
         classLevels: [{ className: "sorcerer", level: 5 }],
         resources: [
@@ -1290,7 +1288,6 @@ function sorcererMetamagicBattleWithOptions(
         combatantId: fighterId,
         displayName: "Nearby Ally",
         initiative: 9,
-        side: partySide,
         currentHp: 12,
         maxHp: 20,
       }),

@@ -28,7 +28,6 @@ module battleRuntimeSpellAttackTests {
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"

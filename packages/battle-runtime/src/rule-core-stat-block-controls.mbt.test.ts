@@ -28,7 +28,6 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 
 import {
-  battleCombatantSide,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -89,8 +88,6 @@ type StatBlockAttack = NonNullable<
 
 const actorId = combatantId("rule-core-stat-block-actor");
 const targetId = combatantId("rule-core-stat-block-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const primaryAttackName = "Claw";
 const secondaryAttackName = "Spine";
@@ -292,14 +289,12 @@ function statBlockControlBattle(): BattleState {
         combatantId: actorId,
         displayName: "Rule Core Multiattacker",
         initiative: 20,
-        side: partySide,
         statBlock: multiattackStatBlock(),
       }),
       statBlockCreature({
         combatantId: targetId,
         displayName: "Rule Core Target",
         initiative: 10,
-        side: oppositionSide,
         statBlock: targetStatBlock(),
       }),
     ],
@@ -320,14 +315,12 @@ function statBlockCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: ReturnType<typeof battleCombatantSide>;
   readonly statBlock: StatBlockRecord;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,

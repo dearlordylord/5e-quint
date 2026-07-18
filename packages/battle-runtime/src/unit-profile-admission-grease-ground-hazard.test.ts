@@ -7,7 +7,6 @@ import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts"
 import {
   battleId,
   characterSeed,
-  partySide,
   startBattleRight,
   statBlockCreatureInit,
   wizardSpellcasting,
@@ -514,7 +513,6 @@ function castHeightenedGreaseWithSelectedTarget(): BattleState {
         combatantId: spellCasterId,
         displayName: "Sorcerer",
         initiative: 20,
-        side: partySide,
         attack: null,
         classLevels: [{ className: "sorcerer", level: 5 }],
         resources: [

@@ -46,11 +46,9 @@ import {
   greatWeaponFightingUnitId,
   monkExtraAttackUnitId,
   monkUnarmoredMovementUnitId,
-  oppositionSide,
   orcAdrenalineRushUnitId,
   orcRelentlessEnduranceUnitId,
   paladinExtraAttackUnitId,
-  partySide,
   rangerExtraAttackUnitId,
   rangerRovingUnitId,
   rogueSneakAttackUnitId,
@@ -91,7 +89,6 @@ export function archeryBattle(input: {
         combatantId: spellCasterId,
         displayName: "Archer",
         initiative: 20,
-        side: partySide,
         attack: input.attack,
         characterUnitRefs,
       }),
@@ -99,7 +96,6 @@ export function archeryBattle(input: {
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -143,7 +139,6 @@ export function savageAttackerBattle(input: {
         combatantId: spellCasterId,
         displayName: "Savage Attacker",
         initiative: 20,
-        side: partySide,
         attack: input.attack,
         characterUnitRefs: input.characterUnitRefs ?? [savageAttackerUnitRef],
         ...(input.classLevels === undefined
@@ -157,7 +152,6 @@ export function savageAttackerBattle(input: {
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -185,7 +179,6 @@ export function greatWeaponFightingBattle(input: {
         combatantId: spellCasterId,
         displayName: "Great Weapon Fighter",
         initiative: 20,
-        side: partySide,
         attack: input.attack,
         characterUnitRefs: [greatWeaponFightingBattleUnitRef()],
         selectedLoadout: input.selectedLoadout,
@@ -194,7 +187,6 @@ export function greatWeaponFightingBattle(input: {
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -220,7 +212,6 @@ export function combatProwessBattle(input: {
         combatantId: spellCasterId,
         displayName: "Peerless Aim User",
         initiative: 20,
-        side: partySide,
         attack: input.attack,
         characterUnitRefs: [combatProwessBattleUnitRef()],
         ...(input.cantrips === undefined
@@ -244,7 +235,6 @@ export function combatProwessBattle(input: {
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
         ...(input.targetPreparedSpells === undefined
           ? {}
           : {
@@ -284,7 +274,6 @@ export function extraAttackBattle(
         combatantId: spellCasterId,
         displayName: "Extra Attacker",
         initiative: 20,
-        side: partySide,
         attack: zeroAbilityWeaponAttack("weapon_longsword"),
         characterUnitRefs,
         classLevels: [{ className: "fighter", level: classLevel(5) }],
@@ -293,7 +282,6 @@ export function extraAttackBattle(
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -319,7 +307,6 @@ export function fastMovementBattle(
         combatantId: spellCasterId,
         displayName: "Fast Barbarian",
         initiative: 20,
-        side: partySide,
         characterUnitRefs: [fastMovementBattleUnitRef()],
         classLevels: [{ className: "barbarian", level: classLevel(5) }],
         ...(input.armorClass === undefined
@@ -330,7 +317,6 @@ export function fastMovementBattle(
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -356,7 +342,6 @@ export function rovingBattle(
         combatantId: spellCasterId,
         displayName: "Roving Ranger",
         initiative: 20,
-        side: partySide,
         characterUnitRefs: [rovingBattleUnitRef()],
         classLevels: [{ className: "ranger", level: classLevel(6) }],
         ...(input.armorClass === undefined
@@ -367,7 +352,6 @@ export function rovingBattle(
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -397,7 +381,6 @@ export function monkUnarmoredMovementBattle(
         combatantId: spellCasterId,
         displayName: "Mobile Monk",
         initiative: 20,
-        side: partySide,
         characterUnitRefs: [monkUnarmoredMovementBattleUnitRef()],
         classLevels: [{ className: "monk", level: classLevel(2) }],
         ...(input.armorClass === undefined
@@ -411,7 +394,6 @@ export function monkUnarmoredMovementBattle(
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -435,14 +417,12 @@ export function relentlessEnduranceBattle(input: {
         combatantId: spellCasterId,
         displayName: "Attacker",
         initiative: 20,
-        side: partySide,
         attack: zeroAbilityWeaponAttack("weapon_longsword"),
       }),
       characterCreature({
         combatantId: spellTargetId,
         displayName: "Orc Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: input.targetHp,
         maxHp: input.targetMaxHp ?? 12,
         resources: [
@@ -477,7 +457,6 @@ export function adrenalineRushBattle(
         combatantId: spellCasterId,
         displayName: "Orc",
         initiative: 20,
-        side: partySide,
         tempHp: input.tempHp ?? 0,
         classLevels: [{ className: "fighter", level: classLevel(5) }],
         resources: [
@@ -491,7 +470,6 @@ export function adrenalineRushBattle(
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });

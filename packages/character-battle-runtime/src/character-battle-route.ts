@@ -37,7 +37,6 @@ export type CharacterBattleRouteFill =
 export const CHARACTER_BATTLE_ROUTE_COMPOSITION_FACTS = [
   "sheetDerivedParticipantCandidate",
   "nonSheetParticipantMembership",
-  "encounterSideRelationshipOwnership",
   "subjectProfileAvailabilityOwnership",
   "initiativeCountOwnership",
   "stableInitiativeOrderOwnership",
@@ -423,9 +422,8 @@ export function characterBattleSettlementRouteStep(
   action: CharacterBattleSettlementRouteAction,
 ): readonly CharacterBattleRouteEvent[] {
   return Match.value(action).pipe(
-    Match.when(
-      "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
-      () => settleHitPointsConditionsSlotsAndPreservedSheetStateRoute(route),
+    Match.when("doSettleHitPointsConditionsSlotsAndPreservedSheetState", () =>
+      settleHitPointsConditionsSlotsAndPreservedSheetStateRoute(route),
     ),
     Match.when("doSettlePurePactMagicSlotExpenditure", () =>
       settlePurePactMagicSlotExpenditureRoute(route),
@@ -615,7 +613,6 @@ function composeParticipantMembershipRoute(
     composeBattleEncounterRoute({
       subject: "handoffParticipantMembership",
       facts: [
-        "encounterSideRelationshipOwnership",
         "nonSheetParticipantMembership",
         "sheetDerivedParticipantCandidate",
       ],
@@ -678,7 +675,6 @@ function enterSheetDerivedSessionBattleRoute(
     composeBattleEncounterRoute({
       subject: "handoffParticipantMembership",
       facts: [
-        "encounterSideRelationshipOwnership",
         "nonSheetParticipantMembership",
         "sheetDerivedParticipantCandidate",
       ],

@@ -21,7 +21,6 @@ import {
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
-  type BattleCombatantSide,
   type BattleState,
   type BattleStateInitIssue,
   type CharacterId,
@@ -101,7 +100,6 @@ export type CharacterBuildCreatureInput = {
   readonly displayName: string;
   readonly build: CharacterBuild;
   readonly initiative: InitiativeScore;
-  readonly side: BattleCombatantSide;
   readonly hitPointMaximum?: Hp;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
@@ -393,7 +391,6 @@ export function battleCreatureInitFromCharacterBuild(
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: input.initiative,
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: input.characterId,

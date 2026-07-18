@@ -45,7 +45,6 @@ import {
   gustOfWindEastDirectionId,
   gustOfWindNorthDirectionId,
   gustOfWindUnitId,
-  partySide,
   spellCasterId,
   spellTargetId,
   thunderwaveSecondTargetId,
@@ -593,7 +592,6 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
         combatantId: spellCasterId,
         displayName: "Sorcerer",
         initiative: 20,
-        side: partySide,
         attack: null,
         classLevels: [{ className: "sorcerer", level: 5 }],
         resources: [

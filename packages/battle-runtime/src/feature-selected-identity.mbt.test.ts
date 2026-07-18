@@ -18,7 +18,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   activeFeatureSpellSaveDcRouteEvents,
   battleReducerStartRouteEvent,
@@ -84,8 +83,6 @@ const innateSorceryExpiresRound = 11;
 const activeInnateSorceryOccurrence = "activeUntilEndOfRound11";
 const sorcererId = combatantId("innate-sorcery-selected-identity-sorcerer");
 const targetId = combatantId("innate-sorcery-selected-identity-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const innateSorcerySourceKey =
   ongoingFeatureSourceKeyForUnit(innateSorceryUnitId);
 const selectedUnitRuntimeBoundaryIds = new Set<string>();
@@ -325,7 +322,6 @@ function innateSorceryBattle(
         combatantId: sorcererId,
         displayName: "Innate Sorcery Sorcerer",
         initiative: 20,
-        side: partySide,
         classLevels:
           sourceClassName === "sorcerer"
             ? [{ className: "sorcerer", level: 1 }]
@@ -351,7 +347,6 @@ function innateSorceryBattle(
         combatantId: targetId,
         displayName: "Innate Sorcery Target",
         initiative: 10,
-        side: oppositionSide,
         classLevels: [{ className: "fighter", level: 1 }],
       }),
     ],
@@ -372,7 +367,6 @@ function characterCombatant(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly classLevels: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -390,7 +384,6 @@ function characterCombatant(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

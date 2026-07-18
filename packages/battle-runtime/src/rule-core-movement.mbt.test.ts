@@ -31,7 +31,6 @@ import {
 } from "@dnd/shared/types";
 
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -95,8 +94,6 @@ const fighterActor = "Fighter";
 const grappledTargetActor = "GrappledTarget";
 const actorId = combatantId("rule-core-mover");
 const observerId = combatantId("rule-core-observer");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const movementSpeedFeet = 30;
 const movementShortCostFeet = 5;
 const movementFillCostFeet = 10;
@@ -382,7 +379,6 @@ function ruleCoreMovementBattle(): BattleState {
         characterId: "rule-core-mover-character",
         displayName: "Rule Core Mover",
         initiative: 20,
-        side: partySide,
         prone: true,
       }),
       movementCreature({
@@ -390,7 +386,6 @@ function ruleCoreMovementBattle(): BattleState {
         characterId: "rule-core-observer-character",
         displayName: "Rule Core Observer",
         initiative: 10,
-        side: oppositionSide,
         prone: false,
       }),
     ],
@@ -412,7 +407,6 @@ function movementCreature(input: {
   readonly characterId: string;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly prone: boolean;
 }): BattleCreatureInit {
   const conditions = input.prone ? (["prone"] as const) : undefined;
@@ -420,7 +414,6 @@ function movementCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(input.characterId),

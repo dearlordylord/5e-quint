@@ -269,30 +269,6 @@ function handUseForOccupancy(
   return occupancy;
 }
 
-export function combatantsAreEnemies(
-  state: BattleState,
-  actorId: CombatantId,
-  targetId: CombatantId,
-): boolean {
-  const actor = state.combatants.get(actorId);
-  const target = state.combatants.get(targetId);
-  return (
-    actor !== undefined && target !== undefined && actor.side !== target.side
-  );
-}
-
-export function combatantsAreAllies(
-  state: BattleState,
-  actorId: CombatantId,
-  targetId: CombatantId,
-): boolean {
-  const actor = state.combatants.get(actorId);
-  const target = state.combatants.get(targetId);
-  return (
-    actor !== undefined && target !== undefined && actor.side === target.side
-  );
-}
-
 export function normalizeBattleGrapples(state: BattleState): BattleState {
   const grapples = state.grapples.filter((grapple) => {
     const grappler = state.combatants.get(grapple.grapplerId);

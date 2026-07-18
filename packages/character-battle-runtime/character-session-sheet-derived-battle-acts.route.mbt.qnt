@@ -5,7 +5,7 @@
 //   #Initiative define encounter entry order.
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots defines
 //   source-exact spell-slot expenditure settled back to the Character Sheet.
-// - UBIQUITOUS_LANGUAGE.md: Encounter Side, Initiative, Spell Slot, Spend,
+// - UBIQUITOUS_LANGUAGE.md: Initiative, Spell Slot, Spend,
 //   Battle Runtime, and Settlement.
 module characterSessionSheetDerivedBattleActsRouteMbt {
   import characterBattleReducerRoute.* from "./character-battle-reducer-route"
@@ -38,7 +38,6 @@ module characterSessionSheetDerivedBattleActsRouteMbt {
           Set(
             SheetDerivedParticipantCandidateRouteFact,
             NonSheetParticipantMembershipRouteFact,
-            EncounterSideRelationshipOwnershipRouteFact,
           ),
           CharacterBattleEncounterSetupOwner,
         )

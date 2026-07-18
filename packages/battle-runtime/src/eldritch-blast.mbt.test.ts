@@ -29,7 +29,6 @@ import {
   attackRollFill,
   damageRollFillWithGroups,
   fighterId,
-  partySide,
   skeletonCreatureInit,
   skeletonId,
   testUnarmedStrikeDamageAttack,
@@ -219,21 +218,25 @@ const eldritchBlastStateCheck = stateCheck(
 );
 
 describe("Eldritch Blast MBT parity", () => {
-  it("replays Eldritch Blast beam sequencing", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-eldritch-blast.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createEldritchBlastDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: eldritchBlastStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays Eldritch Blast beam sequencing",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-eldritch-blast.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createEldritchBlastDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: eldritchBlastStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeEldritchBlastQuintState(
@@ -303,7 +306,6 @@ function eldritchBlastCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Eldritch Blast Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("eldritch-blast-caster-character"),
@@ -489,9 +491,7 @@ function eldritchBlastHoleName(raw: unknown): EldritchBlastMbtHole {
   throw new Error(`Unknown Quint Eldritch Blast hole variant: ${tag}`);
 }
 
-function eldritchBlastMbtLastResult(
-  raw: unknown,
-): EldritchBlastMbtLastResult {
+function eldritchBlastMbtLastResult(raw: unknown): EldritchBlastMbtLastResult {
   if (
     raw === "init" ||
     raw === "needsHoles" ||

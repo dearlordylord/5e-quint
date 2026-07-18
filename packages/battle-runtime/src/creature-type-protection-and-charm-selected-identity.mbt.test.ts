@@ -28,7 +28,6 @@ import {
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -213,8 +212,6 @@ const humanoidAttackerId = combatantId(
 const feySourceId = combatantId(
   "creature-type-protection-and-charm-selected-identity-fey-source",
 );
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -994,7 +991,6 @@ function animalFriendshipBattle(): BattleState {
         combatantId: casterId,
         displayName: "Animal Friendship caster",
         initiative: 20,
-        side: partySide,
         className: "druid",
         spellcasting: {
           sourceClassName: "druid",
@@ -1013,19 +1009,16 @@ function animalFriendshipBattle(): BattleState {
         combatantId: casterAllyId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 19,
-        side: partySide,
       }),
       statBlockCreature({
         combatantId: beastTargetId,
         statBlock: statBlockWithCreatureType("beast"),
         initiative: 10,
-        side: oppositionSide,
       }),
       statBlockCreature({
         combatantId: humanoidTargetId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 9,
-        side: oppositionSide,
       }),
     ],
   });
@@ -1045,7 +1038,6 @@ function protectionFromEvilAndGoodBattle(): BattleState {
         combatantId: casterId,
         displayName: "Protection from Evil and Good caster",
         initiative: 20,
-        side: partySide,
         className: "cleric",
         spellcasting: {
           sourceClassName: "cleric",
@@ -1064,25 +1056,21 @@ function protectionFromEvilAndGoodBattle(): BattleState {
         combatantId: undeadAttackerId,
         statBlock: statBlockWithCreatureType("undead"),
         initiative: 19,
-        side: oppositionSide,
       }),
       statBlockCreature({
         combatantId: humanoidAttackerId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 18,
-        side: oppositionSide,
       }),
       statBlockCreature({
         combatantId: feySourceId,
         statBlock: statBlockWithCreatureType("fey"),
         initiative: 17,
-        side: oppositionSide,
       }),
       statBlockCreature({
         combatantId: protectedTargetId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 10,
-        side: partySide,
       }),
     ],
   });
@@ -1338,7 +1326,6 @@ function spellcasterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly className: CharacterClassName;
   readonly spellcasting: CharacterSpellcastingInit;
 }): BattleCreatureInit {
@@ -1346,7 +1333,6 @@ function spellcasterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
@@ -1382,13 +1368,11 @@ function statBlockCreature(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,

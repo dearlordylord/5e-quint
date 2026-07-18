@@ -26,8 +26,6 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   fighterExtraAttackUnitId,
-  oppositionSide,
-  partySide,
   speciesDragonbornBreathWeaponUnitId,
   spellCasterId,
   spellTargetId,
@@ -470,7 +468,6 @@ function breathWeaponBattle(
         combatantId: spellCasterId,
         displayName: "Dragonborn Fighter",
         initiative: 20,
-        side: partySide,
         classLevels: [{ className: "fighter", level: classLevel(5) }],
         characterUnitRefs: [
           breathWeaponUnitRef(),
@@ -489,7 +486,6 @@ function breathWeaponBattle(
         combatantId: spellTargetId,
         displayName: "Failed Save Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: 20,
         maxHp: 20,
       }),
@@ -497,7 +493,6 @@ function breathWeaponBattle(
         combatantId: secondTargetId,
         displayName: "Successful Save Target",
         initiative: 9,
-        side: oppositionSide,
         currentHp: 20,
         maxHp: 20,
       }),

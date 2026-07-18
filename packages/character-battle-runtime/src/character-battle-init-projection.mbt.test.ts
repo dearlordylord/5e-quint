@@ -2,7 +2,6 @@
 import * as path from "node:path";
 
 import {
-  battleCombatantSide,
   battleCreatureInitFromStatBlock,
   battleId,
   characterId,
@@ -279,7 +278,6 @@ function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
     combatantId: combatantId("combatant:battle-init-mixed-slots"),
     displayName: "Character",
     initiative: initiativeScore(20),
-    side: battleCombatantSide("party"),
   });
 
   return projectFromParts({
@@ -297,7 +295,6 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
     displayName: "Fighter",
     build: defenseBuild({ wearingArmor: false }),
     initiative: initiativeScore(20),
-    side: battleCombatantSide("party"),
     unitLibrary,
     hitPointMaximum: Hp(13),
   });
@@ -333,7 +330,6 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
     combatantId: combatantId("combatant:stable-recovery-init"),
     displayName: "Character",
     initiative: initiativeScore(20),
-    side: battleCombatantSide("party"),
   });
 
   return projectFromParts({
@@ -357,7 +353,6 @@ function startCharacterBattle(input: {
       combatantId: input.combatantId,
       displayName: "Character",
       initiative: initiativeScore(20),
-      side: battleCombatantSide("party"),
     }),
   );
   const state = expectRight(
@@ -369,7 +364,6 @@ function startCharacterBattle(input: {
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         }),
       ],
     }),
