@@ -11,12 +11,13 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { createHttpAdminMirrorPublisher } from "./admin-mirror.ts";
 import {
   adminMirrorPublisherInstanceId,
+  AdminMirrorProjectionEnvelopeSchema,
   adminMirrorSequence,
   adminMirrorSessionId,
   type AdminMirrorProjectionEnvelope,
@@ -110,6 +111,12 @@ describe("Admin Mirror publisher", () => {
     expect(
       JSON.stringify(pendingProjection.session.transientBattleFills),
     ).not.toContain("Hunter's Mark");
+
+    expect(
+      Schema.decodeUnknownEither(AdminMirrorProjectionEnvelopeSchema)(
+        envelope({ sequence: 3, projection: pendingProjection }),
+      )._tag,
+    ).toBe("Left");
 
     const pendingEntry = createAdminMirrorPresentationTimelineEntry(
       envelope({

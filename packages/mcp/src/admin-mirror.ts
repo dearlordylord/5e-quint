@@ -151,11 +151,13 @@ function publishAdminProjection(root: McpCompositionRoot): Effect.Effect<void> {
   if (publication.tag === "disabled") return Effect.void;
   const projection = adminProjection(root);
   if (Either.isLeft(projection)) return Effect.void;
+  const selectedContent = selectedContentForProjection(root, projection.right);
+  if (Either.isLeft(selectedContent)) return Effect.void;
   return publication.publisher.publish({
     mirrorSessionId: publication.mirrorSessionId,
     projection: projection.right,
     publisherInstanceId: publication.publisherInstanceId,
-    selectedContent: selectedContentForProjection(root, projection.right),
+    selectedContent: selectedContent.right,
     sequence: publication.nextSequence(),
     sourceProcessId: process.pid,
   });
@@ -164,31 +166,45 @@ function publishAdminProjection(root: McpCompositionRoot): Effect.Effect<void> {
 function selectedContentForProjection(
   root: McpCompositionRoot,
   projection: AdminSessionProjection,
-): AdminMirrorProjectionEnvelope["selectedContent"] {
+): Either.Either<AdminMirrorProjectionEnvelope["selectedContent"], string> {
   const presentation =
     projection.session.transientBattleFills?.presentation ?? null;
-  if (presentation === null) return null;
+  if (presentation === null) return Either.right(null);
   return Match.value(presentation).pipe(
-    Match.when({ kind: "intrinsic" }, () => null),
+    Match.when({ kind: "intrinsic" }, () => Either.right(null)),
     Match.when({ kind: "spell" }, ({ invocation }) =>
-      Option.getOrNull(root.unitLibrary.getUnit(invocation.spellId)),
+      Option.match(root.unitLibrary.getUnit(invocation.spellId), {
+        onNone: () =>
+          Either.left(
+            `Selected spell content ${invocation.spellId} is unavailable.`,
+          ),
+        onSome: Either.right,
+      }),
     ),
     Match.when({ kind: "druidWildShapeForm" }, ({ formStatBlockId }) =>
-      Option.getOrNull(root.statBlockCatalog.getStatBlock(formStatBlockId)),
+      Option.match(root.statBlockCatalog.getStatBlock(formStatBlockId), {
+        onNone: () =>
+          Either.left(
+            `Selected Wild Shape form content ${formStatBlockId} is unavailable.`,
+          ),
+        onSome: Either.right,
+      }),
     ),
     Match.when({ kind: "unit" }, ({ unitId }) => {
       const catalogUnit = Option.getOrNull(root.unitLibrary.getUnit(unitId));
-      if (catalogUnit !== null) return catalogUnit;
+      if (catalogUnit !== null) return Either.right(catalogUnit);
       const battle = root.sessionStore.battleState;
-      if (battle === null) return null;
+      if (battle === null) {
+        return Either.left(`Selected Unit content ${unitId} is unavailable.`);
+      }
       for (const combatant of battle.combatants.values()) {
         if (combatant.origin.kind !== "character") continue;
         const selected = combatant.origin.characterUnitRefs.find(
           (candidate) => candidate.unit.id === unitId,
         )?.unit;
-        if (selected !== undefined) return selected;
+        if (selected !== undefined) return Either.right(selected);
       }
-      return null;
+      return Either.left(`Selected Unit content ${unitId} is unavailable.`);
     }),
     Match.exhaustive,
   );
