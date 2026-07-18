@@ -245,8 +245,12 @@ the boundary where the procedure needs them:
   table-supplied spatial facts; battle owns downstream rule filters
   such as reaction availability, incapacitation, Disengage suppression, and the
   attack/reaction procedure once a threat fact is supplied.
-- Help attack proximity is a table-supplied fact; battle owns the
-  resulting help link, expiry, and consumption by the later qualifying attack.
+- Help's ally and enemy classifications are separate, procedure-local Table
+  Decision holes. Their candidate lists contain only reducer-known mechanical
+  constraints and the accepted decisions are not stored as an encounter-wide
+  relationship partition. Help attack proximity is a separate table-supplied
+  spatial fact; battle owns the resulting help link, expiry, and consumption by
+  the later qualifying attack.
 
 If a package stores an explicit spatial fact, the type must name that fact rather
 than imply ownership of geometry. For example, a caller-supplied attack range

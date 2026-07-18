@@ -928,11 +928,6 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     targetIds: Schema.Array(CombatantId),
   }),
   Schema.Struct({
-    kind: Schema.Literal("helpAttackTargetWithin5Feet"),
-    helperId: CombatantId,
-    targetEnemyId: CombatantId,
-  }),
-  Schema.Struct({
     kind: Schema.Literal("meleeRedirectTargetWithin5Feet"),
     sourceId: CombatantId,
     targetId: CombatantId,
@@ -1240,6 +1235,19 @@ const BattleOngoingSpellTargetWithinRangeFactSchema = Schema.Struct({
 });
 
 export const BattleHoleSchema = Schema.Union(
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("helpAttackAllyDecision"),
+    helperId: CombatantId,
+    choices: Schema.Array(CombatantId),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("helpAttackEnemyDecision"),
+    helperId: CombatantId,
+    allyId: CombatantId,
+    choices: Schema.Array(CombatantId),
+  }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("targetChoice"),
@@ -2669,6 +2677,17 @@ type BattleInterruptAttackExecutionSelectionEncoded =
 
 type BattleFillEncoded =
   | {
+      readonly kind: "helpAttackAllyDecision";
+      readonly holeId: string;
+      readonly allyId: string;
+    }
+  | {
+      readonly kind: "helpAttackEnemyDecision";
+      readonly holeId: string;
+      readonly targetEnemyId: string;
+      readonly targetWithinFiveFeetOfHelper: true;
+    }
+  | {
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
@@ -3690,6 +3709,17 @@ export const BattleFillSchema: Schema.Schema<
   never
 > = Schema.suspend(() =>
   Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("helpAttackAllyDecision"),
+      holeId: BattleHoleIdSchema,
+      allyId: CombatantId,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("helpAttackEnemyDecision"),
+      holeId: BattleHoleIdSchema,
+      targetEnemyId: CombatantId,
+      targetWithinFiveFeetOfHelper: Schema.Literal(true),
+    }),
     Schema.Struct({
       kind: Schema.Literal("targetChoice"),
       holeId: BattleHoleIdSchema,

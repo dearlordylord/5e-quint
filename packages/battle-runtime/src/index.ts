@@ -355,6 +355,8 @@ export {
   type BattleGrappleOutcomeHole,
   type BattleHand,
   type BattleHelpAttack,
+  type BattleHelpAttackAllyDecisionHole,
+  type BattleHelpAttackEnemyDecisionHole,
   type BattleHiddenState,
   type BattleHidePrerequisite,
   type BattleReducerRouteEvent,

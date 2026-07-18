@@ -72,7 +72,7 @@ Discovers what acts a subject can take. Anchor:
 - 9211 `resolveAttack` (771) — **largest single function**
 - 9982 `needsAttackDamageConcentrationResult`
 - standard action resolvers: `resolveDash`, `applyDashToActor`, `resolveDisengage`, `resolveBonusActionStandardAction`, `resolveBonusActionDash`, `resolveBonusActionDashTemporaryHitPoints`, `applyTemporaryHitPoints`, `resolveBonusActionDisengage`, `applyDisengage`, `resolveDodge`, `resolveReady`, `resolveHelpAttack` (100), `resolveHide` (77), `resolveMultiattack` (90), `resolveSearch` (66)
-- help-attack hole helpers (`helpAttackAllyHole`, `helpAttackTargetHole`, `helpAttackAllyChoices`, `helpAttackTargetChoices`, `hasHelpAttackTargetSpatialFact`)
+- help-attack hole helpers (`helpAttackAllyHole`, `helpAttackTargetHole`, `helpAttackAllyChoices`, `helpAttackTargetChoices`)
 - 10760 `resolveOffHandAttack` (434), `spendOffHandBonusAction`
 - statblock bonus actions: `resolveStatBlockBonusActionOption`, `resolveStatBlockBonusActionDisengage`, `resolveStatBlockBonusActionHide`
 - grapple: `resolveGrapple` (80), `resolveEscapeGrapple` (73), `resolveEscapeSpellRestraint` (78), `resolveReleaseGrappleCommand`

@@ -63,6 +63,14 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "gustOfWindLineDirectionChoice" as const,
       ),
       byBattleFillKind("heldObjectFacts", () => "heldObjectFacts" as const),
+      byBattleFillKind(
+        "helpAttackAllyDecision",
+        () => "helpAttackAllyDecision" as const,
+      ),
+      byBattleFillKind(
+        "helpAttackEnemyDecision",
+        () => "helpAttackEnemyDecision" as const,
+      ),
     )
     .pipe(
       byBattleFillKind(

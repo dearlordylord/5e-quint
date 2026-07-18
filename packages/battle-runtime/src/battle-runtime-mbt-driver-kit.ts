@@ -18464,6 +18464,14 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "slowSomaticSpellFailureOutcome") {
     return ["SlowSomaticSpellFailureOutcome"];
   }
+  if (
+    hole.kind === "helpAttackAllyDecision" ||
+    hole.kind === "helpAttackEnemyDecision"
+  ) {
+    throw new Error(
+      "Generic battle runtime MBT leaves Help relationship decisions to the focused Help witness.",
+    );
+  }
   if (hole.kind === "targetAbilityChoices") {
     throw new Error(
       "Battle runtime MBT does not model target ability choices holes.",

@@ -18,6 +18,8 @@ import {
   requireHole,
   findHole,
   findAct,
+  helpAttackAllyDecisionFill,
+  helpAttackEnemyDecisionFill,
   targetFill,
   spellTargetAllocationFill,
   abilityCheckFill,
@@ -53,6 +55,7 @@ import {
   battleAreaId,
   battleId,
   BattleFillSchema,
+  BattleHoleSchema,
   battleTablePositionId,
   BattleSubjectSchema,
   battleUnitSupportProfilesForUnit,
@@ -65,6 +68,7 @@ import {
   endTurn,
   movementFeet,
   oppositionSide,
+  partySide,
   resolveBattleInterrupt,
   resolveBattleSubject,
   Schema,
@@ -1238,12 +1242,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
   });
 
-  test("Help attack grants and consumes Advantage for the selected ally and target", () => {
+  test("Help attack consumes procedure-local ally and enemy decisions without stored side equality", () => {
     const state = startBattleRight({
       battleId: battleId("battle-help-attack"),
       combatants: [
         characterSeed({ initiative: 20 }),
-        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({ initiative: 10, side: partySide }),
         characterSeed({
           combatantId: wizardId,
           displayName: "Wizard",
@@ -1256,23 +1260,50 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       actorId: fighterId,
       action: "helpAttack",
     };
+    const discoveredHelp = discoverBattleActs(state).find(
+      (act) =>
+        act.subject.tag === "action" && act.subject.action === "helpAttack",
+    );
+    expect(discoveredHelp?.initialHoles).toEqual([
+      expect.objectContaining({ kind: "helpAttackAllyDecision" }),
+    ]);
     const ally = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
-      "targetChoice",
+      "helpAttackAllyDecision",
     );
+    expect(ally.choices).toEqual(expect.arrayContaining([wizardId, goblinId]));
+    expect(
+      Either.isRight(Schema.decodeUnknownEither(BattleHoleSchema)(ally)),
+    ).toBe(true);
+    const allyDecision = helpAttackAllyDecisionFill(ally, wizardId);
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleFillSchema)(allyDecision),
+      ),
+    ).toBe(true);
     const target = requireHole(
       resolveBattleSubject({
         state,
         subject,
-        fills: [targetFill(ally, wizardId)],
+        fills: [allyDecision],
       }),
-      "targetChoice",
+      "helpAttackEnemyDecision",
     );
+    expect(target.choices).toContain(goblinId);
+    expect(
+      Either.isRight(Schema.decodeUnknownEither(BattleHoleSchema)(target)),
+    ).toBe(true);
+    const enemyDecision = helpAttackEnemyDecisionFill(target, goblinId);
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleFillSchema)(enemyDecision),
+      ),
+    ).toBe(true);
     const helped = requireResolved(
       resolveBattleSubject({
         state,
         subject,
-        fills: [targetFill(ally, wizardId), targetFill(target, goblinId)],
+        fills: [allyDecision, enemyDecision],
       }),
     ).state;
     const wizardTurn = requireResolved(

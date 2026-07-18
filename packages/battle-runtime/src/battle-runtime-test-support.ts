@@ -1388,10 +1388,10 @@ export function characterWithDeathSaveCounters(input: {
   };
 }
 
-export function requireHole(
+export function requireHole<K extends BattleHole["kind"]>(
   result: ReturnType<typeof resolveBattleSubject>,
-  kind: BattleHole["kind"],
-): BattleHole {
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
   if (result.tag !== "needsHoles") {
     throw new Error(
       `Expected needsHoles, got ${result.tag}${
@@ -1399,18 +1399,24 @@ export function requireHole(
       }.`,
     );
   }
-  const hole = result.holes.find((candidate) => candidate.kind === kind);
+  const hole = result.holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
   if (hole == null) {
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
 }
 
-export function findHole(
+export function findHole<K extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
-  kind: BattleHole["kind"],
-): BattleHole {
-  const hole = holes.find((candidate) => candidate.kind === kind);
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
   if (hole == null) {
     throw new Error(`Expected ${kind} hole.`);
   }
@@ -1666,11 +1672,6 @@ export function targetFill(
             spellId: spellIdFromTargetHoleLabel(hole.label),
           })),
           {
-            kind: "helpAttackTargetWithin5Feet" as const,
-            helperId: fighterId,
-            targetEnemyId: targetId,
-          },
-          {
             kind: "grappleTargetWithinReach" as const,
             grapplerId: fighterId,
             targetId,
@@ -1699,6 +1700,35 @@ export function targetFill(
     ...((spatialFacts ?? defaultSpatialFacts).length === 0
       ? {}
       : { spatialFacts: spatialFacts ?? defaultSpatialFacts }),
+  };
+}
+
+export function helpAttackAllyDecisionFill(
+  hole: BattleHole,
+  allyId: CombatantId,
+): Extract<BattleFill, { readonly kind: "helpAttackAllyDecision" }> {
+  if (hole.kind !== "helpAttackAllyDecision") {
+    throw new Error("Expected helpAttackAllyDecision hole.");
+  }
+  return {
+    kind: "helpAttackAllyDecision",
+    holeId: hole.holeId,
+    allyId,
+  };
+}
+
+export function helpAttackEnemyDecisionFill(
+  hole: BattleHole,
+  targetEnemyId: CombatantId,
+): Extract<BattleFill, { readonly kind: "helpAttackEnemyDecision" }> {
+  if (hole.kind !== "helpAttackEnemyDecision") {
+    throw new Error("Expected helpAttackEnemyDecision hole.");
+  }
+  return {
+    kind: "helpAttackEnemyDecision",
+    holeId: hole.holeId,
+    targetEnemyId,
+    targetWithinFiveFeetOfHelper: true,
   };
 }
 
@@ -2850,6 +2880,7 @@ export function statBlockCreatureInit(input: {
   readonly displayName?: string;
   readonly statBlock?: StatBlockRecord;
   readonly initiative: number;
+  readonly side?: typeof partySide | typeof oppositionSide;
   readonly currentHp?: number;
   readonly tempHp?: number;
 }): BattleCreatureInit {
@@ -2864,7 +2895,7 @@ export function statBlockCreatureInit(input: {
     combatantId: input.combatantId ?? goblinId,
     displayName: input.displayName ?? statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
+    side: input.side ?? oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock,

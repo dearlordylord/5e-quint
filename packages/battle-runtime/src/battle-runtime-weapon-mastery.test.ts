@@ -41,6 +41,7 @@ import {
   uncannyDodgeUnit,
   wizardSpellcasting,
   oppositionSide,
+  partySide,
   fighterId,
   goblinId,
   skeletonId,
@@ -868,6 +869,7 @@ describe("battle runtime: Weapon Mastery", () => {
           combatantId: skeletonId,
           displayName: "Second Target",
           initiative: 9,
+          side: partySide,
         }),
       ],
     });
@@ -915,6 +917,7 @@ describe("battle runtime: Weapon Mastery", () => {
       }),
       "targetChoice",
     );
+    expect(target.choices).toContain(skeletonId);
     const cleaveFacts = [
       attackTargetSpatialFact(
         fighterId,

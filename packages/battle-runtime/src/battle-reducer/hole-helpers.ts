@@ -160,6 +160,14 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "gustOfWindLineDirectionChoice" as const,
       ),
       byBattleHoleKind("heldObjectFacts", () => "heldObjectFacts" as const),
+      byBattleHoleKind(
+        "helpAttackAllyDecision",
+        () => "helpAttackAllyDecision" as const,
+      ),
+      byBattleHoleKind(
+        "helpAttackEnemyDecision",
+        () => "helpAttackEnemyDecision" as const,
+      ),
     )
     .pipe(
       byBattleHoleKind(

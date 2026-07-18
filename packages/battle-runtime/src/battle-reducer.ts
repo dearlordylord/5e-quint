@@ -439,7 +439,6 @@ export {
   compatibleAttackActionResource,
   criticalThresholdForAttack,
   grappleFillSet,
-  hasHelpAttackTargetSpatialFact,
   helpAttackAllyChoices,
   helpAttackAllyHole,
   helpAttackTargetChoices,
@@ -1969,11 +1968,6 @@ export type BattleTargetSpatialFact =
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
       readonly targetIds: readonly CombatantId[];
-    }
-  | {
-      readonly kind: "helpAttackTargetWithin5Feet";
-      readonly helperId: CombatantId;
-      readonly targetEnemyId: CombatantId;
     }
   | {
       readonly kind: "meleeRedirectTargetWithin5Feet";
@@ -4363,9 +4357,10 @@ export type OngoingFeatureSource = {
 // RAW defines allies/enemies by adventuring party, friendship, combat side,
 // hostile action, or GM/rule designation. This runtime currently projects that
 // relationship as side equality: same side = ally, different side = enemy.
-// Used by Help's ally/enemy picks, Rage extension against enemies, and Sneak
-// Attack's adjacent-ally branch. Widen this model before supporting rules that
-// need per-pair hostility, neutrality, or temporary designation.
+// Used by Rage extension against enemies and Sneak Attack's adjacent-ally
+// branch. Help and Cleave instead request their own procedure-local decisions.
+// Widen the remaining model before supporting rules that need per-pair
+// hostility, neutrality, or temporary designation.
 export type OngoingFeatureSourceKey = string &
   Brand.Brand<"OngoingFeatureSourceKey">;
 export const OngoingFeatureSourceKey = Brand.nominal<OngoingFeatureSourceKey>();
@@ -4771,6 +4766,23 @@ export type BattleTargetChoiceHole = Extract<
     readonly selection: BattleAttackExecutionSelection;
     readonly targetConstraint: "meleeReach" | "rangedRange";
   };
+};
+export type BattleHelpAttackAllyDecisionHole = {
+  readonly kind: "helpAttackAllyDecision";
+  readonly holeId: BattleHoleId;
+  readonly holeInstanceKey: BattleHoleInstanceKey;
+  readonly label: string;
+  readonly helperId: CombatantId;
+  readonly choices: readonly CombatantId[];
+};
+export type BattleHelpAttackEnemyDecisionHole = {
+  readonly kind: "helpAttackEnemyDecision";
+  readonly holeId: BattleHoleId;
+  readonly holeInstanceKey: BattleHoleInstanceKey;
+  readonly label: string;
+  readonly helperId: CombatantId;
+  readonly allyId: CombatantId;
+  readonly choices: readonly CombatantId[];
 };
 export type BattleCreatureAttackRollHole = Extract<
   RuntimeHole,
@@ -6568,6 +6580,8 @@ export type BattleWildShapeEquipmentDispositionHole = {
 };
 export type BattleHole =
   | BattleTargetChoiceHole
+  | BattleHelpAttackAllyDecisionHole
+  | BattleHelpAttackEnemyDecisionHole
   | BattleCreatureAttackRollHole
   | BattleCreatureAttackDamageRollHole
   | BattleSpellCastReactionFactsHole
@@ -6787,6 +6801,17 @@ export type SourceDamageRollPenaltyRoll = Omit<
   };
 };
 export type BattleFill =
+  | {
+      readonly kind: "helpAttackAllyDecision";
+      readonly holeId: BattleHoleId;
+      readonly allyId: CombatantId;
+    }
+  | {
+      readonly kind: "helpAttackEnemyDecision";
+      readonly holeId: BattleHoleId;
+      readonly targetEnemyId: CombatantId;
+      readonly targetWithinFiveFeetOfHelper: true;
+    }
   | {
       readonly kind: "attackRoll";
       readonly holeId: BattleHoleId;

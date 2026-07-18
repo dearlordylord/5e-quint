@@ -10,6 +10,8 @@ import type {
 } from "./battle-reducer.ts";
 
 export const BATTLE_TRACE_HOLE_KINDS = [
+  "helpAttackAllyDecision",
+  "helpAttackEnemyDecision",
   "targetChoice",
   "targetSpatialFacts",
   "hitPointHealingDistribution",

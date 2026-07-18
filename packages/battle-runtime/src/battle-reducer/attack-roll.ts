@@ -1256,9 +1256,7 @@ export function weaponMasteryCleaveTargetHole(
     requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter(
       (combatantId) =>
-        combatantId !== attackerId &&
-        combatantId !== firstTargetId &&
-        combatantsAreEnemies(state, attackerId, combatantId),
+        combatantId !== attackerId && combatantId !== firstTargetId,
     ),
   };
 }

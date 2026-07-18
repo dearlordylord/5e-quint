@@ -9341,6 +9341,12 @@ function battleReducerRouteHole(
   if (family === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (family === "spellTargetAllocation") return ["spellTargetAllocation"];
   if (family === "spellTargetList") return ["spellTargetList"];
+  if (
+    family === "helpAttackAllyDecision" ||
+    family === "helpAttackEnemyDecision"
+  ) {
+    return ["targetChoice"];
+  }
   if (family === "targetChoice") return ["targetChoice"];
   if (family === "unitFeatureDecision") return ["unitFeatureDecision"];
   if (family === "wildShapeEquipmentDisposition") {
@@ -9377,6 +9383,9 @@ function battleReducerRouteFill(
   if (kind === "savingThrowOutcome") return "savingThrowOutcome";
   if (kind === "spellTargetAllocation") return "spellTargetAllocation";
   if (kind === "spellTargetList") return "spellTargetList";
+  if (kind === "helpAttackAllyDecision" || kind === "helpAttackEnemyDecision") {
+    return "targetChoice";
+  }
   if (kind === "targetChoice") return "targetChoice";
   if (kind === "unitFeatureDecision") return "unitFeatureDecision";
   if (kind === "wildShapeEquipmentDisposition") {

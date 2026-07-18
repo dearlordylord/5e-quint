@@ -86,8 +86,6 @@ import { selectedAttackDamageAbilityModifierChoice } from "./attack-damage-abili
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 
 import {
-  combatantsAreAllies,
-  combatantsAreEnemies,
   grappledBy,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
@@ -184,6 +182,8 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleGrappleLink,
+  BattleHelpAttackAllyDecisionHole,
+  BattleHelpAttackEnemyDecisionHole,
   BattleHoleId,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
@@ -191,7 +191,6 @@ import type {
   BattleRolledDiceFill,
   BattleShovePushOutcome,
   BattleState,
-  BattleTargetChoiceHole,
   BattleTargetSpatialFact,
   BattleTurnResources,
   BonusActionStandardActionBattleResolutionInput,
@@ -643,7 +642,7 @@ export function resolveHelpAttack(
     ]);
   }
   if (
-    allyFill.kind !== "targetChoice" ||
+    allyFill.kind !== "helpAttackAllyDecision" ||
     allyFill.holeId !== HELP_ATTACK_ALLY_HOLE_ID
   ) {
     return invalidResult(
@@ -652,7 +651,7 @@ export function resolveHelpAttack(
       "Help requires an ally target fill first.",
     );
   }
-  const allyId = allyFill.value;
+  const allyId = allyFill.allyId;
   if (
     !helpAttackAllyChoices(input.state, input.subject.actorId).includes(allyId)
   ) {
@@ -669,7 +668,7 @@ export function resolveHelpAttack(
   }
   if (
     input.fills.length > 2 ||
-    targetFillValue.kind !== "targetChoice" ||
+    targetFillValue.kind !== "helpAttackEnemyDecision" ||
     targetFillValue.holeId !== HELP_ATTACK_TARGET_HOLE_ID
   ) {
     return invalidResult(
@@ -678,18 +677,13 @@ export function resolveHelpAttack(
       "Help requires one enemy target fill.",
     );
   }
-  const targetEnemyId = targetFillValue.value;
+  const targetEnemyId = targetFillValue.targetEnemyId;
   if (
     !helpAttackTargetChoices(
       input.state,
       input.subject.actorId,
       allyId,
-    ).includes(targetEnemyId) ||
-    !hasHelpAttackTargetSpatialFact(
-      targetFillValue.spatialFacts ?? [],
-      input.subject.actorId,
-      targetEnemyId,
-    )
+    ).includes(targetEnemyId)
   ) {
     return invalidResult(
       input.state,
@@ -1100,12 +1094,13 @@ export function resolveSearch(
 export function helpAttackAllyHole(
   state: BattleState,
   helperId: CombatantId,
-): BattleTargetChoiceHole {
+): BattleHelpAttackAllyDecisionHole {
   return {
-    kind: "targetChoice",
+    kind: "helpAttackAllyDecision",
     holeInstanceKey: HELP_ATTACK_ALLY_HOLE_INSTANCE,
     holeId: HELP_ATTACK_ALLY_HOLE_ID,
     label: "Help ally",
+    helperId,
     choices: helpAttackAllyChoices(state, helperId),
   };
 }
@@ -1114,13 +1109,14 @@ export function helpAttackTargetHole(
   state: BattleState,
   helperId: CombatantId,
   allyId: CombatantId,
-): BattleTargetChoiceHole {
+): BattleHelpAttackEnemyDecisionHole {
   return {
-    kind: "targetChoice",
+    kind: "helpAttackEnemyDecision",
     holeInstanceKey: HELP_ATTACK_TARGET_HOLE_INSTANCE,
     holeId: HELP_ATTACK_TARGET_HOLE_ID,
     label: "Help attack target",
-    requiresTableSpatialFact: true,
+    helperId,
+    allyId,
     choices: helpAttackTargetChoices(state, helperId, allyId),
   };
 }
@@ -1129,14 +1125,8 @@ export function helpAttackAllyChoices(
   state: BattleState,
   helperId: CombatantId,
 ): readonly CombatantId[] {
-  return [...state.combatants]
-    .filter(
-      ([id, combatant]) =>
-        id !== helperId &&
-        combatantsAreAllies(state, helperId, id) &&
-        !zeroHpLifecycleIsTerminal(combatant),
-    )
-    .map(([id]) => id);
+  const participants = helpAttackParticipantChoices(state, helperId);
+  return participants.length >= 2 ? participants : [];
 }
 
 export function helpAttackTargetChoices(
@@ -1145,28 +1135,21 @@ export function helpAttackTargetChoices(
   allyId: CombatantId,
 ): readonly CombatantId[] {
   if (!helpAttackAllyChoices(state, helperId).includes(allyId)) return [];
-  return [...state.combatants]
-    .filter(
-      ([id, combatant]) =>
-        id !== helperId &&
-        id !== allyId &&
-        combatantsAreEnemies(state, helperId, id) &&
-        !zeroHpLifecycleIsTerminal(combatant),
-    )
-    .map(([id]) => id);
+  return helpAttackParticipantChoices(state, helperId).filter(
+    (combatantId) => combatantId !== allyId,
+  );
 }
 
-export function hasHelpAttackTargetSpatialFact(
-  facts: readonly BattleTargetSpatialFact[],
+function helpAttackParticipantChoices(
+  state: BattleState,
   helperId: CombatantId,
-  targetEnemyId: CombatantId,
-): boolean {
-  return facts.some(
-    (fact) =>
-      fact.kind === "helpAttackTargetWithin5Feet" &&
-      fact.helperId === helperId &&
-      fact.targetEnemyId === targetEnemyId,
-  );
+): readonly CombatantId[] {
+  return [...state.combatants]
+    .filter(
+      ([combatantId, combatant]) =>
+        combatantId !== helperId && !zeroHpLifecycleIsTerminal(combatant),
+    )
+    .map(([combatantId]) => combatantId);
 }
 
 export function resolveStatBlockBonusActionOption(
