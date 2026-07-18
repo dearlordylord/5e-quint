@@ -465,7 +465,6 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
   const hazard = caster.activeEffects.find(
     (effect): effect is WebRestraintHazardEffect =>
       effect.kind === "webRestraintHazard" &&
-      effect.sourceProcedureRef === webUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === webAreaId,
   );
@@ -480,7 +479,8 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
       }) !== undefined,
     hazardActive: hazard !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === webUnitId &&
+      hazard !== undefined &&
+      caster.concentration?.sourceProcedureRef === hazard.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     targetRestrained: target.conditions.restrained,
     entrySavedThisTurn:

@@ -482,8 +482,9 @@ function selfTransformationProjection(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
     casterConcentrating:
-      caster.concentration?.effectKind === "spellEffect" &&
-      caster.concentration.sourceProcedureRef === alterSelfUnitId,
+      activeEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        activeEffect.sourceProcedureRef,
     activeMode: activeEffect?.mode ?? "none",
     waterBreathing: battleCreatureCanBreatheUnderwater(caster),
     walkSpeedFeet: Number(casterSnapshot.movement.speedFeet),

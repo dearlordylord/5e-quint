@@ -61,10 +61,6 @@ import type {
   CombatantId,
 } from "./unit-profile-admission-test-support.ts";
 
-const syntheticTargetConcentrationSpellId =
-  "synthetic_target_concentration_spell";
-const syntheticSleepRepeatSaveSpellId = "synthetic_sleep_repeat_save";
-
 describe("L5-C17/L5-C18 Haste runtime profile", () => {
   test("admits Haste as a level-3 Magic Action spell and applies positive effects", () => {
     const spell = spellRecord(hasteUnitId);
@@ -245,7 +241,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       caster.activeEffects.some(
         (effect) =>
           effect.kind === "spellGrantedActionResource" &&
-          effect.sourceProcedureRef === hasteUnitId,
+          effect.sourceCombatantId === spellCasterId,
       ),
     ).toBe(false);
     expect(ended.currentTurnResources.actionResources).toEqual([]);
@@ -480,9 +476,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(caster.concentration).toEqual(
       expect.objectContaining({
         effectKind: "spellEffect",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hasteUnitId),
-        ),
+        sourceProcedureRef: secondAct.subject.procedureRef,
       }),
     );
     expect(hasHastePositiveEffects(target)).toBe(true);
@@ -536,7 +530,6 @@ function hasHastePositiveEffects(combatant: BattleCreatureState): boolean {
     (effect) =>
       isHastePositiveEffectKind(effect.kind) &&
       "sourceProcedureRef" in effect &&
-      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -555,7 +548,6 @@ function hasHasteLethargyCondition(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellCondition" &&
-      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.condition === "incapacitated",
   );
@@ -565,7 +557,6 @@ function hasHasteSpeedZero(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellSpeedZero" &&
-      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -577,7 +568,7 @@ function stateWithSyntheticTargetConcentration(
   const concentrationEffect: BattleActiveEffect = {
     kind: "spellArmorClassBonus",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(syntheticTargetConcentrationSpellId),
+      "synthetic-target-concentration-fixture",
     ),
     sourceCombatantId: spellTargetId,
     bonus: 1,
@@ -594,7 +585,7 @@ function stateWithSyntheticTargetConcentration(
       concentration: {
         effectKind: "spellEffect",
         sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(syntheticTargetConcentrationSpellId),
+          "synthetic-target-concentration-fixture",
         ),
       },
       activeEffects: [...target.activeEffects, concentrationEffect],
@@ -608,7 +599,6 @@ function hasSyntheticTargetConcentrationEffect(
   return combatant.activeEffects.some(
     (effect) =>
       "sourceProcedureRef" in effect &&
-      effect.sourceProcedureRef === syntheticTargetConcentrationSpellId &&
       effect.sourceCombatantId === spellTargetId,
   );
 }
@@ -621,7 +611,7 @@ function stateWithSleepPendingRepeatSave(
   const sleepPendingEffect: BattleActiveEffect = {
     kind: "sleepPendingRepeatSave",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(syntheticSleepRepeatSaveSpellId),
+      "synthetic-sleep-repeat-save-fixture",
     ),
     sourceCombatantId: spellTargetId,
     conditionHadNonSpellSource: false,
@@ -729,9 +719,7 @@ function stateWithTargetAlreadyActedAndCasterLast(
 
 function effectIsOwnedByHaste(effect: BattleActiveEffect): boolean {
   return (
-    "sourceProcedureRef" in effect &&
-    effect.sourceProcedureRef === hasteUnitId &&
-    effect.sourceCombatantId === spellCasterId
+    "sourceProcedureRef" in effect && effect.sourceCombatantId === spellCasterId
   );
 }
 

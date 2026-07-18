@@ -80,8 +80,8 @@ const hasteLethargyScenarioByQuintTag = {
 } as const satisfies Readonly<Record<string, HasteLethargyScenario>>;
 
 type HasteLethargyHole = "hasteLethargyLifecycle";
-const syntheticTargetConcentrationSpellId =
-  "synthetic_target_concentration_spell";
+const syntheticTargetConcentrationProcedureRef =
+  battleProcedureExecutionRefForTest("synthetic-target-concentration-fixture");
 
 type HasteLethargyProjection = {
   readonly scenario: HasteLethargyScenario;
@@ -370,11 +370,18 @@ function hasteLethargyProjection(
 ): HasteLethargyProjection {
   const caster = requireCombatant(state.battle, spellCasterId);
   const target = requireCombatant(state.battle, spellTargetId);
+  const hasteEffect = target.activeEffects.find(
+    (effect) =>
+      isHastePositiveEffectKind(effect.kind) && effectIsOwnedByHaste(effect),
+  );
   return {
     scenario: state.scenario,
     casterConcentrating:
       caster.concentration?.effectKind === "spellEffect" &&
-      caster.concentration.sourceProcedureRef === hasteUnitId,
+      hasteEffect !== undefined &&
+      "sourceProcedureRef" in hasteEffect &&
+      caster.concentration.sourceProcedureRef ===
+        hasteEffect.sourceProcedureRef,
     positiveEffectCount: positiveHasteEffectCount(target),
     lethargyConditionActive: hasHasteLethargyCondition(target),
     lethargySpeedZeroActive: hasHasteSpeedZero(target),
@@ -383,7 +390,7 @@ function hasteLethargyProjection(
     targetConcentrating:
       target.concentration?.effectKind === "spellEffect" &&
       target.concentration.sourceProcedureRef ===
-        syntheticTargetConcentrationSpellId,
+        syntheticTargetConcentrationProcedureRef,
     targetConcentrationEffectActive:
       hasSyntheticTargetConcentrationEffect(target),
     spellSlotExpended: casterSpellSlotExpended(state.battle),
@@ -419,7 +426,6 @@ function hasHasteLethargyCondition(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellCondition" &&
-      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.condition === "incapacitated",
   );
@@ -429,7 +435,6 @@ function hasHasteSpeedZero(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellSpeedZero" &&
-      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -440,16 +445,14 @@ function hasSyntheticTargetConcentrationEffect(
   return combatant.activeEffects.some(
     (effect) =>
       "sourceProcedureRef" in effect &&
-      effect.sourceProcedureRef === syntheticTargetConcentrationSpellId &&
+      effect.sourceProcedureRef === syntheticTargetConcentrationProcedureRef &&
       effect.sourceCombatantId === spellTargetId,
   );
 }
 
 function effectIsOwnedByHaste(effect: BattleActiveEffect): boolean {
   return (
-    "sourceProcedureRef" in effect &&
-    effect.sourceProcedureRef === hasteUnitId &&
-    effect.sourceCombatantId === spellCasterId
+    "sourceProcedureRef" in effect && effect.sourceCombatantId === spellCasterId
   );
 }
 
@@ -497,9 +500,7 @@ function stateWithSyntheticTargetConcentration(
   const target = requireCombatant(state, spellTargetId);
   const concentrationEffect: BattleActiveEffect = {
     kind: "spellArmorClassBonus",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(syntheticTargetConcentrationSpellId),
-    ),
+    sourceProcedureRef: syntheticTargetConcentrationProcedureRef,
     sourceCombatantId: spellTargetId,
     bonus: 1,
     negatedSpellIds: [],
@@ -514,9 +515,7 @@ function stateWithSyntheticTargetConcentration(
       ...target,
       concentration: {
         effectKind: "spellEffect",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(syntheticTargetConcentrationSpellId),
-        ),
+        sourceProcedureRef: syntheticTargetConcentrationProcedureRef,
       },
       activeEffects: [...target.activeEffects, concentrationEffect],
     }),

@@ -1,6 +1,7 @@
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  characterSpellProcedureRefMatchesSpellForTest,
 } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -395,11 +396,11 @@ function projectConditionRemovalProtectionSelectedIdentityState(
     targetPoisoned: hasCondition(target.conditions, "poisoned"),
     targetEffectCount: target.activeEffects.length,
     casterConcentrating: caster.concentration !== null,
-    targetHasPoisonResistance: target.activeEffects.some(
-      isProtectionFromPoisonResistance,
+    targetHasPoisonResistance: target.activeEffects.some((effect) =>
+      isProtectionFromPoisonResistance(state, effect),
     ),
-    targetHasPoisonSaveAdvantage: target.activeEffects.some(
-      isProtectionFromPoisonSaveAdvantage,
+    targetHasPoisonSaveAdvantage: target.activeEffects.some((effect) =>
+      isProtectionFromPoisonSaveAdvantage(state, effect),
     ),
     secondLevelSlotsExpended: secondLevelSlotsExpended(caster),
     actionAvailable: snapshot.turn.actionResources.some(
@@ -426,21 +427,33 @@ function secondLevelSlotsExpended(
 }
 
 function isProtectionFromPoisonResistance(
+  state: BattleState,
   effect: BattleActiveEffect,
 ): effect is DamageResistanceEffect {
   return (
     effect.kind === "damageResistance" &&
-    effect.sourceProcedureRef === protectionFromPoisonUnitId &&
+    characterSpellProcedureRefMatchesSpellForTest(
+      state,
+      effect.sourceCombatantId,
+      effect.sourceProcedureRef,
+      protectionFromPoisonUnitId,
+    ) &&
     effect.damageType === "poison"
   );
 }
 
 function isProtectionFromPoisonSaveAdvantage(
+  state: BattleState,
   effect: BattleActiveEffect,
 ): effect is ConditionSavingThrowRollModeEffect {
   return (
     effect.kind === "conditionSavingThrowRollMode" &&
-    effect.sourceProcedureRef === protectionFromPoisonUnitId &&
+    characterSpellProcedureRefMatchesSpellForTest(
+      state,
+      effect.sourceCombatantId,
+      effect.sourceProcedureRef,
+      protectionFromPoisonUnitId,
+    ) &&
     effect.condition === "poisoned" &&
     effect.mode === "advantage"
   );

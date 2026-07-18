@@ -383,7 +383,6 @@ function heatMetalProjection(
   const effect = caster.activeEffects.find(
     (candidate): candidate is SpellObjectContactDamageActiveEffect =>
       candidate.kind === "spellObjectContactDamage" &&
-      candidate.sourceProcedureRef === heatMetalUnitId &&
       candidate.sourceCombatantId === spellCasterId &&
       candidate.objectId === heatMetalObjectId,
   );
@@ -405,7 +404,8 @@ function heatMetalProjection(
       }) !== undefined,
     objectContactEffectActive: effect !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === heatMetalUnitId &&
+      effect !== undefined &&
+      caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     targetHp: Number(target.hp),
     lastResult: state.lastResult,

@@ -358,7 +358,7 @@ function blurAttackRollDefenseProjection(
 ): BlurAttackRollDefenseProjection {
   const caster = requireCombatant(state.battle, spellCasterId);
   const spellSlotExpended = casterSpellSlotExpended(state.battle);
-  const blurredEffectActive = caster.activeEffects.some(
+  const blurredEffect = caster.activeEffects.find(
     (effect) => effect.kind === "blurred",
   );
   const attackRollMode = attackerAttackRollMode(state);
@@ -375,10 +375,11 @@ function blurAttackRollDefenseProjection(
       state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
-    blurredEffectActive,
+    blurredEffectActive: blurredEffect !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === blurUnitId &&
-      caster.concentration.effectKind === "spellEffect",
+      blurredEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        blurredEffect.sourceProcedureRef,
     attackerPerceivesWithBlindsight: state.bypassSense === "blindsight",
     attackerPerceivesWithTruesight: state.bypassSense === "truesight",
     otherAttackAdvantage: state.otherAttackAdvantage,

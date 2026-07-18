@@ -469,7 +469,6 @@ function isSeeInvisibilityObserverEffect(
 > {
   return (
     effect.kind === "seeInvisibleAndEthereal" &&
-    effect.sourceProcedureRef === seeInvisibilityUnitId &&
     effect.sourceCombatantId === spellCasterId
   );
 }

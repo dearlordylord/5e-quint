@@ -1,4 +1,7 @@
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import {
+  characterSpellProcedureRefMatchesSpellForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.invocation-magic-weapon-enhancement
 
@@ -1021,7 +1024,12 @@ function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceProcedureRef === divineFavorUnitId
+        characterSpellProcedureRefMatchesSpellForTest(
+          damaged.battle,
+          effect.sourceCombatantId,
+          effect.sourceProcedureRef,
+          divineFavorUnitId,
+        )
           ? {
               ...effect,
               expiresAt: {
@@ -1493,7 +1501,12 @@ function cleanDivineFavorDuration(
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceProcedureRef === divineFavorUnitId
+        characterSpellProcedureRefMatchesSpellForTest(
+          state.battle,
+          effect.sourceCombatantId,
+          effect.sourceProcedureRef,
+          divineFavorUnitId,
+        )
           ? {
               ...effect,
               expiresAt: {
@@ -1661,14 +1674,19 @@ function activeEffectPresent(
     return caster.activeEffects.some(
       (effect) =>
         effect.kind === "spellWeaponAttackOverride" &&
-        effect.sourceProcedureRef === shillelaghUnitId,
+        effect.sourceCombatantId === spellCasterId,
     );
   }
   if (scenario === "divineFavorWeaponDamageRider") {
     return caster.activeEffects.some(
       (effect) =>
         effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceProcedureRef === divineFavorUnitId,
+        characterSpellProcedureRefMatchesSpellForTest(
+          battle,
+          effect.sourceCombatantId,
+          effect.sourceProcedureRef,
+          divineFavorUnitId,
+        ),
     );
   }
   if (scenario === "magicWeaponEnhancement") {

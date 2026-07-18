@@ -493,6 +493,9 @@ function dispelProjection(
   state: DispelMagicRuntimeState,
 ): DispelMagicOngoingSpellEndingProjection {
   const caster = requireCharacterCombatant(state.battle, spellCasterId);
+  const highLevelEffect = caster.activeEffects.find(
+    (effect) => effect.kind === "spellObjectContactDamage",
+  );
   const projection = {
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
     slot3Available: spellSlotAvailable(caster, BASE_DISPEL_SLOT_LEVEL),
@@ -503,12 +506,9 @@ function dispelProjection(
         "sourceEffectId" in emitter &&
         emitter.sourceEffectId === lowLevelEffectId,
     ),
-    highLevelEffectActive: caster.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellObjectContactDamage" &&
-        effect.effectRef ===
-          battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
-    ),
+    highLevelEffectActive:
+      highLevelEffect?.effectRef ===
+      battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
     antimagicAuraActive: requireCombatant(
       state.battle,
       spellTargetId,
@@ -520,8 +520,9 @@ function dispelProjection(
     higherLevelCheckHoleCount: state.higherLevelCheckHoles.length,
     higherLevelCheckDc: state.higherLevelCheckHoles[0]?.dc ?? 0,
     highLevelCasterConcentrating:
-      caster.concentration?.sourceProcedureRef === heatMetalUnitId &&
-      caster.concentration.effectKind === "spellEffect",
+      highLevelEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        highLevelEffect.sourceProcedureRef,
     lastResult: state.lastResult,
   };
   expect(projection.higherLevelCheckHoleCount).toBeLessThanOrEqual(1);

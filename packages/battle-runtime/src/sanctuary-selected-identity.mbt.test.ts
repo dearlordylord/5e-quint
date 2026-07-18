@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterSpellProcedureRefMatchesSpellForTest,
+} from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
@@ -1131,7 +1134,13 @@ function projectBattleState(input: {
   return expectedProjection({
     wardPresent: ward !== undefined,
     wardSourceIsSanctuary:
-      ward?.sourceProcedureRef === sanctuaryUnitId &&
+      ward !== undefined &&
+      characterSpellProcedureRefMatchesSpellForTest(
+        input.state,
+        ward.sourceCombatantId,
+        ward.sourceProcedureRef,
+        sanctuaryUnitId,
+      ) &&
       ward.sourceCombatantId === casterId &&
       ward.save.ability === "wis",
     wardedHp: Number(combatant(input.state, wardedId).hp),

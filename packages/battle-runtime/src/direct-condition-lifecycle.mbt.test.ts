@@ -318,7 +318,6 @@ function directConditionEffects(
       { readonly kind: "targetActionEndedSpellCondition" }
     > =>
       effect.kind === "targetActionEndedSpellCondition" &&
-      effect.sourceProcedureRef === invisibilityUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -364,7 +363,6 @@ function battleWithDirectConditionDuration(
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
         effect.kind === "targetActionEndedSpellCondition" &&
-        effect.sourceProcedureRef === invisibilityUnitId &&
         effect.sourceCombatantId === spellCasterId &&
         effect.expiresAt.kind === "concentration"
           ? {

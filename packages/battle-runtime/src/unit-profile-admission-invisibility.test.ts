@@ -1,10 +1,10 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-INVISIBILITY invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-direct-condition
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -101,9 +101,6 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
         activeEffect: expect.objectContaining({
           kind: "targetActionEndedSpellCondition",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(invisibilityUnitId),
-          ),
           sourceCombatantId: spellCasterId,
           condition: "invisible",
           expiresAt: {
@@ -133,9 +130,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     expectInvisibilityEffect(cast.state, spellTargetId);
     expectInvisibilityEffect(cast.state, extraTargetId);
     expect(requireCombatant(cast.state, spellCasterId).concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(invisibilityUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
 
@@ -293,17 +288,13 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     expect(requireCombatant(blurred.state, spellTargetId)).toEqual(
       expect.objectContaining({
         concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(blurUnitId),
-          ),
+          sourceProcedureRef: blur.subject.procedureRef,
           effectKind: "spellEffect",
         },
         activeEffects: expect.arrayContaining([
           expect.objectContaining({
             kind: "blurred",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(blurUnitId),
-            ),
+            sourceProcedureRef: blur.subject.procedureRef,
           }),
         ]),
       }),
@@ -347,6 +338,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         fills: [
           spellCastReactionFactsFill([
             counterspellTriggerFact({
+              state: targetTurn.state,
               reactorId: counterspellerId,
               casterId: spellTargetId,
             }),
@@ -431,6 +423,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         fills: [
           magicMissileTargetAllocationFill({
             hole: targetAllocation,
+            procedureRef: magicMissile.subject.procedureRef,
             casterId: magicMissileCasterId,
             targetId: spellTargetId,
             dartCount: targetAllocation.allocationCount,
@@ -466,9 +459,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "spellArmorClassBonus",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(shieldUnitId),
-          ),
+          sourceProcedureRef: choice.subject.procedureRef,
         }),
       ]),
     );
@@ -522,12 +513,14 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         fills: [
           magicMissileTargetAllocationFill({
             hole: targetAllocation,
+            procedureRef: magicMissile.subject.procedureRef,
             casterId: magicMissileCasterId,
             targetId: spellCasterId,
             dartCount: targetAllocation.allocationCount,
           }),
           spellCastReactionFactsFill([
             counterspellTriggerFact({
+              state: missileTurn.state,
               reactorId: spellTargetId,
               casterId: magicMissileCasterId,
             }),
@@ -668,6 +661,7 @@ type CounterspellTriggerFact = Extract<
 >;
 
 function counterspellTriggerFact(input: {
+  readonly state: BattleState;
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
 }): CounterspellTriggerFact {
@@ -675,8 +669,10 @@ function counterspellTriggerFact(input: {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(counterspellUnitId),
+    sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+      input.state,
+      input.reactorId,
+      spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -757,6 +753,7 @@ function magicMissileTargetAllocationFill(input: {
     BattleHole,
     { readonly kind: "spellTargetAllocation" }
   >;
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
   readonly dartCount: number;
@@ -772,9 +769,7 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: input.casterId,
         targetId: input.targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(magicMissileUnitId),
-        ),
+        sourceProcedureRef: input.procedureRef,
       },
     ],
   };
@@ -789,9 +784,6 @@ function expectInvisibilityEffect(
   expect(invisibilityEffects(state, targetId)).toEqual([
     expect.objectContaining({
       kind: "targetActionEndedSpellCondition",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(invisibilityUnitId),
-      ),
       sourceCombatantId: spellCasterId,
       condition: "invisible",
       conditionHadNonSpellSource: false,
@@ -820,7 +812,7 @@ function invisibilityEffects(
   return requireCombatant(state, targetId).activeEffects.filter(
     (effect) =>
       effect.kind === "targetActionEndedSpellCondition" &&
-      effect.sourceProcedureRef === invisibilityUnitId,
+      effect.sourceCombatantId === spellCasterId,
   );
 }
 
@@ -834,7 +826,7 @@ function combatantsWithInvisibilityDurationTicks(
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
         effect.kind === "targetActionEndedSpellCondition" &&
-        effect.sourceProcedureRef === invisibilityUnitId
+        effect.sourceCombatantId === spellCasterId
           ? {
               ...effect,
               expiresAt: {

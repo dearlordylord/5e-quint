@@ -330,6 +330,21 @@ export function characterSpellInvocationRefForProcedureRefForTest(
   );
 }
 
+export function characterSpellProcedureRefMatchesSpellForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+  spellId: string,
+): boolean {
+  return (
+    characterSpellInvocationRefForProcedureRefForTest(
+      state,
+      actorId,
+      procedureRef,
+    ).spellId === spellId
+  );
+}
+
 export function requireCharacterSpellProcedureRefForTest(
   state: BattleState,
   actorId: CombatantId,

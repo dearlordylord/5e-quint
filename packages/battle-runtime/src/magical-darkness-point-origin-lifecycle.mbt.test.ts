@@ -325,7 +325,9 @@ function darknessProjection(state: DarknessRuntimeState): DarknessProjection {
     darknessActive: activeEffect !== undefined,
     zoneProjected: zone !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === darknessUnitId &&
+      activeEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        activeEffect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     ordinarySightObscurement:
       zone === undefined

@@ -87,6 +87,7 @@ import {
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type {
+  BattleFill,
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
@@ -98,6 +99,20 @@ import {
 import { BattleHoleSchema } from "./index.ts";
 import { Either, Schema } from "effect";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+
+function withoutKnownWillingFacts<
+  T extends Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" | "spellTargetList" }
+  >,
+>(fill: T): T {
+  return {
+    ...fill,
+    spatialFacts: fill.spatialFacts?.filter(
+      (fact) => fact.kind !== "spellTargetKnownWilling",
+    ),
+  };
+}
 
 const protectionFromEnergyDurationTicks = elapsedTimeTicks(600);
 
@@ -123,7 +138,7 @@ function withProtectionFromPoisonResistance(
         {
           kind: "damageResistance" as const,
           sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(protectionFromPoisonUnitId),
+            "protection-from-poison-resistance-fixture",
           ),
           sourceCombatantId: spellCasterId,
           damageType: "poison" as const,
@@ -152,7 +167,7 @@ function withProtectionFromEnergyResistance(
         {
           kind: "damageResistance" as const,
           sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(protectionFromEnergyUnitId),
+            "protection-from-energy-resistance-fixture",
           ),
           sourceCombatantId: spellCasterId,
           damageType,
@@ -234,9 +249,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "d20RollModifier",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(blessUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         on: ["attack_roll", "saving_throw"],
         delta: { dice: 1, dieSize: 4, sign: "+" },
@@ -263,11 +276,10 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ) {
       throw new Error("Expected Bless recast combatants.");
     }
+    const act = spellAct({ state, spellId: blessUnitId });
     const priorBlessEffect = {
       kind: "d20RollModifier" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(blessUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       on: ["attack_roll", "saving_throw"] as const,
       delta: { dice: 1, dieSize: 4, sign: "+" } as const,
@@ -280,9 +292,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         .set(spellCasterId, {
           ...caster,
           concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(blessUnitId),
-            ),
+            sourceProcedureRef: act.subject.procedureRef,
             effectKind: "spellEffect",
           },
         })
@@ -295,7 +305,6 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
           activeEffects: [...secondTarget.activeEffects, priorBlessEffect],
         }),
     };
-    const act = spellAct({ state: stateWithPriorBless, spellId: blessUnitId });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     const resolved = resolveBattleSubject({
@@ -314,9 +323,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     }
     expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
       {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(blessUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         effectKind: "spellEffect",
       },
     );
@@ -326,13 +333,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ?.activeEffects.filter(
           (effect) =>
             effect.kind === "d20RollModifier" &&
-            effect.sourceProcedureRef === blessUnitId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
     ).toEqual([
       expect.objectContaining({
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(blessUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
@@ -343,7 +348,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "d20RollModifier" &&
-            effect.sourceProcedureRef === blessUnitId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
     ).toBe(false);
   });
@@ -398,9 +403,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "d20RollModifier",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(baneUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         on: ["attack_roll", "saving_throw"],
         delta: { dice: 1, dieSize: 4, sign: "-" },
       }),
@@ -411,7 +414,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "d20RollModifier" &&
-            effect.sourceProcedureRef === baneUnitId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
     ).toBe(false);
   });
@@ -437,17 +440,19 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       mode: { tag: "cast" },
     });
     expect(skillHole.choices).toContain("stealth");
-    expect(targetHole.choices).toEqual([spellCasterId]);
+    expect(targetHole.choices).toEqual([spellCasterId, spellTargetId]);
 
     const unwillingTarget = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(
-          targetHole,
-          guidanceUnitId,
-          spellCasterId,
-          spellTargetId,
+        withoutKnownWillingFacts(
+          spellTargetFill(
+            targetHole,
+            guidanceUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
         ),
         skillChoiceFill(skillHole, "stealth"),
       ],
@@ -480,9 +485,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "d20RollModifier",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(guidanceUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         on: ["ability_check"],
         delta: { dice: 1, dieSize: 4, sign: "+" },
         skill: "stealth",
@@ -563,9 +566,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "d20RollModifier",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(passWithoutTraceUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         on: ["ability_check"],
         delta: { dice: 10, dieSize: 1, sign: "+" },
@@ -578,9 +579,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "d20RollModifier",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(passWithoutTraceUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         skill: "stealth",
       }),
     );
@@ -590,7 +589,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "d20RollModifier" &&
-            effect.sourceProcedureRef === passWithoutTraceUnitId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
     ).toBe(false);
   });
@@ -655,9 +654,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "abilityCheckRollMode",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(enhanceAbilityUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         mode: "advantage",
         ability: "dex",
@@ -760,9 +757,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     }
     const failedTargetEffect = {
       kind: "d20RollModifier" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(enthrallUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       on: ["ability_check"] as const,
       delta: { kind: "fixedNumber" as const, amount: 10, sign: "-" as const },
@@ -781,7 +776,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "d20RollModifier" &&
-            effect.sourceProcedureRef === enthrallUnitId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
     ).toBe(false);
     expect(passivePerceptionModifierDelta(resolved.state, spellTargetId)).toBe(
@@ -796,7 +791,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       requireCombatant(ended, spellTargetId).activeEffects.some(
         (effect) =>
           effect.kind === "d20RollModifier" &&
-          effect.sourceProcedureRef === enthrallUnitId,
+          effect.sourceProcedureRef === act.subject.procedureRef,
       ),
     ).toBe(false);
     expect(passivePerceptionModifierDelta(ended, spellTargetId)).toBe(0);
@@ -891,9 +886,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "abilityCheckRollMode",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(enhanceAbilityUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         ability: "dex",
       }),
     );
@@ -902,9 +895,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "abilityCheckRollMode",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(enhanceAbilityUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         ability: "wis",
       }),
     );
@@ -1041,7 +1032,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       ),
       mode: { tag: "cast" },
     });
-    expect(targetHole.choices).toEqual([spellCasterId]);
+    expect(targetHole.choices).toEqual([spellCasterId, spellTargetId]);
     expect(damageTypeHole.choices).toEqual([
       "acid",
       "bludgeoning",
@@ -1083,9 +1074,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellDamageReduction",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(resistanceUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         damageType: "bludgeoning",
         amount: { dice: 1, dieSize: 4 },
@@ -1125,9 +1114,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             kind: "spellTarget" as const,
             casterId: spellCasterId,
             targetId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(resistanceUnitId),
-            ),
+            sourceProcedureRef: act.subject.procedureRef,
           },
         ],
       },
@@ -1203,9 +1190,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
               kind: "spellTarget" as const,
               casterId: spellCasterId,
               targetId: spellCasterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(guidanceUnitId),
-              ),
+              sourceProcedureRef: guidanceAct.subject.procedureRef,
             },
           ],
         },
@@ -1310,7 +1295,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
           {
             kind: "spellDamageReduction" as const,
             sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(resistanceUnitId),
+              "resistance-effect-fixture",
             ),
             sourceCombatantId: spellCasterId,
             damageType: "slashing" as const,
@@ -1363,7 +1348,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const reduction = requireSpellDamageReductionHole(needsReduction.holes);
     expect(reduction.spellDamageReduction).toEqual({
       sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(resistanceUnitId),
+        "resistance-effect-fixture",
       ),
       sourceCombatantId: spellCasterId,
       targetId: spellTargetId,
@@ -1392,7 +1377,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       expect.objectContaining({
         kind: "spellDamageReduction",
         sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(resistanceUnitId),
+          "resistance-effect-fixture",
         ),
         usedThisTurn: true,
       }),
@@ -1466,9 +1451,6 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellDamageReduction",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(resistanceUnitId),
-        ),
         damageType: "slashing",
         usedThisTurn: false,
       }),
@@ -1699,9 +1681,6 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(damaged.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellDamageReduction",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(resistanceUnitId),
-        ),
         usedThisTurn: true,
       }),
     );
@@ -1731,7 +1710,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
                   "poison-spell-condition",
                 ),
                 sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(poisonSprayUnitId),
+                  "poison-condition-fixture",
                 ),
                 sourceCombatantId: spellCasterId,
                 condition: "poisoned" as const,
@@ -1802,9 +1781,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     expect(protectedTarget.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "conditionSavingThrowRollMode",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(protectionFromPoisonUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         condition: "poisoned",
         mode: "advantage",
@@ -1817,9 +1794,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     expect(protectedTarget.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "damageResistance",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(protectionFromPoisonUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         damageType: "poison",
         expiresAt: {
@@ -1919,7 +1894,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
               {
                 kind: "spellConditionEndTurnSave" as const,
                 sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(poisonSprayUnitId),
+                  "poison-end-save-fixture",
                 ),
                 sourceCombatantId: spellCasterId,
                 condition: "poisoned" as const,
@@ -1937,7 +1912,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
               {
                 kind: "conditionSavingThrowRollMode" as const,
                 sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(protectionFromPoisonUnitId),
+                  "protection-from-poison-save-mode-fixture",
                 ),
                 sourceCombatantId: spellCasterId,
                 condition: "poisoned" as const,
@@ -2030,7 +2005,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       activeEffects: protectedTarget.activeEffects.map((effect) =>
         (effect.kind === "conditionSavingThrowRollMode" ||
           effect.kind === "damageResistance") &&
-        effect.sourceProcedureRef === protectionFromPoisonUnitId
+        effect.sourceProcedureRef === act.subject.procedureRef
           ? {
               ...effect,
               expiresAt: {
@@ -2069,7 +2044,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
         (effect) =>
           (effect.kind === "conditionSavingThrowRollMode" ||
             effect.kind === "damageResistance") &&
-          effect.sourceProcedureRef === protectionFromPoisonUnitId,
+          effect.sourceProcedureRef === act.subject.procedureRef,
       ),
     ).toBe(false);
   });
@@ -2115,11 +2090,13 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       "thunder",
     ]);
 
-    const targetFill = spellTargetFill(
-      targetHole,
-      protectionFromEnergyUnitId,
-      spellCasterId,
-      spellTargetId,
+    const targetFill = withoutKnownWillingFacts(
+      spellTargetFill(
+        targetHole,
+        protectionFromEnergyUnitId,
+        spellCasterId,
+        spellTargetId,
+      ),
     );
     const damageTypeFill = damageTypeChoiceFill(damageTypeHole, "fire");
     expect(
@@ -2162,9 +2139,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     ).toContainEqual(
       expect.objectContaining({
         kind: "damageResistance",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(protectionFromEnergyUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         damageType: "fire",
         expiresAt: {
@@ -2180,7 +2155,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       requireCombatant(ended, spellTargetId).activeEffects.some(
         (effect) =>
           effect.kind === "damageResistance" &&
-          effect.sourceProcedureRef === protectionFromEnergyUnitId,
+          effect.sourceProcedureRef === act.subject.procedureRef,
       ),
     ).toBe(false);
   });
@@ -2223,7 +2198,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
         ...target,
         activeEffects: target.activeEffects.map((effect) =>
           effect.kind === "damageResistance" &&
-          effect.sourceProcedureRef === protectionFromEnergyUnitId &&
+          effect.sourceProcedureRef === act.subject.procedureRef &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -2247,7 +2222,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "damageResistance" &&
-            effect.sourceProcedureRef === protectionFromEnergyUnitId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
     ).toBe(false);
   });
@@ -2387,7 +2362,7 @@ defineSelectedIdentityReplayWitness({
             ).activeEffects.find(
               (candidate) =>
                 candidate.kind === "damageResistance" &&
-                candidate.sourceProcedureRef === protectionFromEnergyUnitId,
+                candidate.sourceProcedureRef === act.subject.procedureRef,
             );
             return {
               unitId: protectionFromEnergyUnitId,

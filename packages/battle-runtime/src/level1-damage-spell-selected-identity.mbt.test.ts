@@ -2095,8 +2095,6 @@ function primaryTargetHasViciousMockeryNextAttackRollDisadvantage(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "nextAttackRollBySelf" &&
-          "sourceProcedureRef" in effect &&
-          effect.sourceProcedureRef === "vicious_mockery" &&
           effect.sourceCombatantId === casterId &&
           effect.mode === "disadvantage",
       ) === true

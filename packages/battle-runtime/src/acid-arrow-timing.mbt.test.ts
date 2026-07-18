@@ -444,7 +444,7 @@ function acidArrowDelayedDamageTimingForTarget(
   return target.activeEffects.some(
     (effect) =>
       effect.kind === "spellTurnEndDamage" &&
-      effect.sourceProcedureRef === acidArrowUnitId,
+      effect.sourceCombatantId === spellCasterId,
   )
     ? "targetEndOfNextTurn"
     : "none";

@@ -339,7 +339,8 @@ function dragonsBreathInitialEffectProjection(
   const spellSaveDc = spellSaveDcForCaster(state.battle, spellCasterId);
   const targetEffectActive = effect !== undefined;
   const casterConcentrating =
-    caster.concentration?.sourceProcedureRef === dragonsBreathUnitId &&
+    effect !== undefined &&
+    caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef &&
     caster.concentration.effectKind === "spellEffect";
   const projection = {
     turnRole: state.turnRole,
@@ -384,7 +385,6 @@ function dragonsBreathTargetEffect(
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
       effect.kind === "dragonsBreath" &&
-      effect.sourceProcedureRef === dragonsBreathUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }

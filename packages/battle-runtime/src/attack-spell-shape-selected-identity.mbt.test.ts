@@ -982,7 +982,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "hitPointRegainPrevented" &&
-        effect.sourceProcedureRef === "chill_touch",
+        effect.sourceCombatantId === casterId,
     )
   ) {
     return "hitPointRegainPrevented";
@@ -991,8 +991,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "nextAttackRollAgainstSelf" &&
-        "sourceProcedureRef" in effect &&
-        effect.sourceProcedureRef === "guiding_bolt",
+        effect.sourceCombatantId === casterId,
     )
   ) {
     return "nextAttackRollAgainstSelf";
@@ -1001,8 +1000,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "opportunityAttackDenied" &&
-        "sourceProcedureRef" in effect &&
-        effect.sourceProcedureRef === "shocking_grasp",
+        effect.sourceCombatantId === casterId,
     )
   ) {
     return "opportunityAttackDenied";
@@ -1023,17 +1021,9 @@ function activeEffectCount(
       (effect): effect is BattleActiveEffect & { readonly kind: typeof kind } =>
         effect.kind === kind &&
         "sourceProcedureRef" in effect &&
-        effect.sourceProcedureRef === spellIdForEffectKind(kind),
+        effect.sourceCombatantId === casterId,
     ).length ?? 0
   );
-}
-
-function spellIdForEffectKind(
-  kind: Exclude<AttackSpellShapeActiveEffectKind, "none">,
-): AttackSpellShapeSpellId {
-  if (kind === "hitPointRegainPrevented") return "chill_touch";
-  if (kind === "nextAttackRollAgainstSelf") return "guiding_bolt";
-  return "shocking_grasp";
 }
 
 function level1SlotsRemaining(

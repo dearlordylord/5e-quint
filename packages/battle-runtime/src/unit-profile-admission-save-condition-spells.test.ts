@@ -63,6 +63,7 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
+  type BattleActiveEffect,
   type BattleState,
   type CombatantId,
 } from "./index.ts";
@@ -190,9 +191,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "spellConditionEndTurnSave",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(holdPersonUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "paralyzed",
           save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
@@ -210,9 +209,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
     expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
       {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(holdPersonUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         effectKind: "spellEffect",
       },
     );
@@ -233,7 +230,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         ...paralyzedTarget,
         activeEffects: paralyzedTarget.activeEffects.map((effect) =>
           effect.kind === "spellConditionEndTurnSave" &&
-          effect.sourceProcedureRef === holdPersonUnitId &&
+          effect.sourceCombatantId === spellCasterId &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -271,9 +268,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       expect.objectContaining({
         spellConditionEndTurnSave: expect.objectContaining({
           targetId: spellTargetId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(holdPersonUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           condition: "paralyzed",
         }),
         ability: "wis",
@@ -313,9 +308,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(requireCombatant(cast, spellTargetId).activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellConditionEndTurnSave",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(holdPersonUnitId),
-        ),
         heightenedSpellTargetDisadvantage: {
           kind: "heightenedSpellTargetDisadvantage",
         },
@@ -326,9 +318,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellConditionEndTurnSave",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(holdPersonUnitId),
-        ),
         heightenedSpellTargetDisadvantage: null,
       }),
     );
@@ -520,9 +509,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     }
     expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
       {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(holdPersonUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         effectKind: "spellEffect",
       },
     );
@@ -532,9 +519,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "spellConditionEndTurnSave",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(holdPersonUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
         }),
       ],
     });
@@ -543,8 +528,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         .get(spellTargetId)
         ?.activeEffects.some(
           (effect) =>
-            "sourceProcedureRef" in effect &&
-            effect.sourceProcedureRef === heroismUnitId,
+            (effect.kind === "conditionImmunity" ||
+              effect.kind === "turnStartTemporaryHitPoints") &&
+            effect.sourceCombatantId === spellCasterId,
         ),
     ).toBe(false);
   });
@@ -817,9 +803,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(poisonedTarget.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellConditionCountedEndTurnSave",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(contagionUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         condition: "poisoned",
         save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
@@ -1044,9 +1028,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "spellConditionEndTurnSave",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("blindness_deafness"),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "deafened",
           save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
@@ -1071,9 +1053,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       expect.objectContaining({
         spellConditionEndTurnSave: expect.objectContaining({
           targetId: spellTargetId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("blindness_deafness"),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           condition: "deafened",
         }),
         ability: "con",
@@ -1619,9 +1599,7 @@ function resolveContagionTargetEndTurnSave(
     expect.objectContaining({
       spellConditionCountedEndTurnSave: expect.objectContaining({
         targetId: spellTargetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(contagionUnitId),
-        ),
+        sourceProcedureRef: activeEffect?.sourceProcedureRef,
         sourceCombatantId: spellCasterId,
         condition: "poisoned",
       }),
@@ -1659,11 +1637,22 @@ function resolveContagionTargetEndTurnSave(
   return ended.state;
 }
 
-function contagionEffect(state: BattleState) {
+function contagionEffect(
+  state: BattleState,
+):
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellConditionCountedEndTurnSave" }
+    >
+  | undefined {
   return requireCombatant(state, spellTargetId).activeEffects.find(
-    (effect) =>
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellConditionCountedEndTurnSave" }
+    > =>
       effect.kind === "spellConditionCountedEndTurnSave" &&
-      effect.sourceProcedureRef === contagionUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.condition === "poisoned",
   );

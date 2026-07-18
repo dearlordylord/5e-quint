@@ -1734,7 +1734,6 @@ function protectionFromEvilAndGoodEffectPresentOnProtectedTarget(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "creatureTypeProtection" &&
-          effect.sourceProcedureRef === protectionFromEvilAndGoodUnitId &&
           effect.sourceCombatantId === casterId &&
           effect.attackRollMode === "disadvantage" &&
           effect.preventedConditions.includes("charmed") &&
@@ -1842,7 +1841,6 @@ function animalFriendshipEffectPresentOnBeastTarget(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "spellCondition" &&
-          effect.sourceProcedureRef === animalFriendshipUnitId &&
           effect.sourceCombatantId === casterId &&
           effect.condition === "charmed",
       ) ?? false

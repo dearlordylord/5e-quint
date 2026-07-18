@@ -354,7 +354,7 @@ function projectBattleState(
   const mageArmorEffect = caster.activeEffects.find(
     (effect) =>
       effect.kind === "spellBaseArmorClass" &&
-      effect.sourceProcedureRef === mageArmorUnitId,
+      effect.sourceCombatantId === casterId,
   );
   const projectedArmorClass = activeEffectArmorClass(caster);
   return {
@@ -392,8 +392,7 @@ function mageArmorNearlyExpiredState(
   const caster = requireCombatant(result.state, casterId);
   const activeEffects: BattleActiveEffect[] = caster.activeEffects.map(
     (effect) =>
-      isMageArmorDurationEffect(effect) &&
-      effect.sourceProcedureRef === mageArmorUnitId
+      isMageArmorDurationEffect(effect) && effect.sourceCombatantId === casterId
         ? {
             ...effect,
             expiresAt: {

@@ -610,7 +610,6 @@ describe("battle runtime: Color Spray and Entangle", () => {
         ?.activeEffects.filter(
           (effect) =>
             effect.kind === "spellCondition" &&
-            effect.sourceProcedureRef === "entangle" &&
             effect.sourceCombatantId === wizardId,
         ),
     ).toHaveLength(1);

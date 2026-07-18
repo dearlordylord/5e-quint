@@ -458,12 +458,15 @@ function spellCreatedHeldObjectProjection(
       handUseIsFree(caster.armorClass.leftHandUse) ||
       handUseIsFree(caster.armorClass.rightHandUse),
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === flameBladeUnitId &&
+      activeEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        activeEffect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     lightProjected: snapshotBattle(state.battle).lightEmitters.some(
       (emitter) =>
         emitter.kind === "spellLightEmitter" &&
-        emitter.sourceProcedureRef === flameBladeUnitId &&
+        activeEffect !== undefined &&
+        emitter.sourceProcedureRef === activeEffect.sourceProcedureRef &&
         emitter.sourceCombatantId === spellCasterId &&
         emitter.attachment.kind === "combatant" &&
         emitter.attachment.combatantId === spellCasterId &&
@@ -588,7 +591,6 @@ function spellCreatedHeldObjectEffect(
       { readonly kind: "spellCreatedHeldObject" }
     > =>
       effect.kind === "spellCreatedHeldObject" &&
-      effect.sourceProcedureRef === flameBladeUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.expiresAt.kind === "concentration" &&
       effect.expiresAt.combatantId === spellCasterId,
@@ -606,7 +608,7 @@ function withHeldObjectDurationTicks(
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellCreatedHeldObject" &&
-        effect.sourceProcedureRef === flameBladeUnitId
+        effect.sourceCombatantId === spellCasterId
           ? {
               ...effect,
               expiresAt: { ...effect.expiresAt, durationTicks },

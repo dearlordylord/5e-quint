@@ -1,5 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
@@ -158,9 +156,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     expect(turnStartDamage).toMatchObject({
       spellTurnStartDamage: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(ensnaringStrikeUnitId),
-        ),
+        sourceProcedureRef: choice.subject.procedureRef,
         targetId: spellTargetId,
         trigger: { kind: "condition", condition: "restrained" },
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
@@ -353,9 +349,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(searingSmiteUnitId),
-            ),
+            sourceProcedureRef: choice.subject.procedureRef,
             damage: {
               expr: { dice: 3, dieSize: 6 },
               damageType: "fire",
@@ -387,9 +381,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const turnStartDamage = requireResultHole(awaitingTurnStart, "rolledDice");
     expect(turnStartDamage).toMatchObject({
       spellTurnStartDamage: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(searingSmiteUnitId),
-        ),
+        sourceProcedureRef: choice.subject.procedureRef,
         targetId: spellTargetId,
         trigger: {
           kind: "saveToEnd",
@@ -405,9 +397,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     expect(turnStartSave).toMatchObject({
       spellTurnStartSave: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(searingSmiteUnitId),
-        ),
+        sourceProcedureRef: choice.subject.procedureRef,
         targetId: spellTargetId,
         save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
       },
@@ -431,7 +421,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       requireCombatant(targetTurn.state, spellTargetId).activeEffects.some(
         (effect) =>
           effect.kind === "spellTurnStartDamageAndSave" &&
-          effect.sourceProcedureRef === searingSmiteUnitId,
+          effect.sourceCombatantId === spellCasterId,
       ),
     ).toBe(false);
 
@@ -447,7 +437,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           ...burnedTarget,
           activeEffects: burnedTarget.activeEffects.map((effect) =>
             effect.kind === "spellTurnStartDamageAndSave" &&
-            effect.sourceProcedureRef === searingSmiteUnitId
+            effect.sourceCombatantId === spellCasterId
               ? {
                   ...effect,
                   expiresAt: {
@@ -489,7 +479,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       ).activeEffects.some(
         (effect) =>
           effect.kind === "spellTurnStartDamageAndSave" &&
-          effect.sourceProcedureRef === searingSmiteUnitId,
+          effect.sourceCombatantId === spellCasterId,
       ),
     ).toBe(true);
 
@@ -504,7 +494,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       requireCombatant(durationExpired.state, spellTargetId).activeEffects.some(
         (effect) =>
           effect.kind === "spellTurnStartDamageAndSave" &&
-          effect.sourceProcedureRef === searingSmiteUnitId,
+          effect.sourceCombatantId === spellCasterId,
       ),
     ).toBe(false);
   });

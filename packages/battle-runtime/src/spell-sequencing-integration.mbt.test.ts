@@ -562,10 +562,19 @@ function concentrationSpell(
   state: BattleState,
 ): SpellSequencingConcentrationSpell {
   const caster = requireCombatant(state, spellCasterId);
-  if (caster.concentration?.sourceProcedureRef === dragonsBreathUnitId) {
+  const dragonsBreath = dragonsBreathTargetEffect(state);
+  const heatMetal = heatMetalEffect(state);
+  if (
+    dragonsBreath !== undefined &&
+    caster.concentration?.sourceProcedureRef ===
+      dragonsBreath.sourceProcedureRef
+  ) {
     return "dragonsBreath";
   }
-  if (caster.concentration?.sourceProcedureRef === heatMetalUnitId) {
+  if (
+    heatMetal !== undefined &&
+    caster.concentration?.sourceProcedureRef === heatMetal.sourceProcedureRef
+  ) {
     return "heatMetal";
   }
   return "none";
@@ -577,7 +586,6 @@ function dragonsBreathTargetEffect(
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
       effect.kind === "dragonsBreath" &&
-      effect.sourceProcedureRef === dragonsBreathUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -586,7 +594,6 @@ function heatMetalEffect(state: BattleState): HeatMetalEffect | undefined {
   return requireCombatant(state, spellCasterId).activeEffects.find(
     (effect): effect is HeatMetalEffect =>
       effect.kind === "spellObjectContactDamage" &&
-      effect.sourceProcedureRef === heatMetalUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.objectId === spellSequencingObjectId,
   );

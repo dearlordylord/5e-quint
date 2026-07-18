@@ -1657,11 +1657,15 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
   ) {
     return "storedSpellTargetShapeMismatch";
   }
+  const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
+  if (procedureRef === undefined) {
+    return "storedSpellResolutionInvalid";
+  }
   const hostilePlacementValidation = glyphStoredSpellHostilePlacementValidation(
     {
       profile: input.profile,
       invocation: input.effect.release.storedInvocation,
-      sourceProcedureRef: input.effect.sourceProcedureRef,
+      sourceProcedureRef: procedureRef,
       sourceCombatantId: input.effect.sourceCombatantId,
       witness: input.witness,
     },
@@ -1833,7 +1837,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
-      input.effect.sourceProcedureRef,
+      procedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1857,7 +1861,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
-      input.effect.sourceProcedureRef,
+      procedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1883,7 +1887,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
-      input.effect.sourceProcedureRef,
+      procedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1907,7 +1911,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
-      input.effect.sourceProcedureRef,
+      procedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1934,7 +1938,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
-      input.effect.sourceProcedureRef,
+      procedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1968,7 +1972,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
-      input.effect.sourceProcedureRef,
+      procedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -2032,7 +2036,7 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
   const fillSet = spellFillSet(
     fills,
     input.invocation,
-    input.effect.sourceProcedureRef,
+    procedureRef,
     input.effect.sourceCombatantId,
     input.state,
   );
@@ -2095,8 +2099,11 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
 
 function glyphStoredSpellProcedureRef(
   state: BattleState,
-  effect: GlyphStoredSpellOccurrenceActiveEffect,
+  effect: GlyphDurableOccurrenceActiveEffect,
 ) {
+  if (effect.release.kind !== "spellGlyph") {
+    return undefined;
+  }
   const source = state.combatants.get(effect.sourceCombatantId);
   return source?.origin.kind === "character"
     ? characterStoredSpellProcedureRef(
@@ -2130,9 +2137,13 @@ function glyphStoredSpellReleaseFills(input: {
   if (!isGlyphStoredSpellOccurrence(input.effect)) {
     return input.witness.fills;
   }
+  const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
+  if (procedureRef === undefined) {
+    return input.witness.fills;
+  }
   const executableInvocation = bindSpellProcedureExecutionFacts(
     input.effect.release.storedInvocation,
-    input.effect.sourceProcedureRef,
+    procedureRef,
   );
   if (input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature") {
     if (
@@ -2167,7 +2178,7 @@ function glyphStoredSpellReleaseFills(input: {
     ) {
       const targetListInvocation = bindSpellProcedureExecutionFacts(
         input.effect.release.storedInvocation,
-        input.effect.sourceProcedureRef,
+        procedureRef,
       );
       return [
         {
@@ -2179,6 +2190,7 @@ function glyphStoredSpellReleaseFills(input: {
           ).holeId,
           value: { targetIds: [input.witness.targeting.targetId] },
           spatialFacts: glyphStoredSpellTargetListSpatialFacts({
+            state: input.state,
             effect: input.effect,
             targeting: input.witness.targeting,
           }),
@@ -2188,7 +2200,7 @@ function glyphStoredSpellReleaseFills(input: {
     }
     const targetInvocation = bindSpellProcedureExecutionFacts(
       input.effect.release.storedInvocation,
-      input.effect.sourceProcedureRef,
+      procedureRef,
     );
     return [
       {
@@ -2217,15 +2229,17 @@ function glyphStoredSingleCreatureActiveEffectUsesTargetChoiceFill(
 }
 
 function glyphStoredSpellTargetListSpatialFacts(input: {
+  readonly state: BattleState;
   readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
   readonly targeting: GlyphStoredSpellSingleCreatureRetargetingWitness;
 }): readonly BattleSpellTargetListSpatialFact[] {
+  const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
   return input.targeting.targetSpatialFacts.filter(
     (fact): fact is BattleSpellTargetListSpatialFact =>
       fact.kind === "spellTarget" &&
       fact.casterId === input.effect.sourceCombatantId &&
       fact.targetId === input.targeting.targetId &&
-      fact.sourceProcedureRef === input.effect.sourceProcedureRef,
+      fact.sourceProcedureRef === procedureRef,
   );
 }
 

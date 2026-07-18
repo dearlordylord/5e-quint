@@ -1988,7 +1988,6 @@ function commandPendingEffectCount(state: BattleState): number {
         readonly kind: "commandPending";
       } =>
         effect.kind === "commandPending" &&
-        effect.sourceProcedureRef === "command" &&
         effect.sourceCombatantId === casterId,
     ).length ?? 0
   );
@@ -2003,7 +2002,6 @@ function spellDashBonusActionEffectCount(state: BattleState): number {
         readonly kind: "spellDashBonusAction";
       } =>
         effect.kind === "spellDashBonusAction" &&
-        effect.sourceProcedureRef === "expeditious_retreat" &&
         effect.sourceCombatantId === casterId,
     ).length ?? 0
   );

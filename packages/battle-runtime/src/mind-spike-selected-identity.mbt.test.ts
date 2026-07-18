@@ -24,7 +24,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
-import type { BattleState } from "./index.ts";
+import type { BattleActiveEffect, BattleState } from "./index.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
@@ -296,21 +296,21 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
   }
 
   const caster = requireCombatant(resolved.state, spellCasterId);
-  expect(caster.concentration).toEqual({
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(mindSpikeUnitId),
-    ),
-    effectKind: "spellEffect",
-  });
-  const durationActive = hasMindSpikeDurationEffect(resolved.state);
-  expect(durationActive).toBe(true);
+  const durationEffect = mindSpikeDurationEffect(resolved.state);
+  expect(durationEffect).toBeDefined();
+  expect(caster.concentration?.sourceProcedureRef).toBe(
+    durationEffect?.sourceProcedureRef,
+  );
+  const durationActive = durationEffect !== undefined;
   const cleanedUp = tickExpiredMindSpikeDuration(resolved.state);
 
   return expectedProjection({
     level2SlotsRemaining: spellSlotsRemaining(resolved.state, 2),
     targetHp: Number(requireCombatant(resolved.state, spellTargetId).hp),
     casterConcentratingOnMindSpike:
-      caster.concentration?.sourceProcedureRef === mindSpikeUnitId,
+      durationEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        durationEffect.sourceProcedureRef,
     mindSpikeDurationActive: durationActive,
     mindSpikeDurationCleanedUp: mindSpikeDurationCleanedUp(cleanedUp),
     targetActiveEffectCount: requireCombatant(resolved.state, spellTargetId)
@@ -412,7 +412,6 @@ function tickExpiredMindSpikeDuration(
     ...caster,
     activeEffects: caster.activeEffects.map((effect) =>
       effect.kind === "spellConcentrationDuration" &&
-      effect.sourceProcedureRef === mindSpikeUnitId &&
       effect.expiresAt.kind === "concentration"
         ? {
             ...effect,
@@ -434,18 +433,24 @@ function mindSpikeDurationCleanedUp(
   return (
     caster?.concentration === null &&
     !caster.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellConcentrationDuration" &&
-        effect.sourceProcedureRef === mindSpikeUnitId,
+      (effect) => effect.kind === "spellConcentrationDuration",
     )
   );
 }
 
 function hasMindSpikeDurationEffect(state: BattleState): boolean {
-  return requireCombatant(state, spellCasterId).activeEffects.some(
-    (effect) =>
+  return mindSpikeDurationEffect(state) !== undefined;
+}
+
+function mindSpikeDurationEffect(state: BattleState) {
+  return requireCombatant(state, spellCasterId).activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellConcentrationDuration" }
+    > =>
       effect.kind === "spellConcentrationDuration" &&
-      effect.sourceProcedureRef === mindSpikeUnitId &&
       effect.expiresAt.kind === "concentration" &&
       effect.expiresAt.durationTicks === mindSpikeDurationTicks,
   );

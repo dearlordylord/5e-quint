@@ -581,9 +581,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellTurnEndDamage",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(acidArrowUnitId),
-        ),
+        sourceProcedureRef: hitAct.subject.procedureRef,
         damage: { expr: { dice: 2, dieSize: 4 }, damageType: "acid" },
       }),
     );
@@ -602,9 +600,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(laterDamage).toMatchObject({
       spellTurnEndDamage: {
         targetId: spellTargetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(acidArrowUnitId),
-        ),
+        sourceProcedureRef: hitAct.subject.procedureRef,
         damage: { expr: { dice: 2, dieSize: 4 }, damageType: "acid" },
       },
     });
@@ -1353,9 +1349,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(mindSpikeUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(
@@ -1364,9 +1358,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       {
         kind: "spellConcentrationDuration",
         sourceCombatantId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(mindSpikeUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -1445,7 +1437,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
           effect.kind === "spellConcentrationDuration" &&
-          effect.sourceProcedureRef === mindSpikeUnitId &&
+          effect.sourceCombatantId === spellCasterId &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -1533,9 +1525,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(mindSpikeUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(
@@ -1544,9 +1534,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       {
         kind: "spellConcentrationDuration",
         sourceCombatantId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(mindSpikeUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -2071,9 +2059,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           kind: "startsBurning",
           objectId: fireballObjectId,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spellId(fireballUnitId)),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
         },
       ],
     });
@@ -2128,9 +2114,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           kind: "startsBurning",
           objectId: fireballObjectId,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spellId(fireballUnitId)),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
         },
       ],
     });

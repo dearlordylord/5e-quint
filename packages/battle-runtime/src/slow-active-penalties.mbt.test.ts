@@ -694,6 +694,9 @@ function slowActivePenaltiesProjection(
       (projection) => projection.targetId === spellTargetId,
     )?.bonus ?? 0;
   const turnResources = state.battle.currentTurnResources;
+  const slowEffect = target.activeEffects.find(
+    (effect) => effect.kind === "slowActivePenalties",
+  );
   return {
     currentTurnRole: state.currentTurnRole,
     turnActionOrBonusChoice: actionOrBonusChoice(turnResources),
@@ -710,15 +713,15 @@ function slowActivePenaltiesProjection(
     statBlockMultiattackResourceCount: turnResources.actionResources.filter(
       (resource) => resource.source === "statBlockMultiattack",
     ).length,
-    targetSlowed: target.activeEffects.some(
-      (effect) => effect.kind === "slowActivePenalties",
-    ),
+    targetSlowed: slowEffect !== undefined,
     targetSpeedFeet: Number(effectiveWalkSpeed(target)),
     targetArmorClass: Number(currentArmorClass(activeEffectArmorClass(target))),
     dexteritySavingThrowDelta,
     targetCanReact: combatantCanTakeReactions(target),
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === slowUnitId,
+      slowEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        slowEffect.sourceProcedureRef,
     holes: state.holes.map(slowHole),
     lastResult: state.lastResult,
   };

@@ -517,7 +517,8 @@ function gustProjection(state: GustRuntimeState): GustOfWindLineState {
       }) !== undefined,
     lineActive,
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === gustOfWindUnitId &&
+      effect !== undefined &&
+      caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     lineDirection: effect === undefined ? "none" : lineDirection(effect),
     lineMovementCostFeet:
@@ -534,7 +535,6 @@ function gustLineEffect(state: BattleState): GustOfWindLineEffect | undefined {
   return caster.activeEffects.find(
     (effect): effect is GustOfWindLineEffect =>
       effect.kind === "gustOfWindLine" &&
-      effect.sourceProcedureRef === gustOfWindUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === gustOfWindAreaId,
   );

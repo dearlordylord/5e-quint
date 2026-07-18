@@ -586,7 +586,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         ?.activeEffects.filter(
           (effect) =>
             effect.kind === "spellBaseArmorClass" &&
-            effect.sourceProcedureRef === "mage_armor",
+            effect.sourceCombatantId === wizardId,
         ),
     ).toHaveLength(1);
   });

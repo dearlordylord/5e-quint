@@ -612,6 +612,9 @@ function concentrationBreakTeardownProjection(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownProjection {
   const caster = requireCombatant(state.battle, spellCasterId);
+  const blurredEffect = caster.activeEffects.find(
+    (effect) => effect.kind === "blurred",
+  );
   return {
     scenario: state.scenario,
     damageTaken: state.damageTaken,
@@ -619,8 +622,9 @@ function concentrationBreakTeardownProjection(
     saveRollTotal: state.saveRollTotal,
     concentrationSaveOffered: state.concentrationSaveOffered,
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === blurUnitId &&
-      caster.concentration.effectKind === "spellEffect",
+      blurredEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        blurredEffect.sourceProcedureRef,
     blurredEffectCount: blurredEffectCount(state.battle),
     spellSlotExpended: casterSpellSlotExpended(state.battle),
     teardownBeforeNextCommand: state.teardownBeforeNextCommand,

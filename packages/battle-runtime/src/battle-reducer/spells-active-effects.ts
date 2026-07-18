@@ -1659,7 +1659,7 @@ export function applyFailedSaveSpellConditionEffects(
   return clearSourceConcentrationIfRepeatSaveConditionSpellHasNoEffects(
     targetConcentrationReconciled,
     actorId,
-    invocation.spell.id,
+    invocation.sourceProcedureRef,
     appliedEffect,
   );
 }
@@ -1691,7 +1691,7 @@ function breakConcentrationIfCombatantIsIncapacitated(
 function clearSourceConcentrationIfRepeatSaveConditionSpellHasNoEffects(
   state: BattleState,
   sourceCombatantId: CombatantId,
-  sourceProcedureRef: string,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   appliedEffect: SpellSelectedFailedSaveConditionEffect,
 ): BattleState {
   if (

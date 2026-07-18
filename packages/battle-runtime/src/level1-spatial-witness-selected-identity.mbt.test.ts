@@ -4413,7 +4413,6 @@ function fogCloudActiveEffect(
     ?.activeEffects.find(
       (effect): effect is FogCloudObscurementEffect =>
         effect.kind === "fogCloudObscurement" &&
-        effect.sourceProcedureRef === fogCloudUnitId &&
         effect.sourceCombatantId === casterId &&
         effect.areaId === fogCloudAreaId,
     );
@@ -4422,10 +4421,12 @@ function fogCloudActiveEffect(
 function fogCloudObscurementZone(
   state: BattleState,
 ): SpellObscurementZone | undefined {
+  const activeEffect = fogCloudActiveEffect(state);
   return battleObscurementZones(state).find(
     (zone): zone is SpellObscurementZone =>
       zone.kind === "spellObscurementZone" &&
-      zone.sourceProcedureRef === fogCloudUnitId &&
+      activeEffect !== undefined &&
+      zone.sourceProcedureRef === activeEffect.sourceProcedureRef &&
       zone.sourceCombatantId === casterId &&
       zone.obscurement === "heavilyObscured" &&
       zone.area.kind === "pointOriginSphere" &&
@@ -4434,10 +4435,12 @@ function fogCloudObscurementZone(
 }
 
 function fogCloudHeavilyObscuredZoneCount(state: BattleState): number {
+  const activeEffect = fogCloudActiveEffect(state);
   return battleObscurementZones(state).filter(
     (zone) =>
       zone.kind === "spellObscurementZone" &&
-      zone.sourceProcedureRef === fogCloudUnitId &&
+      activeEffect !== undefined &&
+      zone.sourceProcedureRef === activeEffect.sourceProcedureRef &&
       zone.sourceCombatantId === casterId &&
       zone.obscurement === "heavilyObscured" &&
       zone.area.areaId === fogCloudAreaId,
@@ -4562,7 +4565,6 @@ function greaseActiveEffects(
   return greaseCombatant(state, casterId).activeEffects.filter(
     (effect): effect is GreaseGroundHazardEffect =>
       effect.kind === "greaseGroundHazard" &&
-      effect.sourceProcedureRef === greaseUnitId &&
       effect.sourceCombatantId === casterId &&
       effect.areaId === greaseAreaId,
   );
@@ -4660,7 +4662,6 @@ function jumpMovementReplacementEffect(
   return jumpCombatant(state, id).activeEffects.find(
     (effect): effect is JumpMovementReplacementEffect =>
       effect.kind === "jumpMovementReplacement" &&
-      effect.sourceProcedureRef === jumpUnitId &&
       effect.sourceCombatantId === casterId,
   );
 }
@@ -4910,8 +4911,12 @@ function casterConcentratingOnSelectedUnit(
   }
   const sourceProcedureRef =
     lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
-      ? faerieFireUnitId
-      : dancingLightsUnitId;
+      ? state.objectOutlines.find(
+          (outline) =>
+            outline.kind === "faerieFireObjectOutline" &&
+            outline.sourceCombatantId === casterId,
+        )?.sourceProcedureRef
+      : dancingLightEmitters(state)[0]?.sourceProcedureRef;
   return (
     state.combatants.get(casterId)?.concentration?.sourceProcedureRef ===
     sourceProcedureRef
@@ -4924,7 +4929,6 @@ function dancingLightEmitters(
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is DancingLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceProcedureRef === dancingLightsUnitId &&
       emitter.sourceCombatantId === casterId &&
       emitter.attachment.kind === "dancingLight",
   );
@@ -4934,7 +4938,6 @@ function faerieFireEmitters(state: BattleState): readonly SpellLightEmitter[] {
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is SpellLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceProcedureRef === faerieFireUnitId &&
       emitter.sourceCombatantId === casterId,
   );
 }
@@ -4945,7 +4948,6 @@ function lightObjectEmitters(
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is ObjectLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceProcedureRef === lightUnitId &&
       emitter.sourceCombatantId === casterId &&
       emitter.attachment.kind === "object",
   );
@@ -4957,7 +4959,6 @@ function produceFlameHeldLightEmitters(
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is CombatantLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceProcedureRef === produceFlameUnitId &&
       emitter.sourceCombatantId === casterId &&
       emitter.attachment.kind === "combatant" &&
       emitter.attachment.combatantId === casterId,
@@ -5114,7 +5115,6 @@ function faerieFireOutlinedCreatureCount(state: BattleState): number {
       combatant.activeEffects.filter(
         (effect) =>
           effect.kind === "faerieFireOutline" &&
-          effect.sourceProcedureRef === faerieFireUnitId &&
           effect.sourceCombatantId === casterId,
       ).length,
     0,
@@ -5125,7 +5125,6 @@ function faerieFireOutlinedObjectCount(state: BattleState): number {
   return state.objectOutlines.filter(
     (outline) =>
       outline.kind === "faerieFireObjectOutline" &&
-      outline.sourceProcedureRef === faerieFireUnitId &&
       outline.sourceCombatantId === casterId,
   ).length;
 }
@@ -5267,9 +5266,7 @@ function produceFlameHeldLightEffect(
     (
       effect,
     ): effect is Extract<BattleActiveEffect, { readonly kind: "heldLight" }> =>
-      effect.kind === "heldLight" &&
-      effect.sourceProcedureRef === produceFlameUnitId &&
-      effect.sourceCombatantId === casterId,
+      effect.kind === "heldLight" && effect.sourceCombatantId === casterId,
   );
 }
 
