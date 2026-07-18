@@ -576,7 +576,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 62,
       "id": "GH-164",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Replace relationship partitions in Battle effect and zero-HP lifecycles",
       "dependencies": []
     },

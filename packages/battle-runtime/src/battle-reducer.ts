@@ -76,6 +76,7 @@ import type {
   HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+import type { BattleDamageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 import {
   type AttackRollMode,
@@ -1000,6 +1001,7 @@ export type BattleAttackDamageInterruptionContinuation = {
   >[];
   readonly damageDisposition: BattleAttackDamageDisposition;
   readonly attackDamageRiders: readonly AttackDamageRider[];
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
   readonly cunningStrike?: BattleCunningStrikeDamageContinuation;
 };
@@ -2099,6 +2101,60 @@ export type BattleSpellCastReactionFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
 >;
+export type BattleDamageRelationshipQuestionFacts =
+  | {
+      readonly kind: "targetDamagedByCasterOrAlly";
+      readonly targetId: CombatantId;
+      readonly effectSourceId: CombatantId;
+    }
+  | {
+      readonly kind: "enemyZeroHitPointTemporaryHitPoints";
+      readonly beneficiaryId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+    };
+export type BattleDamageRelationshipQuestion =
+  BattleDamageRelationshipQuestionFacts & {
+    readonly questionId: BattleDamageRelationshipQuestionId;
+  };
+export type BattleDamageRelationshipDecision =
+  | (Extract<
+      BattleDamageRelationshipQuestionFacts,
+      { readonly kind: "targetDamagedByCasterOrAlly" }
+    > & { readonly sourceIsAlly: boolean })
+  | (Extract<
+      BattleDamageRelationshipQuestionFacts,
+      { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
+    > & { readonly targetIsEnemy: boolean });
+export type BattleDamageRelationshipDecisions = readonly [
+  BattleDamageRelationshipDecision,
+  ...BattleDamageRelationshipDecision[],
+];
+export type BattleDamageRelationshipDecisionHole = {
+  readonly holeInstanceKey: BattleHoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "damageRelationshipDecisions";
+  readonly label: string;
+  readonly damageEventHoleId: BattleHoleId;
+  readonly damageSourceId: CombatantId;
+  readonly targetIds: readonly [CombatantId, ...CombatantId[]];
+  readonly questions: readonly [
+    BattleDamageRelationshipQuestion,
+    ...BattleDamageRelationshipQuestion[],
+  ];
+};
+export type BattleDamageRelationshipAnswer = {
+  readonly questionId: BattleDamageRelationshipQuestionId;
+  readonly answer: boolean;
+};
+export type BattleDamageRelationshipDecisionFill = {
+  readonly kind: "damageRelationshipDecisions";
+  readonly holeId: BattleHoleId;
+  readonly answers: readonly [
+    BattleDamageRelationshipAnswer,
+    ...BattleDamageRelationshipAnswer[],
+  ];
+};
 export type BattleThunderwavePushDisposition =
   | {
       readonly kind: "pushed";
@@ -6669,6 +6725,7 @@ export type BattleHole =
   | BattleShoveOutcomeHole
   | BattleSanctuaryInterdictionOutcomeHole
   | BattleAttackDamageDispositionHole
+  | BattleDamageRelationshipDecisionHole
   | BattleOngoingSpellTargetChoiceHole
   | BattleWildShapeEquipmentDispositionHole;
 
@@ -6949,6 +7006,7 @@ export type BattleFill =
       readonly value: CombatantId;
       readonly spatialFacts?: readonly BattleTargetSpatialFact[];
     }
+  | BattleDamageRelationshipDecisionFill
   | {
       readonly kind: "targetSpatialFacts";
       readonly holeId: BattleHoleId;

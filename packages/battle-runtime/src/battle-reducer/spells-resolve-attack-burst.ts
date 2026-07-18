@@ -50,6 +50,7 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   activeMarkedDamageRiders,
   applyAvailableSourceDamageRollPenalty,
@@ -1048,6 +1049,80 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
 
+  const attackDamageDisposition = damageDispositionForTarget(
+    attackDamageDispositionHoles,
+    input.fillSet.damageDispositions,
+    target.combatantId,
+  );
+  const attackRelationshipCheck = damageRelationshipDecisionFillCheck({
+    state: postRemarkableAthleteMovementState,
+    damageEventHoleId:
+      input.fillSet.attackBurstDamageRoll?.holeId ?? ATTACK_ROLL_HOLE_ID,
+    damageSourceId: input.actorId,
+    targets:
+      hitTarget && attackDamageAmount > 0
+        ? [
+            {
+              targetId: target.combatantId,
+              damageAmount: attackDamageAmount,
+              damageDisposition: attackDamageDisposition,
+            },
+          ]
+        : [],
+    spatialFacts: input.fillSet.targetSpatialFacts,
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (attackRelationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      attackRelationshipCheck.holes,
+    );
+  }
+  if (attackRelationshipCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      attackRelationshipCheck.message,
+    );
+  }
+  const burstRelationshipCheck = damageRelationshipDecisionFillCheck({
+    state: damagedByAttack,
+    damageEventHoleId: input.fillSet.damageRoll?.holeId ?? ATTACK_ROLL_HOLE_ID,
+    damageSourceId: input.actorId,
+    targets: failedTargets.flatMap((targetId) => {
+      const damageAmount = burstDamageByTargetId.get(targetId) ?? 0;
+      return damageAmount > 0
+        ? [
+            {
+              targetId,
+              damageAmount,
+              damageDisposition: damageDispositionForTarget(
+                burstDamageDispositionHoles,
+                input.fillSet.damageDispositions,
+                targetId,
+              ),
+            },
+          ]
+        : [];
+    }),
+    spatialFacts: input.fillSet.targetSpatialFacts,
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (burstRelationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      damagedByAttack,
+      input.input.subject,
+      burstRelationshipCheck.holes,
+    );
+  }
+  if (burstRelationshipCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      burstRelationshipCheck.message,
+    );
+  }
   const damagedByAttackWithConcentration =
     hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? applySpellDamage(
@@ -1071,11 +1146,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
                     attackDamageAmount,
                 }),
               ),
-            damageDisposition: damageDispositionForTarget(
-              attackDamageDispositionHoles,
-              input.fillSet.damageDispositions,
-              target.combatantId,
-            ),
+            damageDisposition: attackDamageDisposition,
             spellMarkedDamageRiders,
             hideousLaughterDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
@@ -1098,6 +1169,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
               ),
             damageSourceId: input.actorId,
             spatialFacts: input.fillSet.targetSpatialFacts,
+            ...(attackRelationshipCheck.decisions === undefined
+              ? {}
+              : {
+                  relationshipDecisions: attackRelationshipCheck.decisions,
+                }),
           },
         )
       : postRemarkableAthleteMovementState;
@@ -1151,6 +1227,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             hideousLaughterDamageRepeatSaveEventKey: burstDamageEventKey,
             damageSourceId: input.actorId,
             spatialFacts: input.fillSet.targetSpatialFacts,
+            ...(burstRelationshipCheck.decisions === undefined
+              ? {}
+              : {
+                  relationshipDecisions: burstRelationshipCheck.decisions,
+                }),
           });
         }, damagedByAttackWithConcentration);
 

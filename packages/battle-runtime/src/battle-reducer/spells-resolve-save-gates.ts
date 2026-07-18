@@ -73,6 +73,7 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   deduplicateBattleHolesById,
   needsHolesResult,
@@ -1816,6 +1817,49 @@ export function resolveSaveGateDamageSpellAct(input: {
       "Hideous Laughter damage repeat save fill must match a requested damaged target.",
     );
   }
+  const damageDispositionByTargetId = new Map(
+    damageTargets.map((targetId) => [
+      targetId,
+      damageDispositionForTarget(
+        damageDispositionHoles,
+        input.fillSet.damageDispositions,
+        targetId,
+      ),
+    ]),
+  );
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: stateAfterCastConcentrationBreak,
+    damageEventHoleId: damageRoll.holeId,
+    damageSourceId: input.actorId,
+    targets: damageTargets.flatMap((targetId) => {
+      const damageAmount = damageAmountByTargetId.get(targetId) ?? 0;
+      return damageAmount > 0
+        ? [
+            {
+              targetId,
+              damageAmount,
+              damageDisposition: damageDispositionByTargetId.get(targetId),
+            },
+          ]
+        : [];
+    }),
+    spatialFacts: input.fillSet.targetSpatialFacts,
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      relationshipCheck.message,
+    );
+  }
   const damaged = damageTargets.reduce((state, targetId) => {
     const target = state.combatants.get(targetId);
     if (target === undefined) {
@@ -1902,13 +1946,12 @@ export function resolveSaveGateDamageSpellAct(input: {
           damageByType,
           damageRoll.holeId,
         ),
-        damageDisposition: damageDispositionForTarget(
-          damageDispositionHoles,
-          input.fillSet.damageDispositions,
-          targetId,
-        ),
+        damageDisposition: damageDispositionByTargetId.get(targetId),
         damageSourceId: input.actorId,
         spatialFacts: input.fillSet.targetSpatialFacts,
+        ...(relationshipCheck.decisions === undefined
+          ? {}
+          : { relationshipDecisions: relationshipCheck.decisions }),
       },
     );
   }, stateAfterCastConcentrationBreak);

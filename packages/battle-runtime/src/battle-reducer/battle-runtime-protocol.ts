@@ -27,6 +27,7 @@ import type {
   BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
+import type { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 
 export const INITIAL_ROUND: RoundType = Round(1);
 export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
@@ -204,6 +205,7 @@ export type AttackFillSet =
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+      readonly damageRelationshipDecisions: DamageRelationshipDecisionsByHole;
       readonly attackRoll: BattleAttackRollResult | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,

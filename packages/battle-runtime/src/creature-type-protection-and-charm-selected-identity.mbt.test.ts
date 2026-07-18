@@ -4,7 +4,7 @@
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import { Either } from "effect";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -576,12 +576,13 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
     }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
+  const attackTarget = attackTargetFill(
     targetHole,
     casterAllyId,
     beastTargetId,
     attack.subject,
   );
+  const targetFill = attackTarget;
   const awaitingAttack = resolveBattleSubject({
     state: allyTurn,
     subject: attack.subject,
@@ -598,6 +599,27 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
     fills: [targetFill, attackFill],
   });
   const damageHole = requireResultHole(awaitingDamage, "rolledDice");
+  const damageFill = damageRollFillWithGroups(damageHole, [[1]]);
+  const relationshipHole = requireResultHole(
+    resolveBattleSubject({
+      state: allyTurn,
+      subject: attack.subject,
+      fills: [targetFill, attackFill, damageFill],
+    }),
+    "damageRelationshipDecisions",
+  );
+  expect(relationshipHole).toMatchObject({
+    damageEventHoleId: damageHole.holeId,
+    damageSourceId: casterAllyId,
+    targetIds: [beastTargetId],
+    questions: [
+      {
+        kind: "targetDamagedByCasterOrAlly",
+        targetId: beastTargetId,
+        effectSourceId: casterId,
+      },
+    ],
+  });
   const resolvedDamage = requireResolvedResult(
     resolveBattleSubject({
       state: allyTurn,
@@ -605,11 +627,30 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
       fills: [
         targetFill,
         attackFill,
-        damageRollFillWithGroups(damageHole, [[1]]),
+        damageFill,
+        {
+          kind: "damageRelationshipDecisions",
+          holeId: relationshipHole.holeId,
+          answers: [
+            {
+              questionId: relationshipHole.questions[0].questionId,
+              answer: true,
+            },
+          ],
+        },
       ],
     }),
     "Expected ally weapon damage to break Animal Friendship.",
   );
+  expect(
+    resolvedDamage.state.combatants
+      .get(beastTargetId)
+      ?.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellCondition" &&
+          effect.escape?.kind === "targetDamagedByCasterOrAlly",
+      ),
+  ).toBe(false);
   return [
     ...publicAnimalFriendshipFailedSaveRoute(),
     ...routeEventsOf(resolvedDamage).filter(

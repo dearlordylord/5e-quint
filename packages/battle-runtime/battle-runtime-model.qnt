@@ -16,8 +16,6 @@ module battleRuntimeModel {
 
   type Actor = Fighter | Goblin
   type CombatantSide = PartySide | OppositionSide
-  type DamageSourceActor = FighterDamageSource | FighterAllyDamageSource | GoblinDamageSource
-
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility

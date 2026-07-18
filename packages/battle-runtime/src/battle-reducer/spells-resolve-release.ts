@@ -55,6 +55,7 @@ import {
   fillsMatchingHoleIds,
   damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   activeMarkedDamageRiders,
   applyAvailableSourceDamageRollPenalty,
@@ -1158,6 +1159,38 @@ export function resolveSpellRelease(
           },
         ))
       : input.state;
+  const damageDisposition = damageDispositionForTarget(
+    damageDispositionHole === null ? [] : [damageDispositionHole],
+    fillSet.damageDispositions,
+    target.combatantId,
+  );
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: releaseResolutionState,
+    damageEventHoleId: fillSet.damageRoll.holeId,
+    damageSourceId: input.subject.actorId,
+    targets:
+      spellDamageAmount <= 0
+        ? []
+        : [
+            {
+              targetId: target.combatantId,
+              damageAmount: spellDamageAmount,
+              damageDisposition,
+            },
+          ],
+    spatialFacts: fillSet.targetSpatialFacts,
+    decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      releaseResolutionState,
+      input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", relationshipCheck.message);
+  }
   const damaged = applySpellDamage(
     releaseResolutionState,
     target.combatantId,
@@ -1168,16 +1201,15 @@ export function resolveSpellRelease(
       concentrationSavingThrow: concentrationFill,
       wardingBondDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
-      damageDisposition: damageDispositionForTarget(
-        damageDispositionHole === null ? [] : [damageDispositionHole],
-        fillSet.damageDispositions,
-        target.combatantId,
-      ),
+      damageDisposition,
       spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll,
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.actorId,
       spatialFacts: fillSet.targetSpatialFacts,
+      ...(relationshipCheck.decisions === undefined
+        ? {}
+        : { relationshipDecisions: relationshipCheck.decisions }),
     },
   );
   const effected = applySpellActiveEffects(

@@ -102,6 +102,7 @@ import {
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   activeMarkedDamageRiders,
   applyAvailableSpellDamageReduction,
@@ -158,9 +159,7 @@ import {
   spellHasAvailableSpend,
   spellInvocationIsSpellcasting,
 } from "./spell-turn-resources.ts";
-import {
-  spellAttackKindForRedirect,
-} from "./spells-profiles.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -688,10 +687,7 @@ function resolveSpellActInternal(
       subject.invocation.procedure,
     )
   ) {
-    invocation = supportedActionSpellInvocationForSubject(
-      actor,
-      subject,
-    );
+    invocation = supportedActionSpellInvocationForSubject(actor, subject);
   }
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
@@ -2032,6 +2028,38 @@ function resolveSpellActInternal(
       hideousLaughterSaveCheck.message,
     );
   }
+  const damageDisposition = damageDispositionForTarget(
+    damageDispositionHole === null ? [] : [damageDispositionHole],
+    fillSet.damageDispositions,
+    target.combatantId,
+  );
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: spellDamageBaseState,
+    damageEventHoleId: fillSet.damageRoll.holeId,
+    damageSourceId: subject.actorId,
+    targets:
+      spellDamageAmount <= 0
+        ? []
+        : [
+            {
+              targetId: target.combatantId,
+              damageAmount: spellDamageAmount,
+              damageDisposition,
+            },
+          ],
+    spatialFacts: fillSet.targetSpatialFacts,
+    decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      spellDamageBaseState,
+      input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", relationshipCheck.message);
+  }
   const damaged = applySpellDamage(
     spellDamageBaseState,
     target.combatantId,
@@ -2042,11 +2070,7 @@ function resolveSpellActInternal(
       concentrationSavingThrow: concentrationFill,
       wardingBondDamageShareConcentrationSavingThrows:
         fillSet.concentrationSavingThrows,
-      damageDisposition: damageDispositionForTarget(
-        damageDispositionHole === null ? [] : [damageDispositionHole],
-        fillSet.damageDispositions,
-        target.combatantId,
-      ),
+      damageDisposition,
       spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll,
       spellDamageReductionRoll: spellReductionRoll,
@@ -2055,6 +2079,9 @@ function resolveSpellActInternal(
       damageSourceId: subject.actorId,
       saveDamageResult: spellDamageResult,
       spatialFacts: fillSet.targetSpatialFacts,
+      ...(relationshipCheck.decisions === undefined
+        ? {}
+        : { relationshipDecisions: relationshipCheck.decisions }),
     },
   );
   const effected = spellAttackHit
@@ -2909,16 +2936,10 @@ export function resolveBonusActionSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   let invocation =
     actor?.origin.kind === "character"
-      ? supportedBonusActionSpellInvocationForSubject(
-          actor,
-          subject,
-        )
+      ? supportedBonusActionSpellInvocationForSubject(actor, subject)
       : undefined;
   if (actor?.origin.kind === "character" && invocation == null) {
-    invocation = antimagicSuppressedInvocationForStaleSubject(
-      actor,
-      subject,
-    );
+    invocation = antimagicSuppressedInvocationForStaleSubject(actor, subject);
   }
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
@@ -3290,10 +3311,7 @@ export function resolveBonusActionDashSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? characterSpellProcedure(
-          actor.origin.execution,
-          subject.procedureRef,
-        )
+      ? characterSpellProcedure(actor.origin.execution, subject.procedureRef)
       : undefined;
   if (
     actor?.origin.kind !== "character" ||
