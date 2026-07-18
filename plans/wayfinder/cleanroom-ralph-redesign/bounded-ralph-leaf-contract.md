@@ -1,15 +1,15 @@
 # Bounded Ralph Leaf and Non-Convergence Contract
 
 > **Historical decision record:** the body below is retained in its original
-> shell-delivery terms. It is evidence, not a new-orchestrator contract. The
+> shell-delivery terms. It is evidence, not a Ralph orchestrator contract. The
 > coherent-leaf and non-convergence outcomes were subsequently accepted by the
-> [architecture decision](https://github.com/dearlordylord/5e-quint/issues/179).
+> [tooling architecture decision](https://github.com/dearlordylord/5e-quint/issues/179).
 > Its plan index, labels, claim representation, run directory, launcher
 > mechanics, and ten-round default did not transfer; current tracker, recovery,
 > and policy semantics belong to [issues 185](https://github.com/dearlordylord/5e-quint/issues/185),
 > [183](https://github.com/dearlordylord/5e-quint/issues/183), and
 > [186](https://github.com/dearlordylord/5e-quint/issues/186), under the
-> [delivery-orchestration boundary](../../../ARCHITECTURE.md#delivery-orchestration-boundary).
+> [Ralph tooling boundary](../../../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
 
 ## Decision scope
 
@@ -176,9 +176,7 @@ own those decisions.
 
 ## Documentation ownership check
 
-No D&D rule, Cleanroom product behavior, architecture, or modeling assumption is
-decided here. `Ralph leaf`, `Handback`, `Non-convergent leaf`, and `Safety-cap
-disposition` are execution-plan terms and therefore remain in this Wayfinder
-asset and the Ralph operator projection rather than
-`docs/cleanroom/CONTEXT.md`, `UBIQUITOUS_LANGUAGE.md`, `ARCHITECTURE.md`, or
-`ASSUMPTIONS.md`.
+No D&D rule, Cleanroom product behavior, main-application architecture, or
+modeling assumption is decided here. The tooling terms in this historical body
+are not D&D or Cleanroom language; canonical Ralph boundary terminology belongs
+to the [Ralph tooling context](../../../docs/tooling/ralph/CONTEXT.md).

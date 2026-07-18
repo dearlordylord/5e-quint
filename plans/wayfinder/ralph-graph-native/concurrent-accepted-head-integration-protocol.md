@@ -5,7 +5,7 @@ protocol](https://github.com/dearlordylord/5e-quint/issues/184), under
 [Wayfinder: Ralph graph-native
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
-This protocol integrates results accepted by the new orchestrator. Historical
+This protocol integrates results accepted by the Ralph orchestrator. Historical
 shell-harness branches, worktrees, claims, and run artifacts are evidence only
 and never enter its integration queue.
 

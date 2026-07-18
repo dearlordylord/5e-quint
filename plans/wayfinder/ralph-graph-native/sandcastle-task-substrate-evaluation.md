@@ -41,7 +41,7 @@ published as `@ai-hero/sandcastle@0.12.0` on 2026-06-29. The assessment used
 library contracts, implementation, tests, ADRs, and generated templates rather
 than README claims alone.
 
-The comparison uses the independently accepted new-orchestrator decisions,
+The comparison uses the independently accepted Ralph orchestrator decisions,
 [historical shell-harness evidence](../../../scripts/ralph-run.md), the
 [bounded-leaf evidence](../cleanroom-ralph-redesign/bounded-ralph-leaf-contract.md),
 the historical [worktree installer](../../../scripts/ralph-install-worktree.sh),
@@ -128,11 +128,11 @@ surface is insufficient where it would merely reinterpret private errors,
 paper over branch reuse, or reconstruct session evidence after Sandcastle has
 already discarded it.
 
-## Consequence for the architecture decision
+## Consequence for the tooling architecture decision
 
 Carry Sandcastle forward as the strongest surveyed candidate for the
 **task-execution substrate**, not as the graph-native orchestrator. The
-architecture choice should compare the cost of qualifying this modified
+tooling architecture choice should compare the cost of qualifying this modified
 substrate with building a Ralph-owned implementation behind the same typed
 execution port. The historical shell harness is evidence for candidate
 requirements, not an executor implementation to retain.
@@ -146,5 +146,5 @@ the combined Ralph contract inventory and control-plane evaluation.
 
 This artifact records a Wayfinder adoption decision. It does not redefine D&D
 language, Cleanroom product behavior, or modeling assumptions. The repository
-architecture owns the separate
-[delivery-orchestration boundary](../../../ARCHITECTURE.md#delivery-orchestration-boundary).
+tooling architecture owns the separate
+[Ralph historical-harness boundary](../../../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).

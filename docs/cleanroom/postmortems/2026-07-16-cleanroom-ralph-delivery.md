@@ -1,5 +1,10 @@
 # Cleanroom Ralph Delivery Post-mortem — 2026-07-16
 
+> **Historical delivery evidence:** this report records both Cleanroom product
+> outcomes and one-off Ralph harness behavior. It is neither main-application
+> nor Ralph tooling architecture. Current Ralph ownership is mapped in the
+> [tooling architecture](../../tooling/ralph/ARCHITECTURE.md).
+
 ## Outcome
 
 Product delivery stopped at accepted integration commit

@@ -156,10 +156,11 @@ link to detailed evidence over a wall of acceptance jargon.
 
 Do not write to the memory system unless explicitly asked.
 
-## Ralph architecture boundary (CRITICAL)
+## Ralph tooling architecture boundary (CRITICAL)
 
-Follow [the delivery-orchestration architecture boundary](ARCHITECTURE.md#delivery-orchestration-boundary).
-Do not promote a historical-harness observation into a new-orchestrator
+Follow the
+[Ralph tooling architecture boundary](docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
+Do not promote a historical-harness observation into a Ralph orchestrator
 requirement without an explicit owning decision or specification.
 
 ## Ralph task-base check

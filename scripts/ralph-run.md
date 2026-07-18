@@ -1,7 +1,7 @@
 # Historical Ralph Loop Harness
 
 > **Historical execution runbook:** see the canonical
-> [delivery-orchestration boundary](../ARCHITECTURE.md#delivery-orchestration-boundary).
+> [Ralph tooling boundary](../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
 
 `scripts/ralph-run.sh` ran a per-task fresh-context implementation harness for a plan file:
 
@@ -270,7 +270,7 @@ consistency, and commit the corrected closeout manually.
 ## Historical usage
 
 The commands below document how retained shell-harness runs were launched. Do
-not use them to launch new Ralph work or treat their flags as new-orchestrator
+not use them to launch Ralph orchestrator work or treat their flags as Ralph
 CLI requirements.
 
 ```bash

@@ -3,7 +3,7 @@
 Decision asset for [Choose Ralph's durable journal and recovery protocol](https://github.com/dearlordylord/5e-quint/issues/183), under [Wayfinder: Ralph graph-native orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
 In this decision, a run, planned attempt, managed namespace, and recoverable or
-untracked execution all belong to the new orchestrator. Historical
+untracked execution all belong to the Ralph orchestrator. Historical
 `ralph-run.sh` runs, claims, worktrees, branches, and `.ralph` artifacts are
 outside that namespace: they are evidence, not journal migration or recovery
 inputs.
@@ -91,9 +91,10 @@ frontiers, Git ancestry conclusions, worktree-exists flags, derived operation
 status, or dashboard state. A tracker snapshot may be retained as diagnostic
 evidence with its revision, but recovery always refreshes the tracker.
 
-## Effect V4 architecture
+## Effect V4 tooling architecture
 
-Effect is the application architecture, including simulation and tests:
+Effect is the Ralph tooling application architecture, including simulation and
+tests:
 
 - orchestration workflows are `Effect` programs;
 - application capabilities are explicit `Context.Service` services;
@@ -477,7 +478,8 @@ Replaceable behind contract tests:
 - retry schedule parameters; and
 - possible future use of `@effect/workflow` as a substrate.
 
-Fixed by this decision unless a later architecture decision supersedes it:
+Fixed by this decision unless a later tooling architecture decision supersedes
+it:
 
 - Effect V4 services and layers for all capabilities, simulation, and tests;
 - one explicit, exhaustively handled workflow-operation algebra;

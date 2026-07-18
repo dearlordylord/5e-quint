@@ -10,7 +10,7 @@ Research ticket: [Evaluate Gas Town, Beads, and Agent Orchestrator as Ralph adop
 
 The checked-in shell harness was a one-off experiment, not an incumbent system
 or compatibility baseline. It may supply candidate requirements and failure
-evidence, but the new Ralph orchestrator does not invoke its stages, migrate its
+evidence, but the Ralph orchestrator does not invoke its stages, migrate its
 plan index or runs, preserve behavioral parity with it, or retain it as a
 fallback. The compatibility-executor and shell-cutover hypothesis formerly
 recorded in this research is withdrawn.
@@ -33,8 +33,8 @@ No surveyed tool ships that whole contract. Wholesale adoption would replace or 
 The evidence therefore supports a **compose or build** hypothesis, not a
 whole-tool adoption. It also shifts the implementation hypothesis toward a
 typed control plane that directly implements independently accepted
-requirements. That is evidence for the architecture decision ticket, not the
-architecture decision itself.
+requirements. That is evidence for the tooling architecture decision ticket,
+not the tooling architecture decision itself.
 
 ## Comparison rubric
 
@@ -162,13 +162,13 @@ Risks:
   is traced to an owning decision or specification;
 - optional Sandcastle adoption must prove that its worktree and process lifecycle can carry Base SHA, evidence preservation, cancellation, and quarantine requirements without an adapter-owned shadow state.
 
-### Evidence-weighted direction for the architecture ticket
+### Evidence-weighted direction for the tooling architecture ticket
 
 Do not extend the monolithic historical harness, and do not adopt a surveyed
 product wholesale. Build and test a clean typed control plane. Use the harness
 only as fallible evidence when evaluating candidate requirements.
 
-The safe implementation shape is incremental within the new system:
+The safe implementation shape is incremental within the Ralph orchestrator:
 
 1. trace each candidate requirement to an explicit owning decision;
 2. put tracker snapshots, claims, frontier derivation, task workflow, and integration serialization under one new control-plane owner;
@@ -176,7 +176,7 @@ The safe implementation shape is incremental within the new system:
    those accepted requirements;
 4. qualify optional substrates such as Sandcastle against the new port
    contracts; and
-5. release the new orchestrator only when its own restart, quarantine, cleanup,
+5. release the Ralph orchestrator only when its own restart, quarantine, cleanup,
    and integration-conflict scenarios pass end to end.
 
 Before selecting this direction, prototype the three seams most likely to falsify it:

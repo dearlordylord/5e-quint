@@ -5,7 +5,7 @@ orchestrator](https://github.com/dearlordylord/5e-quint/issues/187), under
 [Wayfinder: Ralph graph-native
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
-This strategy verifies the new orchestrator against its independently accepted
+This strategy verifies the Ralph orchestrator against its independently accepted
 contract. Historical-harness traces and artifacts may motivate scenarios, but
 behavioral parity, replay, migration, and compatibility with
 `scripts/ralph-run.sh` are not verification goals.
@@ -540,7 +540,7 @@ Use these lanes deliberately:
 4. **Tracker qualification:** serialized credentialed GitHub fixture lane when
    tracker-adapter code changes and on a scheduled cadence.
 5. **Release readiness:** all preceding lanes against the exact candidate
-   commit, followed by acceptance of the new orchestrator on its own contract.
+   commit, followed by acceptance of the Ralph orchestrator on its own contract.
 
 Run public root verification scripts directly under their existing shared
 resource guard. Focused package checks stay focused. Never run broad workspace,
@@ -577,8 +577,9 @@ The implementation is verified only when:
 
 ## Documentation, RAW, and reviewer convergence
 
-This decision changes Ralph verification architecture only. It models no D&D
-rule, authored content, battle-runtime behavior, or Quint parity obligation.
+This decision changes Ralph tooling verification architecture only. It changes
+no main-application architecture and models no D&D rule, authored content,
+battle-runtime behavior, or Quint parity obligation.
 Before implementation acceptance, inspect `.references/srd-5.2.1/` ownership
 and `UBIQUITOUS_LANGUAGE.md` and record that no modeled rule or D&D term changed;
 there is no rule passage to cite beyond that non-applicability check.
@@ -596,7 +597,7 @@ at least two complete rounds even if the first appears clean.
 
 The accepted implementation specification will own executable requirements.
 This Wayfinder asset remains historical decision evidence and must not become a
-parallel architecture, glossary, acceptance ledger, or test inventory.
+parallel tooling architecture, glossary, acceptance ledger, or test inventory.
 
 ## Connascence check
 

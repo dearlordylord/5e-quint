@@ -2,7 +2,7 @@
 
 Disposable prototype evidence for [Prototype Ralph's graph-native control-plane seams](https://github.com/dearlordylord/5e-quint/issues/182), under [Wayfinder: Ralph graph-native orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
-This prototype tests new-orchestrator seams. It neither models compatibility
+This prototype tests Ralph orchestrator seams. It neither models compatibility
 with the historical shell harness nor supports importing or resuming that
 harness's runs.
 
@@ -34,7 +34,7 @@ That target has honest limits. If the agent spends ten minutes inside one model 
 | Worktree files and Git index            | Each completed filesystem write/rename/index update                                                        | Reopen the same preserved worktree and inspect status/diff                                     | Filesystem cache is normally sufficient for process death, not necessarily host/power loss; cleanup must not delete ambiguous work                                 | None; these writes already happen                                                    |
 | Git objects and refs                    | Successful Git object/ref operation                                                                        | Discover exact refs, commits, and ancestry                                                     | Uncommitted edits live in the worktree, not Git; an ambiguous remote push needs ref reconciliation                                                                 | None beyond existing Git operations                                                  |
 | Codex agent session                     | Canonical rollout items appended to the session JSONL; exact session ID is resumable                       | Resume the exact session in the same worktree from its last recorded item                      | The current Codex writer has a small asynchronous queue and flushes each JSONL line but does not `fsync` each line; an incomplete inference is not a recorded item | None in Ralph; Codex already records the stream                                      |
-| Agent-adapter invocation evidence       | Adapter-declared durable event or output boundary                                                          | Recover the session identity and inspect emitted evidence when the adapter supports it          | It is evidence, not a second transcript authority; gaps and tail truncation must be explicit                                                                        | Defined and qualified by each new-orchestrator adapter                               |
+| Agent-adapter invocation evidence       | Adapter-declared durable event or output boundary                                                          | Recover the session identity and inspect emitted evidence when the adapter supports it          | It is evidence, not a second transcript authority; gaps and tail truncation must be explicit                                                                        | Defined and qualified by each Ralph orchestrator adapter                              |
 | Active tool/child process               | Tool-specific: completed file writes, remote acknowledgements, or a substrate-owned durable process handle | Reattach only when the substrate supports it; otherwise inspect effects and retry idempotently | PID and in-memory command state are not durable; a half-completed non-idempotent tool requires explicit reconciliation                                             | Capability-dependent; no blanket per-tool snapshot                                   |
 | Control-plane attempt/integration state | A small intent or outcome record acknowledged before crossing an ambiguity boundary                        | Replay attempt identity, retry due time, queued integration, and evidence pointers             | The adapter must define process-loss versus power-loss durability and exclusive-writer behavior                                                                    | One small transition write at orchestration boundaries, not at every agent tool call |
 | Effect fiber and semaphore              | None                                                                                                       | Rebuild fibers and local gates from reconciled durable facts                                   | They are deliberately live-process mechanisms only                                                                                                                 | None                                                                                 |
@@ -51,9 +51,9 @@ synchronous-disk or whole-host disaster recovery.
 The historical harness demonstrated why unconditional `EXIT`, `INT`, and
 `TERM` cleanup is unsafe: it could remove an active worktree and task branch.
 That is negative evidence for the independently accepted cleanup requirement,
-not behavior or state for the new orchestrator to preserve. Cleanup in the new
+not behavior or state for the Ralph orchestrator to preserve. Cleanup in the
 system is allowed only after a durable terminal disposition proves the attempt
-is integrated or explicitly abandoned; unknown or interrupted new-system
+is integrated or explicitly abandoned; unknown or interrupted Ralph-managed
 attempts are preserved for reconciliation.
 
 ### Selected failure domain

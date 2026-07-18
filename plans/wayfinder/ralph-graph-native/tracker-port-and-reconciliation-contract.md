@@ -5,7 +5,7 @@ contract](https://github.com/dearlordylord/5e-quint/issues/185), under
 [Wayfinder: Ralph graph-native
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
-Claims in this contract are new-orchestrator reservations obtained through the
+Claims in this contract are Ralph orchestrator reservations obtained through the
 tracker port. Historical Git-ref claims created by `ralph-run.sh` are not claim
 state to import, reconcile, release, or preserve in this model.
 
@@ -327,11 +327,12 @@ shape, issue number, or Git-ref encoding escapes into the coordinator algebra.
 
 This decision changes orchestration infrastructure only. It models no D&D rule,
 authored game content, or runtime combat behavior, so no SRD passage,
-`ASSUMPTIONS.md` entry, or D&D ubiquitous-language term changes. The accepted
-facts remain in this Wayfinder decision asset until the graph-native Ralph
-implementation specification promotes them to its mapped owner; they are not
-copied into the Cleanroom glossary or the current runtime architecture as a
-parallel authority.
+`ASSUMPTIONS.md` entry, or D&D ubiquitous-language term changes. Stable
+ownership boundaries are indexed by the
+[Ralph tooling architecture](../../../docs/tooling/ralph/ARCHITECTURE.md), while
+the accepted implementation specification owns executable detail. These facts
+are not copied into the Cleanroom glossary or main-application architecture as
+a parallel authority.
 
 The contract preserves the existing bounded-leaf, Base-SHA, reviewer-loop,
 evidence, quarantine, resource-lock, and accepted-head integration decisions.

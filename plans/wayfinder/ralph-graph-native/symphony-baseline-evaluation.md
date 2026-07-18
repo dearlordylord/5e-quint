@@ -206,18 +206,19 @@ This choice rejects three alternatives:
 
 ## Follow-up consequences for the map
 
-This research makes the build/adopt choice answerable: the architecture ticket
-can select an Effect implementation of Symphony plus Ralph extensions. It does
+This research makes the build/adopt choice answerable: the tooling architecture
+ticket can select an Effect implementation of Symphony plus Ralph extensions. It does
 not settle the already-visible follow-up decisions for the precise tracker-port
 schema, durable journal/store, concurrent integration algorithm, operator
 pause/drain/cancel surface, release readiness, or deterministic
 scheduler/failure-injection verification. Those remain beyond this research
-ticket and should be specified after the architecture boundary is accepted.
+ticket and should be specified after the tooling architecture boundary is
+accepted.
 
 No D&D rule or ubiquitous language is changed by this decision. RAW and
 `UBIQUITOUS_LANGUAGE.md` are therefore not applicable verification authorities
-for this orchestration research; architecture, execution-contract, tracker,
-and repository resource owners are the relevant authorities.
+for this orchestration research; tooling architecture, execution-contract,
+tracker, and repository resource owners are the relevant authorities.
 
 ## Verification
 

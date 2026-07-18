@@ -10,12 +10,12 @@ describes the historical one-off shell harness at that commit.
 
 ## Scope boundary
 
-This asset is an evidence inventory, not the architecture or a compatibility
-contract for the new Ralph orchestrator. The historical harness can reveal a
-useful requirement, failure mode, or design lesson. None of its scheduler
+This asset is an evidence inventory, not the tooling architecture or a
+compatibility contract for the Ralph orchestrator. The historical harness can
+reveal a useful requirement, failure mode, or design lesson. None of its scheduler
 stages, plan-index state, claim representation, run-directory layout, prompts,
-shell functions, or retained runs transfers into the new system merely because
-it existed or worked once.
+shell functions, or retained runs transfers into the Ralph orchestrator merely
+because it existed or worked once.
 
 A **candidate requirement** is an observation mined from the historical
 harness. An **accepted requirement** is a requirement explicitly selected by
@@ -55,8 +55,8 @@ silently promoted into product requirements.
 
 | Source | Role in this inventory | Authority limit |
 | --- | --- | --- |
-| [`scripts/ralph-run.sh`](../../../scripts/ralph-run.sh) and [`scripts/ralph-issue-context.ts`](../../../scripts/ralph-issue-context.ts) | Historical executable behavior | Evidence of what the one-off harness did; no authority over the new orchestrator |
-| [`scripts/ralph-run.test.ts`](../../../scripts/ralph-run.test.ts) and the `ralph-issue-context` test files | Historical executable invariants and edge cases | Evidence for candidate requirements, not conformance tests for the new orchestrator |
+| [`scripts/ralph-run.sh`](../../../scripts/ralph-run.sh) and [`scripts/ralph-issue-context.ts`](../../../scripts/ralph-issue-context.ts) | Historical executable behavior | Evidence of what the one-off harness did; no authority over the Ralph orchestrator |
+| [`scripts/ralph-run.test.ts`](../../../scripts/ralph-run.test.ts) and the `ralph-issue-context` test files | Historical executable invariants and edge cases | Evidence for candidate requirements, not conformance tests for the Ralph orchestrator |
 | [`scripts/ralph-run.md`](../../../scripts/ralph-run.md) | Historical operator promise | Evidence of intended behavior and contradictions in the one-off harness |
 | [Bounded Ralph Leaf and Non-Convergence Contract](../cleanroom-ralph-redesign/bounded-ralph-leaf-contract.md) | Historical delivery decision | Evidence for coherent-leaf and non-convergence candidates; later graph, journal, tracker, and policy decisions own accepted semantics |
 | [Cleanroom Ralph Delivery Post-mortem](../../../docs/cleanroom/postmortems/2026-07-16-cleanroom-ralph-delivery.md) | Retained observed evidence | Establishes failures and operator recovery; does not make accidental mechanics durable |
@@ -118,15 +118,16 @@ Key executable anchors at the inspected baseline:
 - **Quarantine**: preservation without acceptance or integration, followed by a
   component-level reuse decision and delivery redesign.
 
-These terms belong to Ralph execution planning, not D&D language, Cleanroom
-product language, architecture, or modeling assumptions. No shared context or
-glossary owner should duplicate them.
+These historical terms belong to the inspected Ralph execution plan, not D&D
+language, Cleanroom product language, main-application architecture, or
+modeling assumptions. They do not override the current
+[Ralph tooling context](../../../docs/tooling/ralph/CONTEXT.md).
 
 ## Observed historical mechanics and candidate evidence
 
 The sections below describe the inspected shell harness and its then-current
 delivery expectations. Present-tense constraints report what that historical
-system required; they are not imperatives for the new orchestrator. The
+system required; they are not imperatives for the Ralph orchestrator. The
 [downstream disposition table](#candidate-requirements-and-downstream-dispositions)
 is the authority map for anything accepted later.
 
@@ -204,7 +205,7 @@ There are two semantic retry scopes and one technical recovery budget:
 The historical harness reviewed an implementer nonzero exit because it might
 have left useful partial work. Its semantic review returned `accept`,
 `accept-with-fixes`, or `reject`; only `accept` reached the decider. This
-nonzero-exit transition was not accepted for the new orchestrator. Current
+nonzero-exit transition was not accepted for the Ralph orchestrator. Current
 recovery preserves the exact worktree and resumable implementation session as
 one attempt lineage, then continues that implementation; incomplete WIP does
 not advance to semantic review.
@@ -238,7 +239,7 @@ The current runner only partially makes this executable:
 Therefore `accept` was the historical executable gate. The later
 [verification decision](https://github.com/dearlordylord/5e-quint/issues/187)
 owns the accepted reviewer-loop evidence and convergence requirements for the
-new orchestrator.
+Ralph orchestrator.
 
 ### 6. Plan mutation and task dispositions
 
@@ -306,7 +307,7 @@ unrelated baseline failure must not expand the task.
 
 The resource bounds are candidate requirements backed by repository policy.
 The shell's exact three-lock sequence and process-name filters are historical
-mechanics, not new-orchestrator requirements.
+mechanics, not Ralph orchestrator requirements.
 
 ### 9. Evidence, observation, and cleanup
 
@@ -481,7 +482,7 @@ or rejected them as follows:
 | Disposition-typed cleanup | Accepted through the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [operator/resource](https://github.com/dearlordylord/5e-quint/issues/186) operation algebras. |
 | Exact accepted-result completion | Accepted and reshaped by the [integration](https://github.com/dearlordylord/5e-quint/issues/184) and [tracker](https://github.com/dearlordylord/5e-quint/issues/185) decisions. |
 | Separate tracker, Git, journal, executor, evidence, and projection authorities | Accepted by the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [tracker](https://github.com/dearlordylord/5e-quint/issues/185) decisions. |
-| Crash-resumable plan mutation | Rejected. The new orchestrator refreshes tracker authority and journals only its own typed workflow operations; it does not mutate or recover a shell plan index. |
+| Crash-resumable plan mutation | Rejected. The Ralph orchestrator refreshes tracker authority and journals only its own typed workflow operations; it does not mutate or recover a shell plan index. |
 | Bounded serialized repository verification and exit-137 handling | Accepted as repository resource policy by the [operator/resource](https://github.com/dearlordylord/5e-quint/issues/186) and [verification](https://github.com/dearlordylord/5e-quint/issues/187) decisions. |
 | Evidence manifests whose retention follows disposition | Accepted and reshaped by the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [verification](https://github.com/dearlordylord/5e-quint/issues/187) decisions; shell filtered/full file layouts are not retained. |
 
@@ -489,8 +490,9 @@ or rejected them as follows:
 
 This asset records the answer to one Wayfinder investigation and remains
 historical evidence after downstream decisions promote accepted facts to their
-owners. It changes no D&D rule, Cleanroom product requirement, architecture, or
-modeling assumption, so `UBIQUITOUS_LANGUAGE.md`, `docs/cleanroom/CONTEXT.md`,
-`ASSUMPTIONS.md` require no parallel edits. The later
-[delivery-orchestration architecture boundary](../../../ARCHITECTURE.md#delivery-orchestration-boundary)
-owns the clean-system correction.
+owners. It changes no D&D rule, Cleanroom product requirement,
+main-application architecture, or modeling assumption. The
+[Ralph tooling architecture](../../../docs/tooling/ralph/ARCHITECTURE.md)
+owns the clean-system correction and the
+[Ralph tooling context](../../../docs/tooling/ralph/CONTEXT.md) owns current
+orchestration terminology.
