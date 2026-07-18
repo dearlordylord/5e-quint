@@ -8,8 +8,6 @@ import type {
 import { battleActTimelineLabel } from "./battle-act-timeline-label.ts";
 import {
   hasFillKind,
-  recordOf,
-  stringField,
   targetIdFromFills,
 } from "./admin-mirror-presentation-input.ts";
 
@@ -210,16 +208,14 @@ function pendingAction(
   projection: AdminSessionProjection,
   selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
 ): EventAction | null {
-  const subject = recordOf(pending.subject);
-  const actorId = stringField(subject, "actorId");
-  const actor =
-    actorId === null ? "Actor" : displayNameForCombatant(projection, actorId);
+  const subject = pending.subject;
+  const actor = displayNameForCombatant(projection, subject.actorId);
   const targetId = targetIdFromFills(pending.fills);
   const target =
     targetId === null ? null : displayNameForCombatant(projection, targetId);
 
   if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = stringField(subject, "attackName") ?? "Attack";
+    const attackName = subject.attackName;
     if (hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -281,7 +277,7 @@ function pendingAction(
   }
 
   return {
-    detail: `Pending battle fills for ${String(subject.tag ?? "unknown subject")}.`,
+    detail: `Pending battle fills for ${subject.tag}.`,
     summary: "Battle action pending",
   };
 }
@@ -294,10 +290,8 @@ function resolvedAction(
   projection: AdminSessionProjection,
   selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
 ): EventAction | null {
-  const subject = recordOf(pending.subject);
-  const actorId = stringField(subject, "actorId");
-  const actor =
-    actorId === null ? "Actor" : displayNameForCombatant(projection, actorId);
+  const subject = pending.subject;
+  const actor = displayNameForCombatant(projection, subject.actorId);
   const changes = hpChanges(previousProjection, projection);
   const targetId =
     targetIdFromFills(pending.fills) ?? changes[0]?.combatantId ?? null;
@@ -305,7 +299,7 @@ function resolvedAction(
     targetId === null ? null : displayNameForCombatant(projection, targetId);
 
   if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = stringField(subject, "attackName") ?? "Attack";
+    const attackName = subject.attackName;
     if (changes.length === 0 && hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -358,7 +352,7 @@ function resolvedAction(
   }
 
   return {
-    detail: `Resolved battle fills for ${String(subject.tag ?? "unknown subject")}.`,
+    detail: `Resolved battle fills for ${subject.tag}.`,
     summary: "Battle action resolved",
   };
 }
