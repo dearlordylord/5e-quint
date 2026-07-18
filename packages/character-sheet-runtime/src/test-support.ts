@@ -73,7 +73,7 @@ import {
   completeShortRest as completeShortRestCore,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   finishLongRest,
   finishShortRest,
   characterSheetId,
@@ -441,8 +441,8 @@ type CharacterSheetTestInput = Omit<
     >
   >;
 
-export function createFreshCharacterSheet(input: CharacterSheetTestInput) {
-  return createFreshCharacterSheetCore({
+export function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
+  return rebuildCharacterSheetCore({
     conditions: [],
     hitPointMaximumReduction: Hp(0),
     ...input,
@@ -611,7 +611,7 @@ export function interruptLongRest(
 
 export function stableSheet(characterIdText: string): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId(characterIdText),
       build,
       currentHp: Hp(0),
@@ -636,7 +636,7 @@ export function spellbookRitualSheet(input: {
   readonly spellcastingSourceUnitId?: string;
 }): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId(input.characterIdText),
       build: {
         ...wizardBuild({ wizardAdvancements: 0 }),

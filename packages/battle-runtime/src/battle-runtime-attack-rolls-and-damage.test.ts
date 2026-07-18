@@ -3,6 +3,8 @@ import {
   fighterVsGoblinBattle,
   criticalRange19UnitRefs,
   fighterAttackSubject,
+  characterBonusAttackSubjectForTest,
+  goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   attackDamageHoleAfterHit,
@@ -45,12 +47,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 14, naturalD20: 9 }),
@@ -78,12 +75,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 99, naturalD20: 1 }),
@@ -103,12 +95,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 1, naturalD20: 20 }),
@@ -135,12 +122,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 21 }),
@@ -166,12 +148,7 @@ describe("battle runtime: attack rolls and damage", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject(state, "Longsword"),
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -182,12 +159,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 14, naturalD20: 9 }),
@@ -208,12 +180,7 @@ describe("battle runtime: attack rolls and damage", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject(state, "Longsword"),
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -224,12 +191,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -255,12 +217,7 @@ describe("battle runtime: attack rolls and damage", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject(state, "Longsword"),
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -271,12 +228,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -304,12 +256,12 @@ describe("battle runtime: attack rolls and damage", () => {
       targetHole,
       rollHole,
       { total: 20, naturalD20: 20 },
-      fighterAttackSubject(),
+      fighterAttackSubject(state),
       goblinId,
     );
     const dispositionHole = attackDamageDispositionHoleAfterFills(
       state,
-      fighterAttackSubject(),
+      fighterAttackSubject(state),
       [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -319,12 +271,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -363,7 +310,7 @@ describe("battle runtime: attack rolls and damage", () => {
     });
     const dispositionHole = attackDamageDispositionHoleAfterFills(
       state,
-      fighterAttackSubject(),
+      fighterAttackSubject(state),
       [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
@@ -373,12 +320,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
@@ -414,12 +356,10 @@ describe("battle runtime: attack rolls and damage", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const subject: BattleSubject = fighterAttackSubject(
+      state,
+      "Unarmed Strike",
+    );
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
 
@@ -456,12 +396,10 @@ describe("battle runtime: attack rolls and damage", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const subject: BattleSubject = fighterAttackSubject(
+      state,
+      "Unarmed Strike",
+    );
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const damageHole = attackDamageHoleAfterHit(
@@ -511,12 +449,10 @@ describe("battle runtime: attack rolls and damage", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const subject: BattleSubject = fighterAttackSubject(
+      state,
+      "Unarmed Strike",
+    );
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const damageHole = attackDamageHoleAfterHit(
@@ -665,12 +601,11 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "bonusAction",
-          actorId: fighterId,
-          action: "martialArtsUnarmedStrike",
-          attackName: "Unarmed Strike",
-        },
+        subject: characterBonusAttackSubjectForTest(
+          state,
+          fighterId,
+          "martialArtsUnarmedStrike",
+        ),
         fills: [],
       }),
     ).toMatchObject({
@@ -760,12 +695,11 @@ describe("battle runtime: attack rolls and damage", () => {
       expect(
         resolveBattleSubject({
           state,
-          subject: {
-            tag: "bonusAction",
-            actorId: fighterId,
-            action: "martialArtsUnarmedStrike",
-            attackName: "Unarmed Strike",
-          },
+          subject: characterBonusAttackSubjectForTest(
+            state,
+            fighterId,
+            "martialArtsUnarmedStrike",
+          ),
           fills: [],
         }),
       ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
@@ -796,12 +730,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 99, naturalD20: 1 }),
@@ -819,12 +748,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        attackName: "Scimitar",
-      },
+      subject: goblinAttackSubject(state, "Scimitar"),
       fills: [],
     });
 
@@ -841,12 +765,7 @@ describe("battle runtime: attack rolls and damage", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject(state, "Longsword"),
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -857,12 +776,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -898,12 +812,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -944,12 +853,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),

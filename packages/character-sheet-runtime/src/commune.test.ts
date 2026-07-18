@@ -12,7 +12,7 @@ import {
   castCommune,
   characterSheetId,
   completeLongRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -226,7 +226,7 @@ function expectedCommuneProjection(input: {
 
 function communeClericSheet() {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:commune-cleric-9"),
       build: {
         ...armorClassBuild({

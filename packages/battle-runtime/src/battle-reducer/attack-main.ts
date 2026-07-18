@@ -125,6 +125,7 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
+  attackExecutionSelectionMatchesOption,
   attackTargetIsLegal,
   effectiveWalkSpeed,
   grappleLinkForTarget,
@@ -167,7 +168,6 @@ import { grapplerSupportProfileRefForCombatant } from "./grappler-support-profil
 
 import {
   attackCanCarryKnockOutChoice,
-  attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   eligibleAttackDamageDieFloorUnitIds,
@@ -208,7 +208,10 @@ import type {
   BattleUnitFeatureDecisionHole,
   AttackFillSet,
 } from "../battle-reducer.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import type {
+  BoundSupportedAttackActionOption,
+  SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import { battleTablePositionId, type CombatantId } from "../identity.ts";
 import {
   attackRollHitsWithCriticalThreshold,
@@ -554,13 +557,12 @@ function grappleFactsForUnarmedStrikeHit(input: {
   ) {
     return input.targetSpatialFacts;
   }
-  const attackName = attackActionOptionName(input.attack);
   return input.targetSpatialFacts.some(
     (fact) =>
       fact.kind === "attackTargetInMeleeReach" &&
       fact.actorId === input.attackerId &&
       fact.targetId === input.targetId &&
-      fact.attackName === attackName,
+      attackExecutionSelectionMatchesOption(fact, input.attack),
   )
     ? [
         ...input.targetSpatialFacts,
@@ -693,7 +695,7 @@ function grapplerPunchAndGrabFillIsAbsent(
 
 export function resolveSelectedAttackProcedure(
   input: AttackProcedureResolutionInput,
-  selectedAttack: SupportedAttackActionOption,
+  selectedAttack: BoundSupportedAttackActionOption,
   spendAttackProcedure: SpendAttackProcedure,
 ): BattleResolutionResult {
   let attack = selectedAttack;

@@ -42,6 +42,8 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   difficultyClass,
+  characterAttackSubjectForTest,
+  attackExecutionSelectionForSubjectForTest,
   hasCondition,
   movementFeet,
 } from "./battle-runtime-test-support.ts";
@@ -609,7 +611,16 @@ function commandFleeOpportunityAttackWindow(): Extract<
       commandFleeMovementFill(movement, {
         movementCostFeet: 30,
         provokedOpportunityAttacks: [
-          { reactorId: spellCasterId, attackName: "Unarmed Strike" },
+          {
+            reactorId: spellCasterId,
+            ...attackExecutionSelectionForSubjectForTest(
+              characterAttackSubjectForTest(
+                targetTurn,
+                spellCasterId,
+                "Unarmed Strike",
+              ),
+            ),
+          },
         ],
       }),
     ],

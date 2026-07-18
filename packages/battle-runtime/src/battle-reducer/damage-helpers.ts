@@ -113,30 +113,23 @@ export function fixedAttackDamageByTypeEntries(
     }),
     Match.when({ kind: "weapon" }, () => null),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
-      const damage = statBlockAttackDamage(statBlockAttack);
       if (statBlockAttack.damageNotation !== "static") {
         return null;
       }
-      const baseStaticDamage = statBlockStaticDamageEntries(
-        damage.baseComponents,
+      const damage = statBlockAttackDamage(statBlockAttack);
+      const baseStaticDamage = damage.baseComponents.map((component) => ({
+        damageType: component.damageType,
+        amount: Math.max(0, component.static),
+      }));
+      const baseStaticDamageWithModifier = addDamageModifierToFirstEntry(
+        baseStaticDamage,
+        ongoingFeatureDamageModifier(attacker, statBlockAttack),
       );
-      if (baseStaticDamage === null) return null;
-      const baseStaticDamageWithModifier =
-        addDamageModifierToFirstEntry(
-          baseStaticDamage,
-          ongoingFeatureDamageModifier(attacker, statBlockAttack),
-        );
       const advantageBonus =
         damage.advantageBonus !== undefined &&
         attackRoll?.rollMode === "advantage"
           ? damage.advantageBonus
           : undefined;
-      if (
-        advantageBonus !== undefined &&
-        advantageBonus.static === undefined
-      ) {
-        return null;
-      }
       return [
         ...baseStaticDamageWithModifier,
         ...(advantageBonus === undefined
@@ -144,29 +137,13 @@ export function fixedAttackDamageByTypeEntries(
           : [
               {
                 damageType: advantageBonus.damageType,
-                amount: Math.max(0, advantageBonus.static ?? 0),
+                amount: Math.max(0, advantageBonus.static),
               },
             ]),
       ];
     }),
     Match.exhaustive,
   );
-}
-
-function statBlockStaticDamageEntries(
-  components: ReturnType<typeof statBlockAttackDamage>["baseComponents"],
-): readonly DamageAmountByTypeEntry[] | null {
-  const entries: DamageAmountByTypeEntry[] = [];
-  for (const component of components) {
-    if (component.static === undefined) {
-      return null;
-    }
-    entries.push({
-      damageType: component.damageType,
-      amount: Math.max(0, component.static),
-    });
-  }
-  return entries;
 }
 
 function addDamageModifierToFirstEntry(
@@ -246,8 +223,7 @@ export function attackDamageByType(
       }
       const diceTotal = group.results.reduce(
         (groupTotal, dieResult) =>
-          groupTotal +
-          attackDamageDieResult(dieResult, damageDieFloorMinimum),
+          groupTotal + attackDamageDieResult(dieResult, damageDieFloorMinimum),
         0,
       );
       const modifier =

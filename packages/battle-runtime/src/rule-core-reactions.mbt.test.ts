@@ -2,6 +2,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME
 import { isDeepStrictEqual } from "node:util";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -212,7 +216,16 @@ function createRuleCoreReactionDriver() {
               movementFill(requireMovementHole(holes), {
                 movementCostFeet: movementResumeCostFeet,
                 provokedOpportunityAttacks: [
-                  { reactorId, attackName: ruleCoreReactionAttackName },
+                  {
+                    reactorId,
+                    ...attackExecutionSelectionForSubjectForTest(
+                      characterAttackSubjectForTest(
+                        state,
+                        reactorId,
+                        ruleCoreReactionAttackName,
+                      ),
+                    ),
+                  },
                 ],
               }),
             ],
@@ -247,7 +260,7 @@ function createRuleCoreReactionDriver() {
         recordResult(endTurn({ state, actorId: reactorId }));
       },
       doOfferReadiedMovement: () => {
-        const subject = interruptedAttackSubject();
+        const subject = interruptedAttackSubject(state);
         const target = requireTargetChoiceHole(
           resolveSubject(subject).tag === "needsHoles" ? holes : [],
         );
@@ -472,16 +485,17 @@ function reactionCreature(input: {
   };
 }
 
-function interruptedAttackSubject(): Extract<
+function interruptedAttackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: interruptedId,
-    action: "attack",
-    attackName: ruleCoreReactionAttackName,
-  };
+  return characterAttackSubjectForTest(
+    state,
+    interruptedId,
+    ruleCoreReactionAttackName,
+  );
 }
 
 function withReactorConcentration(state: BattleState): BattleState {
@@ -545,10 +559,10 @@ function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -566,6 +580,9 @@ function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound rule-core reaction attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -575,7 +592,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: interruptedId,
         targetId,
-        attackName: ruleCoreReactionAttackName,
+        ...hole.attack.selection,
       },
     ],
   };

@@ -104,11 +104,11 @@ describe("battle runtime: class action features", () => {
     } satisfies BattleState;
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual([
-      {
+      expect.objectContaining({
         tag: "unitFeature",
         actorId: fighterId,
         unitId: "fighter_action_surge",
-      },
+      }),
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
@@ -437,12 +437,7 @@ describe("battle runtime: class action features", () => {
     });
     expect(discoverBattleActs(depletedState).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        fighterAttackSubject(depletedState, "Longsword"),
         { tag: "action", actorId: fighterId, action: "grapple" },
         { tag: "runtimeCommand", actorId: fighterId, command: "move" },
         { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
@@ -572,14 +567,14 @@ describe("battle runtime: class action features", () => {
     });
     const needsDamage = resolveBattleSubject({
       state: aimed.state,
-      subject: fighterAttackSubject(),
+      subject: fighterAttackSubject(state),
       fills: [targetFill(targetHole, goblinId), attackRoll],
     });
     const damageHole = requireHole(needsDamage, "rolledDice");
     const attacked = requireResolved(
       resolveBattleSubject({
         state: aimed.state,
-        subject: fighterAttackSubject(),
+        subject: fighterAttackSubject(state),
         fills: [
           targetFill(targetHole, goblinId),
           attackRoll,
@@ -709,7 +704,7 @@ describe("battle runtime: class action features", () => {
       unitId: "barbarian_rage",
     };
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([rageSubject]),
+      expect.arrayContaining([expect.objectContaining(rageSubject)]),
     );
 
     const raging = resolveBattleSubject({
@@ -735,7 +730,7 @@ describe("battle runtime: class action features", () => {
       ]),
     );
 
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(raging.state, attackSubject);
     const roll = attackRollHoleAfterTarget(raging.state, target, attackSubject);
     const damage = attackDamageHoleAfterHit(
@@ -766,7 +761,7 @@ describe("battle runtime: class action features", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: raging.state, actorId: fighterId }),
     ).state;
-    const scimitar = goblinAttackSubject("Scimitar");
+    const scimitar = goblinAttackSubject(goblinTurn, "Scimitar");
     const barbarianTarget = attackInitialTargetHole(goblinTurn, scimitar);
     const goblinRoll = attackRollHoleAfterTarget(
       goblinTurn,
@@ -873,7 +868,7 @@ describe("battle runtime: class action features", () => {
         },
         fills: [],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("Rage breaking Concentration dissipates a held readied spell", () => {
@@ -995,7 +990,7 @@ describe("battle runtime: class action features", () => {
         fills: [],
       }),
     );
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const attackTarget = attackInitialTargetHole(surged.state, attackSubject);
     const attackRoll = attackRollHoleAfterTarget(
       surged.state,
@@ -1034,7 +1029,7 @@ describe("battle runtime: class action features", () => {
         fills: [],
       }),
     );
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(raging.state, attackSubject);
     const roll = attackRollHoleAfterTarget(raging.state, target, attackSubject);
     const damage = attackDamageHoleAfterHit(
@@ -1305,7 +1300,7 @@ describe("battle runtime: class action features", () => {
       }),
     ).state;
     expect(discoverBattleActs(nextRound).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([rageSubject]),
+      expect.arrayContaining([expect.objectContaining(rageSubject)]),
     );
     const extended = requireResolved(
       resolveBattleSubject({
@@ -1542,7 +1537,7 @@ describe("battle runtime: class action features", () => {
     };
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([subject]),
+      expect.arrayContaining([expect.objectContaining(subject)]),
     );
 
     const result = requireResolved(
@@ -1882,7 +1877,7 @@ describe("battle runtime: class action features", () => {
       ]),
     );
 
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
     expect(roll).toMatchObject({
@@ -1946,7 +1941,7 @@ describe("battle runtime: class action features", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: reckless.state, actorId: fighterId }),
     ).state;
-    const scimitar = goblinAttackSubject("Scimitar");
+    const scimitar = goblinAttackSubject(goblinTurn, "Scimitar");
     const barbarianTarget = attackInitialTargetHole(goblinTurn, scimitar);
     const incomingRoll = attackRollHoleAfterTarget(
       goblinTurn,
@@ -1989,7 +1984,7 @@ describe("battle runtime: class action features", () => {
       resolveBattleSubject({ state, subject: rageSubject, fills: [] }),
     ).state;
 
-    const attackSubject = fighterAttackSubject("Unarmed Strike");
+    const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(raging, attackSubject);
     const roll = attackRollHoleAfterTarget(raging, target, attackSubject);
     const afterRecklessRoll = resolveBattleSubject({
@@ -2080,7 +2075,7 @@ describe("battle runtime: class action features", () => {
       ],
     });
 
-    const attackSubject = fighterAttackSubject("Unarmed Strike");
+    const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const firstTarget = attackInitialTargetHole(state, attackSubject);
     const firstRoll = attackRollHoleAfterTarget(
       state,
@@ -2184,7 +2179,7 @@ describe("battle runtime: class action features", () => {
       ],
     });
 
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
       resolveBattleSubject({
@@ -2263,7 +2258,7 @@ describe("battle runtime: class action features", () => {
       ],
     });
 
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const firstTarget = attackInitialTargetHole(state, attackSubject);
     const firstDecision = requireHole(
       resolveBattleSubject({
@@ -2367,7 +2362,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
       resolveBattleSubject({
@@ -2451,7 +2446,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
       resolveBattleSubject({
@@ -2571,7 +2566,7 @@ describe("battle runtime: class action features", () => {
           hidden: { discoveryDc: difficultyClass(16) },
         }),
     };
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(contestedState, attackSubject);
     const roll = attackRollHoleAfterTarget(
       contestedState,
@@ -2650,7 +2645,7 @@ describe("battle runtime: class action features", () => {
         ],
       ]),
     } satisfies BattleState;
-    const attackSubject = fighterAttackSubject();
+    const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
     const awaitingReaction = resolveBattleSubject({

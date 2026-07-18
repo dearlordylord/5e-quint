@@ -17,11 +17,13 @@ import {
 import * as Either from "effect/Either";
 
 import type {
-  CharacterUnarmedStrikeActionOption,
+  BoundCharacterUnarmedStrikeActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import type {
-  AvailableBattleAct,
+  BattleActDiscoveryCandidate,
+  AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
+  AdmittedMonkFocusOptionBattleResolutionInput,
   BattleCreatureState,
   BattleFill,
   BattleRolledDiceFill,
@@ -31,7 +33,6 @@ import type {
   BattleTurnResources,
   BattleUnitFeatureRollHole,
   CharacterBattleCreatureState,
-  MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
   MonkFocusOptionBattleResolutionInput,
 } from "../battle-reducer.ts";
 import { SIZES } from "@dnd/shared/types";
@@ -66,10 +67,7 @@ import { resolveSelectedAttackProcedure } from "./attack-main.ts";
 import { snapshotBattle } from "./dispatcher.ts";
 import { applyTemporaryHitPoints } from "./damage-apply.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
-import {
-  attackActionOptionName,
-  clearPendingAttackRollMissToHitReplacementSelection,
-} from "./statblock-attacks.ts";
+import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 
 export type MonkFocusResourceFact = {
   readonly actor: CharacterBattleCreatureState;
@@ -82,7 +80,7 @@ const HEIGHTENED_FOCUS_MONK_LEVEL = 10;
 export function monkFocusActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) return [];
   if (!combatantCanTakeActions(actor)) return [];
@@ -96,11 +94,11 @@ export function monkFocusActs(
 function monkFocusOptionActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (!canSpendBonusAction(state.currentTurnResources)) return [];
   const focus = monkFocusResourceForActor(state, actor.combatantId);
   if (focus === null) return [];
-  const acts: AvailableBattleAct[] = [];
+  const acts: BattleActDiscoveryCandidate[] = [];
   const hasFocusPoint = resourceHasUsesRemaining(focus.resource);
   const unarmedStrike = flurryOfBlowsUnarmedStrikeForActor(
     state,
@@ -191,7 +189,7 @@ function monkFocusOptionActs(
 function monkFocusFlurryOfBlowsStrikeActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const flurryResource = state.currentTurnResources.actionResources.find(
     (resource): resource is MonkFocusFlurryOfBlowsActionResource =>
       isMonkFocusFlurryOfBlowsActionResource(
@@ -209,14 +207,13 @@ function monkFocusFlurryOfBlowsStrikeActs(
   if (unarmedStrike === undefined) {
     return [];
   }
-  const attackName = attackActionOptionName(unarmedStrike);
   return [
     {
       subject: {
         tag: "monkFocusFlurryOfBlowsStrike",
         actorId: actor.combatantId,
         resourceUnitId: flurryResource.sourceUnitId,
-        attackName,
+        procedureRef: unarmedStrike.procedureRef,
       },
       label: "Flurry of Blows Unarmed Strike",
       summary: "Make one Unarmed Strike granted by Flurry of Blows.",
@@ -226,7 +223,7 @@ function monkFocusFlurryOfBlowsStrikeActs(
 }
 
 export function resolveMonkFocusOption(
-  input: MonkFocusOptionBattleResolutionInput,
+  input: AdmittedMonkFocusOptionBattleResolutionInput,
 ): BattleResolutionResult {
   const focus = monkFocusResourceForActor(input.state, input.subject.actorId);
   if (
@@ -496,7 +493,8 @@ function heightenedPatientDefenseTemporaryHitPointsRollRequest(
         "Heightened Focus Patient Defense requires exactly one Temporary Hit Points roll.",
     };
   }
-  const expectedHole = heightenedPatientDefenseTemporaryHitPointsRollHole(focus);
+  const expectedHole =
+    heightenedPatientDefenseTemporaryHitPointsRollHole(focus);
   if (roll.holeId !== expectedHole.holeId) {
     return {
       tag: "invalid",
@@ -570,14 +568,15 @@ function heightenedPatientDefenseTemporaryHitPointsDiceExpr(
   const level = monkClassLevel(focus.actor);
   return {
     dice: 2,
-    dieSize:
-      level === null ? 6 : martialArtsSrdDieSizeAtClassLevel(level),
+    dieSize: level === null ? 6 : martialArtsSrdDieSizeAtClassLevel(level),
   };
 }
 
 function monkFocusFlurryOfBlowsStrikeCount(
   focus: MonkFocusResourceFact,
-): BattleMonkFocusBattleOptionsSupportProfile["flurryOfBlows"]["strikeCount"] | 3 {
+):
+  | BattleMonkFocusBattleOptionsSupportProfile["flurryOfBlows"]["strikeCount"]
+  | 3 {
   return monkHasHeightenedFocus(focus.actor)
     ? 3
     : focus.profile.flurryOfBlows.strikeCount;
@@ -763,8 +762,9 @@ function heightenedStepOfTheWindCarryHole(
 }
 
 function creatureSizeAtMostLarge(combatant: BattleCreatureState): boolean {
-  return SIZES.indexOf(combatantEffectiveSize(combatant)) <=
-    SIZES.indexOf("large");
+  return (
+    SIZES.indexOf(combatantEffectiveSize(combatant)) <= SIZES.indexOf("large")
+  );
 }
 
 function applyHeightenedStepOfTheWindCarry(
@@ -808,7 +808,7 @@ function applyStepOfTheWindJumpDistanceMultiplier(
 }
 
 export function resolveMonkFocusFlurryOfBlowsStrike(
-  input: MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
+  input: AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
 ): BattleResolutionResult {
   if (
     !combatantCanTakeActions(input.state.combatants.get(input.subject.actorId))
@@ -838,7 +838,7 @@ export function resolveMonkFocusFlurryOfBlowsStrike(
   );
   if (
     unarmedStrike === undefined ||
-    attackActionOptionName(unarmedStrike) !== input.subject.attackName
+    unarmedStrike.procedureRef !== input.subject.procedureRef
   ) {
     return invalidResult(
       input.state,
@@ -935,9 +935,9 @@ export function monkFocusResourceForActor(
 function unarmedStrikeForActor(
   state: BattleState,
   actorId: CombatantId,
-): CharacterUnarmedStrikeActionOption | undefined {
+): BoundCharacterUnarmedStrikeActionOption | undefined {
   return attackActionOptionsForActor(state, actorId).find(
-    (attack): attack is CharacterUnarmedStrikeActionOption =>
+    (attack): attack is BoundCharacterUnarmedStrikeActionOption =>
       attack.kind === "unarmedStrike",
   );
 }
@@ -945,7 +945,7 @@ function unarmedStrikeForActor(
 function flurryOfBlowsUnarmedStrikeForActor(
   state: BattleState,
   actorId: CombatantId,
-): CharacterUnarmedStrikeActionOption | undefined {
+): BoundCharacterUnarmedStrikeActionOption | undefined {
   const unarmedStrike = unarmedStrikeForActor(state, actorId);
   if (
     unarmedStrike === undefined ||

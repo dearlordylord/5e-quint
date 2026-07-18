@@ -7,16 +7,18 @@ import {
   Hp,
   movementFeet,
   Round,
+  NonNegativeInteger,
 } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import { battleProcedureExecutionRef } from "./identity.ts";
 import {
   antimagicFieldUnitId,
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
-  counterspellUnitId,
   flameBladeUnitId,
   healingWordUnitId,
   levitateUnitId,
@@ -52,7 +54,6 @@ import {
   endTurn,
   resolveBattleSubject,
   removeBattleCombatants,
-  spellSlotInvocationRef,
   startBattle,
   type BattleActiveEffect,
   type BattleAntimagicFieldAuraMembership,
@@ -274,11 +275,7 @@ describe("Antimagic Field action interdiction", () => {
         actorId: spellCasterId,
         command: "castTriggeredReactionSpell",
         reactorId: spellCasterId,
-        invocation: spellSlotInvocationRef(
-          counterspellUnitId,
-          3,
-          "counterspell",
-        ),
+        procedureRef: requireCounterspellProcedureRef(state),
       },
       fills: [],
     });
@@ -627,4 +624,15 @@ function preserveLifeUnitRefWithSupport() {
   }
   expect(unitRef.right.supportProfiles).toContainEqual(support);
   return unitRef.right;
+}
+
+function requireCounterspellProcedureRef(state: BattleState) {
+  const caster = state.combatants.get(spellCasterId);
+  if (!isCharacterBattleCreatureState(caster)) {
+    throw new Error("Expected the spell caster to be a character.");
+  }
+  return battleProcedureExecutionRef(
+    caster.origin.execution.scopeRef,
+    NonNegativeInteger(0),
+  );
 }

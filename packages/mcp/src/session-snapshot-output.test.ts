@@ -82,10 +82,9 @@ describe("MCP session wire projections", () => {
       },
       transientBattleFills: {
         subject: {
-          tag: "action",
+          tag: "runtimeCommand",
           actorId: combatantId("combatant:projection-test"),
-          action: "attack",
-          attackName: "Synthetic Strike",
+          command: "endTurn",
         },
         fills: [
           {

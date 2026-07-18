@@ -40,7 +40,7 @@ import { Either } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -411,7 +411,7 @@ function discoverObjectContactDamageCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: ObjectContactDamageInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
@@ -431,7 +431,7 @@ function discoverObjectContactDamageRepeatCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ObjectContactDamageRepeatInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

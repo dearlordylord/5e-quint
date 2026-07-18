@@ -34,21 +34,19 @@ import {
 
 import { type StandardActionKind } from "@dnd/shared/game-facts";
 
-import type {
-  CreatureNamedMultiattack,
-  StatBlockRecord,
-} from "@dnd/surface/surface/types";
-
 import { Match } from "effect";
 
 import * as Either from "effect/Either";
 
 import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
 
-import {
-  type BattleMovementSpeedKind,
-  type BattleSubject,
+import type {
+  AdmittedCharacterProcedureBattleSubject,
+  BattleMovementSpeedKind,
+  BattleSubject,
+  CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
+import { isCharacterProcedureBattleSubject } from "../battle-subjects.ts";
 
 import { CombatantId, spellId } from "../identity.ts";
 import {
@@ -71,6 +69,7 @@ import {
   offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
 import { minimalCreatureAttackActs } from "./creature-attack.ts";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 
 import {
   helpAttackAllyChoices,
@@ -139,12 +138,17 @@ import { attackActionOptionName } from "./statblock-attacks.ts";
 
 import {
   attackActionOptionIsOrdinaryAttackAction,
-  statBlockActionSectionAttackOptions,
-  statBlockAttackResourceAvailable,
-  statBlockLimitedUseForPart,
-  statBlockPartLimitedUseAvailable,
-  statBlockSubjectPart,
+  attackActionOptionPresentationName,
+  statBlockAttackActionOptions,
+  statBlockAttackProcedureSection,
+  attackSubjectPart,
 } from "./statblock.ts";
+import {
+  statBlockBonusActionOptionBindings,
+  statBlockMultiattackBindings,
+  statBlockProcedurePresentations,
+  statBlockProcedureResourcesAvailable,
+} from "../stat-block-execution.ts";
 
 import {
   greaseGroundHazardSavingThrowOutcomeHole,
@@ -178,6 +182,7 @@ import {
 
 import type {
   AvailableBattleAct,
+  BattleActDiscoveryCandidate,
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
@@ -185,11 +190,8 @@ import type {
   ClassFeatureExtraAttackActionResource,
   StatBlockBattleCreatureState,
   StatBlockMultiattackActionResource,
-  SupportedLiteralMultiattackDispatch,
   SupportedSpellInvocation,
-  SupportedStatBlockBonusActionOption,
   SupportedStatBlockBonusActionStandardAction,
-  SupportedStatBlockMultiattack,
 } from "../battle-reducer.ts";
 
 type FogCloudObscurementEffect = Extract<
@@ -206,25 +208,192 @@ import {
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./reducer-route.ts";
+import {
+  BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  MONK_FOCUS_PROCEDURE_QUERY,
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedureRef,
+  characterUnitProcedureRefs,
+  type CharacterExecutionState,
+} from "../character-execution.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 export function discoverBattleActs(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
+  const stateWithExecutionBindings =
+    battleStateWithCharacterExecutionBindings(state);
   return withReducerRouteEvents(
-    state,
-    discoverBattleActsWithoutRouteEvents(state),
+    stateWithExecutionBindings,
+    withCharacterExecutionReferences(
+      stateWithExecutionBindings,
+      discoverBattleActsWithoutRouteEvents(stateWithExecutionBindings),
+    ),
   );
+}
+
+function battleStateWithCharacterExecutionBindings(
+  state: BattleState,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  let changed = false;
+  for (const [combatantId, combatant] of state.combatants) {
+    if (combatant.origin.kind !== "character") continue;
+    const execution = characterExecutionWithSpellInvocations(
+      combatant.origin.execution,
+      supportedSpellActs(combatant, state),
+    );
+    if (execution === combatant.origin.execution) continue;
+    changed = true;
+    combatants.set(combatantId, {
+      ...combatant,
+      origin: { ...combatant.origin, execution },
+    });
+  }
+  return changed ? { ...state, combatants } : state;
+}
+
+function withCharacterExecutionReferences(
+  state: BattleState,
+  acts: readonly BattleActDiscoveryCandidate[],
+): readonly AvailableBattleAct[] {
+  const contexts = new Map<
+    CombatantId,
+    {
+      readonly execution: CharacterExecutionState;
+      readonly invocations: readonly SupportedSpellInvocation[];
+    }
+  >();
+  for (const [combatantId, combatant] of state.combatants) {
+    if (combatant.origin.kind !== "character") continue;
+    const invocations = supportedSpellActs(combatant, state);
+    contexts.set(combatantId, {
+      execution: characterExecutionWithSpellInvocations(
+        combatant.origin.execution,
+        invocations,
+      ),
+      invocations,
+    });
+  }
+  return acts.flatMap((act) => {
+    const subject = act.subject;
+    const characterProcedureSubject =
+      isCharacterProcedureBattleSubject(subject);
+    const context = contexts.get(subject.actorId);
+    if (context === undefined) {
+      return characterProcedureSubject
+        ? []
+        : [{ ...act, subject } satisfies AvailableBattleAct];
+    }
+    const { execution, invocations } = context;
+    if (
+      subject.tag === "actionSpell" ||
+      subject.tag === "bonusActionSpell" ||
+      subject.tag === "bonusActionDashSpell" ||
+      subject.tag === "findFamiliarTouchSpell"
+    ) {
+      const componentWeaponItemId =
+        "componentWeaponItemId" in subject
+          ? subject.componentWeaponItemId
+          : undefined;
+      const invocation = invocations.find(
+        (candidate) =>
+          supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+          (candidate.procedure !== "spellHostedWeaponAttack" ||
+            componentWeaponItemId === candidate.componentWeapon.itemId) &&
+          (candidate.procedure !== "weaponAttackOverride" ||
+            componentWeaponItemId === candidate.attachedWeapon.itemId),
+      );
+      const procedureRef =
+        invocation === undefined
+          ? undefined
+          : characterSpellProcedureRef(execution, invocation);
+      return bindCharacterProcedureActs(
+        act,
+        subject,
+        procedureRef === undefined ? [] : [procedureRef],
+      );
+    }
+    if (
+      subject.tag === "unitFeature" ||
+      subject.tag === "unitFeatureHeldWeaponActivation"
+    ) {
+      const procedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.unitId,
+        CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+      );
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    if (subject.tag === "druidWildShape") {
+      const procedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.unitId,
+        DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+      );
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    if (subject.tag === "bonusActionStandardAction") {
+      const unitProcedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.sourceUnitId,
+        BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
+      );
+      const spellInvocation = invocations.find(
+        (candidate) =>
+          candidate.procedure === "expeditiousRetreatDash" &&
+          candidate.spell.id === subject.sourceUnitId,
+      );
+      const spellProcedureRef =
+        spellInvocation === undefined
+          ? undefined
+          : characterSpellProcedureRef(execution, spellInvocation);
+      const procedureRefs =
+        unitProcedureRefs.length > 0
+          ? unitProcedureRefs
+          : spellProcedureRef === undefined
+            ? []
+            : [spellProcedureRef];
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    if (subject.tag === "monkFocusOption") {
+      const procedureRefs = characterUnitProcedureRefs(
+        execution,
+        subject.resourceUnitId,
+        MONK_FOCUS_PROCEDURE_QUERY,
+      );
+      return bindCharacterProcedureActs(act, subject, procedureRefs);
+    }
+    return [{ ...act, subject } satisfies AvailableBattleAct];
+  });
+}
+
+function bindCharacterProcedureActs(
+  act: BattleActDiscoveryCandidate,
+  subject: CharacterProcedureBattleSubject,
+  procedureRefs: readonly BattleProcedureExecutionRef[],
+): readonly AvailableBattleAct[] {
+  return procedureRefs.map((procedureRef) => {
+    const admittedSubject: AdmittedCharacterProcedureBattleSubject = {
+      ...subject,
+      procedureRef,
+    };
+    return { ...act, subject: admittedSubject };
+  });
 }
 
 function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actorId = currentActorId(state);
   const hasOpenStatBlockMultiattackDispatch =
     currentActorHasOpenStatBlockMultiattackDispatch(state);
-  const acts: AvailableBattleAct[] = hasOpenStatBlockMultiattackDispatch
-    ? []
-    : [...minimalCreatureAttackActs(state), ...releaseGrappleActs(state)];
+  const acts: BattleActDiscoveryCandidate[] =
+    hasOpenStatBlockMultiattackDispatch
+      ? []
+      : [...minimalCreatureAttackActs(state), ...releaseGrappleActs(state)];
   if (!state.combatants.has(actorId)) {
     return acts;
   }
@@ -352,7 +521,9 @@ function discoverBattleActsWithoutRouteEvents(
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
-  ).filter(attackActionOptionIsOrdinaryAttackAction);
+  ).filter((attack) =>
+    attackActionOptionIsOrdinaryAttackAction(state, actorId, attack),
+  );
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
@@ -371,11 +542,10 @@ function discoverBattleActsWithoutRouteEvents(
                   tag: "action" as const,
                   actorId,
                   action: "attack" as const,
-                  attackName: attackActionOptionName(attack),
-                  ...statBlockSubjectPart(attack),
+                  ...attackSubjectPart(attack),
                 },
                 label: "Attack",
-                summary: `Take the Attack action with ${attackActionOptionName(attack)}.`,
+                summary: `Take the Attack action with ${attackActionOptionPresentationName(state, actorId, attack)}.`,
                 initialHoles: [targetHole],
               },
             ];
@@ -608,7 +778,7 @@ function discoverBattleActsWithoutRouteEvents(
           tag: "bonusAction",
           actorId,
           action: "offHandAttack",
-          attackName: attackActionOptionName(offHand),
+          ...attackExecutionSelectionForOption(offHand),
         },
         label: "Light Property Bonus Action Attack",
         summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
@@ -629,7 +799,7 @@ function discoverBattleActsWithoutRouteEvents(
         tag: "bonusAction",
         actorId,
         action: "martialArtsUnarmedStrike",
-        attackName: attackActionOptionName(martialArtsUnarmedStrike),
+        ...attackExecutionSelectionForOption(martialArtsUnarmedStrike),
       },
       label: "Martial Arts Bonus Unarmed Strike",
       summary: "Make an Unarmed Strike as a Bonus Action.",
@@ -695,8 +865,8 @@ function withReducerRouteEvents(
 function companionProtocolActs(
   state: BattleState,
   actorId: CombatantId,
-  spellActs: readonly AvailableBattleAct[],
-): readonly AvailableBattleAct[] {
+  spellActs: readonly BattleActDiscoveryCandidate[],
+): readonly BattleActDiscoveryCandidate[] {
   const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
   if (familiarEntry === null) {
     return [];
@@ -713,7 +883,7 @@ function companionProtocolActs(
     if (!actorCanAct || !canSpendAction(state.currentTurnResources, "magic")) {
       return [];
     }
-    const permanentlyDismiss: AvailableBattleAct = {
+    const permanentlyDismiss: BattleActDiscoveryCandidate = {
       subject: {
         tag: "companionLifecycle",
         actorId,
@@ -749,7 +919,7 @@ function companionProtocolActs(
   if (familiarCombatant === undefined) {
     return [];
   }
-  const acts: AvailableBattleAct[] = [];
+  const acts: BattleActDiscoveryCandidate[] = [];
   if (actorCanAct && canSpendAction(state.currentTurnResources, "magic")) {
     acts.push(
       {
@@ -812,59 +982,62 @@ function findFamiliarTouchSpellActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly companionId: CombatantId;
-  readonly spellActs: readonly AvailableBattleAct[];
-}): readonly AvailableBattleAct[] {
+  readonly spellActs: readonly BattleActDiscoveryCandidate[];
+}): readonly BattleActDiscoveryCandidate[] {
   const actor = input.state.combatants.get(input.actorId);
   if (actor?.origin.kind !== "character") {
     return [];
   }
   const invocations = supportedSpellActs(actor, input.state);
-  return input.spellActs.flatMap((act): readonly AvailableBattleAct[] => {
-    const subject = act.subject;
-    if (
-      (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
-      subject.mode.tag !== "cast"
-    ) {
-      return [];
-    }
-    const invocation = touchSpellDeliveryInvocation(invocations, subject);
-    if (invocation === null) {
-      return [];
-    }
-    const targetChoiceHoles = act.initialHoles.filter(
-      (hole) => hole.kind === "targetChoice",
-    );
-    if (targetChoiceHoles.length !== 1) {
-      return [];
-    }
-    return [
-      {
-        subject: {
-          tag: "findFamiliarTouchSpell",
-          actorId: input.actorId,
-          companionId: input.companionId,
-          spellAction: subject.tag === "actionSpell" ? "action" : "bonusAction",
-          invocation: subject.invocation,
-          mode: subject.mode,
-          ...(subject.metamagic === undefined
-            ? {}
-            : { metamagic: subject.metamagic }),
-          ...(subject.componentWeaponItemId === undefined
-            ? {}
-            : { componentWeaponItemId: subject.componentWeaponItemId }),
-        },
-        label: `Familiar Delivery: ${act.label}`,
-        summary: "Deliver a Touch spell through a present familiar.",
-        initialHoles: [
-          findFamiliarConnectionHole({
-            ownerId: input.actorId,
+  return input.spellActs.flatMap(
+    (act): readonly BattleActDiscoveryCandidate[] => {
+      const subject = act.subject;
+      if (
+        (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
+        subject.mode.tag !== "cast"
+      ) {
+        return [];
+      }
+      const invocation = touchSpellDeliveryInvocation(invocations, subject);
+      if (invocation === null) {
+        return [];
+      }
+      const targetChoiceHoles = act.initialHoles.filter(
+        (hole) => hole.kind === "targetChoice",
+      );
+      if (targetChoiceHoles.length !== 1) {
+        return [];
+      }
+      return [
+        {
+          subject: {
+            tag: "findFamiliarTouchSpell",
+            actorId: input.actorId,
             companionId: input.companionId,
-          }),
-          ...findFamiliarTouchDeliveryTargetHoles(act.initialHoles),
-        ],
-      },
-    ];
-  });
+            spellAction:
+              subject.tag === "actionSpell" ? "action" : "bonusAction",
+            invocation: subject.invocation,
+            mode: subject.mode,
+            ...(subject.metamagic === undefined
+              ? {}
+              : { metamagic: subject.metamagic }),
+            ...(subject.componentWeaponItemId === undefined
+              ? {}
+              : { componentWeaponItemId: subject.componentWeaponItemId }),
+          },
+          label: `Familiar Delivery: ${act.label}`,
+          summary: "Deliver a Touch spell through a present familiar.",
+          initialHoles: [
+            findFamiliarConnectionHole({
+              ownerId: input.actorId,
+              companionId: input.companionId,
+            }),
+            ...findFamiliarTouchDeliveryTargetHoles(act.initialHoles),
+          ],
+        },
+      ];
+    },
+  );
 }
 
 function touchSpellDeliveryInvocation(
@@ -1020,28 +1193,38 @@ function pactOfTheChainFamiliarAttackActs(
   ) {
     return [];
   }
-  return statBlockActionSectionAttackOptions(
-    "actions",
-    familiarCombatant.origin.statBlock.statBlock.actions,
-    familiarCombatant.origin.statBlock.statBlock.traits,
-  ).flatMap((attack) => {
-    const targetHole = attackTargetHole(state, familiarId, attack);
-    return targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "pactOfTheChainFamiliarAttack" as const,
-              actorId,
-              familiarId,
-              attackName: attackActionOptionName(attack),
+  return statBlockAttackActionOptions(familiarCombatant.origin).flatMap(
+    (attack) => {
+      if (
+        statBlockAttackProcedureSection(
+          state,
+          familiarId,
+          attack.procedureRef,
+        ) !== "actions"
+      ) {
+        return [];
+      }
+      const targetHole = attackTargetHole(state, familiarId, attack);
+      return targetHole.choices.length === 0
+        ? []
+        : [
+            {
+              subject: {
+                tag: "pactOfTheChainFamiliarAttack" as const,
+                actorId,
+                familiarId,
+                procedureRef: attack.procedureRef,
+                ...(attack.damageNotation === "static"
+                  ? { statBlockDamageNotation: "static" as const }
+                  : {}),
+              },
+              label: "Pact Familiar Attack",
+              summary: `Forgo one Attack-action attack for the familiar to attack with ${attackActionOptionPresentationName(state, familiarId, attack)}.`,
+              initialHoles: [targetHole],
             },
-            label: "Pact Familiar Attack",
-            summary: `Forgo one Attack-action attack for the familiar to attack with ${attackActionOptionName(attack)}.`,
-            initialHoles: [targetHole],
-          },
-        ];
-  });
+          ];
+    },
+  );
 }
 
 function endTurnAct(actorId: CombatantId): AvailableBattleAct {
@@ -1081,6 +1264,7 @@ function readiedSpellReleaseActs(
       actorId,
       command: "releaseReadiedSpell" as const,
       readiedSpellCasterId: casterId,
+      procedureRef: readiedSpell.procedureRef,
     },
     label: `Release ${readiedSpell.invocation.spell.name}`,
     summary: `Release ${readiedSpell.invocation.spell.name} with a Reaction.`,
@@ -1820,34 +2004,35 @@ export function statBlockMultiattackActs(
     return [];
   }
   const origin = actor.origin;
-  return supportedStatBlockMultiattacks(origin.statBlock).flatMap(
-    (multiattack) => {
-      if (
-        !multiattack.dispatches.every((dispatch) =>
-          statBlockAttackResourceAvailable(
-            origin.statBlock.statBlock,
-            origin.resources,
-            dispatch,
-          ),
-        )
-      ) {
-        return [];
-      }
-      return [
-        {
-          subject: {
-            tag: "action" as const,
-            actorId,
-            action: "multiattack" as const,
-            multiattackName: multiattack.multiattack.name,
-          },
-          label: multiattack.multiattack.name,
-          summary: `Take the Attack action using ${multiattack.multiattack.name}.`,
-          initialHoles: [],
+  const presentations = statBlockProcedurePresentations(origin);
+  return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
+    if (
+      !binding.procedure.dispatchProcedureRefs.every((procedureRef) =>
+        statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
+      )
+    ) {
+      return [];
+    }
+    const presentation = presentations.find(
+      (candidate) =>
+        candidate.kind === "multiattack" &&
+        candidate.procedureRef === binding.procedureRef,
+    );
+    if (presentation?.kind !== "multiattack") return [];
+    return [
+      {
+        subject: {
+          tag: "action" as const,
+          actorId,
+          action: "multiattack" as const,
+          procedureRef: binding.procedureRef,
         },
-      ];
-    },
-  );
+        label: presentation.label,
+        summary: `Take the Attack action using ${presentation.label}.`,
+        initialHoles: [],
+      },
+    ];
+  });
 }
 
 export function statBlockBonusActionOptionActs(
@@ -1863,15 +2048,15 @@ export function statBlockBonusActionOptionActs(
     return [];
   }
   const origin = actor.origin;
+  const presentations = statBlockProcedurePresentations(origin);
 
-  return supportedStatBlockBonusActionOptions(origin.statBlock).flatMap(
-    (option) =>
-      option.option.options.flatMap((standardAction) => {
+  return statBlockBonusActionOptionBindings(origin.execution).flatMap(
+    (binding) =>
+      binding.procedure.standardActions.flatMap((standardAction) => {
         if (
-          !statBlockPartLimitedUseAvailable(
-            origin.statBlock.statBlock,
-            origin.resources,
-            option.part,
+          !statBlockProcedureResourcesAvailable(
+            origin.execution,
+            binding.procedureRef,
           )
         ) {
           return [];
@@ -1882,17 +2067,23 @@ export function statBlockBonusActionOptionActs(
         ) {
           return [];
         }
+        const presentation = presentations.find(
+          (candidate) =>
+            candidate.kind === "bonusActionOption" &&
+            candidate.procedureRef === binding.procedureRef,
+        );
+        if (presentation?.kind !== "bonusActionOption") return [];
         return [
           {
             subject: {
               tag: "bonusAction" as const,
               actorId,
               action: "statBlockActionOption" as const,
-              optionName: option.option.name,
+              procedureRef: binding.procedureRef,
               standardAction,
             },
-            label: option.option.name,
-            summary: `Use ${option.option.name} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
+            label: presentation.label,
+            summary: `Use ${presentation.label} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
             initialHoles:
               standardAction === "hide"
                 ? [hideAbilityCheckHole(state, actorId)]
@@ -1900,94 +2091,6 @@ export function statBlockBonusActionOptionActs(
           },
         ];
       }),
-  );
-}
-
-export function supportedStatBlockMultiattacks(
-  statBlock: StatBlockRecord,
-): readonly SupportedStatBlockMultiattack[] {
-  const actionAttacks = statBlockActionSectionAttackOptions(
-    "actions",
-    statBlock.statBlock.actions,
-    statBlock.statBlock.traits,
-  );
-  return (
-    statBlock.statBlock.actions?.multiattacks?.flatMap((multiattack) => {
-      const literalDispatches =
-        supportedLiteralMultiattackDispatches(multiattack);
-      if (literalDispatches === null) return [];
-
-      const dispatches = literalDispatches.flatMap((dispatch) => {
-        const matchingAttacks = actionAttacks.filter(
-          (candidate) =>
-            candidate.attack.name === dispatch.name &&
-            candidate.damageNotation === "rolled",
-        );
-        const [attack] = matchingAttacks;
-        if (attack === undefined || matchingAttacks.length !== 1) return [];
-        if (
-          dispatch.count.value > 1 &&
-          statBlockLimitedUseForPart(statBlock.statBlock, attack.part) !==
-            undefined
-        ) {
-          return [];
-        }
-        return Array.from({ length: dispatch.count.value }, () => attack);
-      });
-      const dispatchCount = literalDispatches.reduce(
-        (count, dispatch) => count + dispatch.count.value,
-        0,
-      );
-      return dispatches.length === dispatchCount
-        ? [{ multiattack, dispatches }]
-        : [];
-    }) ?? []
-  );
-}
-
-export function supportedLiteralMultiattackDispatches(
-  multiattack: CreatureNamedMultiattack,
-): readonly SupportedLiteralMultiattackDispatch[] | null {
-  if (multiattack.dispatches.length === 0) return null;
-
-  const dispatches = multiattack.dispatches.filter(
-    isSupportedLiteralMultiattackDispatch,
-  );
-  return dispatches.length === multiattack.dispatches.length
-    ? dispatches
-    : null;
-}
-
-export function isSupportedLiteralMultiattackDispatch(
-  dispatch: CreatureNamedMultiattack["dispatches"][number],
-): dispatch is SupportedLiteralMultiattackDispatch {
-  return (
-    dispatch.count.kind === "literal" &&
-    dispatch.count.value >= 1 &&
-    Number.isInteger(dispatch.count.value)
-  );
-}
-
-export function supportedStatBlockBonusActionOptions(
-  statBlock: StatBlockRecord,
-): readonly SupportedStatBlockBonusActionOption[] {
-  return (
-    statBlock.statBlock.bonusActions?.actionOptions?.flatMap((option) => {
-      const supportedOptions = option.options.filter(
-        (
-          standardAction,
-        ): standardAction is SupportedStatBlockBonusActionStandardAction =>
-          supportedStatBlockBonusActionStandardAction(standardAction),
-      );
-      return supportedOptions.length === option.options.length
-        ? [
-            {
-              option: { ...option, options: supportedOptions },
-              part: { section: "bonusActions", name: option.name },
-            },
-          ]
-        : [];
-    }) ?? []
   );
 }
 
@@ -2079,8 +2182,8 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
   return state.currentTurnResources.actionResources.some(
     (resource): boolean =>
       isStatBlockMultiattackActionResource(resource, actorId) &&
-      resource.attackPart.name === subject.attackName &&
-      resource.attackPart.section === (subject.statBlockSection ?? "actions"),
+      subject.procedureRef !== undefined &&
+      resource.attackProcedureRef === subject.procedureRef,
   );
 }
 

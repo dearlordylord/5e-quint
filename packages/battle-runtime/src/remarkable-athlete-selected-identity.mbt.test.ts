@@ -26,6 +26,7 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 type RollMode = "normal" | "advantage" | "disadvantage";
 
@@ -194,12 +195,11 @@ function projectRemarkableAthleteRollModes(
 function projectRemarkableAthleteCriticalMovement(
   state: BattleState,
 ): RemarkableAthleteProjection {
-  const subject = {
-    tag: "action",
-    actorId: remarkableAthleteActorId,
-    action: "attack",
-    attackName: "Unarmed Strike",
-  } as const;
+  const subject = characterAttackSubjectForTest(
+    state,
+    remarkableAthleteActorId,
+    "Unarmed Strike",
+  );
   const target = requireHole(
     requireNeedsHoles(resolveBattleSubject({ state, subject, fills: [] })),
     "targetChoice",

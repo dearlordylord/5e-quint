@@ -28,7 +28,7 @@ import type {
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -243,7 +243,7 @@ function discoverCommandCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: CommandSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
@@ -281,8 +281,8 @@ function commandMetamagicCastActs(input: {
   readonly invocation: CommandSpellInvocation;
   readonly targetHole: BattleHole;
   readonly commandOptionHole: BattleHole;
-  readonly baseCastAct: AvailableBattleAct;
-}): readonly AvailableBattleAct[] {
+  readonly baseCastAct: BattleActDiscoveryCandidate;
+}): readonly BattleActDiscoveryCandidate[] {
   return discoverSpellMetamagicSelections({
     actor: input.actor,
     invocation: input.invocation,
@@ -316,7 +316,7 @@ function commandCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",

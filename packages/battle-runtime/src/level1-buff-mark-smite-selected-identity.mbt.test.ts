@@ -23,6 +23,7 @@
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -89,7 +90,9 @@ import {
   applyBattleHitPointDamage,
   breakBattleConcentration,
 } from "./battle-reducer/damage-apply.ts";
+import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import {
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
@@ -1769,7 +1772,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castAttackHitBonusActionSpell",
-              invocation: smiteChoice.invocation,
+              procedureRef: smiteChoice.subject.procedureRef,
               fills: [],
             },
           },
@@ -1816,7 +1819,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castAttackHitBonusActionSpell",
-              invocation: ensnaringChoice.invocation,
+              procedureRef: ensnaringChoice.subject.procedureRef,
               fills: [
                 savingThrowOutcomeFill(save, [{ targetId, succeeded: false }]),
               ],
@@ -2153,7 +2156,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castAttackHitBonusActionSpell",
-              invocation: searingSmiteChoice.invocation,
+              procedureRef: searingSmiteChoice.subject.procedureRef,
               fills: [],
             },
           },
@@ -2738,19 +2741,9 @@ function resolveWeaponHitWithAttackRoll(input: {
   readonly afterAttackRoll: BattleResolutionResult;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const subject = weaponAttackSubject(input.attackName);
-  const act = discoverBattleActs(input.state).find(
-    (candidate) =>
-      candidate.subject.tag === "action" &&
-      candidate.subject.action === "attack" &&
-      candidate.subject.attackName === input.attackName,
-  );
-  const awaitingTarget = resolveBattleSubject({
-    state: input.state,
-    subject,
-    fills: [],
-  });
-  const target = requireResultHole(awaitingTarget, "targetChoice");
+  const act = weaponAttackAct(input.state, input.attackName);
+  const subject = act.subject;
+  const target = requireHole(act.initialHoles, "targetChoice");
   const targetFill = attackTargetFill(target, input.attackName);
   const awaitingAttackRoll = resolveBattleSubject({
     state: input.state,
@@ -2776,8 +2769,7 @@ function resolveWeaponHitWithAttackRoll(input: {
     attackRoll: attack,
     afterAttackRoll,
     routeEvents: [
-      ...(act?.routeEvents ?? []),
-      ...(awaitingTarget.routeEvents ?? []),
+      ...(act.routeEvents ?? []),
       ...(awaitingAttackRoll.routeEvents ?? []),
       ...(afterAttackRoll.routeEvents ?? []),
     ],
@@ -2816,21 +2808,46 @@ function zeroAbilityWeaponAttack(
   };
 }
 
-function weaponAttackSubject(
+function weaponAttackAct(
+  state: BattleState,
   attackName: Level1WeaponAttackName,
-): Extract<BattleSubject, { readonly tag: "action" }> {
-  return {
-    tag: "action",
-    actorId: casterId,
-    action: "attack",
-    attackName,
-  };
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+} {
+  const act = discoverBattleActs(state).find((candidate) => {
+    if (
+      candidate.subject.tag !== "action" ||
+      candidate.subject.action !== "attack"
+    ) {
+      return false;
+    }
+    const attack = attackActionOptionForSubject(state, candidate.subject);
+    return (
+      attack !== undefined && attackActionOptionName(attack) === attackName
+    );
+  });
+  if (
+    act === undefined ||
+    act.subject.tag !== "action" ||
+    act.subject.action !== "attack"
+  ) {
+    throw new Error(
+      `Expected discovered ${attackName} attack for ${casterId}.`,
+    );
+  }
+  return { ...act, subject: act.subject };
 }
 
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  attackName: Level1WeaponAttackName,
+  _attackName: Level1WeaponAttackName,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound level-1 weapon attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -2840,7 +2857,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: casterId,
         targetId,
-        attackName,
+        ...hole.attack.selection,
       },
     ],
   };
@@ -3163,10 +3180,20 @@ function attackHitBonusActionSpellChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castAttackHitBonusActionSpell" }
-    > =>
-      candidate.kind === "castAttackHitBonusActionSpell" &&
-      candidate.reactorId === casterId &&
-      candidate.invocation.spellId === spellId,
+    > => {
+      if (
+        candidate.kind !== "castAttackHitBonusActionSpell" ||
+        candidate.reactorId !== casterId
+      )
+        return false;
+      return (
+        characterSpellInvocationRefForProcedureRefForTest(
+          result.state,
+          candidate.reactorId,
+          candidate.subject.procedureRef,
+        ).spellId === spellId
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error(`Expected ${spellId} after-hit Bonus Action Spell choice.`);

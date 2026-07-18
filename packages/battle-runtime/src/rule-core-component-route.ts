@@ -61,7 +61,9 @@ export function withRuleCoreComponentRoute<T extends object>(
 export function decodeRuleCoreComponentRoute(
   raw: unknown,
 ): readonly RuleCoreComponentRouteEvent[] {
-  return quintList(raw, "qComponentRoute").map(decodeRuleCoreComponentRouteEvent);
+  return quintList(raw, "qComponentRoute").map(
+    decodeRuleCoreComponentRouteEvent,
+  );
 }
 
 function decodeRuleCoreComponentRouteEvent(
@@ -87,9 +89,7 @@ function ruleCoreComponentOwner(raw: unknown): RuleCoreComponentOwner {
   throw new Error(`Unknown rule-core component owner ${tag}.`);
 }
 
-function isRuleCoreComponentOwner(
-  raw: string,
-): raw is RuleCoreComponentOwner {
+function isRuleCoreComponentOwner(raw: string): raw is RuleCoreComponentOwner {
   return RULE_CORE_COMPONENT_OWNERS.some((owner) => owner === raw);
 }
 

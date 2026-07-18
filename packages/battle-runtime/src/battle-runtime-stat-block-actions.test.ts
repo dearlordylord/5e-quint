@@ -11,6 +11,7 @@ import {
   fighterGrapplesGoblin,
   goblinTurnBattle,
   fighterAttackSubject,
+  characterAttackSubjectForTest,
   goblinAttackSubject,
   monsterAttackSubject,
   attackInitialTargetHole,
@@ -57,11 +58,118 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
-import { spellId, type CombatantId } from "./identity.ts";
+import {
+  BattleStatBlockProcedureExecutionRef,
+  spellId,
+  type BattleResourcePoolExecutionRef,
+  type CombatantId,
+} from "./identity.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
+import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
 import { describe, expect, test } from "vitest";
+
+function discoveredMultiattackSubject(state: BattleState): BattleSubject {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "multiattack",
+  );
+  if (act === undefined) throw new Error("Expected a discovered Multiattack.");
+  return act.subject;
+}
+
+function discoveredStatBlockBonusActionSubject(
+  state: BattleState,
+  standardAction: "disengage" | "hide",
+): BattleSubject {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "bonusAction" &&
+      candidate.subject.action === "statBlockActionOption" &&
+      candidate.subject.standardAction === standardAction,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected a discovered ${standardAction} option.`);
+  }
+  return act.subject;
+}
+
+function discoveredStatBlockAttackSubject(
+  state: BattleState,
+  attackName: string,
+  damageNotation: "rolled" | "static" = "rolled",
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef !== undefined &&
+      (candidate.subject.statBlockDamageNotation ?? "rolled") ===
+        damageNotation &&
+      candidate.summary.includes(attackName),
+  );
+  if (act?.subject.tag !== "action" || act.subject.action !== "attack") {
+    throw new Error(`Expected discovered ${attackName} attack.`);
+  }
+  return act.subject;
+}
+
+function unavailableMultiattackSubject(state: BattleState): BattleSubject {
+  return {
+    tag: "action",
+    actorId: goblinId,
+    action: "multiattack",
+    procedureRef: procedureRefForAttack(state, "Scimitar"),
+  };
+}
+
+function resourcePoolRefForAttack(
+  state: BattleState,
+  attackName: string,
+): BattleResourcePoolExecutionRef {
+  const actor = state.combatants.get(goblinId);
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected Stat Block goblin.");
+  }
+  const origin = actor.origin;
+  const procedureRef = statBlockProcedurePresentations(origin).find(
+    (candidate) => candidate.kind === "attack" && candidate.name === attackName,
+  )?.procedureRef;
+  const binding = origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  const resourcePoolRef = binding?.resourcePoolRefs[0];
+  if (resourcePoolRef === undefined) {
+    throw new Error(`Expected ${attackName} to own a resource pool.`);
+  }
+  return resourcePoolRef;
+}
+
+function procedureRefForAttack(
+  state: BattleState,
+  attackName: string,
+): ReturnType<typeof BattleStatBlockProcedureExecutionRef.make> {
+  const actor = state.combatants.get(goblinId);
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected Stat Block goblin.");
+  }
+  const origin = actor.origin;
+  const procedureRef = statBlockProcedurePresentations(origin).find(
+    (candidate) => candidate.kind === "attack" && candidate.name === attackName,
+  )?.procedureRef;
+  const binding = origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  if (binding === undefined) {
+    throw new Error(`Expected ${attackName} procedure binding.`);
+  }
+  return binding.procedureRef;
+}
 
 function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
@@ -123,10 +231,7 @@ function untypedConditionRiderStatBlock(): StatBlockRecord {
         attacks: [
           {
             ...bite,
-            onHit: [
-              damage,
-              { kind: "apply_condition", condition: "prone" },
-            ],
+            onHit: [damage, { kind: "apply_condition", condition: "prone" }],
           },
         ],
       },
@@ -235,13 +340,28 @@ function proneImmuneTargetStatBlock(): StatBlockRecord {
   };
 }
 
-function biteMeleeReachFact(targetId: CombatantId) {
+function procedureRefForStatBlockAttackSubject(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+) {
+  if (subject.procedureRef === undefined) {
+    throw new Error("Expected Stat Block attack procedure ref.");
+  }
+  return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
+}
+
+function biteMeleeReachFact(
+  targetId: CombatantId,
+  procedureRef: ReturnType<typeof BattleStatBlockProcedureExecutionRef.make>,
+) {
   return [
     {
       kind: "attackTargetInMeleeReach" as const,
       actorId: goblinId,
       targetId,
-      attackName: "Bite",
+      procedureRef,
     },
   ];
 }
@@ -321,12 +441,15 @@ function monsterMultiDamageStatBlock(): StatBlockRecord {
 }
 
 function venomDartTargetFill(hole: BattleHole) {
+  if (hole.kind !== "targetChoice" || hole.attack === undefined) {
+    throw new Error("Expected attack target selection.");
+  }
   return targetFill(hole, fighterId, [
     {
       kind: "attackTargetInRangedRange",
       actorId: goblinId,
       targetId: fighterId,
-      attackName: "Venom Dart",
+      ...hole.attack.selection,
       rangeBand: "normal",
     },
   ]);
@@ -349,17 +472,15 @@ function resolveBiteAgainst(input: {
     ],
   });
   const state = input.stateTransform?.(initialState) ?? initialState;
-  const subject: BattleSubject = {
-    tag: "action",
-    actorId: goblinId,
-    action: "attack",
-    attackName: "Bite",
-  };
+  const subject = discoveredStatBlockAttackSubject(state, "Bite");
   const targetHole = attackInitialTargetHole(state, subject);
   const targetChoice = targetFill(
     targetHole,
     input.targetId,
-    biteMeleeReachFact(input.targetId),
+    biteMeleeReachFact(
+      input.targetId,
+      procedureRefForStatBlockAttackSubject(subject),
+    ),
   );
   const rollHole = requireHole(
     resolveBattleSubject({
@@ -411,13 +532,13 @@ describe("battle runtime: Stat Block actions", () => {
           tag: "action",
           actorId: goblinId,
           action: "attack",
-          attackName: "Scimitar",
+          procedureRef: procedureRefForAttack(afterFighter.state, "Scimitar"),
         },
         {
           tag: "action",
           actorId: goblinId,
           action: "attack",
-          attackName: "Shortbow",
+          procedureRef: procedureRefForAttack(afterFighter.state, "Shortbow"),
         },
         { tag: "runtimeCommand", actorId: goblinId, command: "move" },
         { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
@@ -441,12 +562,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Venom Dart",
-    };
+    const subject = discoveredStatBlockAttackSubject(monsterTurn, "Venom Dart");
 
     expect(discoverBattleActs(monsterTurn).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
@@ -481,7 +597,7 @@ describe("battle runtime: Stat Block actions", () => {
     );
 
     expect(damageHole).toMatchObject({
-      label: "Venom Dart damage (1d4+1-piercing+1d6-poison)",
+      label: "Stat Block Attack damage (1d4+1-piercing+1d6-poison)",
     });
 
     const result = resolveBattleSubject({
@@ -522,13 +638,11 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Venom Dart",
-      statBlockDamageNotation: "static",
-    };
+    const subject = discoveredStatBlockAttackSubject(
+      monsterTurn,
+      "Venom Dart",
+      "static",
+    );
     const targetHole = attackInitialTargetHole(monsterTurn, subject);
     const targetChoice = venomDartTargetFill(targetHole);
     const rollHole = requireHole(
@@ -593,13 +707,13 @@ describe("battle runtime: Stat Block actions", () => {
           tag: "action",
           actorId: goblinId,
           action: "attack",
-          attackName: "Bite",
+          procedureRef: procedureRefForAttack(state, "Bite"),
         },
         {
           tag: "action",
           actorId: goblinId,
           action: "attack",
-          attackName: "Bite",
+          procedureRef: procedureRefForAttack(state, "Bite"),
           statBlockDamageNotation: "static",
         },
       ]),
@@ -667,8 +781,7 @@ describe("battle runtime: Stat Block actions", () => {
         "battle-monster-size-gated-condition-active-prone-immune-target",
       targetId: fighterId,
       target: characterSeed({ initiative: 10 }),
-      stateTransform: (state) =>
-        withProneConditionImmunity(state, fighterId),
+      stateTransform: (state) => withProneConditionImmunity(state, fighterId),
     });
     const target = resolved.combatants.get(fighterId);
     if (target === undefined) {
@@ -695,15 +808,8 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
-      expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Bite",
-        },
-      ]),
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Take the Attack action with Bite.",
     );
   });
 
@@ -726,15 +832,8 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
-      expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Bite",
-        },
-      ]),
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Take the Attack action with Bite.",
     );
   });
 
@@ -754,15 +853,8 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
-      expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Bite",
-        },
-      ]),
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Take the Attack action with Bite.",
     );
   });
 
@@ -778,37 +870,28 @@ describe("battle runtime: Stat Block actions", () => {
       }),
     ).state;
 
-    expect(discoverBattleActs(goblinTurn).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([
-        {
-          tag: "bonusAction",
-          actorId: goblinId,
-          action: "statBlockActionOption",
-          optionName: "Nimble Escape",
-          standardAction: "disengage",
-        },
-        {
-          tag: "bonusAction",
-          actorId: goblinId,
-          action: "statBlockActionOption",
-          optionName: "Nimble Escape",
-          standardAction: "hide",
-        },
-      ]),
-    );
+    expect(
+      discoveredStatBlockBonusActionSubject(goblinTurn, "disengage"),
+    ).toMatchObject({
+      actorId: goblinId,
+      standardAction: "disengage",
+    });
+    expect(
+      discoveredStatBlockBonusActionSubject(goblinTurn, "hide"),
+    ).toMatchObject({
+      actorId: goblinId,
+      standardAction: "hide",
+    });
   });
 
   test("Goblin Warrior Nimble Escape spends Bonus Action for Disengage", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: goblinId,
-      action: "statBlockActionOption",
-      optionName: "Nimble Escape",
-      standardAction: "disengage",
-    };
+    const subject = discoveredStatBlockBonusActionSubject(
+      goblinTurn,
+      "disengage",
+    );
 
     const result = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
@@ -829,13 +912,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: goblinId,
-      action: "statBlockActionOption",
-      optionName: "Nimble Escape",
-      standardAction: "hide",
-    };
+    const subject = discoveredStatBlockBonusActionSubject(goblinTurn, "hide");
     const act = findAct(goblinTurn, subject);
 
     const result = requireResolved(
@@ -878,12 +955,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "multiattack",
-      multiattackName: "Multiattack",
-    };
+    const subject = discoveredMultiattackSubject(goblinTurn);
 
     expect(
       discoverBattleActs(goblinTurn).map((act) => act.subject),
@@ -897,7 +969,7 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
-        attackPart: { section: "actions", name: "Scimitar" },
+        attackProcedureRef: procedureRefForAttack(goblinTurn, "Scimitar"),
         restriction: {
           kind: "exclude",
           actions: expect.arrayContaining(["dash", "magic", "utilize"]),
@@ -907,7 +979,7 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
-        attackPart: { section: "actions", name: "Shortbow" },
+        attackProcedureRef: procedureRefForAttack(goblinTurn, "Shortbow"),
         restriction: {
           kind: "exclude",
           actions: expect.arrayContaining(["dash", "magic", "utilize"]),
@@ -921,26 +993,26 @@ describe("battle runtime: Stat Block actions", () => {
         tag: "action",
         actorId: goblinId,
         action: "attack",
-        attackName: "Scimitar",
+        procedureRef: procedureRefForAttack(multiattackState, "Scimitar"),
       },
       {
         tag: "action",
         actorId: goblinId,
         action: "attack",
-        attackName: "Scimitar",
+        procedureRef: procedureRefForAttack(multiattackState, "Scimitar"),
         statBlockDamageNotation: "static",
       },
       {
         tag: "action",
         actorId: goblinId,
         action: "attack",
-        attackName: "Shortbow",
+        procedureRef: procedureRefForAttack(multiattackState, "Shortbow"),
       },
       {
         tag: "action",
         actorId: goblinId,
         action: "attack",
-        attackName: "Shortbow",
+        procedureRef: procedureRefForAttack(multiattackState, "Shortbow"),
         statBlockDamageNotation: "static",
       },
       { tag: "runtimeCommand", actorId: goblinId, command: "move" },
@@ -997,31 +1069,20 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    expect(
-      resolveBattleSubject({
-        state: multiattackState,
-        subject: {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Dagger",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-
-    const shortbowSubject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Shortbow",
-    };
-    const shortbow = findAct(multiattackState, shortbowSubject);
+    const shortbow = discoverBattleActs(multiattackState).find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.procedureRef ===
+          procedureRefForAttack(multiattackState, "Shortbow") &&
+        act.subject.statBlockDamageNotation === undefined,
+    );
+    if (shortbow === undefined) throw new Error("Expected Shortbow act.");
+    const shortbowSubject = shortbow.subject;
     const targetChoice = attackTargetFill(
       findHole(shortbow.initialHoles, "targetChoice"),
       goblinId,
       fighterId,
-      "Shortbow",
     );
     const targeted = requireNeedsHoles(
       resolveBattleSubject({
@@ -1047,7 +1108,7 @@ describe("battle runtime: Stat Block actions", () => {
     expect(afterDispatch.currentTurnResources.actionResources).toEqual([
       expect.objectContaining({
         source: "statBlockMultiattack",
-        attackPart: { section: "actions", name: "Scimitar" },
+        attackProcedureRef: procedureRefForAttack(goblinTurn, "Scimitar"),
       }),
     ]);
     expect(discoverBattleActs(afterDispatch).map((act) => act.subject)).toEqual(
@@ -1056,7 +1117,7 @@ describe("battle runtime: Stat Block actions", () => {
           tag: "action",
           actorId: goblinId,
           action: "attack",
-          attackName: "Scimitar",
+          procedureRef: procedureRefForAttack(afterDispatch, "Scimitar"),
         },
       ]),
     );
@@ -1090,12 +1151,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "multiattack",
-      multiattackName: "Multiattack",
-    };
+    const subject = unavailableMultiattackSubject(goblinTurn);
 
     expect(
       discoverBattleActs(goblinTurn).map((act) => act.subject),
@@ -1106,6 +1162,60 @@ describe("battle runtime: Stat Block actions", () => {
       tag: "invalid",
       reason: "unsupportedActOption",
     });
+  });
+
+  test("Stat Block Multiattack remains gated when repeated dispatches exceed one limited use", () => {
+    const statBlock = monsterResourceStatBlock();
+    const repeatedLimitedUseStatBlock: StatBlockRecord = {
+      ...statBlock,
+      id: "stat_block_repeated_limited_use_multiattack_test_monster",
+      statBlock: {
+        ...statBlock.statBlock,
+        actions: {
+          ...statBlock.statBlock.actions,
+          multiattacks: [
+            {
+              name: "Synthetic Repeated Limited Attack",
+              dispatches: [
+                { name: "Dread Gaze", count: { kind: "literal", value: 1 } },
+                { name: "Dread Gaze", count: { kind: "literal", value: 1 } },
+              ],
+            },
+          ],
+        },
+      },
+    };
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-repeated-limited-use"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: repeatedLimitedUseStatBlock,
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const goblin = goblinTurn.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+
+    expect(
+      goblin.origin.execution.procedureBindings.some(
+        (binding) => binding.procedure.kind === "multiattack",
+      ),
+    ).toBe(false);
+    expect(
+      discoverBattleActs(goblinTurn).some(
+        (act) =>
+          act.subject.tag === "action" && act.subject.action === "multiattack",
+      ),
+    ).toBe(false);
   });
 
   test("Stat Block Multiattack dispatch resources do not authorize Escape Grapple", () => {
@@ -1140,12 +1250,7 @@ describe("battle runtime: Stat Block actions", () => {
     const multiattackState = requireResolved(
       resolveBattleSubject({
         state: goblinTurn,
-        subject: {
-          tag: "action",
-          actorId: goblinId,
-          action: "multiattack",
-          multiattackName: "Multiattack",
-        },
+        subject: discoveredMultiattackSubject(goblinTurn),
         fills: [],
       }),
     ).state;
@@ -1180,12 +1285,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "multiattack",
-      multiattackName: "Multiattack",
-    };
+    const subject = unavailableMultiattackSubject(goblinTurn);
 
     expect(
       discoverBattleActs(goblinTurn).map((act) => act.subject),
@@ -1210,44 +1310,68 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(state.combatants.get(goblinId)?.origin).toMatchObject({
-      kind: "statBlock",
-      resources: {
-        legendaryActionUsesRemaining: 2,
-        dailyUses: [
-          {
-            key: { section: "actions", name: "Dread Gaze" },
-            usesRemaining: 1,
-          },
-        ],
-        unavailableRechargeParts: [],
-        unavailableRestRechargeParts: [],
-      },
-    });
+    const cinderBreathPoolRef = resourcePoolRefForAttack(
+      state,
+      "Cinder Breath",
+    );
+    const dreadGazePoolRef = resourcePoolRefForAttack(state, "Dread Gaze");
+    const goblin = state.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+    const legendaryPool = goblin.origin.execution.resourcePools.find(
+      (pool) => pool.kind === "legendaryActions",
+    );
+    if (legendaryPool === undefined) {
+      throw new Error("Expected a Legendary Action resource pool.");
+    }
+    expect(goblin.origin.execution.resourcePools).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          resourcePoolRef: cinderBreathPoolRef,
+          kind: "recharge",
+          available: true,
+        }),
+        expect.objectContaining({
+          resourcePoolRef: dreadGazePoolRef,
+          kind: "daily",
+          usesRemaining: 1,
+        }),
+        expect.objectContaining({
+          kind: "legendaryActions",
+          usesRemaining: 2,
+        }),
+      ]),
+    );
     expect(snapshotBattle(state).combatants).toContainEqual(
       expect.objectContaining({
         combatantId: goblinId,
-        origin: {
+        origin: expect.objectContaining({
           kind: "statBlock",
           statBlockId: "stat_block_resource_test_monster",
-          resources: {
-            legendaryActions: { usesMax: 2, usesRemaining: 2 },
-            limitedUses: expect.arrayContaining([
+          execution: expect.objectContaining({
+            resourcePools: expect.arrayContaining([
               {
-                key: { section: "actions", name: "Cinder Breath" },
+                resourcePoolRef: legendaryPool.resourcePoolRef,
+                kind: "legendaryActions",
+                usesMax: 2,
+                usesRemaining: 2,
+              },
+              {
+                resourcePoolRef: cinderBreathPoolRef,
                 kind: "recharge",
                 minimumRoll: 5,
                 available: true,
               },
               {
-                key: { section: "actions", name: "Dread Gaze" },
+                resourcePoolRef: dreadGazePoolRef,
                 kind: "daily",
                 usesMax: 1,
                 usesRemaining: 1,
               },
             ]),
-          },
-        },
+          }),
+        }),
       }),
     );
   });
@@ -1273,38 +1397,10 @@ describe("battle runtime: Stat Block actions", () => {
     expect(
       discoverBattleActs(goblinTurn).some(
         (act) =>
-          act.subject.tag === "action" &&
-          act.subject.action === "attack" &&
-          (act.subject.attackName === "Swift Bite" ||
-            act.subject.attackName === "Counter Snap"),
+          act.summary === "Take the Attack action with Swift Bite." ||
+          act.summary === "Take the Attack action with Counter Snap.",
       ),
     ).toBe(false);
-    expect(
-      resolveBattleSubject({
-        state: goblinTurn,
-        subject: {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Swift Bite",
-          statBlockSection: "bonusActions",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
-    expect(
-      resolveBattleSubject({
-        state: goblinTurn,
-        subject: {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Counter Snap",
-          statBlockSection: "reactions",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
   });
 
   test("Recharge attacks spend availability and use a start-turn d6 roll to return", () => {
@@ -1323,7 +1419,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject = monsterAttackSubject("Cinder Breath");
+    const subject = monsterAttackSubject(firstGoblinTurn, "Cinder Breath");
     const targetHole = attackInitialTargetHole(firstGoblinTurn, subject);
     const rollHole = attackRollHoleAfterTarget(
       firstGoblinTurn,
@@ -1356,20 +1452,24 @@ describe("battle runtime: Stat Block actions", () => {
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.attackName === "Cinder Breath",
+          act.summary.includes("Cinder Breath"),
       ),
     ).toBe(false);
 
     const fighterTurn = requireResolved(
       endTurn({ state: spent, actorId: goblinId }),
     ).state;
+    const cinderBreathPoolRef = resourcePoolRefForAttack(
+      fighterTurn,
+      "Cinder Breath",
+    );
     const rechargeRequest = endTurn({ state: fighterTurn, actorId: fighterId });
     expect(rechargeRequest).toMatchObject({
       tag: "needsHoles",
       holes: [
         {
           kind: "statBlockRechargeRoll",
-          rechargeTargets: [{ section: "actions", name: "Cinder Breath" }],
+          rechargeTargets: [cinderBreathPoolRef],
         },
       ],
     });
@@ -1390,7 +1490,7 @@ describe("battle runtime: Stat Block actions", () => {
             holeId: rechargeRequest.holes[0].holeId,
             value: [
               {
-                target: { section: "actions", name: "Cinder Breath" },
+                target: cinderBreathPoolRef,
                 roll: DieRollResult(5),
               },
             ],
@@ -1404,7 +1504,7 @@ describe("battle runtime: Stat Block actions", () => {
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.attackName === "Cinder Breath",
+          act.summary.includes("Cinder Breath"),
       ),
     ).toBe(true);
   });
@@ -1425,7 +1525,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject = monsterAttackSubject("Dread Gaze");
+    const subject = monsterAttackSubject(goblinTurn, "Dread Gaze");
     const targetHole = attackInitialTargetHole(goblinTurn, subject);
     const rollHole = attackRollHoleAfterTarget(
       goblinTurn,
@@ -1453,23 +1553,23 @@ describe("battle runtime: Stat Block actions", () => {
       }),
     ).state;
 
-    expect(spent.combatants.get(goblinId)?.origin).toMatchObject({
-      kind: "statBlock",
-      resources: {
-        dailyUses: [
-          {
-            key: { section: "actions", name: "Dread Gaze" },
-            usesRemaining: 0,
-          },
-        ],
-      },
-    });
+    const spentGoblin = spent.combatants.get(goblinId);
+    if (spentGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected spent Stat Block goblin.");
+    }
+    expect(
+      spentGoblin.origin.execution.resourcePools.find(
+        (pool) =>
+          pool.resourcePoolRef ===
+          resourcePoolRefForAttack(spent, "Dread Gaze"),
+      ),
+    ).toMatchObject({ kind: "daily", usesRemaining: 0 });
     expect(
       discoverBattleActs(spent).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.attackName === "Dread Gaze",
+          act.subject.procedureRef === subject.procedureRef,
       ),
     ).toBe(false);
   });
@@ -1489,18 +1589,26 @@ describe("battle runtime: Stat Block actions", () => {
     if (goblin?.origin.kind !== "statBlock") {
       throw new Error("Expected Stat Block goblin.");
     }
+    const cinderBreathPoolRef = resourcePoolRefForAttack(
+      state,
+      "Cinder Breath",
+    );
+    const ashCloudPoolRef = resourcePoolRefForAttack(state, "Ash Cloud");
+    const unavailablePoolRefs = new Set([cinderBreathPoolRef, ashCloudPoolRef]);
     const spentState: BattleState = {
       ...state,
       combatants: new Map(state.combatants).set(goblinId, {
         ...goblin,
         origin: {
           ...goblin.origin,
-          resources: {
-            ...goblin.origin.resources,
-            unavailableRechargeParts: [
-              { section: "actions", name: "Cinder Breath" },
-              { section: "actions", name: "Ash Cloud" },
-            ],
+          execution: {
+            ...goblin.origin.execution,
+            resourcePools: goblin.origin.execution.resourcePools.map((pool) =>
+              pool.kind === "recharge" &&
+              unavailablePoolRefs.has(pool.resourcePoolRef)
+                ? { ...pool, available: false }
+                : pool,
+            ),
           },
         },
       }),
@@ -1512,10 +1620,7 @@ describe("battle runtime: Stat Block actions", () => {
       holes: [
         {
           kind: "statBlockRechargeRoll",
-          rechargeTargets: [
-            { section: "actions", name: "Cinder Breath" },
-            { section: "actions", name: "Ash Cloud" },
-          ],
+          rechargeTargets: [cinderBreathPoolRef, ashCloudPoolRef],
         },
       ],
     });
@@ -1537,11 +1642,11 @@ describe("battle runtime: Stat Block actions", () => {
             holeId: rechargeRequest.holes[0].holeId,
             value: [
               {
-                target: { section: "actions", name: "Cinder Breath" },
+                target: cinderBreathPoolRef,
                 roll: DieRollResult(4),
               },
               {
-                target: { section: "actions", name: "Ash Cloud" },
+                target: ashCloudPoolRef,
                 roll: DieRollResult(6),
               },
             ],
@@ -1555,11 +1660,15 @@ describe("battle runtime: Stat Block actions", () => {
       throw new Error("Expected recharged Stat Block goblin.");
     }
     expect(
-      rechargedGoblin.origin.resources.unavailableRechargeParts,
-    ).toContainEqual({ section: "actions", name: "Cinder Breath" });
+      rechargedGoblin.origin.execution.resourcePools.find(
+        (pool) => pool.resourcePoolRef === cinderBreathPoolRef,
+      ),
+    ).toMatchObject({ available: false });
     expect(
-      rechargedGoblin.origin.resources.unavailableRechargeParts,
-    ).not.toContainEqual({ section: "actions", name: "Ash Cloud" });
+      rechargedGoblin.origin.execution.resourcePools.find(
+        (pool) => pool.resourcePoolRef === ashCloudPoolRef,
+      ),
+    ).toMatchObject({ available: true });
   });
 
   test("Legendary Action attacks are Stat Block acts after another creature's turn", () => {
@@ -1587,8 +1696,7 @@ describe("battle runtime: Stat Block actions", () => {
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Tail Swipe" &&
-        act.subject.statBlockSection === "legendaryActions",
+        act.subject.procedureRef === procedureRefForAttack(state, "Tail Swipe"),
     );
     if (legendaryAct === undefined) {
       throw new Error("Expected Tail Swipe Legendary Action act.");
@@ -1627,16 +1735,22 @@ describe("battle runtime: Stat Block actions", () => {
     expect(afterLegendary.currentTurnResources).toEqual(
       state.currentTurnResources,
     );
-    expect(afterLegendary.combatants.get(goblinId)?.origin).toMatchObject({
-      kind: "statBlock",
-      resources: { legendaryActionUsesRemaining: 1 },
-    });
+    const legendaryGoblin = afterLegendary.combatants.get(goblinId);
+    if (legendaryGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Legendary Action Stat Block goblin.");
+    }
+    expect(
+      legendaryGoblin.origin.execution.resourcePools.find(
+        (pool) => pool.kind === "legendaryActions",
+      ),
+    ).toMatchObject({ usesRemaining: 1 });
     expect(
       discoverBattleActs(afterLegendary).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.statBlockSection === "legendaryActions",
+          act.subject.procedureRef ===
+            procedureRefForAttack(afterLegendary, "Tail Swipe"),
       ),
     ).toBe(false);
     expect(
@@ -1672,12 +1786,11 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const distantSubject: BattleSubject = {
-      tag: "action",
-      actorId: distantFighterId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const distantSubject = characterAttackSubjectForTest(
+      state,
+      distantFighterId,
+      "Longsword",
+    );
     const targetHole = attackInitialTargetHole(state, distantSubject);
     const rollHole = attackRollHoleAfterTarget(
       state,
@@ -1698,12 +1811,7 @@ describe("battle runtime: Stat Block actions", () => {
         state,
         subject: distantSubject,
         fills: [
-          attackTargetFill(
-            targetHole,
-            distantSubject.actorId,
-            goblinId,
-            distantSubject.attackName,
-          ),
+          attackTargetFill(targetHole, distantSubject.actorId, goblinId),
           attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
           damageRollFillWithGroups(damageHole, [[2]]),
         ],
@@ -1715,7 +1823,8 @@ describe("battle runtime: Stat Block actions", () => {
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.statBlockSection === "legendaryActions",
+          act.subject.procedureRef ===
+            procedureRefForAttack(afterDistantFighterActs, "Tail Swipe"),
       ),
     ).toBe(false);
   });
@@ -1737,13 +1846,14 @@ describe("battle runtime: Stat Block actions", () => {
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.statBlockSection === "legendaryActions",
+          act.subject.procedureRef ===
+            procedureRefForAttack(state, "Tail Swipe"),
       ),
     ).toBe(false);
     expect(
       resolveBattleSubject({
         state,
-        subject: monsterAttackSubject("Tail Swipe", "legendaryActions"),
+        subject: monsterAttackSubject(state, "Tail Swipe", "legendaryActions"),
         fills: [],
       }),
     ).toMatchObject({
@@ -1774,13 +1884,18 @@ describe("battle runtime: Stat Block actions", () => {
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.statBlockSection === "legendaryActions",
+          act.subject.procedureRef ===
+            procedureRefForAttack(ownTurn, "Tail Swipe"),
       ),
     ).toBe(false);
     expect(
       resolveBattleSubject({
         state: ownTurn,
-        subject: monsterAttackSubject("Tail Swipe", "legendaryActions"),
+        subject: monsterAttackSubject(
+          ownTurn,
+          "Tail Swipe",
+          "legendaryActions",
+        ),
         fills: [],
       }),
     ).toMatchObject({
@@ -1791,7 +1906,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("Goblin Warrior Scimitar attack derives roll bonus and damage from the Stat Block", () => {
     const state = goblinTurnBattle();
-    const subject = goblinAttackSubject("Scimitar");
+    const subject = goblinAttackSubject(state, "Scimitar");
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -1807,11 +1922,10 @@ describe("battle runtime: Stat Block actions", () => {
 
     expect(rollHole).toMatchObject({
       kind: "attackRoll",
-      label: "Scimitar attack roll",
+      label: "Stat Block Attack attack roll",
       attackBonus: 4,
       attack: {
         kind: "statBlockAttack",
-        attack: { name: "Scimitar" },
       },
     });
 
@@ -1830,7 +1944,7 @@ describe("battle runtime: Stat Block actions", () => {
     expect(damageHole).toMatchObject({
       kind: "rolledDice",
       holeId: "battle:attack:damage-result:1d6+2-slashing",
-      label: "Scimitar damage (1d6+2-slashing)",
+      label: "Stat Block Attack damage (1d6+2-slashing)",
       critical: false,
     });
   });
@@ -1857,7 +1971,7 @@ describe("battle runtime: Stat Block actions", () => {
     const scimitarTargetHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: goblinAttackSubject("Scimitar"),
+        subject: goblinAttackSubject(state, "Scimitar"),
         fills: [],
       }),
       "targetChoice",
@@ -1865,7 +1979,7 @@ describe("battle runtime: Stat Block actions", () => {
     const shortbowTargetHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: goblinAttackSubject("Shortbow"),
+        subject: goblinAttackSubject(state, "Shortbow"),
         fills: [],
       }),
       "targetChoice",
@@ -1891,7 +2005,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("Goblin Warrior Shortbow attack keeps its authored identity separate from Scimitar", () => {
     const state = goblinTurnBattle();
-    const shortbowSubject = goblinAttackSubject("Shortbow");
+    const shortbowSubject = goblinAttackSubject(state, "Shortbow");
     const shortbowTargetHole = requireHole(
       resolveBattleSubject({ state, subject: shortbowSubject, fills: [] }),
       "targetChoice",
@@ -1918,19 +2032,26 @@ describe("battle runtime: Stat Block actions", () => {
 
     expect(shortbowDamageHole).toMatchObject({
       holeId: "battle:attack:damage-result:1d6+2-piercing",
-      label: "Shortbow damage (1d6+2-piercing)",
+      label: "Stat Block Attack damage (1d6+2-piercing)",
       attack: {
         kind: "statBlockAttack",
-        attack: { name: "Shortbow" },
       },
     });
 
+    const scimitarSubject = goblinAttackSubject(state, "Scimitar");
+    const scimitarTargetHole = attackInitialTargetHole(state, scimitarSubject);
+    const scimitarRollHole = attackRollHoleAfterTarget(
+      state,
+      scimitarTargetHole,
+      scimitarSubject,
+      fighterId,
+    );
     const scimitarDamageHole = attackDamageHoleAfterHit(
       state,
-      shortbowTargetHole,
-      shortbowRollHole,
+      scimitarTargetHole,
+      scimitarRollHole,
       { total: 14, naturalD20: 10 },
-      goblinAttackSubject("Scimitar"),
+      scimitarSubject,
       fighterId,
     );
     const confused = resolveBattleSubject({
@@ -1952,16 +2073,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("Goblin Warrior advantage rider is included when the attack roll had Advantage", () => {
     const state = goblinTurnBattle({ fighterHp: 12 });
-    const subject: Extract<
-      BattleSubject,
-      { readonly tag: "action"; readonly action: "attack" }
-    > = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-      statBlockSection: "actions",
-    };
+    const subject = discoveredStatBlockAttackSubject(state, "Scimitar");
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(
       state,
@@ -1981,7 +2093,7 @@ describe("battle runtime: Stat Block actions", () => {
     expect(damageHole).toMatchObject({
       kind: "rolledDice",
       holeId: "battle:attack:damage-result:1d6+1d4+2-slashing",
-      label: "Scimitar damage (1d6+1d4+2-slashing)",
+      label: "Stat Block Attack damage (1d6+1d4+2-slashing)",
     });
 
     const result = resolveBattleSubject({
@@ -2016,7 +2128,7 @@ describe("battle runtime: Stat Block actions", () => {
         resistantSkeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = goblinAttackSubject("Scimitar");
+    const subject = goblinAttackSubject(state, "Scimitar");
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(
       state,
@@ -2060,7 +2172,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("Goblin Warrior attack resolves through HP mutation, action spend, and zero-HP policy", () => {
     const state = goblinTurnBattle({ fighterHp: 6 });
-    const subject = goblinAttackSubject("Shortbow");
+    const subject = goblinAttackSubject(state, "Shortbow");
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -2120,7 +2232,7 @@ describe("battle runtime: Stat Block actions", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const flailSubject = fighterAttackSubject("Flail");
+    const flailSubject = fighterAttackSubject(state, "Flail");
     const targetHole = attackInitialTargetHole(state, flailSubject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, flailSubject);
     const damageHole = attackDamageHoleAfterHit(
@@ -2159,7 +2271,7 @@ describe("battle runtime: Stat Block actions", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const poisonSubject = fighterAttackSubject("Flail");
+    const poisonSubject = fighterAttackSubject(poisonState, "Flail");
     const poisonTarget = attackInitialTargetHole(poisonState, poisonSubject);
     const poisonRoll = attackRollHoleAfterTarget(
       poisonState,

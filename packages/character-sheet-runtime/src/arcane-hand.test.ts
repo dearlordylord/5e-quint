@@ -13,7 +13,7 @@ import {
   characterSheetArcaneHandObjectId,
   characterSheetHitPointMaximum,
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -300,7 +300,7 @@ function arcaneHandWizardSheet(input: {
   readonly slots: number;
 }): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:arcane-hand-wizard-9"),
       build: {
         ...armorClassBuild({

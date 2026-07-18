@@ -561,12 +561,6 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
         formStatBlockId: "stat_block_cat",
         formLimbs: { kind: "cannotHandleObjects" },
         equipmentDisposition: [],
-        resources: {
-          legendaryActionUsesRemaining: resourceCount(0),
-          dailyUses: [],
-          unavailableRechargeParts: [],
-          unavailableRestRechargeParts: [],
-        },
         expiresAt: {
           kind: "duration",
           durationTicks: elapsedTimeTicks(600),

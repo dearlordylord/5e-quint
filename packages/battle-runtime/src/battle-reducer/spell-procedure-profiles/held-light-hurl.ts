@@ -22,7 +22,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -128,7 +128,7 @@ function discoverHeldLightHurlCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: HeldLightHurlInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles = [
     ...(targetHole.choices.length === 0 ? [] : [targetHole]),

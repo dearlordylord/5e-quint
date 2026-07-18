@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-feather-fall-mitigation
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -70,11 +71,19 @@ describe("Feather Fall Reaction spell", () => {
     }
 
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) =>
-        candidate.kind === "castTriggeredReactionSpell" &&
-        candidate.invocation.tag === "spellSlot" &&
-        candidate.invocation.spellId === featherFallUnitId &&
-        candidate.invocation.procedure === "featherFallMitigation",
+      (candidate) => {
+        if (candidate.kind !== "castTriggeredReactionSpell") return false;
+        const invocation = characterSpellInvocationRefForProcedureRefForTest(
+          awaitingReaction.state,
+          candidate.reactorId,
+          candidate.subject.procedureRef,
+        );
+        return (
+          invocation.tag === "spellSlot" &&
+          invocation.spellId === featherFallUnitId &&
+          invocation.procedure === "featherFallMitigation"
+        );
+      },
     );
     if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
       throw new Error("Expected Feather Fall Reaction choice.");
@@ -91,7 +100,7 @@ describe("Feather Fall Reaction spell", () => {
           responderId: casterId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               featherFallTargetListFill(targetList, casterId, [
                 fallingAId,
@@ -250,7 +259,7 @@ describe("Feather Fall Reaction spell", () => {
         responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             featherFallTargetListFill(
               targetList,
@@ -274,7 +283,7 @@ describe("Feather Fall Reaction spell", () => {
         responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             featherFallTargetListFill(targetList, casterId, [
               fallingAId,
@@ -343,11 +352,19 @@ function castFeatherFallOn(
     throw new Error("Expected Feather Fall falling-trigger Reaction window.");
   }
   const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-    (candidate) =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === featherFallUnitId &&
-      candidate.invocation.procedure === "featherFallMitigation",
+    (candidate) => {
+      if (candidate.kind !== "castTriggeredReactionSpell") return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        awaitingReaction.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === featherFallUnitId &&
+        invocation.procedure === "featherFallMitigation"
+      );
+    },
   );
   if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
     throw new Error("Expected Feather Fall Reaction choice.");
@@ -361,7 +378,7 @@ function castFeatherFallOn(
         responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),

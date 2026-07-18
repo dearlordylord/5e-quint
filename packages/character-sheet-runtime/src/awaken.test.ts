@@ -13,7 +13,7 @@ import {
   castAwaken,
   characterSheetAwakenTargetId,
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -304,7 +304,7 @@ function awakenBardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:awaken-bard-9"),
       build: {
         ...armorClassBuild({

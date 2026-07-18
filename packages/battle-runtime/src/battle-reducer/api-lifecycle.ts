@@ -21,8 +21,15 @@ import * as Option from "effect/Option";
 
 import type { BattleCreatureInit } from "../battle-init.ts";
 
-import { BattleId, CombatantId } from "../identity.ts";
+import {
+  BattleId,
+  CombatantId,
+  battleExecutionScopeCursor,
+  battleExecutionScopeOrdinal,
+  type BattleExecutionScopeCursor,
+} from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
+import { characterExecutionWithSpellInvocations } from "../character-execution.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
 import {
@@ -31,7 +38,7 @@ import {
 } from "./creature-state-leaves.ts";
 
 import {
-  battleCreatureStateFromInit,
+  battleCreatureStateAdmissionFromInit,
   combatantInitiativeInsertionIndex,
   characterDruidWildShapeAvailableFormsInitIssue,
   characterResourceInitIssue,
@@ -40,6 +47,7 @@ import {
   hidePrerequisiteReferencedCombatantIds,
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
+import { supportedSpellActs } from "./spells-profiles.ts";
 
 import { battleStateInitIssue } from "./domain-helpers.ts";
 
@@ -146,6 +154,10 @@ export function startBattle(
   }
 
   const combatants = new Map<CombatantId, BattleCreatureState>();
+  const executionScopeCursors = new Map<
+    CombatantId,
+    BattleExecutionScopeCursor
+  >();
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
       return battleStateInitIssue(
@@ -171,10 +183,23 @@ export function startBattle(
     if (characterSpellcastingIssue !== null) {
       return characterSpellcastingIssue;
     }
-    combatants.set(
-      combatant.combatantId,
-      battleCreatureStateFromInit(combatant),
+    const admission = battleCreatureStateAdmissionFromInit(
+      input.battleId,
+      combatant,
+      battleExecutionScopeOrdinal(0),
     );
+    if (admission.tag === "invalid") {
+      return battleStateInitIssue(
+        admission.issues.map((issue) => issue.message).join("; "),
+      );
+    }
+    combatants.set(combatant.combatantId, admission.creature);
+    if (admission.nextScopeOrdinal > 0) {
+      executionScopeCursors.set(
+        combatant.combatantId,
+        battleExecutionScopeCursor(admission.nextScopeOrdinal),
+      );
+    }
   }
   const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
     input.hidePrerequisites ?? new Map(),
@@ -187,10 +212,11 @@ export function startBattle(
     emptyRosterMessage: "startBattle requires at least one combatant.",
   });
   if (Either.isLeft(initiative)) return Either.left(initiative.left);
-  return Either.right({
+  const state: BattleState = {
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
+    executionScopeCursors,
     companions: new Map(),
     objectOutlines: [],
     lightEmitters: [],
@@ -202,6 +228,30 @@ export function startBattle(
     grapples: [],
     interruptStack: [],
     legendaryActionWindow: null,
+  };
+  const combatantsWithCharacterExecutions = new Map(
+    [...state.combatants].map(([combatantId, combatant]) => {
+      if (combatant.origin.kind !== "character") {
+        return [combatantId, combatant] as const;
+      }
+      return [
+        combatantId,
+        {
+          ...combatant,
+          origin: {
+            ...combatant.origin,
+            execution: characterExecutionWithSpellInvocations(
+              combatant.origin.execution,
+              supportedSpellActs(combatant, state),
+            ),
+          },
+        },
+      ] as const;
+    }),
+  );
+  return Either.right({
+    ...state,
+    combatants: combatantsWithCharacterExecutions,
   });
 }
 
@@ -383,9 +433,41 @@ export function addBattleCombatant(input: {
   if (characterSpellcastingIssue !== null) {
     return characterSpellcastingIssue;
   }
+  const admission = battleCreatureStateAdmissionFromInit(
+    input.state.battleId,
+    input.combatant,
+    input.state.executionScopeCursors.get(input.combatant.combatantId) ??
+      battleExecutionScopeOrdinal(0),
+  );
+  if (admission.tag === "invalid") {
+    return battleStateInitIssue(
+      admission.issues.map((issue) => issue.message).join("; "),
+    );
+  }
+  const combatantsWithAdmission = new Map(input.state.combatants).set(
+    input.combatant.combatantId,
+    admission.creature,
+  );
+  const stateWithAdmission = {
+    ...input.state,
+    combatants: combatantsWithAdmission,
+  };
+  const admittedCreature =
+    admission.creature.origin.kind === "character"
+      ? {
+          ...admission.creature,
+          origin: {
+            ...admission.creature.origin,
+            execution: characterExecutionWithSpellInvocations(
+              admission.creature.origin.execution,
+              supportedSpellActs(admission.creature, stateWithAdmission),
+            ),
+          },
+        }
+      : admission.creature;
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
-    battleCreatureStateFromInit(input.combatant),
+    admittedCreature,
   );
   const insertionIndex = combatantInitiativeInsertionIndex(
     input.state,
@@ -400,11 +482,19 @@ export function addBattleCombatant(input: {
       initiative: input.combatant.initiative,
     },
   );
+  const executionScopeCursors = new Map(input.state.executionScopeCursors);
+  if (admission.nextScopeOrdinal > 0) {
+    executionScopeCursors.set(
+      input.combatant.combatantId,
+      battleExecutionScopeCursor(admission.nextScopeOrdinal),
+    );
+  }
 
   return Either.right({
     ...input.state,
     initiative,
     combatants: nextCombatants,
+    executionScopeCursors,
   });
 }
 
@@ -489,11 +579,10 @@ export function removeBattleCombatants(input: {
         ? resetBattleTurnResources(input.state.currentTurnResources)
         : input.state.currentTurnResources,
       hidePrerequisites: new Map(
-        [...input.state.hidePrerequisites].filter(
-          ([id, prerequisite]) =>
-            hidePrerequisiteReferencedCombatantIds(id, prerequisite).every(
-              (referencedId) => !removeIds.has(referencedId),
-            ),
+        [...input.state.hidePrerequisites].filter(([id, prerequisite]) =>
+          hidePrerequisiteReferencedCombatantIds(id, prerequisite).every(
+            (referencedId) => !removeIds.has(referencedId),
+          ),
         ),
       ),
       readiedSpells: new Map(

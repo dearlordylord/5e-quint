@@ -12,7 +12,7 @@ import {
   castTelekinesis,
   characterSheetId,
   characterSheetTelekinesisTargetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -286,7 +286,7 @@ function telekinesisWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:telekinesis-wizard-9"),
       build: {
         ...armorClassBuild({

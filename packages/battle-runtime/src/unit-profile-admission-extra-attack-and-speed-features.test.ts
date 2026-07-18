@@ -519,7 +519,7 @@ function isSpellCasterClassFeatureExtraAttackResource(
 function resolveWeaponAttackMiss(
   state: BattleState,
 ): ReturnType<typeof resolveBattleSubject> {
-  const subject = weaponAttackSubject("Longsword");
+  const subject = weaponAttackSubject(state, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -863,8 +863,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
       expect.objectContaining({
         kind: "acrobaticMovement",
         unit,
-        acrobaticMovement: acrobaticMovementSupportProfile()
-          .acrobaticMovement,
+        acrobaticMovement: acrobaticMovementSupportProfile().acrobaticMovement,
       }),
     );
   });
@@ -907,7 +906,9 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
   });
 
   test("Acrobatic Movement rejects the path witness while armored or shielded", () => {
-    const armored = acrobaticMovementBattle({ armorClass: lightArmorClassState() });
+    const armored = acrobaticMovementBattle({
+      armorClass: lightArmorClassState(),
+    });
     expect(
       resolveBattleSubject({
         state: armored,
@@ -1327,12 +1328,14 @@ function acrobaticMovementSupportProfile() {
   } as const;
 }
 
-function acrobaticMovementBattle(input: {
-  readonly armorClass?: Parameters<typeof characterCreature>[0]["armorClass"];
-  readonly selectedLoadout?: Parameters<
-    typeof characterCreature
-  >[0]["selectedLoadout"];
-} = {}): BattleState {
+function acrobaticMovementBattle(
+  input: {
+    readonly armorClass?: Parameters<typeof characterCreature>[0]["armorClass"];
+    readonly selectedLoadout?: Parameters<
+      typeof characterCreature
+    >[0]["selectedLoadout"];
+  } = {},
+): BattleState {
   const unit = unitLibrary.requireUnit(monkAcrobaticMovementUnitId);
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: unit.id },

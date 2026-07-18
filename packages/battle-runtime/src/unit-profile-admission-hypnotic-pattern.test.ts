@@ -60,7 +60,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

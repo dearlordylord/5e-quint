@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack
 import { describe, expect, test } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
   divineSmiteUnitId,
   rayOfFrostUnitId,
@@ -43,10 +44,7 @@ import {
   spellSlotInvocationRef,
   trueStrikeInput,
 } from "./unit-profile-admission-test-support.ts";
-import type {
-  BattleFill,
-  BattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+import type { BattleFill } from "./unit-profile-admission-test-support.ts";
 
 describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => {
   test("true_strike casts through its material weapon using spellcasting ability and cantrip Radiant scaling", () => {
@@ -70,7 +68,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const damageType = requireHole(act.initialHoles, "damageTypeChoice");
     const target = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -242,12 +240,11 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       preparedSpells: [spell],
       attack: null,
     });
-    const subject: Extract<BattleSubject, { readonly tag: "action" }> = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const subject = characterAttackSubjectForTest(
+      state,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -300,12 +297,11 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         },
       ],
     });
-    const subject: Extract<BattleSubject, { readonly tag: "action" }> = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const subject = characterAttackSubjectForTest(
+      state,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -331,11 +327,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite Unarmed Strike hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -352,7 +349,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -399,7 +396,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       preparedSpells: [spell],
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
     });
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -431,7 +428,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       preparedSpells: [spell],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -462,11 +459,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -483,7 +481,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -593,7 +591,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(casterTurn.state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -648,7 +646,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -679,7 +677,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -698,7 +696,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [targetFill],
           },
         },
@@ -718,7 +716,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -786,7 +784,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       spellSlots: [{ spellLevel: 3, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -812,11 +810,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite critical hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -833,7 +832,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -873,7 +872,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         },
       ],
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -899,11 +898,12 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite hit to open an attack-hit window.",
       );
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === spellCasterId,
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -920,7 +920,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },

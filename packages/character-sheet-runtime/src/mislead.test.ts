@@ -11,7 +11,7 @@ import {
   armorClassBuild,
   castMislead,
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -243,7 +243,7 @@ function misleadWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:mislead-wizard-9"),
       build: {
         ...armorClassBuild({

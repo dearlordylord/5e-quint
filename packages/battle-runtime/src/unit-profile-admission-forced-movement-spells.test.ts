@@ -3,6 +3,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-forced-reaction-movement
 import { describe, expect, test } from "vitest";
 import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
+import {
   dissonantWhispersUnitId,
   spellCasterId,
   spellTargetId,
@@ -54,7 +58,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -340,7 +344,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -703,7 +707,16 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
         movementFill(movement, {
           movementCostFeet: 30,
           provokedOpportunityAttacks: [
-            { reactorId: spellCasterId, attackName: "Unarmed Strike" },
+            {
+              reactorId: spellCasterId,
+              ...attackExecutionSelectionForSubjectForTest(
+                characterAttackSubjectForTest(
+                  state,
+                  spellCasterId,
+                  "Unarmed Strike",
+                ),
+              ),
+            },
           ],
         }),
       ],

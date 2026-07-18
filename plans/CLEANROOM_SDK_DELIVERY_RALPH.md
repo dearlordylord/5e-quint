@@ -51,9 +51,9 @@ acceptance, WIP disposition, and focused verification.
     },
     {
       "number": 6,
-      "id": "GH-92",
-      "status": "deferred",
-      "title": "Derive presentation-free Oracle facts from production owners",
+      "id": "GH-162",
+      "status": "ready-for-implementation",
+      "title": "Replace relationship partitions in Battle target and Act discovery",
       "dependencies": []
     },
     {
@@ -107,7 +107,10 @@ acceptance, WIP disposition, and focused verification.
       "status": "ready-for-implementation",
       "title": "Compose the lifecycle-safe Oracle Case and Trace wire algebra",
       "dependencies": [
-        "GH-92"
+        "GH-158",
+        "GH-159",
+        "GH-160",
+        "GH-168"
       ]
     },
     {
@@ -522,6 +525,129 @@ acceptance, WIP disposition, and focused verification.
       "dependencies": [
         "GH-154"
       ]
+    },
+    {
+      "number": 56,
+      "id": "GH-165",
+      "status": "done",
+      "title": "Give Stat Block procedures and limited-use pools typed execution references",
+      "dependencies": []
+    },
+    {
+      "number": 57,
+      "id": "GH-158",
+      "status": "done",
+      "title": "Complete exact Character Creation Oracle facts from their owner",
+      "dependencies": []
+    },
+    {
+      "number": 58,
+      "id": "GH-159",
+      "status": "done",
+      "title": "Make fresh Character Sheet construction return exact facts and flat accumulated issues",
+      "dependencies": []
+    },
+    {
+      "number": 59,
+      "id": "GH-160",
+      "status": "ready-for-implementation",
+      "title": "Make Character-Sheet-to-Battle entry return origin-correct mechanical facts",
+      "dependencies": [
+        "GH-170",
+        "GH-171"
+      ]
+    },
+    {
+      "number": 60,
+      "id": "GH-166",
+      "status": "ready-for-implementation",
+      "title": "Define deterministic stateless Battle continuation replay",
+      "dependencies": [
+        "GH-170"
+      ]
+    },
+    {
+      "number": 61,
+      "id": "GH-163",
+      "status": "ready-for-implementation",
+      "title": "Replace relationship partitions in Battle roll and trigger resolution",
+      "dependencies": []
+    },
+    {
+      "number": 62,
+      "id": "GH-164",
+      "status": "ready-for-implementation",
+      "title": "Replace relationship partitions in Battle effect and zero-HP lifecycles",
+      "dependencies": []
+    },
+    {
+      "number": 63,
+      "id": "GH-171",
+      "status": "ready-for-implementation",
+      "title": "Remove Encounter Side from Battle setup, state, and QNT vocabulary",
+      "dependencies": [
+        "GH-162",
+        "GH-163",
+        "GH-164"
+      ]
+    },
+    {
+      "number": 64,
+      "id": "GH-172",
+      "status": "done",
+      "title": "Migrate weapon and attack Battle subjects to execution references",
+      "dependencies": [
+        "GH-165"
+      ]
+    },
+    {
+      "number": 65,
+      "id": "GH-170",
+      "status": "ready-for-implementation",
+      "title": "Purge authored-name Battle replay keys and publish presentation joins",
+      "dependencies": [
+        "GH-172",
+        "GH-173",
+        "GH-174"
+      ]
+    },
+    {
+      "number": 66,
+      "id": "GH-169",
+      "status": "ready-for-implementation",
+      "title": "Purify BattleSnapshot as committed mechanical state",
+      "dependencies": [
+        "GH-170",
+        "GH-171"
+      ]
+    },
+    {
+      "number": 67,
+      "id": "GH-168",
+      "status": "ready-for-implementation",
+      "title": "Publish the exclusive Battle continuation frontier beside BattleSnapshot",
+      "dependencies": [
+        "GH-166",
+        "GH-169"
+      ]
+    },
+    {
+      "number": 68,
+      "id": "GH-173",
+      "status": "done",
+      "title": "Migrate spell, Unit, and feature Battle subjects to execution references",
+      "dependencies": [
+        "GH-165"
+      ]
+    },
+    {
+      "number": 69,
+      "id": "GH-174",
+      "status": "done",
+      "title": "Migrate Battle threats and nested interruption transport to execution references",
+      "dependencies": [
+        "GH-165"
+      ]
     }
   ]
 }
@@ -541,34 +667,10 @@ pnpm exec tsx scripts/ralph-issue-context.ts validate-plan --plan plans/CLEANROO
 node scripts/ralph-task-index.cjs plans/CLEANROOM_SDK_DELIVERY_RALPH.md --runnable-tsv
 ```
 
-The first frontier is Tasks 6–11. Use distinct launcher worktrees/run IDs/output
-branches and no more than four concurrent Ralph agents. Create all six launcher
-worktrees from this accepted planning branch:
-
-```bash
-git worktree add -b launcher/cleanroom-gh92 ../dnd-cleanroom-gh92 wayfinder/cleanroom-ralph-redesign
-git worktree add -b launcher/cleanroom-gh96 ../dnd-cleanroom-gh96 wayfinder/cleanroom-ralph-redesign
-git worktree add -b launcher/cleanroom-gh98 ../dnd-cleanroom-gh98 wayfinder/cleanroom-ralph-redesign
-git worktree add -b launcher/cleanroom-gh100 ../dnd-cleanroom-gh100 wayfinder/cleanroom-ralph-redesign
-git worktree add -b launcher/cleanroom-gh109 ../dnd-cleanroom-gh109 wayfinder/cleanroom-ralph-redesign
-git worktree add -b launcher/cleanroom-gh113 ../dnd-cleanroom-gh113 wayfinder/cleanroom-ralph-redesign
-```
-
-Launch Tasks 6–9 as the first capacity batch:
-
-```bash
-(cd ../dnd-cleanroom-gh92 && scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md --base wayfinder/cleanroom-ralph-redesign --task 6 --run-id cleanroom-gh92 --output-branch ralph/cleanroom-gh92/integration)
-(cd ../dnd-cleanroom-gh96 && scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md --base wayfinder/cleanroom-ralph-redesign --task 7 --run-id cleanroom-gh96 --output-branch ralph/cleanroom-gh96/integration)
-(cd ../dnd-cleanroom-gh98 && scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md --base wayfinder/cleanroom-ralph-redesign --task 8 --run-id cleanroom-gh98 --output-branch ralph/cleanroom-gh98/integration)
-(cd ../dnd-cleanroom-gh100 && scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md --base wayfinder/cleanroom-ralph-redesign --task 9 --run-id cleanroom-gh100 --output-branch ralph/cleanroom-gh100/integration)
-```
-
-When a slot is free, launch the remaining first-frontier tasks:
-
-```bash
-(cd ../dnd-cleanroom-gh109 && scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md --base wayfinder/cleanroom-ralph-redesign --task 10 --run-id cleanroom-gh109 --output-branch ralph/cleanroom-gh109/integration)
-(cd ../dnd-cleanroom-gh113 && scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md --base wayfinder/cleanroom-ralph-redesign --task 11 --run-id cleanroom-gh113 --output-branch ralph/cleanroom-gh113/integration)
-```
+Do not use a hard-coded first wave: the live frontier changes as canonical
+issues and native blockers change. Use distinct launcher worktrees, run ids,
+and output branches for only the rows emitted by `--runnable-tsv`, with no more
+than four concurrent Ralph agents.
 
 After every accepted integration, update the task status through the normal
 Ralph completion flow, pull the accepted plan state into every idle launcher,
@@ -603,9 +705,9 @@ Canonical issue: [Enforce complete canonical Surface discovery and regeneration]
 
 Canonical issue: [Drive spell execution from typed procedure facts](https://github.com/dearlordylord/5e-quint/issues/47)
 
-### Task 6 - GH-92
+### Task 6 - GH-162
 
-Canonical issue: [Derive presentation-free Oracle facts from production owners](https://github.com/dearlordylord/5e-quint/issues/92)
+Canonical issue: [Replace relationship partitions in Battle target and Act discovery](https://github.com/dearlordylord/5e-quint/issues/162)
 
 ### Task 7 - GH-152
 
@@ -630,6 +732,10 @@ Canonical issue: [Project Stat Block mechanics into typed creatures and availabl
 ### Task 12 - GH-93
 
 Canonical issue: [Compose the lifecycle-safe Oracle Case and Trace wire algebra](https://github.com/dearlordylord/5e-quint/issues/93)
+
+Composition uses the corrected terminal owner blockers GH-158, GH-159, GH-160,
+and GH-168. GH-92 is retained as a non-runnable superseded outcome and is not a
+task dependency.
 
 ### Task 13 - GH-97
 
@@ -802,3 +908,59 @@ Canonical issue: [Traverse decoded Surface strings with finite tuple-aware schem
 ### Task 55 - GH-155
 
 Canonical issue: [Replay renamed Unit mechanics through the Character Build lifecycle](https://github.com/dearlordylord/5e-quint/issues/155)
+
+### Task 56 - GH-165
+
+Canonical issue: [Give Stat Block procedures and limited-use pools typed execution references](https://github.com/dearlordylord/5e-quint/issues/165)
+
+### Task 57 - GH-158
+
+Canonical issue: [Complete exact Character Creation Oracle facts from their owner](https://github.com/dearlordylord/5e-quint/issues/158)
+
+### Task 58 - GH-159
+
+Canonical issue: [Make fresh Character Sheet construction return exact facts and flat accumulated issues](https://github.com/dearlordylord/5e-quint/issues/159)
+
+### Task 59 - GH-160
+
+Canonical issue: [Make Character-Sheet-to-Battle entry return origin-correct mechanical facts](https://github.com/dearlordylord/5e-quint/issues/160)
+
+### Task 60 - GH-166
+
+Canonical issue: [Define deterministic stateless Battle continuation replay](https://github.com/dearlordylord/5e-quint/issues/166)
+
+### Task 61 - GH-163
+
+Canonical issue: [Replace relationship partitions in Battle roll and trigger resolution](https://github.com/dearlordylord/5e-quint/issues/163)
+
+### Task 62 - GH-164
+
+Canonical issue: [Replace relationship partitions in Battle effect and zero-HP lifecycles](https://github.com/dearlordylord/5e-quint/issues/164)
+
+### Task 63 - GH-171
+
+Canonical issue: [Remove Encounter Side from Battle setup, state, and QNT vocabulary](https://github.com/dearlordylord/5e-quint/issues/171)
+
+### Task 64 - GH-172
+
+Canonical issue: [Migrate weapon and attack Battle subjects to execution references](https://github.com/dearlordylord/5e-quint/issues/172)
+
+### Task 65 - GH-170
+
+Canonical issue: [Purge authored-name Battle replay keys and publish presentation joins](https://github.com/dearlordylord/5e-quint/issues/170)
+
+### Task 66 - GH-169
+
+Canonical issue: [Purify BattleSnapshot as committed mechanical state](https://github.com/dearlordylord/5e-quint/issues/169)
+
+### Task 67 - GH-168
+
+Canonical issue: [Publish the exclusive Battle continuation frontier beside BattleSnapshot](https://github.com/dearlordylord/5e-quint/issues/168)
+
+### Task 68 - GH-173
+
+Canonical issue: [Migrate spell, Unit, and feature Battle subjects to execution references](https://github.com/dearlordylord/5e-quint/issues/173)
+
+### Task 69 - GH-174
+
+Canonical issue: [Migrate Battle threats and nested interruption transport to execution references](https://github.com/dearlordylord/5e-quint/issues/174)

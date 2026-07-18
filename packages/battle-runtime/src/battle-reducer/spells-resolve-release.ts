@@ -596,6 +596,7 @@ export function resolveReadySpellAct(
       input.subject.actorId,
       {
         invocation,
+        procedureRef: input.subject.procedureRef,
         trigger: input.subject.mode.trigger,
         expiresAt: {
           kind: "startOfTurn" as const,
@@ -1219,17 +1220,19 @@ function spiritualWeaponReleaseEffectAlreadyApplied(input: {
   readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
 }): boolean {
   return (
-    input.state.combatants.get(input.actorId)?.activeEffects.some(
-      (effect) =>
-        effect.kind === "spiritualWeapon" &&
-        effect.sourceSpellId === input.invocation.spell.id &&
-        effect.sourceCombatantId === input.actorId &&
-        effect.forcePositionId === input.forcePositionId &&
-        spiritualWeaponRepeatTargetingEquals(
-          effect.repeatTargeting,
-          input.repeatTargeting,
-        ),
-    ) ?? false
+    input.state.combatants
+      .get(input.actorId)
+      ?.activeEffects.some(
+        (effect) =>
+          effect.kind === "spiritualWeapon" &&
+          effect.sourceSpellId === input.invocation.spell.id &&
+          effect.sourceCombatantId === input.actorId &&
+          effect.forcePositionId === input.forcePositionId &&
+          spiritualWeaponRepeatTargetingEquals(
+            effect.repeatTargeting,
+            input.repeatTargeting,
+          ),
+      ) ?? false
   );
 }
 
@@ -1244,7 +1247,6 @@ function spiritualWeaponRepeatTargetingEquals(
     return true;
   }
   return (
-    right.kind === "fixedCombatant" &&
-    left.combatantId === right.combatantId
+    right.kind === "fixedCombatant" && left.combatantId === right.combatantId
   );
 }

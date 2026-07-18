@@ -7,6 +7,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 import { describe, expect, it } from "vitest";
 import { Either } from "effect";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -337,7 +338,7 @@ function resistanceReducesMatchingDamage(): RollModifierBuffSelectedIdentityProj
     endTurn({ state: cast.state, actorId: casterId }),
   );
   const postTurnState = nextTurn.state;
-  const subject = unarmedStrikeSubject(primaryTargetId);
+  const subject = unarmedStrikeSubject(postTurnState, primaryTargetId);
   const attackTarget = requireResultHole(
     resolveBattleSubject({ state: postTurnState, subject, fills: [] }),
     "targetChoice",
@@ -580,14 +581,10 @@ function bonusActionSpellAct(
 }
 
 function unarmedStrikeSubject(
+  state: BattleState,
   actorId: CombatantId,
 ): Extract<BattleSubject, { readonly tag: "action" }> {
-  return {
-    tag: "action",
-    actorId,
-    action: "attack",
-    attackName: "Unarmed Strike",
-  };
+  return characterAttackSubjectForTest(state, actorId, "Unarmed Strike");
 }
 
 function spellTargetFill(
@@ -595,6 +592,9 @@ function spellTargetFill(
   spellId: RollModifierBuffSpellId,
   selectedTargetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound roll-modifier attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -658,6 +658,9 @@ function attackTargetFill(
   actorId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound attack target selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -667,7 +670,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };
@@ -990,7 +993,9 @@ function fillResistanceTargetRoute(
     fills: [spellTargetFill(target, "resistance", casterId)],
   });
   if (result.tag !== "needsHoles") {
-    throw new Error(`Expected Resistance damage-type frontier, got ${result.tag}.`);
+    throw new Error(
+      `Expected Resistance damage-type frontier, got ${result.tag}.`,
+    );
   }
   return spellDamageReductionRouteState({
     state,
@@ -1037,7 +1042,7 @@ function applyResistanceReductionRollRoute(
     endTurn({ state: state.battle, actorId: casterId }),
   );
   const postTurnState = nextTurn.state;
-  const subject = unarmedStrikeSubject(primaryTargetId);
+  const subject = unarmedStrikeSubject(postTurnState, primaryTargetId);
   const attackTarget = requireResultHole(
     resolveBattleSubject({ state: postTurnState, subject, fills: [] }),
     "targetChoice",

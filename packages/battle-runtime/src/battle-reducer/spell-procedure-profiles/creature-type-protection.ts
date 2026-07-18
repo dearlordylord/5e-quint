@@ -16,7 +16,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -238,7 +238,7 @@ function discoverCreatureTypeProtectionCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: CreatureTypeProtectionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "self") {
     return [
       {

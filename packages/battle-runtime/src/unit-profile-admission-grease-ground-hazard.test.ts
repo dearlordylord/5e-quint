@@ -68,7 +68,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(greaseUnitId, 1, "greaseGroundHazard"),

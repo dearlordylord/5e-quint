@@ -31,6 +31,7 @@
 // UNIT-IDENTITY-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
 // UNIT-IDENTITY-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
 import { isDeepStrictEqual } from "node:util";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -737,9 +738,11 @@ function evasionUnitIdForReplay(unitId: string): EvasionUnitId | undefined {
   return undefined;
 }
 
-function createRuleCoreFeatureDriver(input: {
-  readonly evasionUnitId?: EvasionUnitId;
-} = {}) {
+function createRuleCoreFeatureDriver(
+  input: {
+    readonly evasionUnitId?: EvasionUnitId;
+  } = {},
+) {
   return defineDriver(driverSchema, () => {
     let state = featureBattle();
     let holes: readonly BattleHole[] = [];
@@ -823,8 +826,16 @@ function createRuleCoreFeatureDriver(input: {
         BattleFill,
         { readonly kind: "rolledDice" }
       >["weaponDamageDiceRollChoice"];
+      readonly attackName?:
+        | "Longsword"
+        | "Dagger"
+        | "Scimitar"
+        | "Shortbow"
+        | "Shortsword";
     }): void {
-      const subject = input.subject ?? actorAttackSubject("Longsword");
+      const attackName = input.attackName ?? "Longsword";
+      const subject =
+        input.subject ?? actorAttackSubject(input.state, attackName);
       const target = requireHole(
         resolveBattleSubject({ state: input.state, subject, fills: [] }),
         "targetChoice",
@@ -834,12 +845,7 @@ function createRuleCoreFeatureDriver(input: {
           state: input.state,
           subject,
           fills: [
-            attackTargetFill(
-              target,
-              subject.actorId,
-              targetId,
-              subject.attackName,
-            ),
+            attackTargetFill(target, subject.actorId, targetId, attackName),
           ],
         }),
         "attackRoll",
@@ -865,12 +871,7 @@ function createRuleCoreFeatureDriver(input: {
           state: input.state,
           subject,
           fills: [
-            attackTargetFill(
-              target,
-              subject.actorId,
-              targetId,
-              subject.attackName,
-            ),
+            attackTargetFill(target, subject.actorId, targetId, attackName),
             attackRollFill(attackRoll, rollValue),
           ],
         }),
@@ -880,12 +881,7 @@ function createRuleCoreFeatureDriver(input: {
         state: input.state,
         subject,
         fills: [
-          attackTargetFill(
-            target,
-            subject.actorId,
-            targetId,
-            subject.attackName,
-          ),
+          attackTargetFill(target, subject.actorId, targetId, attackName),
           attackRollFill(attackRoll, rollValue),
           damageRollFillWithGroups(
             damage,
@@ -1037,7 +1033,8 @@ function createRuleCoreFeatureDriver(input: {
         resetProjection();
         resolveActorAttack({
           state,
-          subject: actorAttackSubject("Dagger"),
+          subject: actorAttackSubject(state, "Dagger"),
+          attackName: "Dagger",
           damageRoll: 4,
           rollMode: "advantage",
           selectedAttackDamageRiderUnitIds: [
@@ -1097,7 +1094,7 @@ function createRuleCoreFeatureDriver(input: {
       doZeroHitPointReplacement: () => {
         state = relentlessEnduranceBattle();
         resetProjection();
-        const subject = actorAttackSubject("Longsword");
+        const subject = actorAttackSubject(state, "Longsword");
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
           "targetChoice",
@@ -1256,7 +1253,7 @@ function createRuleCoreFeatureDriver(input: {
           ],
         });
         resetProjection();
-        const subject = actorAttackSubject("Shortbow");
+        const subject = actorAttackSubject(state, "Shortbow");
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
           "targetChoice",
@@ -1431,7 +1428,7 @@ function createRuleCoreFeatureDriver(input: {
       readonly reductionRoll?: number;
       readonly damageRoll: number;
     }): void {
-      const subject = actorAttackSubject("Shortsword", targetId);
+      const subject = actorAttackSubject(state, "Shortsword", targetId);
       const target = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
         "targetChoice",
@@ -1505,7 +1502,7 @@ function createRuleCoreFeatureDriver(input: {
             responderId: actorId,
             choice: {
               kind: "reactionRollOrDamageReduction",
-              unitId: input.unitId,
+              procedureRef: choice.choice.procedureRef,
               modifierKind: input.modifierKind,
               fills: reductionFills,
             },
@@ -2253,13 +2250,14 @@ function cuttingWordsResource(
 }
 
 function actorAttackSubject(
+  state: BattleState,
   attackName: "Longsword" | "Dagger" | "Scimitar" | "Shortbow" | "Shortsword",
   actor: CombatantId = actorId,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return { tag: "action", actorId: actor, action: "attack", attackName };
+  return characterAttackSubjectForTest(state, actor, attackName);
 }
 
 function unitFeatureSubject(
@@ -2329,27 +2327,29 @@ function attackTargetFill(
   hole: BattleHole,
   attackerId: CombatantId,
   defenderId: CombatantId,
-  attackName: string,
+  _attackName: string,
 ): BattleFill {
-  if (hole.kind !== "targetChoice") throw new Error("Expected targetChoice.");
+  if (hole.kind !== "targetChoice" || hole.attack === undefined) {
+    throw new Error("Expected bound targetChoice attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: defenderId,
     spatialFacts: [
-      attackName === "Shortbow"
+      hole.attack.targetConstraint === "rangedRange"
         ? {
             kind: "attackTargetInRangedRange",
             actorId: attackerId,
             targetId: defenderId,
-            attackName,
+            ...hole.attack.selection,
             rangeBand: "normal",
           }
         : {
             kind: "attackTargetInMeleeReach",
             actorId: attackerId,
             targetId: defenderId,
-            attackName,
+            ...hole.attack.selection,
           },
       {
         kind: "attackerAllyWithin5FeetOfTarget",
@@ -2525,7 +2525,6 @@ function reactionModifierChoice(
   const choice = choices.find(
     (candidate) =>
       candidate.kind === "reactionRollOrDamageReduction" &&
-      candidate.choice.unitId === unitId &&
       candidate.choice.kind === modifierKind,
   );
   if (choice?.kind !== "reactionRollOrDamageReduction") {
@@ -2665,7 +2664,7 @@ function incomingAttackAdvantage(state: BattleState): boolean {
   ) {
     return true;
   }
-  const subject = actorAttackSubject("Scimitar", targetId);
+  const subject = actorAttackSubject(state, "Scimitar", targetId);
   const target = resolveBattleSubject({ state, subject, fills: [] });
   if (target.tag !== "needsHoles") return false;
   const targetHole = target.holes.find((hole) => hole.kind === "targetChoice");

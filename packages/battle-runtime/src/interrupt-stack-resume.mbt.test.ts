@@ -42,6 +42,8 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   attackInitialTargetHole,
+  attackExecutionSelectionForSubjectForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
   attackRollFill,
   attackRollHoleAfterTarget,
   damageRollFill,
@@ -279,7 +281,7 @@ function initialRuntimeState(): InterruptStackResumeRuntimeState {
 
 function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState {
   const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-  const subject = fighterAttackSubject();
+  const subject = fighterAttackSubject(state);
   const target = attackInitialTargetHole(state, subject);
   const attackRoll = attackRollHoleAfterTarget(state, target, subject);
   const awaitingAttackReaction = resolveBattleSubject({
@@ -296,6 +298,12 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   const releaseChoice = reactionChoiceWithSubject(
     awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
   );
+  if (
+    releaseChoice.subject.tag !== "runtimeCommand" ||
+    releaseChoice.subject.command !== "releaseReadiedSpell"
+  ) {
+    throw new Error("Expected a readied-spell release subject.");
+  }
   const released = resolveBattleInterrupt({
     state: awaitingAttackReaction.state,
     fill: interruptDecisionFill(
@@ -306,6 +314,7 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
         choice: {
           kind: "releaseReadiedSpell",
           readiedSpellCasterId: wizardId,
+          procedureRef: releaseChoice.subject.procedureRef,
           fills: [],
         },
       },
@@ -330,13 +339,17 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   if (nested.tag !== "needsHoles") {
     throw new Error("Expected nested save-failed interrupt window.");
   }
-  const maxStackDepthObserved = nested.snapshot.pendingInterrupt?.stackDepth ?? 0;
+  const maxStackDepthObserved =
+    nested.snapshot.pendingInterrupt?.stackDepth ?? 0;
   const declinedNested = resolveBattleInterrupt({
     state: nested.state,
-    fill: interruptDecisionFill(nested.snapshot.pendingInterrupt!.decisionHole, {
-      kind: "decline",
-      responderId: secondWizardId,
-    }),
+    fill: interruptDecisionFill(
+      nested.snapshot.pendingInterrupt!.decisionHole,
+      {
+        kind: "decline",
+        responderId: secondWizardId,
+      },
+    ),
   });
   if (declinedNested.tag !== "needsHoles") {
     throw new Error("Expected nested decline to resume released spell damage.");
@@ -362,7 +375,7 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
   const state = shieldBattle(srdSpellRecord(shieldUnitId));
   const attackAct = unarmedStrikeAct(state);
   const target = requireHoleFromArray(attackAct.initialHoles, "targetChoice");
-  const targetFillForAttack = attackTargetFill(target);
+  const targetFillForAttack = attackTargetFill(target, attackAct.subject);
   const awaitingAttackRoll = resolveBattleSubject({
     state,
     subject: attackAct.subject,
@@ -371,7 +384,10 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
   if (awaitingAttackRoll.tag !== "needsHoles") {
     throw new Error("Expected attack target to request an Attack Roll.");
   }
-  const attackRoll = requireHoleFromArray(awaitingAttackRoll.holes, "attackRoll");
+  const attackRoll = requireHoleFromArray(
+    awaitingAttackRoll.holes,
+    "attackRoll",
+  );
   const awaitingReaction = resolveBattleSubject({
     state,
     subject: attackAct.subject,
@@ -395,7 +411,7 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
         responderId: shieldCasterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [],
         },
       },
@@ -421,7 +437,7 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
 
 function replayRecordedProcedureFromRoot(): InterruptStackResumeRuntimeState {
   const state = fighterVsGoblinBattle();
-  const subject = fighterAttackSubject();
+  const subject = fighterAttackSubject(state);
   const target = attackInitialTargetHole(state, subject);
   const attackRoll = attackRollHoleAfterTarget(state, target, subject);
   const recordedFills = [
@@ -582,7 +598,7 @@ function unarmedStrikeAct(state: BattleState): AttackAct {
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === shieldAttackerId &&
-      candidate.subject.attackName === "Unarmed Strike",
+      candidate.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (act === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -592,6 +608,7 @@ function unarmedStrikeAct(state: BattleState): AttackAct {
 
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  subject: AttackAct["subject"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -602,7 +619,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: shieldAttackerId,
         targetId: shieldCasterId,
-        attackName: "Unarmed Strike",
+        ...attackExecutionSelectionForSubjectForTest(subject),
       },
     ],
   };
@@ -634,12 +651,23 @@ function requireShieldReactionChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === shieldCasterId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === shieldUnitId &&
-      candidate.invocation.procedure === "shieldReaction",
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== shieldCasterId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === shieldUnitId &&
+        invocation.procedure === "shieldReaction"
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected Shield Reaction choice.");
@@ -654,8 +682,9 @@ function shieldArmorClassBonusActive(
   return (
     state.combatants
       .get(combatantId)
-      ?.activeEffects.some((effect) => effect.kind === "spellArmorClassBonus") ??
-    false
+      ?.activeEffects.some(
+        (effect) => effect.kind === "spellArmorClassBonus",
+      ) ?? false
   );
 }
 
@@ -792,8 +821,7 @@ function interruptStackResumeLastResult(
   raw: unknown,
 ): InterruptStackResumeLastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    INTERRUPT_STACK_RESUME_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = INTERRUPT_STACK_RESUME_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

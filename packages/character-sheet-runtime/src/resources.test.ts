@@ -31,7 +31,7 @@ import {
   characterSheetTempHp,
   completeLongRest,
   completeShortRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   parseCharacterSheet,
   prayerOfHealingClericBuild,
   requireRight,
@@ -65,7 +65,7 @@ describe("Character Sheet runtime / resources", () => {
     const cases = [
       {
         sheet: requireRight(
-          createFreshCharacterSheet({
+          rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-paladin"),
             build: armorClassBuild({ startingClass: "class_paladin" }),
             currentHp: Hp(6),
@@ -81,7 +81,7 @@ describe("Character Sheet runtime / resources", () => {
       },
       {
         sheet: requireRight(
-          createFreshCharacterSheet({
+          rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-ranger"),
             build: armorClassBuild({ startingClass: "class_ranger" }),
             currentHp: Hp(8),
@@ -97,7 +97,7 @@ describe("Character Sheet runtime / resources", () => {
       },
       {
         sheet: requireRight(
-          createFreshCharacterSheet({
+          rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-druid"),
             build: armorClassBuild({
               startingClass: "class_druid",
@@ -123,7 +123,7 @@ describe("Character Sheet runtime / resources", () => {
       },
       {
         sheet: requireRight(
-          createFreshCharacterSheet({
+          rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-monk"),
             build: armorClassBuild({
               startingClass: "class_monk",
@@ -143,7 +143,7 @@ describe("Character Sheet runtime / resources", () => {
       },
       {
         sheet: requireRight(
-          createFreshCharacterSheet({
+          rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-sorcerer"),
             build: sorcererFontOfMagicBuild(),
             currentHp: Hp(10),
@@ -250,7 +250,7 @@ describe("Character Sheet runtime / resources", () => {
   test.each(overCapacityResourceCases)(
     "rejects over-capacity $name expenditure",
     (input) => {
-      const sheet = createFreshCharacterSheet({
+      const sheet = rebuildCharacterSheetFixture({
         characterId: characterSheetId(`character:over-capacity-${input.name}`),
         build: input.build,
         currentHp: Hp(10),
@@ -427,7 +427,7 @@ describe("Character Sheet runtime / resources", () => {
 
   test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-rest"),
         build: armorClassBuild({ startingClass: "class_ranger" }),
         currentHp: Hp(10),
@@ -472,7 +472,7 @@ describe("Character Sheet runtime / resources", () => {
 
   test("Long Rest restores the Paladin's Smite Divine Smite free-cast pool", () => {
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin-smite-rest"),
         build: armorClassBuild({
           startingClass: "class_paladin",
@@ -533,7 +533,7 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-focus-rest"),
         build: monkBuild,
         currentHp: Hp(15),
@@ -615,7 +615,7 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-rest"),
         build: sorcererBuild,
         currentHp: Hp(12),
@@ -671,7 +671,7 @@ describe("Character Sheet runtime / resources", () => {
       sorcererAdvancements: 4,
     });
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:sorcerer-sorcerous-restoration",
         ),
@@ -766,7 +766,7 @@ describe("Character Sheet runtime / resources", () => {
     });
 
     const lowerLevelSpent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:sorcerer-no-sorcerous-restoration",
         ),
@@ -824,7 +824,7 @@ describe("Character Sheet runtime / resources", () => {
       advancements: ["class_monk"],
     });
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-used"),
         build: monkBuild,
         currentHp: Hp(15),
@@ -925,7 +925,7 @@ describe("Character Sheet runtime / resources", () => {
       advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
     });
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-initiative"),
         build: monkBuild,
         currentHp: Hp(10),
@@ -980,7 +980,7 @@ describe("Character Sheet runtime / resources", () => {
     });
 
     const nearMaximum = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-cap"),
         build: monkBuild,
         currentHp: Hp(28),
@@ -1017,7 +1017,7 @@ describe("Character Sheet runtime / resources", () => {
       advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
     });
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-gates"),
         build: monkBuild,
         currentHp: Hp(20),
@@ -1061,7 +1061,7 @@ describe("Character Sheet runtime / resources", () => {
   });
 
   test(uncannyMetabolismRejectsUnownedUseStateTestName, () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:unowned-uncanny-metabolism"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
       currentHp: Hp(10),

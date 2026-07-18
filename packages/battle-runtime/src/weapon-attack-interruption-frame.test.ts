@@ -8,12 +8,14 @@ import {
 } from "./battle-reducer.ts";
 import {
   fighterAttackSubject,
+  fighterVsGoblinBattle,
   goblinId,
   skeletonId,
 } from "./battle-runtime-test-support.ts";
 
+const state = fighterVsGoblinBattle();
 const canonicalBoundaryFacts = {
-  participant: fighterAttackSubject(),
+  participant: fighterAttackSubject(state),
   targetId: goblinId,
   targetSpatialFacts: [],
   attackResult: { total: 15, naturalD20: DieRollResult(10) },

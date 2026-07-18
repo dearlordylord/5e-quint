@@ -28,7 +28,7 @@ import { Either, Schema } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -235,7 +235,7 @@ function discoverInsectPlagueAreaHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: InsectPlagueAreaHazardSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

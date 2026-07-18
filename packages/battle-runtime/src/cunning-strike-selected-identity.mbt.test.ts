@@ -252,7 +252,7 @@ function cunningStrikeDamageWindow(
   optionId: CunningStrikeOptionId,
 ): CunningStrikeDamageWindow {
   const state = cunningStrikeBattle();
-  const subject = fighterAttackSubject("Dagger");
+  const subject = fighterAttackSubject(state, "Dagger");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject);
   const attackRoll = {

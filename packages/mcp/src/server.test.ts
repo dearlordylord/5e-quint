@@ -359,20 +359,10 @@ describe("MCP server route", () => {
       currentActorId: fighterId,
     });
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+    expect(discoverBattleActs(state).map((act) => act.summary)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
-        {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Unarmed Strike",
-        },
+        "Take the Attack action with Longsword.",
+        "Take the Attack action with Unarmed Strike.",
       ]),
     );
   });
@@ -485,12 +475,9 @@ describe("MCP server route", () => {
         damageAbilityModifier: 3,
       },
     });
-    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    });
+    expect(discoverBattleActs(state).map((act) => act.summary)).toContain(
+      "Take the Attack action with Unarmed Strike.",
+    );
   });
 
   test("admits only supported authored critical-range Unit hooks at the battle support boundary", () => {
@@ -962,11 +949,12 @@ describe("MCP server route", () => {
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
+        expect.objectContaining({
           tag: "unitFeature",
           actorId: fighterId,
           unitId: "fighter_action_surge",
-        },
+          procedureRef: expect.any(String),
+        }),
       ]),
     );
   });
@@ -1001,13 +989,13 @@ describe("MCP server route", () => {
           tag: "action",
           actorId: goblinId,
           action: "multiattack",
-          multiattackName: "Multiattack",
+          procedureRef: expect.any(String),
         },
         {
           tag: "bonusAction",
           actorId: goblinId,
           action: "statBlockActionOption",
-          optionName: "Nimble Escape",
+          procedureRef: expect.any(String),
           standardAction: "disengage",
         },
       ]),
@@ -1037,14 +1025,9 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    expect(
-      discoverBattleActs(state).map((act) => act.subject),
-    ).not.toContainEqual({
-      tag: "bonusAction",
-      actorId: fighterId,
-      action: "offHandAttack",
-      attackName: "Dagger",
-    });
+    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
+      "Make the Light property Bonus Action attack with Dagger.",
+    );
   });
 
   test("registers agent-facing content discovery tool names", () => {
@@ -1427,14 +1410,14 @@ describe("MCP server route", () => {
       }),
     );
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
+    const multiattackSubject = battleActionSubject(
+      root,
+      "goblin",
+      "multiattack",
+    );
     const opened = readPayload(
       handleToolCall(root, "resolve_battle_act", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "multiattack",
-          multiattackName: "Multiattack",
-        },
+        subject: multiattackSubject,
       }),
     );
     expect(opened.result.tag).toBe("resolved");
@@ -1469,19 +1452,19 @@ describe("MCP server route", () => {
         (act: { subject: unknown }) => act.subject,
       ),
     ).toEqual([
-      {
+      expect.objectContaining({
         tag: "action",
         actorId: "goblin",
         action: "attack",
-        attackName: "Shortbow",
-      },
-      {
+        procedureRef: expect.any(String),
+      }),
+      expect.objectContaining({
         tag: "action",
         actorId: "goblin",
         action: "attack",
-        attackName: "Shortbow",
+        procedureRef: expect.any(String),
         statBlockDamageNotation: "static",
-      },
+      }),
       {
         tag: "runtimeCommand",
         actorId: "goblin",
@@ -1719,11 +1702,12 @@ describe("MCP server route", () => {
       acts: expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
+          summary: "Take the Attack action with Longsword.",
           subject: expect.objectContaining({
             tag: "action",
             actorId: "fighter",
             action: "attack",
-            attackName: "Longsword",
+            procedureRef: expect.any(String),
           }),
           initialHoles: [
             expect.objectContaining({
@@ -1759,15 +1743,19 @@ describe("MCP server route", () => {
         }),
       ]),
     });
+    const fighterAttackSubject = battleAttackSubjectForName(
+      root,
+      "fighter",
+      "Longsword",
+    );
+    const fighterAttackSelection = battleAttackSelection(
+      fighterAttackSubject,
+      "Longsword",
+    );
 
     const afterTarget = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "fighter",
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject,
         fill: {
           kind: "targetChoice",
           holeId: "battle:attack:target",
@@ -1777,7 +1765,7 @@ describe("MCP server route", () => {
               kind: "attackTargetInMeleeReach",
               actorId: "fighter",
               targetId: "goblin",
-              attackName: "Longsword",
+              ...fighterAttackSelection,
             },
           ],
         },
@@ -1788,12 +1776,9 @@ describe("MCP server route", () => {
       holes: [{ kind: "attackRoll", holeId: "battle:attack:roll" }],
     });
     expect(afterTarget.session.transientBattleFills).toMatchObject({
-      subject: {
-        tag: "action",
-        actorId: "fighter",
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: expect.objectContaining({
+        procedureRef: fighterAttackSubject.procedureRef,
+      }),
       fills: [{ kind: "targetChoice", value: "goblin" }],
     });
     expect(
@@ -1807,12 +1792,7 @@ describe("MCP server route", () => {
 
     const afterAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "fighter",
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject,
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
@@ -1834,12 +1814,7 @@ describe("MCP server route", () => {
 
     const afterDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "fighter",
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject: fighterAttackSubject,
         fill: {
           kind: "rolledDice",
           holeId: "battle:attack:damage-result:1d8+3-slashing",
@@ -1881,7 +1856,7 @@ describe("MCP server route", () => {
             tag: "action",
             actorId: "goblin",
             action: "attack",
-            attackName: "Scimitar",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({
@@ -1890,7 +1865,7 @@ describe("MCP server route", () => {
             tag: "action",
             actorId: "goblin",
             action: "attack",
-            attackName: "Shortbow",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({ label: "Move" }),
@@ -1910,28 +1885,21 @@ describe("MCP server route", () => {
       "End Turn",
     ]);
 
-    const afterGoblinTarget = readPayload(
-      handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
-        fill: {
-          kind: "targetChoice",
-          holeId: "battle:attack:target",
-          value: "fighter",
-          spatialFacts: [
-            {
-              kind: "attackTargetInMeleeReach",
-              actorId: "goblin",
-              targetId: "fighter",
-              attackName: "Scimitar",
-            },
-          ],
-        },
-      }),
+    const goblinScimitar = battleAttackSubjectForName(
+      root,
+      "goblin",
+      "Scimitar",
+    );
+    const afterGoblinTarget = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Scimitar",
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "fighter",
+      },
+      goblinScimitar,
     );
     const goblinAttackRoll = afterGoblinTarget.result.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
@@ -1939,26 +1907,22 @@ describe("MCP server route", () => {
     if (goblinAttackRoll === undefined) {
       throw new Error("Expected Goblin attack roll hole.");
     }
-    const afterGoblinAttackRoll = readPayload(
-      handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
+    const afterGoblinAttackRoll = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Scimitar",
+      {
+        kind: "attackRoll",
+        holeId: goblinAttackRoll.holeId,
+        value: {
+          total: 20,
+          naturalD20: 18,
+          ...("rollMode" in goblinAttackRoll
+            ? { rollMode: goblinAttackRoll.rollMode }
+            : {}),
         },
-        fill: {
-          kind: "attackRoll",
-          holeId: goblinAttackRoll.holeId,
-          value: {
-            total: 20,
-            naturalD20: 18,
-            ...("rollMode" in goblinAttackRoll
-              ? { rollMode: goblinAttackRoll.rollMode }
-              : {}),
-          },
-        },
-      }),
+      },
+      goblinScimitar,
     );
     expect(afterGoblinAttackRoll.result).toMatchObject({
       tag: "needsHoles",
@@ -1968,26 +1932,21 @@ describe("MCP server route", () => {
           holeId: "battle:attack:damage-result:1d6+2-slashing",
           attack: {
             kind: "statBlockAttack",
-            attack: { name: "Scimitar" },
           },
         },
       ],
     });
 
-    const afterGoblinDamage = readPayload(
-      handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
-        fill: {
-          kind: "rolledDice",
-          holeId: "battle:attack:damage-result:1d6+2-slashing",
-          value: [{ results: [5] }],
-        },
-      }),
+    const afterGoblinDamage = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Scimitar",
+      {
+        kind: "rolledDice",
+        holeId: "battle:attack:damage-result:1d6+2-slashing",
+        value: [{ results: [5] }],
+      },
+      goblinScimitar,
     );
     expect(afterGoblinDamage.result.tag).toBe("resolved");
     expect(afterGoblinDamage.snapshot.combatants).toEqual([
@@ -2021,20 +1980,35 @@ describe("MCP server route", () => {
       });
     root.sessionStore.pendingBattleFills = null;
 
-    const afterTarget = fillBattleHoleThroughTool(root, "goblin", "Shortbow", {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "fighter",
-      spatialFacts: [
-        {
-          kind: "attackTargetInRangedRange",
-          actorId: "goblin",
-          targetId: "fighter",
-          attackName: "Shortbow",
-          rangeBand: "long",
-        },
-      ],
-    });
+    const shortbowSubject = battleAttackSubjectForName(
+      root,
+      "goblin",
+      "Shortbow",
+    );
+    const shortbowSelection = battleAttackSelection(
+      shortbowSubject,
+      "Shortbow",
+    );
+    const afterTarget = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Shortbow",
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "fighter",
+        spatialFacts: [
+          {
+            kind: "attackTargetInRangedRange",
+            actorId: "goblin",
+            targetId: "fighter",
+            ...shortbowSelection,
+            rangeBand: "long",
+          },
+        ],
+      },
+      shortbowSubject,
+    );
 
     expect(afterTarget.result).toMatchObject({
       tag: "needsHoles",
@@ -2081,27 +2055,42 @@ describe("MCP server route", () => {
       });
     root.sessionStore.pendingBattleFills = null;
 
-    const afterTarget = fillBattleHoleThroughTool(root, "goblin", "Shortbow", {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "fighter",
-      spatialFacts: [
-        {
-          kind: "attackTargetInRangedRange",
-          actorId: "goblin",
-          targetId: "fighter",
-          attackName: "Shortbow",
-          rangeBand: "normal",
-        },
-        {
-          kind: "attackTargetInRangedRange",
-          actorId: "goblin",
-          targetId: "fighter",
-          attackName: "Shortbow",
-          rangeBand: "long",
-        },
-      ],
-    });
+    const shortbowSubject = battleAttackSubjectForName(
+      root,
+      "goblin",
+      "Shortbow",
+    );
+    const shortbowSelection = battleAttackSelection(
+      shortbowSubject,
+      "Shortbow",
+    );
+    const afterTarget = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Shortbow",
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "fighter",
+        spatialFacts: [
+          {
+            kind: "attackTargetInRangedRange",
+            actorId: "goblin",
+            targetId: "fighter",
+            ...shortbowSelection,
+            rangeBand: "normal",
+          },
+          {
+            kind: "attackTargetInRangedRange",
+            actorId: "goblin",
+            targetId: "fighter",
+            ...shortbowSelection,
+            rangeBand: "long",
+          },
+        ],
+      },
+      shortbowSubject,
+    );
 
     expect(afterTarget.result).toMatchObject({
       tag: "invalid",
@@ -3220,15 +3209,15 @@ describe("MCP server route", () => {
         code: "INVALID_ARGUMENTS",
       },
     });
+    const validAttackSubject = battleAttackSubjectForName(
+      root,
+      "fighter",
+      "Longsword",
+    );
     expect(
       readPayload(
         handleToolCall(root, "resolve_battle_act", {
-          subject: {
-            tag: "action",
-            actorId: "fighter",
-            action: "attack",
-            attackName: "Longsword",
-          },
+          subject: validAttackSubject,
         }),
       ),
     ).toMatchObject({
@@ -3458,11 +3447,12 @@ describe("MCP server route", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
+          summary: "Take the Attack action with Longsword.",
           subject: expect.objectContaining({
             tag: "action",
             actorId: "fighter",
             action: "attack",
-            attackName: "Longsword",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({
@@ -3517,7 +3507,10 @@ describe("MCP server route", () => {
       10,
     );
     expect(root.sessionStore.pendingBattleFills).toMatchObject({
-      subject: { actorId: "fighter", attackName: "Longsword" },
+      subject: {
+        actorId: "fighter",
+        procedureRef: expect.any(String),
+      },
       fills: [{ kind: "targetChoice", value: "goblin" }],
     });
 
@@ -3568,7 +3561,7 @@ describe("MCP server route", () => {
             tag: "action",
             actorId: "goblin",
             action: "attack",
-            attackName: "Scimitar",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({
@@ -3577,7 +3570,7 @@ describe("MCP server route", () => {
             tag: "action",
             actorId: "goblin",
             action: "attack",
-            attackName: "Shortbow",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({ label: "Move" }),
@@ -3957,14 +3950,14 @@ describe("MCP server route", () => {
     } satisfies BattleState;
 
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
+    const goblinScimitar = battleAttackSubjectForName(
+      root,
+      "goblin",
+      "Scimitar",
+    );
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
+        subject: goblinScimitar,
         fill: {
           kind: "targetChoice",
           holeId: "battle:attack:target",
@@ -3974,7 +3967,7 @@ describe("MCP server route", () => {
               kind: "attackTargetInMeleeReach",
               actorId: "goblin",
               targetId: "fighter",
-              attackName: "Scimitar",
+              ...battleAttackSelection(goblinScimitar, "Scimitar"),
             },
           ],
         },
@@ -3982,12 +3975,7 @@ describe("MCP server route", () => {
     );
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
+        subject: goblinScimitar,
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
@@ -3997,12 +3985,7 @@ describe("MCP server route", () => {
     );
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
+        subject: goblinScimitar,
         fill: {
           kind: "rolledDice",
           holeId: "battle:attack:damage-result:1d6+2-slashing",
@@ -4012,12 +3995,7 @@ describe("MCP server route", () => {
     );
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
+        subject: goblinScimitar,
         fill: {
           kind: "attackDamageDisposition",
           holeId: "battle:attack:damage-disposition",
@@ -5610,16 +5588,20 @@ describe("MCP server route", () => {
     root.sessionStore.battleState = state;
     root.sessionStore.pendingBattleFills = null;
 
+    const rayOfFrostAct = discoverBattleActs(state).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.actorId === fighterId &&
+        act.subject.invocation.spellId === "ray_of_frost",
+    );
+    if (rayOfFrostAct?.subject.tag !== "actionSpell") {
+      throw new Error("Expected Fighter Ray of Frost act.");
+    }
+
     readPayload(
       handleToolCall(root, "resolve_battle_act", {
         subject: {
-          tag: "actionSpell",
-          actorId: "fighter",
-          invocation: {
-            tag: "cantrip",
-            spellId: "ray_of_frost",
-            procedure: "spellAttackDamage",
-          },
+          ...rayOfFrostAct.subject,
           mode: { tag: "ready", trigger: "attackHit" },
         },
       }),
@@ -5630,12 +5612,7 @@ describe("MCP server route", () => {
     }
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
 
-    const goblinAttack = {
-      tag: "action" as const,
-      actorId: "goblin",
-      action: "attack" as const,
-      attackName: "Shortbow",
-    };
+    const goblinAttack = battleAttackSubjectForName(root, "goblin", "Shortbow");
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: goblinAttack,
@@ -5648,7 +5625,7 @@ describe("MCP server route", () => {
               kind: "attackTargetInRangedRange",
               actorId: "goblin",
               targetId: "fighter",
-              attackName: "Shortbow",
+              ...battleAttackSelection(goblinAttack, "Shortbow"),
               rangeBand: "normal",
             },
           ],
@@ -5674,6 +5651,19 @@ describe("MCP server route", () => {
         pendingInterrupt: { trigger: "attackHit" },
       },
     });
+    const releaseChoices =
+      afterAttackRoll.snapshot.pendingInterrupt.choices.filter(
+        (choice: {
+          readonly kind?: string;
+          readonly readiedSpellCasterId?: string;
+        }) =>
+          choice.kind === "releaseReadiedSpell" &&
+          choice.readiedSpellCasterId === "fighter",
+      );
+    const [releaseChoice] = releaseChoices;
+    if (releaseChoices.length !== 1 || releaseChoice === undefined) {
+      throw new Error("Expected one Fighter readied-spell release choice.");
+    }
 
     const afterReactionDecision = readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -5687,6 +5677,7 @@ describe("MCP server route", () => {
             choice: {
               kind: "releaseReadiedSpell",
               readiedSpellCasterId: "fighter",
+              procedureRef: releaseChoice.subject.procedureRef,
               fills: [],
             },
           },
@@ -6313,19 +6304,21 @@ function fillBattleHoleThroughTool(
   actorId: string,
   attackName: string,
   fill: {
-    readonly kind: "targetChoice" | "attackRoll" | "rolledDice";
+    readonly kind:
+      | "targetChoice"
+      | "attackRoll"
+      | "rolledDice"
+      | "attackDamageDisposition";
     readonly holeId: string;
     readonly spatialFacts?: readonly unknown[];
     readonly selectedAttackDamageRiderUnitIds?: readonly string[];
     readonly value: unknown;
   },
-  subject: BattleSubject = {
-    tag: "action",
-    actorId: combatantId(actorId),
-    action: "attack",
-    attackName,
-  },
+  subject?: BattleSubject,
 ) {
+  const selectedSubject =
+    subject ?? battleAttackSubjectForName(root, actorId, attackName);
+  const attackSelection = battleAttackSelection(selectedSubject, attackName);
   const battleFill =
     fill.kind === "targetChoice" && fill.spatialFacts === undefined
       ? {
@@ -6336,14 +6329,14 @@ function fillBattleHoleThroughTool(
                   kind: "attackTargetInRangedRange",
                   actorId,
                   targetId: String(fill.value),
-                  attackName,
+                  ...attackSelection,
                   rangeBand: "normal",
                 }
               : {
                   kind: "attackTargetInMeleeReach",
                   actorId,
                   targetId: String(fill.value),
-                  attackName,
+                  ...attackSelection,
                 },
             {
               kind: "attackerAllyWithin5FeetOfTarget",
@@ -6362,7 +6355,7 @@ function fillBattleHoleThroughTool(
       : fill;
   const payload = readPayload(
     handleToolCall(root, "fill_battle_hole", {
-      subject,
+      subject: selectedSubject,
       fill: battleFill,
     }),
   );
@@ -6370,6 +6363,73 @@ function fillBattleHoleThroughTool(
     throw new Error(JSON.stringify(payload));
   }
   return payload;
+}
+
+function battleAttackSubjectForName(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  actorId: string,
+  attackName: string,
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const matchingActs = readPayload(
+    handleToolCall(root, "discover_battle_acts", {}),
+  ).snapshot.acts.filter(
+    (candidate: {
+      readonly summary?: string;
+      readonly subject: BattleSubject;
+    }) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === `Take the Attack action with ${attackName}.`,
+  );
+  const [act] = matchingActs;
+  if (matchingActs.length !== 1 || act === undefined) {
+    throw new Error(
+      `Expected one rolled ${actorId} ${attackName} Attack action.`,
+    );
+  }
+  if (act.subject.tag !== "action" || act.subject.action !== "attack") {
+    throw new Error(`Expected ${attackName} Attack subject.`);
+  }
+  return act.subject;
+}
+
+function battleAttackSelection(subject: BattleSubject, attackName: string) {
+  if (subject.tag !== "action" || subject.action !== "attack") {
+    throw new Error(`Expected ${attackName} Attack subject.`);
+  }
+  return {
+    procedureRef: subject.procedureRef,
+    ...(subject.attackAbility === undefined
+      ? {}
+      : { attackAbility: subject.attackAbility }),
+    ...(subject.attackDamageType === undefined
+      ? {}
+      : { attackDamageType: subject.attackDamageType }),
+  };
+}
+
+function battleActionSubject(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  actorId: string,
+  action: Extract<BattleSubject, { readonly tag: "action" }>["action"],
+): BattleSubject {
+  const act = readPayload(
+    handleToolCall(root, "discover_battle_acts", {}),
+  ).snapshot.acts.find(
+    (candidate: { readonly subject: BattleSubject }) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.action === action,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${actorId} ${action} action.`);
+  }
+  return act.subject;
 }
 
 function readPayload(response: CharacterToolResult | BattleToolResult) {

@@ -22,9 +22,9 @@ import {
   requireHole,
   requireResultHole,
   statBlockAttackAct,
+  sameClubMainAndOffHandLoadout,
   weaponAttackRollHole,
   weaponAttackSubject,
-  withSameClubMainAndOffHand,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
@@ -66,6 +66,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "bonusActionSpell",
           actorId: spellCasterId,
           invocation: cantripSpellInvocationRef(
@@ -181,9 +182,8 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(
       discoverBattleActs(cast.state).some(
         (candidate) =>
-          candidate.subject.tag === "action" &&
-          candidate.subject.action === "attack" &&
-          candidate.subject.attackName === "Quarterstaff (bludgeoning)",
+          candidate.summary ===
+          "Take the Attack action with Quarterstaff (bludgeoning).",
       ),
     ).toBe(true);
   });
@@ -218,23 +218,35 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(
       discoverBattleActs(cast.state).some(
         (candidate) =>
-          candidate.subject.tag === "action" &&
-          candidate.subject.action === "attack" &&
-          candidate.subject.attackName === "Club (force)",
+          candidate.summary === "Take the Attack action with Club (force).",
       ),
     ).toBe(true);
   });
 
   test("shillelagh preserves attached item identity when both held weapons have the same unit", () => {
     const clubAttack = zeroAbilityWeaponAttack("weapon_club");
-    const state = withSameClubMainAndOffHand(
-      spellBattle({
-        cantrips: [spellRecord(shillelaghUnitId)],
-        attack: clubAttack,
-        casterClassLevels: [{ className: "druid", level: 1 }],
-      }),
-      clubAttack,
+    const state = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      attack: clubAttack,
+      offHandAttack: clubAttack,
+      selectedLoadout: sameClubMainAndOffHandLoadout(),
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    const clubCastSubjects = discoverBattleActs(state).flatMap((candidate) =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === shillelaghUnitId
+        ? [candidate.subject]
+        : [],
     );
+    const mainHandProcedureRef = clubCastSubjects.find(
+      (subject) => subject.componentWeaponItemId === "main:weapon_club",
+    )?.procedureRef;
+    const offHandProcedureRef = clubCastSubjects.find(
+      (subject) => subject.componentWeaponItemId === "off:weapon_club",
+    )?.procedureRef;
+    expect(mainHandProcedureRef).toBeDefined();
+    expect(offHandProcedureRef).toBeDefined();
+    expect(mainHandProcedureRef).not.toBe(offHandProcedureRef);
     const offHandCastAct = bonusSpellActForItem({
       state,
       spellId: shillelaghUnitId,
@@ -254,7 +266,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
         (candidate) =>
           candidate.subject.tag === "action" &&
           candidate.subject.action === "attack" &&
-          candidate.subject.attackName === "Club (force)",
+          candidate.summary === "Take the Attack action with Club (force).",
       ),
     ).toBe(false);
 
@@ -269,9 +281,8 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(
       discoverBattleActs(offHandReadyState).some(
         (candidate) =>
-          candidate.subject.tag === "bonusAction" &&
-          candidate.subject.action === "offHandAttack" &&
-          candidate.subject.attackName === "Club (force)",
+          candidate.summary ===
+          "Make the Light property Bonus Action attack with Club (force).",
       ),
     ).toBe(true);
   });
@@ -353,11 +364,10 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       ),
     ).toBe(false);
     expect(
-      discoverBattleActs(letGoState).some(
-        (candidate) =>
-          candidate.subject.tag === "action" &&
-          candidate.subject.action === "attack" &&
-          candidate.subject.attackName.startsWith("Quarterstaff ("),
+      discoverBattleActs(letGoState).some((candidate) =>
+        candidate.summary.startsWith(
+          "Take the Attack action with Quarterstaff (",
+        ),
       ),
     ).toBe(false);
   });
@@ -372,7 +382,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     });
     const act = bonusSpellAct({ state, spellId: divineFavorUnitId });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -439,7 +449,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
       throw new Error("Expected Divine Favor to resolve.");
     }
 
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: cast.state, subject, fills: [] }),
       "targetChoice",
@@ -621,7 +631,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
         ),
     ).toBe(false);
 
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: nextRound.state, subject, fills: [] }),
       "targetChoice",
@@ -686,7 +696,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -788,7 +798,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       throw new Error("Expected level 6 Magic Weapon to resolve.");
     }
 
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: cast.state, subject, fills: [] }),
       "targetChoice",

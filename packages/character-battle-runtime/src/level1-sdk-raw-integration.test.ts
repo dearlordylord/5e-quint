@@ -2641,7 +2641,12 @@ function assertLevelOneViciousMockery(input: {
       state: monsterTurn,
       subject: monsterAttack,
       fills: [
-        attackTargetFill(attackTarget, monsterId, input.casterId, "Shortsword"),
+        attackTargetFill(
+          attackTarget,
+          monsterId,
+          input.casterId,
+          monsterAttack,
+        ),
       ],
     }),
     "attackRoll",
@@ -3328,13 +3333,15 @@ function assertLevelOneShillelagh(input: {
   expect(damage).toMatchObject({
     label: "Quarterstaff (force) damage (1d8+2-force)",
   });
+  const ordinaryAttackName = "Quarterstaff (bludgeoning)";
   expect(
     discoverBattleActs(resolved.state).some(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
         candidate.subject.actorId === input.casterId &&
-        candidate.subject.attackName === "Quarterstaff (bludgeoning)",
+        candidate.summary ===
+          `Take the Attack action with ${ordinaryAttackName}.`,
     ),
   ).toBe(true);
 
@@ -8641,10 +8648,10 @@ function walkMovementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["movementCostFeet"];
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -8736,7 +8743,7 @@ function resolveOrdinaryAttackDamage(input: {
     target,
     input.subject.actorId,
     input.targetId,
-    input.subject.attackName,
+    input.subject,
   );
   const roll = requireHole(
     resolveBattleSubject({

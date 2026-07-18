@@ -29,7 +29,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleResolutionResult,
   type BattleState,
@@ -317,7 +317,7 @@ function discoverCreatureSizeChangeCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: CreatureSizeChangeInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
     return [];

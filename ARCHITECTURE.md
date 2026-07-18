@@ -525,6 +525,7 @@ The runtime path uses this dependency direction:
 | `docs/adr/0002-character-creature-monster-ownership.md` | Character/creature/monster domain ownership | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary |
 | `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md` | Monster Stat Block authoring and provenance | Architectural decision authority for Stat Blocks as authored data with explicit provenance |
 | `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md` | Light/obscurement/cover/sight boundary | Architectural decision authority for runtime source-facts plus table-supplied witnesses |
+| `docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md` | Battle committed-state and continuation boundary | Architectural decision authority for atomic Act commits, deterministic continuation replay, and separate frontiers |
 | `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms | Character-creation package vocabulary |
 | `plans/rules-kernel-coverage/` | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics |
 | `plans/unit-profile-coverage/` | Authored Surface Unit/profile support breadth | Coverage authority for authored-content support and the generated rules-kernel join view |

@@ -19,12 +19,14 @@ import {
   wizardSpellcasting,
   spellRecord,
   fighterId,
+  fighterAttackSubject,
   goblinId,
   unitLibrary,
   battleId,
   characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
   characterBattleResourceSupportedForUnit,
+  characterSpellInvocationRefForProcedureRefForTest,
   classFeatureFreeCastSpellInvocationRef,
   discoverBattleActs,
   elapsedTimeTicks,
@@ -84,7 +86,7 @@ describe("battle runtime: Favored Enemy", () => {
     const marked = requireResolved(
       resolveBattleSubject({
         state,
-        subject,
+        subject: act.subject,
         fills: [
           targetFill(markTarget, goblinId, [
             {
@@ -233,11 +235,14 @@ describe("battle runtime: Favored Enemy", () => {
     if (fillSet.tag === "invalid") {
       throw new Error(fillSet.message);
     }
+    if (act.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected bound Favored Enemy Bonus Action spell.");
+    }
 
     const result = markedDamageRiderProfile.resolve({
       input: {
         state: staleState,
-        subject,
+        subject: act.subject,
         fills,
       },
       actorId: fighterId,
@@ -385,17 +390,12 @@ describe("battle runtime: Paladin's Smite", () => {
   test("Paladin's Smite casts Divine Smite after a melee hit without expending a Spell Slot", () => {
     const paladinsSmite = paladinsSmiteResource();
     const state = paladinsSmiteBattleState(paladinsSmite);
-    const subject = paladinLongswordAttackSubject();
+    const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
       "targetChoice",
     );
-    const targetFillValue = attackTargetFill(
-      target,
-      fighterId,
-      goblinId,
-      "Longsword",
-    );
+    const targetFillValue = attackTargetFill(target, fighterId, goblinId);
     const roll = requireHole(
       resolveBattleSubject({
         state,
@@ -413,19 +413,34 @@ describe("battle runtime: Paladin's Smite", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Paladin's Smite attack-hit window.");
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
-        choice.reactorId === fighterId &&
-        choice.invocation.tag === "classFeatureFreeCast",
-    );
+    const smiteChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find((choice) => {
+        if (
+          choice.kind !== "castAttackHitBonusActionSpell" ||
+          choice.reactorId !== fighterId
+        )
+          return false;
+        return (
+          characterSpellInvocationRefForProcedureRefForTest(
+            awaitingReaction.state,
+            choice.reactorId,
+            choice.subject.procedureRef,
+          ).tag === "classFeatureFreeCast"
+        );
+      });
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Paladin's Smite free-cast choice.");
     }
-    expect(smiteChoice.invocation).toEqual(
+    expect(
+      characterSpellInvocationRefForProcedureRefForTest(
+        awaitingReaction.state,
+        smiteChoice.reactorId,
+        smiteChoice.subject.procedureRef,
+      ),
+    ).toEqual(
       classFeatureFreeCastSpellInvocationRef(
         "divine_smite",
         "paladin_paladins_smite",
@@ -442,7 +457,7 @@ describe("battle runtime: Paladin's Smite", () => {
           responderId: fighterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -514,17 +529,12 @@ describe("battle runtime: Paladin's Smite", () => {
     const state = paladinsSmiteBattleState(
       paladinsSmiteResource({ usesRemaining: 0 }),
     );
-    const subject = paladinLongswordAttackSubject();
+    const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
       "targetChoice",
     );
-    const targetFillValue = attackTargetFill(
-      target,
-      fighterId,
-      goblinId,
-      "Longsword",
-    );
+    const targetFillValue = attackTargetFill(target, fighterId, goblinId);
     const roll = requireHole(
       resolveBattleSubject({
         state,
@@ -546,20 +556,32 @@ describe("battle runtime: Paladin's Smite", () => {
     }
 
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.invocation.tag === "classFeatureFreeCast" &&
-          choice.invocation.spellId === "divine_smite",
-      ),
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        const invocation = characterSpellInvocationRefForProcedureRefForTest(
+          awaitingReaction.state,
+          choice.reactorId,
+          choice.subject.procedureRef,
+        );
+        return (
+          invocation.tag === "classFeatureFreeCast" &&
+          invocation.spellId === "divine_smite"
+        );
+      }),
     ).toBe(false);
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.invocation.tag === "spellSlot" &&
-          choice.invocation.spellId === "divine_smite",
-      ),
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        const invocation = characterSpellInvocationRefForProcedureRefForTest(
+          awaitingReaction.state,
+          choice.reactorId,
+          choice.subject.procedureRef,
+        );
+        return (
+          invocation.tag === "spellSlot" &&
+          invocation.spellId === "divine_smite"
+        );
+      }),
     ).toBe(true);
   });
 
@@ -573,17 +595,12 @@ describe("battle runtime: Paladin's Smite", () => {
         levelOnePlusSpellCastsThisTurn: [fighterId],
       },
     };
-    const subject = paladinLongswordAttackSubject();
+    const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
       "targetChoice",
     );
-    const targetFillValue = attackTargetFill(
-      target,
-      fighterId,
-      goblinId,
-      "Longsword",
-    );
+    const targetFillValue = attackTargetFill(target, fighterId, goblinId);
     const roll = requireHole(
       resolveBattleSubject({
         state,
@@ -605,20 +622,32 @@ describe("battle runtime: Paladin's Smite", () => {
     }
 
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.invocation.tag === "classFeatureFreeCast" &&
-          choice.invocation.spellId === "divine_smite",
-      ),
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        const invocation = characterSpellInvocationRefForProcedureRefForTest(
+          awaitingReaction.state,
+          choice.reactorId,
+          choice.subject.procedureRef,
+        );
+        return (
+          invocation.tag === "classFeatureFreeCast" &&
+          invocation.spellId === "divine_smite"
+        );
+      }),
     ).toBe(true);
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.invocation.tag === "spellSlot" &&
-          choice.invocation.spellId === "divine_smite",
-      ),
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        const invocation = characterSpellInvocationRefForProcedureRefForTest(
+          awaitingReaction.state,
+          choice.reactorId,
+          choice.subject.procedureRef,
+        );
+        return (
+          invocation.tag === "spellSlot" &&
+          invocation.spellId === "divine_smite"
+        );
+      }),
     ).toBe(false);
   });
 
@@ -677,11 +706,6 @@ function paladinsSmiteBattleState(
   });
 }
 
-function paladinLongswordAttackSubject() {
-  return {
-    tag: "action" as const,
-    actorId: fighterId,
-    action: "attack" as const,
-    attackName: "Longsword",
-  };
+function paladinLongswordAttackSubject(state: BattleState) {
+  return fighterAttackSubject(state, "Longsword");
 }

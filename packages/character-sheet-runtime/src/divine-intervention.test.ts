@@ -16,7 +16,7 @@ import {
   characterSheetResources,
   characterSheetSpellSlots,
   completeLongRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -280,7 +280,7 @@ function expectedDivineInterventionProjection(): DivineInterventionSelectedIdent
 
 function divineInterventionClericSheet() {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:divine-intervention-cleric-10"),
       build: {
         ...armorClassBuild({

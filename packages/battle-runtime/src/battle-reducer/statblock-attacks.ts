@@ -26,13 +26,16 @@ import {
   type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import type {
+  BoundSupportedAttackActionOption,
   BattleWeaponDamage,
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
   StatBlockAttackActionOption,
   StatBlockAttackDamage,
   StatBlockAttackDamageComponent,
+  StaticStatBlockAttackDamage,
   SupportedAttackActionOption,
+  SupportedCreatureAttackRollMechanics,
   SupportedCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
 import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
@@ -70,10 +73,16 @@ export function supportedStatBlockAttackTargetConstraint(
   attack: SupportedCreatureNamedAttackRoll,
 ): AttackTargetConstraint;
 export function supportedStatBlockAttackTargetConstraint(
+  attack: SupportedCreatureAttackRollMechanics,
+): AttackTargetConstraint;
+export function supportedStatBlockAttackTargetConstraint(
   attack: CreatureNamedAttackRoll,
 ): AttackTargetConstraint | null;
 export function supportedStatBlockAttackTargetConstraint(
-  attack: CreatureNamedAttackRoll,
+  attack: Pick<
+    CreatureNamedAttackRoll,
+    "attackType" | "reachFeet" | "rangeFeet"
+  >,
 ): AttackTargetConstraint | null {
   if (attack.attackType === "melee" && attack.reachFeet !== undefined) {
     return { kind: "meleeReach", reachFeet: movementFeet(attack.reachFeet) };
@@ -89,6 +98,15 @@ export function supportedStatBlockAttackTargetConstraint(
   return null;
 }
 
+export function statBlockAttackDamage(
+  attack: Extract<
+    StatBlockAttackActionOption,
+    { readonly damageNotation: "static" }
+  >,
+): StaticStatBlockAttackDamage;
+export function statBlockAttackDamage(
+  attack: StatBlockAttackActionOption,
+): StatBlockAttackDamage;
 export function statBlockAttackDamage(
   attack: StatBlockAttackActionOption,
 ): StatBlockAttackDamage {
@@ -173,14 +191,17 @@ export function attackActionOptionName(
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) => weaponAttack.weapon.name),
     Match.when({ kind: "unarmedStrike" }, () => "Unarmed Strike"),
-    Match.when(
-      { kind: "statBlockAttack" },
-      (statBlockAttack) => statBlockAttack.attack.name,
-    ),
+    Match.when({ kind: "statBlockAttack" }, () => "Stat Block Attack"),
     Match.exhaustive,
   );
 }
 
+export function attackActionVariantOptions(
+  attack: BoundSupportedAttackActionOption,
+): readonly BoundSupportedAttackActionOption[];
+export function attackActionVariantOptions(
+  attack: SupportedAttackActionOption,
+): readonly SupportedAttackActionOption[];
 export function attackActionVariantOptions(
   attack: SupportedAttackActionOption,
 ): readonly SupportedAttackActionOption[] {

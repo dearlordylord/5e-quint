@@ -137,7 +137,10 @@ export type BattleCompanionEntry = {
 export function companionEntries(
   companions: BattleCompanions,
 ): readonly BattleCompanionEntry[] {
-  return [...companions].map(([ownerId, companion]) => ({ ownerId, companion }));
+  return [...companions].map(([ownerId, companion]) => ({
+    ownerId,
+    companion,
+  }));
 }
 
 export function findCompanionByOwner(

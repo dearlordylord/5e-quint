@@ -37,7 +37,7 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
       spellId: healingWordUnitId,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -94,7 +94,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       spellId: cureWoundsUnitId,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -148,7 +148,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       spellId: massHealingWordUnitId,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -219,7 +219,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       spellId: massCureWoundsUnitId,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

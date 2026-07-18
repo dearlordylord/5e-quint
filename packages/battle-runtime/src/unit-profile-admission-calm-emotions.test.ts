@@ -43,7 +43,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

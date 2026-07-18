@@ -26,7 +26,7 @@ import { Either } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -167,7 +167,7 @@ function discoverFogCloudObscurementCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: FogCloudObscurementSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

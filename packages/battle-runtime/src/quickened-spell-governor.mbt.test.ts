@@ -56,7 +56,6 @@ import {
   characterBattleResourceIsPointPool,
   discoverBattleActs,
   resolveBattleSubject,
-  spellSlotInvocationRef,
 } from "./index.ts";
 import {
   attackRollFill,
@@ -458,33 +457,36 @@ describe("Quickened Spell governor MBT parity", () => {
   });
 
   it("observes copied quickened rejection qRoutes through public reducer entrypoints", () => {
+    const unaffordableState = initialRuntimeState({
+      sorceryPoints: UNAFFORDABLE_SORCERY_POINTS,
+    }).battle;
     expect(
       invalidQuickenedRoute({
-        state: initialRuntimeState({
-          sorceryPoints: UNAFFORDABLE_SORCERY_POINTS,
-        }).battle,
-        subject: quickenedCureWoundsSubject(),
+        state: unaffordableState,
+        subject: quickenedCureWoundsSubject(unaffordableState),
       }),
     ).toEqual(quickenedResourceGovernorRoute());
+    const unknownOptionState = initialRuntimeState({
+      knownOptions: [quickenedMetamagicOption()],
+    }).battle;
     expect(
       invalidQuickenedRoute({
-        state: initialRuntimeState({
-          knownOptions: [quickenedMetamagicOption()],
-        }).battle,
+        state: unknownOptionState,
         subject: {
-          ...quickenedCureWoundsSubject(),
+          ...quickenedCureWoundsSubject(unknownOptionState),
           metamagic: [{ effectKind: "saving_throw_disadvantage" }],
         },
       }),
     ).toEqual(quickenedResourceGovernorRoute());
+    const duplicateStackingState = initialRuntimeState({
+      sorceryPoints: HIGH_SORCERY_POINTS,
+      knownOptions: [quickenedMetamagicOption(), empoweredMetamagicOption()],
+    }).battle;
     expect(
       invalidQuickenedRoute({
-        state: initialRuntimeState({
-          sorceryPoints: HIGH_SORCERY_POINTS,
-          knownOptions: [quickenedMetamagicOption(), empoweredMetamagicOption()],
-        }).battle,
+        state: duplicateStackingState,
         subject: {
-          ...quickenedCureWoundsSubject(),
+          ...quickenedCureWoundsSubject(duplicateStackingState),
           metamagic: [
             { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
             { effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND },
@@ -492,14 +494,15 @@ describe("Quickened Spell governor MBT parity", () => {
         },
       }),
     ).toEqual(quickenedResourceGovernorRoute());
+    const incompatibleStackingState = initialRuntimeState({
+      sorceryPoints: HIGH_SORCERY_POINTS,
+      knownOptions: [quickenedMetamagicOption(), heightenedMetamagicOption()],
+    }).battle;
     expect(
       invalidQuickenedRoute({
-        state: initialRuntimeState({
-          sorceryPoints: HIGH_SORCERY_POINTS,
-          knownOptions: [quickenedMetamagicOption(), heightenedMetamagicOption()],
-        }).battle,
+        state: incompatibleStackingState,
         subject: {
-          ...quickenedCureWoundsSubject(),
+          ...quickenedCureWoundsSubject(incompatibleStackingState),
           metamagic: [
             { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
             { effectKind: "saving_throw_disadvantage" },
@@ -519,7 +522,7 @@ describe("Quickened Spell governor MBT parity", () => {
     expect(
       invalidQuickenedRoute({
         state: priorLevelOnePlusState,
-        subject: quickenedCureWoundsSubject(),
+        subject: quickenedCureWoundsSubject(priorLevelOnePlusState),
       }),
     ).toEqual([
       battleReducerStartRouteEvent(),
@@ -610,7 +613,7 @@ function resolveQuickenedRestoration(
   state: QuickenedSpellGovernorRuntimeState,
 ): QuickenedSpellGovernorRuntimeState {
   const act = quickenedCureWoundsAct(state.battle);
-  expect(act.subject).toEqual(quickenedCureWoundsSubject());
+  expect(act.subject).toMatchObject(quickenedCureWoundsSubject(state.battle));
   const targetHole = findHole(act.initialHoles, "targetChoice");
   const target = targetFill(targetHole, fighterId, [
     {
@@ -735,7 +738,7 @@ function rejectUnaffordable(): QuickenedSpellGovernorRuntimeState {
   expectInvalid(
     resolveBattleSubject({
       state: state.battle,
-      subject: quickenedCureWoundsSubject(),
+      subject: quickenedCureWoundsSubject(state.battle),
       fills: [],
     }),
     "Metamagic requires enough unexpended Sorcery Points.",
@@ -756,7 +759,7 @@ function rejectUnknownOption(): QuickenedSpellGovernorRuntimeState {
     resolveBattleSubject({
       state: state.battle,
       subject: {
-        ...quickenedCureWoundsSubject(),
+        ...quickenedCureWoundsSubject(state.battle),
         metamagic: [{ effectKind: "saving_throw_disadvantage" }],
       },
       fills: [],
@@ -779,7 +782,7 @@ function rejectUnsupportedSecondOption(): QuickenedSpellGovernorRuntimeState {
     resolveBattleSubject({
       state: state.battle,
       subject: {
-        ...quickenedCureWoundsSubject(),
+        ...quickenedCureWoundsSubject(state.battle),
         metamagic: [
           { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
           { effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND },
@@ -805,7 +808,7 @@ function rejectOnePerSpell(): QuickenedSpellGovernorRuntimeState {
     resolveBattleSubject({
       state: state.battle,
       subject: {
-        ...quickenedCureWoundsSubject(),
+        ...quickenedCureWoundsSubject(state.battle),
         metamagic: [
           { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
           { effectKind: "saving_throw_disadvantage" },
@@ -839,7 +842,7 @@ function rejectPriorLevelOnePlusSpell(): QuickenedSpellGovernorRuntimeState {
   expectInvalid(
     resolveBattleSubject({
       state: state.battle,
-      subject: quickenedCureWoundsSubject(),
+      subject: quickenedCureWoundsSubject(state.battle),
       fills: [],
     }),
     "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.",
@@ -909,10 +912,7 @@ function invalidQuickenedRoute(input: {
     fills: [],
   });
   expect(result.tag).toBe("invalid");
-  return [
-    battleReducerStartRouteEvent(),
-    ...(result.routeEvents ?? []),
-  ];
+  return [battleReducerStartRouteEvent(), ...(result.routeEvents ?? [])];
 }
 
 function observeQuickenedRestorationRoute(
@@ -1259,15 +1259,22 @@ function isQuickenedCureWoundsAct(
   );
 }
 
-function quickenedCureWoundsSubject(): QuickenedBonusActionSpellAct["subject"] {
+function quickenedCureWoundsSubject(
+  state: BattleState,
+): QuickenedBonusActionSpellAct["subject"] {
+  const actionSpell = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "cure_wounds",
+  );
+  if (actionSpell?.subject.tag !== "actionSpell") {
+    throw new Error("Expected bound Cure Wounds spell procedure.");
+  }
   return {
     tag: "bonusActionSpell",
-    actorId: wizardId,
-    invocation: spellSlotInvocationRef(
-      "cure_wounds",
-      1,
-      "directHitPointRestoration",
-    ),
+    actorId: actionSpell.subject.actorId,
+    procedureRef: actionSpell.subject.procedureRef,
+    invocation: actionSpell.subject.invocation,
     mode: { tag: "cast" },
     metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
   };

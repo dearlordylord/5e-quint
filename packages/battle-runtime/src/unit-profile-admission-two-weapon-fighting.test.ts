@@ -16,6 +16,8 @@ import {
   battleId,
   characterSeed,
   damageRollFill,
+  fighterAttackSubject,
+  characterBonusAttackSubjectForTest,
   fighterId,
   goblinId,
   requireHole,
@@ -177,9 +179,9 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
           offHandAttack: testDaggerAttackWithAlternateDexterity(),
         }),
       ),
-      attackName: "Dagger (Dexterity)",
       damageRoll: 4,
       attackDamageAbilityModifierSelection: "apply",
+      attackAbility: "dex",
     });
 
     expect(result.damage).toMatchObject({
@@ -208,9 +210,9 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
           offHandAttack: testDaggerAttackWithAlternateDexterity(),
         }),
       ),
-      attackName: "Dagger (Dexterity)",
       damageRoll: 4,
       attackDamageAbilityModifierSelection: "decline",
+      attackAbility: "dex",
     });
 
     expect(result.damage).toMatchObject({
@@ -400,12 +402,7 @@ function lightAttackBattle(input: {
 }
 
 function afterQualifyingLightAttack(state: BattleState): BattleState {
-  const subject: BattleSubject = {
-    tag: "action",
-    actorId: fighterId,
-    action: "attack",
-    attackName: "Shortsword",
-  };
+  const subject: BattleSubject = fighterAttackSubject(state, "Shortsword");
   const target = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -433,7 +430,7 @@ function afterQualifyingLightAttack(state: BattleState): BattleState {
 function resolveOffHandHit(input: {
   readonly state: BattleState;
   readonly damageRoll: number;
-  readonly attackName?: string;
+  readonly attackAbility?: "dex";
   readonly expectsAttackDamageAbilityModifierChoice?: true;
   readonly attackDamageAbilityModifierSelection?: NonNullable<
     Extract<
@@ -442,22 +439,21 @@ function resolveOffHandHit(input: {
     >["attackDamageAbilityModifierChoice"]
   >["selection"];
 }) {
-  const subject: BattleSubject = {
-    tag: "bonusAction",
-    actorId: fighterId,
-    action: "offHandAttack",
-    attackName: input.attackName ?? "Dagger",
-  };
+  const subject: BattleSubject = characterBonusAttackSubjectForTest(
+    input.state,
+    fighterId,
+    "offHandAttack",
+    input.attackAbility,
+  );
   const target = requireHole(
     resolveBattleSubject({ state: input.state, subject, fills: [] }),
     "targetChoice",
   );
-  const targetChoice = attackTargetFill(
-    target,
-    fighterId,
-    goblinId,
-    subject.attackName,
-  );
+  const targetChoice = attackTargetFill(target, fighterId, goblinId, {
+    procedureRef: subject.procedureRef,
+    attackAbility: subject.attackAbility,
+    attackDamageType: subject.attackDamageType,
+  });
   const roll = requireHole(
     resolveBattleSubject({
       state: input.state,

@@ -72,7 +72,7 @@ describe("Thaumaturgy Booming Voice", () => {
 
     expect(discoverBattleActs(state)).toContainEqual(
       expect.objectContaining({
-        subject: thaumaturgySubject,
+        subject: expect.objectContaining(thaumaturgySubject),
         initialHoles: expect.arrayContaining([
           expect.objectContaining({
             kind: "thaumaturgyActiveOneMinuteEffectCount",

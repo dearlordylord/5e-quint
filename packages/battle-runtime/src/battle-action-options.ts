@@ -3,7 +3,6 @@ import type {
   AttackBonus,
   DamageDieSize,
   ReadonlyNonEmptyArray,
-  ResourceCount,
 } from "@dnd/shared/types";
 import type {
   Ability,
@@ -16,6 +15,10 @@ import type {
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+import type {
+  BattleAttackProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
+} from "./identity.ts";
 
 export type BattleWeaponDamage = Extract<
   WeaponDamage,
@@ -81,6 +84,20 @@ export type CharacterUnarmedStrikeActionOption = {
 export type CharacterAttackActionOption =
   | CharacterWeaponAttackActionOption
   | CharacterUnarmedStrikeActionOption;
+
+export type BoundCharacterWeaponAttackActionOption =
+  CharacterWeaponAttackActionOption & {
+    readonly procedureRef: BattleAttackProcedureExecutionRef;
+  };
+
+export type BoundCharacterUnarmedStrikeActionOption =
+  CharacterUnarmedStrikeActionOption & {
+    readonly procedureRef: BattleAttackProcedureExecutionRef;
+  };
+
+export type BoundCharacterAttackActionOption =
+  | BoundCharacterWeaponAttackActionOption
+  | BoundCharacterUnarmedStrikeActionOption;
 
 type LiteralStatBlockValue = Extract<
   StatBlockValue,
@@ -205,6 +222,21 @@ export type SupportedStaticDamageCreatureNamedAttackRoll =
     readonly onHit: SupportedStaticStatBlockAttackEffectList;
   };
 
+export type CreatureAttackRollMechanics = Omit<
+  CreatureNamedAttackRoll,
+  "name" | "description" | "limitedUse"
+>;
+
+export type SupportedCreatureAttackRollMechanics = Omit<
+  SupportedCreatureNamedAttackRoll,
+  "name" | "description" | "limitedUse"
+>;
+
+export type SupportedStaticDamageCreatureAttackRollMechanics = Omit<
+  SupportedStaticDamageCreatureNamedAttackRoll,
+  "name" | "description" | "limitedUse"
+>;
+
 export const STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES = [
   "nonIncapacitatedAllyWithin5FeetOfTarget",
 ] as const;
@@ -217,16 +249,12 @@ export type StatBlockTraitAttackRollMode = {
   readonly predicate: StatBlockAttackRollAdvantagePredicate;
 };
 
-export type StatBlockPartSection =
-  | "actions"
-  | "bonusActions"
-  | "reactions"
-  | "legendaryActions";
-
-export type StatBlockPartKey = {
-  readonly section: StatBlockPartSection;
-  readonly name: string;
-};
+export const STAT_BLOCK_ATTACK_SECTIONS = [
+  "actions",
+  "legendaryActions",
+] as const;
+export type StatBlockAttackSection =
+  (typeof STAT_BLOCK_ATTACK_SECTIONS)[number];
 
 export const STAT_BLOCK_DAMAGE_NOTATIONS = ["rolled", "static"] as const;
 export type StatBlockDamageNotation =
@@ -234,16 +262,16 @@ export type StatBlockDamageNotation =
 
 export type RolledStatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
-  readonly attack: SupportedCreatureNamedAttackRoll;
-  readonly part: StatBlockPartKey;
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+  readonly attack: SupportedCreatureAttackRollMechanics;
   readonly damageNotation: "rolled";
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
 export type StaticStatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
-  readonly attack: SupportedStaticDamageCreatureNamedAttackRoll;
-  readonly part: StatBlockPartKey;
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+  readonly attack: SupportedStaticDamageCreatureAttackRollMechanics;
   readonly damageNotation: "static";
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
@@ -256,46 +284,107 @@ export type SupportedAttackActionOption =
   | CharacterAttackActionOption
   | StatBlockAttackActionOption;
 
-export type StatBlockLimitedUseSnapshot =
-  | {
-      readonly key: StatBlockPartKey;
-      readonly kind: "daily";
-      readonly usesMax: ResourceCount;
-      readonly usesRemaining: ResourceCount;
-    }
-  | {
-      readonly key: StatBlockPartKey;
-      readonly kind: "recharge";
-      readonly minimumRoll: number;
-      readonly available: boolean;
-    }
-  | {
-      readonly key: StatBlockPartKey;
-      readonly kind: "recharge_after_rest";
-      readonly available: boolean;
-    };
+export type BoundSupportedAttackActionOption =
+  | BoundCharacterAttackActionOption
+  | StatBlockAttackActionOption;
 
-export type StatBlockLegendaryActionResourceSnapshot = {
-  readonly usesMax: ResourceCount;
-  readonly usesRemaining: ResourceCount;
-};
+export type BattleAttackExecutionAbility = Ability | "spellcasting";
 
-export type StatBlockResourceSnapshot = {
-  readonly legendaryActions: StatBlockLegendaryActionResourceSnapshot | null;
-  readonly limitedUses: readonly StatBlockLimitedUseSnapshot[];
+export type CharacterAttackExecutionSelection = {
+  readonly procedureRef: BattleAttackProcedureExecutionRef;
+  readonly attackAbility: BattleAttackExecutionAbility;
+  readonly attackDamageType: DamageType;
 };
+export type StatBlockAttackExecutionSelection = {
+  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+  readonly attackAbility?: never;
+  readonly attackDamageType?: never;
+};
+export type BoundAttackExecutionSelection =
+  | CharacterAttackExecutionSelection
+  | StatBlockAttackExecutionSelection;
 
-export type StatBlockDailyUseState = {
-  readonly key: StatBlockPartKey;
-  readonly usesRemaining: ResourceCount;
-};
+export type AttackExecutionSelectionIdentity = BoundAttackExecutionSelection;
 
-export type StatBlockMutableResourceState = {
-  readonly legendaryActionUsesRemaining: ResourceCount;
-  readonly dailyUses: readonly StatBlockDailyUseState[];
-  readonly unavailableRechargeParts: readonly StatBlockPartKey[];
-  readonly unavailableRestRechargeParts: readonly StatBlockPartKey[];
-};
+export function attackExecutionAbility(
+  attack: SupportedAttackActionOption,
+): BattleAttackExecutionAbility | undefined {
+  if (attack.kind === "weapon") return attack.ability;
+  if (attack.kind === "unarmedStrike") return attack.attackAbility;
+  return undefined;
+}
+
+export function attackExecutionDamageType(
+  attack: SupportedAttackActionOption,
+): DamageType | undefined {
+  if (attack.kind === "weapon") return attack.weapon.damage.damageType;
+  if (attack.kind === "unarmedStrike") return attack.effect.damage.damageType;
+  return undefined;
+}
+
+export function attackExecutionSelectionForOption(
+  attack: BoundCharacterAttackActionOption,
+): CharacterAttackExecutionSelection;
+export function attackExecutionSelectionForOption(
+  attack: StatBlockAttackActionOption,
+): StatBlockAttackExecutionSelection;
+export function attackExecutionSelectionForOption(
+  attack: BoundSupportedAttackActionOption,
+): BoundAttackExecutionSelection;
+export function attackExecutionSelectionForOption(
+  attack: BoundSupportedAttackActionOption,
+): BoundAttackExecutionSelection {
+  if (attack.kind === "statBlockAttack") {
+    return { procedureRef: attack.procedureRef };
+  }
+  return {
+    procedureRef: attack.procedureRef,
+    attackAbility:
+      attack.kind === "weapon" ? attack.ability : attack.attackAbility,
+    attackDamageType:
+      attack.kind === "weapon"
+        ? attack.weapon.damage.damageType
+        : attack.effect.damage.damageType,
+  };
+}
+
+export function boundAttackExecutionSelectionMatchesOption(
+  selection: BoundAttackExecutionSelection,
+  attack: BoundSupportedAttackActionOption,
+): boolean {
+  if (selection.procedureRef !== attack.procedureRef) return false;
+  return attack.kind === "statBlockAttack"
+    ? selection.attackAbility === undefined &&
+        selection.attackDamageType === undefined
+    : selection.attackAbility === attackExecutionAbility(attack) &&
+        selection.attackDamageType === attackExecutionDamageType(attack);
+}
+
+export function boundAttackExecutionSelectionKey(
+  selection: BoundAttackExecutionSelection,
+): string {
+  return attackExecutionSelectionKey(selection);
+}
+
+export function attackExecutionSelectionKey(
+  selection: AttackExecutionSelectionIdentity,
+): string {
+  return JSON.stringify([
+    "boundAttack",
+    selection.procedureRef,
+    selection.attackAbility ?? null,
+    selection.attackDamageType ?? null,
+  ]);
+}
+
+export function attackExecutionSelectionIdentitiesEqual(
+  left: AttackExecutionSelectionIdentity,
+  right: AttackExecutionSelectionIdentity,
+): boolean {
+  return (
+    attackExecutionSelectionKey(left) === attackExecutionSelectionKey(right)
+  );
+}
 
 export type StatBlockAttackDamageComponent = {
   readonly expr: DiceExpr;
@@ -306,4 +395,14 @@ export type StatBlockAttackDamageComponent = {
 export type StatBlockAttackDamage = {
   readonly baseComponents: ReadonlyNonEmptyArray<StatBlockAttackDamageComponent>;
   readonly advantageBonus?: StatBlockAttackDamageComponent;
+};
+
+export type StaticStatBlockAttackDamageComponent =
+  StatBlockAttackDamageComponent & {
+    readonly static: number;
+  };
+
+export type StaticStatBlockAttackDamage = {
+  readonly baseComponents: ReadonlyNonEmptyArray<StaticStatBlockAttackDamageComponent>;
+  readonly advantageBonus?: StaticStatBlockAttackDamageComponent;
 };

@@ -34,6 +34,10 @@ import {
 } from "./battle-reducer.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
+  battleAttackExecutionScopeRefBelongsToCombatant,
+  battleAttackExecutionScopeRefForProcedureRef,
+} from "./identity.ts";
+import {
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
   attackRollFill,
@@ -137,7 +141,7 @@ function initialRuntimeState(): RuntimeState {
 }
 
 function offerWeaponAttackInterruption(state: RuntimeState): RuntimeState {
-  const subject = fighterAttackSubject();
+  const subject = fighterAttackSubject(state.battle);
   const target = attackInitialTargetHole(state.battle, subject);
   const targetChoice = targetFill(target, goblinId);
   const attackRoll = attackRollHoleAfterTarget(
@@ -286,7 +290,14 @@ function projectFrame(
     frame.participant.tag !== "action" ||
     frame.participant.actorId !== fighterId ||
     frame.participant.action !== "attack" ||
-    frame.participant.attackName !== "Longsword"
+    frame.participant.attackAbility !== "str" ||
+    frame.participant.attackDamageType !== "slashing" ||
+    !battleAttackExecutionScopeRefBelongsToCombatant(
+      battleAttackExecutionScopeRefForProcedureRef(
+        frame.participant.procedureRef,
+      ),
+      fighterId,
+    )
   ) {
     throw new Error("Expected the weapon attacker participant.");
   }

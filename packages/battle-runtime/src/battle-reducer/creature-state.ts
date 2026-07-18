@@ -16,7 +16,12 @@
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
 import { Either, Match } from "effect";
-import { Hp, movementFeet, type Condition } from "@dnd/shared/types";
+import {
+  Hp,
+  movementFeet,
+  type Condition,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { HandUse } from "@dnd/shared/types";
 import {
   applyCondition,
@@ -45,7 +50,14 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
-import type { CombatantId, InitiativeScore } from "../identity.ts";
+import {
+  battleAttackExecutionScopeRefForProcedureRef,
+  battleExecutionScopeOrdinal,
+  type BattleId,
+  type BattleExecutionScopeOrdinal,
+  type CombatantId,
+  type InitiativeScore,
+} from "../identity.ts";
 import type {
   BattleCreatureInit,
   BattlePositiveHpUnconscious,
@@ -70,6 +82,10 @@ import {
 } from "../character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import {
+  characterExecutionFromUnits,
+  characterProcedureBindingSnapshots,
+} from "../character-execution.ts";
+import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
@@ -89,6 +105,7 @@ import {
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
   type BattleUnitSupportProfile,
+  type BattleUnitSupportProfileIssue,
   type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
@@ -132,9 +149,9 @@ import {
   grappledBy,
 } from "./creature-state-leaves.ts";
 import {
-  statBlockResourceSnapshot,
-  statBlockResourceState,
-} from "./statblock.ts";
+  statBlockExecutionAdmissionCohort,
+  statBlockExecutionSnapshot,
+} from "../stat-block-execution.ts";
 import {
   activeDruidWildShapeEffect,
   combatantDruidWildShapeArmorClassState,
@@ -143,6 +160,7 @@ import {
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
+import { admitCharacterAttackExecution } from "../attack-execution.ts";
 
 export function ongoingFeatureSourceKey(
   source: OngoingFeatureSource,
@@ -176,9 +194,20 @@ export function isCharacterBattleCreatureState(
   return actor?.origin.kind === "character";
 }
 
-export function battleCreatureStateFromInit(
+export function battleCreatureStateAdmissionFromInit(
+  battleId: BattleId,
   input: BattleCreatureInit,
-): BattleCreatureState {
+  startingScopeOrdinal: BattleExecutionScopeOrdinal,
+):
+  | {
+      readonly tag: "admitted";
+      readonly creature: BattleCreatureState;
+      readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly issues: ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>;
+    } {
   const creatureInit = input.creatureInit;
   assertCurrentHpWithinMaxHp(creatureInit);
   const zeroHpLifecycle = initialZeroHpLifecycleForCreatureOrigin(creatureInit);
@@ -209,6 +238,26 @@ export function battleCreatureStateFromInit(
   };
 
   if (creatureInit.kind === "character") {
+    const characterScopeOrdinal = startingScopeOrdinal;
+    const attackScopeOrdinal = battleExecutionScopeOrdinal(
+      Number(characterScopeOrdinal) + 1,
+    );
+    const attackExecution = admitCharacterAttackExecution({
+      battleId,
+      combatantId: input.combatantId,
+      startingScopeOrdinal: attackScopeOrdinal,
+      attack: creatureInit.attack,
+      unarmedStrike: creatureInit.unarmedStrike,
+      ...(creatureInit.offHandAttack === undefined
+        ? {}
+        : { offHandAttack: creatureInit.offHandAttack }),
+    });
+    const executionCohort = statBlockExecutionAdmissionCohort(
+      battleId,
+      input.combatantId,
+      creatureInit.druidWildShapeAvailableForms ?? [],
+      attackExecution.nextScopeOrdinal,
+    );
     const classLevels = parseCharacterBattleClassLevels(
       creatureInit.classLevels,
     );
@@ -220,179 +269,216 @@ export function battleCreatureStateFromInit(
     assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
       creatureInit.weaponMasteries ?? [],
     );
-    return applyInitialZeroHpLifecycle({
-      ...base,
-      armorClass: creatureInit.armorClass,
-      size: creatureInit.size,
-      origin: {
-        kind: "character",
-        characterId: creatureInit.characterId,
-        characterUnitRefs: creatureInit.characterUnitRefs,
-        classLevels,
-        knownLanguages: creatureInit.knownLanguages,
-        d20Statistics: creatureInit.d20Statistics,
-        ...(creatureInit.druidWildShapeAvailableForms === undefined
-          ? {}
-          : {
-              druidWildShapeAvailableForms:
-                creatureInit.druidWildShapeAvailableForms,
-            }),
-        weaponProficiencies: creatureInit.weaponProficiencies ?? [],
-        selectedLoadout: creatureInit.selectedLoadout,
-        weaponMasteries: creatureInit.weaponMasteries ?? [],
-        invocationFeatures: creatureInit.invocationFeatures ?? [],
-        speed: creatureInit.speed,
-        attack: creatureInit.attack,
-        unarmedStrike: creatureInit.unarmedStrike,
-        ...(creatureInit.offHandAttack === undefined
-          ? {}
-          : { offHandAttack: creatureInit.offHandAttack }),
-        resources: (creatureInit.resources ?? []).map((resource) =>
-          characterResourceState(resource, classLevels),
-        ),
-        ...(creatureInit.metamagic === undefined
-          ? {}
-          : { metamagic: creatureInit.metamagic }),
-        ongoingFeatureProfiles: characterOngoingFeatureProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          classLevels,
-        ),
-        attackDamageRiderProfiles: characterAttackDamageRiderProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          creatureInit.characterUnitRefs,
-          classLevels,
-        ),
-        saveDamageReplacementProfiles: characterSaveDamageReplacementProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          creatureInit.characterUnitRefs,
-          classLevels,
-        ),
-        d20TestNaturalOneRerollProfiles:
-          characterD20TestNaturalOneRerollProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        passiveSavingThrowRollModeProfiles:
-          characterPassiveSavingThrowRollModeProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        passiveAbilityCheckRollModeProfiles:
-          characterPassiveAbilityCheckRollModeProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        reactionRollOrDamageReductionProfiles:
-          characterReactionRollOrDamageReductionProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        failedAbilityCheckResourceBoostProfiles:
-          characterFailedAbilityCheckResourceBoostProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        spellSlotHealingModifierProfiles:
-          characterSpellSlotHealingModifierProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        magicActionHealingPoolProfiles: characterMagicActionHealingPoolProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          creatureInit.characterUnitRefs,
-          classLevels,
-        ),
-        magicActionAreaSaveDamageHealingProfiles:
-          characterMagicActionAreaSaveDamageHealingProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        magicActionSaveGatedConditionProfiles:
-          characterMagicActionSaveGatedConditionProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        rogueSteadyAimProfiles: characterRogueSteadyAimProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          creatureInit.characterUnitRefs,
-          classLevels,
-        ),
-        potentCantripProfiles: characterPotentCantripProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          creatureInit.characterUnitRefs,
-          classLevels,
-        ),
-        enemyZeroHitPointTemporaryHitPointsProfiles:
-          characterEnemyZeroHitPointTemporaryHitPointsProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-        remarkableAthleteProfiles: characterRemarkableAthleteProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          creatureInit.characterUnitRefs,
-          classLevels,
-        ),
-        paladinSacredWeaponProfiles: characterPaladinSacredWeaponProfiles(
-          creatureInit.resources ?? [],
-          creatureInit.unitFeatures ?? [],
-          creatureInit.characterUnitRefs,
-          classLevels,
-        ),
-        ...(creatureInit.spellcasting === undefined
-          ? {}
-          : {
-              spellcasting: characterSpellcastingState(
-                requireCharacterSpellcastingStateInit(
-                  creatureInit.spellcasting,
-                ),
-                classLevels,
-                [
-                  ...(creatureInit.resources ?? []),
-                  ...(creatureInit.unitFeatures ?? []),
-                ],
-              ),
-            }),
-      },
+    const characterUnits = [
+      ...(creatureInit.resources ?? []).map((resource) => resource.unit),
+      ...(creatureInit.unitFeatures ?? []).map((feature) => feature.unit),
+    ];
+    const execution = characterExecutionFromUnits({
+      battleId,
+      combatantId: input.combatantId,
+      scopeOrdinal: characterScopeOrdinal,
+      unitFeatureProfiles: characterUnits.flatMap((unit) => {
+        const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+        return profile === null ? [] : [profile];
+      }),
+      units: characterUnits,
+      unitRefs: creatureInit.characterUnitRefs,
+      classLevels,
     });
+    if (Either.isLeft(execution)) {
+      return { tag: "invalid", issues: execution.left };
+    }
+    return {
+      tag: "admitted",
+      creature: applyInitialZeroHpLifecycle({
+        ...base,
+        armorClass: creatureInit.armorClass,
+        size: creatureInit.size,
+        origin: {
+          kind: "character",
+          characterId: creatureInit.characterId,
+          execution: execution.right,
+          characterUnitRefs: creatureInit.characterUnitRefs,
+          classLevels,
+          knownLanguages: creatureInit.knownLanguages,
+          d20Statistics: creatureInit.d20Statistics,
+          ...(creatureInit.druidWildShapeAvailableForms === undefined
+            ? {}
+            : {
+                druidWildShapeAvailableForms: executionCohort.admissions,
+              }),
+          weaponProficiencies: creatureInit.weaponProficiencies ?? [],
+          selectedLoadout: creatureInit.selectedLoadout,
+          weaponMasteries: creatureInit.weaponMasteries ?? [],
+          invocationFeatures: creatureInit.invocationFeatures ?? [],
+          speed: creatureInit.speed,
+          attack: attackExecution.execution.attack,
+          unarmedStrike: attackExecution.execution.unarmedStrike,
+          ...(attackExecution.execution.offHandAttack === undefined
+            ? {}
+            : { offHandAttack: attackExecution.execution.offHandAttack }),
+          resources: (creatureInit.resources ?? []).map((resource) =>
+            characterResourceState(resource, classLevels),
+          ),
+          ...(creatureInit.metamagic === undefined
+            ? {}
+            : { metamagic: creatureInit.metamagic }),
+          ongoingFeatureProfiles: characterOngoingFeatureProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            classLevels,
+          ),
+          attackDamageRiderProfiles: characterAttackDamageRiderProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+          saveDamageReplacementProfiles: characterSaveDamageReplacementProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+          d20TestNaturalOneRerollProfiles:
+            characterD20TestNaturalOneRerollProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          passiveSavingThrowRollModeProfiles:
+            characterPassiveSavingThrowRollModeProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          passiveAbilityCheckRollModeProfiles:
+            characterPassiveAbilityCheckRollModeProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          reactionRollOrDamageReductionProfiles:
+            characterReactionRollOrDamageReductionProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          failedAbilityCheckResourceBoostProfiles:
+            characterFailedAbilityCheckResourceBoostProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          spellSlotHealingModifierProfiles:
+            characterSpellSlotHealingModifierProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          magicActionHealingPoolProfiles:
+            characterMagicActionHealingPoolProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          magicActionAreaSaveDamageHealingProfiles:
+            characterMagicActionAreaSaveDamageHealingProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          magicActionSaveGatedConditionProfiles:
+            characterMagicActionSaveGatedConditionProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          rogueSteadyAimProfiles: characterRogueSteadyAimProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+          potentCantripProfiles: characterPotentCantripProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+          enemyZeroHitPointTemporaryHitPointsProfiles:
+            characterEnemyZeroHitPointTemporaryHitPointsProfiles(
+              creatureInit.resources ?? [],
+              creatureInit.unitFeatures ?? [],
+              creatureInit.characterUnitRefs,
+              classLevels,
+            ),
+          remarkableAthleteProfiles: characterRemarkableAthleteProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+          paladinSacredWeaponProfiles: characterPaladinSacredWeaponProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+          ...(creatureInit.spellcasting === undefined
+            ? {}
+            : {
+                spellcasting: characterSpellcastingState(
+                  requireCharacterSpellcastingStateInit(
+                    creatureInit.spellcasting,
+                  ),
+                  classLevels,
+                  [
+                    ...(creatureInit.resources ?? []),
+                    ...(creatureInit.unitFeatures ?? []),
+                  ],
+                ),
+              }),
+        },
+      }),
+      nextScopeOrdinal: executionCohort.nextScopeOrdinal,
+    };
   }
 
-  return applyInitialZeroHpLifecycle({
-    ...base,
-    armorClass: statBlockArmorClassState(
-      literalStatBlockNumber(creatureInit.statBlock.statBlock.ac),
-    ),
-    size: literalCreatureSize(creatureInit.statBlock.statBlock.size),
-    origin: {
-      kind: "statBlock",
-      statBlock: creatureInit.statBlock,
-      resources: statBlockResourceState(creatureInit.statBlock.statBlock),
-    },
-  });
+  const executionCohort = statBlockExecutionAdmissionCohort(
+    battleId,
+    input.combatantId,
+    [creatureInit.statBlock],
+    startingScopeOrdinal,
+  );
+  const admission = executionCohort.admissions[0];
+  if (admission === undefined) {
+    throw new Error("A stat block init always admits its one stat block.");
+  }
+  return {
+    tag: "admitted",
+    creature: applyInitialZeroHpLifecycle({
+      ...base,
+      armorClass: statBlockArmorClassState(
+        literalStatBlockNumber(creatureInit.statBlock.statBlock.ac),
+      ),
+      size: literalCreatureSize(creatureInit.statBlock.statBlock.size),
+      origin: {
+        kind: "statBlock",
+        ...admission,
+      },
+    }),
+    nextScopeOrdinal: executionCohort.nextScopeOrdinal,
+  };
 }
 
 export function hidePrerequisitesReferenceCombatantsIssue(
@@ -700,7 +786,25 @@ export function combatantOriginSnapshot(
     Match.when({ kind: "character" }, (origin) => ({
       kind: "character" as const,
       characterId: origin.characterId,
+      execution: {
+        scopeRef: origin.execution.scopeRef,
+        procedureBindings: characterProcedureBindingSnapshots(origin.execution),
+      },
+      attackExecution: {
+        scopeRef: battleAttackExecutionScopeRefForProcedureRef(
+          origin.unarmedStrike.procedureRef,
+        ),
+        attackProcedureRef: origin.attack?.procedureRef ?? null,
+        unarmedStrikeProcedureRef: origin.unarmedStrike.procedureRef,
+        offHandAttackProcedureRef: origin.offHandAttack?.procedureRef ?? null,
+      },
       resources: origin.resources.map(characterResourceSnapshot),
+      druidWildShapeAvailableForms: (
+        origin.druidWildShapeAvailableForms ?? []
+      ).map((admission) => ({
+        statBlockId: admission.statBlock.id,
+        execution: statBlockExecutionSnapshot(admission.execution),
+      })),
       spellcasting:
         origin.spellcasting === undefined
           ? null
@@ -709,10 +813,7 @@ export function combatantOriginSnapshot(
     Match.when({ kind: "statBlock" }, (origin) => ({
       kind: "statBlock" as const,
       statBlockId: origin.statBlock.id,
-      resources: statBlockResourceSnapshot(
-        origin.statBlock.statBlock,
-        origin.resources,
-      ),
+      execution: statBlockExecutionSnapshot(origin.execution),
     })),
     Match.exhaustive,
   );
@@ -1165,11 +1266,25 @@ export function battleSubjectActorId(subject: BattleSubject): CombatantId {
   return subject.actorId;
 }
 
-export function isLegendaryAttackSubject(subject: BattleSubject): boolean {
+export function isLegendaryAttackSubject(
+  state: BattleState,
+  subject: BattleSubject,
+): boolean {
+  if (
+    subject.tag !== "action" ||
+    subject.action !== "attack" ||
+    subject.procedureRef === undefined
+  ) {
+    return false;
+  }
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "statBlock") return false;
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === subject.procedureRef,
+  );
   return (
-    subject.tag === "action" &&
-    subject.action === "attack" &&
-    subject.statBlockSection === "legendaryActions"
+    binding?.procedure.kind === "attack" &&
+    binding.procedure.section === "legendaryActions"
   );
 }
 

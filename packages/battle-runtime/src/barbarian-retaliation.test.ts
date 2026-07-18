@@ -8,6 +8,8 @@ import {
   battleUnitSupportProfilesForUnit,
   characterSeed,
   fighterId,
+  fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   findHole,
   goblinAttackSubject,
   goblinId,
@@ -44,7 +46,8 @@ describe("battle runtime: Barbarian Retaliation", () => {
                 command: "retaliationAttack",
                 reactorId: fighterId,
                 targetId: goblinId,
-                attackName: "Longsword",
+                procedureRef: expect.any(String),
+                attackDamageType: "slashing",
               }),
             }),
             expect.objectContaining({
@@ -54,7 +57,8 @@ describe("battle runtime: Barbarian Retaliation", () => {
                 command: "retaliationAttack",
                 reactorId: fighterId,
                 targetId: goblinId,
-                attackName: "Unarmed Strike",
+                procedureRef: expect.any(String),
+                attackDamageType: "bludgeoning",
               }),
             }),
           ]),
@@ -64,19 +68,25 @@ describe("battle runtime: Barbarian Retaliation", () => {
     if (awaitingRetaliation.tag !== "needsHoles") {
       throw new Error("Expected Retaliation interrupt decision.");
     }
+    const longswordSelection = attackExecutionSelectionForSubjectForTest(
+      fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
+    );
 
     const startedRetaliation = resolveBattleInterrupt({
       state: awaitingRetaliation.state,
-      fill: interruptDecisionFill(findHole(awaitingRetaliation.holes, "interruptDecision"), {
-        kind: "resolve",
-        responderId: fighterId,
-        choice: {
-          kind: "retaliationAttack",
-          reactorId: fighterId,
-          attackName: "Longsword",
-          fills: [],
+      fill: interruptDecisionFill(
+        findHole(awaitingRetaliation.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: fighterId,
+          choice: {
+            kind: "retaliationAttack",
+            reactorId: fighterId,
+            selection: longswordSelection,
+            fills: [],
+          },
         },
-      }),
+      ),
     });
 
     expect(startedRetaliation).toMatchObject({
@@ -85,7 +95,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
         command: "retaliationAttack",
         reactorId: fighterId,
         targetId: goblinId,
-        attackName: "Longsword",
+        ...longswordSelection,
       }),
       holes: [{ kind: "attackRoll" }],
       snapshot: {
@@ -156,17 +166,20 @@ function resolveGoblinScimitarDamage(input: {
   readonly state: BattleState;
   readonly includeRetaliationWitness: boolean;
 }) {
-  const subject = goblinAttackSubject("Scimitar");
+  const subject = goblinAttackSubject(input.state, "Scimitar");
   const target = requireHole(
     resolveBattleSubject({ state: input.state, subject, fills: [] }),
     "targetChoice",
   );
+  if (target.kind !== "targetChoice" || target.attack === undefined) {
+    throw new Error("Expected Stat Block attack target context.");
+  }
   const targetFacts = [
     {
       kind: "attackTargetInMeleeReach" as const,
       actorId: goblinId,
       targetId: fighterId,
-      attackName: "Scimitar",
+      ...target.attack.selection,
     },
     ...(input.includeRetaliationWitness
       ? [

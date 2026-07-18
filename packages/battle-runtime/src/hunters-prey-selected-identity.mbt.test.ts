@@ -6,7 +6,7 @@ import { movementFeet } from "@dnd/shared/types";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import type { BattleUnitRef } from "./index.ts";
+import type { BattleHole, BattleUnitRef } from "./index.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
@@ -48,6 +48,13 @@ type HuntersPreyProjection = {
 
 type HuntersPreyOptionId = "colossusSlayer" | "hordeBreaker";
 const syntheticExtraAttackUnitId = "test_hunters_prey_extra_attack";
+
+function requireBoundAttackSelection(hole: BattleHole) {
+  if (hole.kind !== "targetChoice" || hole.attack === undefined) {
+    throw new Error("Expected bound Hunter's Prey attack selection.");
+  }
+  return hole.attack.selection;
+}
 
 const HUNTERS_PREY_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
@@ -160,7 +167,7 @@ function projectColossusSlayer(): HuntersPreyProjection {
       statBlockCreatureInit({ initiative: 10, currentHp: 6 }),
     ],
   });
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
   const damage = attackDamageHoleAfterHit(
@@ -223,7 +230,7 @@ function projectSkipThenUseColossusSlayer(): HuntersPreyProjection {
       }),
     ],
   });
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const firstTarget = attackInitialTargetHole(state, subject);
   const firstRoll = attackRollHoleAfterTarget(
     state,
@@ -320,7 +327,11 @@ function projectRejectSameTarget(): HuntersPreyProjection {
       ...window.primaryFills,
       unitFeatureDecisionFill(window.decision, "use"),
       targetFill(window.hordeTarget, goblinId, [
-        attackTargetSpatialFact(fighterId, goblinId, "Longsword"),
+        attackTargetSpatialFact(
+          fighterId,
+          goblinId,
+          requireBoundAttackSelection(window.hordeTarget),
+        ),
         {
           kind: "hordeBreakerSecondTargetEligible",
           attackerId: fighterId,
@@ -346,7 +357,11 @@ function projectRejectInvalidTargetPredicate(): HuntersPreyProjection {
       ...window.primaryFills,
       unitFeatureDecisionFill(window.decision, "use"),
       targetFill(window.hordeTarget, skeletonId, [
-        attackTargetSpatialFact(fighterId, skeletonId, "Longsword"),
+        attackTargetSpatialFact(
+          fighterId,
+          skeletonId,
+          requireBoundAttackSelection(window.hordeTarget),
+        ),
       ]),
     ],
   });
@@ -367,7 +382,7 @@ function projectSecondHordeBreakerUnavailable(): HuntersPreyProjection {
       ],
     },
   };
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
   const damage = attackDamageHoleAfterHit(
@@ -399,7 +414,11 @@ function projectSecondHordeBreakerUnavailable(): HuntersPreyProjection {
 function resolveHordeBreakerUse(input: { readonly primaryHit?: boolean } = {}) {
   const window = hordeBreakerWindow(input);
   const targetFillForHordeBreaker = targetFill(window.hordeTarget, skeletonId, [
-    attackTargetSpatialFact(fighterId, skeletonId, "Longsword"),
+    attackTargetSpatialFact(
+      fighterId,
+      skeletonId,
+      requireBoundAttackSelection(window.hordeTarget),
+    ),
     {
       kind: "hordeBreakerSecondTargetEligible",
       attackerId: fighterId,
@@ -450,7 +469,7 @@ function resolveHordeBreakerUse(input: { readonly primaryHit?: boolean } = {}) {
 
 function hordeBreakerWindow(input: { readonly primaryHit?: boolean } = {}) {
   const state = hordeBreakerBattle();
-  const subject = fighterAttackSubject("Longsword");
+  const subject = fighterAttackSubject(state, "Longsword");
   const primaryTarget = attackInitialTargetHole(state, subject);
   const primaryAttackRoll =
     input.primaryHit === false
@@ -463,7 +482,7 @@ function hordeBreakerWindow(input: { readonly primaryHit?: boolean } = {}) {
     goblinId,
   );
   const attackFills = [
-    attackTargetFill(primaryTarget, fighterId, goblinId, "Longsword"),
+    attackTargetFill(primaryTarget, fighterId, goblinId),
     attackRollFill(primaryRoll, primaryAttackRoll),
   ];
   const primaryFills =

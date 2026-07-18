@@ -1,5 +1,9 @@
 import { Either, Match, Option } from "effect";
-import { resourceCount, type ResourceCount } from "@dnd/shared/types";
+import {
+  resourceCount,
+  type ReadonlyNonEmptyArray,
+  type ResourceCount,
+} from "@dnd/shared/types";
 import type {
   StatBlockCatalog,
   StatBlockId,
@@ -59,6 +63,35 @@ export type CharacterBuildDruidWildShapeFactsIssue = {
   readonly tag: "druidWildShapeFactsIssue";
   readonly message: string;
 };
+
+export const DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES = [
+  "wildShapeKnownFormCountMismatch",
+] as const;
+export const DRUID_WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_ISSUE_CODES = [
+  "wildShapeKnownFormWrongCreatureType",
+  "wildShapeKnownFormChallengeRatingExceeded",
+  "wildShapeKnownFormFlySpeedForbidden",
+] as const;
+export const DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES = [
+  "wildShapeKnownFormUnavailable",
+  ...DRUID_WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_ISSUE_CODES,
+] as const;
+export const DRUID_WILD_SHAPE_KNOWN_FORM_ISSUE_CODES = [
+  ...DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES,
+  ...DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES,
+] as const;
+
+export type DruidWildShapeKnownFormIssue =
+  | {
+      readonly code: (typeof DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES)[number];
+    }
+  | {
+      readonly code: (typeof DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES)[number];
+      readonly statBlockId: StatBlockId;
+    };
+
+type DruidWildShapeKnownFormEligibilityIssueCode =
+  (typeof DRUID_WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_ISSUE_CODES)[number];
 
 export function characterBuildDruidWildShapeFacts(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
@@ -221,28 +254,72 @@ export function validateDruidWildShapeKnownForms(input: {
   readonly StatBlockId[],
   CharacterBuildDruidWildShapeFactsIssue
 > {
+  const issues = validateDruidWildShapeKnownFormIssues(input);
+  if (issues === undefined) return Either.right(input.knownFormStatBlockIds);
+  return druidWildShapeFactsIssue(
+    messageForDruidWildShapeKnownFormIssue(issues[0]),
+  );
+}
+
+export function validateDruidWildShapeKnownFormIssues(input: {
+  readonly facts: CharacterBuildDruidWildShapeFacts;
+  readonly knownFormStatBlockIds: readonly StatBlockId[];
+  readonly statBlockCatalog: StatBlockCatalog;
+}): ReadonlyNonEmptyArray<DruidWildShapeKnownFormIssue> | undefined {
+  const issues: DruidWildShapeKnownFormIssue[] = [];
   if (
     input.knownFormStatBlockIds.length !== input.facts.knownFormRoster.count ||
     hasDuplicateStatBlockIds(input.knownFormStatBlockIds)
   ) {
-    return druidWildShapeFactsIssue(
-      "Wild Shape known forms must match the Druid's known-form count.",
-    );
+    issues.push({ code: "wildShapeKnownFormCountMismatch" });
   }
-  for (const statBlockId of input.knownFormStatBlockIds) {
+  for (const statBlockId of [...new Set(input.knownFormStatBlockIds)].sort()) {
     const statBlock = input.statBlockCatalog.getStatBlock(statBlockId);
     if (Option.isNone(statBlock)) {
-      return druidWildShapeFactsIssue(
-        "Wild Shape known forms require available Stat Blocks.",
-      );
+      issues.push({ code: "wildShapeKnownFormUnavailable", statBlockId });
+      continue;
     }
-    const eligibility = druidWildShapeStatBlockEligibility({
+    for (const code of druidWildShapeStatBlockIssueCodes({
       facts: input.facts,
       statBlock: statBlock.value,
-    });
-    if (Either.isLeft(eligibility)) return Either.left(eligibility.left);
+    })) {
+      issues.push({ code, statBlockId });
+    }
   }
-  return Either.right(input.knownFormStatBlockIds);
+  const firstIssue = issues[0];
+  return firstIssue === undefined
+    ? undefined
+    : [firstIssue, ...issues.slice(1)];
+}
+
+export function messageForDruidWildShapeKnownFormIssue(
+  issue: DruidWildShapeKnownFormIssue,
+): string {
+  return Match.value(issue.code).pipe(
+    Match.when(
+      "wildShapeKnownFormCountMismatch",
+      () => "Wild Shape known forms must match the Druid's known-form count.",
+    ),
+    Match.when(
+      "wildShapeKnownFormUnavailable",
+      () => "Wild Shape known forms require available Stat Blocks.",
+    ),
+    Match.when(
+      "wildShapeKnownFormWrongCreatureType",
+      () => "Wild Shape known forms require eligible Beast Stat Blocks.",
+    ),
+    Match.when(
+      "wildShapeKnownFormChallengeRatingExceeded",
+      () =>
+        "Wild Shape known forms cannot exceed the Druid's maximum Challenge Rating.",
+    ),
+    Match.when(
+      "wildShapeKnownFormFlySpeedForbidden",
+      () =>
+        "Wild Shape known forms cannot have a Fly Speed at this Druid level.",
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function validateDruidWildShapeKnownFormRecords(input: {
@@ -321,31 +398,41 @@ function druidWildShapeStatBlockEligibility(input: {
   readonly facts: CharacterBuildDruidWildShapeFacts;
   readonly statBlock: StatBlockRecord;
 }): Either.Either<true, CharacterBuildDruidWildShapeFactsIssue> {
+  const issueCode = druidWildShapeStatBlockIssueCodes(input)[0];
+  return issueCode === undefined
+    ? Either.right(true)
+    : druidWildShapeFactsIssue(
+        messageForDruidWildShapeKnownFormIssue({
+          code: issueCode,
+          statBlockId: input.statBlock.id,
+        }),
+      );
+}
+
+function druidWildShapeStatBlockIssueCodes(input: {
+  readonly facts: CharacterBuildDruidWildShapeFacts;
+  readonly statBlock: StatBlockRecord;
+}): readonly DruidWildShapeKnownFormEligibilityIssueCode[] {
+  const issues: DruidWildShapeKnownFormEligibilityIssueCode[] = [];
   if (
     input.statBlock.statBlock.creatureType !==
     input.facts.knownFormRoster.creatureType
   ) {
-    return druidWildShapeFactsIssue(
-      "Wild Shape known forms require eligible Beast Stat Blocks.",
-    );
+    issues.push("wildShapeKnownFormWrongCreatureType");
   }
   if (
     input.statBlock.challengeRating >
     input.facts.knownFormRoster.maxChallengeRating
   ) {
-    return druidWildShapeFactsIssue(
-      "Wild Shape known forms cannot exceed the Druid's maximum Challenge Rating.",
-    );
+    issues.push("wildShapeKnownFormChallengeRatingExceeded");
   }
   if (
     input.facts.knownFormRoster.flySpeed === "forbidden" &&
     statBlockHasFlySpeed(input.statBlock)
   ) {
-    return druidWildShapeFactsIssue(
-      "Wild Shape known forms cannot have a Fly Speed at this Druid level.",
-    );
+    issues.push("wildShapeKnownFormFlySpeedForbidden");
   }
-  return Either.right(true);
+  return issues;
 }
 
 function statBlockHasFlySpeed(statBlock: StatBlockRecord): boolean {

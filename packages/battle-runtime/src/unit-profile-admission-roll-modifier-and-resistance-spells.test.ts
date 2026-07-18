@@ -10,6 +10,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection spell.invocation-chosen-damage-resistance
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 import { describe, expect, test } from "vitest";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
@@ -167,7 +171,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const act = spellAct({ state, spellId: blessUnitId, slotLevel: 2 });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(blessUnitId, 2, "rollModifier"),
@@ -390,7 +394,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const skillHole = requireHole(act.initialHoles, "skillChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(guidanceUnitId, "rollModifier"),
@@ -465,7 +469,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -556,7 +560,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const abilityHole = requireHole(act.initialHoles, "abilityChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -637,7 +641,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const act = spellAct({ state, spellId: enthrallUnitId, slotLevel: 2 });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(enthrallUnitId, 2, "rollModifier"),
@@ -758,7 +762,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       "targetAbilityChoices",
     );
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -958,7 +962,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -1242,7 +1246,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ],
       }),
     };
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -1395,12 +1399,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       "bludgeoning",
       false,
     );
-    const unarmedSubject: Extract<BattleSubject, { readonly tag: "action" }> = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Unarmed Strike",
-    };
+    const unarmedSubject = characterAttackSubjectForTest(
+      fixedState,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const target = requireResultHole(
       resolveBattleSubject({
         state: fixedState,
@@ -1550,7 +1553,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       command: "opportunityAttack",
       reactorId: spellCasterId,
       targetId: spellTargetId,
-      attackName: "Longsword",
+      ...attackExecutionSelectionForSubjectForTest(
+        characterAttackSubjectForTest(state, spellCasterId, "Longsword"),
+      ),
     };
     const attack = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
@@ -1660,7 +1665,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1979,7 +1984,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

@@ -22,7 +22,7 @@ import {
   build,
   characterSheetId,
   completeLongRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   Hp,
   parseCharacterSheet,
   requireRight,
@@ -88,7 +88,7 @@ function retainedCompanionProtocolInput(
 describe("Character Sheet runtime / companions", () => {
   test("creates and parses an empty durable companion slot", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:no-companion"),
         build,
         currentHp: Hp(11),
@@ -106,7 +106,7 @@ describe("Character Sheet runtime / companions", () => {
 
   test("retains one familiar-like companion with resolved form proof", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:retained-companion"),
         build,
         currentHp: Hp(11),
@@ -204,7 +204,7 @@ describe("Character Sheet runtime / companions", () => {
 
   test("rejects retained embodied companions with zero current HP", () => {
     expect(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:bad-companion-hp"),
         build,
         currentHp: Hp(11),
@@ -243,7 +243,7 @@ describe("Character Sheet runtime / companions", () => {
     "rejects retained companion protocol hybrids: $title",
     ({ companion, message }) => {
       expect(
-        createFreshCharacterSheet({
+        rebuildCharacterSheetFixture({
           characterId: characterSheetId("character:bad-companion-protocol"),
           build,
           currentHp: Hp(11),
@@ -260,7 +260,7 @@ describe("Character Sheet runtime / companions", () => {
 
   test("rejects a stored retained companion protocol with an unknown tag", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:unknown-companion-protocol"),
         build,
         currentHp: Hp(11),
@@ -294,7 +294,7 @@ describe("Character Sheet runtime / companions", () => {
 
   test("removes owner-long-rest retained companions on Long Rest", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:wild-companion"),
         build,
         currentHp: Hp(11),
@@ -313,7 +313,7 @@ describe("Character Sheet runtime / companions", () => {
 
   test("leaves a surviving retained companion's Hit Points and Temporary Hit Points unchanged on Long Rest (A46)", () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:familiar-rest-temp-hp"),
         build,
         currentHp: Hp(11),

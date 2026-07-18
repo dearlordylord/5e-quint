@@ -21,7 +21,13 @@ import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import {
+  boundAttackExecutionSelectionMatchesOption,
+} from "../battle-action-options.ts";
 import type {
+  BoundCharacterUnarmedStrikeActionOption,
+  BoundCharacterWeaponAttackActionOption,
+  BoundSupportedAttackActionOption,
   CharacterWeaponAttackAbilityChoice,
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -65,11 +71,8 @@ import {
 } from "./statblock-attacks.ts";
 import { activeSelfTransformationNaturalWeaponsEffect } from "./spells-active-effects.ts";
 import { scoreModifier } from "./domain-helpers.ts";
-import {
-  statBlockAttackActionOptions,
-  statBlockAttackResourceAvailable,
-  statBlockSectionMatchesSubject,
-} from "./statblock.ts";
+import { statBlockAttackActionOptions } from "./statblock.ts";
+import { statBlockProcedureResourcesAvailable } from "../stat-block-execution.ts";
 import {
   activeDruidWildShape,
   activeDruidWildShapeEffect,
@@ -361,22 +364,22 @@ export function attackActionOptionForSubject(
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
-): SupportedAttackActionOption | undefined {
-  const damageNotation = subject.statBlockDamageNotation ?? "rolled";
-  return attackActionOptionsForActor(state, subject.actorId).find(
-    (attack) =>
-      attackActionOptionName(attack) === subject.attackName &&
-      statBlockSectionMatchesSubject(attack, subject.statBlockSection) &&
+): BoundSupportedAttackActionOption | undefined {
+  return attackActionOptionsForActor(state, subject.actorId).find((attack) => {
+    return (
+      boundAttackExecutionSelectionMatchesOption(subject, attack) &&
       (attack.kind === "statBlockAttack"
-        ? attack.damageNotation === damageNotation
-        : subject.statBlockDamageNotation === undefined),
-  );
+        ? attack.damageNotation ===
+          (subject.statBlockDamageNotation ?? "rolled")
+        : subject.statBlockDamageNotation === undefined)
+    );
+  });
 }
 
 export function attackActionOptionsForActor(
   state: BattleState,
   actorId: CombatantId,
-): readonly SupportedAttackActionOption[] {
+): readonly BoundSupportedAttackActionOption[] {
   if (isPresentFindFamiliarCombatant(state, actorId)) {
     return [];
   }
@@ -385,11 +388,10 @@ export function attackActionOptionsForActor(
     const wildShape = activeDruidWildShape(actor);
     if (wildShape !== null) {
       return [
-        ...statBlockAttackActionOptions(wildShape.form).filter((option) =>
-          statBlockAttackResourceAvailable(
-            wildShape.form.statBlock,
-            wildShape.effect.resources,
-            option,
+        ...statBlockAttackActionOptions(wildShape.admission).filter((option) =>
+          statBlockProcedureResourcesAvailable(
+            wildShape.admission.execution,
+            option.procedureRef,
           ),
         ),
         ...wildShapeWornWeaponAttackOptions(state, actor, wildShape.effect),
@@ -421,18 +423,19 @@ export function attackActionOptionsForActor(
         (resource): resource is StatBlockMultiattackActionResource =>
           isStatBlockMultiattackActionResource(resource, actorId),
       );
-    const multiattackAttackNames = multiattackResources.map(
-      (resource) => resource.attackPart.name,
+    const multiattackAttackProcedureRefs = multiattackResources.map(
+      (resource) => resource.attackProcedureRef,
     );
-    return statBlockAttackActionOptions(origin.statBlock).filter(
+    return statBlockAttackActionOptions(origin).filter(
       (option) =>
-        statBlockAttackResourceAvailable(
-          origin.statBlock.statBlock,
-          origin.resources,
-          option,
+        option.procedureRef !== undefined &&
+        statBlockProcedureResourcesAvailable(
+          origin.execution,
+          option.procedureRef,
         ) &&
-        (multiattackAttackNames.length === 0 ||
-          multiattackAttackNames.includes(option.attack.name)),
+        (multiattackAttackProcedureRefs.length === 0 ||
+          (option.procedureRef !== undefined &&
+            multiattackAttackProcedureRefs.includes(option.procedureRef))),
     );
   }
 
@@ -442,14 +445,14 @@ export function attackActionOptionsForActor(
 export function offHandAttackActionOptionForActor(
   state: BattleState,
   actorId: CombatantId,
-): CharacterWeaponAttackActionOption | undefined {
+): BoundCharacterWeaponAttackActionOption | undefined {
   return offHandAttackActionOptionsForActor(state, actorId)[0];
 }
 
 export function offHandAttackActionOptionsForActor(
   state: BattleState,
   actorId: CombatantId,
-): readonly CharacterWeaponAttackActionOption[] {
+): readonly BoundCharacterWeaponAttackActionOption[] {
   const actor = state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) return [];
   const activeWildShapeEffect = activeDruidWildShapeEffect(actor);
@@ -517,7 +520,7 @@ export function offHandAttackActionOptionsForActor(
         }),
   };
   return attackActionVariantOptions(lightPropertyOffHand).filter(
-    (attack): attack is CharacterWeaponAttackActionOption =>
+    (attack): attack is BoundCharacterWeaponAttackActionOption =>
       attack.kind === "weapon",
   );
 }
@@ -526,7 +529,7 @@ function wildShapeWornWeaponAttackOptions(
   state: BattleState,
   actor: CharacterBattleCreatureState,
   effect: NonNullable<ReturnType<typeof activeDruidWildShapeEffect>>,
-): readonly CharacterWeaponAttackActionOption[] {
+): readonly BoundCharacterWeaponAttackActionOption[] {
   return [
     ...(actor.origin.attack === null
       ? []
@@ -548,8 +551,8 @@ function wildShapeWornWeaponAttackOption(input: {
     WildShapeLoadoutObjectRef["kind"],
     "mainWeapon" | "offHandWeapon"
   >;
-  readonly attack: CharacterWeaponAttackActionOption;
-}): readonly CharacterWeaponAttackActionOption[] {
+  readonly attack: BoundCharacterWeaponAttackActionOption;
+}): readonly BoundCharacterWeaponAttackActionOption[] {
   const item = wildShapeWornLoadoutWeaponObjectForAttack(
     input.actor,
     input.effect,
@@ -570,7 +573,7 @@ function wildShapeWornWeaponAttackOption(input: {
             item.objectId,
           ),
         ).filter(
-          (attack): attack is CharacterWeaponAttackActionOption =>
+          (attack): attack is BoundCharacterWeaponAttackActionOption =>
             attack.kind === "weapon",
         ),
       ];
@@ -594,6 +597,14 @@ function wildShapeWornLoadoutWeaponObjectForAttack(
   });
 }
 
+function wildShapeWornWeaponAttackWithFormStatistics(
+  actor: CharacterBattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+): BoundCharacterWeaponAttackActionOption;
+function wildShapeWornWeaponAttackWithFormStatistics(
+  actor: CharacterBattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+): CharacterWeaponAttackActionOption;
 function wildShapeWornWeaponAttackWithFormStatistics(
   actor: CharacterBattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
@@ -687,6 +698,18 @@ function isCharacterBattleCreatureState(
 function weaponAttackWithActiveSpellEffects(
   state: BattleState,
   actor: BattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): BoundCharacterWeaponAttackActionOption;
+function weaponAttackWithActiveSpellEffects(
+  state: BattleState,
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption;
+function weaponAttackWithActiveSpellEffects(
+  state: BattleState,
+  actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
   attachedWeaponItemId: string | undefined,
 ): CharacterWeaponAttackActionOption {
@@ -702,6 +725,16 @@ function weaponAttackWithActiveSpellEffects(
   );
 }
 
+function weaponAttackWithActiveSacredWeapon(
+  actor: BattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): BoundCharacterWeaponAttackActionOption;
+function weaponAttackWithActiveSacredWeapon(
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption;
 function weaponAttackWithActiveSacredWeapon(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
@@ -792,6 +825,16 @@ function sacredWeaponAbilityChoice(
 
 function weaponAttackWithActiveSpellOverride(
   actor: BattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): BoundCharacterWeaponAttackActionOption;
+function weaponAttackWithActiveSpellOverride(
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption;
+function weaponAttackWithActiveSpellOverride(
+  actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
   attachedWeaponItemId: string | undefined,
 ): CharacterWeaponAttackActionOption {
@@ -878,8 +921,7 @@ function weaponAttackCanUseActiveSpellOverride(
   attack: CharacterWeaponAttackActionOption,
 ): attack is SpellWeaponAttackOverrideShape {
   return (
-    attack.weapon.damage.kind === "dice" &&
-    attack.weapon.usage === "melee"
+    attack.weapon.damage.kind === "dice" && attack.weapon.usage === "melee"
   );
 }
 
@@ -902,6 +944,18 @@ function activeSpellWeaponAttackOverrideEffectForWeapon(
   );
 }
 
+function weaponAttackWithMagicWeaponEnhancement(
+  state: BattleState,
+  holderCombatantId: CombatantId,
+  attack: BoundCharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): BoundCharacterWeaponAttackActionOption;
+function weaponAttackWithMagicWeaponEnhancement(
+  state: BattleState,
+  holderCombatantId: CombatantId,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption;
 function weaponAttackWithMagicWeaponEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
@@ -1198,7 +1252,7 @@ function characterLightExtraAttackDamageAbilityModifierSupportUnitIds(
 export function martialArtsBonusUnarmedStrikeActionOptionForActor(
   state: BattleState,
   actorId: CombatantId,
-): CharacterUnarmedStrikeActionOption | undefined {
+): BoundCharacterUnarmedStrikeActionOption | undefined {
   const actor = state.combatants.get(actorId);
   if (
     actor === undefined ||
@@ -1214,6 +1268,14 @@ export function martialArtsBonusUnarmedStrikeActionOptionForActor(
   );
 }
 
+function unarmedStrikeWithActiveSelfTransformationOverride(
+  actor: BattleCreatureState,
+  unarmedStrike: BoundCharacterUnarmedStrikeActionOption,
+): BoundCharacterUnarmedStrikeActionOption;
+function unarmedStrikeWithActiveSelfTransformationOverride(
+  actor: BattleCreatureState,
+  unarmedStrike: CharacterUnarmedStrikeActionOption,
+): CharacterUnarmedStrikeActionOption;
 function unarmedStrikeWithActiveSelfTransformationOverride(
   actor: BattleCreatureState,
   unarmedStrike: CharacterUnarmedStrikeActionOption,

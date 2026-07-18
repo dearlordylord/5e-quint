@@ -1,15 +1,21 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-action-interdiction
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
+import {
+  classLevel,
+  Hp,
+  movementFeet,
+  NonNegativeInteger,
+} from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import { battleProcedureExecutionRef } from "./identity.ts";
 
 import {
   antimagicFieldUnitId,
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
-  counterspellUnitId,
   healingWordUnitId,
   oppositionSide,
   partySide,
@@ -33,7 +39,6 @@ import {
   combatantId,
   discoverBattleActs,
   resolveBattleSubject,
-  spellSlotInvocationRef,
   startBattle,
   type BattleActiveEffect,
   type BattleAntimagicFieldAuraMembership,
@@ -86,21 +91,25 @@ const antimagicActionInterdictionDriverSchema = {
 } as const;
 
 describe("Antimagic Field action interdiction MBT", () => {
-  it("replays action spell, Bonus Action spell, Reaction spell, and Magic Action interdiction", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAntimagicActionInterdictionDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(3),
-      stateCheck: antimagicActionInterdictionStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays action spell, Bonus Action spell, Reaction spell, and Magic Action interdiction",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAntimagicActionInterdictionDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: antimagicActionInterdictionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createAntimagicActionInterdictionDriver() {
@@ -192,10 +201,8 @@ function createAntimagicActionInterdictionDriver() {
               actorId: spellCasterId,
               command: "castTriggeredReactionSpell",
               reactorId: spellCasterId,
-              invocation: spellSlotInvocationRef(
-                counterspellUnitId,
-                3,
-                "counterspell",
+              procedureRef: requireCounterspellProcedureRef(
+                spellInterdictionBattle(),
               ),
             },
             fills: [],
@@ -457,4 +464,15 @@ function preserveLifeUnitRefWithSupport() {
   }
   expect(unitRef.right.supportProfiles).toContainEqual(support);
   return unitRef.right;
+}
+
+function requireCounterspellProcedureRef(state: BattleState) {
+  const caster = state.combatants.get(spellCasterId);
+  if (!isCharacterBattleCreatureState(caster)) {
+    throw new Error("Expected the spell caster to be a character.");
+  }
+  return battleProcedureExecutionRef(
+    caster.origin.execution.scopeRef,
+    NonNegativeInteger(0),
+  );
 }

@@ -2119,7 +2119,8 @@ export function repositionSpiritualWeaponAttackProxyEffect(input: {
   combatants.set(input.invocation.activeEffect.sourceCombatantId, {
     ...caster,
     activeEffects: caster.activeEffects.map((effect) =>
-      effect === input.invocation.activeEffect
+      effect.kind === "spiritualWeapon" &&
+      effect.sourceEffectId === input.invocation.activeEffect.sourceEffectId
         ? { ...effect, forcePositionId: input.forcePositionId }
         : effect,
     ),

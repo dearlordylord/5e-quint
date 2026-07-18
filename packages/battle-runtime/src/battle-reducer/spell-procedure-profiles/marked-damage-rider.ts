@@ -45,7 +45,7 @@ import {
 } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleResolutionResult,
@@ -425,7 +425,7 @@ function discoverMarkedDamageRiderCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: MarkedDamageRiderInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles =
     invocation.action === "cast" &&

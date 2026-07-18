@@ -23,7 +23,7 @@ import { Either } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -169,7 +169,7 @@ function discoverSanctuaryTargetingInterdictionCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SanctuaryTargetingInterdictionInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []

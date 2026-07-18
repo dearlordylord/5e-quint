@@ -19,6 +19,8 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
 
+type CharacterSeedInput = Parameters<typeof characterSeed>[0];
+
 import {
   activeDruidWildShapeForm,
   activeDruidWildShapeEffect,
@@ -72,6 +74,10 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
+import {
+  activeDruidWildShape,
+  spendActiveDruidWildShapeProcedureResources,
+} from "./battle-reducer/druid-wild-shape.ts";
 
 const druidId = combatantId("wild-shape-druid");
 const ratId = "stat_block_rat";
@@ -116,7 +122,7 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Hooves",
+        act.summary.includes("Hooves"),
     ),
   ).toBe(true);
   expect(
@@ -125,7 +131,7 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
         act.subject.tag === "actionSpell" ||
         (act.subject.tag === "action" &&
           act.subject.action === "attack" &&
-          act.subject.attackName === "Longsword"),
+          act.summary === "Take the Attack action with Longsword."),
     ),
   ).toBe(false);
 
@@ -144,7 +150,7 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Scratch",
+        act.summary.includes("Scratch"),
     ),
   ).toBe(true);
   expect(
@@ -166,6 +172,97 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const dismissedSnapshot = snapshotCreature(dismissed.snapshot, druidId);
   expect(dismissedSnapshot.size).toBe("medium");
   expect(Number(dismissedSnapshot.movement.speedFeet)).toBe(30);
+});
+
+test("re-assuming a Wild Shape form preserves its committed Stat Block resources", () => {
+  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const limitedFormId = "synthetic_limited_wild_shape_form";
+  const baseAttack = baseForm.statBlock.actions?.attacks?.[0];
+  if (baseAttack === undefined) {
+    throw new Error("Expected the Riding Horse attack fixture.");
+  }
+  const limitedForm: StatBlockRecord = {
+    ...baseForm,
+    id: limitedFormId,
+    name: "Synthetic Limited Wild Shape Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-limited-wild-shape-form",
+    },
+    statBlock: {
+      ...baseForm.statBlock,
+      displayName: "Synthetic Limited Wild Shape Form",
+      actions: {
+        ...baseForm.statBlock.actions,
+        attacks: [
+          {
+            ...baseAttack,
+            limitedUse: { kind: "daily", uses: 1 },
+          },
+        ],
+      },
+    },
+  };
+  const initial = druidWildShapeBattle({
+    knownForms: druidWildShapeKnownFormsReplacingRidingHorse(limitedForm),
+  });
+  const assumeSubject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: limitedFormId,
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(initial, assumeSubject),
+  );
+  const assumedDruid = requireCharacter(assumed.state, druidId);
+  const firstActive = activeDruidWildShape(assumedDruid);
+  const limitedBinding =
+    firstActive?.admission.execution.procedureBindings.find(
+      (binding) => binding.resourcePoolRefs.length > 0,
+    );
+  const limitedPool = firstActive?.admission.execution.resourcePools.find(
+    (pool) => pool.kind === "daily",
+  );
+  if (
+    firstActive === null ||
+    limitedBinding === undefined ||
+    limitedPool === undefined
+  ) {
+    throw new Error("Expected the active limited-use form procedure.");
+  }
+  const spentDruid = spendActiveDruidWildShapeProcedureResources(
+    assumedDruid,
+    limitedBinding.procedureRef,
+  );
+  const spentActive = activeDruidWildShape(spentDruid);
+  expect(
+    spentActive?.admission.execution.resourcePools.find(
+      (pool) => pool.resourcePoolRef === limitedPool.resourcePoolRef,
+    ),
+  ).toMatchObject({ usesRemaining: 0 });
+
+  const spentState: BattleState = {
+    ...assumed.state,
+    combatants: new Map(assumed.state.combatants).set(druidId, spentDruid),
+  };
+  const reAssumeTurn = restoreBonusAction(spentState);
+  const reAssumeSubject = wildShapeSubject(reAssumeTurn, {
+    action: "assumeForm",
+    formStatBlockId: limitedFormId,
+  });
+  const reAssumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(reAssumeTurn, reAssumeSubject),
+  );
+  const reAssumedActive = activeDruidWildShape(
+    requireCharacter(reAssumed.state, druidId),
+  );
+  expect(reAssumedActive?.admission.execution.scopeRef).toBe(
+    firstActive.admission.execution.scopeRef,
+  );
+  expect(
+    reAssumedActive?.admission.execution.resourcePools.find(
+      (pool) => pool.resourcePoolRef === limitedPool.resourcePoolRef,
+    ),
+  ).toMatchObject({ usesRemaining: 0 });
 });
 
 test("derives Wild Shape equipment disposition candidates from selected loadout object refs", () => {
@@ -325,7 +422,7 @@ test("requires and validates Wild Shape equipment disposition fills for selected
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Quarterstaff",
+        act.summary === "Take the Attack action with Quarterstaff.",
     ),
   ).toBe(false);
 });
@@ -445,7 +542,7 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Quarterstaff",
+        act.summary === "Take the Attack action with Quarterstaff.",
     ),
   ).toBe(false);
 });
@@ -501,7 +598,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Hooves",
+        act.summary.includes("Hooves"),
     ),
   ).toBe(true);
   expect(
@@ -509,7 +606,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Longsword",
+        act.summary === "Take the Attack action with Longsword.",
     ),
   ).toBe(true);
 
@@ -517,13 +614,13 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
-      act.subject.attackName === "Longsword",
+      act.summary === "Take the Attack action with Longsword.",
   );
   if (longswordAct?.subject.tag !== "action") {
     throw new Error("Expected Longsword attack act.");
   }
   const target = findHole(longswordAct.initialHoles, "targetChoice");
-  const targetChoice = attackTargetFill(target, druidId, goblinId, "Longsword");
+  const targetChoice = attackTargetFill(target, druidId, goblinId);
   const needsAttackRoll = resolveBattleSubject({
     state: resolved.state,
     subject: longswordAct.subject,
@@ -626,34 +723,24 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
   const activeActs = discoverBattleActs(battleReadyState);
   expect(
     activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.subject.attackName === "Shortsword",
+      (act) => act.summary === "Take the Attack action with Shortsword.",
     ),
   ).toBe(true);
   expect(
     activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.subject.attackName === "Dagger",
+      (act) => act.summary === "Take the Attack action with Dagger.",
     ),
   ).toBe(false);
   expect(
     activeActs.some(
       (act) =>
-        act.subject.tag === "bonusAction" &&
-        act.subject.action === "offHandAttack" &&
-        act.subject.attackName === "Dagger",
+        act.summary ===
+        "Make the Light property Bonus Action attack with Dagger.",
     ),
   ).toBe(false);
 
   const shortswordAct = activeActs.find(
-    (act) =>
-      act.subject.tag === "action" &&
-      act.subject.action === "attack" &&
-      act.subject.attackName === "Shortsword",
+    (act) => act.summary === "Take the Attack action with Shortsword.",
   );
   if (shortswordAct?.subject.tag !== "action") {
     throw new Error("Expected Shortsword attack act.");
@@ -663,7 +750,6 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     shortswordTarget,
     druidId,
     goblinId,
-    "Shortsword",
   );
   const needsShortswordAttackRoll = resolveBattleSubject({
     state: battleReadyState,
@@ -691,28 +777,19 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
   const afterLightActs = discoverBattleActs(afterQualifyingAttack);
   expect(
     afterLightActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.subject.attackName === "Dagger",
+      (act) => act.summary === "Take the Attack action with Dagger.",
     ),
   ).toBe(false);
   const daggerAct = afterLightActs.find(
     (act) =>
-      act.subject.tag === "bonusAction" &&
-      act.subject.action === "offHandAttack" &&
-      act.subject.attackName === "Dagger",
+      act.summary ===
+      "Make the Light property Bonus Action attack with Dagger.",
   );
   if (daggerAct?.subject.tag !== "bonusAction") {
     throw new Error("Expected Dagger off-hand Bonus Action act.");
   }
   const daggerTarget = findHole(daggerAct.initialHoles, "targetChoice");
-  const daggerTargetChoice = attackTargetFill(
-    daggerTarget,
-    druidId,
-    goblinId,
-    "Dagger",
-  );
+  const daggerTargetChoice = attackTargetFill(daggerTarget, druidId, goblinId);
   const needsDaggerAttackRoll = resolveBattleSubject({
     state: afterQualifyingAttack,
     subject: daggerAct.subject,
@@ -815,7 +892,7 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Longsword",
+        act.summary === "Take the Attack action with Longsword.",
     ),
   ).toBe(false);
 });
@@ -1519,9 +1596,7 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
     resolveBattleSubject({
       state: assumed.state,
       subject,
-      fills: [
-        attackTargetFill(targetHole, druidId, goblinId, subject.attackName),
-      ],
+      fills: [attackTargetFill(targetHole, druidId, goblinId)],
     }),
     "attackRoll",
   );
@@ -1532,7 +1607,7 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
       state: assumed.state,
       subject,
       fills: [
-        attackTargetFill(targetHole, druidId, goblinId, subject.attackName, [
+        attackTargetFill(targetHole, druidId, goblinId, undefined, [
           {
             kind: "attackerAllyWithin5FeetOfTarget",
             attackerId: druidId,
@@ -1553,7 +1628,7 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
       state: assumed.state,
       subject,
       fills: [
-        attackTargetFill(targetHole, druidId, goblinId, subject.attackName, [
+        attackTargetFill(targetHole, druidId, goblinId, undefined, [
           {
             kind: "attackerAllyWithin5FeetOfTarget",
             attackerId: druidId,
@@ -1606,7 +1681,9 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
       }),
       expect.objectContaining({
         category: "attackHitConditionRider",
-        exampleStatBlockIds: expect.arrayContaining([syntheticProseProneFormId]),
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticProseProneFormId,
+        ]),
         closedBoundary: expect.objectContaining({
           owner: expect.stringContaining("condition rider owner"),
           reason: expect.stringContaining(
@@ -2029,8 +2106,8 @@ test("rounds odd-level duration down through the general division rule", () => {
 function druidWildShapeBattle(input?: {
   readonly druidLevel?: number;
   readonly armorClass?: ArmorClassState;
-  readonly attack?: CharacterBattleCreatureState["origin"]["attack"];
-  readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
+  readonly attack?: CharacterSeedInput["attack"];
+  readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
@@ -2060,8 +2137,8 @@ function druidWildShapeBattle(input?: {
 function druidWildShapeCreatureInit(input?: {
   readonly druidLevel?: number;
   readonly armorClass?: ArmorClassState;
-  readonly attack?: CharacterBattleCreatureState["origin"]["attack"];
-  readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
+  readonly attack?: CharacterSeedInput["attack"];
+  readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
@@ -2112,26 +2189,26 @@ function hasActionSpell(state: BattleState, spellId: string): boolean {
 }
 
 function weakTrueFormLongswordAttack(): NonNullable<
-  CharacterBattleCreatureState["origin"]["attack"]
+  CharacterSeedInput["attack"]
 > {
   return weakTrueFormWeaponAttack("weapon_longsword");
 }
 
 function weakTrueFormShortswordAttack(): NonNullable<
-  CharacterBattleCreatureState["origin"]["attack"]
+  CharacterSeedInput["attack"]
 > {
   return weakTrueFormWeaponAttack("weapon_shortsword");
 }
 
 function weakTrueFormDaggerAttack(): NonNullable<
-  CharacterBattleCreatureState["origin"]["offHandAttack"]
+  CharacterSeedInput["offHandAttack"]
 > {
   return weakTrueFormWeaponAttack("weapon_dagger");
 }
 
 function weakTrueFormWeaponAttack(
   unitId: "weapon_longsword" | "weapon_shortsword" | "weapon_dagger",
-): NonNullable<CharacterBattleCreatureState["origin"]["attack"]> {
+): NonNullable<CharacterSeedInput["attack"]> {
   const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
     throw new Error("Expected weapon Unit.");
@@ -2204,7 +2281,7 @@ function statBlockAttackSubject(
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === druidId &&
-      act.subject.attackName === attackName,
+      act.summary.includes(attackName),
   )?.subject;
   if (
     subject?.tag !== "action" ||

@@ -266,7 +266,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const nicked = requireResolved(
       resolveBattleSubject({
         state: marked.state,
-        subject: fighterAttackSubject(),
+        subject: fighterAttackSubject(state),
         fills: [
           targetFill(target, goblinId),
           attackRollFill(roll, { total: 15, naturalD20: 10 }),
@@ -284,7 +284,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const disposition = requireHole(
       resolveBattleSubject({
         state: marked.state,
-        subject: fighterAttackSubject(),
+        subject: fighterAttackSubject(state),
         fills: attackFills,
       }),
       "attackDamageDisposition",
@@ -292,7 +292,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const dropped = requireResolved(
       resolveBattleSubject({
         state: marked.state,
-        subject: fighterAttackSubject(),
+        subject: fighterAttackSubject(state),
         fills: [
           ...attackFills,
           attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
@@ -1089,7 +1089,9 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ],
     });
 
-    const expiredCombatants = tickDurationEffects(nearlyExpired.combatants).value;
+    const expiredCombatants = tickDurationEffects(
+      nearlyExpired.combatants,
+    ).value;
     expect(expiredCombatants.get(fighterId)?.concentration).toBeNull();
     expect(expiredCombatants.get(fighterId)?.activeEffects).toEqual([]);
   });

@@ -17,7 +17,7 @@ import {
   characterSheetId,
   completeLongRest,
   completeShortRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   druidCircleLandBuild,
   druidWildShapeFixtureKnownFormStatBlockIds,
   empoweredEvocationDamageRollModifier,
@@ -149,7 +149,7 @@ describe("Character Sheet runtime / passive defenses", () => {
 
   test(fiendishResiliencePassiveDefenseProjectionTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fiendish-resilience"),
         build: fiendWarlockLevelTenBuild(),
         currentHp: Hp(58),
@@ -198,7 +198,7 @@ describe("Character Sheet runtime / passive defenses", () => {
 
   test(fiendishResiliencePassiveDefenseGateTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fiendish-resilience-force"),
         build: fiendWarlockLevelTenBuild(),
         currentHp: Hp(58),
@@ -225,7 +225,7 @@ describe("Character Sheet runtime / passive defenses", () => {
     });
 
     expect(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fiendish-resilience-unowned"),
         build: warlockMagicalCunningBuild({
           warlockAdvancements: 9,
@@ -250,7 +250,7 @@ describe("Character Sheet runtime / passive defenses", () => {
 
   test(naturesWardPassiveDefenseProjectionTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:natures-ward-temperate"),
         build: druidCircleLandBuild({ druidLevel: 10 }),
         currentHp: Hp(58),
@@ -313,7 +313,7 @@ describe("Character Sheet runtime / passive defenses", () => {
 
   test(auraOfCouragePassiveDefenseProjectionTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:aura-of-courage"),
         build: paladinLevelTenBuild(),
         currentHp: Hp(64),
@@ -342,7 +342,7 @@ describe("Character Sheet runtime / passive defenses", () => {
 
   test(selfRestorationConditionCleanupTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:self-restoration"),
         build: monkLevelTenBuild(),
         currentHp: Hp(58),
@@ -391,7 +391,7 @@ describe("Character Sheet runtime / passive defenses", () => {
 
   test(empoweredEvocationDamageModifierProjectionTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:empowered-evocation"),
         build: wizardEvokerLevelTenBuild(),
         currentHp: Hp(42),
@@ -543,7 +543,7 @@ function spellRecord(unitId: string) {
 const passiveDefenseSelectedIdentityActions = {
   doProjectDruidNaturesWard: (): PassiveDefenseSelectedIdentityProjection => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:natures-ward-replay"),
         build: druidCircleLandBuild({ druidLevel: 10 }),
         currentHp: Hp(58),
@@ -587,7 +587,7 @@ const passiveDefenseSelectedIdentityActions = {
   doSelectWarlockFiendishResilience:
     (): PassiveDefenseSelectedIdentityProjection => {
       const sheet = requireRight(
-        createFreshCharacterSheet({
+        rebuildCharacterSheetFixture({
           characterId: characterSheetId("character:fiendish-resilience-replay"),
           build: fiendWarlockLevelTenBuild(),
           currentHp: Hp(58),

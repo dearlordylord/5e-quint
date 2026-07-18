@@ -60,7 +60,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       spellId: fireBoltUnitId,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -128,7 +128,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       spellId: spell.id,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(

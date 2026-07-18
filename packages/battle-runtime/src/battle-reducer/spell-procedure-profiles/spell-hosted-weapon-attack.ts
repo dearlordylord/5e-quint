@@ -22,11 +22,11 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
-import type { CharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
+import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type AttackSpellDamageAddition,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SpellHostedWeaponAttackInvocation,
@@ -57,7 +57,7 @@ import {
   AbilityModifier,
   AttackBonus,
   BattleRuntimeObjectSchema,
-  CharacterWeaponAttackActionOptionSchema,
+  BoundCharacterWeaponAttackActionOptionSchema,
   ClassCantripSpellAccessSchema,
   DamageTypeSchema,
   NoSpellInvocationResourceSchema,
@@ -164,7 +164,7 @@ function spellHostedWeaponAttackProjection(
 
 function spellHostedWeaponAttacks(ctx: SpellAdmissionContext): readonly {
   readonly itemId: string;
-  readonly attack: CharacterWeaponAttackActionOption;
+  readonly attack: BoundCharacterWeaponAttackActionOption;
 }[] {
   const origin = ctx.actor.origin;
   const activeWildShape = activeDruidWildShapeEffect(ctx.actor);
@@ -236,7 +236,7 @@ function discoverSpellHostedWeaponAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpellHostedWeaponAttackInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = attackTargetHole(
     state,
     actorId,
@@ -368,7 +368,7 @@ function resolveSpellHostedWeaponAttack(
 function spellHostedWeaponAttack(
   invocation: SpellHostedWeaponAttackInvocation,
   damageType: DamageType,
-): CharacterWeaponAttackActionOption {
+): BoundCharacterWeaponAttackActionOption {
   const attack = invocation.componentWeapon.attack;
   return {
     ...attack,
@@ -417,7 +417,7 @@ const SpellHostedWeaponAttackInvocationSchema = spellProcedureInvocationSchema<
     actionCost: Schema.Literal("magicAction"),
     componentWeapon: Schema.Struct({
       itemId: Schema.String,
-      attack: CharacterWeaponAttackActionOptionSchema,
+      attack: BoundCharacterWeaponAttackActionOptionSchema,
     }),
     spellcastingAbilityModifier: AbilityModifier,
     attackBonus: AttackBonus,

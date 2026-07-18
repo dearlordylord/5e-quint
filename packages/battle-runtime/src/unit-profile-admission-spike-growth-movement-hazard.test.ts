@@ -224,7 +224,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

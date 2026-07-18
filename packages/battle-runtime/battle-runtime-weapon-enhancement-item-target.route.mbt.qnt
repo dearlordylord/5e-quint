@@ -42,11 +42,6 @@ module battleRuntimeWeaponEnhancementItemTargetRouteMbt {
       WeaponEnhancementItemTargetRouteSurface,
       List(
         startRoute,
-        routeDiscoverBattleActs(
-          WeaponEnhancementItemTargetRouteSubject,
-          Set(),
-          BattleItemTargetBoundaryOwner,
-        ),
         routeResolveBattleSubjectWithoutFill(
           WeaponEnhancementItemTargetRouteSubject,
           Set(),

@@ -11,6 +11,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
+import {
+  characterAttackSubjectForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   canSpendAction,
@@ -1062,11 +1066,7 @@ function expectedLevel1SpatialWitnessPublicReducerRoutes(): Readonly<
         ["savingThrowOutcome", "targetChoice"],
         "battleSpellSlotAndActionEconomy",
       ),
-      spatialResolve(
-        "targetChoice",
-        ["savingThrowOutcome"],
-        "battleAreaShape",
-      ),
+      spatialResolve("targetChoice", ["savingThrowOutcome"], "battleAreaShape"),
       spatialResolve("savingThrowOutcome", [], "battleSavingThrowOutcome"),
       spatialResolveWithoutFill("battleActiveEffect"),
       spatialResolveWithoutFill("battleConcentration"),
@@ -1129,17 +1129,8 @@ function expectedLevel1SpatialWitnessPublicReducerRoutes(): Readonly<
     ],
     movementReplacement: [
       startRoute(),
-      discover(
-        "movementPresentation",
-        ["movement"],
-        "battleMovementResource",
-      ),
-      resolve(
-        "movementPresentation",
-        "movement",
-        [],
-        "battleMovementResource",
-      ),
+      discover("movementPresentation", ["movement"], "battleMovementResource"),
+      resolve("movementPresentation", "movement", [], "battleMovementResource"),
       resolveWithoutFill("movementPresentation", "battleTablePresentation"),
       resolveWithoutFill("movementPresentation", "battleConditionLifecycle"),
     ],
@@ -1179,12 +1170,7 @@ function expectedLevel1SpatialWitnessPublicReducerRoutes(): Readonly<
         ["movement"],
         "battleSavingThrowOutcome",
       ),
-      resolve(
-        "movementPresentation",
-        "movement",
-        [],
-        "battleMovementResource",
-      ),
+      resolve("movementPresentation", "movement", [], "battleMovementResource"),
       resolveWithoutFill("movementPresentation", "battleTablePresentation"),
       discover("movementPresentation", [], "battleObjectTargetBoundary"),
       resolveWithoutFill("movementPresentation", "battleObjectTargetBoundary"),
@@ -1334,7 +1320,9 @@ function replayMovableMultiEmitterLightRoute(): readonly BattleReducerRouteEvent
     ),
   );
   if (cast.tag !== "resolved") {
-    throw new Error(`Expected Dancing Lights cast to resolve, got ${cast.tag}.`);
+    throw new Error(
+      `Expected Dancing Lights cast to resolve, got ${cast.tag}.`,
+    );
   }
   const moveAct = dancingLightsRepositionAct(cast.state);
   route.push(
@@ -1387,7 +1375,11 @@ function replayOutlineSightAdvantageRoute(): readonly BattleReducerRouteEvent[] 
     ],
   });
   route.push(
-    ...routeEventsOfSubject(outlined, "Faerie Fire resolution", "spatialEffect"),
+    ...routeEventsOfSubject(
+      outlined,
+      "Faerie Fire resolution",
+      "spatialEffect",
+    ),
   );
   return route;
 }
@@ -1418,7 +1410,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
         responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
@@ -1457,7 +1449,9 @@ function replayAreaObscurementCleanupRoute(): readonly BattleReducerRouteEvent[]
   const state = fogCloudBattle();
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const act = fogCloudAct(state);
-  route.push(...routeEventsOfSubject(act, "Fog Cloud discovery", "spatialEffect"));
+  route.push(
+    ...routeEventsOfSubject(act, "Fog Cloud discovery", "spatialEffect"),
+  );
   const cast = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -1603,10 +1597,9 @@ function replayMovementReplacementRoute(): readonly BattleReducerRouteEvent[] {
     state: initial,
     subject: castAct.subject,
     fills: [
-      jumpTargetListFill(
-        requireHole(castAct.initialHoles, "spellTargetList"),
-        [jumpTargetId],
-      ),
+      jumpTargetListFill(requireHole(castAct.initialHoles, "spellTargetList"), [
+        jumpTargetId,
+      ]),
     ],
   });
   if (cast.tag !== "resolved") {
@@ -1648,16 +1641,21 @@ function replayObjectLightEmitterRoute(): readonly BattleReducerRouteEvent[] {
   const state = lightBattle();
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const act = lightAct(state);
-  route.push(...routeEventsOfSubject(act, "Light discovery", "objectLightRider"));
+  route.push(
+    ...routeEventsOfSubject(act, "Light discovery", "objectLightRider"),
+  );
   const admitted = resolveBattleSubject({
     state,
     subject: act.subject,
     fills: [
-      lightObjectTargetFill(requireHole(act.initialHoles, "objectTargetChoice"), {
-        objectId: lightObjectId,
-        size: "large",
-        wornOrCarried: { kind: "caster" },
-      }),
+      lightObjectTargetFill(
+        requireHole(act.initialHoles, "objectTargetChoice"),
+        {
+          objectId: lightObjectId,
+          size: "large",
+          wornOrCarried: { kind: "caster" },
+        },
+      ),
     ],
   });
   route.push(
@@ -1766,11 +1764,7 @@ function replaySaveGatedSpellOrderingRoute(): readonly BattleReducerRouteEvent[]
     ],
   });
   route.push(
-    ...routeEventsOfSubject(
-      resolved,
-      "Thunderwave damage",
-      "saveGatedSpell",
-    ),
+    ...routeEventsOfSubject(resolved, "Thunderwave damage", "saveGatedSpell"),
   );
   return route;
 }
@@ -1801,7 +1795,7 @@ function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
         responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
@@ -1841,9 +1835,7 @@ function spatialResolve(
   return resolve("spatialEffect", fill, holes, owner);
 }
 
-function spatialResolveWithoutFill(
-  owner: RouteOwner,
-): BattleReducerRouteEvent {
+function spatialResolveWithoutFill(owner: RouteOwner): BattleReducerRouteEvent {
   return resolveWithoutFill("spatialEffect", owner);
 }
 
@@ -1918,11 +1910,15 @@ function routeEventsOfSubject(
   subject: BattleReducerRouteSubjectFamily,
 ): readonly BattleReducerRouteEvent[] {
   const events = routeEventsOf(source, label).filter(
-    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+    (
+      event,
+    ): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
       event.kind !== "startBattle" && event.subject === subject,
   );
   if (events.length === 0) {
-    throw new Error(`Expected ${subject} public reducer route events for ${label}.`);
+    throw new Error(
+      `Expected ${subject} public reducer route events for ${label}.`,
+    );
   }
   return events;
 }
@@ -2096,7 +2092,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castTriggeredReactionSpell",
-              invocation: choice.invocation,
+              procedureRef: choice.subject.procedureRef,
               fills: [
                 featherFallTargetListFill(
                   requireHole(choice.initialHoles, "spellTargetList"),
@@ -4048,13 +4044,19 @@ function featherFallTriggerFact(): Extract<
 function featherFallReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ) {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate) =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === featherFallUnitId &&
-      candidate.invocation.procedure === "featherFallMitigation",
-  );
+  const choice = result.snapshot.pendingInterrupt?.choices.find((candidate) => {
+    if (candidate.kind !== "castTriggeredReactionSpell") return false;
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      result.state,
+      candidate.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === featherFallUnitId &&
+      invocation.procedure === "featherFallMitigation"
+    );
+  });
   if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
     throw new Error("Expected Feather Fall Reaction choice.");
   }
@@ -4263,12 +4265,11 @@ function withInvisibleObserver(state: BattleState): BattleState {
 function attackRollModeForMeleeTarget(
   state: BattleState,
 ): ProjectedAttackRollMode {
-  const subject: BattleSubject = {
-    tag: "action",
-    actorId: casterId,
-    action: "attack",
-    attackName: "Unarmed Strike",
-  };
+  const subject: BattleSubject = characterAttackSubjectForTest(
+    state,
+    casterId,
+    "Unarmed Strike",
+  );
   const targetChoice = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -4287,6 +4288,9 @@ function attackRollModeForMeleeTarget(
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound spatial-witness attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -4296,7 +4300,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: casterId,
         targetId: observerId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };

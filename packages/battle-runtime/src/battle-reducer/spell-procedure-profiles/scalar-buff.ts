@@ -46,7 +46,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -228,7 +228,7 @@ function discoverScalarBuffCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ScalarBuffInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "self") {
     const initialHoles = scalarBuffInitialHoles(invocation);
     const castActs = [
@@ -288,7 +288,7 @@ function scalarBuffSubtleMetamagicCastActs(input: {
   readonly actorId: CombatantId;
   readonly invocation: ScalarBuffInvocation;
   readonly initialHoles: readonly BattleHole[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const subject = {
     tag: spellSubjectTagForInvocation(input.invocation),
     actorId: input.actorId,

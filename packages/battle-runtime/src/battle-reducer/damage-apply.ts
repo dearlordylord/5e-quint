@@ -43,13 +43,13 @@ import {
   damageAmount as toDamageAmount,
   type DamageAmount,
 } from "@dnd/shared/types";
-import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import * as Either from "effect/Either";
-import type {
-  StatBlockMutableResourceState,
-  StatBlockPartKey,
-} from "../battle-action-options.ts";
+import {
+  applyStatBlockRechargeRolls,
+  unavailableStatBlockRechargePoolRefs,
+} from "../stat-block-execution.ts";
 import { KNOCKED_OUT_UNCONSCIOUS } from "../battle-init.ts";
 import type { AttackFillSet } from "../battle-reducer.ts";
 import {
@@ -104,7 +104,7 @@ import {
 } from "./creature-state.ts";
 import {
   activeDruidWildShape,
-  updateActiveDruidWildShapeResources,
+  applyActiveDruidWildShapeRechargeRolls,
 } from "./druid-wild-shape.ts";
 import {
   applySpellDamageReductions,
@@ -136,10 +136,6 @@ import {
 } from "./spell-end-target-state.ts";
 import { battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects } from "./spell-granted-action-resource.ts";
 import { enemyZeroHitPointTemporaryHitPointsAwards } from "./enemy-zero-hit-point-temporary-hit-points.ts";
-import {
-  sameStatBlockPartKey,
-  statBlockLimitedUseForPart,
-} from "./statblock.ts";
 import {
   d20TestNaturalOneRerollOutcomeIssue,
   effectiveD20TestNaturalOneRerollConcentrationSavingThrow,
@@ -1585,18 +1581,15 @@ export function statBlockRechargeRollHole(
 ): BattleStatBlockRechargeRollHole | null {
   if (combatant === undefined) return null;
   const wildShape = activeDruidWildShape(combatant);
+  const execution =
+    wildShape?.admission.execution ??
+    (combatant.origin.kind === "statBlock"
+      ? combatant.origin.execution
+      : undefined);
   const rechargeTargets =
-    wildShape === null
-      ? combatant.origin.kind === "statBlock"
-        ? unavailableRechargeTargets(
-            combatant.origin.statBlock.statBlock,
-            combatant.origin.resources,
-          )
-        : []
-      : unavailableRechargeTargets(
-          wildShape.form.statBlock,
-          wildShape.effect.resources,
-        );
+    execution === undefined
+      ? []
+      : unavailableStatBlockRechargePoolRefs(execution);
   if (rechargeTargets.length === 0) return null;
   return {
     kind: "statBlockRechargeRoll",
@@ -1608,15 +1601,6 @@ export function statBlockRechargeRollHole(
   };
 }
 
-export function unavailableRechargeTargets(
-  statBlock: StatBlockRecord["statBlock"],
-  resources: StatBlockMutableResourceState,
-): readonly StatBlockPartKey[] {
-  return resources.unavailableRechargeParts.filter(
-    (key) => statBlockLimitedUseForPart(statBlock, key)?.kind === "recharge",
-  );
-}
-
 export function processStatBlockRechargeRolls(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
@@ -1625,48 +1609,24 @@ export function processStatBlockRechargeRolls(
   const combatant = combatants.get(actorId);
   if (combatant === undefined) return combatants;
   const wildShape = activeDruidWildShape(combatant);
-  const statBlock =
-    wildShape === null
-      ? combatant.origin.kind === "statBlock"
-        ? combatant.origin.statBlock.statBlock
-        : null
-      : wildShape.form.statBlock;
-  if (statBlock === null) return combatants;
-  const resources =
-    wildShape === null && combatant.origin.kind === "statBlock"
-      ? combatant.origin.resources
-      : wildShape?.effect.resources;
-  if (resources === undefined) return combatants;
-  const nextResources = {
-    ...resources,
-    unavailableRechargeParts: resources.unavailableRechargeParts.filter(
-      (key) => {
-        const limitedUse = statBlockLimitedUseForPart(statBlock, key);
-        const result = rolls.find((roll) =>
-          sameStatBlockPartKey(roll.target, key),
-        );
-        return (
-          limitedUse?.kind !== "recharge" ||
-          result === undefined ||
-          result.roll < limitedUse.minimumRoll
-        );
-      },
-    ),
-  };
-  if (wildShape !== null) {
-    return new Map(combatants).set(
-      actorId,
-      updateActiveDruidWildShapeResources(combatant, nextResources),
-    );
+  const execution =
+    wildShape?.admission.execution ??
+    (combatant.origin.kind === "statBlock"
+      ? combatant.origin.execution
+      : undefined);
+  if (execution === undefined) return combatants;
+  const nextExecution = applyStatBlockRechargeRolls(execution, rolls);
+  if (wildShape === null) {
+    if (combatant.origin.kind !== "statBlock") return combatants;
+    return new Map(combatants).set(actorId, {
+      ...combatant,
+      origin: { ...combatant.origin, execution: nextExecution },
+    });
   }
-  if (combatant.origin.kind !== "statBlock") return combatants;
-  return new Map(combatants).set(actorId, {
-    ...combatant,
-    origin: {
-      ...combatant.origin,
-      resources: nextResources,
-    },
-  });
+  return new Map(combatants).set(
+    actorId,
+    applyActiveDruidWildShapeRechargeRolls(combatant, rolls),
+  );
 }
 
 export function concentrationSavingThrowHole(

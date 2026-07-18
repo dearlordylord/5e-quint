@@ -38,7 +38,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -265,7 +265,7 @@ function discoverDirectHitPointRestorationCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: DirectHitPointRestorationInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
     : spellTargetHole(state, actorId, invocation);

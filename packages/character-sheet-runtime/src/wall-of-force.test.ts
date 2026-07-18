@@ -12,7 +12,7 @@ import {
   castWallOfForce,
   characterSheetId,
   characterSheetWallOfForceBarrierId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -299,7 +299,7 @@ function wallOfForceWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:wall-of-force-wizard-9"),
       build: {
         ...armorClassBuild({

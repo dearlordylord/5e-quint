@@ -102,6 +102,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "actionSpell",
           actorId: spellCasterId,
           invocation: cantripSpellInvocationRef(lightUnitId, "objectLight"),
@@ -196,6 +197,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "actionSpell",
           actorId: spellCasterId,
           invocation: spellSlotInvocationRef(

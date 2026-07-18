@@ -13,7 +13,7 @@ import { characterId, snapshotBattle } from "@dnd/battle-runtime";
 import {
   characterSheetCurrentHp,
   characterSheetSpellSlots,
-  createFreshCharacterSheet,
+  rebuildCharacterSheet,
   type CharacterSheet,
   type CharacterSheetHitPoints,
   type CharacterSheetInput,
@@ -99,7 +99,7 @@ export type McpSessionStore = {
 export function availableCharacterSession(
   input: AvailableCharacterSessionInput,
 ): Either.Either<AvailableCharacterSession, CharacterSessionIssue> {
-  const sheet = createFreshCharacterSheet(input);
+  const sheet = rebuildCharacterSheet(input);
   return Either.isLeft(sheet)
     ? characterSessionIssue(sheet.left.message)
     : Either.right(sheet.right);

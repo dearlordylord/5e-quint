@@ -17,7 +17,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type WardingBondSpellInvocation,
@@ -264,7 +264,7 @@ function discoverWardingBondCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: WardingBondSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
     targetHole.choices.length === 0

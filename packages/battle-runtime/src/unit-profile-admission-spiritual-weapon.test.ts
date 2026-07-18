@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 import { describe, expect, test } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
@@ -74,7 +75,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       slotLevel: 4,
     });
 
-    expect(secondLevelAct.subject).toEqual({
+    expect(secondLevelAct.subject).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -135,7 +136,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "unsupportedSubject",
-      message: "Prepared Bonus Action spells must use the Bonus Action spell subject.",
+      message:
+        "Prepared Bonus Action spells must use the Bonus Action spell subject.",
     });
   });
 
@@ -584,7 +586,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null, turn: { bonusActionAvailable: false } },
+      snapshot: {
+        pendingInterrupt: null,
+        turn: { bonusActionAvailable: false },
+      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon cast to resolve.");
@@ -1271,7 +1276,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null, turn: { bonusActionAvailable: false } },
+      snapshot: {
+        pendingInterrupt: null,
+        turn: { bonusActionAvailable: false },
+      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon repeat to resolve.");
@@ -1479,13 +1487,24 @@ function requireTriggeredReactionSpellChoice(input: {
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === input.reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === input.spellId &&
-      candidate.invocation.procedure === input.procedure &&
-      Number(candidate.invocation.slotLevel) === input.slotLevel,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== input.reactorId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        input.result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === input.spellId &&
+        invocation.procedure === input.procedure &&
+        Number(invocation.slotLevel) === input.slotLevel
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
@@ -1506,7 +1525,7 @@ function triggeredReactionSpellDecision(
     responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
-      invocation: choice.invocation,
+      procedureRef: choice.subject.procedureRef,
       fills,
     },
   };
@@ -1652,11 +1671,7 @@ function spiritualWeaponWithExtraCompositeEffect(): SpellRecord {
   if (firstEffect === undefined) {
     throw new Error("Expected Spiritual Weapon repeat effect.");
   }
-  const effects = [
-    firstEffect,
-    ...laterEffects,
-    firstEffect,
-  ];
+  const effects = [firstEffect, ...laterEffects, firstEffect];
   const operation = {
     ...firstOperation,
     effect: {

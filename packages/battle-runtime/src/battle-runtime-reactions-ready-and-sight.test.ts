@@ -4,6 +4,7 @@ import {
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   wizardTurnWithReadiedRay,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   attackDamageHoleAfterHit,
@@ -26,6 +27,7 @@ import {
   applyCondition,
   BATTLE_READIED_SPELL_TRIGGERS,
   BattleFillSchema,
+  BattleSnapshotSchema,
   BattleSubjectSchema,
   cantripSpellInvocationRef,
   Either,
@@ -33,15 +35,55 @@ import {
   resolveBattleSubject,
   sameBattleSubject,
   Schema,
+  snapshotBattle,
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
 import type { BattleState } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import { isTriggeredReactionSpellInvocation } from "./battle-reducer/spell-interrupt-procedure-kinds.ts";
+
+function readiedSpellAttackHitPending() {
+  const state = fighterTurnWithReadiedRay("attackHit");
+  const subject = fighterAttackSubject(state);
+  const target = attackInitialTargetHole(state, subject);
+  const roll = attackRollHoleAfterTarget(state, target, subject);
+  const result = resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      targetFill(target, goblinId),
+      attackRollFill(roll, { total: 15, naturalD20: 10 }),
+    ],
+  });
+  if (result.tag !== "needsHoles" || result.snapshot.pendingInterrupt === null) {
+    throw new Error("Expected a pending Readied Spell attack-hit interrupt.");
+  }
+  return result;
+}
 
 describe("battle runtime: reactions, Ready, and sight facts", () => {
+  test("action-time save-damage spells are not triggered-Reaction procedures", () => {
+    const wizard = fighterTurnWithReadiedRay("attackHit").combatants.get(wizardId);
+    if (wizard?.origin.kind !== "character") {
+      throw new Error("Expected a Wizard character origin.");
+    }
+    const actionSaveSpell = wizard.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedure.kind === "spellInvocation" &&
+        binding.procedure.invocation.procedure === "saveGatedDamage",
+    );
+    if (actionSaveSpell?.procedure.kind !== "spellInvocation") {
+      throw new Error("Expected an action-time save-damage spell binding.");
+    }
+
+    expect(
+      isTriggeredReactionSpellInvocation(actionSaveSpell.procedure.invocation),
+    ).toBe(false);
+  });
+
   test("attack hit procedures open a typed reaction window and resume after decline", () => {
     const state = fighterTurnWithReadiedRay("attackHit");
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const fills = [
@@ -97,7 +139,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("resolved reactions execute the admitted readied-spell procedure before resuming attack replay", () => {
     const state = fighterTurnWithReadiedRay("attackHit");
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const fills = [
@@ -115,6 +157,31 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const choice = reactionChoiceWithSubject(
       awaitingReaction.snapshot.pendingInterrupt!.choices,
     );
+    if (
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected a readied-spell release subject.");
+    }
+
+    expect(
+      resolveBattleInterrupt({
+        state: awaitingReaction.state,
+        fill: interruptDecisionFill(
+          awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+          {
+            kind: "resolve",
+            responderId: wizardId,
+            choice: {
+              kind: "releaseReadiedSpell",
+              readiedSpellCasterId: wizardId,
+              procedureRef: subject.procedureRef,
+              fills: [],
+            },
+          },
+        ),
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
 
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -126,6 +193,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           choice: {
             kind: "releaseReadiedSpell",
             readiedSpellCasterId: wizardId,
+            procedureRef: choice.subject.procedureRef,
             fills: [],
           },
         },
@@ -197,7 +265,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("nested reaction windows resume a released readied save spell before the interrupted attack", () => {
     const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const awaitingAttackReaction = resolveBattleSubject({
@@ -216,6 +284,12 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const releaseChoice = reactionChoiceWithSubject(
       awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
     );
+    if (
+      releaseChoice.subject.tag !== "runtimeCommand" ||
+      releaseChoice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected a readied-spell release subject.");
+    }
     const released = resolveBattleInterrupt({
       state: awaitingAttackReaction.state,
       fill: interruptDecisionFill(
@@ -226,6 +300,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           choice: {
             kind: "releaseReadiedSpell",
             readiedSpellCasterId: wizardId,
+            procedureRef: releaseChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -560,7 +635,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("after-damage reactions observe the post-damage battle state", () => {
     const state = fighterTurnWithReadiedRay("afterDamage");
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
     const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
@@ -594,6 +669,12 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const choice = reactionChoiceWithSubject(
       awaitingReaction.snapshot.pendingInterrupt!.choices,
     );
+    if (
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected a readied-spell release subject.");
+    }
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
@@ -604,6 +685,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           choice: {
             kind: "releaseReadiedSpell",
             readiedSpellCasterId: wizardId,
+            procedureRef: choice.subject.procedureRef,
             fills: [],
           },
         },
@@ -643,6 +725,220 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
 
     expect(Either.isLeft(decoded)).toBe(true);
+  });
+
+  test("snapshot codecs preserve the Readied Spell procedure binding", () => {
+    const state = fighterTurnWithReadiedRay("attackHit");
+    const readied = state.readiedSpells.get(wizardId);
+    if (readied === undefined) {
+      throw new Error("Expected the Wizard to hold a readied spell.");
+    }
+
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(state),
+    );
+    const decoded = Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded);
+
+    expect(decoded.readiedResponses.spells).toContainEqual(
+      expect.objectContaining({
+        casterId: wizardId,
+        procedureRef: readied.procedureRef,
+      }),
+    );
+  });
+
+  test("snapshot decoding rejects unbound, wrong-kind, and mismatched Readied Spell owners", () => {
+    const awaiting = readiedSpellAttackHitPending();
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(awaiting.snapshot);
+    if (encoded.pendingInterrupt === null) {
+      throw new Error("Expected an encoded pending interrupt.");
+    }
+    const pendingInterrupt = encoded.pendingInterrupt;
+    const releaseChoice = pendingInterrupt.choices.find(
+      (choice) => choice.kind === "releaseReadiedSpell",
+    );
+    if (
+      releaseChoice?.kind !== "releaseReadiedSpell" ||
+      releaseChoice.subject.tag !== "runtimeCommand" ||
+      releaseChoice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected an encoded Readied Spell release choice.");
+    }
+    const readiedSpellProcedureRef = releaseChoice.subject.procedureRef;
+    const parsedRef: unknown = JSON.parse(releaseChoice.subject.procedureRef);
+    if (
+      typeof parsedRef !== "object" ||
+      parsedRef === null ||
+      !("scopeRef" in parsedRef)
+    ) {
+      throw new Error("Expected a canonical nested procedure reference.");
+    }
+    const unboundRef = JSON.stringify({
+      scopeRef: parsedRef.scopeRef,
+      kind: "procedure",
+      ordinal: 999,
+    });
+    const wizard = encoded.combatants.find(
+      (combatant) => combatant.combatantId === wizardId,
+    );
+    if (wizard?.origin.kind !== "character") {
+      throw new Error("Expected the encoded Wizard character origin.");
+    }
+    const wrongKindRef = wizard.origin.attackExecution.unarmedStrikeProcedureRef;
+    const differentSpellBinding = wizard.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedure.kind === "spellInvocation" &&
+        binding.procedureRef !== readiedSpellProcedureRef,
+    );
+    if (differentSpellBinding === undefined) {
+      throw new Error("Expected another encoded Wizard spell binding.");
+    }
+    const replaceReleaseChoice = (input: {
+      readonly procedureRef: string;
+      readonly reactorId?: string;
+      readonly casterId?: string;
+    }) => ({
+      ...encoded,
+      pendingInterrupt: {
+        ...pendingInterrupt,
+        choices: pendingInterrupt.choices.map((choice) =>
+          choice.kind === "releaseReadiedSpell" &&
+          choice.subject.tag === "runtimeCommand" &&
+          choice.subject.command === "releaseReadiedSpell"
+            ? {
+                ...choice,
+                reactorId: input.reactorId ?? choice.reactorId,
+                readiedSpellCasterId:
+                  input.casterId ?? choice.readiedSpellCasterId,
+                subject: {
+                  ...choice.subject,
+                  readiedSpellCasterId:
+                    input.casterId ?? choice.subject.readiedSpellCasterId,
+                  procedureRef: input.procedureRef,
+                },
+              }
+            : choice,
+        ),
+      },
+    });
+    const replaceReleaseAct = (procedureRef: string) => ({
+      ...encoded,
+      acts: encoded.acts.map((act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "releaseReadiedSpell"
+          ? {
+              ...act,
+              subject: { ...act.subject, procedureRef },
+            }
+          : act,
+      ),
+    });
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          replaceReleaseChoice({ procedureRef: unboundRef }),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+          ...encoded,
+          readiedResponses: {
+            ...encoded.readiedResponses,
+            spells: encoded.readiedResponses.spells.map((readied) =>
+              readied.casterId === wizardId
+                ? {
+                    ...readied,
+                    procedureRef: differentSpellBinding.procedureRef,
+                  }
+                : readied,
+            ),
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          replaceReleaseChoice({ procedureRef: wrongKindRef }),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          replaceReleaseChoice({
+            procedureRef: releaseChoice.subject.procedureRef,
+            reactorId: goblinId,
+          }),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          replaceReleaseAct(unboundRef),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          replaceReleaseAct(wrongKindRef),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          replaceReleaseAct(differentSpellBinding.procedureRef),
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("retaliation decisions carry one exact attack execution selection", () => {
+    const selection = attackExecutionSelectionForSubjectForTest(
+      fighterAttackSubject(fighterTurnWithReadiedRay("attackHit"), "Longsword"),
+    );
+    const decision = {
+      kind: "interruptDecision",
+      holeId: "battle:interrupt:decision",
+      value: {
+        kind: "resolve",
+        responderId: "synthetic-retaliator",
+        choice: {
+          kind: "retaliationAttack",
+          reactorId: "synthetic-retaliator",
+          selection,
+          fills: [],
+        },
+      },
+    };
+
+    expect(
+      Either.isRight(Schema.decodeUnknownEither(BattleFillSchema)(decision)),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "interruptDecision",
+          holeId: "battle:interrupt:decision",
+          value: {
+            kind: "resolve",
+            responderId: "synthetic-retaliator",
+            choice: {
+              kind: "retaliationAttack",
+              reactorId: "synthetic-retaliator",
+              attackName: "Synthetic Retaliation Strike",
+              fills: [],
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("attack sight spatial facts parse through target-choice fills", () => {

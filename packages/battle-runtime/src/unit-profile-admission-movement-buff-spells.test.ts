@@ -47,6 +47,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
+          procedureRef: expect.any(String),
           tag: "bonusActionDashSpell",
           actorId: spellCasterId,
           invocation: spellSlotInvocationRef(

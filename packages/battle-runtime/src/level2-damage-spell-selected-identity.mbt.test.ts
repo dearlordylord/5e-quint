@@ -304,7 +304,9 @@ function flamingSphereHazardCastReplay(): HazardCastReplay {
   });
   route.push(...routeEventsOfSubject(cast, "Flaming Sphere cast"));
   if (cast.tag !== "resolved") {
-    throw new Error(`Expected Flaming Sphere cast to resolve, got ${cast.tag}.`);
+    throw new Error(
+      `Expected Flaming Sphere cast to resolve, got ${cast.tag}.`,
+    );
   }
   return { route, state: cast.state };
 }
@@ -327,8 +329,7 @@ function moonbeamHazardCastReplay(): HazardCastReplay {
   return { route, state: cast.state };
 }
 
-function replayFlamingSphereExactDamageRoute():
-  readonly BattleReducerRouteEvent[] {
+function replayFlamingSphereExactDamageRoute(): readonly BattleReducerRouteEvent[] {
   const replay = flamingSphereHazardCastReplay();
   const route = [...replay.route];
   const targetTurn = endTurn({ state: replay.state, actorId: spellCasterId });
@@ -415,8 +416,7 @@ function expectedMoonbeamHazardRoute(): readonly BattleReducerRouteEvent[] {
   ];
 }
 
-function expectedFlamingSphereExactDamageRoute():
-  readonly BattleReducerRouteEvent[] {
+function expectedFlamingSphereExactDamageRoute(): readonly BattleReducerRouteEvent[] {
   return [
     ...expectedFlamingSphereHazardRoute(),
     ...hazardSavingThrowDamageRoute(),
@@ -486,11 +486,15 @@ function routeEventsOfSubject(
   subject: BattleReducerRouteSubjectFamily = "spatialEffect",
 ): readonly BattleReducerRouteEvent[] {
   const events = (source.routeEvents ?? []).filter(
-    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+    (
+      event,
+    ): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
       event.kind !== "startBattle" && event.subject === subject,
   );
   if (events.length === 0) {
-    throw new Error(`Expected ${subject} public reducer route events for ${label}.`);
+    throw new Error(
+      `Expected ${subject} public reducer route events for ${label}.`,
+    );
   }
   return events;
 }
@@ -523,7 +527,7 @@ function recordDiscoveredInvocation(
           slotLevel: input.slotLevel,
         });
 
-  expect(act.subject).toEqual({
+  expect(act.subject).toMatchObject({
     tag: input.actionTag,
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(

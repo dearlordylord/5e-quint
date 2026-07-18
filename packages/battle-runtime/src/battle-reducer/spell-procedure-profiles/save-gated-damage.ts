@@ -18,7 +18,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   interruptTriggerLabel,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -111,7 +111,7 @@ function discoverSaveGatedDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SaveGatedDamageSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const castActs =
     invocation.targeting.kind === "singleCombatant"
@@ -133,7 +133,7 @@ function discoverSingleTargetSaveGatedDamageCastActs(
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
   invocation: SaveGatedDamageSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
     return [];
@@ -163,7 +163,7 @@ function discoverAreaSaveGatedDamageCastActs(
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
   invocation: SaveGatedDamageSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
     actorId,
@@ -194,9 +194,9 @@ function saveGatedDamageMetamagicCastActs(input: {
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: SaveGatedDamageSpellInvocation;
-  readonly baseCastAct: AvailableBattleAct;
+  readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const actor = input.actor;
   if (actor === undefined) {
     return [];
@@ -237,7 +237,7 @@ function saveGatedDamageCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",
@@ -258,7 +258,9 @@ function saveGatedDamageMetamagicInitialHoles(
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [...saveGatedDamageAbilityChoiceHoles(invocation)];
+  const holes: BattleHole[] = [
+    ...saveGatedDamageAbilityChoiceHoles(invocation),
+  ];
   if (
     targeting.kind !== "singleCombatant" &&
     metamagicApplications.some(
@@ -291,7 +293,7 @@ function readiedSaveGatedDamageActs(
   state: BattleState,
   actorId: CombatantId,
   invocation: SaveGatedDamageSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (state.readiedSpells.has(actorId)) {
     return [];
   }

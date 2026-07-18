@@ -12,7 +12,7 @@ import {
   castSeeming,
   characterSheetId,
   characterSheetSeemingTargetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -391,7 +391,7 @@ function seemingWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:seeming-wizard-9"),
       build: {
         ...armorClassBuild({

@@ -58,9 +58,11 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill-support.ts";
+import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   paladinsSmiteResource,
+  characterSpellInvocationForProcedureRefForTest,
   startBattleRight,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -77,6 +79,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
+  type SupportedSpellInvocation,
 } from "./index.ts";
 
 const AFTER_HIT_SCENARIOS = [
@@ -142,7 +145,8 @@ type InterruptChoiceFill = Extract<
 >;
 
 type PendingAfterHitChoice = {
-  readonly invocation: InterruptChoiceFill["invocation"];
+  readonly procedureRef: InterruptChoiceFill["procedureRef"];
+  readonly invocation: SupportedSpellInvocation;
   readonly initialHoles: readonly BattleHole[];
 };
 
@@ -1303,7 +1307,7 @@ function paladinFreeCastBattle(): BattleState {
 }
 
 function discoverWeaponHit(state: AfterHitRuntimeState): AfterHitRuntimeState {
-  const subject = weaponAttackSubject("Longsword");
+  const subject = weaponAttackSubject(state.battle, "Longsword");
   const result = resolveBattleSubject({
     state: state.battle,
     subject,
@@ -1408,7 +1412,7 @@ function chooseAfterHitDamageSpell(
         responderId: spellCasterId,
         choice: {
           kind: "castAttackHitBonusActionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.procedureRef,
           fills: [],
         },
       }),
@@ -1476,7 +1480,7 @@ function fillEnsnaringSave(
         responderId: spellCasterId,
         choice: {
           kind: "castAttackHitBonusActionSpell",
-          invocation: state.pending.choice.invocation,
+          procedureRef: state.pending.choice.procedureRef,
           fills: [saveFill],
         },
       }),
@@ -1921,17 +1925,31 @@ function requireAfterHitChoice(
   options: { readonly invocationTag?: string } = {},
 ): PendingAfterHitChoice {
   const choice = snapshotBattle(state).pendingInterrupt?.choices.find(
-    (candidate) =>
-      candidate.kind === "castAttackHitBonusActionSpell" &&
-      candidate.invocation.spellId === spellId &&
-      (options.invocationTag === undefined ||
-        candidate.invocation.tag === options.invocationTag),
+    (candidate) => {
+      if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+      const invocation = characterSpellInvocationForProcedureRefForTest(
+        state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      const invocationRef = supportedSpellInvocationRef(invocation);
+      return (
+        invocationRef.spellId === spellId &&
+        (options.invocationTag === undefined ||
+          invocationRef.tag === options.invocationTag)
+      );
+    },
   );
   if (choice === undefined || choice.kind !== "castAttackHitBonusActionSpell") {
     throw new Error(`Expected ${spellId} after-hit spell choice.`);
   }
   return {
-    invocation: choice.invocation,
+    procedureRef: choice.subject.procedureRef,
+    invocation: characterSpellInvocationForProcedureRefForTest(
+      state,
+      choice.reactorId,
+      choice.subject.procedureRef,
+    ),
     initialHoles: choice.initialHoles,
   };
 }

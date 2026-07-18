@@ -9,6 +9,12 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 import {
+  statBlockAttackActionOptions,
+  statBlockProcedurePresentations,
+} from "./stat-block-execution.ts";
+import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
+import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
+import {
   findFamiliarFormEligibilityForSpell,
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
   resolveFindFamiliarForm,
@@ -62,7 +68,7 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   objectInvisibleBenefitDenied,
   parseSupportedUnitFeatureProfile,
-  resolveBattleSubject,
+  resolveBattleSubject as resolveBattleSubjectRuntime,
   resolveBardicInspirationFailedD20Test,
   resolveBattleInterrupt,
   resolveBattleConcentrationDamage,
@@ -75,10 +81,14 @@ import {
   resolveFailedAbilityCheckResourceBoost,
   resolveSuccessfulAbilityCheckReactionReduction,
   type BattleAreaId,
+  type BattleAttackExecutionSelection,
+  type BattleAttackProcedureExecutionRef,
+  type BattleProcedureExecutionRef,
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
   type BattleInterruptCheckpoint,
+  type BattleInterruptProcedureSelection,
   type BattleReadiedSpellTrigger,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
@@ -90,9 +100,56 @@ import {
   type ActiveOngoingFeatureOccurrence,
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
+  type SupportedSpellInvocation,
 } from "./index.ts";
+import type { BattleInterruptAttackExecutionSelection } from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  MONK_FOCUS_PROCEDURE_QUERY,
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedure,
+  characterSpellProcedureRefForInvocationRef,
+  characterUnitProcedureRef,
+} from "./character-execution.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
 export { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+
+export function characterSpellInvocationForProcedureRefForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): SupportedSpellInvocation {
+  const actor = state.combatants.get(actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  const invocation = characterSpellProcedure(
+    actor.origin.execution,
+    procedureRef,
+  );
+  if (invocation === undefined) {
+    throw new Error(`Expected spell procedure ${procedureRef} for ${actorId}.`);
+  }
+  return invocation;
+}
+
+export function characterSpellInvocationRefForProcedureRefForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): SpellInvocationRef {
+  return supportedSpellInvocationRef(
+    characterSpellInvocationForProcedureRefForTest(
+      state,
+      actorId,
+      procedureRef,
+    ),
+  );
+}
 import {
   characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
@@ -183,6 +240,7 @@ import spareTheDyingInput from "../../surface/content/spare_the_dying.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   AreaDirectEffectAtom,
+  DamageType,
   EffectAtom,
   SpellRecord,
   StatBlockRecord,
@@ -960,46 +1018,167 @@ export function goblinTurnBattle(
 }
 
 export function fighterAttackSubject(
+  state: BattleState,
   attackName: string = "Longsword",
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
+  return characterAttackSubjectForTest(state, fighterId, attackName);
+}
+
+export function characterAttackSubjectForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  attackName: string,
+): {
+  readonly tag: "action";
+  readonly actorId: CombatantId;
+  readonly action: "attack";
+  readonly procedureRef: BattleAttackProcedureExecutionRef;
+  readonly attackAbility: import("./battle-action-options.ts").BattleAttackExecutionAbility;
+  readonly attackDamageType: DamageType;
+} {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  const attack = [actor.origin.attack, actor.origin.unarmedStrike].find(
+    (candidate) =>
+      candidate !== null && attackActionOptionName(candidate) === attackName,
+  );
+  if (attack === null || attack === undefined) {
+    throw new Error(`Expected discovered ${attackName} attack for ${actorId}.`);
+  }
   return {
     tag: "action",
-    actorId: fighterId,
+    actorId,
     action: "attack",
-    attackName,
+    procedureRef: attack.procedureRef,
+    attackAbility:
+      attack.kind === "weapon" ? attack.ability : attack.attackAbility,
+    attackDamageType:
+      attack.kind === "weapon"
+        ? attack.weapon.damage.damageType
+        : attack.effect.damage.damageType,
+  };
+}
+
+export function attackExecutionSelectionForSubjectForTest(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): BattleInterruptAttackExecutionSelection {
+  if (subject.procedureRef === undefined) {
+    throw new Error("Expected attack procedure execution reference.");
+  }
+  return subject.attackAbility === undefined ||
+    subject.attackDamageType === undefined
+    ? { procedureRef: subject.procedureRef }
+    : {
+        procedureRef: subject.procedureRef,
+        attackAbility: subject.attackAbility,
+        attackDamageType: subject.attackDamageType,
+      };
+}
+
+export function characterBonusAttackSubjectForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  action: "offHandAttack" | "martialArtsUnarmedStrike",
+  attackAbility?: import("./battle-action-options.ts").BattleAttackExecutionAbility,
+): Extract<
+  BattleSubject,
+  {
+    readonly tag: "bonusAction";
+    readonly action: "offHandAttack" | "martialArtsUnarmedStrike";
+  }
+> {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  const attack =
+    action === "offHandAttack"
+      ? actor.origin.offHandAttack
+      : actor.origin.unarmedStrike;
+  if (attack === undefined) {
+    throw new Error(`Expected admitted ${action} for ${actorId}.`);
+  }
+  return {
+    tag: "bonusAction",
+    actorId,
+    action,
+    procedureRef: attack.procedureRef,
+    attackAbility:
+      attackAbility ??
+      (attack.kind === "weapon" ? attack.ability : attack.attackAbility),
+    attackDamageType:
+      attack.kind === "weapon"
+        ? attack.weapon.damage.damageType
+        : attack.effect.damage.damageType,
   };
 }
 
 export function goblinAttackSubject(
+  state: BattleState,
   attackName: "Scimitar" | "Shortbow",
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: goblinId,
-    action: "attack",
-    attackName,
-  };
+  return statBlockAttackSubjectForTest(state, goblinId, attackName, "actions");
 }
 
 export function monsterAttackSubject(
+  state: BattleState,
   attackName: "Cinder Breath" | "Dread Gaze" | "Tail Swipe",
   statBlockSection: "actions" | "legendaryActions" = "actions",
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
+  return statBlockAttackSubjectForTest(
+    state,
+    goblinId,
+    attackName,
+    statBlockSection,
+  );
+}
+
+export function statBlockAttackSubjectForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  attackName: string,
+  section: "actions" | "legendaryActions",
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected Stat Block test actor.");
+  }
+  const procedureRef = statBlockProcedurePresentations(actor.origin).find(
+    (candidate) => candidate.kind === "attack" && candidate.name === attackName,
+  )?.procedureRef;
+  const option = statBlockAttackActionOptions(actor.origin).find(
+    (candidate) =>
+      candidate.procedureRef === procedureRef &&
+      statBlockAttackProcedureSection(
+        state,
+        actorId,
+        candidate.procedureRef,
+      ) === section &&
+      candidate.damageNotation === "rolled",
+  );
+  if (option === undefined) throw new Error(`Expected ${attackName} attack.`);
   return {
     tag: "action",
-    actorId: goblinId,
+    actorId,
     action: "attack",
-    attackName,
-    ...(statBlockSection === "actions" ? {} : { statBlockSection }),
+    procedureRef: option.procedureRef,
   };
 }
 
@@ -1008,7 +1187,7 @@ export function attackInitialTargetHole(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  > = fighterAttackSubject(),
+  > = fighterAttackSubject(state),
 ): BattleHole {
   return requireHole(
     resolveBattleSubject({
@@ -1026,7 +1205,7 @@ export function attackRollHoleAfterTarget(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  > = fighterAttackSubject(),
+  > = fighterAttackSubject(state),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
     : goblinId,
@@ -1038,14 +1217,7 @@ export function attackRollHoleAfterTarget(
     resolveBattleSubject({
       state,
       subject,
-      fills: [
-        attackTargetFill(
-          targetHole,
-          subject.actorId,
-          targetId,
-          subject.attackName,
-        ),
-      ],
+      fills: [attackTargetFill(targetHole, subject.actorId, targetId)],
     }),
     "attackRoll",
   );
@@ -1066,7 +1238,7 @@ export function attackDamageHoleAfterHit(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
-  > = fighterAttackSubject(),
+  > = fighterAttackSubject(state),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
     : goblinId,
@@ -1079,12 +1251,7 @@ export function attackDamageHoleAfterHit(
       state,
       subject,
       fills: [
-        attackTargetFill(
-          targetHole,
-          subject.actorId,
-          targetId,
-          subject.attackName,
-        ),
+        attackTargetFill(targetHole, subject.actorId, targetId),
         attackRollFill(rollHole, attackRoll),
       ],
     }),
@@ -1105,12 +1272,7 @@ export function criticalAttackDamageResult(
 
   return resolveBattleSubject({
     state,
-    subject: {
-      tag: "action",
-      actorId: fighterId,
-      action: "attack",
-      attackName: "Longsword",
-    },
+    subject: fighterAttackSubject(state, "Longsword"),
     fills: [
       targetFill(targetHole, targetId),
       attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -1121,7 +1283,9 @@ export function criticalAttackDamageResult(
 
 export function resolveLongswordHit(
   state: BattleState,
-  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(),
+  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(
+    state,
+  ),
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
@@ -1157,7 +1321,9 @@ function resolveWeaponHit(
 
 export function resolveLongswordMiss(
   state: BattleState,
-  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(),
+  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(
+    state,
+  ),
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
@@ -1255,14 +1421,105 @@ export function findAct(
   state: BattleState,
   subject: BattleSubject,
 ): ReturnType<typeof discoverBattleActs>[number] {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      JSON.stringify(candidate.subject) === JSON.stringify(subject),
-  );
+  const act = discoverBattleActs(state).find((candidate) => {
+    return (
+      JSON.stringify(battleSubjectSelection(candidate.subject)) ===
+      JSON.stringify(battleSubjectSelection(subject))
+    );
+  });
   if (act === undefined) {
     throw new Error(`Expected discovered act ${JSON.stringify(subject)}.`);
   }
   return act;
+}
+
+function resolveBattleSubject(
+  input: Parameters<typeof resolveBattleSubjectRuntime>[0],
+): ReturnType<typeof resolveBattleSubjectRuntime> {
+  const subject = boundCharacterProcedureTestSubject(
+    input.state,
+    input.subject,
+  );
+  return resolveBattleSubjectRuntime({ ...input, subject });
+}
+
+function boundCharacterProcedureTestSubject(
+  state: BattleState,
+  subject: BattleSubject,
+): BattleSubject {
+  if (!isUnboundCharacterProcedureTestSubject(subject)) return subject;
+  const discovered = discoverBattleActs(state).find(
+    (candidate) =>
+      JSON.stringify(battleSubjectSelection(candidate.subject)) ===
+      JSON.stringify(battleSubjectSelection(subject)),
+  );
+  if (discovered !== undefined) return discovered.subject;
+  const actor = state.combatants.get(subject.actorId);
+  if (!isCharacterBattleCreatureState(actor)) return subject;
+  if (
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "findFamiliarTouchSpell"
+  ) {
+    const execution = characterExecutionWithSpellInvocations(
+      actor.origin.execution,
+      supportedSpellActs(actor, state),
+    );
+    const procedureRef = characterSpellProcedureRefForInvocationRef(
+      execution,
+      subject.invocation,
+    );
+    return procedureRef === undefined ? subject : { ...subject, procedureRef };
+  }
+  const unitSelection =
+    subject.tag === "bonusActionStandardAction"
+      ? {
+          unitId: subject.sourceUnitId,
+          query: BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
+        }
+      : subject.tag === "monkFocusOption"
+        ? { unitId: subject.resourceUnitId, query: MONK_FOCUS_PROCEDURE_QUERY }
+        : subject.tag === "druidWildShape"
+          ? { unitId: subject.unitId, query: DRUID_WILD_SHAPE_PROCEDURE_QUERY }
+          : "unitId" in subject
+            ? {
+                unitId: subject.unitId,
+                query: CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+              }
+            : undefined;
+  if (unitSelection === undefined) return subject;
+  const procedureRef = characterUnitProcedureRef(
+    actor.origin.execution,
+    unitSelection.unitId,
+    unitSelection.query,
+  );
+  return procedureRef === undefined ? subject : { ...subject, procedureRef };
+}
+
+function isUnboundCharacterProcedureTestSubject(
+  subject: BattleSubject,
+): subject is CharacterProcedureBattleSubject & {
+  readonly procedureRef?: undefined;
+} {
+  return (
+    (subject.tag === "actionSpell" ||
+      subject.tag === "bonusActionSpell" ||
+      subject.tag === "bonusActionDashSpell" ||
+      subject.tag === "findFamiliarTouchSpell" ||
+      subject.tag === "unitFeature" ||
+      subject.tag === "unitFeatureHeldWeaponActivation" ||
+      subject.tag === "druidWildShape" ||
+      subject.tag === "bonusActionStandardAction" ||
+      subject.tag === "monkFocusOption") &&
+    subject.procedureRef === undefined
+  );
+}
+
+export function battleSubjectSelection(subject: BattleSubject) {
+  if (!("procedureRef" in subject)) return subject;
+  const { procedureRef: _procedureRef, ...selection } = subject;
+  return selection;
 }
 
 type SleepShakeAwakeSubject = Extract<
@@ -1390,7 +1647,18 @@ export function targetFill(
   const defaultSpatialFacts =
     hole.requiresTableSpatialFact === true
       ? [
-          ...defaultAttackTargetSpatialFacts(targetId),
+          ...(hole.attack === undefined
+            ? []
+            : [
+                attackTargetSpatialFact(
+                  hole.attack.actorId,
+                  targetId,
+                  hole.attack.selection,
+                  hole.attack.targetConstraint === "rangedRange"
+                    ? "normal"
+                    : undefined,
+                ),
+              ]),
           ...[wizardId, fighterId].map((casterId) => ({
             kind: "spellTarget" as const,
             casterId,
@@ -1506,14 +1774,29 @@ export function attackTargetFill(
   hole: BattleHole,
   actorId: CombatantId,
   targetId: CombatantId,
-  attackName = defaultAttackNameForActor(actorId),
+  attackSelection?: BattleAttackExecutionSelection,
   extraFacts: Extract<
     BattleFill,
     { readonly kind: "targetChoice" }
   >["spatialFacts"] = [],
 ): BattleFill {
+  const boundSelection =
+    hole.kind === "targetChoice" && hole.attack !== undefined
+      ? hole.attack.selection
+      : attackSelection;
+  if (boundSelection === undefined) {
+    throw new Error("Expected a bound attack execution selection.");
+  }
   return targetFill(hole, targetId, [
-    attackTargetSpatialFact(actorId, targetId, attackName),
+    attackTargetSpatialFact(
+      actorId,
+      targetId,
+      boundSelection,
+      hole.kind === "targetChoice" &&
+        hole.attack?.targetConstraint === "rangedRange"
+        ? "normal"
+        : undefined,
+    ),
     ...commonAdjacentAllySpatialFacts(actorId, targetId),
     ...(extraFacts ?? []),
   ]);
@@ -1522,53 +1805,26 @@ export function attackTargetFill(
 export function attackTargetSpatialFact(
   actorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
+  attackSelection: BattleAttackExecutionSelection,
+  rangeBand?: "normal" | "long",
 ): NonNullable<
   Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
 >[number] {
-  return attackName === "Shortbow" || attackName === "Longbow"
+  const isRanged = rangeBand !== undefined;
+  return isRanged
     ? {
         kind: "attackTargetInRangedRange" as const,
         actorId,
         targetId,
-        attackName,
-        rangeBand: "normal" as const,
+        ...attackSelection,
+        rangeBand: rangeBand ?? ("normal" as const),
       }
     : {
         kind: "attackTargetInMeleeReach" as const,
         actorId,
         targetId,
-        attackName,
+        ...attackSelection,
       };
-}
-
-function defaultAttackNameForActor(actorId: CombatantId): string {
-  if (actorId === goblinId) return "Scimitar";
-  if (actorId === skeletonId) return "Shortsword";
-  return "Longsword";
-}
-
-function defaultAttackTargetSpatialFacts(
-  targetId: CombatantId,
-): readonly NonNullable<
-  Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
->[number][] {
-  return [
-    attackTargetSpatialFact(fighterId, targetId, "Longsword"),
-    attackTargetSpatialFact(fighterId, targetId, "Dagger"),
-    attackTargetSpatialFact(fighterId, targetId, "Shortsword"),
-    attackTargetSpatialFact(fighterId, targetId, "Flail"),
-    attackTargetSpatialFact(fighterId, targetId, "Quarterstaff"),
-    attackTargetSpatialFact(fighterId, targetId, "Unarmed Strike"),
-    attackTargetSpatialFact(wizardId, targetId, "Longsword"),
-    attackTargetSpatialFact(goblinId, targetId, "Scimitar"),
-    attackTargetSpatialFact(goblinId, targetId, "Shortbow"),
-    attackTargetSpatialFact(goblinId, targetId, "Cinder Breath"),
-    attackTargetSpatialFact(goblinId, targetId, "Dread Gaze"),
-    attackTargetSpatialFact(goblinId, targetId, "Tail Swipe"),
-    attackTargetSpatialFact(skeletonId, targetId, "Shortsword"),
-    attackTargetSpatialFact(combatantId("second-rogue"), targetId, "Longsword"),
-  ];
 }
 
 function commonAdjacentAllySpatialFacts(
@@ -1832,10 +2088,10 @@ export function movementFill(
       { readonly kind: "movement" }
     >["value"]["speedKind"];
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
     readonly areaDifficultTerrain?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -2142,11 +2398,15 @@ export function attackDamageDispositionHoleAfterDamage(
   targetId: CombatantId,
   damage: number,
 ): BattleHole {
-  return attackDamageDispositionHoleAfterFills(state, fighterAttackSubject(), [
-    targetFill(targetHole, targetId),
-    attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
-    damageRollFill(damageHole, damage),
-  ]);
+  return attackDamageDispositionHoleAfterFills(
+    state,
+    fighterAttackSubject(state),
+    [
+      targetFill(targetHole, targetId),
+      attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+      damageRollFill(damageHole, damage),
+    ],
+  );
 }
 
 export function attackDamageDispositionHoleAfterFills(
@@ -3307,12 +3567,7 @@ export function goblinScimitarHitReactionSetup(state: BattleState): {
   readonly prefixFills: readonly BattleFill[];
   readonly result: ReturnType<typeof resolveBattleSubject>;
 } {
-  const subject: BattleSubject = {
-    tag: "action",
-    actorId: goblinId,
-    action: "attack",
-    attackName: "Scimitar",
-  };
+  const subject = goblinAttackSubject(state, "Scimitar");
   const target = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -3367,7 +3622,7 @@ export function resolveGoblinScimitarHitReduction(input: {
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          unitId: input.unitId,
+          procedureRef: choice.choice.procedureRef,
           modifierKind: "attackDamageReduction",
           fills,
         },
@@ -3418,7 +3673,6 @@ export function reactionModifierChoice(
   const choice = choices.find(
     (candidate) =>
       candidate.kind === "reactionRollOrDamageReduction" &&
-      candidate.choice.unitId === unitId &&
       candidate.choice.kind === modifierKind,
   );
   if (choice?.kind !== "reactionRollOrDamageReduction") {
@@ -3428,7 +3682,7 @@ export function reactionModifierChoice(
           candidate.kind === "reactionRollOrDamageReduction"
             ? {
                 kind: candidate.kind,
-                unitId: candidate.choice.unitId,
+                procedureRef: candidate.choice.procedureRef,
                 modifierKind: candidate.choice.kind,
               }
             : { kind: candidate.kind },
@@ -3462,6 +3716,36 @@ export function reactionChoiceWithSubject(
     throw new Error("Expected subject-backed reaction choice.");
   }
   return choice;
+}
+
+export function opportunityAttackProcedureSelectionForTest(
+  choice: ReturnType<typeof reactionChoiceWithSubject>,
+  fills: readonly BattleFill[] = [],
+): Extract<
+  BattleInterruptProcedureSelection,
+  { readonly kind: "opportunityAttack" }
+> {
+  if (
+    choice.kind !== "opportunityAttack" ||
+    choice.subject.command !== "opportunityAttack"
+  ) {
+    throw new Error("Expected an Opportunity Attack reaction choice.");
+  }
+  const selection: BattleInterruptAttackExecutionSelection =
+    choice.subject.attackAbility === undefined ||
+    choice.subject.attackDamageType === undefined
+      ? { procedureRef: choice.subject.procedureRef }
+      : {
+          procedureRef: choice.subject.procedureRef,
+          attackAbility: choice.subject.attackAbility,
+          attackDamageType: choice.subject.attackDamageType,
+        };
+  return {
+    kind: "opportunityAttack",
+    reactorId: choice.reactorId,
+    selection,
+    fills,
+  };
 }
 
 function rogueSneakAttackUnit(input?: {

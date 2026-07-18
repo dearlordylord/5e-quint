@@ -78,12 +78,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -339,12 +334,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -560,12 +550,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -592,7 +577,7 @@ describe("battle runtime: death saves and turns", () => {
 
   test("ranged attacks cannot carry Knock Out", () => {
     const state = goblinTurnBattle({ fighterHp: 3 });
-    const subject = goblinAttackSubject("Shortbow");
+    const subject = goblinAttackSubject(state, "Shortbow");
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -660,12 +645,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -717,12 +697,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const withoutDisposition = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -741,12 +716,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const ordinaryDisposition = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -772,12 +742,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const knockOutDisposition = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -823,12 +788,12 @@ describe("battle runtime: death saves and turns", () => {
       targetHole,
       rollHole,
       { total: 20, naturalD20: 20 },
-      fighterAttackSubject(),
+      fighterAttackSubject(state),
       targetCharacterId,
     );
     const dispositionHole = attackDamageDispositionHoleAfterFills(
       state,
-      fighterAttackSubject(),
+      fighterAttackSubject(state),
       [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -838,12 +803,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -897,12 +857,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -956,12 +911,7 @@ describe("battle runtime: death saves and turns", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
+      subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 1, naturalD20: 19 }),

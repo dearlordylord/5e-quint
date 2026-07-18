@@ -13,10 +13,11 @@ import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
 import { characterListRows } from "./character-session-rows.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
+import { characterIdFromDraftId } from "./session-store.ts";
 import {
-  availableCharacterSession,
-  characterIdFromDraftId,
-} from "./session-store.ts";
+  characterSheetConstructionIssuesSummary,
+  createFreshCharacterSheet,
+} from "@dnd/character-sheet-runtime";
 import {
   CHARACTER_TOOL_NAMES,
   characterToolNames,
@@ -171,7 +172,7 @@ export function handleCharacterToolCall(
       });
       const finalizedCharacterId = characterIdFromDraftId(draftId);
       if (finalization.tag === "ready") {
-        const session = availableCharacterSession({
+        const session = createFreshCharacterSheet({
           characterId: finalizedCharacterId,
           build: finalization.build,
           tempHp: Hp(0),
@@ -188,7 +189,7 @@ export function handleCharacterToolCall(
         if (Either.isLeft(session)) {
           return errorContent("Character finalization session failed.", {
             code: "CHARACTER_SESSION_INVALID",
-            message: session.left.message,
+            message: characterSheetConstructionIssuesSummary(session.left),
           });
         }
         root.sessionStore.characters.set(session.right);

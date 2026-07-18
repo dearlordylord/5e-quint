@@ -43,7 +43,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       "selfTransformationModeChoice",
     );
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -202,7 +202,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.subject.attackName === "Unarmed Strike",
+        candidate.summary === "Take the Attack action with Unarmed Strike.",
     );
     expect(unarmedStrike).toBeDefined();
     if (unarmedStrike === undefined) {
@@ -213,7 +213,6 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       targetHole,
       spellCasterId,
       spellTargetId,
-      "Unarmed Strike",
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({

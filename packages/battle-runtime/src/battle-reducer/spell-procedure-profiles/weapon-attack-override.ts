@@ -22,11 +22,11 @@ import {
 import type { SpellRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { CharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
+import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
@@ -53,7 +53,7 @@ import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
-  CharacterWeaponAttackActionOptionSchema,
+  BoundCharacterWeaponAttackActionOptionSchema,
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -166,7 +166,7 @@ function weaponAttackOverrideProjection(
 
 function shillelaghAttachedWeaponAttacks(actor: SpellAdmissionActor): readonly {
   readonly itemId: string;
-  readonly attack: CharacterWeaponAttackActionOption;
+  readonly attack: BoundCharacterWeaponAttackActionOption;
 }[] {
   const origin = actor.origin;
   const activeWildShape = activeDruidWildShapeEffect(actor);
@@ -212,7 +212,7 @@ function shillelaghAttachedWeaponAttacks(actor: SpellAdmissionActor): readonly {
       held,
     ): held is {
       readonly itemId: string;
-      readonly attack: CharacterWeaponAttackActionOption;
+      readonly attack: BoundCharacterWeaponAttackActionOption;
       readonly unitId: WeaponRecord["id"];
     } =>
       held.attack.weapon.usage === "melee" &&
@@ -276,7 +276,7 @@ function discoverWeaponAttackOverrideCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: WeaponAttackOverrideInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
@@ -425,7 +425,7 @@ const WeaponAttackOverrideInvocationSchema = spellProcedureInvocationSchema<
     actionCost: Schema.Literal("bonusAction"),
     attachedWeapon: Schema.Struct({
       itemId: Schema.String,
-      attack: CharacterWeaponAttackActionOptionSchema,
+      attack: BoundCharacterWeaponAttackActionOptionSchema,
     }),
     activeEffect: BattleRuntimeObjectSchema,
   }),

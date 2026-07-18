@@ -14,6 +14,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterUnitProcedureRef,
+} from "../character-execution.ts";
+import {
   canSpendAction,
   canSpendBonusAction,
   enableMovementActionBonusActionExclusion,
@@ -59,6 +63,7 @@ import {
 import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
+import { characterUnitFeatureProcedureId } from "../character-execution.ts";
 
 import { CombatantId } from "../identity.ts";
 
@@ -147,17 +152,24 @@ import {
 } from "./wild-shape-equipment.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
+import {
+  attackActionOptionPresentationName,
+  statBlockAttackProcedureSection,
+  attackSubjectPart,
+} from "./statblock.ts";
 
 import { attackTargetHole } from "./hole-helpers.ts";
-import { statBlockResourceState } from "./statblock.ts";
 
 import type {
-  AvailableBattleAct,
+  BattleActDiscoveryCandidate,
   BardicInspirationFailedD20TestResolutionInput,
   BardicInspirationFailedD20TestResolutionResult,
   BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
+  AdmittedDruidWildShapeBattleResolutionInput,
+  AdmittedUnitFeatureBattleResolutionInput,
+  AdmittedUnitFeatureHeldWeaponActivationBattleResolutionInput,
   BattleWildShapeEquipmentDispositionHole,
   BattleHitPointHealingPoolDistributionHole,
   BattleHoleId,
@@ -169,13 +181,11 @@ import type {
   BattleUnitFeatureRollHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
   CharacterBattleCreatureState,
-  DruidWildShapeBattleResolutionInput,
   FailedAbilityCheckResourceBoostResolutionInput,
   FailedAbilityCheckResourceBoostResolutionResult,
   SuccessfulAbilityCheckReactionReductionResolutionInput,
   SuccessfulAbilityCheckReactionReductionResolutionResult,
   UnitFeatureBattleResolutionInput,
-  UnitFeatureHeldWeaponActivationBattleResolutionInput,
   UnitFeatureRolledDiceFill,
 } from "../battle-reducer.ts";
 import {
@@ -189,7 +199,7 @@ const WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL =
 export function supportedUnitFeatureActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     return [];
@@ -200,8 +210,8 @@ export function supportedUnitFeatureActs(
   }
 
   const classLevels = actor.origin.classLevels;
-  const resourceActs = actor.origin.resources.flatMap<AvailableBattleAct>(
-    (resource) => {
+  const resourceActs =
+    actor.origin.resources.flatMap<BattleActDiscoveryCandidate>((resource) => {
       const unitFeature = supportedUnitFeatureProfileForResource(
         actor,
         resource,
@@ -296,8 +306,7 @@ export function supportedUnitFeatureActs(
             },
           ]
         : [];
-    },
-  );
+    });
   return [
     ...resourceActs,
     ...attackActionAreaSaveDamageReplacementActs(state, actor),
@@ -313,12 +322,12 @@ export function supportedUnitFeatureActs(
 function attackActionAreaSaveDamageReplacementActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (!canSpendAction(state.currentTurnResources, "attack")) {
     return [];
   }
   return actor.origin.resources.flatMap(
-    (resource): readonly AvailableBattleAct[] => {
+    (resource): readonly BattleActDiscoveryCandidate[] => {
       const unitFeature =
         attackActionAreaSaveDamageReplacementProfileForResource(
           actor,
@@ -352,7 +361,7 @@ function attackActionAreaSaveDamageReplacementActs(
 function magicActionHealingPoolActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
     combatantInsideActiveAntimagicFieldAura(state, actor.combatantId)
@@ -360,7 +369,7 @@ function magicActionHealingPoolActs(
     return [];
   }
   return [...actor.origin.magicActionHealingPoolProfiles.values()].flatMap(
-    (unitFeature): readonly AvailableBattleAct[] => {
+    (unitFeature): readonly BattleActDiscoveryCandidate[] => {
       const resource = actor.origin.resources.find(
         (candidate) =>
           candidate.unit.id === unitFeature.healingPool.spends.resourceUnitId,
@@ -400,7 +409,7 @@ function magicActionHealingPoolActs(
 function magicActionAreaSaveDamageHealingActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
     spellSaveDcForCaster(state, actor.combatantId) === null ||
@@ -410,7 +419,7 @@ function magicActionAreaSaveDamageHealingActs(
   }
   return [
     ...actor.origin.magicActionAreaSaveDamageHealingProfiles.values(),
-  ].flatMap((unitFeature): readonly AvailableBattleAct[] => {
+  ].flatMap((unitFeature): readonly BattleActDiscoveryCandidate[] => {
     const resource = actor.origin.resources.find(
       (candidate) =>
         candidate.unit.id === unitFeature.damageHealing.spends.resourceUnitId,
@@ -440,7 +449,7 @@ function magicActionAreaSaveDamageHealingActs(
 function magicActionSaveGatedConditionActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
     spellSaveDcForCaster(state, actor.combatantId) === null ||
@@ -450,7 +459,7 @@ function magicActionSaveGatedConditionActs(
   }
   return [
     ...actor.origin.magicActionSaveGatedConditionProfiles.values(),
-  ].flatMap((unitFeature): readonly AvailableBattleAct[] => {
+  ].flatMap((unitFeature): readonly BattleActDiscoveryCandidate[] => {
     const resource = actor.origin.resources.find(
       (candidate) =>
         candidate.unit.id === unitFeature.condition.spends.resourceUnitId,
@@ -494,7 +503,7 @@ type SacredWeaponHeldMeleeWeapon = {
 function paladinSacredWeaponActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (!canSpendAction(state.currentTurnResources, "attack")) {
     return [];
   }
@@ -525,7 +534,7 @@ function paladinSacredWeaponActs(
 
 function paladinSacredWeaponDismissActs(
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const activeUnitIds = new Set(
     actor.activeEffects.flatMap((effect) =>
       effect.kind === "paladinSacredWeapon" &&
@@ -619,7 +628,7 @@ function wildShapeCanUseLoadoutWeaponObject(input: {
 function rogueSteadyAimActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendBonusAction(state.currentTurnResources) ||
     Number(actor.movementSpentFeet) > 0
@@ -646,22 +655,25 @@ export function druidWildShapeActsForResource(
   actor: CharacterBattleCreatureState,
   resource: CharacterBattleResourceState,
   unitFeature: SupportedDruidWildShapeKnownFormProfile,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const assumeActs =
     resourceHasUsesRemaining(resource) &&
     !combatantShapeShiftingSuppressed(state, actor.combatantId)
-      ? (actor.origin.druidWildShapeAvailableForms ?? []).map((form) => ({
+      ? (actor.origin.druidWildShapeAvailableForms ?? []).map((admission) => ({
           subject: {
             tag: "druidWildShape" as const,
             actorId: actor.combatantId,
             unitId: unitFeature.unit.id,
             action: "assumeForm" as const,
-            formStatBlockId: form.id,
+            formStatBlockId: admission.statBlock.id,
           },
-          label: `${unitFeature.unit.name}: ${form.statBlock.displayName}`,
+          label: `${unitFeature.unit.name}: ${admission.statBlock.statBlock.displayName}`,
           summary:
             "Spend a Bonus Action and one use to assume this known Beast form.",
-          initialHoles: wildShapeInitialEquipmentDispositionHoles(actor, form),
+          initialHoles: wildShapeInitialEquipmentDispositionHoles(
+            actor,
+            admission.statBlock,
+          ),
         }))
       : [];
   const dismissAct =
@@ -736,13 +748,24 @@ export function supportedUnitFeatureProfileForResource(
 }
 
 export function resolveUnitFeature(
-  input: UnitFeatureBattleResolutionInput,
+  input: AdmittedUnitFeatureBattleResolutionInput,
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
   if (isCharacterBattleCreatureState(actor)) {
+    const selectedUnitId = characterUnitFeatureProcedureId(
+      actor.origin.execution,
+      subject.procedureRef,
+    );
+    if (selectedUnitId === undefined) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Unit feature procedure reference is no longer bound to this actor.",
+      );
+    }
     const resource = actor.origin.resources.find(
-      (candidate) => candidate.unit.id === subject.unitId,
+      (candidate) => candidate.unit.id === selectedUnitId,
     );
 
     if (resource !== undefined) {
@@ -785,12 +808,10 @@ export function resolveUnitFeature(
       }
     }
 
-    const rogueSteadyAim = actor.origin.rogueSteadyAimProfiles.get(
-      subject.unitId,
-    );
-    const sacredWeapon = actor.origin.paladinSacredWeaponProfiles.get(
-      subject.unitId,
-    );
+    const rogueSteadyAim =
+      actor.origin.rogueSteadyAimProfiles.get(selectedUnitId);
+    const sacredWeapon =
+      actor.origin.paladinSacredWeaponProfiles.get(selectedUnitId);
     if (sacredWeapon !== undefined) {
       return resolvePaladinSacredWeaponDismissUnitFeature(
         input,
@@ -804,7 +825,7 @@ export function resolveUnitFeature(
 
     const attackActionAreaSaveDamageReplacementResource =
       actor.origin.resources.find(
-        (candidate) => candidate.unit.id === subject.unitId,
+        (candidate) => candidate.unit.id === selectedUnitId,
       );
     if (attackActionAreaSaveDamageReplacementResource !== undefined) {
       const attackActionAreaSaveDamageReplacement =
@@ -823,7 +844,7 @@ export function resolveUnitFeature(
     }
 
     const magicActionHealingPool =
-      actor.origin.magicActionHealingPoolProfiles.get(subject.unitId);
+      actor.origin.magicActionHealingPoolProfiles.get(selectedUnitId);
     if (magicActionHealingPool !== undefined) {
       return resolveMagicActionHealingPoolUnitFeature(
         input,
@@ -833,7 +854,7 @@ export function resolveUnitFeature(
     }
 
     const magicActionAreaSaveDamageHealing =
-      actor.origin.magicActionAreaSaveDamageHealingProfiles.get(subject.unitId);
+      actor.origin.magicActionAreaSaveDamageHealingProfiles.get(selectedUnitId);
     if (magicActionAreaSaveDamageHealing !== undefined) {
       return resolveMagicActionAreaSaveDamageHealingUnitFeature(
         input,
@@ -843,7 +864,7 @@ export function resolveUnitFeature(
     }
 
     const magicActionSaveGatedCondition =
-      actor.origin.magicActionSaveGatedConditionProfiles.get(subject.unitId);
+      actor.origin.magicActionSaveGatedConditionProfiles.get(selectedUnitId);
     if (magicActionSaveGatedCondition !== undefined) {
       return resolveMagicActionSaveGatedConditionUnitFeature(
         input,
@@ -869,7 +890,7 @@ export function resolveUnitFeature(
 }
 
 export function resolveUnitFeatureHeldWeaponActivation(
-  input: UnitFeatureHeldWeaponActivationBattleResolutionInput,
+  input: AdmittedUnitFeatureHeldWeaponActivationBattleResolutionInput,
 ): BattleResolutionResult {
   if (input.fills.length > 0) {
     return invalidResult(
@@ -887,7 +908,10 @@ export function resolveUnitFeatureHeldWeaponActivation(
     );
   }
   const unitFeature = actor.origin.paladinSacredWeaponProfiles.get(
-    input.subject.unitId,
+    characterUnitFeatureProcedureId(
+      actor.origin.execution,
+      input.subject.procedureRef,
+    ),
   );
   if (unitFeature === undefined) {
     return invalidResult(
@@ -1455,7 +1479,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
 }
 
 export function resolveDruidWildShapeUnitFeature(
-  input: DruidWildShapeBattleResolutionInput,
+  input: AdmittedDruidWildShapeBattleResolutionInput,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
   if (!isCharacterBattleCreatureState(actor)) {
@@ -1541,16 +1565,17 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape has no uses remaining.",
     );
   }
-  const form = actor.origin.druidWildShapeAvailableForms?.find(
-    (candidate) => candidate.id === subject.formStatBlockId,
+  const formAdmission = actor.origin.druidWildShapeAvailableForms?.find(
+    (candidate) => candidate.statBlock.id === subject.formStatBlockId,
   );
-  if (form === undefined) {
+  if (formAdmission === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Druid Wild Shape form is not battle-available.",
     );
   }
+  const form = formAdmission.statBlock;
   const equipmentCandidates = wildShapeLoadoutObjectRefs(
     actor.origin.selectedLoadout,
   );
@@ -1650,7 +1675,6 @@ export function resolveDruidWildShapeUnitFeature(
     equipmentDisposition: wildShapeActiveEquipmentDispositions(
       equipmentDisposition.dispositions,
     ),
-    formResources: statBlockResourceState(form.statBlock),
     profile: unitFeature,
   });
   return {
@@ -3749,9 +3773,18 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
   const modifier = profile?.modifiers.find(
     (candidate) => candidate.kind === "abilityCheckReduction",
   );
+  const procedureRef =
+    profile === undefined
+      ? undefined
+      : characterUnitProcedureRef(
+          reactor.origin.execution,
+          profile.unit.id,
+          CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+        );
   if (
     profile === undefined ||
     modifier === undefined ||
+    procedureRef === undefined ||
     !combatantCanTakeReactions(reactor) ||
     !reactionModifierResourceAvailable(
       input.state,
@@ -3819,9 +3852,10 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
   const spentState = spendReactionModifierResource(
     spendReaction(input.state, input.reactorId),
     input.reactorId,
+    profile.unit.id,
     {
       kind: "abilityCheckReduction",
-      unitId: profile.unit.id,
+      procedureRef,
       label: profile.unit.name,
       reduction: {
         kind: "rolled",
@@ -4255,13 +4289,12 @@ export function selfBonusActionHealingAmount(
 
 export function discoverLegendaryActionActs(
   state: BattleState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([actorId, actor]) => {
     if (
       !statBlockLegendaryActionWindowIsOpen(state, actorId) ||
       actor.origin.kind !== "statBlock" ||
-      !combatantCanTakeActions(actor) ||
-      actor.origin.resources.legendaryActionUsesRemaining <= 0
+      !combatantCanTakeActions(actor)
     ) {
       return [];
     }
@@ -4269,7 +4302,11 @@ export function discoverLegendaryActionActs(
       .filter(
         (attack) =>
           attack.kind === "statBlockAttack" &&
-          attack.part.section === "legendaryActions",
+          statBlockAttackProcedureSection(
+            state,
+            actorId,
+            attack.procedureRef,
+          ) === "legendaryActions",
       )
       .flatMap((attack) => {
         const targetHole = attackTargetHole(state, actorId, attack);
@@ -4281,11 +4318,12 @@ export function discoverLegendaryActionActs(
                   tag: "action" as const,
                   actorId,
                   action: "attack" as const,
-                  attackName: attackActionOptionName(attack),
-                  statBlockSection: "legendaryActions" as const,
+                  ...attackSubjectPart(attack),
                 },
                 label: "Legendary Action",
-                summary: `Take the Legendary Action ${attackActionOptionName(
+                summary: `Take the Legendary Action ${attackActionOptionPresentationName(
+                  state,
+                  actorId,
                   attack,
                 )}.`,
                 initialHoles: [targetHole],

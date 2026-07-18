@@ -84,7 +84,6 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   eligibleAttackDamageDieFloorUnitIds,
@@ -131,26 +130,19 @@ export function resolveOpportunityAttackCommand(
           input.state,
           subject.reactorId,
           subject.targetId,
-          subject.attackName,
+          subject,
         )
       : opportunityAttackOptionForReactor(
           input.state,
           subject.reactorId,
           subject.targetId,
-          subject.attackName,
+          subject,
         );
   if (target === undefined || attack === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       `${commandLabel} attack is no longer available.`,
-    );
-  }
-  if (attackActionOptionName(attack) !== subject.attackName) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      `${commandLabel} requires the selected melee attack option.`,
     );
   }
   const fillSet = attackFillSet(input.fills);

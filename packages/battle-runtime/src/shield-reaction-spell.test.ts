@@ -37,6 +37,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  characterSpellInvocationRefForProcedureRefForTest,
+  opportunityAttackProcedureSelectionForTest,
+} from "./battle-runtime-test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -71,7 +75,7 @@ describe("Shield Reaction spell", () => {
       (act): act is AttackAct =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.attackName === "Unarmed Strike",
+        act.summary === "Take the Attack action with Unarmed Strike.",
     );
     expect(attackAct).toBeDefined();
     if (attackAct === undefined) {
@@ -240,7 +244,10 @@ describe("Shield Reaction spell", () => {
         movementFill(moveHole, {
           movementCostFeet: 5,
           provokedOpportunityAttacks: [
-            { reactorId: attackerThreeId, attackName: "Unarmed Strike" },
+            {
+              reactorId: attackerThreeId,
+              ...unarmedStrikeSelection(casterTurn, attackerThreeId),
+            },
           ],
         }),
       ],
@@ -266,16 +273,20 @@ describe("Shield Reaction spell", () => {
         value: {
           kind: "resolve",
           responderId: attackerThreeId,
-          choice: {
-            kind: "opportunityAttack",
-            reactorId: attackerThreeId,
-            fills: [],
-          },
+          choice: opportunityAttackProcedureSelectionForTest(
+            opportunityAttackChoice,
+          ),
         },
       },
     });
     if (startedOpportunityAttack.tag !== "needsHoles") {
-      throw new Error("Expected Opportunity Attack to ask for an Attack Roll.");
+      throw new Error(
+        `Expected Opportunity Attack to ask for an Attack Roll, got ${startedOpportunityAttack.tag}${
+          startedOpportunityAttack.tag === "invalid"
+            ? `: ${startedOpportunityAttack.message}`
+            : ""
+        }.`,
+      );
     }
     const opportunityAttackRoll = requireHole(
       startedOpportunityAttack.holes,
@@ -871,7 +882,7 @@ function resolveAttackRollOnly(input: {
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === input.attackerId &&
-      act.subject.attackName === "Unarmed Strike",
+      act.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -925,6 +936,9 @@ function attackTargetFill(
   actorId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound Shield trigger attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -934,7 +948,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };
@@ -965,10 +979,10 @@ function movementFill(
       { readonly kind: "movement" }
     >["value"]["speedKind"];
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -979,6 +993,18 @@ function movementFill(
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
+  };
+}
+
+function unarmedStrikeSelection(state: BattleState, actorId: CombatantId) {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  return {
+    procedureRef: actor.origin.unarmedStrike.procedureRef,
+    attackAbility: actor.origin.unarmedStrike.attackAbility,
+    attackDamageType: actor.origin.unarmedStrike.effect.damage.damageType,
   };
 }
 
@@ -1065,23 +1091,24 @@ function resolveShieldReactionChoice(
     awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (choice) => choice.kind === "castTriggeredReactionSpell",
     );
-  expect(reactionChoice).toEqual(
-    expect.objectContaining({
-      kind: "castTriggeredReactionSpell",
-      reactorId: spellCasterId,
-      invocation: expect.objectContaining({
-        tag: "spellSlot",
-        spellId: shieldUnitId,
-        procedure: "shieldReaction",
-      }),
-    }),
-  );
   if (
     reactionChoice === undefined ||
     reactionChoice.kind !== "castTriggeredReactionSpell"
   ) {
     throw new Error("Expected Shield Reaction spell choice.");
   }
+  expect(reactionChoice.reactorId).toBe(spellCasterId);
+  expect(
+    characterSpellInvocationRefForProcedureRefForTest(
+      awaitingReaction.state,
+      reactionChoice.reactorId,
+      reactionChoice.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    tag: "spellSlot",
+    spellId: shieldUnitId,
+    procedure: "shieldReaction",
+  });
   return resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: {
@@ -1092,7 +1119,7 @@ function resolveShieldReactionChoice(
         responderId: spellCasterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: reactionChoice.invocation,
+          procedureRef: reactionChoice.subject.procedureRef,
           fills: [],
         },
       },

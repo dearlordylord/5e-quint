@@ -14,7 +14,7 @@ import {
   characterSheetScryingLocationId,
   characterSheetScryingTargetId,
   completedScryingCasting,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   scryingSavingThrowModifier,
   spellSlotLevel,
@@ -383,7 +383,7 @@ function scryingWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:scrying-wizard-9"),
       build: {
         ...armorClassBuild({

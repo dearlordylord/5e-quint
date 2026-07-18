@@ -114,6 +114,7 @@ import {
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import { resolveSpellRelease } from "./spells-resolve.ts";
+import { characterStoredSpellProcedureRef } from "../character-execution.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import {
   resolveGreaseGroundHazardSpellAct,
@@ -1793,9 +1794,18 @@ function resolveStoredSpellGlyphRelease(input: {
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
   const invocation = input.effect.release.storedInvocation;
+  const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
+  if (procedureRef === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The stored spell procedure is no longer bound to its source character.",
+    );
+  }
   const subject = {
     tag: "actionSpell" as const,
     actorId: input.effect.sourceCombatantId,
+    procedureRef,
     invocation: supportedSpellInvocationRef(invocation),
     mode: { tag: "cast" as const },
   };
@@ -1958,9 +1968,18 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
   readonly invocation: GlyphStoredConcentrationSingleCreatureActiveEffectInvocation;
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
+  const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
+  if (procedureRef === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The stored spell procedure is no longer bound to its source character.",
+    );
+  }
   const subject = {
     tag: "actionSpell" as const,
     actorId: input.effect.sourceCombatantId,
+    procedureRef,
     invocation: supportedSpellInvocationRef(input.invocation),
     mode: { tag: "cast" as const },
   };
@@ -2017,6 +2036,19 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
     ),
     Match.exhaustive,
   );
+}
+
+function glyphStoredSpellProcedureRef(
+  state: BattleState,
+  effect: GlyphStoredSpellOccurrenceActiveEffect,
+) {
+  const source = state.combatants.get(effect.sourceCombatantId);
+  return source?.origin.kind === "character"
+    ? characterStoredSpellProcedureRef(
+        source.origin.execution,
+        effect.release.storedInvocation,
+      )
+    : undefined;
 }
 
 function glyphStoredSpellReleaseReplayContext(input: {

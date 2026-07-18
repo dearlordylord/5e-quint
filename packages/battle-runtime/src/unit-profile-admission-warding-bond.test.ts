@@ -9,7 +9,12 @@ import {
 } from "./battle-reducer/damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
-import { concentrationSavingThrowFill } from "./battle-runtime-test-support.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  characterBonusAttackSubjectForTest,
+  characterAttackSubjectForTest,
+  concentrationSavingThrowFill,
+} from "./battle-runtime-test-support.ts";
 import {
   attackDamageInterruptionFrame,
   resumeInterruptedProcedure,
@@ -33,7 +38,8 @@ import {
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
-  withSameClubMainAndOffHand,
+  sameClubMainAndOffHandLoadout,
+  weaponAttackSubject,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
@@ -71,7 +77,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const act = spellAct({ state, spellId: wardingBondUnitId, slotLevel: 2 });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(wardingBondUnitId, 2, "wardingBond"),
@@ -273,12 +279,11 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const state = withTargetConcentration(
       withCasterConcentration(castWardingBond(wardingBondBattle())),
     );
-    const subject = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Club",
-    } satisfies Extract<BattleSubject, { readonly tag: "action" }>;
+    const subject = characterAttackSubjectForTest(
+      state,
+      spellCasterId,
+      "Unarmed Strike",
+    );
     const continuation = attackDamageInterruptionFrame({
       participant: subject,
       targetId: spellTargetId,
@@ -367,12 +372,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         spellTargetId,
       ]),
     );
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: spellCasterId,
-      action: "attack",
-      attackName: "Club",
-    };
+    const attackSubject: BattleSubject = weaponAttackSubject(state, "Club");
     const attackTarget = requireResultHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -399,12 +399,11 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       throw new Error("Expected qualifying Club attack to resolve.");
     }
 
-    const offHandSubject: BattleSubject = {
-      tag: "bonusAction",
-      actorId: spellCasterId,
-      action: "offHandAttack",
-      attackName: "Club",
-    };
+    const offHandSubject: BattleSubject = characterBonusAttackSubjectForTest(
+      afterQualifyingAttack.state,
+      spellCasterId,
+      "offHandAttack",
+    );
     const offHandTarget = requireResultHole(
       resolveBattleSubject({
         state: afterQualifyingAttack.state,
@@ -473,6 +472,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         spellTargetId,
       ]),
     );
+    const clubAttack = weaponAttackSubject(state, "Club");
     const subject: Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
@@ -482,7 +482,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       command: "opportunityAttack",
       reactorId: spellCasterId,
       targetId: spellTargetId,
-      attackName: "Club",
+      ...attackExecutionSelectionForSubjectForTest(clubAttack),
     };
     const attackRoll = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
@@ -925,6 +925,12 @@ function wardingBondBattle(
     >[0]["preparedSpells"];
     readonly extraTargetIds?: readonly CombatantId[];
     readonly casterAttack?: Parameters<typeof spellBattle>[0]["attack"];
+    readonly casterOffHandAttack?: Parameters<
+      typeof spellBattle
+    >[0]["offHandAttack"];
+    readonly casterSelectedLoadout?: Parameters<
+      typeof spellBattle
+    >[0]["selectedLoadout"];
   } = {},
 ): BattleState {
   return spellBattle({
@@ -938,6 +944,12 @@ function wardingBondBattle(
     targetHp: 12,
     targetMaxHp: 12,
     ...(input.casterAttack === undefined ? {} : { attack: input.casterAttack }),
+    ...(input.casterOffHandAttack === undefined
+      ? {}
+      : { offHandAttack: input.casterOffHandAttack }),
+    ...(input.casterSelectedLoadout === undefined
+      ? {}
+      : { selectedLoadout: input.casterSelectedLoadout }),
     ...(input.extraTargetIds === undefined
       ? {}
       : { extraTargetIds: input.extraTargetIds }),
@@ -961,10 +973,11 @@ function damageSpellTurnState(
 
 function wardingBondClubBattle(): BattleState {
   const club = zeroAbilityWeaponAttack("weapon_club");
-  return withSameClubMainAndOffHand(
-    wardingBondBattle({ casterAttack: club }),
-    club,
-  );
+  return wardingBondBattle({
+    casterAttack: club,
+    casterOffHandAttack: club,
+    casterSelectedLoadout: sameClubMainAndOffHandLoadout(),
+  });
 }
 
 function attackTargetFillForClub(

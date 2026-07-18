@@ -12,7 +12,7 @@ import {
   castModifyMemory,
   characterSheetId,
   characterSheetModifyMemoryTargetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -401,7 +401,7 @@ function modifyMemoryWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:modify-memory-wizard-9"),
       build: {
         ...armorClassBuild({

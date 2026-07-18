@@ -83,6 +83,7 @@ import {
   initiativeScore,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  sameBattleSubject,
   snapshotBattle,
   spellSaveDcForCaster,
   spellSlotInvocationRef,
@@ -100,6 +101,8 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
+  attackExecutionSelectionForSubjectForTest as interruptAttackExecutionSelectionForSubject,
+  characterSpellInvocationRefForProcedureRefForTest,
   attackInitialTargetHole as interruptAttackInitialTargetHole,
   attackRollHoleAfterTarget as interruptAttackRollHoleAfterTarget,
   attackTargetFill as interruptAttackTargetFill,
@@ -1417,8 +1420,7 @@ const SPATIAL_EFFECT_BATTLE_EFFECTS = [
   "areaHazardEffectAdmitted",
   "concentrationBackedEffect",
 ] as const;
-type SpatialEffectBattleEffect =
-  (typeof SPATIAL_EFFECT_BATTLE_EFFECTS)[number];
+type SpatialEffectBattleEffect = (typeof SPATIAL_EFFECT_BATTLE_EFFECTS)[number];
 const SPATIAL_EFFECT_LIGHTS = [
   "multiEmitterDimLightProjection",
   "emitterPositionMoved",
@@ -1439,8 +1441,7 @@ const SPATIAL_EFFECT_PRESENTATIONS = [
   "colorChoicePresentation",
   "visibleOutlinePresentation",
 ] as const;
-type SpatialEffectPresentation =
-  (typeof SPATIAL_EFFECT_PRESENTATIONS)[number];
+type SpatialEffectPresentation = (typeof SPATIAL_EFFECT_PRESENTATIONS)[number];
 const SPATIAL_EFFECT_OBJECTS = [
   "outlinedObjectWitness",
   "objectSightTargetWitness",
@@ -1484,8 +1485,7 @@ const SPATIAL_EFFECT_CLEANUP_OWNERS = [
   "battleObscurementProjection",
   "battleAreaHazard",
 ] as const;
-type SpatialEffectCleanupOwner =
-  (typeof SPATIAL_EFFECT_CLEANUP_OWNERS)[number];
+type SpatialEffectCleanupOwner = (typeof SPATIAL_EFFECT_CLEANUP_OWNERS)[number];
 export type SpatialEffectRouteFact =
   | {
       readonly kind: "battleEffect";
@@ -2645,7 +2645,7 @@ function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
 export function createBattleRuntimeDriver() {
   return defineDriver(driverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    let subject: BattleSubject = fighterAttackSubject();
+    let subject: BattleSubject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverAttackHoles(state, subject);
     let lastResult: MbtProjection["lastResult"] = "init";
@@ -2653,7 +2653,7 @@ export function createBattleRuntimeDriver() {
 
     function reset(): void {
       state = fighterVsSkeletonBattle();
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       fills = [];
       holes = discoverAttackHoles(state, subject);
       lastResult = "init";
@@ -2686,7 +2686,7 @@ export function createBattleRuntimeDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject();
+        subject = fighterAttackSubject(state);
         holes = discoverAttackHoles(state, subject);
         lastResult = "needsHoles";
         lastInvalidReason = "";
@@ -2748,17 +2748,17 @@ export function createBattleRuntimeDriver() {
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject();
+        subject = skeletonShortswordSubject(state);
         const target = requireHole(
           discoverAttackHoles(state, subject),
           "targetChoice",
@@ -2789,7 +2789,7 @@ export function createBattleRuntimeDriver() {
 export function createBattleRuntimeRouteDriver() {
   return defineDriver(driverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    let subject: BattleSubject = fighterAttackSubject();
+    let subject: BattleSubject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverAttackHoles(state, subject);
     let route: readonly ReducerRouteEvent[] = [];
@@ -2798,7 +2798,7 @@ export function createBattleRuntimeRouteDriver() {
 
     function reset(): void {
       state = fighterVsSkeletonBattle();
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       fills = [];
       const act = discoverAttackAct(state, subject);
       holes = act.initialHoles;
@@ -2864,7 +2864,7 @@ export function createBattleRuntimeRouteDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject();
+        subject = fighterAttackSubject(state);
         const act = discoverAttackAct(state, subject);
         holes = act.initialHoles;
         appendRequiredRouteEvents({
@@ -2932,17 +2932,17 @@ export function createBattleRuntimeRouteDriver() {
         resolveWithoutFill();
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         resolveWithoutFill();
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject();
+        subject = skeletonMultiattackSubject(state);
         fills = [];
         resolveWithoutFill();
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject();
+        subject = skeletonShortswordSubject(state);
         const act = discoverAttackAct(state, subject);
         appendRequiredRouteEvents({
           routeEvents: act.routeEvents,
@@ -2990,7 +2990,7 @@ export function createBattleRuntimeRouteDriver() {
 export function createWeaponAttackOrderingDriver() {
   return defineDriver(weaponAttackOrderingDriverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: WeaponAttackOrderingProjection["stage"] = "actSelection";
@@ -3354,7 +3354,7 @@ export function createSaveGatedSpellOrderingDriver() {
 export function createWeaponAttackOrderingRouteDriver() {
   return defineDriver(weaponAttackOrderingDriverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -9797,7 +9797,7 @@ export function createInterruptStackResumeRouteDriver() {
       init: reset,
       doNestedDeclineResumesOuterInterrupt: () => {
         const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-        const subject = interruptFighterAttackSubject();
+        const subject = interruptFighterAttackSubject(state);
         const target = interruptAttackInitialTargetHole(state, subject);
         const attackRoll = interruptAttackRollHoleAfterTarget(
           state,
@@ -9813,7 +9813,7 @@ export function createInterruptStackResumeRouteDriver() {
               target,
               subject.actorId,
               interruptGoblinId,
-              subject.attackName,
+              interruptAttackExecutionSelectionForSubject(subject),
             ),
             attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
           ],
@@ -9825,6 +9825,12 @@ export function createInterruptStackResumeRouteDriver() {
         const releaseChoice = interruptReactionChoiceWithSubject(
           awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
         );
+        if (
+          releaseChoice.subject.tag !== "runtimeCommand" ||
+          releaseChoice.subject.command !== "releaseReadiedSpell"
+        ) {
+          throw new Error("Expected a readied-spell release subject.");
+        }
         const released = resolveBattleInterrupt({
           state: awaitingAttackReaction.state,
           fill: interruptDecisionFillSupport(
@@ -9835,6 +9841,7 @@ export function createInterruptStackResumeRouteDriver() {
               choice: {
                 kind: "releaseReadiedSpell",
                 readiedSpellCasterId: interruptWizardId,
+                procedureRef: releaseChoice.subject.procedureRef,
                 fills: [],
               },
             },
@@ -9912,7 +9919,7 @@ export function createInterruptStackResumeRouteDriver() {
               responderId: interruptShieldCasterId,
               choice: {
                 kind: "castTriggeredReactionSpell",
-                invocation: choice.invocation,
+                procedureRef: choice.subject.procedureRef,
                 fills: [],
               },
             },
@@ -9965,7 +9972,7 @@ function publicReplayContinuationAfterAttackDeclines(): {
   >;
 } {
   const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-  const subject = interruptFighterAttackSubject();
+  const subject = interruptFighterAttackSubject(state);
   const target = interruptAttackInitialTargetHole(state, subject);
   const attackRoll = interruptAttackRollHoleAfterTarget(
     state,
@@ -9981,7 +9988,7 @@ function publicReplayContinuationAfterAttackDeclines(): {
         target,
         subject.actorId,
         interruptGoblinId,
-        subject.attackName,
+        interruptAttackExecutionSelectionForSubject(subject),
       ),
       attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
     ],
@@ -11022,7 +11029,12 @@ function createCommandOrderingDriverWithRoute<
           commandFleeMovementFill(movement, {
             movementCostFeet: 30,
             provokedOpportunityAttacks: [
-              { reactorId: fighterId, attackName: "Unarmed Strike" },
+              {
+                reactorId: fighterId,
+                ...interruptAttackExecutionSelectionForSubject(
+                  interruptFighterAttackSubject(state, "Unarmed Strike"),
+                ),
+              },
             ],
           }),
         ];
@@ -11062,14 +11074,14 @@ export function createExtraAttackDriver(
   return defineDriver(schema, () => {
     let state = extraAttackBattle(unitId);
     let currentUnitId = unitId;
-    let subject: BattleSubject = fighterAttackSubject();
+    let subject: BattleSubject = fighterAttackSubject(state);
     let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
 
     function resetUnit(nextUnitId: ExtraAttackMbtUnitId): void {
       currentUnitId = nextUnitId;
       state = extraAttackBattle(nextUnitId);
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -11091,7 +11103,7 @@ export function createExtraAttackDriver(
 
     function resolveAttackMiss(): void {
       recordExtraAttackBoundaryFromState(state, currentUnitId);
-      subject = fighterAttackSubject();
+      subject = fighterAttackSubject(state);
       const target = requireHole(
         discoverAttackHoles(state, subject),
         "targetChoice",
@@ -11146,7 +11158,7 @@ export function createExtraAttackDriver(
       },
       doResolveSecondExtraAttackMiss: resolveAttackMiss,
       doRejectThirdExtraAttack: () => {
-        subject = fighterAttackSubject();
+        subject = fighterAttackSubject(state);
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
       },
       doEndTurnClosesExtraAttackSlot: () => {
@@ -11438,7 +11450,7 @@ export function createReducerSpineContractDriver() {
       },
       doDiscoverWeaponAttack: () => {
         state = requireStartedState();
-        const attackSubject = skeletonShortswordSubject();
+        const attackSubject = skeletonShortswordSubject(state);
         subject = attackSubject;
         fills = [];
         holes = discoverAttackHoles(state, attackSubject);
@@ -12027,7 +12039,7 @@ export function createRogueSteadyAimDriver(
     }
 
     function resolveAttack(): void {
-      const subject = fighterAttackSubject();
+      const subject = fighterAttackSubject(state);
       const targetHole = requireHole(
         discoverAttackHoles(state, subject),
         "targetChoice",
@@ -15647,10 +15659,10 @@ function discoverAttackAct(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === subject.attackName,
+      sameBattleSubject(candidate.subject, subject),
   );
   if (act == null) {
-    throw new Error(`Expected ${subject.attackName} attack act.`);
+    throw new Error("Expected the selected attack act.");
   }
 
   return act;
@@ -15811,16 +15823,23 @@ function healingOrderingHolesAfterFills(
   return result.holes;
 }
 
-function fighterAttackSubject(): Extract<
+function fighterAttackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: fighterId,
-    action: "attack",
-    attackName: "Dagger",
-  };
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === fighterId &&
+      act.summary === "Take the Attack action with Dagger.",
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error("Expected discovered fighter Dagger attack.");
+  }
+  return subject;
 }
 
 function adrenalineRushDashSubject(): Extract<
@@ -15847,28 +15866,47 @@ function rogueSteadyAimSubject(): Extract<
   };
 }
 
-function skeletonMultiattackSubject(): Extract<
+function skeletonMultiattackSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "multiattack" }
 > {
-  return {
-    tag: "action",
-    actorId: skeletonId,
-    action: "multiattack",
-    multiattackName: "Multiattack",
-  };
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === skeletonId &&
+      candidate.subject.action === "multiattack",
+  );
+  if (act?.subject.tag !== "action" || act.subject.action !== "multiattack") {
+    throw new Error("Expected the Skeleton Multiattack act.");
+  }
+  return act.subject;
 }
 
-function skeletonShortswordSubject(): Extract<
+function skeletonShortswordSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  return {
-    tag: "action",
-    actorId: skeletonId,
-    action: "attack",
-    attackName: "Shortsword",
-  };
+  const matchingActs = discoverBattleActs(state).filter(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === skeletonId &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef !== undefined &&
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === "Take the Attack action with Shortsword.",
+  );
+  if (matchingActs.length !== 1) {
+    throw new Error("Expected one rolled Skeleton Shortsword attack act.");
+  }
+  const subject = matchingActs[0]?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error("Expected the Skeleton Shortsword attack subject.");
+  }
+  return subject;
 }
 
 function magicMissileSubject(): Extract<
@@ -15998,7 +16036,7 @@ function interruptShieldUnarmedStrikeAct(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === interruptShieldAttackerId &&
-      candidate.subject.attackName === "Unarmed Strike",
+      candidate.summary === "Take the Attack action with Unarmed Strike.",
   );
   if (act === undefined) {
     throw new Error("Expected interrupt-stack Shield Unarmed Strike act.");
@@ -16009,6 +16047,9 @@ function interruptShieldUnarmedStrikeAct(
 function interruptShieldAttackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound interrupt-shield attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -16018,7 +16059,7 @@ function interruptShieldAttackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: interruptShieldAttackerId,
         targetId: interruptShieldCasterId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };
@@ -16036,13 +16077,24 @@ function requireInterruptShieldReactionChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === interruptShieldCasterId &&
-      candidate.invocation.tag === "spellSlot" &&
-      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-      candidate.invocation.spellId === interruptShieldUnitId &&
-      candidate.invocation.procedure === "shieldReaction",
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== interruptShieldCasterId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+        invocation.spellId === interruptShieldUnitId &&
+        invocation.procedure === "shieldReaction"
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected interrupt-stack Shield Reaction choice.");
@@ -17795,23 +17847,34 @@ function targetFill(
   hole: BattleHole,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected an attack target-choice hole.");
+  }
+  const attackSpatialFacts =
+    hole.attack === undefined
+      ? []
+      : [
+          hole.attack.targetConstraint === "meleeReach"
+            ? {
+                kind: "attackTargetInMeleeReach" as const,
+                actorId: hole.attack.actorId,
+                targetId,
+                ...hole.attack.selection,
+              }
+            : {
+                kind: "attackTargetInRangedRange" as const,
+                actorId: hole.attack.actorId,
+                targetId,
+                ...hole.attack.selection,
+                rangeBand: "normal" as const,
+              },
+        ];
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: fighterId,
-        targetId,
-        attackName: "Dagger",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: skeletonId,
-        targetId,
-        attackName: "Shortsword",
-      },
+      ...attackSpatialFacts,
       {
         kind: "attackerAllyWithin5FeetOfTarget",
         attackerId: fighterId,
@@ -18047,10 +18110,10 @@ function commandFleeMovementFill(
   hole: BattleHole,
   value: {
     readonly movementCostFeet: number;
-    readonly provokedOpportunityAttacks: readonly {
-      readonly reactorId: CombatantId;
-      readonly attackName: string;
-    }[];
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {

@@ -12,7 +12,7 @@ import {
   castPasswall,
   characterSheetId,
   characterSheetPasswallSurfaceId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -234,7 +234,7 @@ function passwallWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:passwall-wizard-9"),
       build: {
         ...armorClassBuild({

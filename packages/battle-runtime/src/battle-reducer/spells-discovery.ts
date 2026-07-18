@@ -28,7 +28,7 @@ import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-interrupt-triggers.ts";
 import {
   interruptTriggerLabel,
   type BattleHole,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleState,
   type ReadiedSpellInvocation,
@@ -79,7 +79,7 @@ type SpellProcedureProfileDiscovery = {
     state: BattleState,
     actorId: CombatantId,
     invocation: never,
-  ) => readonly AvailableBattleAct[];
+  ) => readonly BattleActDiscoveryCandidate[];
 };
 
 type SpellProcedureProfileCastSummary = {
@@ -91,7 +91,7 @@ function discoverRegisteredSpellProcedureCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   // Registry lookup preserves the procedure/invocation pairing, but the
   // heterogeneous profile methods erase to a union at this call site.
   return profile.discoverCastAct(state, actorId, invocation as never);
@@ -109,7 +109,7 @@ function registeredSpellProcedureCastSummary(
 export function discoverSupportedSpellInvocations(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     return [];
@@ -119,7 +119,7 @@ export function discoverSupportedSpellInvocations(
   const invocations = supportedSpellActs(actor, state);
   const counterspellReactors = counterspellCapableReactors(state);
   const acts = invocations.flatMap(
-    (invocation): readonly AvailableBattleAct[] => {
+    (invocation): readonly BattleActDiscoveryCandidate[] => {
       if (invocation.procedure === "shieldReaction") {
         return [];
       }
@@ -202,12 +202,12 @@ export function discoverSupportedSpellInvocations(
 }
 
 function spellActWithQuickenedRewrite(input: {
-  readonly act: AvailableBattleAct;
+  readonly act: BattleActDiscoveryCandidate;
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
   readonly invocations: readonly SupportedSpellInvocation[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
   if (subject.tag !== "actionSpell") {
     return [input.act];
@@ -255,10 +255,10 @@ function spellActWithQuickenedRewrite(input: {
 }
 
 function spellActWithTransmutedDamageType(input: {
-  readonly act: AvailableBattleAct;
+  readonly act: BattleActDiscoveryCandidate;
   readonly actor: BattleCreatureState;
   readonly invocations: readonly SupportedSpellInvocation[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
   if (
     subject.tag !== "actionSpell" ||
@@ -292,12 +292,12 @@ function spellActWithTransmutedDamageType(input: {
 }
 
 function spellActWithTwinnedTargetCount(input: {
-  readonly act: AvailableBattleAct;
+  readonly act: BattleActDiscoveryCandidate;
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
   readonly invocations: readonly SupportedSpellInvocation[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
   if (
     (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
@@ -355,8 +355,8 @@ function spellCastReactionFactsAct(
   actorId: CombatantId,
   invocations: readonly SupportedSpellInvocation[],
   counterspellReactors: readonly CounterspellCapableReactor[],
-  act: AvailableBattleAct,
-): AvailableBattleAct {
+  act: BattleActDiscoveryCandidate,
+): BattleActDiscoveryCandidate {
   const subject = act.subject;
   if (
     (subject.tag !== "actionSpell" &&
@@ -602,7 +602,7 @@ export function readiedSpellAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !isReadiedSpellInvocation(invocation) ||
     state.readiedSpells.has(actorId)

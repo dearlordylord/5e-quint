@@ -8,6 +8,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
+  characterProcedureBinding,
   type CombatantId,
   discoverBattleActs,
   SPELL_CAST_REACTION_FACTS_HOLE_ID
@@ -52,14 +53,24 @@ export function requireCounterspellChoice(
     readonly spellId: string
   }
 ): CounterspellReactionChoice {
+  const reactor = result.state.combatants.get(input.reactorId)
   const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is CounterspellReactionChoice =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === input.reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === input.spellId &&
-      candidate.invocation.procedure === "counterspell" &&
-      Number(candidate.invocation.slotLevel) === input.slotLevel
+    (candidate): candidate is CounterspellReactionChoice => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== input.reactorId ||
+        reactor?.origin.kind !== "character"
+      ) {
+        return false
+      }
+      const binding = characterProcedureBinding(reactor.origin.execution, candidate.subject.procedureRef)
+      return (
+        binding?.procedure.kind === "spellInvocation" &&
+        binding.procedure.invocation.procedure === "counterspell" &&
+        binding.procedure.invocation.spell.id === input.spellId &&
+        Number(binding.procedure.invocation.resource.slotLevel) === input.slotLevel
+      )
+    }
   )
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.")
@@ -77,7 +88,7 @@ export function counterspellDecision(
     responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
-      invocation: choice.invocation,
+      procedureRef: choice.subject.procedureRef,
       fills
     }
   }

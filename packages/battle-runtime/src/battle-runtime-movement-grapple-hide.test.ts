@@ -11,6 +11,8 @@ import {
   fighterVsGoblinBattle,
   fighterGrapplesGoblin,
   fighterAttackSubject,
+  characterAttackSubjectForTest,
+  goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   requireHole,
@@ -150,7 +152,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         },
       ],
     };
-    const subject = fighterAttackSubject();
+    const subject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, subject);
     const attackRoll = attackRollHoleAfterTarget(
       state,
@@ -169,7 +171,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const state = fighterVsGoblinBattle({
       characterUnitRefs: grapplerUnitRefs(),
     });
-    const subject = fighterAttackSubject("Unarmed Strike");
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(state, subject);
     const attackRoll = attackRollHoleAfterTarget(
       state,
@@ -286,16 +288,15 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const fighterRoundTwo = requireResolved(
       endTurn({ state: goblinTurn, actorId: goblinId }),
     ).state;
-    const beforePunch =
-      fighterRoundTwo.combatants
-        .get(fighterId)
-        ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+    const beforePunch = fighterRoundTwo.combatants
+      .get(fighterId)
+      ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
     if (beforePunch?.kind !== "roundExtended") {
       throw new Error("Expected Rage to be active before Punch and Grab.");
     }
     expect(Number(beforePunch.expiresAt.round)).toBe(2);
 
-    const subject = fighterAttackSubject("Unarmed Strike");
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(fighterRoundTwo, subject);
     const attackRoll = attackRollHoleAfterTarget(
       fighterRoundTwo,
@@ -339,10 +340,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     );
 
-    const afterPunch =
-      result.state.combatants
-        .get(fighterId)
-        ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+    const afterPunch = result.state.combatants
+      .get(fighterId)
+      ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
     if (afterPunch?.kind !== "roundExtended") {
       throw new Error("Expected Rage to remain active after Punch and Grab.");
     }
@@ -542,9 +542,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const secondBlockerPositionId = battleTablePositionId(
       "large-blocker-back-space",
     );
-    const destinationPositionId = battleTablePositionId(
-      "beyond-large-blocker",
-    );
+    const destinationPositionId = battleTablePositionId("beyond-large-blocker");
     const state = startBattleRight({
       battleId: battleId("battle-halfling-nimbleness-route-derived-movement"),
       combatants: [
@@ -1159,13 +1157,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-      statBlockSection: "actions",
-    };
+    const attackSubject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({
         state: goblinTurn,
@@ -1290,12 +1282,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         actorId: goblinId,
       }),
     ).state;
-    const attackSubject: BattleSubject = {
-      tag: "action",
-      actorId: wizardId,
-      action: "attack",
-      attackName: "Longsword",
-    };
+    const attackSubject: BattleSubject = characterAttackSubjectForTest(
+      wizardTurn,
+      wizardId,
+      "Longsword",
+    );
     const attackTarget = requireHole(
       resolveBattleSubject({
         state: wizardTurn,
@@ -2177,7 +2168,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       command: "move",
     };
     const moveHole = requireHole(
-      resolveBattleSubject({ state: enlarged, subject: moveSubject, fills: [] }),
+      resolveBattleSubject({
+        state: enlarged,
+        subject: moveSubject,
+        fills: [],
+      }),
       "movement",
     );
     const grappleDrag = {
@@ -2245,13 +2240,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: grappled, actorId: fighterId }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-      statBlockSection: "actions",
-    };
+    const subject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
       "targetChoice",
@@ -2352,13 +2341,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: blindedDodger, actorId: fighterId }),
     ).state;
-    const subject: BattleSubject = {
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      attackName: "Scimitar",
-      statBlockSection: "actions",
-    };
+    const subject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
       "targetChoice",
@@ -2570,7 +2553,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     const damageHoleResult = resolveBattleSubject({
       state: hiddenState,
-      subject: fighterAttackSubject(),
+      subject: fighterAttackSubject(state),
       fills: [
         targetFill(target, goblinId),
         attackRollFill(roll, {
@@ -2591,7 +2574,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const missed = requireResolved(
       resolveBattleSubject({
         state: hiddenState,
-        subject: fighterAttackSubject(),
+        subject: fighterAttackSubject(state),
         fills: [
           targetFill(target, goblinId),
           attackRollFill(roll, {
@@ -2820,7 +2803,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "unsupportedActOption",
+      reason: "staleSubject",
     });
     const noHidePrerequisiteState = startBattleRight({
       battleId: battleId("battle-rogue-cunning-action-no-hide-prerequisite"),

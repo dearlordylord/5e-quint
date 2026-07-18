@@ -124,10 +124,16 @@ type DruidWildShapeFormLifecycleRuntimeState = {
 };
 type AvailableBattleAct = ReturnType<typeof discoverBattleActs>[number];
 type DruidWildShapeAvailableAct = Omit<AvailableBattleAct, "subject"> & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>;
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "druidWildShape" }
+  >;
 };
 type ActionSpellAvailableAct = Omit<AvailableBattleAct, "subject"> & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "actionSpell" }
+  >;
 };
 
 const druidId = combatantId("wild-shape-form-lifecycle-mbt-druid");

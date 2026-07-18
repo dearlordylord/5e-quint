@@ -46,7 +46,6 @@ import type {
   SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import type { StatBlockMutableResourceState } from "../battle-action-options.ts";
 import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type {
   ActiveWildShapeEquipmentDisposition,
@@ -609,7 +608,6 @@ export type BattleActiveEffect =
       readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
       readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
       readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
-      readonly resources: StatBlockMutableResourceState;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }

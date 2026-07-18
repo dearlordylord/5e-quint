@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-REPLAY: L19E-06-L5-RESTORATION-DEATH raise_dead doCastRaiseDead
 // UNIT-IDENTITY-REPLAY: L19E-06-L5-RESTORATION-DEATH reincarnate doCastReincarnate
 import { describe, expect, it, test } from "vitest";
+import type { CharacterSheet } from "./index.ts";
 
 import {
   Either,
@@ -15,7 +16,7 @@ import {
   castReincarnateOnSheet,
   characterSheetId,
   characterSheetSpellSlots,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   druidWildShapeFixtureKnownFormStatBlockIds,
   greaterRestorationSheetSessionTestName,
   raiseDeadSheetSessionTestName,
@@ -160,7 +161,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       spellId: "greater_restoration",
     });
     const target = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:greater-restoration-target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
         currentHp: Hp(7),
@@ -202,7 +203,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       spellId: "raise_dead",
     });
     const target = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:raise-dead-target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
         currentHp: Hp(0),
@@ -468,8 +469,8 @@ function projectReincarnate(): RestorationDeathSelectedIdentityProjection {
 }
 
 function projectRestorationDeathResult(input: {
-  readonly caster: ReturnType<typeof restorationCasterSheet>;
-  readonly target: ReturnType<typeof greaterRestorationTargetSheet>;
+  readonly caster: CharacterSheet;
+  readonly target: CharacterSheet;
   readonly spellId: string;
   readonly deferredMechanics: readonly string[];
 }): RestorationDeathSelectedIdentityProjection {
@@ -490,7 +491,7 @@ function projectRestorationDeathResult(input: {
 
 function greaterRestorationTargetSheet() {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:greater-restoration-target"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
       currentHp: Hp(7),
@@ -503,7 +504,7 @@ function greaterRestorationTargetSheet() {
 
 function raiseDeadTargetSheet() {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:raise-dead-target"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
       currentHp: Hp(0),
@@ -520,7 +521,7 @@ function raiseDeadTargetSheet() {
 
 function reincarnateTargetSheet() {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:reincarnate-target"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
       currentHp: Hp(0),
@@ -544,7 +545,7 @@ function restorationCasterSheet(input: {
   const spellcastingFocus =
     input.spellId === "reincarnate" ? "druidic_focus" : "holy_symbol";
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId(input.characterId),
       build: {
         ...armorClassBuild({

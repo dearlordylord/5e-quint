@@ -4,7 +4,130 @@ Wayfinder decision for [Define the Oracle Case and Trace
 algebra](https://github.com/dearlordylord/5e-quint/issues/23), investigated at
 source commit `3441f91b623e6ec661e9958e15d6c296fa20d578`.
 
-## Decision
+## Status amendment (2026-07-16)
+
+The original Battle observation and Case decomposition below is superseded. It
+incorrectly promoted caller/table choices into durable Oracle roles, fixed one
+Character-Sheet-backed combatant and one Stat-Block-backed opponent as a
+production observation invariant, and treated an Oracle-only observation as
+the remedy for presentation facts already present in the production snapshot.
+The entire file is now historical decision evidence, not an implementation
+contract. The corrected canonical delivery contract is the native child graph
+under [GH-92](https://github.com/dearlordylord/5e-quint/issues/92), with composed
+acceptance in GH-93 through GH-95. `UBIQUITOUS_LANGUAGE.md` owns the domain
+terms, and `docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md`
+owns the stable committed-state/continuation decision. The summaries below
+explain the supersession only; they do not create parallel requirements.
+
+### Historical replacement-constraint summary
+
+- A Battle roster is an arbitrary production-reachable collection of
+  combatants. An individual Oracle fixture may deliberately use a narrow
+  roster, but the production snapshot and fact owners impose no one-versus-one
+  cardinality.
+- Character Sheet and Stat Block are mechanically meaningful combatant origins.
+  Character, opponent, ally, enemy, party, opposition, Encounter Side, and
+  companion are not global combatant roles. A Companion is an owner-to-creature
+  relationship; it does not replace either combatant origin.
+- Ally/enemy or similar relationship judgments are contextual Table Decisions
+  unless RAW fixes them. A reducer consumes the rule-local decision or witness
+  needed by the current procedure; it does not infer or retain an
+  encounter-wide partition.
+- `BattleSnapshot` is the production-owned public read model for committed
+  mechanical state. It is purified in place; there is no parallel
+  `BattleObservation` or Oracle-local roster projection.
+- Available Acts, Runtime Holes, and interrupt choices form a production-owned
+  continuation frontier separate from `BattleSnapshot`. A caller-facing result
+  may pair the committed snapshot with its current frontier, but that envelope
+  is not another store of Battle state.
+- An Act commits atomically when it resolves. While an Act is awaiting fills,
+  the visible snapshot remains the last committed snapshot. Rejected selection
+  or fill input leaves both that snapshot and its frontier unchanged and may be
+  retried. An Oracle Case may stop recording after rejection without making the
+  Battle terminal.
+- Combatant identity remains `CombatantId` and continues to scope each
+  combatant's resources. Existing Stat Block part identity is preserved in
+  meaning, but production execution and resource linkage must not dispatch on
+  an authored part name or array position. Any corrected presentation-free
+  execution reference is owned by production admission/runtime and merely
+  reused by the Oracle.
+- Presentation is joined at UI, MCP, or other presentation boundaries. Labels,
+  display names, authored record identity, and session/composition identity do
+  not become duplicate reducer or snapshot state. Authored identity may remain
+  at the repository's explicitly allowed selection and catalog boundaries.
+- Oracle schemas and facts are constructed exhaustively from their production
+  owners. Generic schema-AST rewriting, field-name omission registries, casts,
+  Oracle role maps, and parallel hand-maintained Battle schemas are prohibited.
+- Optional values and empty collections retain one domain spelling. Issue
+  algebras are flat, precisely owner-named, accumulated where failures are
+  independent, and do not store a derived message beside structured issues.
+
+### Historical replacement-decomposition summary
+
+The former GH-86/GH-92 decomposition is retired rather than patched. Preserve
+its issues, attempts, and review artifacts as historical evidence, but do not
+resume dependent implementation from their role/cardinality premises. Replace
+it with these independently reviewable increments:
+
+1. **[Correct contextual Battle relationships](https://github.com/dearlordylord/5e-quint/issues/156).** Remove Encounter Side from
+   production Battle initialization, state, snapshots, reducer decisions, and
+   active QNT parity owners. Replace every equality-based ally/enemy decision
+   with the narrow rule-local Table Decision or RAW-fixed relationship its
+   procedure actually requires. Update focused QNT and MBT bridges where
+   behavior changes. This increment blocks any Oracle Battle contract.
+2. **[Correct production execution references](https://github.com/dearlordylord/5e-quint/issues/157).** Retain combatant-owned
+   procedure/resource identity while replacing authored-name and positional
+   dispatch in `BattleSubject`, Stat Block part keys, and coupled resource
+   lookup with production-owned typed execution references. Preserve explicit
+   shared resource ownership where RAW makes procedures share a pool. This
+   increment blocks presentation-free Battle facts but is independent of the
+   relationship correction.
+3. **[Purify the production Battle read/continuation boundary](https://github.com/dearlordylord/5e-quint/issues/161).** Make the
+   existing `BattleSnapshot` committed mechanical state only; remove
+   presentation and setup classifications, and expose exactly one separate
+   production continuation frontier for available Acts, rule-input Holes, or
+   interrupt decisions. Encode atomic commit and unchanged retry semantics in
+   the production result types. Depend on increments 1 and 2.
+4. **Complete non-Battle fact owners.** In owner-sized slices, finish exact
+   [Character Creation projection](https://github.com/dearlordylord/5e-quint/issues/158),
+   [fresh Character Sheet construction and its narrowed freshness proof](https://github.com/dearlordylord/5e-quint/issues/159),
+   and [Character-Sheet-to-Battle entry issues](https://github.com/dearlordylord/5e-quint/issues/160).
+   Accumulate independent issues without nested issue collections or stored
+   summary messages. These slices do not invent Battle roster roles.
+5. **[Compose the Oracle Case and Trace](https://github.com/dearlordylord/5e-quint/issues/93), then [publish its schema](https://github.com/dearlordylord/5e-quint/issues/94).** Only after increments
+   1-4 converge, specify Case cardinality as a workflow/fixture choice rather
+   than a production snapshot invariant. Derive one strict Case/Trace algebra,
+   one projection, and one generated schema from the corrected owners. Trace
+   frames pair committed snapshots with separate frontiers and reuse the
+   production execution references.
+6. **[Publish fixtures and transports](https://github.com/dearlordylord/5e-quint/issues/95).** Add portable fixtures and CLI/HTTP
+   consumption only after the composed algebra is stable. These consumers may
+   serialize or present the owner contract but may not redeclare it.
+
+Increments 1, 2, and the owner-sized portions of 4 may proceed independently.
+Increment 3 depends on 1 and 2; increment 5 depends on 3 and all required parts
+of 4; increment 6 depends on 5. This graph keeps the architecture corrections
+out of the Oracle composition task while still making them explicit blockers.
+
+### Historical verification recommendation
+
+- Before changing a modeled rule, read and cite the relevant passage in the
+  local `.references/srd-5.2.1/` corpus and check `UBIQUITOUS_LANGUAGE.md`.
+  Confirm afterward that every modeled rule still traces to that RAW text and
+  that Table Decisions have not become reducer-owned policy.
+- Run the focused typecheck and tests for each changed owner. Run affected QNT
+  proofs and the focused battle MBT only when the increment changes those
+  parity owners, following the repository's resource and seed protocols.
+- Check authored-identity, redundant-state, invalid-state, and connascence
+  boundaries explicitly, including every name/value/position fact that must
+  change together.
+- After implementation, run RAW/ubiquitous-language, architecture/domain and
+  connascence, and strict code/spec review passes. Fix every reasonable finding,
+  record concrete reasons for any rejection, and repeat the complete reviewer
+  loop until it converges with no reasonable findings. Non-trivial increments
+  require at least two rounds.
+
+## Superseded decision (historical)
 
 The Opaque Oracle contract is one strict, language-neutral algebra over the
 production Character Creation-to-Battle continuation protocol. An **Oracle

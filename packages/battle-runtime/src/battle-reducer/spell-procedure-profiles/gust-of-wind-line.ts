@@ -31,7 +31,7 @@ import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -259,7 +259,7 @@ function discoverGustOfWindLineCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: GustOfWindLineSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
   const baseCastAct = gustOfWindLineCastAct(
@@ -287,9 +287,9 @@ function gustOfWindLineMetamagicCastActs(input: {
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: GustOfWindLineSpellInvocation;
-  readonly baseCastAct: AvailableBattleAct;
+  readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const actor = input.actor;
   if (actor === undefined) {
     return [];
@@ -330,7 +330,7 @@ function gustOfWindLineCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",

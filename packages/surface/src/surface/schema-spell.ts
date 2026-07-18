@@ -4949,6 +4949,11 @@ export const CreatureActionsSchema = Schema.Struct({
   specials: optionalExact(nonEmpty(CreatureNamedSpecialActionSchema)),
 });
 
+export const CreatureRechargeMinimumRollSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(2, 6),
+);
+
 export const CreatureLimitedUseSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("daily"),
@@ -4956,7 +4961,7 @@ export const CreatureLimitedUseSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("recharge"),
-    minimumRoll: Schema.Number.pipe(Schema.int(), Schema.between(2, 6)),
+    minimumRoll: CreatureRechargeMinimumRollSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("recharge_after_rest") }),
 );

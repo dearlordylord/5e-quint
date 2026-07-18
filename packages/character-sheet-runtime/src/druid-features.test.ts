@@ -14,7 +14,7 @@ import {
   characterSheetResources,
   completeLongRest,
   completeShortRest,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   druidCircleLandBuild,
   druidCircleLandSpellAccessBookOfShadowsDuplicateTestName,
   druidCircleLandSpellAccessProjectionTestName,
@@ -33,7 +33,7 @@ import {
 describe("Character Sheet runtime / druid features", () => {
   test(druidCircleLandSpellAccessProjectionTestName, () => {
     const sheet = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:druid-land-temperate"),
         build: druidCircleLandBuild({ druidLevel: 5 }),
         currentHp: Hp(24),
@@ -87,7 +87,7 @@ describe("Character Sheet runtime / druid features", () => {
   });
 
   test(druidCircleLandSpellAccessSelectedLandGateTestName, () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-land-missing"),
       build: druidCircleLandBuild({ druidLevel: 3 }),
       currentHp: Hp(18),
@@ -106,7 +106,7 @@ describe("Character Sheet runtime / druid features", () => {
   });
 
   test(druidCircleLandSpellcastingSourceGateTestName, () => {
-    const sheet = createFreshCharacterSheet({
+    const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:druid-land-no-spellcasting"),
       build: {
         ...armorClassBuild({
@@ -213,7 +213,7 @@ describe("Character Sheet runtime / druid features", () => {
     );
 
     const spent = requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:druid-wild-shape-rest"),
         build: druidBuild,
         currentHp: Hp(15),
@@ -233,7 +233,7 @@ describe("Character Sheet runtime / druid features", () => {
 
     expect(
       Either.isLeft(
-        createFreshCharacterSheet({
+        rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             "character:druid-wild-shape-missing-forms",
           ),

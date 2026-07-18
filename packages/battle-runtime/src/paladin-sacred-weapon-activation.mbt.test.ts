@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
 import { describe, expect, test } from "vitest";
+import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
@@ -155,7 +156,7 @@ describe("Sacred Weapon activation", () => {
       state,
     );
 
-    const attackNames = discoverBattleActs(activated)
+    const attackSummaries = discoverBattleActs(activated)
       .filter(
         (
           act,
@@ -166,9 +167,12 @@ describe("Sacred Weapon activation", () => {
           >;
         } => isPaladinAttackAct(act),
       )
-      .map((act) => act.subject.attackName);
-    expect(attackNames).toEqual(
-      expect.arrayContaining(["Longsword (slashing)", "Longsword (radiant)"]),
+      .map((act) => act.summary);
+    expect(attackSummaries).toEqual(
+      expect.arrayContaining([
+        "Take the Attack action with Longsword (slashing).",
+        "Take the Attack action with Longsword (radiant).",
+      ]),
     );
 
     const attackRoll = sacredWeaponAttackRoll(activated, "Longsword (radiant)");
@@ -281,7 +285,8 @@ defineSelectedIdentityReplayAndQntReplay({
       unitId: paladinSacredWeaponUnitId,
       procedures: [
         {
-          actionName: "doActivateSacredWeapon",          discover: () => {
+          actionName: "doActivateSacredWeapon",
+          discover: () => {
             const state = sacredWeaponBattle({});
             return sacredWeaponProjection(
               resolveSacredWeapon(state, requireSacredWeaponAct(state)),
@@ -290,21 +295,24 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doRejectSacredWeaponNoResource",          discover: () =>
+          actionName: "doRejectSacredWeaponNoResource",
+          discover: () =>
             sacredWeaponProjection(
               sacredWeaponBattle({ channelDivinityUsesRemaining: 0 }),
               "noResource",
             ),
         },
         {
-          actionName: "doRejectSacredWeaponRangedWeapon",          discover: () =>
+          actionName: "doRejectSacredWeaponRangedWeapon",
+          discover: () =>
             sacredWeaponProjection(
               sacredWeaponBattle({ weaponUnitId: "weapon_shortbow" }),
               "rangedWeapon",
             ),
         },
         {
-          actionName: "doRecastSacredWeapon",          discover: () => {
+          actionName: "doRecastSacredWeapon",
+          discover: () => {
             const state = sacredWeaponBattle({});
             const first = resolveSacredWeapon(
               state,
@@ -324,7 +332,8 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doProjectSacredWeaponAttackDamageAndLight",          discover: () => {
+          actionName: "doProjectSacredWeaponAttackDamageAndLight",
+          discover: () => {
             const state = sacredWeaponBattle({});
             return sacredWeaponProjection(
               resolveSacredWeapon(state, requireSacredWeaponAct(state)),
@@ -333,7 +342,8 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doDismissSacredWeapon",          discover: () => {
+          actionName: "doDismissSacredWeapon",
+          discover: () => {
             const state = sacredWeaponBattle({});
             const activated = resolveSacredWeapon(
               state,
@@ -355,7 +365,8 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doEndSacredWeaponWhenNotCarryingWeapon",          discover: () => {
+          actionName: "doEndSacredWeaponWhenNotCarryingWeapon",
+          discover: () => {
             const state = sacredWeaponBattle({});
             const activated = resolveSacredWeapon(
               state,
@@ -500,12 +511,7 @@ function sacredWeaponAttackRoll(
   state: BattleState,
   attackName: "Longsword (slashing)" | "Longsword (radiant)",
 ): Extract<BattleHole, { readonly kind: "attackRoll" }> {
-  const subject = {
-    tag: "action" as const,
-    actorId: paladinId,
-    action: "attack" as const,
-    attackName,
-  };
+  const subject = characterAttackSubjectForTest(state, paladinId, attackName);
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",

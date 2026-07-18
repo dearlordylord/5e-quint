@@ -33,9 +33,15 @@ import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
+  type BattleInterruptAttackExecutionSelection,
   type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  attackExecutionSelectionIdentitiesEqual,
+  boundAttackExecutionSelectionMatchesOption,
+  type BoundSupportedAttackActionOption,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import {
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -48,6 +54,7 @@ import {
   zeroHpLifecycleIsTerminal,
   BATTLE_SPECIAL_SPEED_KINDS,
   type BattleAttackHitTriggerKind,
+  type BattleAttackExecutionSelection,
   type BattleAttackKindForRedirect,
   type BattleAttackRangeBand,
   type BattleCreatureState,
@@ -55,6 +62,7 @@ import {
   type BattleHand,
   type BattleMovementHole,
   type BattleOpportunityAttackThreat,
+  type BattleOpportunityAttackSelection,
   type BattlePassiveSpeedProfile,
   type BattleResolvedMovement,
   type BattleSpecialSpeedKind,
@@ -62,7 +70,6 @@ import {
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import {
-  attackActionOptionName,
   attackTargetConstraint,
 } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
@@ -243,8 +250,7 @@ export function battleSpeedChanges(
   const activeEffectDelta = combatant.activeEffects
     .filter(
       (effect) =>
-        effect.kind === "speedDelta" ||
-        effect.kind === "unitFeatureSpeedDelta",
+        effect.kind === "speedDelta" || effect.kind === "unitFeatureSpeedDelta",
     )
     .reduce((total, effect) => total + effect.deltaFeet, 0);
   return [
@@ -525,7 +531,7 @@ export function opportunityAttackThreatsForMovement(
         state,
         threat.reactorId,
         movement.moverId,
-        threat.attackName,
+        threat,
       ) !== undefined &&
       combatantCanSee(state, threat.reactorId, movement.moverId),
   );
@@ -535,8 +541,8 @@ export function opportunityAttackOptionForReactor(
   state: BattleState,
   reactorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
-): SupportedAttackActionOption | undefined {
+  selection: BattleOpportunityAttackSelection,
+): BoundSupportedAttackActionOption | undefined {
   if (isPresentFindFamiliarCombatant(state, reactorId)) {
     return undefined;
   }
@@ -552,24 +558,60 @@ export function opportunityAttackOptionForReactor(
   return attackActionOptionsForActor(state, reactorId).find((attack) => {
     const constraint = attackTargetConstraint(attack);
     return (
-      attackActionOptionName(attack) === attackName &&
+      interruptAttackExecutionSelectionMatchesOption(selection, attack) &&
       constraint.kind === "meleeReach" &&
       state.combatants.has(targetId)
     );
   });
 }
 
+export function attackExecutionSelectionMatchesOption(
+  selection: BattleAttackExecutionSelection,
+  attack: SupportedAttackActionOption,
+): boolean {
+  return (
+    "procedureRef" in attack &&
+    selection.procedureRef !== undefined &&
+    selection.procedureRef === attack.procedureRef
+  );
+}
+
+export function interruptAttackExecutionSelectionMatchesOption(
+  selection: BattleInterruptAttackExecutionSelection,
+  attack: BoundSupportedAttackActionOption,
+): boolean {
+  return boundAttackExecutionSelectionMatchesOption(selection, attack);
+}
+
+export function attackExecutionSelectionsEqual(
+  left: BattleAttackExecutionSelection,
+  right: BattleAttackExecutionSelection,
+): boolean {
+  return (
+    left.procedureRef !== undefined &&
+    right.procedureRef !== undefined &&
+    attackExecutionSelectionIdentitiesEqual(left, right)
+  );
+}
+
+export function interruptAttackExecutionSelectionsEqual(
+  left: BattleInterruptAttackExecutionSelection,
+  right: BattleInterruptAttackExecutionSelection,
+): boolean {
+  return attackExecutionSelectionIdentitiesEqual(left, right);
+}
+
 export function meleeWeaponOrUnarmedStrikeOptionForReactor(
   state: BattleState,
   reactorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
-): SupportedAttackActionOption | undefined {
+  selection: BattleInterruptAttackExecutionSelection,
+): BoundSupportedAttackActionOption | undefined {
   return attackActionOptionsForActor(state, reactorId).find((attack) => {
     const constraint = attackTargetConstraint(attack);
     return (
       (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
-      attackActionOptionName(attack) === attackName &&
+      interruptAttackExecutionSelectionMatchesOption(selection, attack) &&
       constraint.kind === "meleeReach" &&
       state.combatants.has(targetId)
     );
@@ -583,7 +625,6 @@ export function attackTargetIsLegal(
   attack: SupportedAttackActionOption,
   facts: readonly BattleTargetSpatialFact[],
 ): boolean {
-  const attackName = attackActionOptionName(attack);
   const constraint = attackTargetConstraint(attack);
   return (
     actorId !== targetId &&
@@ -594,7 +635,7 @@ export function attackTargetIsLegal(
             fact.kind === "attackTargetInMeleeReach" &&
             fact.actorId === actorId &&
             fact.targetId === targetId &&
-            fact.attackName === attackName,
+            attackExecutionSelectionMatchesOption(fact, attack),
         )
       : attackTargetRangeBand(facts, actorId, targetId, attack) !== null)
   );
@@ -631,13 +672,12 @@ export function attackTargetRangeBand(
   if (attackTargetConstraint(attack).kind !== "rangedRange") {
     return null;
   }
-  const attackName = attackActionOptionName(attack);
   for (const fact of facts) {
     if (
       fact.kind === "attackTargetInRangedRange" &&
       fact.actorId === actorId &&
       fact.targetId === targetId &&
-      fact.attackName === attackName
+      attackExecutionSelectionMatchesOption(fact, attack)
     ) {
       return fact.rangeBand;
     }

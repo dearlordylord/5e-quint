@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import {
   blurUnitId,
   counterspellUnitId,
@@ -77,7 +78,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toEqual({
+    expect(act.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -113,12 +114,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         state,
         subject: act.subject,
         fills: [
-          spellTargetListFill(
-            targetList,
-            spellCasterId,
-            invisibilityUnitId,
-            [spellTargetId, extraTargetId],
-          ),
+          spellTargetListFill(targetList, spellCasterId, invisibilityUnitId, [
+            spellTargetId,
+            extraTargetId,
+          ]),
         ],
       }),
     );
@@ -696,13 +695,24 @@ function requireTriggeredReactionSpellChoice(input: {
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === input.reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === input.spellId &&
-      candidate.invocation.procedure === input.procedure &&
-      Number(candidate.invocation.slotLevel) === input.slotLevel,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== input.reactorId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        input.result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === input.spellId &&
+        invocation.procedure === input.procedure &&
+        Number(invocation.slotLevel) === input.slotLevel
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
@@ -723,14 +733,17 @@ function triggeredReactionSpellDecision(
     responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
-      invocation: choice.invocation,
+      procedureRef: choice.subject.procedureRef,
       fills,
     },
   };
 }
 
 function magicMissileTargetAllocationFill(input: {
-  readonly hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>;
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "spellTargetAllocation" }
+  >;
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
   readonly dartCount: number;

@@ -135,7 +135,6 @@ import {
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   resolveBattlePossessionAttempt,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   resolveFallDamageLanding,
   resolveFeatherFallLanding,
   resolveFlySpeedGrantEndFallCleanup,
@@ -171,6 +170,7 @@ import {
   type FlySpeedGrantEndFallWitnessResult,
   type SupportedSpellInvocation,
 } from "./index.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import {
   ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
   ALTERNATE_ACTION_COST_ACTIONS,

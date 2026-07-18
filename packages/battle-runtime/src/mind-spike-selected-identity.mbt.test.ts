@@ -222,7 +222,7 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
   const spell = spellRecord(mindSpikeUnitId);
   const state = mindSpikeBattle();
   const act = spellAct({ state, spellId: mindSpikeUnitId, slotLevel: 2 });
-  expect(act.subject).toEqual({
+  expect(act.subject).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(mindSpikeUnitId, 2, "saveGatedDamage"),

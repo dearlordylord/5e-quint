@@ -18,7 +18,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   isTargetListSpellInvocation,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -97,7 +97,7 @@ function discoverSaveGatedConditionCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SaveGatedConditionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   return invocation.targeting.kind === "singleCombatant" ||
     invocation.targeting.kind === "targetList"
@@ -115,7 +115,7 @@ function discoverTargetedSaveGatedConditionCastActs(
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
   invocation: SaveGatedConditionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole =
     invocation.targeting.kind === "singleCombatant"
       ? spellTargetHole(state, actorId, invocation)
@@ -155,7 +155,7 @@ function discoverAreaSaveGatedConditionCastActs(
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
   invocation: SaveGatedConditionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
     actorId,
@@ -199,12 +199,12 @@ function saveGatedConditionMetamagicCastActs(input: {
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: SaveGatedConditionSpellInvocation;
-  readonly baseCastAct: AvailableBattleAct;
+  readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly metamagicInitialHoles: (
     saveMetamagicSelectionHoles: readonly BattleHole[],
   ) => readonly BattleHole[];
   readonly conditionChoiceHoles: readonly BattleHole[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const actor = input.actor;
   if (actor === undefined) {
     return [];
@@ -245,7 +245,7 @@ function saveGatedConditionCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",

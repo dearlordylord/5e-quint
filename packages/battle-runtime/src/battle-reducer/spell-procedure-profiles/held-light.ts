@@ -34,7 +34,7 @@ import type { CombatantId } from "../../identity.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -140,7 +140,7 @@ function discoverHeldLightCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: HeldLightInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

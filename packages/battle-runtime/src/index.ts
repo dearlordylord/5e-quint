@@ -1,15 +1,21 @@
 export {
   BattleCombatantSide,
+  BattleAttackProcedureExecutionRef,
+  BattleCharacterExecutionScopeRef,
   BattleDancingLightId,
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
+  BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   BattleReplayStackDepth,
+  BattleResourcePoolExecutionRef,
   BattleTablePositionId,
   CombatantId,
   SpellId,
   battleAreaId,
   battleCombatantSide,
+  battleCharacterExecutionScopeRef,
   battleDancingLightId,
   battleId,
   battleLineDirectionId,
@@ -26,6 +32,26 @@ export {
   type CharacterId,
   type InitiativeScore,
 } from "./identity.ts";
+export type {
+  CharacterExecutionState,
+  CharacterProcedureBinding,
+} from "./character-execution.ts";
+export { characterProcedureBinding } from "./character-execution.ts";
+export type {
+  StatBlockExecutionAdmission,
+  StatBlockExecutionRestoreIssue,
+  StatBlockExecutionRestoration,
+  StatBlockExecutionSnapshot,
+  StatBlockExecutionState,
+  StatBlockProcedureBinding,
+  StatBlockProcedureBindingSnapshot,
+  StatBlockResourcePoolState,
+} from "./stat-block-execution.ts";
+export {
+  restoreStatBlockExecutionAdmission,
+  restoreStatBlockExecutionAdmissions,
+  statBlockExecutionSnapshot,
+} from "./stat-block-execution.ts";
 export type {
   CharacterZeroHpLifecycleInit,
   ZeroHpLifecycle,
@@ -150,6 +176,7 @@ export {
   type FindFamiliarWithin100FeetFact,
 } from "./find-familiar-telepathy.ts";
 export { type PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
+export { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 export {
   combatantPerceptionCommunicationProjection,
   type BattleCharacterSpeechProjection,
@@ -170,6 +197,7 @@ export {
   BATTLE_SUBJECT_ACTIONS,
   BATTLE_SUBJECT_BONUS_ACTIONS,
   CANTRIP_SPELL_PROCEDURES,
+  AdmittedBattleSubjectSchema,
   BattleSubjectSchema,
   SPELL_SLOT_PROCEDURES,
   SpellInvocationRefSchema,
@@ -178,10 +206,13 @@ export {
   armorOfShadowsSpellInvocationRef,
   cantripSpellInvocationRef,
   classFeatureFreeCastSpellInvocationRef,
+  isCharacterProcedureBattleSubject,
+  sameAdmittedBattleSubject,
   sameBattleSubject,
   spellSlotInvocationRef,
   type BattleRuntimeCommand,
   type BattleMovementSpeedKind,
+  type AdmittedBattleSubject,
   type BattleSubject,
   type BattleSubjectAction,
   type BattleSubjectBonusAction,
@@ -199,13 +230,6 @@ export type {
   CharacterWeaponAttackActionOption,
   CharacterWeaponAttackDamageTypeChoices,
   StatBlockAttackActionOption,
-  StatBlockDailyUseState,
-  StatBlockLegendaryActionResourceSnapshot,
-  StatBlockLimitedUseSnapshot,
-  StatBlockMutableResourceState,
-  StatBlockPartKey,
-  StatBlockPartSection,
-  StatBlockResourceSnapshot,
   SupportedAttackActionOption,
   SupportedCreatureNamedAttackRoll,
   UnarmedStrikeDamageEffect,
@@ -246,6 +270,7 @@ export {
   BattleObjectIgnitionOutcomeSchema,
   BattleShovePushOutcomeSchema,
   BattleSnapshotSchema,
+  StatBlockExecutionSnapshotSchema,
   addBattleCombatant,
   applyInitiativeSwap,
   finishInitialInitiativeSetup,
@@ -383,6 +408,8 @@ export {
   type BattleInterruptProcedureSelection,
   type BattleReadiedMovement,
   type BattleReadiedSpell,
+  type AdmittedBattleResolutionInput,
+  type BattleResolutionCandidateInput,
   type BattleResolutionInput,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
@@ -410,6 +437,7 @@ export {
   type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
+  type BattleAttackExecutionSelection,
   type BattleThaumaturgyActiveOneMinuteEffectCountHole,
   type BattleTrackedOngoingSpellLightEmitter,
   type BattleTurnResources,

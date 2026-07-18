@@ -1,10 +1,7 @@
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
-import {
-  DieRollResult,
-  Hp,
-} from "@dnd/shared/types";
+import { DieRollResult, Hp } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -27,7 +24,6 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -36,7 +32,9 @@ const statBlockCatalogResult = buildStatBlockCatalog({
 });
 
 if (statBlockCatalogResult.tag !== "ok") {
-  throw new Error("Battle trace contract tests require the SRD Stat Block catalog.");
+  throw new Error(
+    "Battle trace contract tests require the SRD Stat Block catalog.",
+  );
 }
 
 const statBlockCatalog = statBlockCatalogResult.catalog;
@@ -143,22 +141,17 @@ function startBattleRight(): BattleState {
 }
 
 function requireAttackAct(state: BattleState): AvailableBattleAct {
-  const act = discoverBattleActs(state).find((availableAct) =>
-    isScimitarAttackSubject(availableAct.subject),
+  const act = discoverBattleActs(state).find(
+    (availableAct) =>
+      availableAct.subject.tag === "action" &&
+      availableAct.subject.action === "attack" &&
+      availableAct.subject.actorId === attackerId &&
+      availableAct.summary.includes("Scimitar"),
   );
   if (act === undefined) {
     throw new Error("Expected trace fixture to expose Scimitar attack.");
   }
   return act;
-}
-
-function isScimitarAttackSubject(subject: BattleSubject): boolean {
-  return (
-    subject.tag === "action" &&
-    subject.action === "attack" &&
-    subject.actorId === attackerId &&
-    subject.attackName === "Scimitar"
-  );
 }
 
 function requireResultHole(
@@ -186,6 +179,9 @@ function attackTargetFill(hole: BattleHole): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
   }
+  if (hole.attack === undefined) {
+    throw new Error("Expected attack target context.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -195,7 +191,7 @@ function attackTargetFill(hole: BattleHole): BattleFill {
         kind: "attackTargetInMeleeReach",
         actorId: attackerId,
         targetId,
-        attackName: "Scimitar",
+        ...hole.attack.selection,
       },
     ],
   };

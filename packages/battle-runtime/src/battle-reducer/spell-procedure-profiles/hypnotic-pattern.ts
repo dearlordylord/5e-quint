@@ -20,8 +20,9 @@ import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 import type {
   ActionSpellBattleResolutionInput,
-  AvailableBattleAct,
+  BattleActDiscoveryCandidate,
   BattleHole,
+  BattleInterruptedProcedure,
   BattleResolutionResult,
   BattleSpellSavingThrowOutcomeValue,
   BattleState,
@@ -144,9 +145,7 @@ export function resolveStoredGlyphAreaControlSpellRelease(input: {
   readonly actorId: CombatantId;
   readonly invocation: StoredGlyphAreaControlSpellInvocation;
   readonly fillSet: Extract<
-    SpellProcedureProfileResolveInput<
-      HypnoticPatternSpellInvocation
-    >["fillSet"],
+    SpellProcedureProfileResolveInput<HypnoticPatternSpellInvocation>["fillSet"],
     { readonly tag: "ok" }
   >;
   readonly selfOriginAreaAnchorId: CombatantId;
@@ -286,7 +285,7 @@ function discoverHypnoticPatternCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: HypnoticPatternSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
     actorId,
@@ -332,7 +331,7 @@ function hypnoticPatternCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",
@@ -554,24 +553,28 @@ function resolveHypnoticPattern(
     (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
   );
   if (failedTargets.length > 0) {
+    const continuation: BattleInterruptedProcedure =
+      input.input.glyphStoredSpellReleaseReplay === undefined
+        ? {
+            kind: "replay",
+            subject:
+              input.input.reactionContinuationSubject ?? input.input.subject,
+            fills: input.input.fills,
+          }
+        : {
+            kind: "replay",
+            subject: input.input.subject,
+            fills: input.input.fills,
+            glyphStoredSpellReleaseReplay:
+              input.input.glyphStoredSpellReleaseReplay,
+          };
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
         sourceSpellId: input.invocation.spell.id,
-        continuation: {
-          kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
-          fills: input.input.fills,
-          ...(input.input.glyphStoredSpellReleaseReplay === undefined
-            ? {}
-            : {
-                glyphStoredSpellReleaseReplay:
-                  input.input.glyphStoredSpellReleaseReplay,
-              }),
-        },
+        continuation,
       },
       input.input.handledInterruptTrigger,
     );

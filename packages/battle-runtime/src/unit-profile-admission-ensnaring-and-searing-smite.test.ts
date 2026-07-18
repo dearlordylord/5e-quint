@@ -3,6 +3,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31E searing_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save
 import { describe, expect, test } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import type { BattleInterruptProcedureChoice, BattleState } from "./index.ts";
 import {
   ensnaringStrikeHelperId,
   ensnaringStrikeUnitId,
@@ -39,6 +41,21 @@ import {
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 
+function afterHitChoiceMatchesSpell(
+  state: BattleState,
+  candidate: BattleInterruptProcedureChoice,
+  spellId: string,
+): boolean {
+  if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+  return (
+    characterSpellInvocationRefForProcedureRefForTest(
+      state,
+      candidate.reactorId,
+      candidate.subject.procedureRef,
+    ).spellId === spellId
+  );
+}
+
 describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", () => {
   test("ensnaring_strike restrains after a weapon hit, damages at turn start, and can be escaped", () => {
     const spell = spellRecord(ensnaringStrikeUnitId);
@@ -49,7 +66,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -75,8 +92,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
-        candidate.kind === "castAttackHitBonusActionSpell" &&
-        candidate.invocation.spellId === ensnaringStrikeUnitId,
+        afterHitChoiceMatchesSpell(
+          awaitingReaction.state,
+          candidate,
+          ensnaringStrikeUnitId,
+        ),
     );
     if (
       choice === undefined ||
@@ -95,7 +115,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: spellTargetId, succeeded: false },
@@ -253,7 +273,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const subject = weaponAttackSubject("Longsword");
+    const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -279,8 +299,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
-        candidate.kind === "castAttackHitBonusActionSpell" &&
-        candidate.invocation.spellId === searingSmiteUnitId,
+        afterHitChoiceMatchesSpell(
+          awaitingReaction.state,
+          candidate,
+          searingSmiteUnitId,
+        ),
     );
     if (
       choice === undefined ||
@@ -288,7 +311,13 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     ) {
       throw new Error("Expected Searing Smite after-hit choice.");
     }
-    expect(choice.invocation).toEqual(
+    expect(
+      characterSpellInvocationRefForProcedureRefForTest(
+        awaitingReaction.state,
+        choice.reactorId,
+        choice.subject.procedureRef,
+      ),
+    ).toEqual(
       spellSlotInvocationRef(
         searingSmiteUnitId,
         3,
@@ -305,7 +334,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [],
           },
         },
@@ -518,7 +547,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -548,8 +577,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
-        candidate.kind === "castAttackHitBonusActionSpell" &&
-        candidate.invocation.spellId === ensnaringStrikeUnitId,
+        afterHitChoiceMatchesSpell(
+          awaitingAttackHit.state,
+          candidate,
+          ensnaringStrikeUnitId,
+        ),
     );
     if (
       choice === undefined ||
@@ -567,7 +599,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: spellTargetId, succeeded: false },
@@ -648,7 +680,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -678,8 +710,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
-        candidate.kind === "castAttackHitBonusActionSpell" &&
-        candidate.invocation.spellId === ensnaringStrikeUnitId,
+        afterHitChoiceMatchesSpell(
+          awaitingAttackHit.state,
+          candidate,
+          ensnaringStrikeUnitId,
+        ),
     );
     if (
       choice === undefined ||
@@ -697,7 +732,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: spellTargetId, succeeded: false },
@@ -809,7 +844,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject("Shortbow");
+    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -839,8 +874,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
-        candidate.kind === "castAttackHitBonusActionSpell" &&
-        candidate.invocation.spellId === ensnaringStrikeUnitId,
+        afterHitChoiceMatchesSpell(
+          awaitingAttackHit.state,
+          candidate,
+          ensnaringStrikeUnitId,
+        ),
     );
     if (
       choice === undefined ||
@@ -858,7 +896,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: spellTargetId, succeeded: false },

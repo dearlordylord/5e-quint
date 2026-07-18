@@ -13,7 +13,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -177,7 +177,7 @@ function discoverConditionRemovalProtectionCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ConditionRemovalProtectionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
     targetHole.choices.length === 0

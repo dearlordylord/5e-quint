@@ -8,6 +8,7 @@ import {
   spellSlotInvocationRef,
   startBattle,
   type AvailableBattleAct,
+  type BattleAttackExecutionSelection,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -41,7 +42,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheet,
   type CharacterSheet,
   type CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
@@ -146,7 +147,7 @@ export function characterSheet(input: {
     combatantId: input.combatantId,
     initiative: input.initiative,
     sheet: requireRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheet({
         characterId: characterSheetId(input.characterIdText),
         build: input.build,
         hitPointMaximumReduction: Hp(0),
@@ -1059,14 +1060,17 @@ export function attackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const act = discoverBattleActs(state).find(
+  const matchingActs = discoverBattleActs(state).filter(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.attackName === attackName,
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === `Take the Attack action with ${attackName}.`,
   );
+  const [act] = matchingActs;
   if (
+    matchingActs.length !== 1 ||
     act === undefined ||
     act.subject.tag !== "action" ||
     act.subject.action !== "attack"
@@ -1109,12 +1113,17 @@ export function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
-  attackName: string,
+  attack: string | BattleAttackExecutionSelection,
   extraSpatialFacts: Extract<
     BattleFill,
     { readonly kind: "targetChoice" }
   >["spatialFacts"] = [],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const selection =
+    typeof attack === "string" ? hole.attack?.selection : attack;
+  if (selection === undefined) {
+    throw new Error(`Expected ${attack} attack selection on target hole.`);
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1124,7 +1133,7 @@ export function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName,
+        ...selection,
       },
       ...extraSpatialFacts,
     ],

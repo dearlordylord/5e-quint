@@ -84,11 +84,24 @@ import {
 } from "../find-familiar-state.ts";
 
 import {
-  sameBattleSubject,
+  sameAdmittedBattleSubject,
+  type AdmittedBattleSubject,
+  type AdmittedCharacterProcedureBattleSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
   type BattleSubject,
+  isCharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
+import {
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedure,
+  characterSpellProcedureRef,
+  characterUnitProcedureId,
+} from "../character-execution.ts";
+import {
+  characterUnitProcedureQueryForSubject,
+} from "../battle-composition-admission.ts";
 
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 
@@ -117,6 +130,7 @@ import {
   combatantCanTakeReactions,
   combatantSnapshot,
   consumeLegendaryActionWindow,
+  isCharacterBattleCreatureState,
   isLegendaryAttackSubject,
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
@@ -142,6 +156,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 
 import {
+  interruptAttackExecutionSelectionsEqual,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
@@ -209,6 +224,10 @@ import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/af
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
+import {
+  isAttackHitBonusActionSpellInvocation,
+  isTriggeredReactionSpellInvocation,
+} from "./spell-interrupt-procedure-kinds.ts";
 import { battleAttackHostParticipantId } from "./attack-damage-events.ts";
 import {
   battleStateAfterWardingBondSeparation,
@@ -246,14 +265,12 @@ import {
   battleObscurementZones,
   applySpellDamage,
   featherFallLandingCleanupForCombatant,
-  sameSpellInvocationRef,
   saveGateDamageResultForOutcome,
   damageAmountByTypeAfterSaveDamageResult,
   spellDamageByTypeForTarget,
   spellDamageHole,
   spellSavingThrowOutcomeHole,
   supportedSpellInvocationRef,
-  supportedSpellInvocationMatchesRef,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 
@@ -287,14 +304,13 @@ import {
 } from "./spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
-import {
-  attackActionOptionName,
-  attackTargetConstraint,
-} from "./statblock-attacks.ts";
+import { attackTargetConstraint } from "./statblock-attacks.ts";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import type {
   BattleAfterDamageEvent,
+  AdmittedBattleResolutionInput,
   BattleAttackRollResult,
   BattleAttackDamageContinuationCunningStrikeFrame,
   BattleAttackDamageContinuationConcentrationFrame,
@@ -305,6 +321,7 @@ import type {
   BattleDroppedObjectOutcome,
   BattleFill,
   BattleCreatureState,
+  CharacterBattleCreatureState,
   BattleFeatherFallLandingResult,
   BattleFallDamageLandingResult,
   BattleRawFallDamage,
@@ -421,13 +438,180 @@ type ResolveBattleSubjectInternalOptions = {
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  const result = resolveBattleSubjectInternal(input, {});
-  const routeEvents = battleReducerRouteForResolution(input, result);
+  input = {
+    ...input,
+    state: battleStateWithCharacterSpellProcedureBindings(input.state),
+  };
+  const selected = selectCharacterProcedureForResolution(input);
+  if (selected.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The selected character procedure reference is not bound to this actor.",
+    );
+  }
+  const unresolvedResult = resolveBattleSubjectInternal(selected.input, {});
+  const result =
+    unresolvedResult.tag === "resolved"
+      ? resultWithCharacterSpellProcedureBindings(unresolvedResult)
+      : unresolvedResult;
+  const routeEvents = battleReducerRouteForResolution(selected.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 
-function validateD20TestNaturalOneRerollFills(
+function resultWithCharacterSpellProcedureBindings(
+  result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const nextState = battleStateWithCharacterSpellProcedureBindings(
+    result.state,
+  );
+  if (nextState === result.state) return result;
+  return { ...result, state: nextState, snapshot: snapshotBattle(nextState) };
+}
+
+function battleStateWithCharacterSpellProcedureBindings(
+  state: BattleState,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  let changed = false;
+  for (const [combatantId, combatant] of state.combatants) {
+    if (!isCharacterBattleCreatureState(combatant)) continue;
+    const execution = characterExecutionWithSpellInvocations(
+      combatant.origin.execution,
+      supportedSpellActs(combatant, state),
+    );
+    if (execution === combatant.origin.execution) continue;
+    changed = true;
+    combatants.set(combatantId, {
+      ...combatant,
+      origin: { ...combatant.origin, execution },
+    });
+  }
+  return changed ? { ...state, combatants } : state;
+}
+
+type SelectedCharacterProcedureInput =
+  | { readonly tag: "selected"; readonly input: AdmittedBattleResolutionInput }
+  | { readonly tag: "invalid" };
+
+function selectCharacterProcedureForResolution(
   input: BattleResolutionInput,
+): SelectedCharacterProcedureInput {
+  if (!isCharacterProcedureBattleSubject(input.subject)) {
+    return {
+      tag: "selected",
+      input: { ...input, subject: input.subject },
+    };
+  }
+  const subject = input.subject;
+  const currentActor = input.state.combatants.get(subject.actorId);
+  if (!isCharacterBattleCreatureState(currentActor)) {
+    return { tag: "invalid" };
+  }
+  let actor: CharacterBattleCreatureState = currentActor;
+  const execution = characterExecutionWithSpellInvocations(
+    actor.origin.execution,
+    supportedSpellActs(actor, input.state),
+  );
+  if (execution !== actor.origin.execution) {
+    actor = { ...actor, origin: { ...actor.origin, execution } };
+    input = {
+      ...input,
+      state: {
+        ...input.state,
+        combatants: new Map(input.state.combatants).set(
+          actor.combatantId,
+          actor,
+        ),
+      },
+    };
+  }
+  const procedureRef = subject.procedureRef;
+  if (procedureRef === undefined) {
+    return { tag: "invalid" };
+  }
+  const admittedSubject: AdmittedCharacterProcedureBattleSubject = {
+    ...subject,
+    procedureRef,
+  };
+  input = { ...input, subject: admittedSubject };
+  if (
+    admittedSubject.tag === "actionSpell" ||
+    admittedSubject.tag === "bonusActionSpell" ||
+    admittedSubject.tag === "bonusActionDashSpell" ||
+    admittedSubject.tag === "findFamiliarTouchSpell"
+  ) {
+    const invocation = characterSpellProcedure(execution, procedureRef);
+    return invocation === undefined
+      ? { tag: "invalid" }
+      : {
+          tag: "selected",
+          input: {
+            ...input,
+            subject: {
+              ...admittedSubject,
+              invocation: supportedSpellInvocationRef(invocation),
+            },
+          },
+        };
+  }
+  const unitProcedureQuery =
+    characterUnitProcedureQueryForSubject(admittedSubject);
+  if (unitProcedureQuery === undefined) {
+    return { tag: "invalid" };
+  }
+  const unitId = characterUnitProcedureId(
+    execution,
+    procedureRef,
+    unitProcedureQuery,
+  );
+  if (
+    admittedSubject.tag === "bonusActionStandardAction" &&
+    unitId === undefined
+  ) {
+    const invocation = characterSpellProcedure(execution, procedureRef);
+    return invocation?.procedure === "expeditiousRetreatDash"
+      ? {
+          tag: "selected",
+          input: {
+            ...input,
+            subject: {
+              ...admittedSubject,
+              sourceUnitId: invocation.spell.id,
+            },
+          },
+        }
+      : { tag: "invalid" };
+  }
+  if (unitId === undefined) {
+    return { tag: "invalid" };
+  }
+  if (admittedSubject.tag === "bonusActionStandardAction") {
+    return {
+      tag: "selected",
+      input: {
+        ...input,
+        subject: { ...admittedSubject, sourceUnitId: unitId },
+      },
+    };
+  }
+  if (admittedSubject.tag === "monkFocusOption") {
+    return {
+      tag: "selected",
+      input: {
+        ...input,
+        subject: { ...admittedSubject, resourceUnitId: unitId },
+      },
+    };
+  }
+  return {
+    tag: "selected",
+    input: { ...input, subject: { ...admittedSubject, unitId } },
+  };
+}
+
+function validateD20TestNaturalOneRerollFills(
+  input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): D20TestNaturalOneRerollFillValidation {
   const actor = input.state.combatants.get(battleSubjectActorId(input.subject));
@@ -596,7 +780,7 @@ type D20TestNaturalOneRerollFillValidation =
     };
 
 function resolveD20TestNaturalOneRerollDecisionHole(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: Parameters<typeof resolveBattleSubjectInternal>[1];
   readonly decision: Extract<
     D20TestNaturalOneRerollFillValidation,
@@ -644,7 +828,7 @@ type D20TestNaturalOneRerollAbilityCheckHole = Extract<
 >;
 
 function abilityCheckHoleForFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
   readonly fill: Extract<BattleFill, { readonly kind: "abilityCheck" }>;
@@ -663,7 +847,7 @@ type D20TestNaturalOneRerollSavingThrowOutcomeHole = Extract<
 >;
 
 function savingThrowOutcomeHoleForFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
   readonly fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
@@ -684,7 +868,7 @@ function savingThrowOutcomeRollModeForTarget(
 }
 
 function concentrationSavingThrowHoleForFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
   readonly fill: Extract<
@@ -700,7 +884,7 @@ function concentrationSavingThrowHoleForFill(input: {
 }
 
 function pendingHolesBeforeFill(input: {
-  readonly resolutionInput: BattleResolutionInput;
+  readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
 }): readonly BattleHole[] {
@@ -721,7 +905,7 @@ function pendingHolesBeforeFill(input: {
 }
 
 export function resolveBattleSubjectInternal(
-  input: BattleResolutionInput,
+  input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult {
   const normalizedInputState = normalizeEarlyEndedOngoingFeatures(input.state);
@@ -757,7 +941,7 @@ export function resolveBattleSubjectInternal(
     if (activeFrame !== null) {
       if (activeFrame.kind === "attackDamageContinuationConcentration") {
         if (
-          !sameBattleSubject(
+          !sameAdmittedBattleSubject(
             input.subject,
             activeFrame.continuation.participant,
           )
@@ -777,7 +961,7 @@ export function resolveBattleSubjectInternal(
       }
       if (activeFrame.kind === "attackDamageContinuationCunningStrike") {
         if (
-          !sameBattleSubject(
+          !sameAdmittedBattleSubject(
             input.subject,
             activeFrame.continuation.participant,
           )
@@ -797,7 +981,10 @@ export function resolveBattleSubjectInternal(
       }
       if (activeFrame.kind === "replayContinuation") {
         if (
-          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
+          !sameAdmittedBattleSubject(
+            input.subject,
+            activeFrame.continuation.subject,
+          )
         ) {
           return invalidResult(
             input.state,
@@ -829,7 +1016,7 @@ export function resolveBattleSubjectInternal(
       const activeInterrupt = activeFrame.frame.activeInterrupt;
       if (
         activeInterrupt !== undefined &&
-        sameBattleSubject(input.subject, activeInterrupt.subject)
+        sameAdmittedBattleSubject(input.subject, activeInterrupt.subject)
       ) {
         const interruptResult = resolveBattleSubjectInternal(input, {
           replayingInterruptedProcedure: true,
@@ -867,7 +1054,7 @@ export function resolveBattleSubjectInternal(
   const actorId = battleSubjectActorId(input.subject);
   if (
     actorId !== currentActorId(input.state) &&
-    !isLegendaryAttackSubject(input.subject) &&
+    !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
     !isInsectPlagueAppearanceSaveSubject(input.subject) &&
     !isCloudkillAppearanceSaveSubject(input.subject)
@@ -879,7 +1066,7 @@ export function resolveBattleSubjectInternal(
     );
   }
   if (
-    isLegendaryAttackSubject(input.subject) &&
+    isLegendaryAttackSubject(input.state, input.subject) &&
     !statBlockLegendaryActionWindowIsOpen(input.state, actorId)
   ) {
     return invalidResult(
@@ -992,7 +1179,10 @@ export function resolveBattleSubjectInternal(
     );
   }
 
-  const standardActionKind = standardActionKindForSubject(input.subject);
+  const standardActionKind = standardActionKindForSubject(
+    input.state,
+    input.subject,
+  );
   if (
     isPresentFindFamiliarCombatant(input.state, actorId) &&
     subjectIsOrdinaryAttack(input.subject)
@@ -1943,7 +2133,7 @@ function resolveFindFamiliarSharedSensesSubject(
 
 function resolveFindFamiliarTouchSpellSubject(
   input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
+    Extract<AdmittedBattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
   >,
 ): BattleResolutionResult {
   const connection = findFamiliarConnectionFact({
@@ -2063,7 +2253,10 @@ function findFamiliarConnectionFact(input: {
 }
 
 function findFamiliarTouchSpellSubject(
-  subject: Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>,
+  subject: Extract<
+    AdmittedBattleSubject,
+    { readonly tag: "findFamiliarTouchSpell" }
+  >,
 ):
   | {
       readonly tag: "resolved";
@@ -2075,6 +2268,7 @@ function findFamiliarTouchSpellSubject(
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
   const base = {
     actorId: subject.actorId,
+    procedureRef: subject.procedureRef,
     invocation: subject.invocation,
     mode: subject.mode,
     ...(subject.metamagic === undefined
@@ -2769,12 +2963,13 @@ function subjectCanSpendStandardActionResource(
 }
 
 export function standardActionKindForSubject(
+  state: BattleState,
   subject: BattleSubject,
 ): StandardActionKind | null {
   if (subject.tag === "pactOfTheChainFamiliarAttack") {
     return "attack";
   }
-  if (subject.tag !== "action" || isLegendaryAttackSubject(subject)) {
+  if (subject.tag !== "action" || isLegendaryAttackSubject(state, subject)) {
     return null;
   }
   if (
@@ -2813,7 +3008,7 @@ export function consumeOrCloseLegendaryActionWindow(
       : { ...result, state: normalized, snapshot: snapshotBattle(normalized) };
   }
   const normalized = normalizeEarlyEndedOngoingFeatures(result.state);
-  const state = isLegendaryAttackSubject(subject)
+  const state = isLegendaryAttackSubject(normalized, subject)
     ? consumeLegendaryActionWindow(normalized)
     : closeLegendaryActionWindow(normalized);
   return state === result.state
@@ -3268,11 +3463,28 @@ export function resolveBattleInterrupt(input: {
       );
     }
     if (choice.kind === "reactionRollOrDamageReduction") {
+      const currentChoice = reactionRollOrDamageReductionChoices(
+        input.state,
+        frame,
+      ).find(
+        (candidate): candidate is BattleInterruptProcedureModifierChoice =>
+          candidate.kind === "reactionRollOrDamageReduction" &&
+          candidate.reactorId === choice.reactorId &&
+          candidate.choice.procedureRef === choice.choice.procedureRef &&
+          candidate.choice.kind === choice.choice.kind,
+      );
+      if (currentChoice === undefined) {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "The selected Reaction modifier is no longer bound to this responder.",
+        );
+      }
       return withInterruptRoute(
         resolveReactionRollOrDamageReduction({
           state: input.state,
           frame,
-          choice,
+          choice: currentChoice,
           selection: input.fill.value.choice,
         }),
       );
@@ -3440,6 +3652,22 @@ export function resolveReactionRollOrDamageReduction(input: {
       "Reaction modifier selection does not match the admitted choice.",
     );
   }
+  const reactor = input.state.combatants.get(input.choice.reactorId);
+  const sourceUnitId =
+    reactor?.origin.kind === "character"
+      ? characterUnitProcedureId(
+          reactor.origin.execution,
+          input.choice.choice.procedureRef,
+          CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+        )
+      : undefined;
+  if (sourceUnitId === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The selected Reaction modifier procedure is no longer bound to this responder.",
+    );
+  }
   const reductionRoll = reactionModifierReductionRoll(
     input.choice.choice,
     input.selection.fills,
@@ -3462,7 +3690,6 @@ export function resolveReactionRollOrDamageReduction(input: {
     input.choice.choice.kind === "attackDamageReduction" &&
     input.frame.trigger === "attackHit"
   ) {
-    const reactor = input.state.combatants.get(input.choice.reactorId);
     if (
       input.choice.reactorId !== input.frame.targetId ||
       reactor?.origin.kind !== "character"
@@ -3498,6 +3725,7 @@ export function resolveReactionRollOrDamageReduction(input: {
   const spent = spendReactionModifierResource(
     spendReaction(input.state, input.choice.reactorId),
     input.choice.reactorId,
+    sourceUnitId,
     input.choice.choice,
   );
   const updatedFrame = interruptCheckpointAfterReactionModifierCompletion(
@@ -3604,16 +3832,9 @@ export function resolveCastTriggeredReactionSpellCommand(
   const reactor = input.state.combatants.get(input.subject.reactorId);
   const invocation =
     reactor?.origin.kind === "character"
-      ? supportedSpellActs(reactor, input.state).find(
-          (candidate) =>
-            (candidate.procedure === "shieldReaction" ||
-              candidate.procedure === "saveGatedDamage" ||
-              candidate.procedure === "featherFallMitigation" ||
-              candidate.procedure === "counterspell") &&
-            supportedSpellInvocationMatchesRef(
-              candidate,
-              input.subject.invocation,
-            ),
+      ? characterSpellProcedure(
+          reactor.origin.execution,
+          input.subject.procedureRef,
         )
       : undefined;
   if (
@@ -3623,7 +3844,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       frame?.trigger !== "creatureFalls") ||
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== input.subject.reactorId ||
-    !sameBattleSubject(activeInterrupt.subject, input.subject)
+    !sameAdmittedBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -3633,10 +3854,8 @@ export function resolveCastTriggeredReactionSpellCommand(
   }
   if (
     reactor?.origin.kind !== "character" ||
-    (invocation?.procedure !== "shieldReaction" &&
-      invocation?.procedure !== "saveGatedDamage" &&
-      invocation?.procedure !== "featherFallMitigation" &&
-      invocation?.procedure !== "counterspell")
+    (invocation === undefined ||
+      !isTriggeredReactionSpellInvocation(invocation))
   ) {
     return invalidResult(
       input.state,
@@ -4274,16 +4493,9 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       : undefined;
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find(
-          (candidate) =>
-            (candidate.procedure === "afterHitDamage" ||
-              candidate.procedure === "afterHitSaveGatedCondition" ||
-              candidate.procedure === "afterHitTimedDamageAndSave" ||
-              candidate.procedure === "afterHitDamageAndIllumination") &&
-            supportedSpellInvocationMatchesRef(
-              candidate,
-              input.subject.invocation,
-            ),
+      ? characterSpellProcedure(
+          actor.origin.execution,
+          input.subject.procedureRef,
         )
       : undefined;
   if (
@@ -4291,7 +4503,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     frame.continuation.kind !== "replay" ||
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== input.subject.casterId ||
-    !sameBattleSubject(activeInterrupt.subject, input.subject)
+    !sameAdmittedBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -4300,11 +4512,9 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     );
   }
   if (
-    actor?.origin.kind !== "character" ||
-    (invocation?.procedure !== "afterHitDamage" &&
-      invocation?.procedure !== "afterHitSaveGatedCondition" &&
-      invocation?.procedure !== "afterHitTimedDamageAndSave" &&
-      invocation?.procedure !== "afterHitDamageAndIllumination")
+    !isCharacterBattleCreatureState(actor) ||
+    (invocation === undefined ||
+      !isAttackHitBonusActionSpellInvocation(invocation))
   ) {
     return invalidResult(
       input.state,
@@ -4352,10 +4562,6 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Attack-hit Bonus Action spell requires a replayable attack-hit window.",
     );
   }
-  const attackHitFrame = {
-    ...frame,
-    continuation: frame.continuation,
-  };
   if (!spellHasAvailableSpend(actor, invocation)) {
     return invalidResult(
       input.state,
@@ -4371,6 +4577,17 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       fillSet: input.fills,
     });
   }
+  if (!interruptedProcedureSupportsAttackDamageChanges(frame.continuation)) {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "After-hit damage cannot modify a stored-glyph replay continuation.",
+    );
+  }
+  const attackDamageChangeFrame = {
+    ...frame,
+    continuation: frame.continuation,
+  };
   const fillValidation = attackHitBonusActionSpellFillValidation(
     input,
     invocation,
@@ -4400,7 +4617,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       );
     }
     return afterHitDamageProfile.resolve({
-      input: { ...input, frame: attackHitFrame, target },
+      input: { ...input, frame: attackDamageChangeFrame, target },
       actorId: input.subject.casterId,
       invocation,
       fillSet: fillValidation.fillSet,
@@ -4415,7 +4632,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       );
     }
     return afterHitDamageAndIlluminationProfile.resolve({
-      input: { ...input, frame: attackHitFrame, target },
+      input: { ...input, frame: attackDamageChangeFrame, target },
       actorId: input.subject.casterId,
       invocation,
       fillSet: fillValidation.fillSet,
@@ -4430,7 +4647,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       );
     }
     return afterHitTimedDamageAndSaveProfile.resolve({
-      input: { ...input, frame: attackHitFrame, target },
+      input: { ...input, frame: attackDamageChangeFrame, target },
       actorId: input.subject.casterId,
       invocation,
       fillSet: fillValidation.fillSet,
@@ -4445,7 +4662,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
 
 export function maybeOpenPostCastReadySpellCastWindow(input: {
   readonly state: BattleState;
-  readonly subject: BattleSubject;
+  readonly subject: AdmittedBattleSubject;
   readonly casterId: CombatantId;
   readonly spellId: string;
   readonly targetIds: readonly CombatantId[];
@@ -4577,7 +4794,8 @@ export function interruptCheckpointAfterModifier(
   if (
     frame.trigger === "attackHit" &&
     choice.kind === "attackDamageReduction" &&
-    frame.continuation.kind === "replay"
+    frame.continuation.kind === "replay" &&
+    frame.continuation.glyphStoredSpellReleaseReplay === undefined
   ) {
     return {
       ...frame,
@@ -4587,8 +4805,7 @@ export function interruptCheckpointAfterModifier(
           ...(frame.continuation.attackDamageReductions ?? []),
           {
             reactorId,
-            unitId: choice.unitId,
-            label: choice.label,
+            procedureRef: choice.procedureRef,
             reduction: choice.reduction,
             reductionAmount: reduction,
             ...(choice.zeroDamageRedirect === undefined
@@ -4684,7 +4901,7 @@ export function sameInterruptProcedureChoice(
     decisionChoice.kind === "reactionRollOrDamageReduction"
   ) {
     return (
-      choice.choice.unitId === decisionChoice.unitId &&
+      choice.choice.procedureRef === decisionChoice.procedureRef &&
       choice.choice.kind === decisionChoice.modifierKind
     );
   }
@@ -4692,7 +4909,12 @@ export function sameInterruptProcedureChoice(
     choice.kind === "releaseReadiedSpell" &&
     decisionChoice.kind === "releaseReadiedSpell"
   ) {
-    return choice.readiedSpellCasterId === decisionChoice.readiedSpellCasterId;
+    return (
+      choice.readiedSpellCasterId === decisionChoice.readiedSpellCasterId &&
+      choice.subject.tag === "runtimeCommand" &&
+      choice.subject.command === "releaseReadiedSpell" &&
+      choice.subject.procedureRef === decisionChoice.procedureRef
+    );
   }
   if (
     choice.kind === "releaseReadiedMovement" &&
@@ -4706,19 +4928,26 @@ export function sameInterruptProcedureChoice(
     choice.kind === "castTriggeredReactionSpell" &&
     decisionChoice.kind === "castTriggeredReactionSpell"
   ) {
-    return sameSpellInvocationRef(choice.invocation, decisionChoice.invocation);
+    return choice.subject.procedureRef === decisionChoice.procedureRef;
   }
   if (
     choice.kind === "castAttackHitBonusActionSpell" &&
     decisionChoice.kind === "castAttackHitBonusActionSpell"
   ) {
-    return sameSpellInvocationRef(choice.invocation, decisionChoice.invocation);
+    return choice.subject.procedureRef === decisionChoice.procedureRef;
   }
   if (
     choice.kind === "opportunityAttack" &&
     decisionChoice.kind === "opportunityAttack"
   ) {
-    return choice.reactorId === decisionChoice.reactorId;
+    return (
+      choice.reactorId === decisionChoice.reactorId &&
+      choice.subject.command === "opportunityAttack" &&
+      interruptAttackExecutionSelectionsEqual(
+        choice.subject,
+        decisionChoice.selection,
+      )
+    );
   }
   if (
     choice.kind === "retaliationAttack" &&
@@ -4727,7 +4956,10 @@ export function sameInterruptProcedureChoice(
     return (
       choice.reactorId === decisionChoice.reactorId &&
       choice.subject.command === "retaliationAttack" &&
-      choice.subject.attackName === decisionChoice.attackName
+      interruptAttackExecutionSelectionsEqual(
+        choice.subject,
+        decisionChoice.selection,
+      )
     );
   }
   return false;
@@ -5077,7 +5309,7 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
 
 export function openAfterDamageSequenceInterruptWindow(input: {
   readonly state: BattleState;
-  readonly subject: BattleSubject;
+  readonly subject: AdmittedBattleSubject;
   readonly events: readonly BattleAfterDamageEvent[];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
@@ -5321,27 +5553,32 @@ export function resolveReplayContinuationFromState(
       fills,
     );
   }
-  const result = resolveBattleSubjectInternal(
-    {
+  const selected = selectCharacterProcedureForResolution({
+    state,
+    subject: continuation.subject,
+    fills,
+  });
+  if (selected.tag === "invalid") {
+    return invalidResult(
       state,
-      subject: continuation.subject,
-      fills,
-    },
-    {
-      replayingInterruptedProcedure: true,
-      handledInterruptTrigger,
-      ...(continuation.attackDamageReductions === undefined
-        ? {}
-        : {
-            pendingAttackDamageReductions: continuation.attackDamageReductions,
-          }),
-      ...(continuation.attackDamageAdditions === undefined
-        ? {}
-        : {
-            pendingAttackDamageAdditions: continuation.attackDamageAdditions,
-          }),
-    },
-  );
+      "staleSubject",
+      "The interrupted character procedure reference is no longer bound to its actor.",
+    );
+  }
+  const result = resolveBattleSubjectInternal(selected.input, {
+    replayingInterruptedProcedure: true,
+    handledInterruptTrigger,
+    ...(continuation.attackDamageReductions === undefined
+      ? {}
+      : {
+          pendingAttackDamageReductions: continuation.attackDamageReductions,
+        }),
+    ...(continuation.attackDamageAdditions === undefined
+      ? {}
+      : {
+          pendingAttackDamageAdditions: continuation.attackDamageAdditions,
+        }),
+  });
   if (
     result.tag !== "needsHoles" ||
     result.state.interruptStack.length !== state.interruptStack.length
@@ -5353,7 +5590,7 @@ export function resolveReplayContinuationFromState(
   )?.activeInterrupt;
   if (
     activeInterrupt !== undefined &&
-    sameBattleSubject(activeInterrupt.subject, continuation.subject)
+    sameAdmittedBattleSubject(activeInterrupt.subject, continuation.subject)
   ) {
     const pendingState =
       activeInterruptWithReplayContinuationAttackDamageChanges(
@@ -6095,17 +6332,18 @@ function opportunityAttackThreatsEqual(
   a: readonly BattleOpportunityAttackThreat[],
   b: readonly BattleOpportunityAttackThreat[],
 ): boolean {
-  return (
-    a.length === b.length &&
-    a.every((threat, index) => {
-      const other = b[index];
-      return (
-        other !== undefined &&
+  if (a.length !== b.length) return false;
+  const unmatched = [...b];
+  return a.every((threat) => {
+    const matchingIndex = unmatched.findIndex(
+      (other) =>
         threat.reactorId === other.reactorId &&
-        threat.attackName === other.attackName
-      );
-    })
-  );
+        interruptAttackExecutionSelectionsEqual(threat, other),
+    );
+    if (matchingIndex === -1) return false;
+    unmatched.splice(matchingIndex, 1);
+    return true;
+  });
 }
 
 function arrayValuesEqual<T>(a: readonly T[], b: readonly T[]): boolean {
@@ -6200,6 +6438,12 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
 
   return {
     battleId: state.battleId,
+    executionScopeCursors: [...state.executionScopeCursors].map(
+      ([combatantId, nextScopeOrdinal]) => ({
+        combatantId,
+        nextScopeOrdinal,
+      }),
+    ),
     round: state.initiative.round,
     currentActorId: currentActorId(state),
     turnOrder,
@@ -6347,10 +6591,25 @@ export function currentInterruptCheckpoint(
 
 export function interruptedProcedureSubject(
   procedure: BattleInterruptedProcedure,
-): BattleSubject {
+): AdmittedBattleSubject {
   return procedure.kind === "attackDamage"
     ? procedure.participant
     : procedure.subject;
+}
+
+export function interruptedProcedureSupportsAttackDamageChanges(
+  procedure: BattleInterruptedProcedure,
+): procedure is Extract<
+  BattleInterruptedProcedure,
+  {
+    readonly kind: "replay";
+    readonly glyphStoredSpellReleaseReplay?: never;
+  }
+> {
+  return (
+    procedure.kind === "replay" &&
+    procedure.glyphStoredSpellReleaseReplay === undefined
+  );
 }
 
 export function interruptDecisionHole(
@@ -6521,6 +6780,7 @@ export function readiedSpellReactionChoices(
             actorId: currentActorId(state),
             command: "releaseReadiedSpell" as const,
             readiedSpellCasterId: casterId,
+            procedureRef: readiedSpell.procedureRef,
           },
         },
       ];
@@ -6627,10 +6887,13 @@ export function attackHitBonusActionSpellReactionChoices(
   return supportedSpellActs(actor, state).flatMap(
     (invocation): readonly BattleInterruptProcedureChoice[] => {
       if (
-        (invocation.procedure !== "afterHitDamage" &&
-          invocation.procedure !== "afterHitSaveGatedCondition" &&
-          invocation.procedure !== "afterHitTimedDamageAndSave" &&
-          invocation.procedure !== "afterHitDamageAndIllumination") ||
+        !isAttackHitBonusActionSpellInvocation(invocation) ||
+        ((invocation.procedure === "afterHitDamage" ||
+          invocation.procedure === "afterHitTimedDamageAndSave" ||
+          invocation.procedure === "afterHitDamageAndIllumination") &&
+          !interruptedProcedureSupportsAttackDamageChanges(
+            frame.continuation,
+          )) ||
         !afterHitSpellMatchesAttackTrigger(
           invocation,
           frame.attackHitTriggerKind,
@@ -6644,7 +6907,12 @@ export function attackHitBonusActionSpellReactionChoices(
       ) {
         return [];
       }
-      const invocationRef = supportedSpellInvocationRef(invocation);
+      if (!isCharacterBattleCreatureState(actor)) return [];
+      const procedureRef = characterSpellProcedureRef(
+        actor.origin.execution,
+        invocation,
+      );
+      if (procedureRef === undefined) return [];
       const initialHoles =
         invocation.procedure === "afterHitSaveGatedCondition"
           ? [
@@ -6660,14 +6928,13 @@ export function attackHitBonusActionSpellReactionChoices(
         {
           kind: "castAttackHitBonusActionSpell" as const,
           reactorId: frame.attackerId,
-          invocation: invocationRef,
           initialHoles,
           subject: {
             tag: "runtimeCommand" as const,
             actorId: currentActorId(state),
             command: "castAttackHitBonusActionSpell" as const,
             casterId: frame.attackerId,
-            invocation: invocationRef,
+            procedureRef,
           },
         },
       ];
@@ -6690,7 +6957,7 @@ export function opportunityAttackReactionChoices(
       state,
       reactorId,
       moverId,
-      threat.attackName,
+      threat,
     );
     if (attack === undefined) return [];
     return [
@@ -6704,7 +6971,7 @@ export function opportunityAttackReactionChoices(
           command: "opportunityAttack" as const,
           reactorId,
           targetId: moverId,
-          attackName: attackActionOptionName(attack),
+          ...attackExecutionSelectionForOption(attack),
         },
       },
     ];
@@ -6743,7 +7010,7 @@ export function retaliationReactionAttackChoices(
     return [];
   }
   return attackActionOptionsForActor(state, reactorId).flatMap((attack) => {
-    const attackName = attackActionOptionName(attack);
+    const selection = attackExecutionSelectionForOption(attack);
     const eligibleAttack =
       (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
       attackTargetConstraint(attack).kind === "meleeReach" &&
@@ -6751,7 +7018,7 @@ export function retaliationReactionAttackChoices(
         state,
         reactorId,
         frame.damageSourceId,
-        attackName,
+        selection,
       ) !== undefined;
     return eligibleAttack
       ? [
@@ -6765,7 +7032,7 @@ export function retaliationReactionAttackChoices(
               command: "retaliationAttack" as const,
               reactorId,
               targetId: frame.damageSourceId,
-              attackName,
+              ...selection,
             },
           },
         ]

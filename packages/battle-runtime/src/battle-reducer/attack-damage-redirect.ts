@@ -33,7 +33,10 @@ import {
 } from "./domain-constants.ts";
 
 import { attackDamageEventAmountForTarget } from "./attack-damage-events.ts";
-import { rolledDiceFillTotal } from "./reaction-modifiers.ts";
+import {
+  reactionModifierProcedureSource,
+  rolledDiceFillTotal,
+} from "./reaction-modifiers.ts";
 export {
   attackDamageEventAfterPendingReduction,
   attackDamageEventAfterPendingReductions,
@@ -190,18 +193,32 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
       readonly tag: "invalid";
       readonly message: string;
     } {
-  const offers = input.reductions.flatMap((reduction) =>
-    reduction.zeroDamageRedirect === undefined
+  const redirectReductions = input.reductions.filter(
+    (reduction) => reduction.zeroDamageRedirect !== undefined,
+  );
+  const offers = redirectReductions.flatMap((reduction) => {
+    const source = reactionModifierProcedureSource(
+      input.state,
+      reduction.reactorId,
+      reduction.procedureRef,
+    );
+    return source === undefined || reduction.zeroDamageRedirect === undefined
       ? []
       : [
           {
             reactorId: reduction.reactorId,
-            unitId: reduction.unitId,
-            label: reduction.label,
+            ...source,
             redirect: reduction.zeroDamageRedirect,
           } satisfies AttackDamageReductionZeroDamageRedirectAvailableOffer,
-        ],
-  );
+        ];
+  });
+  if (offers.length !== redirectReductions.length) {
+    return {
+      tag: "invalid",
+      message:
+        "Attack damage reduction redirect procedure binding is no longer available.",
+    };
+  }
   if (offers.length === 0) {
     return { tag: "ok", state: input.state };
   }

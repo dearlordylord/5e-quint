@@ -26,7 +26,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
@@ -125,7 +125,7 @@ function discoverSelfTeleportCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: SelfTeleportInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

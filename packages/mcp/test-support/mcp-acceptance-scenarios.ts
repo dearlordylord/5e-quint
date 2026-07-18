@@ -606,32 +606,35 @@ export async function verifyBaselineVertical(client: Client) {
 
   const read = await callTool(client, "read_battle_state", {});
   assert.equal(get(read, "snapshot.currentActorId"), "fighter");
-  assert.deepEqual(
-    actionLabels(await callTool(client, "discover_battle_acts", {})),
-    [
-      "Attack",
-      "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
-      "Adrenaline Rush",
-      "Second Wind",
-      "Move",
-      "End Turn",
-    ],
+  const fighterActs = await callTool(client, "discover_battle_acts", {});
+  assert.deepEqual(actionLabels(fighterActs), [
+    "Attack",
+    "Attack",
+    ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+    "Adrenaline Rush",
+    "Second Wind",
+    "Move",
+    "End Turn",
+  ]);
+  const longswordSubject = attackSubjectFromActs(
+    fighterActs,
+    "fighter",
+    "Longsword",
   );
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Longsword"),
-    fill: targetFill("goblin"),
+    subject: longswordSubject,
+    fill: attackTargetFill(longswordSubject, "goblin"),
   });
   await expectToolError(client, "end_turn", { actorId: "fighter" });
   await expectToolError(client, "end_battle", {});
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Longsword"),
+    subject: longswordSubject,
     fill: attackRollFill(16, 14),
   });
   const fighterDamage = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Longsword"),
+    subject: longswordSubject,
     fill: rolledDiceFill("battle:attack:damage-result:1d8+3-slashing", [[5]]),
   });
   assert.equal(get(fighterDamage, "result.tag"), "resolved");
@@ -641,30 +644,29 @@ export async function verifyBaselineVertical(client: Client) {
     actorId: "fighter",
   });
   assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
-  assert.deepEqual(
-    actionLabels(await callTool(client, "discover_battle_acts", {})),
-    [
-      "Attack",
-      "Attack",
-      "Attack",
-      "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
-      "Nimble Escape",
-      "Move",
-      "End Turn",
-    ],
-  );
+  const goblinActs = await callTool(client, "discover_battle_acts", {});
+  assert.deepEqual(actionLabels(goblinActs), [
+    "Attack",
+    "Attack",
+    "Attack",
+    "Attack",
+    ...GENERIC_COMBAT_ACTION_LABELS,
+    "Nimble Escape",
+    "Move",
+    "End Turn",
+  ]);
+  const goblinAttack = attackSubjectFromActs(goblinActs, "goblin", "Scimitar");
 
   const goblinTarget = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("goblin", "Scimitar"),
-    fill: targetFill("fighter"),
+    subject: goblinAttack,
+    fill: attackTargetFill(goblinAttack, "fighter"),
   });
   const goblinAttackRoll = (
     get(goblinTarget, "result.holes") as JsonObject[]
   ).find((hole) => hole.kind === "attackRoll");
   assert.ok(goblinAttackRoll);
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("goblin", "Scimitar"),
+    subject: goblinAttack,
     fill: attackRollFill(
       20,
       18,
@@ -674,7 +676,7 @@ export async function verifyBaselineVertical(client: Client) {
     ),
   });
   const goblinDamage = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("goblin", "Scimitar"),
+    subject: goblinAttack,
     fill: rolledDiceFill("battle:attack:damage-result:1d6+2-slashing", [[5]]),
   });
   assert.equal(combatantHp(goblinDamage, "fighter"), 5);
@@ -781,30 +783,34 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(combatantHp(started, "skeleton-b"), 13);
   assert.equal(combatantHp(started, "goblin"), 10);
 
-  assert.deepEqual(
-    actionLabels(await callTool(client, "discover_battle_acts", {})),
-    [
-      "Attack",
-      "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-      "Adrenaline Rush",
-      "Second Wind",
-      "Action Surge",
-      "Move",
-      "End Turn",
-    ],
+  const fighterActs = await callTool(client, "discover_battle_acts", {});
+  assert.deepEqual(actionLabels(fighterActs), [
+    "Attack",
+    "Attack",
+    ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+    "Adrenaline Rush",
+    "Second Wind",
+    "Action Surge",
+    "Move",
+    "End Turn",
+  ]);
+  const flailSubject = attackSubjectFromActs(fighterActs, "fighter", "Flail");
+  const actionSurgeSubject = actionSubjectFromActs(
+    fighterActs,
+    "fighter",
+    "Action Surge",
   );
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
-    fill: targetFill("skeleton-a"),
+    subject: flailSubject,
+    fill: attackTargetFill(flailSubject, "skeleton-a"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
+    subject: flailSubject,
     fill: attackRollFill(18, 15),
   });
   const afterBludgeoning = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
+    subject: flailSubject,
     fill: rolledDiceFill("battle:attack:damage-result:1d8+3-bludgeoning", [
       [1],
     ]),
@@ -812,18 +818,14 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(combatantHp(afterBludgeoning, "skeleton-a"), 5);
 
   await callTool(client, "resolve_battle_act", {
-    subject: {
-      tag: "unitFeature",
-      actorId: "fighter",
-      unitId: "fighter_action_surge",
-    },
+    subject: actionSurgeSubject,
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
-    fill: targetFill("skeleton-a"),
+    subject: flailSubject,
+    fill: attackTargetFill(flailSubject, "skeleton-a"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("fighter", "Flail"),
+    subject: flailSubject,
     fill: attackRollFill(1, 1),
   });
   assert.equal(combatantHp(afterBludgeoning, "skeleton-a"), 5);
@@ -839,17 +841,27 @@ export async function verifyWidthVertical(client: Client) {
   const wizardActs = await callTool(client, "discover_battle_acts", {});
   assert.ok(actionLabels(wizardActs).includes("Magic Missile"));
   assert.ok(actionLabels(wizardActs).includes("Ray of Frost"));
+  const rayOfFrostSubject = actionSubjectFromActs(
+    wizardActs,
+    "wizard",
+    "Ray of Frost",
+  );
+  const magicMissileSubject = actionSubjectFromActs(
+    wizardActs,
+    "wizard",
+    "Magic Missile",
+  );
 
   await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "ray_of_frost"),
+    subject: rayOfFrostSubject,
     fill: targetFill("skeleton-b"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "ray_of_frost"),
+    subject: rayOfFrostSubject,
     fill: attackRollFill(18, 15),
   });
   const afterRayDamage = await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "ray_of_frost"),
+    subject: rayOfFrostSubject,
     fill: rolledDiceFill("battle:spell:damage-result:ray_of_frost:1d8-cold", [
       [4],
     ]),
@@ -873,17 +885,23 @@ export async function verifyWidthVertical(client: Client) {
     ),
     "skeleton-b",
   );
+  const skeletonActs = await callTool(client, "discover_battle_acts", {});
+  const skeletonAttack = attackSubjectFromActs(
+    skeletonActs,
+    "skeleton-b",
+    "Shortsword",
+  );
 
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("skeleton-b", "Shortsword"),
-    fill: targetFill("fighter"),
+    subject: skeletonAttack,
+    fill: attackTargetFill(skeletonAttack, "fighter"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("skeleton-b", "Shortsword"),
+    subject: skeletonAttack,
     fill: attackRollFill(20, 15),
   });
   const afterSkeletonAttack = await callTool(client, "fill_battle_hole", {
-    subject: attackSubject("skeleton-b", "Shortsword"),
+    subject: skeletonAttack,
     fill: rolledDiceFill("battle:attack:damage-result:1d6+3-piercing", [[1]]),
   });
   assert.equal(combatantHp(afterSkeletonAttack, "fighter"), 16);
@@ -911,7 +929,7 @@ export async function verifyWidthVertical(client: Client) {
   );
 
   await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "magic_missile"),
+    subject: magicMissileSubject,
     fill: {
       kind: "spellTargetAllocation",
       holeId: "battle:spell:target-allocation:magic_missile",
@@ -927,7 +945,7 @@ export async function verifyWidthVertical(client: Client) {
     },
   });
   const afterMagicMissile = await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "magic_missile"),
+    subject: magicMissileSubject,
     fill: rolledDiceFill(
       "battle:spell:damage-result:magic_missile:3d4+3-force",
       [[2, 2, 2]],
@@ -1034,12 +1052,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
   assert.ok(scorchingRayAct, "Missing Scorching Ray act");
   const targetHoles = initialHolesOfKind(scorchingRayAct, "targetChoice");
   assert.equal(targetHoles.length, 3);
-  const scorchingRaySubject = spellSlotSubject(
-    "wizard-level-3",
-    "scorching_ray",
-    2,
-    "spellAttackSequence",
-  );
+  const scorchingRaySubject = scorchingRayAct.subject;
 
   let pendingScorchingRay = wizardActs;
   for (const hole of targetHoles) {
@@ -1409,24 +1422,32 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
       "ice_knife",
     ],
   });
-  await createAndFinalizeElfWizardTwoWithSpells(client, iceKnifePrimaryDraftId, {
-    preparedSpells: [
-      "mage_armor",
-      "magic_missile",
-      "sleep",
-      "thunderwave",
-      "chromatic_orb",
-    ],
-  });
-  await createAndFinalizeElfWizardTwoWithSpells(client, iceKnifeSecondaryDraftId, {
-    preparedSpells: [
-      "mage_armor",
-      "magic_missile",
-      "sleep",
-      "thunderwave",
-      "chromatic_orb",
-    ],
-  });
+  await createAndFinalizeElfWizardTwoWithSpells(
+    client,
+    iceKnifePrimaryDraftId,
+    {
+      preparedSpells: [
+        "mage_armor",
+        "magic_missile",
+        "sleep",
+        "thunderwave",
+        "chromatic_orb",
+      ],
+    },
+  );
+  await createAndFinalizeElfWizardTwoWithSpells(
+    client,
+    iceKnifeSecondaryDraftId,
+    {
+      preparedSpells: [
+        "mage_armor",
+        "magic_missile",
+        "sleep",
+        "thunderwave",
+        "chromatic_orb",
+      ],
+    },
+  );
 
   const started = await callTool(client, "start_battle", {
     battleId: iceKnifeBattleId,
@@ -1461,10 +1482,16 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
     iceKnifeSecondaryCombatantId,
   ]);
   const primaryStartingHp = combatantHp(started, iceKnifePrimaryCombatantId);
-  const secondaryStartingHp = combatantHp(started, iceKnifeSecondaryCombatantId);
+  const secondaryStartingHp = combatantHp(
+    started,
+    iceKnifeSecondaryCombatantId,
+  );
 
   const casterActs = await callTool(client, "discover_battle_acts", {});
-  assert.equal(get(casterActs, "snapshot.currentActorId"), iceKnifeCasterCombatantId);
+  assert.equal(
+    get(casterActs, "snapshot.currentActorId"),
+    iceKnifeCasterCombatantId,
+  );
   const iceKnifeAct = battleActByLabel(casterActs, "Ice Knife");
   assert.ok(iceKnifeAct, "Missing Ice Knife act");
   const targetHole = singleInitialHoleOfKind(iceKnifeAct, "targetChoice");
@@ -1689,11 +1716,19 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
     levelSixRogueSteadyAimActLabel,
   );
   assert.ok(steadyAimAct, `Missing ${levelSixRogueSteadyAimActLabel} act`);
-  assert.deepEqual(steadyAimAct.subject, {
-    tag: "unitFeature",
-    actorId: levelSixRogueExpertiseCombatantId,
-    unitId: levelSixRogueSteadyAimUnitId,
-  });
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(steadyAimAct.subject).filter(
+        ([key]) => key !== "procedureRef",
+      ),
+    ),
+    {
+      tag: "unitFeature",
+      actorId: levelSixRogueExpertiseCombatantId,
+      unitId: levelSixRogueSteadyAimUnitId,
+    },
+  );
+  assert.equal(typeof steadyAimAct.subject.procedureRef, "string");
   assert.deepEqual(steadyAimAct.initialHoles, []);
 
   const aimed = await callTool(client, "resolve_battle_act", {
@@ -1774,7 +1809,10 @@ export async function verifyLevelNineRangerExpertiseSheetScenario(
   assert.equal(get(ranger, "status"), "available");
   assert.equal(get(ranger, "displayName"), "Orc Soldier Ranger 9");
   assertLevelNineRangerExpertiseBuild(ranger, "build.proficiencyChoices");
-  assert.deepEqual(get(ranger, "spellSlots"), levelNineRangerUnexpendedSpellSlots);
+  assert.deepEqual(
+    get(ranger, "spellSlots"),
+    levelNineRangerUnexpendedSpellSlots,
+  );
 }
 
 export async function verifyLevelNineRangerExpertiseBattleHandoff(
@@ -1795,10 +1833,7 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
 
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   const rangerSheet = characterRow(listedBeforeBattle, characterId);
-  assertLevelNineRangerExpertiseBuild(
-    rangerSheet,
-    "build.proficiencyChoices",
-  );
+  assertLevelNineRangerExpertiseBuild(rangerSheet, "build.proficiencyChoices");
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
@@ -1843,7 +1878,10 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
     get(rangerActs, "snapshot.currentActorId"),
     levelNineRangerExpertiseCombatantId,
   );
-  assert.ok(battleActByLabel(rangerActs, "Attack"), "Missing Ranger Attack act");
+  assert.ok(
+    battleActByLabel(rangerActs, "Attack"),
+    "Missing Ranger Attack act",
+  );
   assert.ok(
     battleActByLabel(rangerActs, "Hunter's Mark"),
     "Missing Ranger Hunter's Mark act",
@@ -2624,7 +2662,10 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
   let current = await callTool(client, "fill_creation_holes", {
     draftId,
     expectedRevision: returnedDraftRevision(created),
-    fills: creationFillsForReturnedHoles(created, rangerNineCreationPreferences),
+    fills: creationFillsForReturnedHoles(
+      created,
+      rangerNineCreationPreferences,
+    ),
   });
   assert.equal(get(current, "result.tag"), "accepted");
 
@@ -2638,7 +2679,10 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
     current = await callTool(client, "fill_creation_holes", {
       draftId,
       expectedRevision: returnedDraftRevision(holes),
-      fills: creationFillsForReturnedHoles(holes, rangerNineCreationPreferences),
+      fills: creationFillsForReturnedHoles(
+        holes,
+        rangerNineCreationPreferences,
+      ),
     });
     assert.equal(
       get(current, "result.tag"),
@@ -2999,11 +3043,11 @@ function optionIdsForReturnedHole(
   return options.slice(0, max);
 }
 
-function rangerNinePreferredOptionIds(holeId: string): readonly string[] | undefined {
+function rangerNinePreferredOptionIds(
+  holeId: string,
+): readonly string[] | undefined {
   const choices: Readonly<Record<string, readonly string[]>> = {
-    "cc:draft:draft.progression.initial": [
-      levelNineRangerProgressionOptionId,
-    ],
+    "cc:draft:draft.progression.initial": [levelNineRangerProgressionOptionId],
     "cc:draft:draft.background": ["background_soldier"],
     "cc:draft:draft.species": ["species_orc"],
     "cc:draft:draft.languages": ["Dwarvish", "Goblin"],
@@ -3037,17 +3081,19 @@ function rangerNinePreferredOptionIds(holeId: string): readonly string[] | undef
       "guidance",
       "starry_wisp",
     ],
-    [unitHoleId("ranger_hunters_prey", "hunters_prey")]: [
-      "colossus_slayer",
-    ],
-    [unitHoleId("ranger_ability_score_improvement_l4", "class_feature_feat_choice")]:
-      ["feat_ability_score_improvement"],
+    [unitHoleId("ranger_hunters_prey", "hunters_prey")]: ["colossus_slayer"],
+    [unitHoleId(
+      "ranger_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+    )]: ["feat_ability_score_improvement"],
     [unitHoleId(
       "ranger_ability_score_improvement_l4",
       "class_feature_ability_score_increase_choice",
     )]: ["ability_score:dex:+2:max20"],
-    [unitHoleId("ranger_ability_score_improvement_l8", "class_feature_feat_choice")]:
-      ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "ranger_ability_score_improvement_l8",
+      "class_feature_feat_choice",
+    )]: ["feat_ability_score_improvement"],
     [unitHoleId(
       "ranger_ability_score_improvement_l8",
       "class_feature_ability_score_increase_choice",
@@ -3073,9 +3119,7 @@ function fighterTenPreferredOptionIds(
   holeId: string,
 ): readonly string[] | undefined {
   const choices: Readonly<Record<string, readonly string[]>> = {
-    "cc:draft:draft.progression.initial": [
-      levelTenFighterProgressionOptionId,
-    ],
+    "cc:draft:draft.progression.initial": [levelTenFighterProgressionOptionId],
     "cc:draft:draft.background": ["background_soldier"],
     "cc:draft:draft.species": ["species_orc"],
     "cc:draft:draft.languages": ["Dwarvish", "Goblin"],
@@ -3093,8 +3137,10 @@ function fighterTenPreferredOptionIds(
       "subclass_fighter_champion",
     ],
     [unitHoleId("class_fighter", "class_equipment_choice")]: ["option_c"],
-    [unitHoleId("fighter_ability_score_improvement_l4", "class_feature_feat_choice")]:
-      ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "fighter_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+    )]: ["feat_ability_score_improvement"],
     [unitHoleId(
       "fighter_ability_score_improvement_l4",
       "class_feature_ability_score_increase_choice",
@@ -3361,8 +3407,83 @@ function returnedDraftRevision(payload: JsonObject) {
   return revision;
 }
 
-function attackSubject(actorId: string, attackName: string) {
-  return { tag: "action", actorId, action: "attack", attackName };
+function attackSubjectFromActs(
+  payload: JsonObject,
+  actorId: string,
+  attackName: string,
+): JsonObject {
+  const acts = jsonObjectArrayAt(payload, "snapshot.acts");
+  const matchingActs = acts.filter((candidate) => {
+    const subject = candidate.subject;
+    if (!isJsonObject(subject)) return false;
+    return (
+      subject.tag === "action" &&
+      subject.action === "attack" &&
+      subject.actorId === actorId &&
+      candidate.summary === `Take the Attack action with ${attackName}.` &&
+      subject.statBlockDamageNotation === undefined
+    );
+  });
+  assert.equal(
+    matchingActs.length,
+    1,
+    `Expected exactly one rolled ${actorId} ${attackName} Attack action.`,
+  );
+  const act = matchingActs[0];
+  assert.ok(act);
+  assert.ok(
+    isJsonObject(act.subject),
+    "Attack action subject must be an object.",
+  );
+  return act.subject;
+}
+
+function actionSubjectFromActs(
+  payload: JsonObject,
+  actorId: string,
+  label: string,
+): JsonObject {
+  const matchingActs = jsonObjectArrayAt(payload, "snapshot.acts").filter(
+    (candidate) =>
+      candidate.label === label &&
+      isJsonObject(candidate.subject) &&
+      candidate.subject.actorId === actorId,
+  );
+  assert.equal(
+    matchingActs.length,
+    1,
+    `Expected exactly one ${actorId} ${label} act.`,
+  );
+  const act = matchingActs[0];
+  assert.ok(act && isJsonObject(act.subject));
+  return act.subject;
+}
+
+function attackTargetFill(subject: JsonObject, value: string) {
+  assert.equal(typeof subject.actorId, "string");
+  assert.equal(typeof subject.procedureRef, "string");
+  const selection = {
+    procedureRef: subject.procedureRef,
+    ...(typeof subject.attackAbility === "string"
+      ? { attackAbility: subject.attackAbility }
+      : {}),
+    ...(typeof subject.attackDamageType === "string"
+      ? { attackDamageType: subject.attackDamageType }
+      : {}),
+  };
+  return {
+    kind: "targetChoice",
+    holeId: "battle:attack:target",
+    value,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: subject.actorId,
+        targetId: value,
+        ...selection,
+      },
+    ],
+  };
 }
 
 function statBlockCombatant(
@@ -3380,76 +3501,12 @@ function statBlockCombatant(
   };
 }
 
-function magicSubject(actorId: string, spellId: string) {
-  if (spellId === "magic_missile") {
-    return spellSlotSubject(actorId, spellId, 1, "repeatedDamageAllocation");
-  }
-  return {
-    tag: "actionSpell",
-    actorId,
-    invocation: { tag: "cantrip", spellId, procedure: "spellAttackDamage" },
-    mode: { tag: "cast" },
-  };
-}
-
-function spellSlotSubject(
-  actorId: string,
-  spellId: string,
-  slotLevel: number,
-  procedure:
-    | "repeatedDamageAllocation"
-    | "spellAttackDamage"
-    | "spellAttackSequence",
-) {
-  return {
-    tag: "actionSpell",
-    actorId,
-    invocation: {
-      tag: "spellSlot",
-      spellId,
-      slotLevel,
-      procedure,
-    },
-    mode: { tag: "cast" },
-  };
-}
-
 function targetFill(value: string) {
   return {
     kind: "targetChoice",
     holeId: "battle:attack:target",
     value,
     spatialFacts: [
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "fighter",
-        targetId: value,
-        attackName: "Longsword",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "fighter",
-        targetId: value,
-        attackName: "Flail",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "goblin",
-        targetId: value,
-        attackName: "Scimitar",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "skeleton-a",
-        targetId: value,
-        attackName: "Shortsword",
-      },
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: "skeleton-b",
-        targetId: value,
-        attackName: "Shortsword",
-      },
       {
         kind: "spellTarget",
         casterId: "wizard",
@@ -3688,7 +3745,10 @@ function assertLevelSixRogueExpertiseBuild(payload: JsonObject, path: string) {
   }
 }
 
-function assertLevelNineRangerExpertiseBuild(payload: JsonObject, path: string) {
+function assertLevelNineRangerExpertiseBuild(
+  payload: JsonObject,
+  path: string,
+) {
   const expertise = proficiencyChoiceSkills(payload, path, "skill_expertise");
   assert.deepEqual(
     [...expertise].sort(),

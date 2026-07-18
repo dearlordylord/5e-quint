@@ -12,7 +12,7 @@ import {
   castGeas,
   characterSheetGeasTargetId,
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheetFixture,
   requireRight,
   spellSlotLevel,
   unitLibrary,
@@ -350,7 +350,7 @@ function geasWizardSheet(input: {
   readonly slots: number;
 }) {
   return requireRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:geas-wizard-9"),
       build: {
         ...armorClassBuild({

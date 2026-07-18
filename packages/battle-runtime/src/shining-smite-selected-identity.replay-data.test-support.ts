@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
@@ -50,7 +51,7 @@ export const shiningSmiteSelectedIdentityReplay = {
               targetHp: 30,
               targetMaxHp: 30,
             });
-            const subject = weaponAttackSubject("Longsword");
+            const subject = weaponAttackSubject(state, "Longsword");
             const target = requireResultHole(
               resolveBattleSubject({ state, subject, fills: [] }),
               "targetChoice",
@@ -79,9 +80,18 @@ export const shiningSmiteSelectedIdentityReplay = {
             }
             const choice =
               awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-                (candidate) =>
-                  candidate.kind === "castAttackHitBonusActionSpell" &&
-                  candidate.invocation.spellId === shiningSmiteUnitId,
+                (candidate) => {
+                  if (candidate.kind !== "castAttackHitBonusActionSpell") {
+                    return false;
+                  }
+                  return (
+                    characterSpellInvocationRefForProcedureRefForTest(
+                      awaitingReaction.state,
+                      candidate.reactorId,
+                      candidate.subject.procedureRef,
+                    ).spellId === shiningSmiteUnitId
+                  );
+                },
               );
             if (
               choice === undefined ||
@@ -91,7 +101,13 @@ export const shiningSmiteSelectedIdentityReplay = {
                 "Expected selected Shining Smite after-hit choice.",
               );
             }
-            expect(choice.invocation).toEqual(
+            expect(
+              characterSpellInvocationRefForProcedureRefForTest(
+                awaitingReaction.state,
+                choice.reactorId,
+                choice.subject.procedureRef,
+              ),
+            ).toEqual(
               spellSlotInvocationRef(
                 shiningSmiteUnitId,
                 3,
@@ -108,7 +124,7 @@ export const shiningSmiteSelectedIdentityReplay = {
                   responderId: spellCasterId,
                   choice: {
                     kind: "castAttackHitBonusActionSpell",
-                    invocation: choice.invocation,
+                    procedureRef: choice.subject.procedureRef,
                     fills: [],
                   },
                 },

@@ -17,7 +17,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -194,7 +194,7 @@ function discoverSleepTargetAdmissionCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SleepTargetAdmissionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
   const baseCastAct = sleepTargetAdmissionCastAct(
@@ -234,7 +234,7 @@ function sleepTargetAdmissionCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",

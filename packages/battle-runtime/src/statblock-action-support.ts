@@ -9,7 +9,12 @@ import type {
 } from "@dnd/surface/surface/types";
 import { CONDITIONS } from "@dnd/surface/surface/types";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
+import type {
+  CreatureAttackRollMechanics,
+  StatBlockTraitAttackRollMode,
+  SupportedCreatureAttackRollMechanics,
+  SupportedCreatureNamedAttackRoll,
+} from "./battle-action-options.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./unit-feature-support.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
 import { supportedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
@@ -90,8 +95,7 @@ const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORY_SET: ReadonlySet<WildShapeF
 
 const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_BOUNDARIES = {
   attackHitConditionRider: {
-    owner:
-      "battle-runtime generic Stat Block attack-hit condition rider owner",
+    owner: "battle-runtime generic Stat Block attack-hit condition rider owner",
     reason:
       "Attack-hit condition rider shapes outside the typed target Size Prone payload remain closed so the host attack cannot drop required condition-specific facts or over-apply the condition.",
   },
@@ -112,7 +116,8 @@ const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_BOUNDARIES = {
       "Surface actions.multiattacks entries need a Wild Shape selected-form admission witness that consumes the generic Multiattack control owner before the form admits them.",
   },
   statBlockActionSaveGate: {
-    owner: "battle-runtime generic Stat Block save-gated action procedure owner",
+    owner:
+      "battle-runtime generic Stat Block save-gated action procedure owner",
     reason:
       "Surface actions.saves entries carry saving throw, recipient, and effect facts that need a generic save-gated Stat Block procedure owner before Wild Shape admits them.",
   },
@@ -127,7 +132,8 @@ const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_BOUNDARIES = {
       "Surface actionOptions delegate to Standard Action procedures; Wild Shape admission needs focused evidence for each delegated action kind, and this task does not promote generic Utilize or object-use execution.",
   },
   statBlockSpecialAction: {
-    owner: "battle-runtime typed Stat Block special-action payload or table owner",
+    owner:
+      "battle-runtime typed Stat Block special-action payload or table owner",
     reason:
       "Surface specials carry prose descriptions and need typed effect payloads or an explicit table owner before Wild Shape admits them.",
   },
@@ -190,10 +196,18 @@ export function creatureActionSectionIsSupported(
 
 export function creatureNamedAttackRollIsSupported(
   attack: CreatureNamedAttackRoll,
-): boolean {
+): attack is SupportedCreatureNamedAttackRoll {
+  return (
+    attack.description === undefined &&
+    creatureAttackRollMechanicsAreSupported(attack)
+  );
+}
+
+export function creatureAttackRollMechanicsAreSupported(
+  attack: CreatureAttackRollMechanics,
+): attack is SupportedCreatureAttackRollMechanics {
   return (
     attack.multiattackCount === undefined &&
-    attack.description === undefined &&
     attack.attackBonus.kind === "literal" &&
     creatureNamedAttackDamageIsSupported(attack) &&
     creatureNamedAttackHitConditionRidersAreSupported(attack) &&
@@ -202,19 +216,19 @@ export function creatureNamedAttackRollIsSupported(
 }
 
 function creatureNamedAttackDamageIsSupported(
-  attack: CreatureNamedAttackRoll,
+  attack: CreatureAttackRollMechanics,
 ): boolean {
   return supportedStatBlockAttackDamage(attack) !== null;
 }
 
 function creatureNamedAttackHitConditionRidersAreSupported(
-  attack: CreatureNamedAttackRoll,
+  attack: CreatureAttackRollMechanics,
 ): boolean {
   return supportedStatBlockAttackHitConditionRiders(attack) !== null;
 }
 
 function creatureNamedAttackTargetIsSupported(
-  attack: CreatureNamedAttackRoll,
+  attack: CreatureAttackRollMechanics,
 ): boolean {
   return (
     (attack.attackType === "melee" && attack.reachFeet !== undefined) ||
@@ -381,9 +395,7 @@ function attackHitEffectRiderCategory(
   if (effect.kind === "damage" || effect.kind === "conditional_bonus_damage") {
     return null;
   }
-  if (
-    supportedStatBlockAttackHitConditionRiderEffect(effect) !== null
-  ) {
+  if (supportedStatBlockAttackHitConditionRiderEffect(effect) !== null) {
     return "attackHitTargetSizeConditionRider";
   }
   if (

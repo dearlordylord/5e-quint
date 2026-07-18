@@ -35,7 +35,9 @@ import {
   type ReducerRouteOwnerGroup,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { attackDamageByTypeEntries } from "./battle-reducer/damage-helpers.ts";
-import { supportedStatBlockAttackActionOption } from "./battle-reducer/statblock.ts";
+import { statBlockAttackActionOptions } from "./battle-reducer/statblock.ts";
+import { battleExecutionScopeOrdinal } from "./identity.ts";
+import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import {
   DieRollResult,
   attackRollFill,
@@ -96,10 +98,50 @@ type StatBlockActionOrderingRouteProjection =
     readonly route: readonly ReducerRouteEvent[];
   };
 
+function requireMultiattackSubject(
+  state: BattleState,
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "multiattack" }
+> {
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "action" && act.subject.action === "multiattack",
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "multiattack") {
+    throw new Error("Expected a discovered Multiattack subject.");
+  }
+  return subject;
+}
+
 const rechargeAttackName = "Cinder Breath";
 const multiattackDispatchAttackName = "Scimitar";
-const multiattackName = "Multiattack";
 const srdGoblinWarrior = decodeStatBlockRecordSync(srdGoblinWarriorInput);
+
+function admittedAttackOption(
+  attack: CreatureNamedAttackRoll,
+  damageNotation: StatBlockDamageNotation,
+) {
+  const statBlock: StatBlockRecord = {
+    ...srdGoblinWarrior,
+    statBlock: {
+      ...srdGoblinWarrior.statBlock,
+      actions: { attacks: [attack] },
+    },
+  };
+  const admission = statBlockExecutionAdmissionCohort(
+    battleId("stat-block-action-ordering-isolated-admission"),
+    goblinId,
+    [statBlock],
+    battleExecutionScopeOrdinal(0),
+  ).admissions[0];
+  if (admission === undefined) {
+    throw new Error("Expected the driver Stat Block admission.");
+  }
+  return statBlockAttackActionOptions(admission).find(
+    (option) => option.damageNotation === damageNotation,
+  );
+}
 
 const driverSchema = {
   init: {},
@@ -138,7 +180,11 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
 ) {
   return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = statBlockActionOrderingBattle(monsterResourceStatBlock());
-    let subject: BattleSubject = statBlockAttackSubject(rechargeAttackName);
+    let subject: BattleSubject = requireDiscoveredStatBlockAttackSubject(
+      state,
+      rechargeAttackName,
+      "rolled",
+    );
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -151,7 +197,11 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
 
     function reset(): void {
       state = statBlockActionOrderingBattle(monsterResourceStatBlock());
-      subject = statBlockAttackSubject(rechargeAttackName);
+      subject = requireDiscoveredStatBlockAttackSubject(
+        state,
+        rechargeAttackName,
+        "rolled",
+      );
       fills = [];
       holes = [];
       route = [reducerRouteStartBattle("battleActionEconomy")];
@@ -165,12 +215,29 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
 
     function discoverAttack(input: {
       readonly battle: BattleState;
-      readonly attackSubject: typeof subject;
+      readonly attackSubject: Extract<
+        BattleSubject,
+        { readonly tag: "action"; readonly action: "attack" }
+      >;
       readonly rolledDamage: boolean;
       readonly dispatchesAvailable: number;
     }): void {
       state = input.battle;
-      subject = input.attackSubject;
+      const admittedSubject = discoverBattleActs(state).find(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
+          act.subject.procedureRef === input.attackSubject.procedureRef &&
+          act.subject.statBlockDamageNotation ===
+            input.attackSubject.statBlockDamageNotation,
+      )?.subject;
+      if (
+        admittedSubject?.tag !== "action" ||
+        admittedSubject.action !== "attack"
+      ) {
+        throw new Error("Expected admitted Stat Block attack subject.");
+      }
+      subject = admittedSubject;
       fills = [];
       holes = requireNeedsHoles(
         resolveBattleSubject({ state, subject, fills: [] }),
@@ -187,7 +254,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       lastResult = "needsHoles";
       orderingError = "";
       multiattackDispatchesAvailable = input.dispatchesAvailable;
-      rechargeActionAvailable = statBlockAttackAvailable(state, rechargeAttackName);
+      rechargeActionAvailable = statBlockAttackAvailable(
+        state,
+        rechargeAttackName,
+      );
       usesRolledDamage = input.rolledDamage;
     }
 
@@ -280,7 +350,6 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         requireHoleFromList(holes, "targetChoice"),
         goblinId,
         fighterId,
-        statBlockAttackName(subject),
       );
     }
 
@@ -303,18 +372,17 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         const multiattack = requireResolved(
           resolveBattleSubject({
             state: battle,
-            subject: {
-              tag: "action",
-              actorId: goblinId,
-              action: "multiattack",
-              multiattackName,
-            },
+            subject: requireMultiattackSubject(battle),
             fills: [],
           }),
         ).state;
         discoverAttack({
           battle: multiattack,
-          attackSubject: statBlockAttackSubject(multiattackDispatchAttackName),
+          attackSubject: requireDiscoveredStatBlockAttackSubject(
+            multiattack,
+            multiattackDispatchAttackName,
+            "rolled",
+          ),
           rolledDamage: true,
           dispatchesAvailable: 2,
         });
@@ -322,7 +390,11 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       doDiscoverRolledActionAttackControl: () => {
         discoverAttack({
           battle: statBlockActionOrderingBattle(monsterResourceStatBlock()),
-          attackSubject: statBlockAttackSubject(rechargeAttackName),
+          attackSubject: requireDiscoveredStatBlockAttackSubject(
+            statBlockActionOrderingBattle(monsterResourceStatBlock()),
+            rechargeAttackName,
+            "rolled",
+          ),
           rolledDamage: true,
           dispatchesAvailable: 0,
         });
@@ -485,6 +557,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           holes,
           "statBlockRechargeRoll",
         );
+        const [rechargeTarget] = rechargeHole.rechargeTargets;
+        if (rechargeTarget === undefined) {
+          throw new Error("Expected a Stat Block Recharge target.");
+        }
         recordAccepted(
           resolveBattleSubject({
             state,
@@ -495,7 +571,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
                 holeId: rechargeHole.holeId,
                 value: [
                   {
-                    target: { section: "actions", name: rechargeAttackName },
+                    target: rechargeTarget,
                     roll: DieRollResult(5),
                   },
                 ],
@@ -548,11 +624,8 @@ describe("Stat Block action ordering MBT", () => {
     if (scimitar === undefined) {
       throw new Error("Expected SRD Goblin Warrior Scimitar.");
     }
-    const attack = supportedStatBlockAttackActionOption(scimitar, {
-      section: "actions",
-      name: scimitar.name,
-    }, "static");
-    if (attack === null) {
+    const attack = admittedAttackOption(scimitar, "static");
+    if (attack === undefined) {
       throw new Error("Expected static SRD Goblin Warrior Scimitar.");
     }
     const rider = {
@@ -605,32 +678,23 @@ describe("Stat Block action ordering MBT", () => {
       onHit: rolledOnlyOnHit,
     };
 
-    expect(
-      supportedStatBlockAttackActionOption(
-        rolledOnlyScimitar,
-        {
-          section: "actions",
-          name: rolledOnlyScimitar.name,
-        },
-        "static",
-      ),
-    ).toBeNull();
+    expect(admittedAttackOption(rolledOnlyScimitar, "static")).toBeUndefined();
   });
 
   it("discovers SRD static Stat Block damage notation as an attack subject", () => {
     const state = statBlockActionOrderingBattle(srdGoblinWarrior);
-    expect(
-      requireDiscoveredStatBlockAttackSubject(
-        state,
-        multiattackDispatchAttackName,
-        "static",
-      ),
-    ).toMatchObject({
+    const subject = requireDiscoveredStatBlockAttackSubject(
+      state,
+      multiattackDispatchAttackName,
+      "static",
+    );
+    expect(subject).toMatchObject({
       tag: "action",
       action: "attack",
-      attackName: multiattackDispatchAttackName,
       statBlockDamageNotation: "static",
     });
+    expect(subject.procedureRef).toBeDefined();
+    expect("attackName" in subject).toBe(false);
   });
 
   it("resolves SRD static Stat Block damage notation without a rolled-dice frontier", () => {
@@ -644,12 +708,7 @@ describe("Stat Block action ordering MBT", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetChoice = attackTargetFill(
-      targetHole,
-      goblinId,
-      fighterId,
-      multiattackDispatchAttackName,
-    );
+    const targetChoice = attackTargetFill(targetHole, goblinId, fighterId);
     const attackRollHole = requireHole(
       resolveBattleSubject({
         state,
@@ -673,39 +732,47 @@ describe("Stat Block action ordering MBT", () => {
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(5);
   });
 
-  it("projects Stat Block control, attack, damage, and recharge frontiers", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-stat-block-action-ordering.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createStatBlockActionOrderingDriver(),
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: statBlockActionOrderingStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "projects Stat Block control, attack, damage, and recharge frontiers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-stat-block-action-ordering.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createStatBlockActionOrderingDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: statBlockActionOrderingStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Stat Block action ordering through the shared reducer surface", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-stat-block-action-ordering.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createStatBlockActionOrderingRouteDriver(),
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: statBlockActionOrderingRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Stat Block action ordering through the shared reducer surface",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createStatBlockActionOrderingRouteDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: statBlockActionOrderingRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function statBlockAttackEffectWithoutStaticDamage(
@@ -724,7 +791,9 @@ function statBlockAttackEffectWithoutStaticDamage(
     : effect;
 }
 
-function statBlockActionOrderingBattle(statBlock: StatBlockRecord): BattleState {
+function statBlockActionOrderingBattle(
+  statBlock: StatBlockRecord,
+): BattleState {
   return requireResolved(
     endTurn({
       state: startBattleRight({
@@ -742,24 +811,6 @@ function statBlockActionOrderingBattle(statBlock: StatBlockRecord): BattleState 
   ).state;
 }
 
-function statBlockAttackSubject(
-  attackName: string,
-  statBlockDamageNotation: StatBlockDamageNotation = "rolled",
-): Extract<
-  BattleSubject,
-  { readonly tag: "action"; readonly action: "attack" }
-> {
-  return {
-    tag: "action",
-    actorId: goblinId,
-    action: "attack",
-    attackName,
-    ...(statBlockDamageNotation === "rolled"
-      ? {}
-      : { statBlockDamageNotation }),
-  };
-}
-
 function requireDiscoveredStatBlockAttackSubject(
   state: BattleState,
   attackName: string,
@@ -773,7 +824,7 @@ function requireDiscoveredStatBlockAttackSubject(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === goblinId &&
-      candidate.subject.attackName === attackName &&
+      candidate.summary.includes(attackName) &&
       (candidate.subject.statBlockDamageNotation ?? "rolled") ===
         statBlockDamageNotation,
   );
@@ -791,17 +842,16 @@ function requireDiscoveredStatBlockAttackSubject(
 
 function spendRechargeAttack(): BattleState {
   const battle = statBlockActionOrderingBattle(monsterResourceStatBlock());
-  const subject = statBlockAttackSubject(rechargeAttackName);
+  const subject = requireDiscoveredStatBlockAttackSubject(
+    battle,
+    rechargeAttackName,
+    "rolled",
+  );
   const target = requireHole(
     resolveBattleSubject({ state: battle, subject, fills: [] }),
     "targetChoice",
   );
-  const targetChoice = attackTargetFill(
-    target,
-    goblinId,
-    fighterId,
-    rechargeAttackName,
-  );
+  const targetChoice = attackTargetFill(target, goblinId, fighterId);
   const attackRoll = requireHole(
     resolveBattleSubject({
       state: battle,
@@ -848,15 +898,8 @@ function statBlockAttackAvailable(
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === goblinId &&
-      act.subject.attackName === attackName,
+      act.summary.includes(attackName),
   );
-}
-
-function statBlockAttackName(subject: BattleSubject): string {
-  if (subject.tag === "action" && subject.action === "attack") {
-    return subject.attackName;
-  }
-  throw new Error("Expected Stat Block attack subject.");
 }
 
 function requireHoleFromList<K extends BattleHole["kind"]>(

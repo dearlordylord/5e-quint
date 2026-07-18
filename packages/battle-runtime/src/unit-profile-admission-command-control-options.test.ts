@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
 import { describe, expect, test } from "vitest";
+import { characterBonusAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
   commandLegendaryActorId,
   commandUnitId,
@@ -62,7 +63,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 2,
     });
 
-    expect(levelOne.subject).toEqual({
+    expect(levelOne.subject).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(commandUnitId, 1, "command"),
@@ -308,7 +309,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
         candidate.subject.actorId === commandLegendaryActorId &&
-        candidate.subject.statBlockSection === "legendaryActions",
+        candidate.summary.includes("Tail Swipe"),
     );
     if (legendaryAct === undefined) {
       throw new Error("Expected Command Halt to leave Legendary Actions open.");
@@ -339,11 +340,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
           },
         }),
         expect.objectContaining({
-          subject: expect.objectContaining({
-            tag: "action",
-            actorId: commandLegendaryActorId,
-            statBlockSection: "legendaryActions",
-          }),
+          subject: legendaryAct.subject,
         }),
       ]),
     );
@@ -364,12 +361,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(
       resolveBattleSubject({
         state: targetTurn.state,
-        subject: {
-          tag: "bonusAction",
-          actorId: spellTargetId,
-          action: "offHandAttack",
-          attackName: "Shortsword",
-        },
+        subject: characterBonusAttackSubjectForTest(
+          targetTurn.state,
+          spellTargetId,
+          "martialArtsUnarmedStrike",
+        ),
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });

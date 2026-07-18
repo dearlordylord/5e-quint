@@ -15,7 +15,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleResolutionResult,
@@ -149,7 +149,7 @@ function discoverWeaponDamageRiderCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: WeaponDamageRiderInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
