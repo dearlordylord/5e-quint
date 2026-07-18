@@ -49,7 +49,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} repeat WIS save`,
+    label: "Repeat WIS save",
     hideousLaughterRepeatSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,

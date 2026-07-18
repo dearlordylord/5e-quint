@@ -363,7 +363,7 @@ export function escapeSpellRestraintAbilityCheckHole(
     holeInstanceKey: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
     kind: "abilityCheck",
-    label: `Escape ${effect.sourceProcedureRef} Strength (Athletics) check (DC ${dc ?? 1})`,
+    label: `Escape spell restraint Strength (Athletics) check (DC ${dc ?? 1})`,
     ability: "str",
     skill: "athletics",
     dc: dc ?? difficultyClass(1),

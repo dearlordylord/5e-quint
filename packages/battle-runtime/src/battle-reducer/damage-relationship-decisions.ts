@@ -18,6 +18,7 @@ import type {
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
+  enemyZeroHitPointTemporaryHitPointsProcedureRef,
   enemyZeroHitPointTemporaryHitPointsTriggerApplies,
   enemyZeroHitPointTransitionOccurs,
 } from "./enemy-zero-hit-point-temporary-hit-points.ts";
@@ -254,8 +255,13 @@ function damageRelationshipQuestions(input: {
       continue;
     }
     for (const profile of beneficiary.origin.enemyZeroHitPointTemporaryHitPointsProfiles.values()) {
+      const procedureRef = enemyZeroHitPointTemporaryHitPointsProcedureRef(
+        beneficiary.origin.execution,
+        profile.unit.id,
+      );
+      if (procedureRef === undefined) continue;
       const triggerApplies = enemyZeroHitPointTemporaryHitPointsTriggerApplies({
-        profileUnitId: profile.unit.id,
+        procedureRef,
         beneficiaryId: beneficiary.combatantId,
         damageSourceId: input.damageSourceId,
         targetId: input.targetId,

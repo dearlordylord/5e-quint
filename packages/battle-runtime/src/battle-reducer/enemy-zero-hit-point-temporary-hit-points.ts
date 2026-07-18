@@ -8,8 +8,13 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
+import {
+  characterUnitProcedureRef,
+  type CharacterExecutionState,
+} from "../character-execution.ts";
+import { ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 
 export type EnemyZeroHitPointTemporaryHitPointsAward = {
@@ -89,7 +94,12 @@ function enemyZeroHitPointTemporaryHitPointsAward(
 ): number | null {
   let highestAward: number | null = null;
   for (const profile of beneficiary.origin.enemyZeroHitPointTemporaryHitPointsProfiles.values()) {
+    const procedureRef = enemyZeroHitPointTemporaryHitPointsProcedureRef(
+      beneficiary.origin.execution,
+      profile.unit.id,
+    );
     if (
+      procedureRef === undefined ||
       !relationshipDecisions.some(
         (decision) =>
           decision.kind === "enemyZeroHitPointTemporaryHitPoints" &&
@@ -99,7 +109,7 @@ function enemyZeroHitPointTemporaryHitPointsAward(
           decision.targetIsEnemy,
       ) ||
       !enemyZeroHitPointTemporaryHitPointsTriggerApplies({
-        profileUnitId: profile.unit.id,
+        procedureRef,
         beneficiaryId: beneficiary.combatantId,
         damageSourceId,
         targetId,
@@ -122,7 +132,7 @@ function enemyZeroHitPointTemporaryHitPointsAward(
 }
 
 export function enemyZeroHitPointTemporaryHitPointsTriggerApplies(input: {
-  readonly profileUnitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly beneficiaryId: CombatantId;
   readonly damageSourceId: CombatantId;
   readonly targetId: CombatantId;
@@ -143,9 +153,21 @@ export function enemyZeroHitPointTemporaryHitPointsTriggerApplies(input: {
       fact.beneficiaryId === input.beneficiaryId &&
       fact.damageSourceId === input.damageSourceId &&
       fact.targetId === input.targetId &&
-      fact.sourceProcedureRef === input.profileUnitId &&
+      fact.sourceProcedureRef === input.procedureRef &&
       fact.rangeFeet === input.otherWithinFeet,
   );
+}
+
+export function enemyZeroHitPointTemporaryHitPointsProcedureRef(
+  execution: CharacterExecutionState,
+  unitId: UnitRecord["id"],
+): BattleProcedureExecutionRef | undefined {
+  return characterUnitProcedureRef(execution, unitId, {
+    kind: "unitSupportProfile",
+    supportKinds: new Set([
+      ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+    ]),
+  });
 }
 
 function classLevelForUnit(

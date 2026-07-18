@@ -260,7 +260,7 @@ function characterProcedurePresentationText(
       (candidate) => candidate.sourceProcedureRef === procedureRef,
     );
     if (invocation === undefined) return undefined;
-    return spellProcedurePresentationText(invocation);
+    return spellProcedurePresentationText(invocation, subject);
   }
   if (subject.tag === "druidWildShape" && subject.action === "assumeForm") {
     const form = actor.origin.druidWildShapeAvailableForms?.find(
@@ -314,7 +314,31 @@ function characterProcedurePresentationText(
 
 function spellProcedurePresentationText(
   invocation: ReturnType<typeof supportedSpellActs>[number],
+  subject: Extract<
+    CharacterProcedureSelectionSubject,
+    {
+      readonly tag:
+        | "actionSpell"
+        | "bonusActionSpell"
+        | "bonusActionDashSpell"
+        | "findFamiliarTouchSpell";
+    }
+  >,
 ): { readonly label: string; readonly summary: string } {
+  if (subject.tag === "findFamiliarTouchSpell") {
+    const label = `Familiar Delivery: ${invocation.spell.name}`;
+    return {
+      label,
+      summary: `Deliver ${invocation.spell.name} through the selected familiar.`,
+    };
+  }
+  if (subject.tag === "actionSpell" && subject.mode.tag === "ready") {
+    const label = `Ready ${invocation.spell.name}`;
+    return {
+      label,
+      summary: `${label} for ${readiedSpellTriggerPresentationName(subject.mode.trigger)}.`,
+    };
+  }
   if (
     invocation.procedure === "spiritualWeaponRepeatAttack" ||
     invocation.procedure === "spellCreatedHeldObjectAttack"
@@ -326,10 +350,34 @@ function spellProcedurePresentationText(
     const label = `Re-evoke ${invocation.spell.name}`;
     return { label, summary: `${label}.` };
   }
+  if (subject.tag === "bonusActionDashSpell") {
+    return {
+      label: invocation.spell.name,
+      summary: `Use ${invocation.spell.name} and Dash.`,
+    };
+  }
+  if (subject.metamagic !== undefined) {
+    return {
+      label: invocation.spell.name,
+      summary: `Use ${invocation.spell.name} with the selected Metamagic.`,
+    };
+  }
   return {
     label: invocation.spell.name,
     summary: `Use ${invocation.spell.name}.`,
   };
+}
+
+function readiedSpellTriggerPresentationName(
+  trigger: "attackHit" | "spellCast" | "saveFailed" | "afterDamage",
+): string {
+  return Match.value(trigger).pipe(
+    Match.when("attackHit", () => "an attack hit"),
+    Match.when("spellCast", () => "a spell cast"),
+    Match.when("saveFailed", () => "a failed save"),
+    Match.when("afterDamage", () => "damage"),
+    Match.exhaustive,
+  );
 }
 
 function alternateActionPresentationName(

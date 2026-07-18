@@ -575,8 +575,8 @@ function discoverBattleActsWithoutRouteEvents(
         },
         label:
           actorId === targetId
-            ? `Escape ${effect.sourceProcedureRef}`
-            : `Help escape ${effect.sourceProcedureRef}`,
+            ? "Escape spell restraint"
+            : "Help escape spell restraint",
         summary:
           actorId === targetId
             ? "Use an action to attempt to end a spell-imposed Restrained condition."
@@ -1587,7 +1587,7 @@ function protectionRelevantEffectSaveActs(
         effectRef: spellActiveEffectExecutionRef(effect),
         relevantEffect,
       },
-      label: `${effect.sourceProcedureRef} ${relevantEffect} save`,
+      label: `${relevantEffect} save`,
       summary:
         "Resolve a new Saving Throw against an already-applied effect relevant to Protection from Evil and Good.",
       initialHoles: [hole],

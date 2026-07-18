@@ -874,7 +874,7 @@ export function spellTurnEndDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} turn-end damage (${expr})`,
+    label: `Spell turn-end damage (${expr})`,
     spellTurnEndDamage: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -938,7 +938,7 @@ export function spellTurnStartDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} turn-start damage (${expr})`,
+    label: `Spell turn-start damage (${expr})`,
     spellTurnStartDamage: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1022,7 +1022,7 @@ function spellTurnStartSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} turn-start ${effect.save.ability.toUpperCase()} save`,
+    label: `Turn-start ${effect.save.ability.toUpperCase()} save`,
     spellTurnStartSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1145,7 +1145,7 @@ function sleepRepeatSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} repeat WIS save`,
+    label: "Repeat WIS save",
     sleepRepeatSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1283,7 +1283,7 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${effect.condition} end-turn save`,
+    label: `${effect.condition} end-turn save`,
     spellConditionEndTurnSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1350,7 +1350,7 @@ function spellConditionCountedEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${effect.condition} counted end-turn save`,
+    label: `${effect.condition} counted end-turn save`,
     spellConditionCountedEndTurnSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1476,7 +1476,7 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} end-turn WIS save`,
+    label: "End-turn WIS save",
     slowActivePenaltiesEndTurnSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1536,7 +1536,7 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${effect.ability.toUpperCase()} D20 Test end-turn save`,
+    label: `${effect.ability.toUpperCase()} D20 Test end-turn save`,
     abilityD20TestRollModeEndTurnSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -2379,7 +2379,7 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${trigger === "entersArea" ? "entry" : "end-turn"} DEX save`,
+    label: `${trigger === "entersArea" ? "Entry" : "End-turn"} DEX save`,
     greaseGroundHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -2573,7 +2573,7 @@ export function webRestraintSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
     webRestraint: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -2780,7 +2780,7 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
     sleetStormAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -2982,7 +2982,7 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${insectPlagueAreaHazardTriggerLabel(trigger)} CON save`,
+    label: `${insectPlagueAreaHazardTriggerLabel(trigger)} CON save`,
     insectPlagueAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -3016,7 +3016,7 @@ function insectPlagueAreaHazardDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${insectPlagueAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    label: `${insectPlagueAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     insectPlagueAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -3361,7 +3361,7 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${cloudkillAreaHazardTriggerLabel(trigger)} CON save`,
+    label: `${cloudkillAreaHazardTriggerLabel(trigger)} CON save`,
     cloudkillAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -3395,7 +3395,7 @@ function cloudkillAreaHazardDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${cloudkillAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    label: `${cloudkillAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     cloudkillAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -3917,7 +3917,7 @@ export function gustOfWindLineSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} end-turn STR save`,
+    label: "End-turn STR save",
     gustOfWindLine: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -3961,7 +3961,7 @@ export function gustOfWindLineDirectionChoiceHole(
     kind: "gustOfWindLineDirectionChoice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} Line direction`,
+    label: "Line direction",
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
     areaId: effect.areaId,
@@ -4252,7 +4252,7 @@ export function flamingSphereRamMovementHole(
     kind: "movableZoneRamMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ram movement`,
+    label: "Ram movement",
     movableZone: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -4272,7 +4272,7 @@ export function flamingSphereRepositionMovementHole(
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} reposition movement`,
+    label: "Reposition movement",
     movableZone: {
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -4294,7 +4294,7 @@ export function flamingSphereSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${flamingSphereTriggerLabel(trigger)} DEX save`,
+    label: `${flamingSphereTriggerLabel(trigger)} DEX save`,
     movableZone: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -4327,7 +4327,7 @@ function flamingSphereDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${flamingSphereTriggerLabel(trigger)} damage`,
+    label: `${flamingSphereTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -5074,7 +5074,7 @@ export function moonbeamSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${moonbeamTriggerLabel(trigger)} CON save`,
+    label: `${moonbeamTriggerLabel(trigger)} CON save`,
     movableZone: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -5107,7 +5107,7 @@ function moonbeamDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${moonbeamTriggerLabel(trigger)} damage`,
+    label: `${moonbeamTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -5128,7 +5128,7 @@ export function moonbeamRepositionMovementHole(
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} reposition movement`,
+    label: "Reposition movement",
     movableZone: {
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -8556,7 +8556,7 @@ function spikeGrowthMovementDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${request.effect.sourceProcedureRef} movement damage`,
+    label: "Movement damage",
     spikeGrowthMovement: {
       targetId,
       sourceProcedureRef: request.effect.sourceProcedureRef,

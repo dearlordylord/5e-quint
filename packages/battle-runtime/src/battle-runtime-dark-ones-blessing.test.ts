@@ -37,7 +37,11 @@ import type {
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
 import { damageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
 import { applyChainedSpellDamage } from "./battle-reducer/spells-resolve-chained.ts";
-import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
+import { characterUnitProcedureRef } from "./character-execution.ts";
+import {
+  battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit,
+  ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+} from "./unit-feature-support.ts";
 
 type DarkOnesBlessingSupportProfile = Exclude<
   ReturnType<typeof battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit>,
@@ -355,7 +359,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     });
     const result = applyPreparedSlotSpellDamage(state, enemyId, 5, {
       damageSourceId: allyId,
-      spatialFacts: [darkOnesBlessingRangeFact(allyId, enemyId)],
+      spatialFacts: [darkOnesBlessingRangeFactForState(state, allyId, enemyId)],
       relationshipDecisions: [darkOnesBlessingEnemyDecision(enemyId)],
     });
 
@@ -422,8 +426,13 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       deathFailuresAtZeroHp: 1,
       damageSourceId: allyId,
       spatialFacts: [
-        darkOnesBlessingRangeFact(allyId, enemyId, warlockId),
-        darkOnesBlessingRangeFact(allyId, enemyId, secondWarlockId),
+        darkOnesBlessingRangeFactForState(state, allyId, enemyId, warlockId),
+        darkOnesBlessingRangeFactForState(
+          state,
+          allyId,
+          enemyId,
+          secondWarlockId,
+        ),
       ],
       relationshipDecisions: [
         darkOnesBlessingEnemyDecision(enemyId, warlockId),
@@ -481,13 +490,26 @@ function damageEnemyToZero(input: {
   if (target === undefined) {
     throw new Error("Dark One's Blessing test target must exist.");
   }
+  const spatialFacts = (input.spatialFacts ?? []).map((fact) => {
+    if (
+      fact.kind !== "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange"
+    ) {
+      return fact;
+    }
+    return darkOnesBlessingRangeFactForState(
+      state,
+      fact.damageSourceId,
+      fact.targetId,
+      fact.beneficiaryId,
+    );
+  });
   return applyBattleHitPointDamage({
     state,
     target,
     damageAmount: 5,
     deathFailuresAtZeroHp: 1,
     damageSourceId: input.damageSourceId,
-    spatialFacts: [...(input.spatialFacts ?? [])],
+    spatialFacts,
     ...(input.targetIsEnemy === false
       ? {}
       : {
@@ -593,6 +615,39 @@ function darkOnesBlessingRangeFact(
     damageSourceId,
     targetId,
     sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
+    rangeFeet: movementFeet(10),
+  };
+}
+
+function darkOnesBlessingRangeFactForState(
+  state: BattleState,
+  damageSourceId: CombatantId,
+  targetId: CombatantId,
+  beneficiaryId: CombatantId = warlockId,
+): BattleTargetSpatialFact {
+  const beneficiary = state.combatants.get(beneficiaryId);
+  if (beneficiary?.origin.kind !== "character") {
+    throw new Error("Dark One's Blessing beneficiary must be a character.");
+  }
+  const sourceProcedureRef = characterUnitProcedureRef(
+    beneficiary.origin.execution,
+    unit.id,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([
+        ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+      ]),
+    },
+  );
+  if (sourceProcedureRef === undefined) {
+    throw new Error("Dark One's Blessing execution binding must exist.");
+  }
+  return {
+    kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
+    beneficiaryId,
+    damageSourceId,
+    targetId,
+    sourceProcedureRef,
     rangeFeet: movementFeet(10),
   };
 }

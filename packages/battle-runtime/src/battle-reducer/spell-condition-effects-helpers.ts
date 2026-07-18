@@ -269,7 +269,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceProcedureRef} ${relevantEffect} save`,
+    label: `${relevantEffect} save`,
     protectionRelevantEffectSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
