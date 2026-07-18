@@ -20,6 +20,7 @@ import {
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
   type BattleAttackRollResult,
+  type BattleAttackRollRelationshipFact,
   type BattleCommandOption,
   type BattleFill,
   type BattleHoleId,
@@ -28,17 +29,25 @@ import {
   type BattleSpellTargetAllocation,
   type BattleSpellTargetAllocationSpatialFact,
   type BattleSpellTargetListSpatialFact,
+  type BattleSpellTargetListRelationshipFact,
   type BattleSpellCastReactionFact,
   type BattleMagicWeaponTargetItemFact,
+  type BattleSavingThrowRelationshipFact,
   type BattleSpiritualWeaponForcePosition,
   type BattleObjectContactTargetSpatialFact,
   type BattleOngoingSpellTargetWithinRangeFact,
   type SelfTransformationModeKind,
   type BattleTargetSpatialFact,
+  type BattleState,
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
+import {
+  parseAttackTargetChoiceFill,
+  parseSavingThrowRelationshipFacts,
+  parseSpellTargetListRelationshipFacts,
+} from "./roll-trigger-relationship-facts.ts";
 import {
   isSourceDamageRollPenaltyRollFill,
   isSpellDamageReductionRollFill,
@@ -76,11 +85,13 @@ import {
   spellTargetAllocationHoleId,
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   magicWeaponTargetItemHoleId,
   spellDancingLightsPlacementHoleId,
   spiritualWeaponForcePositionHole,
   spiritualWeaponForcePositionInvalidReason,
+  spellTargetRequiresAttackRollRelationshipFact,
 } from "./spells-targeting.ts";
 import { levitateInitialRiseHole } from "./levitate-creature.ts";
 import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
@@ -95,6 +106,7 @@ export type SpellAttackSequencePartTargetFill =
       readonly kind: "combatant";
       readonly targetId: CombatantId;
       readonly spatialFacts: readonly BattleTargetSpatialFact[];
+      readonly relationshipFacts: readonly BattleAttackRollRelationshipFact[];
     }
   | {
       readonly kind: "object";
@@ -182,6 +194,7 @@ export type SpellFillSet =
       >[];
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly damageRelationshipDecisions: DamageRelationshipDecisionsByHole;
+      readonly targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
       readonly reactionSpellTargetFacts: readonly SpellCastReactionFact[];
       readonly targetAllocation:
         | {
@@ -193,6 +206,7 @@ export type SpellFillSet =
         | {
             readonly targetIds: readonly CombatantId[];
             readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
+            readonly relationshipFacts: readonly BattleSpellTargetListRelationshipFact[];
           }
         | undefined;
       readonly attackSequencePartFills: readonly SpellAttackSequencePartFillSet[];
@@ -206,6 +220,7 @@ export type SpellFillSet =
       readonly savingThrowOutcomes:
         | BattleSpellSavingThrowOutcomeValue
         | undefined;
+      readonly savingThrowRelationshipFacts: readonly BattleSavingThrowRelationshipFact[];
       readonly skillChoice: Skill | undefined;
       readonly abilityChoice: Ability | undefined;
       readonly targetAbilityChoices:
@@ -277,7 +292,21 @@ export type SpellFillSet =
 export function spellFillSet(
   fills: readonly BattleFill[],
   invocation: SupportedSpellInvocation,
+  actorId: CombatantId,
+  state: BattleState,
 ): SpellFillSet {
+  const attackRelationshipDecisionRequired =
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "attackRollAgainstEnemy",
+    );
+  const savingThrowRelationshipDecisionRequired =
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "enemySavingThrow",
+    );
   let targetId: CombatantId | undefined;
   let objectTarget:
     | {
@@ -319,6 +348,7 @@ export function spellFillSet(
     { readonly kind: "abilityCheck" }
   >[] = [];
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
+  let targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[] = [];
   let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
   let reactionSpellTargetFactsFilled = false;
   let targetAllocation:
@@ -331,6 +361,7 @@ export function spellFillSet(
     | {
         readonly targetIds: readonly CombatantId[];
         readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
+        readonly relationshipFacts: readonly BattleSpellTargetListRelationshipFact[];
       }
     | undefined;
   let attackRoll: BattleAttackRollResult | undefined;
@@ -352,6 +383,8 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "movement" }>
     | undefined;
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
+  let savingThrowRelationshipFacts: readonly BattleSavingThrowRelationshipFact[] =
+    [];
   let skillChoice: Skill | undefined;
   let abilityChoice: Ability | undefined;
   let targetAbilityChoices:
@@ -416,6 +449,13 @@ export function spellFillSet(
   for (const fill of fills) {
     if (fill.kind === "damageRelationshipDecisions") {
       continue;
+    }
+    if (fill.kind === "attackRoll" && fill.relationshipFacts !== undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Spell attack roll relationship facts do not match a requested spell attack-roll decision.",
+      };
     }
     if (fill.kind === "slowSomaticSpellFailureOutcome") {
       continue;
@@ -518,11 +558,29 @@ export function spellFillSet(
     }
 
     if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
+      const requiresAttackRelationship =
+        spellTargetRequiresAttackRollRelationshipFact(invocation);
+      const parsed = requiresAttackRelationship
+        ? parseAttackTargetChoiceFill(
+            fill,
+            actorId,
+            attackRelationshipDecisionRequired,
+          )
+        : null;
+      if (parsed?.tag === "invalid") return parsed;
+      if (!requiresAttackRelationship && fill.relationshipFacts !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Non-attack spell target does not accept attack-roll relationship facts.",
+        };
+      }
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Spell target was filled twice." };
       }
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      targetRelationshipFacts = parsed?.fill.relationshipFacts ?? [];
       const sightFactValidation = attackSightFactValidation(targetSpatialFacts);
       if (sightFactValidation !== null) return sightFactValidation;
       continue;
@@ -575,6 +633,12 @@ export function spellFillSet(
         "target",
       );
       if (partIndex !== null) {
+        const parsed = parseAttackTargetChoiceFill(
+          fill,
+          actorId,
+          attackRelationshipDecisionRequired,
+        );
+        if (parsed.tag === "invalid") return parsed;
         const attackSequencePartFill = attackSequencePartFills[partIndex];
         if (attackSequencePartFill === undefined) {
           return {
@@ -597,6 +661,7 @@ export function spellFillSet(
             kind: "combatant",
             targetId: fill.value,
             spatialFacts,
+            relationshipFacts: parsed.fill.relationshipFacts ?? [],
           },
         };
         continue;
@@ -936,9 +1001,30 @@ export function spellFillSet(
           message: "Spell target list was filled twice.",
         };
       }
+      const relationshipFactsRequired =
+        "saveRollModeRule" in invocation &&
+        invocation.saveRollModeRule?.kind === "hostileTarget";
+      const relationshipFacts = relationshipFactsRequired
+        ? parseSpellTargetListRelationshipFacts(
+            fill.relationshipFacts ?? [],
+            actorId,
+            invocation.spell.id,
+            fill.value.targetIds,
+          )
+        : fill.relationshipFacts === undefined
+          ? []
+          : null;
+      if (relationshipFacts === null) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell target relationship facts must answer the target-list hole request.",
+        };
+      }
       targetList = {
         targetIds: fill.value.targetIds,
         spatialFacts: fill.spatialFacts,
+        relationshipFacts,
       };
       continue;
     }
@@ -1054,6 +1140,22 @@ export function spellFillSet(
         };
       }
       savingThrowOutcomes = effectiveSavingThrowOutcomeFill.value;
+      const parsedRelationshipFacts = parseSavingThrowRelationshipFacts(
+        fill.relationshipFacts ?? [],
+        actorId,
+        effectiveSavingThrowOutcomeFill.value.outcomes.map(
+          (outcome) => outcome.targetId,
+        ),
+        savingThrowRelationshipDecisionRequired,
+      );
+      if (parsedRelationshipFacts === null) {
+        return {
+          tag: "invalid",
+          message:
+            "Saving Throw relationship facts must answer the saving-throw hole request.",
+        };
+      }
+      savingThrowRelationshipFacts = parsedRelationshipFacts;
       continue;
     }
 
@@ -1715,6 +1817,7 @@ export function spellFillSet(
     targetSpatialFacts,
     damageRelationshipDecisions:
       relationshipDecisions.decisionsByRelationshipHole,
+    targetRelationshipFacts,
     reactionSpellTargetFacts,
     targetAllocation,
     targetList,
@@ -1723,6 +1826,7 @@ export function spellFillSet(
     remarkableAthleteCriticalHitMovementDecision,
     remarkableAthleteCriticalHitMovement,
     savingThrowOutcomes,
+    savingThrowRelationshipFacts,
     skillChoice,
     abilityChoice,
     targetAbilityChoices,

@@ -1128,6 +1128,18 @@ export function attackTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [
       {
         kind: "attackTargetInMeleeReach",
@@ -1175,9 +1187,26 @@ export function attackRollFill(
     readonly rollMode?: "advantage" | "disadvantage" | "normal";
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
   return {
     kind: "attackRoll",
     holeId: hole.holeId,
+    ...(relationshipFactRequest?.kind === "attackRollTargetIsEnemy" &&
+    relationshipFactRequest.targetId !== undefined
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: relationshipFactRequest.attackerId,
+              targetId: relationshipFactRequest.targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     value: {
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),

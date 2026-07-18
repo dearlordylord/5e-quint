@@ -895,6 +895,8 @@ module battleRuntimeCoreCombatTests {
   run test_rage_extends_when_grapple_forces_enemy_save = {
     val raging = startRage(initialState, 2).state
     val nextFighterTurn = endTurn(endTurn(raging))
+    val unchangedForNonEnemyAttack = extendRageWithAttackRoll(nextFighterTurn, false)
+    val unchangedForNonEnemySave = extendRageWithEnemySavingThrow(nextFighterTurn, false)
     val grappled = grappleFighterGoblin(nextFighterTurn, 12)
     val extendedToNextTurn = match fighterRageOccurrence(grappled) {
       | ActiveRoundExtendedOngoingFeature(data) =>
@@ -904,6 +906,8 @@ module battleRuntimeCoreCombatTests {
     all {
       assert(fighterHasRage(grappled)),
       assert(extendedToNextTurn),
+      assert(fighterRageOccurrence(unchangedForNonEnemyAttack) == fighterRageOccurrence(nextFighterTurn)),
+      assert(fighterRageOccurrence(unchangedForNonEnemySave) == fighterRageOccurrence(nextFighterTurn)),
     }
   }
 

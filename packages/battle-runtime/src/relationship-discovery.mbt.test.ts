@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.RELATIONSHIP_DISCOVERY
 import { describe, expect, it } from "vitest";
 
 import { weaponMasteryCleaveTargetHole } from "./battle-reducer/attack-roll.ts";

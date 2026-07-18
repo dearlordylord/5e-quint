@@ -127,16 +127,23 @@ describe("Sanctuary targeting interdiction", () => {
     if (needsSanctuary.tag !== "needsHoles") {
       throw new Error("Expected Sanctuary interdiction hole.");
     }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    expect(sanctuaryHole).toMatchObject({
+      replacementTargetKind: "attackRoll",
+    });
 
     const lost = resolveBattleSubject({
       state: warded,
       subject: attack.subject,
       fills: [
         targetFill,
-        sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
-          { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
-        ),
+        sanctuaryOutcomeFill(sanctuaryHole, {
+          saveSucceeded: false,
+          outcome: { kind: "loseAttackOrSpell" },
+        }),
       ],
     });
 
@@ -184,7 +191,7 @@ describe("Sanctuary targeting interdiction", () => {
     });
   });
 
-  test("failed save can choose a new legal attack target", () => {
+  test("failed save can choose a new legal nonenemy attack target", () => {
     const warded = advanceToAttacker(
       castSanctuary(battleWithSanctuary(), wardedId),
     );
@@ -216,6 +223,7 @@ describe("Sanctuary targeting interdiction", () => {
               kind: "newTarget",
               targetId: replacementId,
               spatialFacts: [attackTargetFact(replacementId, attack.subject)],
+              replacementTargetKind: "attackRoll",
             },
           },
         ),
@@ -342,16 +350,24 @@ describe("Sanctuary targeting interdiction", () => {
     if (needsSanctuary.tag !== "needsHoles") {
       throw new Error("Expected Sanctuary interdiction hole.");
     }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    expect(sanctuaryHole).toMatchObject({
+      replacementTargetKind: "nonAttack",
+    });
+    expect("relationshipFactRequest" in sanctuaryHole).toBe(false);
 
     const lost = resolveBattleSubject({
       state: warded,
       subject: act.subject,
       fills: [
         allocationFill,
-        sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
-          { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
-        ),
+        sanctuaryOutcomeFill(sanctuaryHole, {
+          saveSucceeded: false,
+          outcome: { kind: "loseAttackOrSpell" },
+        }),
       ],
     });
 
@@ -1021,6 +1037,18 @@ function attackTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [attackTargetFact(targetId, attackSubject)],
   };
 }
@@ -1035,6 +1063,18 @@ function spellTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [
       { kind: "spellTarget", casterId: casterIdValue, targetId, spellId },
     ],
@@ -1050,6 +1090,18 @@ function spellLeapTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [
       {
         kind: "spellLeapTargetWithinRange",
@@ -1105,9 +1157,25 @@ function attackRollFill(
     naturalD20: 12,
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
   return {
     kind: "attackRoll",
     holeId: hole.holeId,
+    ...(relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: relationshipFactRequest.attackerId,
+              targetId: relationshipFactRequest.targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     value: { total: value.total, naturalD20: DieRollResult(value.naturalD20) },
   };
 }
@@ -1138,9 +1206,32 @@ function savingThrowOutcomeFill(
     readonly succeeded: boolean;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
+  const relationshipFacts =
+    relationshipFactRequest?.kind === "savingThrowTargetIsEnemy" &&
+    outcomes[0] !== undefined
+      ? ([
+          {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: relationshipFactRequest.actorId,
+            targetId: outcomes[0].targetId,
+            targetIsEnemy: true,
+          },
+          ...outcomes.slice(1).map((outcome) => ({
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: relationshipFactRequest.actorId,
+            targetId: outcome.targetId,
+            targetIsEnemy: true,
+          })),
+        ] as const)
+      : undefined;
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
+    ...(relationshipFacts === undefined ? {} : { relationshipFacts }),
     value: {
       area: {
         originAnchorId: casterId,

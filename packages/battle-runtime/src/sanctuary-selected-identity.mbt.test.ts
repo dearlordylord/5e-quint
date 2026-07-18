@@ -573,6 +573,7 @@ function observeLegalReplacementTargetRoute(): SanctuaryRouteProjection {
             kind: "newTarget",
             targetId: replacementId,
             spatialFacts: [attackTargetFact(targetHole, replacementId)],
+            replacementTargetKind: "attackRoll",
           },
         }),
       ],
@@ -614,6 +615,7 @@ function observeIllegalReplacementTargetRoute(): SanctuaryRouteProjection {
           kind: "newTarget",
           targetId: attackerId,
           spatialFacts: [attackTargetFact(targetHole, attackerId)],
+          replacementTargetKind: "attackRoll",
         },
       }),
     ],
@@ -941,6 +943,7 @@ function projectLegalReplacementTarget(): SanctuarySelectedIdentityProjection {
             kind: "newTarget",
             targetId: replacementId,
             spatialFacts: [attackTargetFact(targetHole, replacementId)],
+            replacementTargetKind: "attackRoll",
           },
         }),
       ],
@@ -986,6 +989,7 @@ function projectIllegalReplacementTarget(): SanctuarySelectedIdentityProjection 
           kind: "newTarget",
           targetId: attackerId,
           spatialFacts: [attackTargetFact(targetHole, attackerId)],
+          replacementTargetKind: "attackRoll",
         },
       }),
     ],
@@ -1415,6 +1419,18 @@ function attackTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [attackTargetFact(hole, targetId)],
   };
 }
@@ -1429,6 +1445,18 @@ function spellTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [
       { kind: "spellTarget", casterId: casterIdValue, targetId, spellId },
     ],

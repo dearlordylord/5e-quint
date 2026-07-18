@@ -40,7 +40,11 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
+import {
+  extendSavingThrowOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
 type OpenHandTechniqueSavingThrowChoice = Extract<
   OpenHandTechniqueDecisionChoice,
@@ -209,10 +213,28 @@ function resolveOpenHandTechniqueSaveChoice(
         "Open Hand Technique Saving Throw must target the attacked creature.",
     };
   }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    input.savingThrow.relationshipFacts ?? [],
+    hit.actorId,
+    [hit.targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      hit.actorId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Open Hand Technique relationship facts must answer the saving-throw hole request.",
+    };
+  }
   const savingThrowState = extendSavingThrowOngoingFeatures(
     input.state,
     hit.actorId,
     [hit.targetId],
+    relationshipFacts,
   );
   const push = openHandTechniquePush(input.savingThrow);
   if (choice !== "pushAwayOnFailedSave" && push !== undefined) {
@@ -259,6 +281,18 @@ function openHandTechniqueSavingThrowHole(
     holeId: OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
     holeInstanceKey: OPEN_HAND_TECHNIQUE_SAVE_HOLE_INSTANCE,
     label: `Open Hand Technique ${choice === "pushAwayOnFailedSave" ? "Strength" : "Dexterity"} Saving Throw`,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      hit.actorId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: hit.actorId,
+          },
+        }
+      : {}),
     unitFeature: {
       unitId: hit.unitId,
       label: "Open Hand Technique",

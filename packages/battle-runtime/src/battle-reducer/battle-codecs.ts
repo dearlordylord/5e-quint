@@ -1086,6 +1086,65 @@ const BattleDamageRelationshipDecisionsSchema = Schema.NonEmptyArray(
     answer: Schema.Boolean,
   }),
 );
+const BattleAttackRollRelationshipFactSchema = Schema.Struct({
+  kind: Schema.Literal("attackRollTargetIsEnemy"),
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  targetIsEnemy: Schema.Boolean,
+});
+const BattleSavingThrowRelationshipFactSchema = Schema.Struct({
+  kind: Schema.Literal("savingThrowTargetIsEnemy"),
+  actorId: CombatantId,
+  targetId: CombatantId,
+  targetIsEnemy: Schema.Boolean,
+});
+const BattleSpellTargetListRelationshipFactSchema = Schema.Struct({
+  kind: Schema.Literal("spellTargetIsHostileToCaster"),
+  casterId: CombatantId,
+  targetId: CombatantId,
+  spellId: Schema.String,
+  targetIsHostileToCaster: Schema.Boolean,
+});
+const BattleTargetChoiceRelationshipFactSchema = Schema.Union(
+  BattleAttackRollRelationshipFactSchema,
+  BattleSavingThrowRelationshipFactSchema,
+);
+const BattleAttackRollRelationshipFactsSchema = Schema.NonEmptyArray(
+  BattleAttackRollRelationshipFactSchema,
+);
+const BattleSavingThrowRelationshipFactsSchema = Schema.NonEmptyArray(
+  BattleSavingThrowRelationshipFactSchema,
+);
+const BattleTargetChoiceRelationshipFactsSchema = Schema.NonEmptyArray(
+  BattleTargetChoiceRelationshipFactSchema,
+);
+const BattleSpellTargetListRelationshipFactsSchema = Schema.NonEmptyArray(
+  BattleSpellTargetListRelationshipFactSchema,
+);
+const BattleTargetChoiceRelationshipFactRequestSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("attackRollTargetIsEnemy"),
+    attackerId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("savingThrowTargetIsEnemy"),
+    actorId: CombatantId,
+  }),
+);
+const BattleAttackRollRelationshipFactRequestSchema = Schema.Struct({
+  kind: Schema.Literal("attackRollTargetIsEnemy"),
+  attackerId: CombatantId,
+  targetId: CombatantId,
+});
+const BattleSpellTargetListRelationshipFactRequestSchema = Schema.Struct({
+  kind: Schema.Literal("spellTargetIsHostileToCaster"),
+  casterId: CombatantId,
+  spellId: Schema.String,
+});
+const BattleSavingThrowRelationshipFactRequestSchema = Schema.Struct({
+  kind: Schema.Literal("savingThrowTargetIsEnemy"),
+  actorId: CombatantId,
+});
 
 export const BattleObjectDamageOutcomeSchema = Schema.Union(
   Schema.Struct({
@@ -1286,6 +1345,10 @@ export const BattleHoleSchema = Schema.Union(
     requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
       exact: true,
     }),
+    relationshipFactRequest: Schema.optionalWith(
+      BattleTargetChoiceRelationshipFactRequestSchema,
+      { exact: true },
+    ),
     attack: Schema.optionalWith(
       Schema.Struct({
         actorId: CombatantId,
@@ -1471,6 +1534,10 @@ export const BattleHoleSchema = Schema.Union(
     maxTargets: Schema.Number,
     choices: Schema.Array(CombatantId),
     requiresTableSpatialFact: Schema.Literal(true),
+    relationshipFactRequest: Schema.optionalWith(
+      BattleSpellTargetListRelationshipFactRequestSchema,
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1517,6 +1584,10 @@ export const BattleHoleSchema = Schema.Union(
           label: Schema.String,
         }),
       ),
+      { exact: true },
+    ),
+    relationshipFactRequest: Schema.optionalWith(
+      BattleAttackRollRelationshipFactRequestSchema,
       { exact: true },
     ),
   }),
@@ -2096,6 +2167,10 @@ export const BattleHoleSchema = Schema.Union(
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    relationshipFactRequest: Schema.optionalWith(
+      BattleSavingThrowRelationshipFactRequestSchema,
+      { exact: true },
+    ),
     ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
@@ -2125,6 +2200,10 @@ export const BattleHoleSchema = Schema.Union(
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    relationshipFactRequest: Schema.optionalWith(
+      BattleSavingThrowRelationshipFactRequestSchema,
+      { exact: true },
+    ),
     ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
@@ -2137,6 +2216,10 @@ export const BattleHoleSchema = Schema.Union(
     targetIds: Schema.Array(CombatantId),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    relationshipFactRequest: Schema.optionalWith(
+      BattleSavingThrowRelationshipFactRequestSchema,
+      { exact: true },
+    ),
     ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
@@ -2269,6 +2352,10 @@ export const BattleHoleSchema = Schema.Union(
     actorId: CombatantId,
     targetId: CombatantId,
     dc: DifficultyClass,
+    relationshipFactRequest: Schema.optionalWith(
+      BattleSavingThrowRelationshipFactRequestSchema,
+      { exact: true },
+    ),
     mode: Schema.Literal("grappleSave", "escapeCheck"),
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
@@ -2281,20 +2368,48 @@ export const BattleHoleSchema = Schema.Union(
     actorId: CombatantId,
     targetId: CombatantId,
     dc: DifficultyClass,
+    relationshipFactRequest: Schema.optionalWith(
+      BattleSavingThrowRelationshipFactRequestSchema,
+      { exact: true },
+    ),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("sanctuaryInterdictionOutcome"),
-    label: Schema.String,
-    sourceSpellId: Schema.String,
-    sourceCombatantId: CombatantId,
-    wardedCombatantId: CombatantId,
-    triggeringCombatantId: CombatantId,
-    triggeringTargetEventId: BattleHoleIdSchema,
-    ability: Schema.Literal("wis"),
-    dc: DcSourceSchema,
-    choices: Schema.Array(CombatantId),
-  }),
+  Schema.Union(
+    Schema.Struct({
+      ...BattleHoleBaseSchema,
+      kind: Schema.Literal("sanctuaryInterdictionOutcome"),
+      label: Schema.String,
+      sourceSpellId: Schema.String,
+      sourceCombatantId: CombatantId,
+      wardedCombatantId: CombatantId,
+      triggeringCombatantId: CombatantId,
+      triggeringTargetEventId: BattleHoleIdSchema,
+      ability: Schema.Literal("wis"),
+      dc: DcSourceSchema,
+      choices: Schema.Array(CombatantId),
+      replacementTargetKind: Schema.Literal("attackRoll"),
+      relationshipFactRequest: Schema.optionalWith(
+        Schema.Struct({
+          kind: Schema.Literal("attackRollTargetIsEnemy"),
+          attackerId: CombatantId,
+        }),
+        { exact: true },
+      ),
+    }),
+    Schema.Struct({
+      ...BattleHoleBaseSchema,
+      kind: Schema.Literal("sanctuaryInterdictionOutcome"),
+      label: Schema.String,
+      sourceSpellId: Schema.String,
+      sourceCombatantId: CombatantId,
+      wardedCombatantId: CombatantId,
+      triggeringCombatantId: CombatantId,
+      triggeringTargetEventId: BattleHoleIdSchema,
+      ability: Schema.Literal("wis"),
+      dc: DcSourceSchema,
+      choices: Schema.Array(CombatantId),
+      replacementTargetKind: Schema.Literal("nonAttack"),
+    }),
+  ),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackDamageDisposition"),
@@ -2710,6 +2825,58 @@ type BattleDamageRelationshipDecisionEncoded = {
   readonly questionId: string;
   readonly answer: boolean;
 };
+type BattleProcedureRelationshipFactEncoded =
+  | {
+      readonly kind: "attackRollTargetIsEnemy";
+      readonly attackerId: string;
+      readonly targetId: string;
+      readonly targetIsEnemy: boolean;
+    }
+  | {
+      readonly kind: "savingThrowTargetIsEnemy";
+      readonly actorId: string;
+      readonly targetId: string;
+      readonly targetIsEnemy: boolean;
+    }
+  | {
+      readonly kind: "spellTargetIsHostileToCaster";
+      readonly casterId: string;
+      readonly targetId: string;
+      readonly spellId: string;
+      readonly targetIsHostileToCaster: boolean;
+    };
+
+type BattleProcedureRelationshipFactsEncoded<
+  Fact extends BattleProcedureRelationshipFactEncoded,
+> = readonly [Fact, ...Fact[]];
+type BattleAttackRollRelationshipFactsEncoded =
+  BattleProcedureRelationshipFactsEncoded<
+    Extract<
+      BattleProcedureRelationshipFactEncoded,
+      { readonly kind: "attackRollTargetIsEnemy" }
+    >
+  >;
+type BattleSavingThrowRelationshipFactsEncoded =
+  BattleProcedureRelationshipFactsEncoded<
+    Extract<
+      BattleProcedureRelationshipFactEncoded,
+      { readonly kind: "savingThrowTargetIsEnemy" }
+    >
+  >;
+type BattleTargetChoiceRelationshipFactsEncoded =
+  BattleProcedureRelationshipFactsEncoded<
+    Exclude<
+      BattleProcedureRelationshipFactEncoded,
+      { readonly kind: "spellTargetIsHostileToCaster" }
+    >
+  >;
+type BattleSpellTargetListRelationshipFactsEncoded =
+  BattleProcedureRelationshipFactsEncoded<
+    Extract<
+      BattleProcedureRelationshipFactEncoded,
+      { readonly kind: "spellTargetIsHostileToCaster" }
+    >
+  >;
 
 type BattleFillEncoded =
   | {
@@ -2728,6 +2895,7 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: string;
       readonly spatialFacts?: readonly unknown[];
+      readonly relationshipFacts?: BattleTargetChoiceRelationshipFactsEncoded;
     }
   | {
       readonly kind: "damageRelationshipDecisions";
@@ -3204,6 +3372,7 @@ type BattleFillEncoded =
             readonly rangeFeet: number;
           }
       )[];
+      readonly relationshipFacts?: BattleSpellTargetListRelationshipFactsEncoded;
     }
   | {
       readonly kind: "attackRoll";
@@ -3217,6 +3386,7 @@ type BattleFillEncoded =
         readonly missToHitReplacementUnitId?: string;
         readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
       };
+      readonly relationshipFacts?: BattleAttackRollRelationshipFactsEncoded;
     }
   | {
       readonly kind: "savingThrowOutcome";
@@ -3244,6 +3414,7 @@ type BattleFillEncoded =
               readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
             }[];
           };
+      readonly relationshipFacts?: BattleSavingThrowRelationshipFactsEncoded;
     }
   | {
       readonly kind: "skillChoice";
@@ -3491,11 +3662,17 @@ type BattleFillEncoded =
             readonly saveSucceeded: false;
             readonly outcome:
               | { readonly kind: "loseAttackOrSpell" }
-              | {
+              | ({
                   readonly kind: "newTarget";
                   readonly targetId: string;
                   readonly spatialFacts: readonly unknown[];
-                };
+                } & (
+                  | {
+                      readonly replacementTargetKind: "attackRoll";
+                      readonly relationshipFacts?: BattleAttackRollRelationshipFactsEncoded;
+                    }
+                  | { readonly replacementTargetKind: "nonAttack" }
+                ));
           };
     }
   | {
@@ -3718,6 +3895,7 @@ type BattleFillEncoded =
       readonly value: {
         readonly succeeded: boolean;
       };
+      readonly relationshipFacts?: BattleSavingThrowRelationshipFactsEncoded;
     }
   | {
       readonly kind: "shoveOutcome";
@@ -3745,6 +3923,7 @@ type BattleFillEncoded =
                       };
                 };
           };
+      readonly relationshipFacts?: BattleSavingThrowRelationshipFactsEncoded;
     };
 
 export const BattleFillSchema: Schema.Schema<
@@ -3771,6 +3950,10 @@ export const BattleFillSchema: Schema.Schema<
       spatialFacts: Schema.optionalWith(BattleTargetSpatialFactsSchema, {
         exact: true,
       }),
+      relationshipFacts: Schema.optionalWith(
+        BattleTargetChoiceRelationshipFactsSchema,
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("damageRelationshipDecisions"),
@@ -4050,11 +4233,19 @@ export const BattleFillSchema: Schema.Schema<
           }),
         ),
       ),
+      relationshipFacts: Schema.optionalWith(
+        BattleSpellTargetListRelationshipFactsSchema,
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("attackRoll"),
       holeId: BattleHoleIdSchema,
       value: BattleAttackRollResultSchema,
+      relationshipFacts: Schema.optionalWith(
+        BattleAttackRollRelationshipFactsSchema,
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("damageTypeChoice"),
@@ -4220,6 +4411,10 @@ export const BattleFillSchema: Schema.Schema<
       spatialFacts: Schema.optionalWith(BattleTargetSpatialFactsSchema, {
         exact: true,
       }),
+      relationshipFacts: Schema.optionalWith(
+        BattleSavingThrowRelationshipFactsSchema,
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("skillChoice"),
@@ -4698,6 +4893,10 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Struct({
         succeeded: Schema.Boolean,
       }),
+      relationshipFacts: Schema.optionalWith(
+        BattleSavingThrowRelationshipFactsSchema,
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("shoveOutcome"),
@@ -4719,6 +4918,10 @@ export const BattleFillSchema: Schema.Schema<
           ),
         }),
       ),
+      relationshipFacts: Schema.optionalWith(
+        BattleSavingThrowRelationshipFactsSchema,
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("sanctuaryInterdictionOutcome"),
@@ -4733,11 +4936,24 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("loseAttackOrSpell"),
             }),
-            Schema.Struct({
-              kind: Schema.Literal("newTarget"),
-              targetId: CombatantId,
-              spatialFacts: BattleTargetSpatialFactsSchema,
-            }),
+            Schema.Union(
+              Schema.Struct({
+                kind: Schema.Literal("newTarget"),
+                targetId: CombatantId,
+                spatialFacts: BattleTargetSpatialFactsSchema,
+                replacementTargetKind: Schema.Literal("attackRoll"),
+                relationshipFacts: Schema.optionalWith(
+                  BattleAttackRollRelationshipFactsSchema,
+                  { exact: true },
+                ),
+              }),
+              Schema.Struct({
+                kind: Schema.Literal("newTarget"),
+                targetId: CombatantId,
+                spatialFacts: BattleTargetSpatialFactsSchema,
+                replacementTargetKind: Schema.Literal("nonAttack"),
+              }),
+            ),
           ),
         }),
       ),

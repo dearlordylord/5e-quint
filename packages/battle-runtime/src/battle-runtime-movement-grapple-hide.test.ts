@@ -229,11 +229,42 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
       "grappleOutcome",
     );
+    expect(outcome).not.toHaveProperty("relationshipFactRequest");
     expect(outcome).toMatchObject({
       actorId: fighterId,
       targetId: goblinId,
       dc: difficultyClass(13),
       mode: "grappleSave",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+          unitFeatureDecisionFill(decision, "use"),
+          grappleOutcomeFill(outcome, false, [
+            {
+              kind: "savingThrowTargetIsEnemy",
+              actorId: fighterId,
+              targetId: goblinId,
+              targetIsEnemy: true,
+            },
+            {
+              kind: "savingThrowTargetIsEnemy",
+              actorId: fighterId,
+              targetId: goblinId,
+              targetIsEnemy: false,
+            },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Grappler Punch and Grab relationship facts must answer the saving-throw hole request.",
     });
 
     const result = requireResolved(
@@ -302,6 +333,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     const subject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(fighterRoundTwo, subject);
+    const targetSelection = targetFill(target, goblinId);
+    if (targetSelection.kind !== "targetChoice") {
+      throw new Error("Expected attack target choice fill.");
+    }
     const attackRoll = attackRollHoleAfterTarget(
       fighterRoundTwo,
       target,
@@ -313,7 +348,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state: fighterRoundTwo,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          targetSelection,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
         ],
       }),
@@ -324,7 +359,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state: fighterRoundTwo,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          targetSelection,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
           unitFeatureDecisionFill(decision, "use"),
         ],
@@ -336,10 +371,17 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state: fighterRoundTwo,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          targetSelection,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
           unitFeatureDecisionFill(decision, "use"),
-          grappleOutcomeFill(outcome, false),
+          grappleOutcomeFill(outcome, false, [
+            {
+              kind: "savingThrowTargetIsEnemy",
+              actorId: fighterId,
+              targetId: goblinId,
+              targetIsEnemy: true,
+            },
+          ]),
         ],
       }),
     );
@@ -476,6 +518,46 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         }),
       ),
     ).toBe(true);
+  });
+
+  test("BattleFillSchema admits only non-empty procedure-specific roll relationship facts", () => {
+    const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+    const valid = decodeFill({
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "goblin",
+      relationshipFacts: [
+        {
+          kind: "attackRollTargetIsEnemy",
+          attackerId: "fighter",
+          targetId: "goblin",
+          targetIsEnemy: true,
+        },
+      ],
+    });
+    const empty = decodeFill({
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "goblin",
+      relationshipFacts: [],
+    });
+    const wrongProcedure = decodeFill({
+      kind: "attackRoll",
+      holeId: "battle:attack:roll",
+      value: { naturalD20: 10, total: 15 },
+      relationshipFacts: [
+        {
+          kind: "savingThrowTargetIsEnemy",
+          actorId: "fighter",
+          targetId: "goblin",
+          targetIsEnemy: true,
+        },
+      ],
+    });
+
+    expect(Either.isRight(valid)).toBe(true);
+    expect(Either.isLeft(empty)).toBe(true);
+    expect(Either.isLeft(wrongProcedure)).toBe(true);
   });
 
   test("Halfling Nimbleness Movement facts admit traversal through a larger occupied creature space", () => {
@@ -1252,6 +1334,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: wizardId,
           displayName: "Wizard",
           initiative: 5,
+          side: oppositionSide,
         }),
       ],
     });
@@ -1730,6 +1813,29 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     );
 
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          grappleOutcomeFill(outcome, false, [
+            {
+              kind: "savingThrowTargetIsEnemy",
+              actorId: wizardId,
+              targetId: goblinId,
+              targetIsEnemy: true,
+            },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Grapple relationship facts must answer the saving-throw hole request.",
+    });
+
     expect(grappled.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: fighterId }),
@@ -1905,6 +2011,38 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
       "shoveOutcome",
     );
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          shoveOutcomeFill(
+            outcome,
+            { succeeded: false, failedEffect: { kind: "prone" } },
+            [
+              {
+                kind: "savingThrowTargetIsEnemy",
+                actorId: fighterId,
+                targetId: goblinId,
+                targetIsEnemy: true,
+              },
+              {
+                kind: "savingThrowTargetIsEnemy",
+                actorId: fighterId,
+                targetId: goblinId,
+                targetIsEnemy: false,
+              },
+            ],
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Shove relationship facts must answer the saving-throw hole request.",
+    });
     const shoved = requireResolved(
       resolveBattleSubject({
         state,

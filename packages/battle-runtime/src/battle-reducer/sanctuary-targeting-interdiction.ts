@@ -5,6 +5,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleActiveEffect,
+  BattleAttackRollRelationshipFact,
   BattleCreatureState,
   BattleFill,
   BattleHoleId,
@@ -16,16 +17,24 @@ import type {
 import type { CombatantId } from "../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
 import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./direct-condition-lifecycle.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
+import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
-export type SanctuaryTargetingInterdictionCheck =
+type SanctuaryTargetingInterdictionCheckCommon =
   | { readonly tag: "notWarded" }
-  | {
-      readonly tag: "needsHoles";
-      readonly hole: BattleSanctuaryInterdictionOutcomeHole;
-    }
   | { readonly tag: "invalid"; readonly message: string }
   | { readonly tag: "saveSucceeded" }
-  | { readonly tag: "lost" }
+  | { readonly tag: "lost" };
+
+type AttackRollSanctuaryTargetingInterdictionCheck =
+  | SanctuaryTargetingInterdictionCheckCommon
+  | {
+      readonly tag: "needsHoles";
+      readonly hole: Extract<
+        BattleSanctuaryInterdictionOutcomeHole,
+        { readonly replacementTargetKind: "attackRoll" }
+      >;
+    }
   | {
       readonly tag: "newTarget";
       readonly targetId: CombatantId;
@@ -36,15 +45,90 @@ export type SanctuaryTargetingInterdictionCheck =
         >["outcome"],
         { readonly kind: "newTarget" }
       >["spatialFacts"];
+      readonly relationshipFacts:
+        | readonly []
+        | readonly [
+            BattleAttackRollRelationshipFact,
+            ...BattleAttackRollRelationshipFact[],
+          ];
     };
 
-export function sanctuaryTargetingInterdictionCheck(input: {
+type SanctuaryAttackRollReplacementTarget = Extract<
+  AttackRollSanctuaryTargetingInterdictionCheck,
+  { readonly tag: "newTarget" }
+>;
+
+export function targetChoiceFillAfterSanctuaryAttackRollReplacement(input: {
+  readonly fill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
+  readonly replacement: SanctuaryAttackRollReplacementTarget;
+}): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const replacementFill = {
+    ...input.fill,
+    value: input.replacement.targetId,
+    spatialFacts: input.replacement.spatialFacts,
+  };
+  const [firstRelationshipFact, ...remainingRelationshipFacts] =
+    input.replacement.relationshipFacts;
+  return firstRelationshipFact === undefined
+    ? replacementFill
+    : {
+        ...replacementFill,
+        relationshipFacts: [
+          firstRelationshipFact,
+          ...remainingRelationshipFacts,
+        ],
+      };
+}
+
+type NonAttackSanctuaryTargetingInterdictionCheck =
+  | SanctuaryTargetingInterdictionCheckCommon
+  | {
+      readonly tag: "needsHoles";
+      readonly hole: Extract<
+        BattleSanctuaryInterdictionOutcomeHole,
+        { readonly replacementTargetKind: "nonAttack" }
+      >;
+    }
+  | {
+      readonly tag: "newTarget";
+      readonly targetId: CombatantId;
+      readonly spatialFacts: Extract<
+        Exclude<
+          BattleSanctuaryInterdictionOutcome,
+          { readonly saveSucceeded: true }
+        >["outcome"],
+        {
+          readonly kind: "newTarget";
+          readonly replacementTargetKind: "nonAttack";
+        }
+      >["spatialFacts"];
+    };
+
+type SanctuaryTargetingInterdictionInput = {
   readonly state: BattleState;
   readonly triggeringCombatantId: CombatantId;
   readonly wardedCombatantId: CombatantId;
   readonly triggeringTargetEventId: BattleHoleId;
   readonly fills: readonly BattleFill[];
-}): SanctuaryTargetingInterdictionCheck {
+};
+
+export function sanctuaryTargetingInterdictionCheck(
+  input: SanctuaryTargetingInterdictionInput & {
+    readonly replacementTargetKind: "attackRoll";
+  },
+): AttackRollSanctuaryTargetingInterdictionCheck;
+export function sanctuaryTargetingInterdictionCheck(
+  input: SanctuaryTargetingInterdictionInput & {
+    readonly replacementTargetKind: "nonAttack";
+  },
+): NonAttackSanctuaryTargetingInterdictionCheck;
+export function sanctuaryTargetingInterdictionCheck(
+  input: SanctuaryTargetingInterdictionInput & {
+    readonly replacementTargetKind: "attackRoll" | "nonAttack";
+  },
+):
+  | AttackRollSanctuaryTargetingInterdictionCheck
+  | NonAttackSanctuaryTargetingInterdictionCheck {
   const warded = input.state.combatants.get(input.wardedCombatantId);
   const effect = warded?.activeEffects.find(
     (
@@ -62,6 +146,7 @@ export function sanctuaryTargetingInterdictionCheck(input: {
     triggeringCombatantId: input.triggeringCombatantId,
     wardedCombatantId: input.wardedCombatantId,
     triggeringTargetEventId: input.triggeringTargetEventId,
+    replacementTargetKind: input.replacementTargetKind,
     effect,
   });
   const matchingFills = input.fills.filter(
@@ -75,7 +160,9 @@ export function sanctuaryTargetingInterdictionCheck(input: {
       fill.holeId === hole.holeId,
   );
   if (matchingFills.length === 0) {
-    return { tag: "needsHoles", hole };
+    return hole.replacementTargetKind === "attackRoll"
+      ? { tag: "needsHoles", hole }
+      : { tag: "needsHoles", hole };
   }
   if (matchingFills.length > 1) {
     return {
@@ -104,14 +191,46 @@ export function sanctuaryTargetingInterdictionCheck(input: {
         "Sanctuary replacement target must be a combatant in this battle.",
     };
   }
+  if (value.outcome.replacementTargetKind !== input.replacementTargetKind) {
+    return {
+      tag: "invalid",
+      message:
+        "Sanctuary replacement target facts must match the triggering procedure.",
+    };
+  }
+  if (value.outcome.replacementTargetKind === "nonAttack") {
+    return {
+      tag: "newTarget",
+      targetId: value.outcome.targetId,
+      spatialFacts: value.outcome.spatialFacts,
+    };
+  }
+  const relationshipFacts = parseAttackRollRelationshipFacts(
+    value.outcome.relationshipFacts ?? [],
+    input.triggeringCombatantId,
+    value.outcome.targetId,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      input.triggeringCombatantId,
+      "attackRollAgainstEnemy",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Sanctuary replacement relationship facts must answer the attack-roll hole request.",
+    };
+  }
   return {
     tag: "newTarget",
     targetId: value.outcome.targetId,
     spatialFacts: value.outcome.spatialFacts,
+    relationshipFacts,
   };
 }
 
-function sanctuaryTargetingInterdictionOutcomeHole(input: {
+type SanctuaryTargetingInterdictionOutcomeHoleInput = {
   readonly state: BattleState;
   readonly triggeringCombatantId: CombatantId;
   readonly wardedCombatantId: CombatantId;
@@ -120,7 +239,34 @@ function sanctuaryTargetingInterdictionOutcomeHole(input: {
     BattleActiveEffect,
     { readonly kind: "sanctuaryWard" }
   >;
-}): BattleSanctuaryInterdictionOutcomeHole {
+};
+
+function sanctuaryTargetingInterdictionOutcomeHole(
+  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+    readonly replacementTargetKind: "attackRoll";
+  },
+): Extract<
+  BattleSanctuaryInterdictionOutcomeHole,
+  { readonly replacementTargetKind: "attackRoll" }
+>;
+function sanctuaryTargetingInterdictionOutcomeHole(
+  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+    readonly replacementTargetKind: "nonAttack";
+  },
+): Extract<
+  BattleSanctuaryInterdictionOutcomeHole,
+  { readonly replacementTargetKind: "nonAttack" }
+>;
+function sanctuaryTargetingInterdictionOutcomeHole(
+  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+    readonly replacementTargetKind: "attackRoll" | "nonAttack";
+  },
+): BattleSanctuaryInterdictionOutcomeHole;
+function sanctuaryTargetingInterdictionOutcomeHole(
+  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+    readonly replacementTargetKind: "attackRoll" | "nonAttack";
+  },
+): BattleSanctuaryInterdictionOutcomeHole {
   const holeKey = [
     "battle",
     "sanctuary-interdiction",
@@ -129,9 +275,10 @@ function sanctuaryTargetingInterdictionOutcomeHole(input: {
     input.wardedCombatantId,
     input.triggeringCombatantId,
     input.triggeringTargetEventId,
+    input.replacementTargetKind,
   ].join(":");
-  return {
-    kind: "sanctuaryInterdictionOutcome",
+  const base = {
+    kind: "sanctuaryInterdictionOutcome" as const,
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: "Sanctuary Wisdom save and targeting outcome",
@@ -146,6 +293,24 @@ function sanctuaryTargetingInterdictionOutcomeHole(input: {
       (id) => id !== input.wardedCombatantId,
     ),
   };
+  return input.replacementTargetKind === "attackRoll"
+    ? {
+        ...base,
+        replacementTargetKind: "attackRoll",
+        ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+          input.state,
+          input.triggeringCombatantId,
+          "attackRollAgainstEnemy",
+        )
+          ? {
+              relationshipFactRequest: {
+                kind: "attackRollTargetIsEnemy" as const,
+                attackerId: input.triggeringCombatantId,
+              },
+            }
+          : {}),
+      }
+    : { ...base, replacementTargetKind: "nonAttack" };
 }
 
 export function battleStateAfterTargetActionEarlyEndForActor(

@@ -5,7 +5,6 @@ module battleRuntimeFighterOngoingFeatures {
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
@@ -205,8 +204,8 @@ module battleRuntimeFighterOngoingFeatures {
     else
       { state: state, usesRemaining: usesRemaining }
 
-  pure def extendRageWithAttackRoll(state: BattleState, target: Actor): BattleState =
-    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
+  pure def extendRageWithAttackRoll(state: BattleState, targetIsEnemy: bool): BattleState =
+    if (currentActor(state) == Fighter and targetIsEnemy and fighterHasRoundExtendedRage(state))
       setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1)
     else
       state
@@ -249,10 +248,10 @@ module battleRuntimeFighterOngoingFeatures {
       { state: state, usesRemaining: usesRemaining }
 
   pure def recordFighterAttackRoll(state: BattleState): BattleState =
-    { ...battleStateAfterTargetActionEarlyEndForActor(extendRageWithAttackRoll(state, Goblin), Fighter), attackRollMadeThisTurn: true }
+    { ...battleStateAfterTargetActionEarlyEndForActor(extendRageWithAttackRoll(state, true), Fighter), attackRollMadeThisTurn: true }
 
-  pure def extendRageWithEnemySavingThrow(state: BattleState, target: Actor): BattleState =
-    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
+  pure def extendRageWithEnemySavingThrow(state: BattleState, targetIsEnemy: bool): BattleState =
+    if (currentActor(state) == Fighter and targetIsEnemy and fighterHasRoundExtendedRage(state))
       setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1)
     else
       state

@@ -2224,3 +2224,4 @@ export function standardActionLabel(
     Match.exhaustive,
   );
 }
+// KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY

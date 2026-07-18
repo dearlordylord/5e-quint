@@ -13,10 +13,16 @@ import {
   type BattleAttackRollResult,
   type BattleFill,
   type BattleRolledDiceFill,
+  type BattleAttackRollRelationshipFact,
+  type BattleState,
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import { attackExecutionSelectionsEqual } from "./movement-speed.ts";
 import type { CombatantId } from "../identity.ts";
+import {
+  parseAttackTargetChoiceFill,
+  type BattleAttackTargetChoiceFill,
+} from "./roll-trigger-relationship-facts.ts";
 import {
   isSourceDamageRollPenaltyRollFill,
   isSpellDamageReductionRollFill,
@@ -53,10 +59,25 @@ import {
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 
-export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
+export function attackFillSet(
+  fills: readonly BattleFill[],
+  attackerId: CombatantId,
+  state: BattleState,
+  attackRollRelationshipFactsAllowed = false,
+): AttackFillSet {
+  const attackRelationshipDecisionRequired =
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      attackerId,
+      "attackRollAgainstEnemy",
+    );
   let targetId: CombatantId | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
+  let targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[] = [];
+  let attackRollRelationshipFacts: readonly BattleAttackRollRelationshipFact[] =
+    [];
   let targetSpatialFactsFilled = false;
   let attackRoll: BattleAttackRollResult | undefined;
   const concentrationSavingThrows: Extract<
@@ -129,9 +150,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let weaponMasteryCleaveDecision:
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
     | undefined;
-  let weaponMasteryCleaveTarget:
-    | Extract<BattleFill, { readonly kind: "targetChoice" }>
-    | undefined;
+  let weaponMasteryCleaveTarget: BattleAttackTargetChoiceFill | undefined;
   let weaponMasteryCleaveAttackRoll:
     | Extract<BattleFill, { readonly kind: "attackRoll" }>
     | undefined;
@@ -151,9 +170,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let huntersPreyHordeBreakerDecision:
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
     | undefined;
-  let huntersPreyHordeBreakerTarget:
-    | Extract<BattleFill, { readonly kind: "targetChoice" }>
-    | undefined;
+  let huntersPreyHordeBreakerTarget: BattleAttackTargetChoiceFill | undefined;
   let huntersPreyHordeBreakerAttackRoll:
     | Extract<BattleFill, { readonly kind: "attackRoll" }>
     | undefined;
@@ -296,7 +313,13 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
           message: "Hunter's Prey Horde Breaker target was filled twice.",
         };
       }
-      huntersPreyHordeBreakerTarget = fill;
+      const parsed = parseAttackTargetChoiceFill(
+        fill,
+        attackerId,
+        attackRelationshipDecisionRequired,
+      );
+      if (parsed.tag === "invalid") return parsed;
+      huntersPreyHordeBreakerTarget = parsed.fill;
       continue;
     }
 
@@ -366,6 +389,13 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
           message: "Hunter's Prey Horde Breaker attack roll was filled twice.",
         };
       }
+      if (fill.relationshipFacts !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Hunter's Prey Horde Breaker attack-roll relationship facts were not requested.",
+        };
+      }
       huntersPreyHordeBreakerAttackRoll = fill;
       continue;
     }
@@ -380,11 +410,23 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
           message: "Weapon Mastery Cleave target was filled twice.",
         };
       }
-      weaponMasteryCleaveTarget = fill;
+      const parsed = parseAttackTargetChoiceFill(
+        fill,
+        attackerId,
+        attackRelationshipDecisionRequired,
+      );
+      if (parsed.tag === "invalid") return parsed;
+      weaponMasteryCleaveTarget = parsed.fill;
       continue;
     }
 
     if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
+      const parsed = parseAttackTargetChoiceFill(
+        fill,
+        attackerId,
+        attackRelationshipDecisionRequired,
+      );
+      if (parsed.tag === "invalid") return parsed;
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Attack target was filled twice." };
       }
@@ -396,6 +438,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       }
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      targetRelationshipFacts = parsed.fill.relationshipFacts ?? [];
       targetSpatialFactsFilled = true;
       const rangeFactValidation =
         validateUniqueAttackTargetRangeFacts(targetSpatialFacts);
@@ -446,6 +489,13 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
           message: "Attack damage reduction redirect target was filled twice.",
         };
       }
+      if (fill.relationshipFacts !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Attack damage redirect target relationship facts do not match a requested target decision.",
+        };
+      }
       attackDamageReductionRedirectTarget = fill;
       continue;
     }
@@ -454,7 +504,18 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       if (attackRoll !== undefined) {
         return { tag: "invalid", message: "Attack roll was filled twice." };
       }
+      if (
+        fill.relationshipFacts !== undefined &&
+        !attackRollRelationshipFactsAllowed
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Attack roll relationship facts do not match a requested attack-roll decision.",
+        };
+      }
       attackRoll = fill.value;
+      attackRollRelationshipFacts = fill.relationshipFacts ?? [];
       continue;
     }
 
@@ -466,6 +527,13 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         return {
           tag: "invalid",
           message: "Weapon Mastery Cleave attack roll was filled twice.",
+        };
+      }
+      if (fill.relationshipFacts !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Weapon Mastery Cleave attack-roll relationship facts were not requested.",
         };
       }
       weaponMasteryCleaveAttackRoll = fill;
@@ -791,6 +859,8 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     targetSpatialFacts,
     damageRelationshipDecisions:
       relationshipDecisions.decisionsByRelationshipHole,
+    targetRelationshipFacts,
+    attackRollRelationshipFacts,
     attackRoll,
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,

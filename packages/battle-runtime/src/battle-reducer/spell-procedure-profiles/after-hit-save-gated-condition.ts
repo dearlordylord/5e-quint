@@ -377,7 +377,12 @@ function afterHitSaveGatedConditionFillSet(
         { readonly tag: "invalid" }
       >;
     } {
-  const fillSet = spellFillSet(fills, invocation);
+  const fillSet = spellFillSet(
+    fills,
+    invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return {
       tag: "invalid",

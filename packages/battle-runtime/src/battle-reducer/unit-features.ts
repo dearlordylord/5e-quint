@@ -110,6 +110,11 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import {
+  extendSavingThrowOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
+import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
 } from "./antimagic-field-magical-effect-interdiction.ts";
@@ -1196,7 +1201,6 @@ function resolveMagicActionHealingPoolUnitFeature(
   if (validation.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", validation.message);
   }
-
   const nextActor: BattleCreatureState = {
     ...actor,
     origin: {
@@ -1304,6 +1308,24 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   if (validation.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", validation.message);
   }
+  const savingThrowTargetIds = [...validation.outcomesByTargetId.keys()];
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fills.value.savingThrows.relationshipFacts ?? [],
+    actor.combatantId,
+    savingThrowTargetIds,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      actor.combatantId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${unitFeature.unit.name} relationship facts must answer the saving-throw hole request.`,
+    );
+  }
 
   const actorAfterResourceSpend: CharacterBattleCreatureState = {
     ...actor,
@@ -1317,14 +1339,19 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
       ),
     },
   };
-  const stateAfterSpend = {
-    ...input.state,
-    currentTurnResources: spent.right,
-    combatants: new Map(input.state.combatants).set(
-      actor.combatantId,
-      actorAfterResourceSpend,
-    ),
-  };
+  const stateAfterSpend = extendSavingThrowOngoingFeatures(
+    {
+      ...input.state,
+      currentTurnResources: spent.right,
+      combatants: new Map(input.state.combatants).set(
+        actor.combatantId,
+        actorAfterResourceSpend,
+      ),
+    },
+    actor.combatantId,
+    savingThrowTargetIds,
+    relationshipFacts,
+  );
   const damageRollTotal = rolledDiceTotal(fills.value.damageRoll.value);
   const savingThrows = fills.value.savingThrows;
   const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
@@ -1431,6 +1458,26 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
   if (validation.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", validation.message);
   }
+  const savingThrowTargetIds = validation.outcomes.map(
+    (outcome) => outcome.targetId,
+  );
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fills.value.savingThrows.relationshipFacts ?? [],
+    actor.combatantId,
+    savingThrowTargetIds,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      actor.combatantId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${unitFeature.unit.name} relationship facts must answer the saving-throw hole request.`,
+    );
+  }
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "action",
     action: "magic",
@@ -1454,14 +1501,19 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
       ),
     },
   };
-  const stateAfterSpend: BattleState = {
-    ...input.state,
-    currentTurnResources: spent.right,
-    combatants: new Map(input.state.combatants).set(
-      actor.combatantId,
-      actorAfterResourceSpend,
-    ),
-  };
+  const stateAfterSpend = extendSavingThrowOngoingFeatures(
+    {
+      ...input.state,
+      currentTurnResources: spent.right,
+      combatants: new Map(input.state.combatants).set(
+        actor.combatantId,
+        actorAfterResourceSpend,
+      ),
+    },
+    actor.combatantId,
+    savingThrowTargetIds,
+    relationshipFacts,
+  );
   const failedTargetIds = validation.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
@@ -2068,6 +2120,13 @@ function bardicInspirationGrantTargetFill(
           message: "Bardic Inspiration target was filled twice.",
         };
       }
+      if (fill.relationshipFacts !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Bardic Inspiration target relationship facts were not requested.",
+        };
+      }
       target = fill;
       continue;
     }
@@ -2492,6 +2551,24 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
   if (validation.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", validation.message);
   }
+  const savingThrowTargetIds = [...validation.outcomesByTargetId.keys()];
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fills.value.savingThrows.relationshipFacts ?? [],
+    actor.combatantId,
+    savingThrowTargetIds,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      actor.combatantId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${unitFeature.unit.name} relationship facts must answer the saving-throw hole request.`,
+    );
+  }
   if (
     validation.damageTargetIds.length > 0 &&
     fills.value.damageRoll === undefined
@@ -2521,21 +2598,26 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
       ),
     },
   };
-  const stateAfterSpend: BattleState = {
-    ...input.state,
-    currentTurnResources: openClassFeatureExtraAttackResource({
-      state: {
-        ...input.state,
-        currentTurnResources: spent.right.state,
-      },
-      actorId: actor.combatantId,
-      spentResource: spent.right.spentResource,
-    }),
-    combatants: new Map(input.state.combatants).set(
-      actor.combatantId,
-      nextActor,
-    ),
-  };
+  const stateAfterSpend = extendSavingThrowOngoingFeatures(
+    {
+      ...input.state,
+      currentTurnResources: openClassFeatureExtraAttackResource({
+        state: {
+          ...input.state,
+          currentTurnResources: spent.right.state,
+        },
+        actorId: actor.combatantId,
+        spentResource: spent.right.spentResource,
+      }),
+      combatants: new Map(input.state.combatants).set(
+        actor.combatantId,
+        nextActor,
+      ),
+    },
+    actor.combatantId,
+    savingThrowTargetIds,
+    relationshipFacts,
+  );
   if (validation.damageTargetIds.length === 0) {
     return {
       tag: "resolved",
@@ -2754,6 +2836,18 @@ function attackActionAreaSaveDamageReplacementSavingThrowHole(
         unitFeature,
       ),
     label: `${unitFeature.unit.name} Cone or Line Dexterity Saving Throws`,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actor.combatantId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: actor.combatantId,
+          },
+        }
+      : {}),
     unitFeature: {
       unitId: unitFeature.unit.id,
       label: unitFeature.unit.name,
@@ -3085,6 +3179,18 @@ function magicActionSaveGatedConditionSavingThrowHole(
     holeInstanceKey:
       magicActionSaveGatedConditionSavingThrowHoleInstanceKey(unitFeature),
     label: `${unitFeature.unit.name} Wisdom Saving Throws`,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId,
+          },
+        }
+      : {}),
     unitFeature: {
       unitId: unitFeature.unit.id,
       label: unitFeature.unit.name,
@@ -3460,6 +3566,18 @@ function magicActionAreaSaveDamageHealingSavingThrowHole(
     holeInstanceKey:
       magicActionAreaSaveDamageHealingSavingThrowHoleInstanceKey(unitFeature),
     label: `${unitFeature.unit.name} Constitution Saving Throws`,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId,
+          },
+        }
+      : {}),
     unitFeature: {
       unitId: unitFeature.unit.id,
       label: unitFeature.unit.name,

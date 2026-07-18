@@ -35,7 +35,11 @@ import type { BattleStunningStrikeSupportProfile } from "../unit-feature-support
 import type { BattleUnitSupportProfile } from "../unit-feature-support.ts";
 import { STUNNING_STRIKE_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
-import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
+import {
+  extendSavingThrowOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 import {
   monkFocusResourceForActor,
@@ -157,10 +161,28 @@ function resolveStunningStrikeAttempt(
       message: "Stunning Strike requires an unspent Focus Point.",
     };
   }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    input.savingThrow.relationshipFacts ?? [],
+    hit.actorId,
+    [hit.targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      hit.actorId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Stunning Strike relationship facts must answer the saving-throw hole request.",
+    };
+  }
   const savingThrowState = extendSavingThrowOngoingFeatures(
     stateAfterSpend,
     hit.actorId,
     [hit.targetId],
+    relationshipFacts,
   );
   return {
     tag: "ok",
@@ -207,6 +229,18 @@ function stunningStrikeSavingThrowHole(
     holeId: STUNNING_STRIKE_SAVE_HOLE_ID,
     holeInstanceKey: STUNNING_STRIKE_SAVE_HOLE_INSTANCE,
     label: "Stunning Strike Constitution Saving Throw",
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      hit.actorId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: hit.actorId,
+          },
+        }
+      : {}),
     unitFeature: {
       unitId: hit.unitId,
       label: "Stunning Strike",

@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 133
-- Covered obligations: 127
+- Total obligations: 134
+- Covered obligations: 128
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 127 |
+| covered | 128 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 102 |
+| battle | 103 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -163,22 +163,23 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE` | battle | covered | `spell.invocation-glyph-explosive-rune-release` |
 | `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` | battle | covered | `spell.invocation-glyph-stored-spell-release` |
 | `BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION` | battle | covered | `spell.invocation-glyph-stored-concentration-full-duration` |
+| `BATTLE.RELATIONSHIP_DISCOVERY` | battle | covered | _direct reducer entrypoint_ |
 
 ## Battle Hole Frontier
 
-- Total classified rows: 179
+- Total classified rows: 185
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 90 |
-| battle-fill-kind | 50 |
+| battle-hole-family | 93 |
+| battle-fill-kind | 53 |
 | battle-subject-kind | 39 |
 
 | Classification | Count |
 | --- | ---: |
 | semantic-frontier | 146 |
 | deterministic-boundary-projection | 0 |
-| table-owned-fact | 33 |
+| table-owned-fact | 39 |
 | unsupported-dead-branch | 0 |
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
@@ -362,6 +363,12 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `toolPossessionFacts` | `toolPossessionFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-subject-kind | `creatureAttack` | `creatureAttack` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-hole-family | `BattleHelpAttackAllyDecisionHole` | `helpAttackAllyDecision` | table-owned-fact | `BATTLE.RELATIONSHIP_DISCOVERY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleHelpAttackEnemyDecisionHole` | `helpAttackEnemyDecision` | table-owned-fact | `BATTLE.RELATIONSHIP_DISCOVERY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleDamageRelationshipDecisionHole` | `damageRelationshipDecisions` | table-owned-fact | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `helpAttackAllyDecision` | `helpAttackAllyDecision` | table-owned-fact | `BATTLE.RELATIONSHIP_DISCOVERY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `helpAttackEnemyDecision` | `helpAttackEnemyDecision` | table-owned-fact | `BATTLE.RELATIONSHIP_DISCOVERY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `damageRelationshipDecisions` | `damageRelationshipDecisions` | table-owned-fact | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 
 ## QNT Owner Roles
 
@@ -644,6 +651,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt` | semantic-core | profile-scoped: `unit-feature.rogue-steady-aim` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt` | proof-only | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt` | proof-only | _none_ |
+| `packages/battle-runtime/battle-runtime-relationship-discovery.qnt` | semantic-core | `BATTLE.RELATIONSHIP_DISCOVERY` |
+| `packages/battle-runtime/battle-runtime-relationship-discovery.mbt.qnt` | proof-only | _none_ |
 
 ## QNT Registry
 
@@ -730,6 +739,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-reaction-resolution.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-reaction-window.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-reducer-route.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-relationship-discovery.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-replay-equivalence.qnt` | qnt-owner-role | semantic-core |
@@ -1077,6 +1087,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `filter`, `set-operators`, `membership` |  |  |
 | `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
 | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` | generation-subset-clean | `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `all-block`, `set`, `membership` |  |  |
+| `BATTLE.RELATIONSHIP_DISCOVERY` | generation-subset-clean | `pure-def`, `int`, `bool`, `comparison`, `boolean-connective`, `all-block` |  |  |
 
 ### Generator Readiness Backlog
 

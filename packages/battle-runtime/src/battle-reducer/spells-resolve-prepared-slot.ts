@@ -148,6 +148,7 @@ export function resolvePreparedSlotSpellAct(input: {
       triggeringCombatantId: input.actorId,
       wardedCombatantId: allocation.targetId,
       triggeringTargetEventId: allocationHole.holeId,
+      replacementTargetKind: "nonAttack",
       fills: input.input.fills,
     });
     if (sanctuaryCheck.tag === "notWarded") {
@@ -254,7 +255,12 @@ export function resolvePreparedSlotSpellAct(input: {
               }
             : fill,
       );
-    const fillSet = spellFillSet(fills, input.invocation);
+    const fillSet = spellFillSet(
+      fills,
+      input.invocation,
+      input.actorId,
+      input.input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.input.state, "invalidFill", fillSet.message);
     }

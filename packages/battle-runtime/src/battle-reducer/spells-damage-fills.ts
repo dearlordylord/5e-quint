@@ -68,9 +68,12 @@ import {
   attackRollMissToHitReplacementHolePayload,
   signedModifier,
 } from "./statblock-attacks.ts";
-import { hasDodgeBenefit } from "./attack-roll.ts";
+import {
+  hasDodgeBenefit,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
 import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
-import { combatantsAreEnemies } from "./creature-state-leaves.ts";
+import { spellTargetIsHostileToCaster } from "./roll-trigger-relationship-facts.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import {
@@ -87,6 +90,7 @@ import {
   type BattleHoleId,
   type BattleObjectDamageDisposition,
   type BattleObjectDamageOutcome,
+  type BattleSpellTargetListRelationshipFact,
   type BattleSavingThrowFlatBonusProjection,
   type BattleSavingThrowRollModeProjection,
   type BattleSpellAttackRollHole,
@@ -383,6 +387,18 @@ export function chainedSpellTargetHole(input: {
         ? `${input.invocation.spell.name} target`
         : `${input.invocation.spell.name} leap target ${input.stepIndex}`,
     requiresTableSpatialFact: true,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      input.actorId,
+      "attackRollAgainstEnemy",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId: input.actorId,
+          },
+        }
+      : {}),
     choices: [...input.state.combatants.keys()].filter(
       (targetId) =>
         !targeted.has(targetId) &&
@@ -830,8 +846,8 @@ export function spellAbilityChoiceHole(
       invocation.procedure === "saveGatedDamage"
         ? (invocation.failedSaveAbilityChoices ?? [])
         : invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
-        ? invocation.abilityCheckBehavior.choices
-        : [],
+          ? invocation.abilityCheckBehavior.choices
+          : [],
   };
 }
 
@@ -887,6 +903,7 @@ export function spellSavingThrowOutcomeHole(
     }
   >,
   heightenedSpellTargetId?: CombatantId,
+  relationshipFacts: readonly BattleSpellTargetListRelationshipFact[] = [],
 ): BattleSpellSavingThrowOutcomeHole {
   const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
   const ability =
@@ -911,6 +928,18 @@ export function spellSavingThrowOutcomeHole(
           : `${invocation.spell.name} ${spellAreaTargetingLabel(targeting)} Saving Throw outcomes`;
     })(),
     spell: invocation,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId,
+          },
+        }
+      : {}),
     ability,
     dc:
       invocation.procedure === "attackBurstSaveDamage"
@@ -927,6 +956,7 @@ export function spellSavingThrowOutcomeHole(
         ? {
             actorId,
             invocation,
+            relationshipFacts,
             ...(invocation.procedure === "saveGatedCondition" &&
             invocation.effect.kind === "fixed"
               ? { condition: invocation.effect.condition }
@@ -1165,13 +1195,18 @@ export function savingThrowRollModeProjections(
     "invocation" in rollModeContext &&
     saveRollModeRule?.kind === "hostileTarget"
   ) {
-    const { actorId, invocation } = rollModeContext;
+    const { actorId, invocation, relationshipFacts } = rollModeContext;
     return uniqueSavingThrowRollModeProjections([
       ...baseProjections,
       ...[...state.combatants]
         .filter(
           ([targetId]) =>
-            combatantsAreEnemies(state, actorId, targetId) &&
+            spellTargetIsHostileToCaster(
+              relationshipFacts,
+              actorId,
+              targetId,
+              invocation,
+            ) &&
             spellTargetHasNonSpatialPrerequisites(
               state,
               actorId,
@@ -1230,6 +1265,7 @@ type SavingThrowRollModeContext =
         SupportedSpellInvocation,
         { readonly procedure: "saveGatedCondition" | "saveGatedDamage" }
       >;
+      readonly relationshipFacts: readonly BattleSpellTargetListRelationshipFact[];
       readonly condition?: Condition;
     };
 
@@ -1283,7 +1319,8 @@ function activeSavingThrowRollModeProjections(
         ): effect is Extract<
           BattleActiveEffect,
           { readonly kind: "savingThrowRollMode" }
-        > => effect.kind === "savingThrowRollMode" && effect.ability === ability,
+        > =>
+          effect.kind === "savingThrowRollMode" && effect.ability === ability,
       )
       .map((effect) => ({ targetId, rollMode: effect.mode })),
   );

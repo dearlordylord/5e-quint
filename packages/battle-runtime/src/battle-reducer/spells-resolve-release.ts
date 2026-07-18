@@ -513,7 +513,12 @@ export function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
   invocation: ReadiedSpellInvocation,
 ): BattleResolutionResult {
-  const fillSet = spellFillSet(input.fills, invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -662,7 +667,12 @@ export function resolveSpellRelease(
       spendsCastResources: false,
     });
   }
-  const fillSet = spellFillSet(input.fills, invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -852,6 +862,7 @@ export function resolveSpellRelease(
           input.subject.actorId,
           target.combatantId,
           null,
+          fillSet.targetRelationshipFacts,
         ),
         input.subject.actorId,
         target.combatantId,
@@ -1136,6 +1147,7 @@ export function resolveSpellRelease(
               input.subject.actorId,
               target.combatantId,
               null,
+              fillSet.targetRelationshipFacts,
             ),
             input.subject.actorId,
             target.combatantId,

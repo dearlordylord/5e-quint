@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: qnt-owner BATTLE.RELATIONSHIP_DISCOVERY
 module battleRuntimeRelationshipDiscovery {
   // .references/srd-5.2.1/Rules-Glossary.md "Help [Action]", "Ally", and
   // "Enemy" supply the rule and relationship terms. UBIQUITOUS_LANGUAGE.md

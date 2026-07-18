@@ -1821,7 +1821,12 @@ function resolveStoredSpellGlyphRelease(input: {
     );
   }
   if (isGlyphStoredAreaOngoingSpellInvocation(invocation)) {
-    const fillSet = spellFillSet(fills, invocation);
+    const fillSet = spellFillSet(
+      fills,
+      invocation,
+      input.effect.sourceCombatantId,
+      input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
@@ -1839,7 +1844,12 @@ function resolveStoredSpellGlyphRelease(input: {
     });
   }
   if (isGlyphStoredAreaControlSpellInvocation(invocation)) {
-    const fillSet = spellFillSet(fills, invocation);
+    const fillSet = spellFillSet(
+      fills,
+      invocation,
+      input.effect.sourceCombatantId,
+      input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
@@ -1859,7 +1869,12 @@ function resolveStoredSpellGlyphRelease(input: {
     });
   }
   if (invocation.procedure === "greaseGroundHazard") {
-    const fillSet = spellFillSet(fills, invocation);
+    const fillSet = spellFillSet(
+      fills,
+      invocation,
+      input.effect.sourceCombatantId,
+      input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
@@ -1877,7 +1892,12 @@ function resolveStoredSpellGlyphRelease(input: {
     });
   }
   if (invocation.procedure === "saveGatedCondition") {
-    const fillSet = spellFillSet(fills, invocation);
+    const fillSet = spellFillSet(
+      fills,
+      invocation,
+      input.effect.sourceCombatantId,
+      input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
@@ -1898,7 +1918,12 @@ function resolveStoredSpellGlyphRelease(input: {
     invocation.procedure === "saveGatedDamage" &&
     glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)
   ) {
-    const fillSet = spellFillSet(fills, invocation);
+    const fillSet = spellFillSet(
+      fills,
+      invocation,
+      input.effect.sourceCombatantId,
+      input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
@@ -1926,7 +1951,12 @@ function resolveStoredSpellGlyphRelease(input: {
     });
   }
   if (isGlyphStoredSelfTransformationModeSpellInvocation(invocation)) {
-    const fillSet = spellFillSet(fills, invocation);
+    const fillSet = spellFillSet(
+      fills,
+      invocation,
+      input.effect.sourceCombatantId,
+      input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
@@ -1984,7 +2014,12 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
     mode: { tag: "cast" as const },
   };
   const fills = glyphStoredSpellReleaseFills(input);
-  const fillSet = spellFillSet(fills, input.invocation);
+  const fillSet = spellFillSet(
+    fills,
+    input.invocation,
+    input.effect.sourceCombatantId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -2468,6 +2503,7 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
   const [fill] = matchingFills;
   if (
     fill === undefined ||
+    fill.relationshipFacts !== undefined ||
     !savingThrowOutcomesExactlyMatchTargets(
       fill.value.outcomes,
       areaMembership.affectedTargetIds,

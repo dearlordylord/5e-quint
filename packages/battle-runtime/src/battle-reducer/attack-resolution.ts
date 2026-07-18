@@ -6,6 +6,7 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+// KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -83,12 +84,18 @@ import {
 } from "./attack-damage-apply.ts";
 import { selectedAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
 
-import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
+import {
+  extendSavingThrowOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
 
 import {
   grappledBy,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
+import {
+  parseSavingThrowRelationshipFacts,
+} from "./roll-trigger-relationship-facts.ts";
 
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -185,6 +192,7 @@ import type {
   BattleHelpAttackAllyDecisionHole,
   BattleHelpAttackEnemyDecisionHole,
   BattleHoleId,
+  BattleSavingThrowRelationshipFact,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
@@ -652,7 +660,11 @@ export function resolveHelpAttack(
     );
   }
   const allyId = allyFill.allyId;
+  const ally = input.state.combatants.get(allyId);
   if (
+    allyId === input.subject.actorId ||
+    ally === undefined ||
+    zeroHpLifecycleIsTerminal(ally) ||
     !helpAttackAllyChoices(input.state, input.subject.actorId).includes(allyId)
   ) {
     return invalidResult(
@@ -1037,6 +1049,13 @@ export function resolveSearch(
       "Search target fill does not match the requested hole.",
     );
   }
+  if (targetFill.relationshipFacts !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Search target relationship facts were not requested.",
+    );
+  }
   const target = input.state.combatants.get(targetFill.value);
   if (
     target === undefined ||
@@ -1355,7 +1374,7 @@ export function resolveGrapple(
   }
   if (fillSet.outcome === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      grappleOutcomeHole(link.link),
+      grappleOutcomeHole(input.state, link.link),
     ]);
   }
   if (fillSet.outcome.holeId !== GRAPPLE_OUTCOME_HOLE_ID) {
@@ -1377,6 +1396,23 @@ export function resolveGrapple(
       "Grapple is not available during a Stat Block Multiattack dispatch.",
     );
   }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fillSet.outcome.relationshipFacts ?? [],
+    link.link.grapplerId,
+    [link.link.targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      link.link.grapplerId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Grapple relationship facts must answer the saving-throw hole request.",
+    );
+  }
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
@@ -1393,6 +1429,7 @@ export function resolveGrapple(
       currentTurnResources: spent.right,
     },
     link: link.link,
+    relationshipFacts,
     outcome: fillSet.outcome.value,
   });
   return {
@@ -1405,6 +1442,7 @@ export function resolveGrapple(
 export function applyGrappleSavingThrowOutcome(input: {
   readonly state: BattleState;
   readonly link: BattleGrappleLink;
+  readonly relationshipFacts: readonly BattleSavingThrowRelationshipFact[];
   readonly outcome: Extract<
     BattleFill,
     { readonly kind: "grappleOutcome" }
@@ -1414,6 +1452,7 @@ export function applyGrappleSavingThrowOutcome(input: {
     input.state,
     input.link.grapplerId,
     [input.link.targetId],
+    input.relationshipFacts,
   );
   return normalizeBattleGrapples({
     ...savingThrowExtendedState,
@@ -1455,6 +1494,7 @@ export function resolveShove(
   if (fillSet.outcome === undefined) {
     return needsHolesResult(input.state, input.subject, [
       shoveOutcomeHole({
+        state: input.state,
         actorId: input.subject.actorId,
         targetId: fillSet.targetId,
         dc: shove.dc,
@@ -1491,6 +1531,23 @@ export function resolveShove(
       "Shove is not available during a Stat Block Multiattack dispatch.",
     );
   }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fillSet.outcome.relationshipFacts ?? [],
+    input.subject.actorId,
+    [fillSet.targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      input.subject.actorId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Shove relationship facts must answer the saving-throw hole request.",
+    );
+  }
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
@@ -1505,6 +1562,7 @@ export function resolveShove(
     input.state,
     input.subject.actorId,
     [fillSet.targetId],
+    relationshipFacts,
   );
   const afterEffect = applyShoveOutcome({
     state: {
@@ -1952,6 +2010,13 @@ export function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
     | undefined;
   for (const fill of fills) {
     if (fill.kind === "targetChoice") {
+      if (fill.relationshipFacts !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Grapple target relationship facts do not match a requested target decision.",
+        };
+      }
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Grapple target was filled twice." };
       }
@@ -1985,6 +2050,13 @@ export function shoveFillSet(fills: readonly BattleFill[]): ShoveFillSet {
     | undefined;
   for (const fill of fills) {
     if (fill.kind === "targetChoice") {
+      if (fill.relationshipFacts !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Shove target relationship facts do not match a requested target decision.",
+        };
+      }
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Shove target was filled twice." };
       }

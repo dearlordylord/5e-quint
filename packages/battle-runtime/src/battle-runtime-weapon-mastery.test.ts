@@ -865,11 +865,14 @@ describe("battle runtime: Weapon Mastery", () => {
           attack: testGreataxeAttack(),
         }),
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
-        statBlockCreatureInit({
+        characterSeed({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          displayName: "Same-Side Second Target",
           initiative: 9,
           side: partySide,
+          currentHp: 10,
+          maxHp: 10,
+          attack: null,
         }),
       ],
     });

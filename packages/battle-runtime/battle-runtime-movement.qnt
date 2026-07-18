@@ -425,7 +425,7 @@ module battleRuntimeMovement {
       targetSaveTotal,
       FIGHTER_GRAPPLE_ESCAPE_DC,
     )) {
-      val extended = extendRageWithEnemySavingThrow(state, Goblin)
+      val extended = extendRageWithEnemySavingThrow(state, true)
       {
         ...extended,
         actionAvailable: false,
@@ -434,7 +434,7 @@ module battleRuntimeMovement {
       }
     }
     else {
-      val extended = extendRageWithEnemySavingThrow(state, Goblin)
+      val extended = extendRageWithEnemySavingThrow(state, true)
       { ...extended, actionAvailable: false }
     }
 

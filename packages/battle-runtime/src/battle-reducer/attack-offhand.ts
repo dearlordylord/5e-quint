@@ -242,7 +242,11 @@ function resolveBonusActionAttack(
     return staleBonusActionResult(input.state);
   }
 
-  const fillSet = attackFillSet(input.fills);
+  const fillSet = attackFillSet(
+    input.fills,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -413,6 +417,7 @@ function resolveBonusActionAttack(
       input.subject.actorId,
       target.combatantId,
       activatedOngoingFeatureProfile,
+      fillSet.targetRelationshipFacts,
     ),
     input.subject.actorId,
     target.combatantId,

@@ -1646,10 +1646,34 @@ export function targetFill(
     BattleFill,
     { readonly kind: "targetChoice" }
   >["spatialFacts"],
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["relationshipFacts"],
 ): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
   }
+  const defaultRelationshipFacts =
+    hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? ([
+          {
+            kind: "attackRollTargetIsEnemy",
+            attackerId: hole.relationshipFactRequest.attackerId,
+            targetId,
+            targetIsEnemy: true,
+          },
+        ] as const)
+      : hole.relationshipFactRequest?.kind === "savingThrowTargetIsEnemy"
+        ? ([
+            {
+              kind: "savingThrowTargetIsEnemy",
+              actorId: hole.relationshipFactRequest.actorId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ] as const)
+        : undefined;
   const defaultSpatialFacts =
     hole.requiresTableSpatialFact === true
       ? [
@@ -1693,6 +1717,8 @@ export function targetFill(
           },
         ]
       : [];
+  const selectedRelationshipFacts =
+    relationshipFacts ?? defaultRelationshipFacts;
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1700,6 +1726,9 @@ export function targetFill(
     ...((spatialFacts ?? defaultSpatialFacts).length === 0
       ? {}
       : { spatialFacts: spatialFacts ?? defaultSpatialFacts }),
+    ...(selectedRelationshipFacts === undefined
+      ? {}
+      : { relationshipFacts: selectedRelationshipFacts }),
   };
 }
 
@@ -1976,9 +2005,25 @@ export function attackRollFill(
   if (hole.kind !== "attackRoll") {
     throw new Error("Expected attackRoll hole.");
   }
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
   return {
     kind: "attackRoll",
     holeId: hole.holeId,
+    ...(relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: relationshipFactRequest.attackerId,
+              targetId: relationshipFactRequest.targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     value: {
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
@@ -2281,28 +2326,67 @@ function greaseGroundAreaSavingThrowFill(
 export function grappleOutcomeFill(
   hole: BattleHole,
   succeeded: boolean,
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "grappleOutcome" }
+  >["relationshipFacts"],
 ): Extract<BattleFill, { readonly kind: "grappleOutcome" }> {
   if (hole.kind !== "grappleOutcome") {
     throw new Error("Expected grappleOutcome hole.");
   }
+  const relationshipFactRequest = hole.relationshipFactRequest;
+  const selectedRelationshipFacts =
+    relationshipFacts ??
+    (relationshipFactRequest?.kind === "savingThrowTargetIsEnemy"
+      ? ([
+          {
+            kind: "savingThrowTargetIsEnemy",
+            actorId: relationshipFactRequest.actorId,
+            targetId: hole.targetId,
+            targetIsEnemy: true,
+          },
+        ] as const)
+      : undefined);
   return {
     kind: "grappleOutcome",
     holeId: hole.holeId,
     value: { succeeded },
+    ...(selectedRelationshipFacts === undefined
+      ? {}
+      : { relationshipFacts: selectedRelationshipFacts }),
   };
 }
 
 export function shoveOutcomeFill(
   hole: BattleHole,
   value: Extract<BattleFill, { readonly kind: "shoveOutcome" }>["value"],
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "shoveOutcome" }
+  >["relationshipFacts"],
 ): Extract<BattleFill, { readonly kind: "shoveOutcome" }> {
   if (hole.kind !== "shoveOutcome") {
     throw new Error("Expected shoveOutcome hole.");
   }
+  const selectedRelationshipFacts =
+    relationshipFacts ??
+    (hole.relationshipFactRequest?.kind === "savingThrowTargetIsEnemy"
+      ? ([
+          {
+            kind: "savingThrowTargetIsEnemy",
+            actorId: hole.relationshipFactRequest.actorId,
+            targetId: hole.targetId,
+            targetIsEnemy: true,
+          },
+        ] as const)
+      : undefined);
   return {
     kind: "shoveOutcome",
     holeId: hole.holeId,
     value,
+    ...(selectedRelationshipFacts === undefined
+      ? {}
+      : { relationshipFacts: selectedRelationshipFacts }),
   };
 }
 
@@ -2319,13 +2403,39 @@ export function savingThrowOutcomeFill(
       { readonly kind: "savingThrowOutcome" }
     >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
   }[],
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["relationshipFacts"],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected savingThrowOutcome hole.");
   }
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
+  const defaultRelationshipFacts =
+    relationshipFactRequest?.kind === "savingThrowTargetIsEnemy"
+      ? outcomes.map((outcome) => ({
+          kind: "savingThrowTargetIsEnemy" as const,
+          actorId: relationshipFactRequest.actorId,
+          targetId: outcome.targetId,
+          targetIsEnemy: true,
+        }))
+      : undefined;
+  const selectedRelationshipFacts =
+    relationshipFacts ??
+    (defaultRelationshipFacts === undefined ||
+    defaultRelationshipFacts.length === 0
+      ? undefined
+      : [defaultRelationshipFacts[0]!, ...defaultRelationshipFacts.slice(1)]);
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
+    ...(selectedRelationshipFacts === undefined
+      ? {}
+      : { relationshipFacts: selectedRelationshipFacts }),
     value:
       "spell" in hole && hole.spell.targeting.kind !== "singleCombatant"
         ? {

@@ -70,7 +70,8 @@ import {
   type CharacterSheetRetainedCompanionCurrentHitPoints,
 } from "@dnd/character-sheet-runtime";
 import {
-  GENERIC_COMBAT_ACTION_LABELS,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
   GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
   GENERIC_READY_TRIGGERS,
 } from "../test-support/battle-act-labels.ts";
@@ -1879,7 +1880,7 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Nimble Escape",
       "Move",
       "End Turn",
@@ -3486,7 +3487,7 @@ describe("MCP server route", () => {
     ).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
       "Adrenaline Rush",
       "Second Wind",
       "Move",
@@ -3584,7 +3585,7 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Nimble Escape",
       "Move",
       "End Turn",

@@ -51,7 +51,10 @@ import { activeEffectArmorClass } from "./creature-state.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
-import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import {
+  sanctuaryTargetingInterdictionCheck,
+  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+} from "./sanctuary-targeting-interdiction.ts";
 import {
   activeMarkedDamageRiders,
   applyAvailableSpellDamageReduction,
@@ -373,6 +376,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     triggeringCombatantId: input.actorId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: originalTargetHole.holeId,
+    replacementTargetKind: "attackRoll",
     fills: input.input.fills,
   });
   if (sanctuaryCheck.tag === "needsHoles") {
@@ -440,14 +444,18 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       .map(
         (fill): BattleFill =>
           fill === originalTargetFill
-            ? {
-                ...fill,
-                value: replacementTarget.combatantId,
-                spatialFacts: sanctuaryCheck.spatialFacts,
-              }
+            ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+                fill,
+                replacement: sanctuaryCheck,
+              })
             : fill,
       );
-    const fillSet = spellFillSet(fills, input.invocation);
+    const fillSet = spellFillSet(
+      fills,
+      input.invocation,
+      input.actorId,
+      input.input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.input.state, "invalidFill", fillSet.message);
     }
@@ -552,6 +560,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         input.actorId,
         target.combatantId,
         null,
+        input.target.relationshipFacts,
       ),
       input.actorId,
       target.combatantId,

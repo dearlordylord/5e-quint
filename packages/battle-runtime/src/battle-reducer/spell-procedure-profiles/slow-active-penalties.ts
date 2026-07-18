@@ -569,6 +569,7 @@ function resolveSlowActivePenalties(
     concentrationState,
     input.actorId,
     affectedTargetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",

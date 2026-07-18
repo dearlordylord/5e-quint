@@ -681,9 +681,12 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
     failedTargets,
     input.invocation,
   );
-  const nextState = extendSavingThrowOngoingFeatures(effected, input.actorId, [
-    ...selectedTargetIds,
-  ]);
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    [...selectedTargetIds],
+    input.fillSet.savingThrowRelationshipFacts,
+  );
   return {
     tag: "resolved",
     state: nextState,
@@ -830,6 +833,7 @@ export function resolveHideousLaughterSpellAct(input: {
     effected,
     input.actorId,
     input.fillSet.targetList.targetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",
@@ -950,6 +954,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
     effected,
     input.actorId,
     input.fillSet.targetList.targetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",
@@ -1110,6 +1115,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+      replacementTargetKind: "nonAttack",
       fills: input.input.fills,
     });
     if (sanctuaryCheck.tag === "needsHoles") {
@@ -1183,7 +1189,12 @@ export function resolveSaveGateDamageSpellAct(input: {
               }
             : fill,
         );
-      const rewrittenFillSet = spellFillSet(rewrittenFills, input.invocation);
+      const rewrittenFillSet = spellFillSet(
+        rewrittenFills,
+        input.invocation,
+        input.actorId,
+        input.input.state,
+      );
       if (rewrittenFillSet.tag !== "ok") {
         return invalidResult(
           input.input.state,
@@ -1225,6 +1236,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     input.actorId,
     input.invocation,
     metamagicSelections.heightenedSpellTargetId,
+    input.fillSet.targetList?.relationshipFacts ?? [],
   );
   if (input.fillSet.attackRoll !== undefined) {
     return invalidResult(
@@ -1424,6 +1436,7 @@ export function resolveSaveGateDamageSpellAct(input: {
           conditioned,
           input.actorId,
           selectedTargetIds,
+          input.fillSet.savingThrowRelationshipFacts,
         ),
         actorId: input.actorId,
         invocation: input.invocation,
@@ -1973,6 +1986,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     conditioned,
     input.actorId,
     selectedTargetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   const spentResources = withFailedSaveConcentrationDuration(
     resolveSaveGateDamageSpellCastResources(input, {
@@ -2497,6 +2511,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     input.actorId,
     input.invocation,
     metamagicSelections.heightenedSpellTargetId,
+    input.fillSet.targetList?.relationshipFacts ?? [],
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -2579,6 +2594,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     effected,
     input.actorId,
     selectedTargetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",
@@ -2737,6 +2753,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     effected,
     input.actorId,
     selectedTargetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",
@@ -2926,6 +2943,7 @@ export function resolveCommandSpellAct(input: {
     effected,
     input.actorId,
     selectedTargetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",
@@ -3065,6 +3083,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     effected,
     input.actorId,
     selectedTargetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",

@@ -52,6 +52,7 @@ import {
   endTurn,
   movementFeet,
   movementDeltaFeet,
+  partySide,
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
@@ -1335,7 +1336,7 @@ describe("battle runtime: class action features", () => {
           classLevels: [{ className: "barbarian", level: 1 }],
           resources: [rageResource()],
         }),
-        statBlockCreatureInit({ initiative: 10 }),
+        { ...statBlockCreatureInit({ initiative: 10 }), side: partySide },
       ],
     });
     const raging = requireResolved(
@@ -1375,7 +1376,15 @@ describe("battle runtime: class action features", () => {
     const afterTarget = resolveBattleSubject({
       state: nextFighterTurn,
       subject: grappleSubject,
-      fills: [targetFill(target, goblinId)],
+      fills: [
+        targetFill(target, goblinId, [
+          {
+            kind: "grappleTargetWithinReach",
+            grapplerId: fighterId,
+            targetId: goblinId,
+          },
+        ]),
+      ],
     });
     if (afterTarget.tag !== "needsHoles") {
       throw new Error("Expected Grapple outcome hole.");
@@ -1386,12 +1395,124 @@ describe("battle runtime: class action features", () => {
         state: nextFighterTurn,
         subject: grappleSubject,
         fills: [
-          targetFill(target, goblinId),
-          grappleOutcomeFill(outcome, false),
+          targetFill(target, goblinId, [
+            {
+              kind: "grappleTargetWithinReach",
+              grapplerId: fighterId,
+              targetId: goblinId,
+            },
+          ]),
+          grappleOutcomeFill(outcome, false, [
+            {
+              kind: "savingThrowTargetIsEnemy",
+              actorId: fighterId,
+              targetId: goblinId,
+              targetIsEnemy: true,
+            },
+          ]),
         ],
       }),
     );
     const barbarian = grappled.state.combatants.get(fighterId);
+    expect(
+      [...(barbarian?.activeOngoingFeatureOccurrences.values() ?? [])][0]
+        ?.expiresAt,
+    ).toEqual({
+      kind: "endOfTurn",
+      combatantId: fighterId,
+      round: 3,
+    });
+  });
+
+  test("Rage attack-roll extension consumes the procedure enemy fact instead of Encounter Side", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-rage-attack-roll-relationship-fact"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 1 }],
+          resources: [rageResource()],
+        }),
+        { ...statBlockCreatureInit({ initiative: 10 }), side: partySide },
+      ],
+    });
+    const raging = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "barbarian_rage",
+        },
+        fills: [],
+      }),
+    ).state;
+    const nextFighterTurn = requireResolved(
+      endTurn({
+        state: requireResolved(endTurn({ state: raging, actorId: fighterId }))
+          .state,
+        actorId: goblinId,
+      }),
+    ).state;
+    const subject = fighterAttackSubject(nextFighterTurn, "Longsword");
+    const target = attackInitialTargetHole(nextFighterTurn, subject);
+    expect(target).toMatchObject({
+      relationshipFactRequest: {
+        kind: "attackRollTargetIsEnemy",
+        attackerId: fighterId,
+      },
+    });
+    const targetSelection = targetFill(target, goblinId);
+    if (targetSelection.kind !== "targetChoice") {
+      throw new Error("Expected attack target choice fill.");
+    }
+    expect(
+      resolveBattleSubject({
+        state: nextFighterTurn,
+        subject,
+        fills: [
+          {
+            ...targetSelection,
+            relationshipFacts: [
+              {
+                kind: "savingThrowTargetIsEnemy",
+                actorId: fighterId,
+                targetId: goblinId,
+                targetIsEnemy: true,
+              },
+            ],
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack target relationship facts must answer the attack target hole request.",
+    });
+    const enemyTargetSelection = {
+      ...targetSelection,
+      relationshipFacts: [
+        {
+          kind: "attackRollTargetIsEnemy" as const,
+          attackerId: fighterId,
+          targetId: goblinId,
+          targetIsEnemy: true,
+        },
+      ] as const,
+    };
+    const roll = attackRollHoleAfterTarget(nextFighterTurn, target, subject);
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: nextFighterTurn,
+        subject,
+        fills: [
+          enemyTargetSelection,
+          attackRollFill(roll, { naturalD20: 1, total: 1 }),
+        ],
+      }),
+    );
+    const barbarian = resolved.state.combatants.get(fighterId);
     expect(
       [...(barbarian?.activeOngoingFeatureOccurrences.values() ?? [])][0]
         ?.expiresAt,

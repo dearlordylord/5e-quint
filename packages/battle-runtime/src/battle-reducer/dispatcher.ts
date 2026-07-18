@@ -2777,6 +2777,13 @@ function resolveProtectionRelevantEffectSaveCommand(
   if (saveFill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
+  if (saveFill.relationshipFacts !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Protection from Evil and Good save relationship facts were not requested.",
+    );
+  }
   const validation = validateProtectionRelevantEffectSavingThrowOutcome(
     saveFill.value,
     input.subject.actorId,
@@ -4009,7 +4016,12 @@ function maybeOpenTriggeredReactionSpellCastInterrupt(input: {
   if (input.handledInterruptTrigger === "spellCast") {
     return null;
   }
-  const fillSet = spellFillSet(input.fills, input.invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    input.invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return null;
   }
@@ -4115,7 +4127,12 @@ function resolveCounterspellReactionSpellCommand(
     >;
   },
 ): BattleResolutionResult {
-  const fillSet = spellFillSet(input.fills, input.invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    input.invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -4144,7 +4161,12 @@ function resolveFeatherFallReactionSpellCommand(
     >;
   },
 ): BattleResolutionResult {
-  const fillSet = spellFillSet(input.fills, input.invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    input.invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -4173,7 +4195,12 @@ function resolveShieldReactionSpellCommand(
     >;
   },
 ): BattleResolutionResult {
-  const fillSet = spellFillSet(input.fills, input.invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    input.invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -4216,7 +4243,12 @@ function resolveHellishRebukeReactionSpellCommand(
       "Hellish Rebuke requires a matching after-damage Reaction trigger.",
     );
   }
-  const fillSet = spellFillSet(input.fills, input.invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    input.invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -4790,7 +4822,12 @@ function attackHitBonusActionSpellFillValidation(
         { readonly tag: "invalid" }
       >;
     } {
-  const fillSet = spellFillSet(input.fills, invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    invocation,
+    input.subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return {
       tag: "invalid",

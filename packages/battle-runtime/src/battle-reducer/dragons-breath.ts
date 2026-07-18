@@ -44,6 +44,11 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
+import {
+  extendSavingThrowOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { combatantCanTakeActions } from "./creature-state.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
@@ -106,7 +111,9 @@ export function dragonsBreathExhaleActs(
       subject,
       label: "Dragon's Breath",
       summary: "Spend a Magic action to exhale a table-supplied 15-foot Cone.",
-      initialHoles: [dragonsBreathSavingThrowOutcomeHole(state, effect)],
+      initialHoles: [
+        dragonsBreathSavingThrowOutcomeHole(state, actorId, effect),
+      ],
     };
   });
 }
@@ -140,7 +147,11 @@ export function resolveDragonsBreathExhaleCommand(
       "Dragon's Breath requires an active target-attached effect.",
     );
   }
-  const saveHole = dragonsBreathSavingThrowOutcomeHole(input.state, effect);
+  const saveHole = dragonsBreathSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
   const saveFillsValidation = validateExpectedDragonBreathFillKind(
     input.fills,
     "savingThrowOutcome",
@@ -171,6 +182,24 @@ export function resolveDragonsBreathExhaleCommand(
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
   const outcomes = saveFill.value.outcomes;
+  const savingThrowTargetIds = outcomes.map((outcome) => outcome.targetId);
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    saveFill.relationshipFacts ?? [],
+    input.subject.actorId,
+    savingThrowTargetIds,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      input.subject.actorId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Dragon's Breath relationship facts must answer the saving-throw hole request.",
+    );
+  }
   if (outcomes.length === 0) {
     const fillsValidation = validateExpectedDragonBreathFills(input.fills, [
       { kind: "savingThrowOutcome", holeId: saveHole.holeId },
@@ -187,7 +216,12 @@ export function resolveDragonsBreathExhaleCommand(
       );
     }
     const resolvedState = battleStateAfterTargetActionEarlyEndForActor(
-      { ...input.state, currentTurnResources: spent.right },
+      extendSavingThrowOngoingFeatures(
+        { ...input.state, currentTurnResources: spent.right },
+        input.subject.actorId,
+        savingThrowTargetIds,
+        relationshipFacts,
+      ),
       input.subject.actorId,
     );
     return {
@@ -386,7 +420,12 @@ export function resolveDragonsBreathExhaleCommand(
     );
   }
   let damaged = battleStateAfterTargetActionEarlyEndForActor(
-    { ...input.state, currentTurnResources: spent.right },
+    extendSavingThrowOngoingFeatures(
+      { ...input.state, currentTurnResources: spent.right },
+      input.subject.actorId,
+      savingThrowTargetIds,
+      relationshipFacts,
+    ),
     input.subject.actorId,
   );
   for (const entry of damageEntriesByTarget) {
@@ -460,6 +499,7 @@ export function resolveDragonsBreathExhaleCommand(
 
 export function dragonsBreathSavingThrowOutcomeHole(
   state: BattleState,
+  actorId: CombatantId,
   effect: DragonsBreathEffect,
 ): BattleDragonsBreathSavingThrowOutcomeHole {
   const key = dragonsBreathHoleKey(effect, "saving-throw-outcome");
@@ -478,6 +518,18 @@ export function dragonsBreathSavingThrowOutcomeHole(
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(state, "dex"),
     targetFlatBonuses: savingThrowFlatBonusProjections(state, "dex"),
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId,
+          },
+        }
+      : {}),
   };
 }
 

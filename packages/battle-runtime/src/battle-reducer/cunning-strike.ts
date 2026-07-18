@@ -38,7 +38,11 @@ import {
   CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
   CUNNING_STRIKE_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
-import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
+import {
+  extendSavingThrowOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
@@ -362,8 +366,9 @@ function cunningStrikeOptionEligibleForTarget(
   return Match.value(option.effect).pipe(
     byCunningStrikeEffectKind("equipmentGatedConditionSave", () => true),
     byCunningStrikeEffectKind("postDamageMovement", () => true),
-    byCunningStrikeEffectKind("hideInvisibleEndSuppression", () =>
-      hiddenBeforeAttack !== null
+    byCunningStrikeEffectKind(
+      "hideInvisibleEndSuppression",
+      () => hiddenBeforeAttack !== null,
     ),
     byCunningStrikeEffectKind(
       "sizeGatedConditionSave",
@@ -428,10 +433,28 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fills.savingThrow.relationshipFacts ?? [],
+    context.attackerId,
+    [context.targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      context.attackerId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Cunning Strike relationship facts must answer the saving-throw hole request.",
+    };
+  }
   const savingThrowState = extendSavingThrowOngoingFeatures(
     state,
     context.attackerId,
     [context.targetId],
+    relationshipFacts,
   );
   return {
     tag: "ok",
@@ -480,10 +503,28 @@ function resolveCunningStrikeSizeGatedConditionSave(
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fills.savingThrow.relationshipFacts ?? [],
+    context.attackerId,
+    [context.targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      context.attackerId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Cunning Strike relationship facts must answer the saving-throw hole request.",
+    };
+  }
   const savingThrowState = extendSavingThrowOngoingFeatures(
     state,
     context.attackerId,
     [context.targetId],
+    relationshipFacts,
   );
   return {
     tag: "ok",
@@ -636,6 +677,18 @@ function cunningStrikeSavingThrowHole(
     holeId: CUNNING_STRIKE_SAVE_HOLE_ID,
     holeInstanceKey: CUNNING_STRIKE_SAVE_HOLE_INSTANCE,
     label: `Cunning Strike ${save.ability.toUpperCase()} Saving Throw`,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      context.attackerId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: context.attackerId,
+          },
+        }
+      : {}),
     unitFeature: {
       unitId: context.unitId,
       label: context.label,
@@ -648,9 +701,10 @@ function cunningStrikeSavingThrowHole(
       save.ability,
       save.condition === undefined ? undefined : { condition: save.condition },
     ).filter((projection) => projection.targetId === context.targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state, save.ability).filter(
-      (projection) => projection.targetId === context.targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      save.ability,
+    ).filter((projection) => projection.targetId === context.targetId),
   };
 }
 

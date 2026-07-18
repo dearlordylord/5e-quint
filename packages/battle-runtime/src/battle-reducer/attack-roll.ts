@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.grappler unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 
 import {
   applyCondition,
@@ -39,6 +40,7 @@ import type {
   OngoingFeatureRollModifier,
   SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
@@ -58,6 +60,7 @@ import {
   type AttackRollFeatureActivation,
   type BattleActiveEffect,
   type BattleAttackRollHole,
+  type BattleAttackRollRelationshipFact,
   type BattleDamageRollHole,
   type BattleAttackRollResult,
   type BattleCreatureState,
@@ -68,6 +71,7 @@ import {
   type BattleUnitFeatureDecisionHole,
   type BattleLightEmitter,
   type BattleObjectOutline,
+  type BattleSavingThrowRelationshipFact,
   type BattleState,
   type BattleTargetSpatialFact,
   type SpellAttackDamageComponent,
@@ -103,10 +107,13 @@ import {
 import {
   combatantCanSee,
   combatantInvisibleBenefitDenied,
-  combatantsAreEnemies,
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
+import {
+  attackRollTargetIsEnemy,
+  savingThrowTargetsEnemy,
+} from "./roll-trigger-relationship-facts.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
 import {
   activeOngoingFeatureOccurrenceFromProfile,
@@ -1134,6 +1141,18 @@ export function weaponMasteryToppleSavingThrowHole(
     holeId: WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
     holeInstanceKey: WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
     label: "Topple Constitution saving throw",
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      attackerId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: attackerId,
+          },
+        }
+      : {}),
     unitFeature: {
       unitId: selection.unitId,
       label: "Topple",
@@ -1171,10 +1190,28 @@ export function applyWeaponMasteryToppleSavingThrow(
       message: "Weapon Mastery Topple save must target the attacked creature.",
     };
   }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    fill.relationshipFacts ?? [],
+    attackerId,
+    [targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      attackerId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Weapon Mastery Topple relationship facts must answer the saving-throw hole request.",
+    };
+  }
   const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
     state,
     attackerId,
     [targetId],
+    relationshipFacts,
   );
   if (outcomes[0].succeeded) {
     return { tag: "ok", state: savingThrowExtendedState };
@@ -1254,6 +1291,18 @@ export function weaponMasteryCleaveTargetHole(
     holeInstanceKey: WEAPON_MASTERY_CLEAVE_TARGET_HOLE_INSTANCE,
     label: "Cleave second target",
     requiresTableSpatialFact: true,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      attackerId,
+      "attackRollAgainstEnemy",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId,
+          },
+        }
+      : {}),
     choices: [...state.combatants.keys()].filter(
       (combatantId) =>
         combatantId !== attackerId && combatantId !== firstTargetId,
@@ -1368,6 +1417,18 @@ export function huntersPreyHordeBreakerTargetHole(
     holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
     label: "Horde Breaker second target",
     requiresTableSpatialFact: true,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      attackerId,
+      "attackRollAgainstEnemy",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId,
+          },
+        }
+      : {}),
     choices: [...state.combatants.keys()].filter(
       (combatantId) =>
         combatantId !== attackerId && combatantId !== firstTargetId,
@@ -1816,8 +1877,9 @@ export function extendAttackRollOngoingFeatures(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
+  relationshipFacts: readonly BattleAttackRollRelationshipFact[],
 ): BattleState {
-  if (!combatantsAreEnemies(state, attackerId, targetId)) {
+  if (!attackRollTargetIsEnemy(relationshipFacts, attackerId, targetId)) {
     return state;
   }
   const attacker = state.combatants.get(attackerId);
@@ -1862,12 +1924,9 @@ export function extendSavingThrowOngoingFeatures(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
+  relationshipFacts: readonly BattleSavingThrowRelationshipFact[],
 ): BattleState {
-  if (
-    !targetIds.some((targetId) =>
-      combatantsAreEnemies(state, actorId, targetId),
-    )
-  ) {
+  if (!savingThrowTargetsEnemy(relationshipFacts, actorId, targetIds)) {
     return state;
   }
   const actor = state.combatants.get(actorId);
@@ -1907,6 +1966,23 @@ export function extendSavingThrowOngoingFeatures(
   };
 }
 
+export function ongoingFeatureEnemyRelationshipDecisionRequired(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: "attackRollAgainstEnemy" | "enemySavingThrow",
+): boolean {
+  const actor = state.combatants.get(actorId);
+  return (
+    actor !== undefined &&
+    [...activeOngoingFeatureOccurrencesForCombatant(actor)].some(([key]) =>
+      ongoingFeatureProfileHasExtensionTrigger(
+        ongoingFeatureProfileForSourceKey(actor, key),
+        trigger,
+      ),
+    )
+  );
+}
+
 export function recordAttackRollOngoingFeatures(
   state: BattleState,
   attackerId: CombatantId,
@@ -1915,6 +1991,7 @@ export function recordAttackRollOngoingFeatures(
     SupportedUnitFeatureProfile,
     { readonly kind: "ongoingFeature" }
   > | null,
+  relationshipFacts: readonly BattleAttackRollRelationshipFact[],
 ): BattleState {
   const attacker = state.combatants.get(attackerId);
   if (attacker === undefined || attackerId !== currentActorId(state)) {
@@ -1947,6 +2024,7 @@ export function recordAttackRollOngoingFeatures(
     withActivatedOngoingFeature,
     attackerId,
     targetId,
+    relationshipFacts,
   );
   return {
     ...withExtendedOngoingFeatures,

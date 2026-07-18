@@ -46,6 +46,7 @@ import {
   attackRollModeMatches,
   consumeHelpAttackForAttackRoll,
   recordAttackRollOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
@@ -83,9 +84,16 @@ import {
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import {
+  parseAttackTargetChoiceFill,
+  type BattleAttackTargetChoiceFill,
+} from "./roll-trigger-relationship-facts.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
-import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import {
+  sanctuaryTargetingInterdictionCheck,
+  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+} from "./sanctuary-targeting-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   chainedSpellAttackRollHole,
@@ -115,9 +123,7 @@ import {
   type SpellCastReactionFact,
 } from "./spells-resolve-fill-set.ts";
 export type ChainedSpellStepFills = {
-  readonly target:
-    | Extract<BattleFill, { readonly kind: "targetChoice" }>
-    | undefined;
+  readonly target: BattleAttackTargetChoiceFill | undefined;
   readonly attackRoll:
     | Extract<BattleFill, { readonly kind: "attackRoll" }>
     | undefined;
@@ -184,7 +190,13 @@ export function resolveChainedSpellAttackDamageAct(input: {
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   const fillSet =
-    input.fillSet ?? chainedSpellFillSet(input.input.fills, input.invocation);
+    input.fillSet ??
+    chainedSpellFillSet(
+      input.input.fills,
+      input.invocation,
+      input.actorId,
+      input.input.state,
+    );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.input.state, "invalidFill", fillSet.message);
   }
@@ -270,6 +282,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: targetEventId,
+      replacementTargetKind: "attackRoll",
       fills: input.input.fills,
     });
     if (sanctuaryCheck.tag === "needsHoles") {
@@ -350,14 +363,18 @@ export function resolveChainedSpellAttackDamageAct(input: {
       const fills = input.input.fills.map(
         (fill): BattleFill =>
           fill === originalTargetFill
-            ? {
-                ...fill,
-                value: replacementTarget.combatantId,
-                spatialFacts: sanctuaryCheck.spatialFacts,
-              }
+            ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+                fill,
+                replacement: sanctuaryCheck,
+              })
             : fill,
       );
-      const replacementFillSet = chainedSpellFillSet(fills, input.invocation);
+      const replacementFillSet = chainedSpellFillSet(
+        fills,
+        input.invocation,
+        input.actorId,
+        input.input.state,
+      );
       if (replacementFillSet.tag === "invalid") {
         return invalidResult(
           input.input.state,
@@ -511,6 +528,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           input.actorId,
           target.combatantId,
           null,
+          [...(step.target.relationshipFacts ?? [])],
         ),
         input.actorId,
         target.combatantId,
@@ -931,6 +949,8 @@ export function chainedSpellFillSet(
     SupportedSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >,
+  actorId: CombatantId,
+  state: BattleState,
 ): ChainedSpellFillSet {
   let damageType:
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
@@ -1083,6 +1103,16 @@ export function chainedSpellFillSet(
       }
       const step = steps[stepIndex];
       if (fill.kind === "targetChoice") {
+        const parsed = parseAttackTargetChoiceFill(
+          fill,
+          actorId,
+          ongoingFeatureEnemyRelationshipDecisionRequired(
+            state,
+            actorId,
+            "attackRollAgainstEnemy",
+          ),
+        );
+        if (parsed.tag === "invalid") return parsed;
         if (step.target !== undefined) {
           return {
             tag: "invalid",
@@ -1093,7 +1123,7 @@ export function chainedSpellFillSet(
           fill.spatialFacts ?? [],
         );
         if (sightFactValidation !== null) return sightFactValidation;
-        steps[stepIndex] = { ...step, target: fill };
+        steps[stepIndex] = { ...step, target: parsed.fill };
         continue;
       }
       if (fill.kind === "attackRoll") {

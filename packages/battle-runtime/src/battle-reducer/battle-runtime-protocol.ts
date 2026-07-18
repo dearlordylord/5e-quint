@@ -21,6 +21,7 @@ import {
 } from "@dnd/shared/types";
 import type {
   BattleAttackDamageDisposition,
+  BattleAttackRollRelationshipFact,
   BattleAttackRollResult,
   BattleFill,
   BattleRolledDiceFill,
@@ -200,12 +201,23 @@ export const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
   "battle:reaction:modifier-roll",
 );
 export const HIDE_DC = difficultyClass(15);
+type BattleAttackTargetChoiceFill = Omit<
+  Extract<BattleFill, { readonly kind: "targetChoice" }>,
+  "relationshipFacts"
+> & {
+  readonly relationshipFacts?: readonly [
+    BattleAttackRollRelationshipFact,
+    ...BattleAttackRollRelationshipFact[],
+  ];
+};
 export type AttackFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly damageRelationshipDecisions: DamageRelationshipDecisionsByHole;
+      readonly targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
+      readonly attackRollRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
       readonly attackRoll: BattleAttackRollResult | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
@@ -270,7 +282,7 @@ export type AttackFillSet =
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
         | undefined;
       readonly weaponMasteryCleaveTarget:
-        | Extract<BattleFill, { readonly kind: "targetChoice" }>
+        | BattleAttackTargetChoiceFill
         | undefined;
       readonly weaponMasteryCleaveAttackRoll:
         | Extract<BattleFill, { readonly kind: "attackRoll" }>
@@ -294,7 +306,7 @@ export type AttackFillSet =
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
         | undefined;
       readonly huntersPreyHordeBreakerTarget:
-        | Extract<BattleFill, { readonly kind: "targetChoice" }>
+        | BattleAttackTargetChoiceFill
         | undefined;
       readonly huntersPreyHordeBreakerAttackRoll:
         | Extract<BattleFill, { readonly kind: "attackRoll" }>

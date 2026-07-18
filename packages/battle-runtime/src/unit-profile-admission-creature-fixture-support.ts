@@ -573,6 +573,18 @@ export function attackTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [
       hole.attack.targetConstraint === "rangedRange"
         ? {

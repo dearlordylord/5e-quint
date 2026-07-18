@@ -70,7 +70,10 @@ import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import {
+  sanctuaryTargetingInterdictionCheck,
+  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+} from "./sanctuary-targeting-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   applyPreparedSlotSpellDamage,
@@ -155,6 +158,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     triggeringCombatantId: input.actorId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+    replacementTargetKind: "attackRoll",
     fills: input.input.fills,
   });
   if (sanctuaryCheck.tag === "needsHoles") {
@@ -219,14 +223,18 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       .map(
         (fill): BattleFill =>
           fill === originalTargetFill
-            ? {
-                ...fill,
-                value: replacementTarget.combatantId,
-                spatialFacts: sanctuaryCheck.spatialFacts,
-              }
+            ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+                fill,
+                replacement: sanctuaryCheck,
+              })
             : fill,
       );
-    const fillSet = spellFillSet(fills, input.invocation);
+    const fillSet = spellFillSet(
+      fills,
+      input.invocation,
+      input.actorId,
+      input.input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.input.state, "invalidFill", fillSet.message);
     }
@@ -384,6 +392,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         input.actorId,
         target.combatantId,
         null,
+        input.fillSet.targetRelationshipFacts,
       ),
       input.actorId,
       target.combatantId,

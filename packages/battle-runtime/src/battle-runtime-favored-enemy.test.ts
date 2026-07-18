@@ -231,7 +231,7 @@ describe("battle runtime: Favored Enemy", () => {
         },
       ]),
     ];
-    const fillSet = spellFillSet(fills, invocation);
+    const fillSet = spellFillSet(fills, invocation, fighterId, staleState);
     if (fillSet.tag === "invalid") {
       throw new Error(fillSet.message);
     }

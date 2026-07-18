@@ -7022,6 +7022,15 @@ export function resolveEndTurnCommand(
       fill.kind === "savingThrowOutcome",
   );
   if (
+    savingThrowOutcomeFills.some((fill) => fill.relationshipFacts !== undefined)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Turn-boundary Saving Throw relationship facts were not requested.",
+    );
+  }
+  if (
     input.fills.filter((fill) => fill.kind === "deathSavingThrow").length > 1 ||
     input.fills.filter((fill) => fill.kind === "statBlockRechargeRoll").length >
       1

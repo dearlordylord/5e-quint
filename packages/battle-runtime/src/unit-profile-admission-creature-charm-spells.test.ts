@@ -460,12 +460,26 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     expect(targetHole).toEqual(
       expect.objectContaining({ minTargets: 1, maxTargets: 1 }),
     );
+    expect(targetHole.relationshipFactRequest).toEqual({
+      kind: "spellTargetIsHostileToCaster",
+      casterId: spellCasterId,
+      spellId: charmPersonUnitId,
+    });
 
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
       charmPersonUnitId,
-      [spellTargetId],
+      [friendlyHumanoidId],
+      [
+        {
+          kind: "spellTargetIsHostileToCaster",
+          casterId: spellCasterId,
+          targetId: friendlyHumanoidId,
+          spellId: charmPersonUnitId,
+          targetIsHostileToCaster: true,
+        },
+      ],
     );
     const saveHole = requireResultHole(
       resolveBattleSubject({
@@ -479,14 +493,15 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     expect(saveHole).toMatchObject({
       ability: "wis",
       targetRollModes: expect.arrayContaining([
+        { targetId: friendlyHumanoidId, rollMode: "advantage" },
+      ]),
+    });
+    expect(saveHole.targetRollModes).not.toEqual(
+      expect.arrayContaining([
         { targetId: spellTargetId, rollMode: "advantage" },
         { targetId: humanoidId, rollMode: "advantage" },
       ]),
-    });
-    expect(saveHole.targetRollModes).not.toContainEqual({
-      targetId: friendlyHumanoidId,
-      rollMode: "advantage",
-    });
+    );
   });
   test("charm person applies one-hour spell-owned Charmed and ends when the caster damages the target", () => {
     const spell = spellRecord(charmPersonUnitId);

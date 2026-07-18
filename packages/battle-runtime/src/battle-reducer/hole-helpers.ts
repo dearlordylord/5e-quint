@@ -37,6 +37,7 @@ import {
 import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeStrengthRollMode,
@@ -682,6 +683,18 @@ export function attackTargetHole(
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
     label: "Attack target",
     requiresTableSpatialFact: true,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "attackRollAgainstEnemy",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId: actorId,
+          },
+        }
+      : {}),
     attack: {
       actorId,
       selection: attackExecutionSelectionForOption(attack),
@@ -761,6 +774,7 @@ export function hypnoticPatternShakeAwakeTargetHole(
 }
 
 export function grappleOutcomeHole(
+  state: BattleState,
   link: BattleGrappleLink,
 ): BattleGrappleOutcomeHole {
   return {
@@ -772,10 +786,23 @@ export function grappleOutcomeHole(
     targetId: link.targetId,
     dc: link.escapeDc,
     mode: "grappleSave",
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      link.grapplerId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: link.grapplerId,
+          },
+        }
+      : {}),
   };
 }
 
 export function shoveOutcomeHole(input: {
+  readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly dc: DifficultyClass;
@@ -788,6 +815,18 @@ export function shoveOutcomeHole(input: {
     actorId: input.actorId,
     targetId: input.targetId,
     dc: input.dc,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      input.actorId,
+      "enemySavingThrow",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: input.actorId,
+          },
+        }
+      : {}),
   };
 }
 

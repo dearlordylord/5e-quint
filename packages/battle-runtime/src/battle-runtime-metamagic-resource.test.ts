@@ -3502,6 +3502,20 @@ function sanctuaryRetargetFill(
         spatialFacts: [
           { kind: "spellTarget", casterId: wizardId, targetId, spellId },
         ],
+        replacementTargetKind: "attackRoll",
+        ...("relationshipFactRequest" in hole &&
+        hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+          ? {
+              relationshipFacts: [
+                {
+                  kind: "attackRollTargetIsEnemy" as const,
+                  attackerId: hole.relationshipFactRequest.attackerId,
+                  targetId,
+                  targetIsEnemy: true,
+                },
+              ],
+            }
+          : {}),
       },
     },
   };
@@ -4608,10 +4622,32 @@ function spellTargetListFill(
   spellId: "bless" | "burning_hands" | "command" | "invisibility",
   targetIds: readonly ReturnType<typeof combatantId>[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  const relationshipFactRequest = hole.relationshipFactRequest;
+  const relationshipFacts =
+    relationshipFactRequest?.kind === "spellTargetIsHostileToCaster" &&
+    targetIds[0] !== undefined
+      ? ([
+          {
+            kind: "spellTargetIsHostileToCaster" as const,
+            casterId: relationshipFactRequest.casterId,
+            targetId: targetIds[0],
+            spellId: relationshipFactRequest.spellId,
+            targetIsHostileToCaster: true,
+          },
+          ...targetIds.slice(1).map((targetId) => ({
+            kind: "spellTargetIsHostileToCaster" as const,
+            casterId: relationshipFactRequest.casterId,
+            targetId,
+            spellId: relationshipFactRequest.spellId,
+            targetIsHostileToCaster: true,
+          })),
+        ] as const)
+      : undefined;
   return {
     kind: "spellTargetList",
     holeId: hole.holeId,
     value: { targetIds },
+    ...(relationshipFacts === undefined ? {} : { relationshipFacts }),
     spatialFacts: targetIds.map((targetId) => ({
       kind: "spellTarget" as const,
       casterId: wizardId,

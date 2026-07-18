@@ -2097,6 +2097,62 @@ export type BattleTargetSpatialFact =
       readonly originalTargetId: CombatantId;
       readonly secondTargetId: CombatantId;
     };
+export type BattleProcedureRelationshipFact =
+  | {
+      readonly kind: "attackRollTargetIsEnemy";
+      readonly attackerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly targetIsEnemy: boolean;
+    }
+  | {
+      readonly kind: "savingThrowTargetIsEnemy";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly targetIsEnemy: boolean;
+    }
+  | {
+      readonly kind: "spellTargetIsHostileToCaster";
+      readonly casterId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly targetIsHostileToCaster: boolean;
+    };
+export type BattleAttackRollRelationshipFact = Extract<
+  BattleProcedureRelationshipFact,
+  { readonly kind: "attackRollTargetIsEnemy" }
+>;
+export type BattleSavingThrowRelationshipFact = Extract<
+  BattleProcedureRelationshipFact,
+  { readonly kind: "savingThrowTargetIsEnemy" }
+>;
+export type BattleTargetChoiceRelationshipFact = Exclude<
+  BattleProcedureRelationshipFact,
+  { readonly kind: "spellTargetIsHostileToCaster" }
+>;
+export type BattleSpellTargetListRelationshipFact = Extract<
+  BattleProcedureRelationshipFact,
+  { readonly kind: "spellTargetIsHostileToCaster" }
+>;
+export type BattleTargetChoiceRelationshipFactRequest =
+  | {
+      readonly kind: "attackRollTargetIsEnemy";
+      readonly attackerId: CombatantId;
+    }
+  | { readonly kind: "savingThrowTargetIsEnemy"; readonly actorId: CombatantId };
+export type BattleAttackRollRelationshipFactRequest = {
+  readonly kind: "attackRollTargetIsEnemy";
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+};
+export type BattleSpellTargetListRelationshipFactRequest = {
+  readonly kind: "spellTargetIsHostileToCaster";
+  readonly casterId: CombatantId;
+  readonly spellId: SpellRecord["id"];
+};
+export type BattleSavingThrowRelationshipFactRequest = {
+  readonly kind: "savingThrowTargetIsEnemy";
+  readonly actorId: CombatantId;
+};
 export type BattleSpellCastReactionFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
@@ -4409,14 +4465,6 @@ export type OngoingFeatureSource = {
   readonly kind: "unit";
   readonly unitId: UnitRecord["id"];
 };
-// Encounter relationship id, not creature provenance or a creature trait.
-// RAW defines allies/enemies by adventuring party, friendship, combat side,
-// hostile action, or GM/rule designation. This runtime currently projects that
-// relationship as side equality: same side = ally, different side = enemy.
-// Used by Rage extension against enemies and Sneak Attack's adjacent-ally
-// branch. Help and Cleave instead request their own procedure-local decisions.
-// Widen the remaining model before supporting rules that need per-pair
-// hostility, neutrality, or temporary designation.
 export type OngoingFeatureSourceKey = string &
   Brand.Brand<"OngoingFeatureSourceKey">;
 export const OngoingFeatureSourceKey = Brand.nominal<OngoingFeatureSourceKey>();
@@ -4817,6 +4865,7 @@ export type BattleTargetChoiceHole = Extract<
 > & {
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact?: boolean;
+  readonly relationshipFactRequest?: BattleTargetChoiceRelationshipFactRequest;
   readonly attack?: {
     readonly actorId: CombatantId;
     readonly selection: BattleAttackExecutionSelection;
@@ -5261,6 +5310,7 @@ export type BattleSpellTargetListHole = {
   readonly maxTargets: number;
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
+  readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;
 };
 export type BattleAttackRollHole = Extract<
   RuntimeHole,
@@ -5272,6 +5322,7 @@ export type BattleAttackRollHole = Extract<
   readonly ongoingFeatureActivations?: readonly AttackRollFeatureActivation[];
   readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly relationshipFactRequest?: BattleAttackRollRelationshipFactRequest;
 };
 export type AttackRollFeatureActivation = {
   readonly unitId: UnitRecord["id"];
@@ -6333,6 +6384,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleDragonsBreathSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6350,6 +6402,7 @@ export type BattleDragonsBreathSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6384,6 +6437,7 @@ export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+  readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleUnitFeatureRollHole = Extract<
   RuntimeHole,
@@ -6554,6 +6608,7 @@ export type BattleGrappleOutcomeHole = {
   readonly dc: DifficultyClass;
   readonly mode: "grappleSave" | "escapeCheck";
   readonly rollMode?: AttackRollMode;
+  readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleShoveOutcomeValue =
   | {
@@ -6576,6 +6631,7 @@ export type BattleShoveOutcomeHole = {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly dc: DifficultyClass;
+  readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleSanctuaryInterdictionOutcome =
   | {
@@ -6585,13 +6641,19 @@ export type BattleSanctuaryInterdictionOutcome =
       readonly saveSucceeded: false;
       readonly outcome:
         | { readonly kind: "loseAttackOrSpell" }
-        | {
+        | ({
             readonly kind: "newTarget";
             readonly targetId: CombatantId;
             readonly spatialFacts: readonly BattleTargetSpatialFact[];
-          };
+          } & (
+            | {
+                readonly replacementTargetKind: "attackRoll";
+                readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleAttackRollRelationshipFact>;
+              }
+            | { readonly replacementTargetKind: "nonAttack" }
+          ));
     };
-export type BattleSanctuaryInterdictionOutcomeHole = {
+type BattleSanctuaryInterdictionOutcomeHoleBase = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "sanctuaryInterdictionOutcome";
@@ -6605,6 +6667,18 @@ export type BattleSanctuaryInterdictionOutcomeHole = {
   readonly dc: DcSource;
   readonly choices: readonly CombatantId[];
 };
+export type BattleSanctuaryInterdictionOutcomeHole =
+  BattleSanctuaryInterdictionOutcomeHoleBase &
+    (
+      | {
+          readonly replacementTargetKind: "attackRoll";
+          readonly relationshipFactRequest?: Extract<
+            BattleTargetChoiceRelationshipFactRequest,
+            { readonly kind: "attackRollTargetIsEnemy" }
+          >;
+        }
+      | { readonly replacementTargetKind: "nonAttack" }
+    );
 export type BattleAttackDamageDispositionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6873,6 +6947,7 @@ export type BattleFill =
       readonly kind: "attackRoll";
       readonly holeId: BattleHoleId;
       readonly value: BattleAttackRollResult;
+      readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleAttackRollRelationshipFact>;
     }
   | BattleCreatureAttackZeroDamageFill
   | BattleRolledDiceFill
@@ -6886,6 +6961,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: BattleSavingThrowOutcomeValue;
       readonly spatialFacts?: readonly BattleTargetSpatialFact[];
+      readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleSavingThrowRelationshipFact>;
     }
   | {
       readonly kind: "conditionChoice";
@@ -7005,6 +7081,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: CombatantId;
       readonly spatialFacts?: readonly BattleTargetSpatialFact[];
+      readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleTargetChoiceRelationshipFact>;
     }
   | BattleDamageRelationshipDecisionFill
   | {
@@ -7110,6 +7187,7 @@ export type BattleFill =
         readonly targetIds: readonly CombatantId[];
       };
       readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
+      readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleSpellTargetListRelationshipFact>;
     }
   | {
       readonly kind: "deathSavingThrow";
@@ -7180,11 +7258,13 @@ export type BattleFill =
       readonly value: {
         readonly succeeded: boolean;
       };
+      readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleSavingThrowRelationshipFact>;
     }
   | {
       readonly kind: "shoveOutcome";
       readonly holeId: BattleHoleId;
       readonly value: BattleShoveOutcomeValue;
+      readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleSavingThrowRelationshipFact>;
     };
 
 export type BattleResolutionCandidateInput = {

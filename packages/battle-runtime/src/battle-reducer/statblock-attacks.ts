@@ -58,10 +58,7 @@ import {
   type AttackDamageDieFloorChoiceFill,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
-import {
-  combatantsAreAllies,
-  currentActorId,
-} from "./creature-state-leaves.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
 import {
   activeRageDamageBonusForFrenzy,
@@ -447,7 +444,6 @@ export function targetHasAdjacentNonIncapacitatedAlly(
       ally !== undefined &&
       fact.allyId !== attackerId &&
       fact.allyId !== targetId &&
-      combatantsAreAllies(state, attackerId, fact.allyId) &&
       !isIncapacitated(ally.conditions)
     );
   });

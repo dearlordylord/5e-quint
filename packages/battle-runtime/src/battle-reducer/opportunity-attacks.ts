@@ -24,6 +24,7 @@ import {
   attackRollHole,
   attackRollModeMatches,
   consumeHelpAttackForAttackRoll,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
 } from "./attack-roll.ts";
@@ -84,6 +85,7 @@ import {
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import {
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
@@ -149,7 +151,16 @@ export function resolveOpportunityAttackCommand(
       `${commandLabel} attack is no longer available.`,
     );
   }
-  const fillSet = attackFillSet(input.fills);
+  const fillSet = attackFillSet(
+    input.fills,
+    subject.reactorId,
+    input.state,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      subject.reactorId,
+      "attackRollAgainstEnemy",
+    ),
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -176,11 +187,26 @@ export function resolveOpportunityAttackCommand(
       );
     }
     return needsHolesResult(input.state, input.subject, [
-      attackRollHole(
-        input.state.combatants.get(subject.reactorId),
-        attack,
-        requiredRollMode,
-      ),
+      {
+        ...attackRollHole(
+          input.state.combatants.get(subject.reactorId),
+          attack,
+          requiredRollMode,
+        ),
+        ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+          input.state,
+          subject.reactorId,
+          "attackRollAgainstEnemy",
+        )
+          ? {
+              relationshipFactRequest: {
+                kind: "attackRollTargetIsEnemy" as const,
+                attackerId: subject.reactorId,
+                targetId: subject.targetId,
+              },
+            }
+          : {}),
+      },
     ]);
   }
   if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -214,9 +240,22 @@ export function resolveOpportunityAttackCommand(
     })
   ) {
     return needsHolesResult(input.state, input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
-        attackRollHole(reactor, attack, requiredRollMode),
-      ),
+      attackRollHoleWithD20TestNaturalOneRerollOption({
+        ...attackRollHole(reactor, attack, requiredRollMode),
+        ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+          input.state,
+          subject.reactorId,
+          "attackRollAgainstEnemy",
+        )
+          ? {
+              relationshipFactRequest: {
+                kind: "attackRollTargetIsEnemy" as const,
+                attackerId: subject.reactorId,
+                targetId: subject.targetId,
+              },
+            }
+          : {}),
+      }),
     ]);
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
@@ -240,12 +279,30 @@ export function resolveOpportunityAttackCommand(
   );
   const hiddenBeforeAttack =
     input.state.combatants.get(subject.reactorId)?.hidden ?? null;
+  const attackRollRelationshipFacts = parseAttackRollRelationshipFacts(
+    fillSet.attackRollRelationshipFacts,
+    subject.reactorId,
+    subject.targetId,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      subject.reactorId,
+      "attackRollAgainstEnemy",
+    ),
+  );
+  if (attackRollRelationshipFacts === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${commandLabel} relationship facts must answer the attack-roll hole request.`,
+    );
+  }
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(input.state, subject.reactorId),
       subject.reactorId,
       subject.targetId,
       null,
+      attackRollRelationshipFacts,
     ),
     subject.reactorId,
     subject.targetId,

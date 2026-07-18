@@ -14,6 +14,7 @@ import {
   type BattleCloudkillAreaHazardTrigger,
   type BattleInsectPlagueAreaHazardTrigger,
   type BattleSleetStormAreaHazardTrigger,
+  type BattleSpellTargetListRelationshipFact,
   type SupportedDamageSpellInvocation,
 } from "./battle-reducer.ts";
 import {
@@ -300,6 +301,18 @@ export function spellTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
     spatialFacts: [
       {
         kind: "spellTarget",
@@ -704,12 +717,41 @@ export function spellTargetListFill(
   casterId: CombatantId,
   spellId: string,
   targetIds: readonly CombatantId[],
+  relationshipFacts?: readonly [
+    BattleSpellTargetListRelationshipFact,
+    ...BattleSpellTargetListRelationshipFact[],
+  ],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  const relationshipFactRequest = hole.relationshipFactRequest;
+  const selectedRelationshipFacts =
+    relationshipFacts ??
+    (relationshipFactRequest?.kind === "spellTargetIsHostileToCaster" &&
+    targetIds[0] !== undefined
+      ? [
+          {
+            kind: "spellTargetIsHostileToCaster" as const,
+            casterId: relationshipFactRequest.casterId,
+            targetId: targetIds[0],
+            spellId: relationshipFactRequest.spellId,
+            targetIsHostileToCaster: true,
+          },
+          ...targetIds.slice(1).map((targetId) => ({
+            kind: "spellTargetIsHostileToCaster" as const,
+            casterId: relationshipFactRequest.casterId,
+            targetId,
+            spellId: relationshipFactRequest.spellId,
+            targetIsHostileToCaster: true,
+          })),
+        ]
+      : undefined);
   if (hole.spell.targeting.kind === "pointOriginSphereTargetList") {
     return {
       kind: "spellTargetList",
       holeId: hole.holeId,
       value: { targetIds },
+      ...(selectedRelationshipFacts === undefined
+        ? {}
+        : { relationshipFacts: selectedRelationshipFacts }),
       spatialFacts: [
         {
           kind: "spellTargetsInPointOriginSphere",
@@ -726,8 +768,11 @@ export function spellTargetListFill(
     kind: "spellTargetList",
     holeId: hole.holeId,
     value: { targetIds },
+    ...(selectedRelationshipFacts === undefined
+      ? {}
+      : { relationshipFacts: selectedRelationshipFacts }),
     spatialFacts: targetIds.map((targetId) => ({
-      kind: "spellTarget",
+      kind: "spellTarget" as const,
       casterId,
       targetId,
       spellId,
@@ -785,9 +830,32 @@ export function savingThrowOutcomeFill(
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const projectedOutcomes = outcomes.map(d20TestSavingThrowOutcomeValue);
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
+  const relationshipFacts =
+    relationshipFactRequest?.kind === "savingThrowTargetIsEnemy" &&
+    outcomes[0] !== undefined
+      ? ([
+          {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: relationshipFactRequest.actorId,
+            targetId: outcomes[0].targetId,
+            targetIsEnemy: true,
+          },
+          ...outcomes.slice(1).map((outcome) => ({
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: relationshipFactRequest.actorId,
+            targetId: outcome.targetId,
+            targetIsEnemy: true,
+          })),
+        ] as const)
+      : undefined;
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
+    ...(relationshipFacts === undefined ? {} : { relationshipFacts }),
     value:
       "spell" in hole &&
       hole.spell.procedure !== "rollModifier" &&

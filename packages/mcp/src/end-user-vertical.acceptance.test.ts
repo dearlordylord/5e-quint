@@ -4,9 +4,8 @@ import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
-  GENERIC_COMBAT_ACTION_LABELS,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
   GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
 } from "../test-support/battle-act-labels.ts";
 import {
   loadoutHoleId,
@@ -174,7 +173,7 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
       "Adrenaline Rush",
       "Second Wind",
       "Move",
@@ -217,7 +216,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Nimble Escape",
       "Move",
       "End Turn",

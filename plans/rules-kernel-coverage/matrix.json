@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 133,
-    "covered": 127,
+    "total": 134,
+    "covered": 128,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 102,
+      "battle": 103,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 127,
+      "covered": 128,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 179,
+    "total": 185,
     "bySubject": {
-      "battle-hole-family": 90,
-      "battle-fill-kind": 50,
+      "battle-hole-family": 93,
+      "battle-fill-kind": 53,
       "battle-subject-kind": 39
     },
     "byClassification": {
       "semantic-frontier": 146,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 33,
+      "table-owned-fact": 39,
       "unsupported-dead-branch": 0
     }
   },
@@ -4828,6 +4828,39 @@
         "UBIQUITOUS_LANGUAGE.md#Saving Throw"
       ],
       "title": "Battle Glyph of Warding spell glyph releases supported stored Concentration spells to full duration"
+    },
+    {
+      "id": "BATTLE.RELATIONSHIP_DISCOVERY",
+      "kind": "hole-frontier",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/relationship-discovery.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-relationship-discovery.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-relationship-discovery.qnt"
+      ],
+      "reason": "Dedicated Help ally and enemy decision holes carry contextual pair decisions without creating a generic relationship partition; Help proximity remains a dedicated decision field. Cleave discovers any distinct second creature rather than requiring an enemy. The focused QNT and MBT owner remains the single authority for this discovery boundary.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Help [Action]",
+        ".references/srd-5.2.1/Rules-Glossary.md#Ally",
+        ".references/srd-5.2.1/Rules-Glossary.md#Enemy",
+        ".references/srd-5.2.1/Equipment.md#Cleave",
+        "UBIQUITOUS_LANGUAGE.md#Table Decisions",
+        "UBIQUITOUS_LANGUAGE.md#Equipment"
+      ],
+      "title": "Battle Help ally/enemy decisions and Cleave second-creature discovery are procedure-local and independent of Encounter Side"
     }
   ],
   "battleHoleFrontier": [
@@ -6949,6 +6982,80 @@
       "reason": "The minimal creatureAttack subject kind is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY as public BattleSubject vocabulary. Task 67 target replay covers its executable reducer route through Attack Roll and Hit Point owners.",
       "subject": "battle-subject-kind",
       "subjectKind": "creatureAttack"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.RELATIONSHIP_DISCOVERY",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "helpAttackAllyDecision",
+      "id": "BattleHelpAttackAllyDecisionHole",
+      "reason": "The dedicated Help ally decision hole asks the table to classify one mechanically eligible participant as an Ally for this Help procedure; the accepted decision is not stored as an encounter-wide relationship partition.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.RELATIONSHIP_DISCOVERY",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "helpAttackEnemyDecision",
+      "id": "BattleHelpAttackEnemyDecisionHole",
+      "reason": "The dedicated Help enemy decision hole asks the table to classify one mechanically eligible participant as an Enemy and records the Help-specific within-5-feet decision without introducing generic relationship or geometry state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "damageRelationshipDecisions",
+      "id": "BattleDamageRelationshipDecisionHole",
+      "reason": "Damage-event-scoped relationship questions are emitted only when a downstream damage trigger consumes them; exact answers remain scoped to the represented damage event rather than an encounter-wide relationship map.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.RELATIONSHIP_DISCOVERY",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "helpAttackAllyDecision",
+      "followUpTaskIds": [],
+      "id": "helpAttackAllyDecision",
+      "reason": "The dedicated Help ally fill answers the corresponding procedure-local ally decision hole and is consumed only by that Help resolution.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.RELATIONSHIP_DISCOVERY",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "helpAttackEnemyDecision",
+      "followUpTaskIds": [],
+      "id": "helpAttackEnemyDecision",
+      "reason": "The dedicated Help enemy fill answers the corresponding procedure-local enemy decision and Help proximity question without entering generic relationship facts.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "damageRelationshipDecisions",
+      "followUpTaskIds": [],
+      "id": "damageRelationshipDecisions",
+      "reason": "Damage relationship decision fills answer every question from one emitted damage-event hole exactly once and are carried only through that event's damage application.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -10755,6 +10862,20 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Dedicated semantic owner for procedure-local Help ally/enemy candidate decisions and Side-independent Cleave second-creature discovery.",
+      "obligationIds": [
+        "BATTLE.RELATIONSHIP_DISCOVERY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-relationship-discovery.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Literal focused MBT projection witness for the dedicated relationship-discovery semantic owner.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-relationship-discovery.mbt.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -11166,6 +11287,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-reducer-route.qnt",
       "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-relationship-discovery.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -15934,6 +16060,25 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "pure-def",
+        "int",
+        "bool",
+        "comparison",
+        "boolean-connective",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.RELATIONSHIP_DISCOVERY",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-relationship-discovery.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-relationship-discovery.qnt"
       ],
       "status": "generation-subset-clean"
     }

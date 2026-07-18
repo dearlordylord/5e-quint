@@ -72,6 +72,11 @@ import type {
   BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import { zeroHpLifecycleIsTerminal } from "../battle-reducer.ts";
+import {
+  extendSavingThrowOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
+} from "./attack-roll.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 export function attackDamageReductionZeroDamageRedirectSelection(input: {
   readonly state: BattleState;
   readonly reactorId: CombatantId;
@@ -249,6 +254,26 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
     };
   }
   const offer = offers[0];
+  const relationshipFacts =
+    input.redirectSave === undefined || input.redirectTarget === undefined
+      ? []
+      : parseSavingThrowRelationshipFacts(
+          input.redirectSave.relationshipFacts ?? [],
+          offer.reactorId,
+          [input.redirectTarget.value],
+          ongoingFeatureEnemyRelationshipDecisionRequired(
+            input.state,
+            offer.reactorId,
+            "enemySavingThrow",
+          ),
+        );
+  if (relationshipFacts === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Attack damage reduction redirect relationship facts must answer the saving-throw hole request.",
+    };
+  }
   const selection = attackDamageReductionZeroDamageRedirectSelection({
     state: input.state,
     reactorId: offer.reactorId,
@@ -276,7 +301,12 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
     };
   }
   const resourceSpent = spendAttackDamageReductionRedirectResource(
-    input.state,
+    extendSavingThrowOngoingFeatures(
+      input.state,
+      offer.reactorId,
+      input.redirectTarget === undefined ? [] : [input.redirectTarget.value],
+      relationshipFacts,
+    ),
     offer.reactorId,
     offer.unitId,
     offer.redirect,
@@ -392,6 +422,18 @@ export function attackDamageReductionZeroDamageRedirectHoles(
       holeInstanceKey:
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_INSTANCE,
       label: `${offer.label} Dexterity saving throw`,
+      ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+        state,
+        offer.reactorId,
+        "enemySavingThrow",
+      )
+        ? {
+            relationshipFactRequest: {
+              kind: "savingThrowTargetIsEnemy" as const,
+              actorId: offer.reactorId,
+            },
+          }
+        : {}),
       unitFeature: {
         unitId: offer.unitId,
         label: offer.label,

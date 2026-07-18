@@ -268,6 +268,7 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import {
   battleStateAfterTargetActionEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
+  targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import { resolveSlowSomaticSpellFailure } from "./slow-active-penalties-runtime.ts";
@@ -920,7 +921,12 @@ function resolveSpellActInternal(
   }
 
   if (invocation.procedure === "chainedSpellAttackDamage") {
-    const fillSet = parseChainedSpellFillSet(input.fills, invocation);
+    const fillSet = parseChainedSpellFillSet(
+      input.fills,
+      invocation,
+      subject.actorId,
+      input.state,
+    );
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
@@ -933,7 +939,12 @@ function resolveSpellActInternal(
     });
   }
 
-  const fillSet = spellFillSet(input.fills, invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    invocation,
+    subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -1143,6 +1154,7 @@ function resolveSpellActInternal(
       triggeringCombatantId: subject.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+      replacementTargetKind: "attackRoll",
       fills: input.fills,
     });
     if (sanctuaryCheck.tag === "needsHoles") {
@@ -1221,11 +1233,10 @@ function resolveSpellActInternal(
               .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
               .map((fill) =>
                 fill === originalTargetFill
-                  ? {
-                      ...fill,
-                      value: replacementTarget.combatantId,
-                      spatialFacts: sanctuaryCheck.spatialFacts,
-                    }
+                  ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+                      fill,
+                      replacement: sanctuaryCheck,
+                    })
                   : fill,
               ),
           ],
@@ -1439,6 +1450,7 @@ function resolveSpellActInternal(
           subject.actorId,
           target.combatantId,
           null,
+          fillSet.targetRelationshipFacts,
         ),
         subject.actorId,
         target.combatantId,
@@ -1764,6 +1776,7 @@ function resolveSpellActInternal(
               subject.actorId,
               target.combatantId,
               null,
+              fillSet.targetRelationshipFacts,
             ),
             subject.actorId,
             target.combatantId,
@@ -2289,7 +2302,12 @@ function spiritualWeaponResolutionCommitAlreadyApplied(input: {
   ) {
     return false;
   }
-  const fillSet = spellFillSet(input.fills, input.invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    input.invocation,
+    input.actorId,
+    input.state,
+  );
   if (
     fillSet.tag !== "ok" ||
     fillSet.spiritualWeaponForcePosition === undefined
@@ -3202,7 +3220,12 @@ export function resolveBonusActionSpellAct(
   if (slowSomaticSpellFailure.tag !== "continue") {
     return slowSomaticSpellFailure;
   }
-  const fillSet = spellFillSet(input.fills, invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    invocation,
+    subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -3339,7 +3362,12 @@ export function resolveBonusActionDashSpellAct(
   if (slowSomaticSpellFailure.tag !== "continue") {
     return slowSomaticSpellFailure;
   }
-  const fillSet = spellFillSet(input.fills, invocation);
+  const fillSet = spellFillSet(
+    input.fills,
+    invocation,
+    subject.actorId,
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }

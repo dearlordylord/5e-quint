@@ -51,6 +51,7 @@ import {
   repeatedDamageAllocationTargetCardinality,
 } from "./spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   spellId,
   type BattleObjectId,
@@ -164,8 +165,38 @@ export function spellTargetHole(
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
     label: `${invocation.spell.name} target`,
     requiresTableSpatialFact: true,
+    ...(spellTargetRequiresAttackRollRelationshipFact(invocation) &&
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "attackRollAgainstEnemy",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId: actorId,
+          },
+        }
+      : {}),
     choices,
   };
+}
+
+export function spellTargetRequiresAttackRollRelationshipFact(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return (
+    invocation.procedure === "spellAttackDamage" ||
+    invocation.procedure === "spellAttackSequence" ||
+    invocation.procedure === "heldLightHurl" ||
+    invocation.procedure === "spellCreatedHeldObjectAttack" ||
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack" ||
+    invocation.procedure === "weaponAttackOverride" ||
+    invocation.procedure === "spellHostedWeaponAttack" ||
+    invocation.procedure === "attackBurstSaveDamage" ||
+    invocation.procedure === "chainedSpellAttackDamage"
+  );
 }
 
 function spiritualWeaponRepeatTargetingAllows(
@@ -267,6 +298,18 @@ export function spellAttackSequencePartTargetHole(
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} ${partName} ${partIndex + 1} target`,
     requiresTableSpatialFact: true,
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      state,
+      actorId,
+      "attackRollAgainstEnemy",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId: actorId,
+          },
+        }
+      : {}),
     choices: [...state.combatants.keys()].filter((id) =>
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
     ),
@@ -519,6 +562,16 @@ export function spellTargetListHole(
     minTargets: invocation.targeting.minTargets,
     maxTargets: targetListHoleMaxTargets(invocation, choices.length),
     requiresTableSpatialFact: true,
+    ...("saveRollModeRule" in invocation &&
+    invocation.saveRollModeRule?.kind === "hostileTarget"
+      ? {
+          relationshipFactRequest: {
+            kind: "spellTargetIsHostileToCaster" as const,
+            casterId: actorId,
+            spellId: invocation.spell.id,
+          },
+        }
+      : {}),
     choices,
   };
 }

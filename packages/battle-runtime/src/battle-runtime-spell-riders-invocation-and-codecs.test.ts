@@ -816,6 +816,10 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       areaChoices: [],
       targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
       targetFlatBonuses: [],
+      relationshipFactRequest: {
+        kind: "savingThrowTargetIsEnemy",
+        actorId: wizardId,
+      },
     };
 
     const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(hole);
@@ -914,6 +918,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
             outcome: {
               kind: "newTarget",
               targetId: fighterId,
+              replacementTargetKind: "nonAttack",
               spatialFacts: [
                 {
                   kind: "notBattleTargetSpatialFact",

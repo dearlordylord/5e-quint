@@ -118,7 +118,7 @@ function resolveRayOfEnfeeblementCast(input: {
     { targetId: spellTargetId, succeeded: input.succeeded },
   ]);
   const fills = [targetFill, saveFill];
-  const fillSet = spellFillSet(fills, invocation);
+  const fillSet = spellFillSet(fills, invocation, spellCasterId, input.state);
   expect(fillSet.tag).toBe("ok");
   if (fillSet.tag !== "ok") {
     throw new Error(fillSet.message);

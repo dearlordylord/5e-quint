@@ -619,6 +619,7 @@ function resolveHypnoticPattern(
     concentrationChecked,
     input.actorId,
     affectedTargetIds,
+    input.fillSet.savingThrowRelationshipFacts,
   );
   return {
     tag: "resolved",

@@ -64,6 +64,7 @@ import {
   consumeHelpAttackForAttackRoll,
   recordWeaponMasteryCleaveUsed,
   recordAttackRollOngoingFeatures,
+  ongoingFeatureEnemyRelationshipDecisionRequired,
   requiredAttackRollMode,
   tacticalMasterAttackWithReplacement,
   tacticalMasterReplacementDecisionHole,
@@ -150,6 +151,7 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import {
   battleStateAfterTargetActionEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
+  targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
@@ -225,6 +227,7 @@ import {
   validateRolledDiceForWeaponAttack,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
+import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 
 export function resolveAttack(
   input: AttackBattleResolutionInput,
@@ -661,8 +664,28 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
     return {
       tag: "result",
       result: needsHolesResult(input.state, input.subject, [
-        grappleOutcomeHole(eligibility.link),
+        grappleOutcomeHole(input.state, eligibility.link),
       ]),
+    };
+  }
+  const relationshipFacts = parseSavingThrowRelationshipFacts(
+    input.fillSet.grapplerPunchAndGrabOutcome.relationshipFacts ?? [],
+    eligibility.link.grapplerId,
+    [eligibility.link.targetId],
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      eligibility.link.grapplerId,
+      "enemySavingThrow",
+    ),
+  );
+  if (relationshipFacts === null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Grappler Punch and Grab relationship facts must answer the saving-throw hole request.",
+      ),
     };
   }
   const usedState = {
@@ -680,6 +703,7 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
     state: applyGrappleSavingThrowOutcome({
       state: usedState,
       link: eligibility.link,
+      relationshipFacts,
       outcome: input.fillSet.grapplerPunchAndGrabOutcome.value,
     }),
   };
@@ -704,12 +728,11 @@ export function resolveSelectedAttackProcedure(
     input.pendingAttackDamageReductions ?? [];
   const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
 
-  const fillSet = attackFillSet(input.fills);
+  const attackerId = battleAttackHostParticipantId(input.subject);
+  const fillSet = attackFillSet(input.fills, attackerId, input.state);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  const attackerId = battleAttackHostParticipantId(input.subject);
-
   if (fillSet.targetId == null) {
     if (
       fillSet.tacticalMasterReplacementDecision !== undefined ||
@@ -766,6 +789,7 @@ export function resolveSelectedAttackProcedure(
     triggeringCombatantId: attackerId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+    replacementTargetKind: "attackRoll",
     fills: input.fills,
   });
   if (sanctuaryCheck.tag === "needsHoles") {
@@ -817,11 +841,10 @@ export function resolveSelectedAttackProcedure(
             .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
             .map((fill) =>
               fill === originalTargetFill
-                ? {
-                    ...fill,
-                    value: replacementTarget.combatantId,
-                    spatialFacts: sanctuaryCheck.spatialFacts,
-                  }
+                ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+                    fill,
+                    replacement: sanctuaryCheck,
+                  })
                 : fill,
             ),
         ],
@@ -1140,6 +1163,7 @@ export function resolveSelectedAttackProcedure(
         attackerId,
         target.combatantId,
         activatedOngoingFeatureProfile,
+        fillSet.targetRelationshipFacts,
       ),
       attackerId,
       target.combatantId,
@@ -2391,7 +2415,11 @@ export function resolveWeaponMasteryCleaveContinuation(input: {
   readonly fills: readonly BattleFill[];
   readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): BattleResolutionResult {
-  const fillSet = attackFillSet(input.fills);
+  const fillSet = attackFillSet(
+    input.fills,
+    battleAttackHostParticipantId(input.subject),
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -2709,6 +2737,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         input.subject.actorId,
         secondTargetId,
         null,
+        input.fillSet.weaponMasteryCleaveTarget.relationshipFacts ?? [],
       ),
       input.subject.actorId,
       secondTargetId,
@@ -3133,7 +3162,11 @@ export function resolveHuntersPreyHordeBreakerContinuation(input: {
   readonly fills: readonly BattleFill[];
   readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): BattleResolutionResult {
-  const fillSet = attackFillSet(input.fills);
+  const fillSet = attackFillSet(
+    input.fills,
+    battleAttackHostParticipantId(input.subject),
+    input.state,
+  );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -3434,6 +3467,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       input.subject.actorId,
       secondTargetId,
       null,
+      input.fillSet.huntersPreyHordeBreakerTarget.relationshipFacts ?? [],
     ),
     input.subject.actorId,
     secondTargetId,
