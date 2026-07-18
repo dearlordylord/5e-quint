@@ -31,7 +31,7 @@ import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type DamageReductionSpellInvocation,
@@ -192,7 +192,7 @@ function discoverDamageReductionCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: DamageReductionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
     return [];

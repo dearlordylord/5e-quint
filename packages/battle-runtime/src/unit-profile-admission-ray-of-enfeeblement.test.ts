@@ -123,16 +123,14 @@ function resolveRayOfEnfeeblementCast(input: {
   if (fillSet.tag !== "ok") {
     throw new Error(fillSet.message);
   }
+  const act = spellAct({
+    state: input.state,
+    spellId: rayOfEnfeeblementUnitId,
+  });
   return abilityD20TestRollModeSaveGateProfile.resolve({
     input: {
       state: input.state,
-      subject: {
-        tag: "actionSpell",
-        actorId: spellCasterId,
-        invocation:
-          abilityD20TestRollModeSaveGateProfile.invocationRef(invocation),
-        mode: { tag: "cast" },
-      },
+      subject: act.subject,
       fills,
     },
     actorId: spellCasterId,

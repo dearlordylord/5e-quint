@@ -37,7 +37,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { opportunityAttackProcedureSelectionForTest } from "./battle-runtime-test-support.ts";
+import {
+  characterSpellInvocationRefForProcedureRefForTest,
+  opportunityAttackProcedureSelectionForTest,
+} from "./battle-runtime-test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -933,6 +936,9 @@ function attackTargetFill(
   actorId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound Shield trigger attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -942,7 +948,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        ...(hole.attack?.selection ?? { attackName: "Unarmed Strike" }),
+        ...hole.attack.selection,
       },
     ],
   };
@@ -1085,23 +1091,24 @@ function resolveShieldReactionChoice(
     awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (choice) => choice.kind === "castTriggeredReactionSpell",
     );
-  expect(reactionChoice).toEqual(
-    expect.objectContaining({
-      kind: "castTriggeredReactionSpell",
-      reactorId: spellCasterId,
-      invocation: expect.objectContaining({
-        tag: "spellSlot",
-        spellId: shieldUnitId,
-        procedure: "shieldReaction",
-      }),
-    }),
-  );
   if (
     reactionChoice === undefined ||
     reactionChoice.kind !== "castTriggeredReactionSpell"
   ) {
     throw new Error("Expected Shield Reaction spell choice.");
   }
+  expect(reactionChoice.reactorId).toBe(spellCasterId);
+  expect(
+    characterSpellInvocationRefForProcedureRefForTest(
+      awaitingReaction.state,
+      reactionChoice.reactorId,
+      reactionChoice.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    tag: "spellSlot",
+    spellId: shieldUnitId,
+    procedure: "shieldReaction",
+  });
   return resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: {
@@ -1112,7 +1119,7 @@ function resolveShieldReactionChoice(
         responderId: spellCasterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: reactionChoice.invocation,
+          procedureRef: reactionChoice.subject.procedureRef,
           fills: [],
         },
       },

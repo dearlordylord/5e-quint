@@ -120,7 +120,6 @@ import { Brand } from "effect";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
-  CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import type {
@@ -172,10 +171,7 @@ import {
   type BattleMovementSpeedKind,
   type BattleSubject,
   type AdmittedBattleSubject,
-  type BonusActionStandardActionSubject,
   type MonkFocusFlurryOfBlowsStrikeSubject,
-  type MonkFocusOptionSubject,
-  type SpellInvocationRef,
 } from "./battle-subjects.ts";
 export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";
 import {
@@ -183,7 +179,10 @@ import {
   type CharacterBattleResourceState,
   type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
-import type { CharacterExecutionState } from "./character-execution.ts";
+import type {
+  CharacterExecutionState,
+  CharacterProcedureBindingSnapshot,
+} from "./character-execution.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import type {
   BattleCompanionPlacement,
@@ -961,6 +960,7 @@ export type BattleSeeInvisibleEtherealWitness = {
 // releases it later with a Reaction.
 export type BattleReadiedSpell = {
   readonly invocation: ReadiedSpellInvocation;
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly trigger: BattleReadiedSpellTrigger;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
@@ -1046,19 +1046,30 @@ export type BattleAttackDamageInterruptionBoundaryResult =
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
-      readonly subject: BattleSubject;
+      readonly subject: AdmittedBattleSubject;
       readonly fills: readonly BattleFill[];
-      readonly glyphStoredSpellReleaseReplay?: GlyphStoredSpellReleaseReplayContext;
+      readonly glyphStoredSpellReleaseReplay?: never;
       readonly attackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
       readonly attackDamageAdditions?: readonly AttackSpellDamageAddition[];
     }
   | {
+      readonly kind: "replay";
+      readonly subject: Extract<
+        AdmittedBattleSubject,
+        { readonly tag: "actionSpell" }
+      >;
+      readonly fills: readonly BattleFill[];
+      readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
+      readonly attackDamageReductions?: never;
+      readonly attackDamageAdditions?: never;
+    }
+  | {
       readonly kind: "resolved";
-      readonly subject: BattleSubject;
+      readonly subject: AdmittedBattleSubject;
     }
   | {
       readonly kind: "afterDamageSequence";
-      readonly subject: BattleSubject;
+      readonly subject: AdmittedBattleSubject;
       readonly events: readonly BattleAfterDamageEvent[];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
@@ -1080,12 +1091,12 @@ export type BattleInterruptedProcedure =
     }
   | {
       readonly kind: "movement";
-      readonly subject: BattleSubject;
+      readonly subject: AdmittedBattleSubject;
       readonly movement: BattleResolvedMovement;
     }
   | {
       readonly kind: "movementThenAfterDamageSequence";
-      readonly subject: BattleSubject;
+      readonly subject: AdmittedBattleSubject;
       readonly movement: BattleResolvedMovement;
       readonly events: readonly BattleAfterDamageEvent[];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
@@ -1114,31 +1125,34 @@ export type BattleInterruptedProcedure =
   | BattleAttackDamageInterruptionFrame;
 export type BattleAttackHostSubject =
   | Extract<
-      BattleSubject,
+      AdmittedBattleSubject,
       { readonly tag: "action"; readonly action: "attack" }
     >
-  | Extract<BattleSubject, { readonly tag: "pactOfTheChainFamiliarAttack" }>
   | Extract<
-      BattleSubject,
+      AdmittedBattleSubject,
+      { readonly tag: "pactOfTheChainFamiliarAttack" }
+    >
+  | Extract<
+      AdmittedBattleSubject,
       { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
     >
   | Extract<
-      BattleSubject,
+      AdmittedBattleSubject,
       {
         readonly tag: "bonusAction";
         readonly action: "martialArtsUnarmedStrike";
       }
     >
   | MonkFocusFlurryOfBlowsStrikeSubject
-  | (Extract<BattleSubject, { readonly tag: "actionSpell" }> & {
+  | (Extract<AdmittedBattleSubject, { readonly tag: "actionSpell" }> & {
       readonly componentWeaponItemId: string;
     })
   | Extract<
-      BattleSubject,
+      AdmittedBattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
     >
   | Extract<
-      BattleSubject,
+      AdmittedBattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "retaliationAttack" }
     >;
 export type BattleCunningStrikeSelectedOption = {
@@ -1168,8 +1182,7 @@ export type BattleAfterDamageEvent = {
 };
 export type BattlePendingAttackDamageReduction = {
   readonly reactorId: CombatantId;
-  readonly unitId: UnitRecord["id"];
-  readonly label: string;
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly reduction: Extract<
     BattleReactionModifierChoice,
     { readonly kind: "attackDamageReduction" }
@@ -1213,34 +1226,77 @@ export type AttackDamageReductionZeroDamageRedirectSelection = {
   readonly savingThrowSucceeded: boolean;
   readonly redirectedDamageRoll: number;
 };
-type BattleInterruptProcedureChoiceWithSubject = {
+type BattleInterruptProcedureChoiceBase = {
   readonly reactorId: CombatantId;
-  readonly subject: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>;
   readonly initialHoles: readonly BattleHole[];
-} & (
+};
+type BattleInterruptProcedureChoiceWithSubject =
   | {
+      readonly reactorId: CombatantId;
+      readonly initialHoles: readonly BattleHole[];
       readonly kind: "releaseReadiedSpell";
       readonly readiedSpellCasterId: CombatantId;
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "releaseReadiedSpell";
+        }
+      >;
     }
   | {
+      readonly reactorId: CombatantId;
+      readonly initialHoles: readonly BattleHole[];
       readonly kind: "releaseReadiedMovement";
       readonly readiedMovementActorId: CombatantId;
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "releaseReadiedMovement";
+        }
+      >;
     }
-  | {
+  | (BattleInterruptProcedureChoiceBase & {
       readonly kind: "castTriggeredReactionSpell";
-      readonly invocation: SpellInvocationRef;
-    }
-  | {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "castTriggeredReactionSpell";
+        }
+      >;
+    })
+  | (BattleInterruptProcedureChoiceBase & {
       readonly kind: "castAttackHitBonusActionSpell";
-      readonly invocation: SpellInvocationRef;
-    }
-  | {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "castAttackHitBonusActionSpell";
+        }
+      >;
+    })
+  | (BattleInterruptProcedureChoiceBase & {
       readonly kind: "opportunityAttack";
-    }
-  | {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "opportunityAttack";
+        }
+      >;
+    })
+  | (BattleInterruptProcedureChoiceBase & {
       readonly kind: "retaliationAttack";
-    }
-);
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "retaliationAttack";
+        }
+      >;
+    });
 type BattleAttackDamageContinuation = Extract<
   BattleInterruptedProcedure,
   { readonly kind: "attackDamage" }
@@ -1253,13 +1309,13 @@ export type BattleReactionModifierChoice =
         | "attackRollReduction"
         | "abilityCheckReduction"
         | "damageRollReduction";
-      readonly unitId: UnitRecord["id"];
+      readonly procedureRef: BattleProcedureExecutionRef;
       readonly label: string;
       readonly reduction: BattleReactionRolledResourceReduction;
     }
   | {
       readonly kind: "attackDamageReduction";
-      readonly unitId: UnitRecord["id"];
+      readonly procedureRef: BattleProcedureExecutionRef;
       readonly label: string;
       readonly reduction:
         | { readonly kind: "halfDamage" }
@@ -1284,7 +1340,7 @@ export type BattleReactionModifierChoice =
     }
   | {
       readonly kind: "fallDamageReduction";
-      readonly unitId: UnitRecord["id"];
+      readonly procedureRef: BattleProcedureExecutionRef;
       readonly label: string;
       readonly reduction: {
         readonly kind: "flat";
@@ -1328,6 +1384,7 @@ export type BattleInterruptProcedureSelection = {
   | {
       readonly kind: "releaseReadiedSpell";
       readonly readiedSpellCasterId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
     }
   | {
       readonly kind: "releaseReadiedMovement";
@@ -1335,11 +1392,11 @@ export type BattleInterruptProcedureSelection = {
     }
   | {
       readonly kind: "castTriggeredReactionSpell";
-      readonly invocation: SpellInvocationRef;
+      readonly procedureRef: BattleProcedureExecutionRef;
     }
   | {
       readonly kind: "castAttackHitBonusActionSpell";
-      readonly invocation: SpellInvocationRef;
+      readonly procedureRef: BattleProcedureExecutionRef;
     }
   | {
       readonly kind: "opportunityAttack";
@@ -1353,7 +1410,7 @@ export type BattleInterruptProcedureSelection = {
     }
   | {
       readonly kind: "reactionRollOrDamageReduction";
-      readonly unitId: UnitRecord["id"];
+      readonly procedureRef: BattleProcedureExecutionRef;
       readonly modifierKind: BattleReactionModifierChoice["kind"];
     }
 );
@@ -3365,7 +3422,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly actionCost: "magicAction";
   readonly componentWeapon: {
     readonly itemId: string;
-    readonly attack: CharacterWeaponAttackActionOption;
+    readonly attack: BoundCharacterWeaponAttackActionOption;
   };
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
@@ -3383,7 +3440,7 @@ export type WeaponAttackOverrideSpellInvocation = {
   readonly actionCost: "bonusAction";
   readonly attachedWeapon: {
     readonly itemId: string;
-    readonly attack: CharacterWeaponAttackActionOption;
+    readonly attack: BoundCharacterWeaponAttackActionOption;
   };
   readonly activeEffect: Extract<
     BattleActiveEffect,
@@ -4689,13 +4746,17 @@ export const SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET = movementFeet(20);
 export const COLOR_SPRAY_FAILED_SAVE_CONDITION = "blinded" satisfies Condition;
 export const ENTANGLE_FAILED_SAVE_CONDITION = "restrained" satisfies Condition;
 
-export type AvailableBattleAct = {
-  readonly subject: BattleSubject;
+type BattleAct<TSubject extends BattleSubject> = {
+  readonly subject: TSubject;
   readonly label: string;
   readonly summary: string;
   readonly initialHoles: readonly BattleHole[];
   readonly routeEvents?: BattleReducerRouteEvents;
 };
+
+export type BattleActDiscoveryCandidate = BattleAct<BattleSubject>;
+
+export type AvailableBattleAct = BattleAct<AdmittedBattleSubject>;
 
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
@@ -7043,20 +7104,19 @@ export type BattleFill =
       readonly value: BattleShoveOutcomeValue;
     };
 
-export type BattleResolutionInput = {
+export type BattleResolutionCandidateInput = {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
   readonly statBlockCatalog?: StatBlockCatalog;
 };
+export type BattleResolutionInput = BattleResolutionCandidateInput;
 export type AdmittedBattleResolutionInput = Omit<
   BattleResolutionInput,
   "subject"
-> & {
-  readonly subject: AdmittedBattleSubject;
-};
+> & { readonly subject: AdmittedBattleSubject };
 export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
-  Omit<BattleResolutionInput, "subject"> & {
+  Omit<BattleResolutionCandidateInput, "subject"> & {
     readonly subject: TSubject;
   };
 export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
@@ -7124,10 +7184,18 @@ export type StatBlockBonusActionOptionBattleResolutionInput =
   >;
 export type HideBattleResolutionInput = BattleResolutionInputForSubject<
   | ActionHideSubject
-  | (BonusActionStandardActionSubject & { readonly action: "hide" })
+  | (Extract<
+      AdmittedBattleSubject,
+      { readonly tag: "bonusActionStandardAction" }
+    > & { readonly action: "hide" })
 >;
 export type BonusActionStandardActionBattleResolutionInput =
-  BattleResolutionInputForSubject<BonusActionStandardActionSubject>;
+  BattleResolutionInputForSubject<
+    Extract<
+      AdmittedBattleSubject,
+      { readonly tag: "bonusActionStandardAction" }
+    >
+  >;
 export type SearchBattleResolutionInput =
   BattleResolutionInputForSubject<ActionSearchSubject>;
 export type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
@@ -7151,10 +7219,10 @@ export type EscapeSpellRestraintBattleResolutionInput =
     >
   >;
 export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
-  Extract<BattleSubject, { readonly tag: "actionSpell" }>
+  Extract<AdmittedBattleSubject, { readonly tag: "actionSpell" }>
 > & {
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  readonly reactionContinuationSubject?: BattleSubject | undefined;
+  readonly reactionContinuationSubject?: AdmittedBattleSubject | undefined;
   readonly glyphStoredSpellReleaseReplay?:
     | GlyphStoredSpellReleaseReplayContext
     | undefined;
@@ -7168,25 +7236,30 @@ export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
 };
 export type BonusActionSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
+    Extract<AdmittedBattleSubject, { readonly tag: "bonusActionSpell" }>
   > & {
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 export type BonusActionDashSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "bonusActionDashSpell" }>
+    Extract<AdmittedBattleSubject, { readonly tag: "bonusActionDashSpell" }>
   > & {
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 export type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
-  Extract<BattleSubject, { readonly tag: "unitFeature" }>
+  Extract<AdmittedBattleSubject, { readonly tag: "unitFeature" }>
 >;
 export type UnitFeatureHeldWeaponActivationBattleResolutionInput =
   BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "unitFeatureHeldWeaponActivation" }>
+    Extract<
+      AdmittedBattleSubject,
+      { readonly tag: "unitFeatureHeldWeaponActivation" }
+    >
   >;
 export type MonkFocusOptionBattleResolutionInput =
-  BattleResolutionInputForSubject<MonkFocusOptionSubject>;
+  BattleResolutionInputForSubject<
+    Extract<AdmittedBattleSubject, { readonly tag: "monkFocusOption" }>
+  >;
 export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
   BattleResolutionInputForSubject<MonkFocusFlurryOfBlowsStrikeSubject> & {
     readonly replayingInterruptedProcedure?: boolean;
@@ -7200,7 +7273,7 @@ export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
   };
 export type DruidWildShapeBattleResolutionInput =
   BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "druidWildShape" }>
+    Extract<AdmittedBattleSubject, { readonly tag: "druidWildShape" }>
   >;
 
 type WithAdmittedSubject<
@@ -7431,7 +7504,7 @@ export type BattleCreatureOriginSnapshot =
       readonly characterId: CharacterId;
       readonly execution: {
         readonly scopeRef: BattleCharacterExecutionScopeRef;
-        readonly procedureRefs: readonly BattleProcedureExecutionRef[];
+        readonly procedureBindings: readonly CharacterProcedureBindingSnapshot[];
       };
       readonly attackExecution: {
         readonly scopeRef: BattleAttackExecutionScopeRef;

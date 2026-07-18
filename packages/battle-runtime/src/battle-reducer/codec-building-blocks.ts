@@ -20,6 +20,7 @@ import {
 import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import {
+  BattleAttackProcedureExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -206,6 +207,11 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
     },
   ),
 });
+
+export const BoundCharacterWeaponAttackActionOptionSchema = Schema.extend(
+  CharacterWeaponAttackActionOptionSchema,
+  Schema.Struct({ procedureRef: BattleAttackProcedureExecutionRef }),
+);
 
 const SupportedCreatureAttackRollMechanicsSchema =
   CreatureNamedAttackRollSchema.pipe(

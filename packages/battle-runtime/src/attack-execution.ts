@@ -9,6 +9,7 @@ import {
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
   battleExecutionScopeOrdinal,
+  battleProcedureExecutionRefIsAtOrdinal,
   type BattleId,
   type BattleExecutionScopeOrdinal,
   type CombatantId,
@@ -19,6 +20,44 @@ export type CharacterAttackExecution = {
   readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
 };
+
+export type CharacterAttackExecutionSnapshotRefs = {
+  readonly attackProcedureRef: ReturnType<
+    typeof battleAttackProcedureExecutionRef
+  > | null;
+  readonly unarmedStrikeProcedureRef: ReturnType<
+    typeof battleAttackProcedureExecutionRef
+  >;
+  readonly offHandAttackProcedureRef: ReturnType<
+    typeof battleAttackProcedureExecutionRef
+  > | null;
+};
+
+export function characterAttackExecutionRefsMatchLayout(
+  scopeRef: ReturnType<typeof battleAttackExecutionScopeRef>,
+  refs: CharacterAttackExecutionSnapshotRefs,
+): boolean {
+  const attackOffset = refs.attackProcedureRef === null ? 0 : 1;
+  return (
+    (refs.attackProcedureRef === null ||
+      battleProcedureExecutionRefIsAtOrdinal(
+        refs.attackProcedureRef,
+        scopeRef,
+        0,
+      )) &&
+    battleProcedureExecutionRefIsAtOrdinal(
+      refs.unarmedStrikeProcedureRef,
+      scopeRef,
+      attackOffset,
+    ) &&
+    (refs.offHandAttackProcedureRef === null ||
+      battleProcedureExecutionRefIsAtOrdinal(
+        refs.offHandAttackProcedureRef,
+        scopeRef,
+        attackOffset + 1,
+      ))
+  );
+}
 
 export function admitCharacterAttackExecution(input: {
   readonly battleId: BattleId;

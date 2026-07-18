@@ -19,6 +19,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect, it } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
 import {
   battleReducerStartRouteEvent,
@@ -31,7 +32,6 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
-  spellSlotInvocationRef,
   startBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type AvailableBattleAct,
@@ -328,7 +328,7 @@ function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
           responderId: reactorId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: triggerCreatureId, succeeded: false },
@@ -364,7 +364,7 @@ function resolveHellishRebukeFailedSavingThrowRoute(): readonly BattleReducerRou
         responderId: reactorId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             savingThrowOutcomeFill(save, [
               { targetId: triggerCreatureId, succeeded: false },
@@ -399,7 +399,7 @@ function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
           responderId: reactorId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [],
           },
         },
@@ -428,7 +428,7 @@ function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly Reduce
         responderId: reactorId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             savingThrowOutcomeFill(save, [
               { targetId: triggerCreatureId, succeeded: false },
@@ -468,7 +468,7 @@ function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly Redu
         responderId: reactorId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             savingThrowOutcomeFill(save, [
               { targetId: triggerCreatureId, succeeded: true },
@@ -484,7 +484,7 @@ function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly Redu
   const damage = requireHole(resumed.holes, "rolledDice");
   const resolved = finishMagicMissile({
     state: resumed.state,
-    slotLevel: higherLevelMagicMissileSlotLevel,
+    subject: resumed.subject,
     targetAllocationFill: awaitingReaction.targetAllocationFill,
     damage,
     dartCount: higherLevelMagicMissileDartCount,
@@ -771,7 +771,7 @@ function startMagicMissileWithCounterspell(input: {
 }): StartedMagicMissile {
   const slotLevel = input.slotLevel ?? magicMissileSlotLevel;
   const dartCount = input.dartCount ?? magicMissileDartCount;
-  const subject = magicMissileSubject(slotLevel);
+  const subject = magicMissileSubject(input.state, slotLevel);
   const targetAllocationResult = resolveBattleSubject({
     state: input.state,
     subject,
@@ -816,7 +816,7 @@ function startMagicMissileWithCounterspell(input: {
 
 function finishMagicMissile(input: {
   readonly state: BattleState;
-  readonly slotLevel: number;
+  readonly subject: BattleSubject;
   readonly targetAllocationFill: Extract<
     BattleFill,
     { readonly kind: "spellTargetAllocation" }
@@ -826,7 +826,7 @@ function finishMagicMissile(input: {
 }): ReturnType<typeof resolveBattleSubject> {
   return resolveBattleSubject({
     state: input.state,
-    subject: magicMissileSubject(input.slotLevel),
+    subject: input.subject,
     fills: [
       input.targetAllocationFill,
       damageRollFillWithGroups(input.damage, [
@@ -836,17 +836,23 @@ function finishMagicMissile(input: {
   });
 }
 
-function magicMissileSubject(slotLevel: number): BattleSubject {
-  return {
-    tag: "actionSpell",
-    actorId: triggerCreatureId,
-    invocation: spellSlotInvocationRef(
-      magicMissileUnitId,
-      slotLevel,
-      "repeatedDamageAllocation",
-    ),
-    mode: { tag: "cast" },
-  };
+function magicMissileSubject(
+  state: BattleState,
+  slotLevel: number,
+): BattleSubject {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === triggerCreatureId &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === magicMissileUnitId &&
+      candidate.subject.invocation.slotLevel === slotLevel &&
+      candidate.subject.invocation.procedure === "repeatedDamageAllocation",
+  );
+  if (act === undefined) {
+    throw new Error("Expected bound Magic Missile action spell.");
+  }
+  return act.subject;
 }
 
 function magicMissileTargetAllocationFill(input: {
@@ -920,6 +926,9 @@ function attackTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "targetChoice" }>;
   readonly includeHellishRebukeTriggerFact: boolean;
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (input.hole.attack === undefined) {
+    throw new Error("Expected bound reaction-spell trigger attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: input.hole.holeId,
@@ -929,7 +938,7 @@ function attackTargetFill(input: {
         kind: "attackTargetInMeleeReach",
         actorId: triggerCreatureId,
         targetId: reactorId,
-        attackName: "Unarmed Strike",
+        ...input.hole.attack.selection,
       },
       ...(input.includeHellishRebukeTriggerFact
         ? [
@@ -959,12 +968,23 @@ function resolveShieldReactionChoice(
       ): choice is Extract<
         BattleInterruptProcedureChoice,
         { readonly kind: "castTriggeredReactionSpell" }
-      > =>
-        choice.kind === "castTriggeredReactionSpell" &&
-        choice.reactorId === reactorId &&
-        choice.invocation.tag === "spellSlot" &&
-        choice.invocation.spellId === "shield" &&
-        choice.invocation.procedure === "shieldReaction",
+      > => {
+        if (
+          choice.kind !== "castTriggeredReactionSpell" ||
+          choice.reactorId !== reactorId
+        )
+          return false;
+        const invocation = characterSpellInvocationRefForProcedureRefForTest(
+          awaitingReaction.state,
+          choice.reactorId,
+          choice.subject.procedureRef,
+        );
+        return (
+          invocation.tag === "spellSlot" &&
+          invocation.spellId === "shield" &&
+          invocation.procedure === "shieldReaction"
+        );
+      },
     );
   if (reactionChoice === undefined) {
     throw new Error("Expected Shield Reaction spell choice.");
@@ -978,7 +998,7 @@ function resolveShieldReactionChoice(
         responderId: reactorId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: reactionChoice.invocation,
+          procedureRef: reactionChoice.subject.procedureRef,
           fills: [],
         },
       },
@@ -1001,13 +1021,24 @@ function requireCounterspellChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === counterspellUnitId &&
-      candidate.invocation.procedure === "counterspell" &&
-      Number(candidate.invocation.slotLevel) === counterspellSlotLevel,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== reactorId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === counterspellUnitId &&
+        invocation.procedure === "counterspell" &&
+        Number(invocation.slotLevel) === counterspellSlotLevel
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected Counterspell level 3 Reaction choice.");
@@ -1030,13 +1061,24 @@ function requireHellishRebukeChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === "hellish_rebuke" &&
-      candidate.invocation.procedure === "saveGatedDamage" &&
-      candidate.invocation.slotLevel === 2,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== reactorId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === "hellish_rebuke" &&
+        invocation.procedure === "saveGatedDamage" &&
+        invocation.slotLevel === 2
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected Hellish Rebuke level 2 Reaction choice.");

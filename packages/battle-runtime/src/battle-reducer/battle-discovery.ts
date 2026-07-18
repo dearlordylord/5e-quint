@@ -46,6 +46,7 @@ import type {
   BattleSubject,
   CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
+import { isCharacterProcedureBattleSubject } from "../battle-subjects.ts";
 
 import { CombatantId, spellId } from "../identity.ts";
 import {
@@ -181,6 +182,7 @@ import {
 
 import type {
   AvailableBattleAct,
+  BattleActDiscoveryCandidate,
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
@@ -255,7 +257,7 @@ function battleStateWithCharacterExecutionBindings(
 
 function withCharacterExecutionReferences(
   state: BattleState,
-  acts: readonly AvailableBattleAct[],
+  acts: readonly BattleActDiscoveryCandidate[],
 ): readonly AvailableBattleAct[] {
   const contexts = new Map<
     CombatantId,
@@ -277,8 +279,14 @@ function withCharacterExecutionReferences(
   }
   return acts.flatMap((act) => {
     const subject = act.subject;
+    const characterProcedureSubject =
+      isCharacterProcedureBattleSubject(subject);
     const context = contexts.get(subject.actorId);
-    if (context === undefined) return [act];
+    if (context === undefined) {
+      return characterProcedureSubject
+        ? []
+        : [{ ...act, subject } satisfies AvailableBattleAct];
+    }
     const { execution, invocations } = context;
     if (
       subject.tag === "actionSpell" ||
@@ -358,12 +366,12 @@ function withCharacterExecutionReferences(
       );
       return bindCharacterProcedureActs(act, subject, procedureRefs);
     }
-    return [act];
+    return [{ ...act, subject } satisfies AvailableBattleAct];
   });
 }
 
 function bindCharacterProcedureActs(
-  act: AvailableBattleAct,
+  act: BattleActDiscoveryCandidate,
   subject: CharacterProcedureBattleSubject,
   procedureRefs: readonly BattleProcedureExecutionRef[],
 ): readonly AvailableBattleAct[] {
@@ -378,13 +386,14 @@ function bindCharacterProcedureActs(
 
 function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actorId = currentActorId(state);
   const hasOpenStatBlockMultiattackDispatch =
     currentActorHasOpenStatBlockMultiattackDispatch(state);
-  const acts: AvailableBattleAct[] = hasOpenStatBlockMultiattackDispatch
-    ? []
-    : [...minimalCreatureAttackActs(state), ...releaseGrappleActs(state)];
+  const acts: BattleActDiscoveryCandidate[] =
+    hasOpenStatBlockMultiattackDispatch
+      ? []
+      : [...minimalCreatureAttackActs(state), ...releaseGrappleActs(state)];
   if (!state.combatants.has(actorId)) {
     return acts;
   }
@@ -856,8 +865,8 @@ function withReducerRouteEvents(
 function companionProtocolActs(
   state: BattleState,
   actorId: CombatantId,
-  spellActs: readonly AvailableBattleAct[],
-): readonly AvailableBattleAct[] {
+  spellActs: readonly BattleActDiscoveryCandidate[],
+): readonly BattleActDiscoveryCandidate[] {
   const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
   if (familiarEntry === null) {
     return [];
@@ -874,7 +883,7 @@ function companionProtocolActs(
     if (!actorCanAct || !canSpendAction(state.currentTurnResources, "magic")) {
       return [];
     }
-    const permanentlyDismiss: AvailableBattleAct = {
+    const permanentlyDismiss: BattleActDiscoveryCandidate = {
       subject: {
         tag: "companionLifecycle",
         actorId,
@@ -910,7 +919,7 @@ function companionProtocolActs(
   if (familiarCombatant === undefined) {
     return [];
   }
-  const acts: AvailableBattleAct[] = [];
+  const acts: BattleActDiscoveryCandidate[] = [];
   if (actorCanAct && canSpendAction(state.currentTurnResources, "magic")) {
     acts.push(
       {
@@ -973,59 +982,62 @@ function findFamiliarTouchSpellActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly companionId: CombatantId;
-  readonly spellActs: readonly AvailableBattleAct[];
-}): readonly AvailableBattleAct[] {
+  readonly spellActs: readonly BattleActDiscoveryCandidate[];
+}): readonly BattleActDiscoveryCandidate[] {
   const actor = input.state.combatants.get(input.actorId);
   if (actor?.origin.kind !== "character") {
     return [];
   }
   const invocations = supportedSpellActs(actor, input.state);
-  return input.spellActs.flatMap((act): readonly AvailableBattleAct[] => {
-    const subject = act.subject;
-    if (
-      (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
-      subject.mode.tag !== "cast"
-    ) {
-      return [];
-    }
-    const invocation = touchSpellDeliveryInvocation(invocations, subject);
-    if (invocation === null) {
-      return [];
-    }
-    const targetChoiceHoles = act.initialHoles.filter(
-      (hole) => hole.kind === "targetChoice",
-    );
-    if (targetChoiceHoles.length !== 1) {
-      return [];
-    }
-    return [
-      {
-        subject: {
-          tag: "findFamiliarTouchSpell",
-          actorId: input.actorId,
-          companionId: input.companionId,
-          spellAction: subject.tag === "actionSpell" ? "action" : "bonusAction",
-          invocation: subject.invocation,
-          mode: subject.mode,
-          ...(subject.metamagic === undefined
-            ? {}
-            : { metamagic: subject.metamagic }),
-          ...(subject.componentWeaponItemId === undefined
-            ? {}
-            : { componentWeaponItemId: subject.componentWeaponItemId }),
-        },
-        label: `Familiar Delivery: ${act.label}`,
-        summary: "Deliver a Touch spell through a present familiar.",
-        initialHoles: [
-          findFamiliarConnectionHole({
-            ownerId: input.actorId,
+  return input.spellActs.flatMap(
+    (act): readonly BattleActDiscoveryCandidate[] => {
+      const subject = act.subject;
+      if (
+        (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
+        subject.mode.tag !== "cast"
+      ) {
+        return [];
+      }
+      const invocation = touchSpellDeliveryInvocation(invocations, subject);
+      if (invocation === null) {
+        return [];
+      }
+      const targetChoiceHoles = act.initialHoles.filter(
+        (hole) => hole.kind === "targetChoice",
+      );
+      if (targetChoiceHoles.length !== 1) {
+        return [];
+      }
+      return [
+        {
+          subject: {
+            tag: "findFamiliarTouchSpell",
+            actorId: input.actorId,
             companionId: input.companionId,
-          }),
-          ...findFamiliarTouchDeliveryTargetHoles(act.initialHoles),
-        ],
-      },
-    ];
-  });
+            spellAction:
+              subject.tag === "actionSpell" ? "action" : "bonusAction",
+            invocation: subject.invocation,
+            mode: subject.mode,
+            ...(subject.metamagic === undefined
+              ? {}
+              : { metamagic: subject.metamagic }),
+            ...(subject.componentWeaponItemId === undefined
+              ? {}
+              : { componentWeaponItemId: subject.componentWeaponItemId }),
+          },
+          label: `Familiar Delivery: ${act.label}`,
+          summary: "Deliver a Touch spell through a present familiar.",
+          initialHoles: [
+            findFamiliarConnectionHole({
+              ownerId: input.actorId,
+              companionId: input.companionId,
+            }),
+            ...findFamiliarTouchDeliveryTargetHoles(act.initialHoles),
+          ],
+        },
+      ];
+    },
+  );
 }
 
 function touchSpellDeliveryInvocation(
@@ -1252,6 +1264,7 @@ function readiedSpellReleaseActs(
       actorId,
       command: "releaseReadiedSpell" as const,
       readiedSpellCasterId: casterId,
+      procedureRef: readiedSpell.procedureRef,
     },
     label: `Release ${readiedSpell.invocation.spell.name}`,
     summary: `Release ${readiedSpell.invocation.spell.name} with a Reaction.`,

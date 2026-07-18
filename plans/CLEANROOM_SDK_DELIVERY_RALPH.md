@@ -594,7 +594,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 64,
       "id": "GH-172",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Migrate weapon and attack Battle subjects to execution references",
       "dependencies": [
         "GH-165"
@@ -634,7 +634,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 68,
       "id": "GH-173",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Migrate spell, Unit, and feature Battle subjects to execution references",
       "dependencies": [
         "GH-165"
@@ -643,7 +643,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 69,
       "id": "GH-174",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Migrate Battle threats and nested interruption transport to execution references",
       "dependencies": [
         "GH-165"

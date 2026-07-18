@@ -19,7 +19,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -197,7 +197,7 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
     : spellTargetHole(state, actorId, invocation);

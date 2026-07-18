@@ -169,48 +169,12 @@ describe("battle runtime: save-damage replacements", () => {
     });
   });
 
-  test("save-damage replacement riders ignore non-Dexterity save mechanics", () => {
-    const state = wizardVsRogueBattle({
-      evasion: true,
-      evasionAbility: "con",
-    });
-    const subject = magicSubject("dex_half_cantrip");
-    const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
-      "savingThrowOutcome",
-    );
-    const damage = requireHole(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          savingThrowOutcomeFill(savingThrows, [
-            { targetId: fighterId, succeeded: true },
-          ]),
-        ],
+  test("rejects non-Dexterity save-damage replacement mechanics during admission", () => {
+    expect(() =>
+      wizardVsRogueBattle({
+        evasion: true,
+        evasionAbility: "con",
       }),
-      "rolledDice",
-    );
-
-    const result = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        savingThrowOutcomeFill(savingThrows, [
-          { targetId: fighterId, succeeded: true },
-        ]),
-        damageRollFill(damage, 6),
-      ],
-    });
-
-    expect(result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          { combatantId: wizardId, hp: 12 },
-          { combatantId: fighterId, hp: 9 },
-        ],
-      },
-    });
+    ).toThrow("Unsupported battle save-damage replacement Unit hook");
   });
 });

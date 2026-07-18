@@ -109,7 +109,7 @@ describe("battle runtime: Cutting Words", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: cuttingWordsAttackOnly.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackRollReduction",
             fills: [
               {
@@ -229,7 +229,7 @@ describe("battle runtime: Cutting Words", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: cuttingWordsDamageOnly.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "damageRollReduction",
             fills: [
               {

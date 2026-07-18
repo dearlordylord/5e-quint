@@ -33,7 +33,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type MirrorImageHitInterceptionSpellInvocation,
@@ -144,7 +144,7 @@ function discoverMirrorImageHitInterceptionCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: MirrorImageHitInterceptionSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

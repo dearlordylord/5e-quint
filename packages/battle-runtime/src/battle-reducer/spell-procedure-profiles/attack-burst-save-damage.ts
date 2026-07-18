@@ -25,7 +25,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -87,7 +87,7 @@ function discoverAttackBurstSaveDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: AttackBurstSaveDamageInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
     targetHole.choices.length === 0

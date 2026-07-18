@@ -42,11 +42,14 @@ import {
   CreatureRechargeMinimumRollSchema,
 } from "@dnd/surface/surface/schema";
 import {
+  BATTLE_UNIT_SUPPORT_PROFILES,
   BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
   CUNNING_STRIKE_END_TURN_COVER_DEGREES,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
 import { Schema } from "effect";
 import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
+import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
 import {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -69,14 +72,12 @@ import {
 } from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
+  AdmittedBattleSubjectSchema,
   BattleAttackExecutionAbilitySchema,
   BattleAttackExecutionSelectionSchema,
   BattleInterruptAttackExecutionSelectionSchema,
-  BattleSubjectSchema,
-  BattleSubjectTextSchema,
   SpellInvocationRefSchema,
   type BattleMovementSpeedKind,
-  type SpellInvocationRefEncoded,
 } from "../battle-subjects.ts";
 import {
   BattleAreaId,
@@ -160,6 +161,14 @@ import {
 } from "./codec-building-blocks.ts";
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
 import { BattleSpellEffectLevel } from "./spells-effective-level.ts";
+import {
+  sameSpellInvocationRef,
+  supportedSpellInvocationRef,
+} from "./spells-invocation-ref.ts";
+import {
+  isAttackHitBonusActionSpellInvocation,
+  isTriggeredReactionSpellInvocation,
+} from "./spell-interrupt-procedure-kinds.ts";
 import {
   BRUTAL_STRIKE_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
@@ -648,13 +657,6 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("attackTargetInMeleeReach"),
       actorId: CombatantId,
       targetId: CombatantId,
-      attackName: Schema.String,
-      procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("attackTargetInMeleeReach"),
-      actorId: CombatantId,
-      targetId: CombatantId,
       procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
@@ -686,14 +688,6 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       kind: Schema.Literal("weaponMasteryPushDisposition"),
       attackerId: CombatantId,
       targetId: CombatantId,
-      attackName: Schema.String,
-      procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-      disposition: BattleThunderwavePushDispositionSchema,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("weaponMasteryPushDisposition"),
-      attackerId: CombatantId,
-      targetId: CombatantId,
       procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
@@ -712,14 +706,6 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     }),
   ),
   Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("attackTargetInRangedRange"),
-      actorId: CombatantId,
-      targetId: CombatantId,
-      attackName: Schema.String,
-      procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-      rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
-    }),
     Schema.Struct({
       kind: Schema.Literal("attackTargetInRangedRange"),
       actorId: CombatantId,
@@ -3464,6 +3450,7 @@ type BattleFillEncoded =
               | {
                   readonly kind: "releaseReadiedSpell";
                   readonly readiedSpellCasterId: string;
+                  readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -3473,12 +3460,12 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "castTriggeredReactionSpell";
-                  readonly invocation: SpellInvocationRefEncoded;
+                  readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "castAttackHitBonusActionSpell";
-                  readonly invocation: SpellInvocationRefEncoded;
+                  readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -3495,7 +3482,7 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "reactionRollOrDamageReduction";
-                  readonly unitId: string;
+                  readonly procedureRef: string;
                   readonly modifierKind:
                     | "attackRollReduction"
                     | "abilityCheckReduction"
@@ -4368,6 +4355,7 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedSpell"),
               readiedSpellCasterId: CombatantId,
+              procedureRef: BattleProcedureExecutionRef,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
@@ -4377,12 +4365,12 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               kind: Schema.Literal("castTriggeredReactionSpell"),
-              invocation: SpellInvocationRefSchema,
+              procedureRef: BattleProcedureExecutionRef,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
               kind: Schema.Literal("castAttackHitBonusActionSpell"),
-              invocation: SpellInvocationRefSchema,
+              procedureRef: BattleProcedureExecutionRef,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
@@ -4399,7 +4387,7 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               kind: Schema.Literal("reactionRollOrDamageReduction"),
-              unitId: BattleSubjectTextSchema,
+              procedureRef: BattleProcedureExecutionRef,
               modifierKind: Schema.Literal(
                 "attackRollReduction",
                 "abilityCheckReduction",
@@ -5085,7 +5073,56 @@ const BattleCreatureOriginSnapshotSchema = Schema.Union(
     characterId: Schema.String,
     execution: Schema.Struct({
       scopeRef: BattleCharacterExecutionScopeRef,
-      procedureRefs: Schema.Array(BattleProcedureExecutionRef),
+      procedureBindings: Schema.Array(
+        Schema.Struct({
+          procedureRef: BattleProcedureExecutionRef,
+          procedure: Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal("unitFeature"),
+              unitId: Schema.String,
+              supportKind: Schema.Literal(
+                ...BATTLE_UNIT_SUPPORT_PROFILES,
+                "extraActionGrant",
+                "selfBonusActionHealing",
+                "ongoingFeature",
+              ),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("unitSupportProfile"),
+              unitId: Schema.String,
+              supportKind: Schema.Literal(...BATTLE_UNIT_SUPPORT_PROFILES),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("spellInvocation"),
+              invocation: SupportedSpellInvocationSchema,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("unavailableSpellInvocation"),
+              occurrence: Schema.Union(
+                Schema.Struct({
+                  invocationRef: SpellInvocationRefSchema,
+                  kind: Schema.Literal("invocationRefOnly"),
+                }),
+                Schema.Struct({
+                  invocationRef: SpellInvocationRefSchema,
+                  kind: Schema.Literal("activeEffect"),
+                  effectId: Schema.String,
+                }),
+                Schema.Struct({
+                  invocationRef: SpellInvocationRefSchema,
+                  kind: Schema.Literal("componentWeapon"),
+                  itemId: Schema.String,
+                }),
+                Schema.Struct({
+                  invocationRef: SpellInvocationRefSchema,
+                  kind: Schema.Literal("attachedWeapon"),
+                  itemId: Schema.String,
+                }),
+              ),
+            }),
+          ),
+        }),
+      ),
     }),
     attackExecution: Schema.Struct({
       scopeRef: BattleAttackExecutionScopeRef,
@@ -5174,24 +5211,25 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
           characterOrigin.execution.scopeRef,
           snapshot.combatantId,
         ) &&
-        characterOrigin.execution.procedureRefs.every((procedureRef, ordinal) =>
+        characterOrigin.execution.procedureBindings.every((binding, ordinal) =>
           battleProcedureExecutionRefIsAtOrdinal(
-            procedureRef,
+            binding.procedureRef,
             characterOrigin.execution.scopeRef,
             ordinal,
           ),
         ) &&
-        new Set(characterOrigin.execution.procedureRefs).size ===
-          characterOrigin.execution.procedureRefs.length &&
+        new Set(
+          characterOrigin.execution.procedureBindings.map(
+            (binding) => binding.procedureRef,
+          ),
+        ).size === characterOrigin.execution.procedureBindings.length &&
         battleAttackExecutionScopeRefBelongsToCombatant(
           characterOrigin.attackExecution.scopeRef,
           snapshot.combatantId,
         ) &&
-        attackProcedureRefs.every((procedureRef) =>
-          battleProcedureExecutionRefBelongsToScope(
-            procedureRef,
-            characterOrigin.attackExecution.scopeRef,
-          ),
+        characterAttackExecutionRefsMatchLayout(
+          characterOrigin.attackExecution.scopeRef,
+          characterOrigin.attackExecution,
         ) &&
         new Set(attackProcedureRefs).size === attackProcedureRefs.length &&
         characterOrigin.druidWildShapeAvailableForms.every((form) =>
@@ -5215,7 +5253,7 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
 );
 
 const AvailableBattleActSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
+  subject: AdmittedBattleSubjectSchema,
   label: Schema.String,
   summary: Schema.String,
   initialHoles: Schema.Array(BattleHoleSchema),
@@ -5224,6 +5262,7 @@ const AvailableBattleActSchema = Schema.Struct({
 const BattleReadiedSpellSnapshotSchema = Schema.Struct({
   casterId: CombatantId,
   invocation: SupportedSpellInvocationSchema,
+  procedureRef: BattleProcedureExecutionRef,
   trigger: Schema.Literal(...BATTLE_READIED_SPELL_TRIGGERS),
   expiresAt: OngoingFeatureExpirationSchema,
 });
@@ -5248,7 +5287,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
       "abilityCheckReduction",
       "damageRollReduction",
     ),
-    unitId: Schema.String,
+    procedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     reduction: Schema.Struct({
       kind: Schema.Literal("rolled"),
@@ -5263,7 +5302,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("attackDamageReduction"),
-    unitId: Schema.String,
+    procedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     reduction: Schema.Union(
       Schema.Struct({
@@ -5300,7 +5339,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("fallDamageReduction"),
-    unitId: Schema.String,
+    procedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     reduction: Schema.Struct({
       kind: Schema.Literal("flat"),
@@ -5313,41 +5352,39 @@ const BattleInterruptProcedureChoiceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("releaseReadiedSpell"),
     reactorId: CombatantId,
-    subject: BattleSubjectSchema,
+    subject: AdmittedBattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
     readiedSpellCasterId: CombatantId,
   }),
   Schema.Struct({
     kind: Schema.Literal("releaseReadiedMovement"),
     reactorId: CombatantId,
-    subject: BattleSubjectSchema,
+    subject: AdmittedBattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
     readiedMovementActorId: CombatantId,
   }),
   Schema.Struct({
     kind: Schema.Literal("castTriggeredReactionSpell"),
     reactorId: CombatantId,
-    subject: BattleSubjectSchema,
+    subject: AdmittedBattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
-    invocation: SpellInvocationRefSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("castAttackHitBonusActionSpell"),
     reactorId: CombatantId,
-    subject: BattleSubjectSchema,
+    subject: AdmittedBattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
-    invocation: SpellInvocationRefSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("opportunityAttack"),
     reactorId: CombatantId,
-    subject: BattleSubjectSchema,
+    subject: AdmittedBattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("retaliationAttack"),
     reactorId: CombatantId,
-    subject: BattleSubjectSchema,
+    subject: AdmittedBattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
   }),
   Schema.Struct({
@@ -5356,6 +5393,53 @@ const BattleInterruptProcedureChoiceSchema = Schema.Union(
     choice: BattleReactionModifierChoiceSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
   }),
+).pipe(
+  Schema.filter(
+    (choice) => {
+      if (choice.kind === "reactionRollOrDamageReduction") return true;
+      if (choice.subject.tag !== "runtimeCommand") return false;
+      if (choice.kind === "releaseReadiedSpell") {
+        return (
+          choice.subject.command === "releaseReadiedSpell" &&
+          choice.reactorId === choice.readiedSpellCasterId &&
+          choice.reactorId === choice.subject.readiedSpellCasterId
+        );
+      }
+      if (choice.kind === "releaseReadiedMovement") {
+        return (
+          choice.subject.command === "releaseReadiedMovement" &&
+          choice.reactorId === choice.readiedMovementActorId &&
+          choice.reactorId === choice.subject.readiedMovementActorId
+        );
+      }
+      if (choice.kind === "castTriggeredReactionSpell") {
+        return (
+          choice.subject.command === "castTriggeredReactionSpell" &&
+          choice.reactorId === choice.subject.reactorId
+        );
+      }
+      if (choice.kind === "castAttackHitBonusActionSpell") {
+        return (
+          choice.subject.command === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === choice.subject.casterId
+        );
+      }
+      if (choice.kind === "opportunityAttack") {
+        return (
+          choice.subject.command === "opportunityAttack" &&
+          choice.reactorId === choice.subject.reactorId
+        );
+      }
+      return (
+        choice.subject.command === "retaliationAttack" &&
+        choice.reactorId === choice.subject.reactorId
+      );
+    },
+    {
+      message: () =>
+        "Interrupt choices must own the matching reference-bearing runtime subject.",
+    },
+  ),
 );
 
 const BattlePendingReactionSnapshotSchema = Schema.Struct({
@@ -5566,6 +5650,360 @@ const BattleCompanionSnapshotSchema = Schema.Union(
   // exported BattleCompanionSnapshot alias after composing those nested schemas.
 ) as unknown as Schema.Schema<BattleCompanionSnapshot>;
 
+type EncodedBattleCreatureSnapshot = typeof BattleCreatureSnapshotSchema.Type;
+type EncodedBattleInterruptChoice =
+  typeof BattleInterruptProcedureChoiceSchema.Type;
+type EncodedBattleReadiedSpellSnapshot =
+  typeof BattleReadiedSpellSnapshotSchema.Type;
+type EncodedAvailableBattleAct = typeof AvailableBattleActSchema.Type;
+
+function characterProcedureBindingKind(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+):
+  | "unitFeature"
+  | "unitSupportProfile"
+  | "spellInvocation"
+  | "unavailableSpellInvocation"
+  | undefined {
+  return characterProcedureBinding(
+    combatants,
+    combatantId,
+    procedureRef,
+  )?.procedure.kind;
+}
+
+function characterProcedureBinding(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+) {
+  const combatant = combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant?.origin.kind !== "character") return undefined;
+  return combatant.origin.execution.procedureBindings.find(
+    (binding) => binding.procedureRef === procedureRef,
+  );
+}
+
+function serializedSpellProcedureRefIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  const kind = characterProcedureBindingKind(
+    combatants,
+    combatantId,
+    procedureRef,
+  );
+  return kind === "spellInvocation" || kind === "unavailableSpellInvocation";
+}
+
+function serializedReactionModifierProcedureRefIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  const binding = characterProcedureBinding(
+    combatants,
+    combatantId,
+    procedureRef,
+  );
+  return (
+    (binding?.procedure.kind === "unitFeature" ||
+      binding?.procedure.kind === "unitSupportProfile") &&
+    binding.procedure.supportKind ===
+      REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
+  );
+}
+
+function serializedReadiedSpellOwnsInvocation(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  readied: EncodedBattleReadiedSpellSnapshot,
+): boolean {
+  const binding = characterProcedureBinding(
+    combatants,
+    readied.casterId,
+    readied.procedureRef,
+  );
+  if (binding?.procedure.kind === "spellInvocation") {
+    return (
+      JSON.stringify(binding.procedure.invocation) ===
+      JSON.stringify(readied.invocation)
+    );
+  }
+  return (
+    binding?.procedure.kind === "unavailableSpellInvocation" &&
+    sameSpellInvocationRef(
+      binding.procedure.occurrence.invocationRef,
+      supportedSpellInvocationRef(readied.invocation),
+    )
+  );
+}
+
+function serializedImmediateSpellChoiceIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  choice: Extract<
+    EncodedBattleInterruptChoice,
+    {
+      readonly kind:
+        | "castTriggeredReactionSpell"
+        | "castAttackHitBonusActionSpell";
+    }
+  >,
+): boolean {
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    (choice.subject.command !== "castTriggeredReactionSpell" &&
+      choice.subject.command !== "castAttackHitBonusActionSpell")
+  )
+    return false;
+  const binding = characterProcedureBinding(
+    combatants,
+    choice.reactorId,
+    choice.subject.procedureRef,
+  );
+  if (binding?.procedure.kind !== "spellInvocation") return false;
+  return choice.kind === "castTriggeredReactionSpell"
+    ? isTriggeredReactionSpellInvocation(binding.procedure.invocation)
+    : isAttackHitBonusActionSpellInvocation(binding.procedure.invocation);
+}
+
+function serializedAttackProcedureRefIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  const combatant = combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant === undefined) return false;
+  if (combatant.origin.kind === "character") {
+    return (
+      combatant.origin.attackExecution.attackProcedureRef === procedureRef ||
+      combatant.origin.attackExecution.unarmedStrikeProcedureRef ===
+        procedureRef ||
+      combatant.origin.attackExecution.offHandAttackProcedureRef === procedureRef
+    );
+  }
+  return combatant.origin.execution.procedureBindings.some(
+    (binding) =>
+      binding.procedureRef === procedureRef &&
+      binding.procedure.kind === "attack",
+  );
+}
+
+function serializedStatBlockProcedureKind(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): "attack" | "multiattack" | "bonusActionOption" | undefined {
+  const combatant = combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant?.origin.kind !== "statBlock") return undefined;
+  return combatant.origin.execution.procedureBindings.find(
+    (binding) => binding.procedureRef === procedureRef,
+  )?.procedure.kind;
+}
+
+function serializedAvailableActOwnsBoundProcedure(
+  act: EncodedAvailableBattleAct,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
+): boolean {
+  const subject = act.subject;
+  if (!("procedureRef" in subject)) return true;
+  const procedureRef = subject.procedureRef;
+  if (procedureRef === undefined) return false;
+  if (subject.tag === "pactOfTheChainFamiliarAttack") {
+    return serializedAttackProcedureRefIsBound(
+      combatants,
+      subject.familiarId,
+      procedureRef,
+    );
+  }
+  if (
+    subject.tag === "action" &&
+    subject.action === "attack"
+  ) {
+    const owner = combatants.find(
+      (combatant) => combatant.combatantId === subject.actorId,
+    );
+    return owner?.origin.kind === "character"
+      ? owner.origin.attackExecution.attackProcedureRef === procedureRef ||
+          owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef
+      : serializedAttackProcedureRefIsBound(
+          combatants,
+          subject.actorId,
+          procedureRef,
+        );
+  }
+  if (
+    (subject.tag === "bonusAction" &&
+      subject.action === "offHandAttack") ||
+    (subject.tag === "bonusAction" &&
+      subject.action === "martialArtsUnarmedStrike") ||
+    subject.tag === "monkFocusFlurryOfBlowsStrike"
+  ) {
+    const owner = combatants.find(
+      (combatant) => combatant.combatantId === subject.actorId,
+    );
+    if (owner?.origin.kind !== "character") return false;
+    return subject.tag === "bonusAction" && subject.action === "offHandAttack"
+      ? owner.origin.attackExecution.offHandAttackProcedureRef === procedureRef
+      : owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef;
+  }
+  if (subject.tag === "action" && subject.action === "multiattack") {
+    return (
+      serializedStatBlockProcedureKind(
+        combatants,
+        subject.actorId,
+        procedureRef,
+      ) === "multiattack"
+    );
+  }
+  if (
+    subject.tag === "bonusAction" &&
+    subject.action === "statBlockActionOption"
+  ) {
+    return (
+      serializedStatBlockProcedureKind(
+        combatants,
+        subject.actorId,
+        procedureRef,
+      ) === "bonusActionOption"
+    );
+  }
+  if (
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "findFamiliarTouchSpell"
+  ) {
+    const binding = characterProcedureBinding(
+      combatants,
+      subject.actorId,
+      procedureRef,
+    );
+    return (
+      binding?.procedure.kind === "spellInvocation" &&
+      sameSpellInvocationRef(
+        supportedSpellInvocationRef(binding.procedure.invocation),
+        subject.invocation,
+      )
+    );
+  }
+  if (
+    subject.tag === "unitFeature" ||
+    subject.tag === "unitFeatureHeldWeaponActivation" ||
+    subject.tag === "druidWildShape" ||
+    subject.tag === "monkFocusOption"
+  ) {
+    const binding = characterProcedureBinding(
+      combatants,
+      subject.actorId,
+      procedureRef,
+    );
+    return (
+      (binding?.procedure.kind === "unitFeature" ||
+        binding?.procedure.kind === "unitSupportProfile") &&
+      binding.procedure.unitId ===
+        (subject.tag === "monkFocusOption"
+          ? subject.resourceUnitId
+          : subject.unitId)
+    );
+  }
+  if (subject.tag === "bonusActionStandardAction") {
+    const binding = characterProcedureBinding(
+      combatants,
+      subject.actorId,
+      procedureRef,
+    );
+    return binding?.procedure.kind === "spellInvocation"
+      ? binding.procedure.invocation.procedure === "expeditiousRetreatDash" &&
+          binding.procedure.invocation.spell.id === subject.sourceUnitId
+      : (binding?.procedure.kind === "unitFeature" ||
+            binding?.procedure.kind === "unitSupportProfile") &&
+          binding.procedure.unitId === subject.sourceUnitId;
+  }
+  if (
+    subject.tag === "runtimeCommand" &&
+    subject.command === "releaseReadiedSpell"
+  ) {
+    return readiedSpells.some(
+      (readied) =>
+        readied.casterId === subject.readiedSpellCasterId &&
+        readied.procedureRef === procedureRef,
+    );
+  }
+  return false;
+}
+
+function pendingInterruptChoiceOwnsBoundProcedure(input: {
+  readonly choice: EncodedBattleInterruptChoice;
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
+}): boolean {
+  const { choice, combatants, readiedSpells } = input;
+  if (choice.kind === "releaseReadiedMovement") return true;
+  if (choice.kind === "reactionRollOrDamageReduction") {
+    return serializedReactionModifierProcedureRefIsBound(
+      combatants,
+      choice.reactorId,
+      choice.choice.procedureRef,
+    );
+  }
+  if (choice.kind === "releaseReadiedSpell") {
+    if (
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
+      return false;
+    }
+    const procedureRef = choice.subject.procedureRef;
+    return (
+      serializedSpellProcedureRefIsBound(
+        combatants,
+        choice.reactorId,
+        procedureRef,
+      ) &&
+      readiedSpells.some(
+        (readied) =>
+          readied.casterId === choice.reactorId &&
+          readied.procedureRef === procedureRef,
+      )
+    );
+  }
+  if (
+    choice.kind === "castTriggeredReactionSpell" ||
+    choice.kind === "castAttackHitBonusActionSpell"
+  ) {
+    if (
+      choice.subject.tag !== "runtimeCommand" ||
+      (choice.subject.command !== "castTriggeredReactionSpell" &&
+        choice.subject.command !== "castAttackHitBonusActionSpell")
+    ) {
+      return false;
+    }
+    return serializedImmediateSpellChoiceIsBound(combatants, choice);
+  }
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    (choice.subject.command !== "opportunityAttack" &&
+      choice.subject.command !== "retaliationAttack")
+  ) {
+    return false;
+  }
+  return serializedAttackProcedureRefIsBound(
+    combatants,
+    choice.reactorId,
+    choice.subject.procedureRef,
+  );
+}
+
 export const BattleSnapshotSchema = Schema.Struct({
   battleId: BattleId,
   executionScopeCursors: Schema.Array(
@@ -5625,6 +6063,27 @@ export const BattleSnapshotSchema = Schema.Struct({
             .size === snapshot.combatants.length &&
           new Set(executionScopeRefs).size === executionScopeRefs.length &&
           cursorByCombatant.size === snapshot.executionScopeCursors.length &&
+          snapshot.acts.every((act) =>
+            serializedAvailableActOwnsBoundProcedure(
+              act,
+              snapshot.combatants,
+              snapshot.readiedResponses.spells,
+            ),
+          ) &&
+          snapshot.readiedResponses.spells.every((readied) =>
+            serializedReadiedSpellOwnsInvocation(
+              snapshot.combatants,
+              readied,
+            ),
+          ) &&
+          (snapshot.pendingInterrupt === null ||
+            snapshot.pendingInterrupt.choices.every((choice) =>
+              pendingInterruptChoiceOwnsBoundProcedure({
+                choice,
+                combatants: snapshot.combatants,
+                readiedSpells: snapshot.readiedResponses.spells,
+              }),
+            )) &&
           executionScopes.every((executionScope) => {
             const cursor = cursorByCombatant.get(executionScope.combatantId);
             return Schema.is(BattleAttackExecutionScopeRef)(

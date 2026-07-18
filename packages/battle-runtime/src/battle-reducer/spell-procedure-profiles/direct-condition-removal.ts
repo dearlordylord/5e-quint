@@ -10,7 +10,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -139,7 +139,7 @@ function discoverDirectConditionRemovalCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: DirectConditionRemovalSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []

@@ -36,7 +36,7 @@ import { Either, Match } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { armorOfShadowsSpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -181,7 +181,7 @@ function discoverPersistentArmorEffectCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: PersistentArmorInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
     return [];

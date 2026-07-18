@@ -718,7 +718,7 @@ describe("battle runtime: Sleep", () => {
       resolveBattleSubject({
         state: goblinTurn,
         subject,
-        fills: [attackTargetFill(target, goblinId, fighterId, "Scimitar")],
+        fills: [attackTargetFill(target, goblinId, fighterId)],
       }),
       "attackRoll",
     );
@@ -727,7 +727,7 @@ describe("battle runtime: Sleep", () => {
         state: goblinTurn,
         subject,
         fills: [
-          attackTargetFill(target, goblinId, fighterId, "Scimitar"),
+          attackTargetFill(target, goblinId, fighterId),
           attackRollFill(attack, { total: 15, naturalD20: 10 }),
         ],
       }),
@@ -739,7 +739,7 @@ describe("battle runtime: Sleep", () => {
         state: goblinTurn,
         subject,
         fills: [
-          attackTargetFill(target, goblinId, fighterId, "Scimitar"),
+          attackTargetFill(target, goblinId, fighterId),
           attackRollFill(attack, { total: 15, naturalD20: 10 }),
           damageRollFill(damage, 1),
         ],

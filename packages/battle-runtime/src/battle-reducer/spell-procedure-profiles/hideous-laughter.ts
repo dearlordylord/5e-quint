@@ -21,7 +21,7 @@ import type {
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -229,7 +229,7 @@ function discoverHideousLaughterCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: HideousLaughterSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
@@ -265,8 +265,8 @@ function hideousLaughterMetamagicCastActs(input: {
   readonly actor: BattleCreatureState;
   readonly invocation: HideousLaughterSpellInvocation;
   readonly targetHole: BattleHole;
-  readonly baseCastAct: AvailableBattleAct;
-}): readonly AvailableBattleAct[] {
+  readonly baseCastAct: BattleActDiscoveryCandidate;
+}): readonly BattleActDiscoveryCandidate[] {
   return discoverSpellMetamagicSelections({
     actor: input.actor,
     invocation: input.invocation,
@@ -299,7 +299,7 @@ function hideousLaughterCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",

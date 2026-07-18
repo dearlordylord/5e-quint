@@ -431,7 +431,7 @@ function cleaveRouteWalk(): {
     targetId: secondTargetId,
     attackName: scenario.attackName,
     spatialFacts: [
-      attackTargetInMeleeReachFact(secondTargetId, scenario.attackName),
+      attackTargetInMeleeReachFact(secondTarget, secondTargetId),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
         attackerId,
@@ -656,7 +656,7 @@ function resolveCleaveMasteryPropertySecondTargetHit(): WeaponMasteryProjection 
     targetId: secondTargetId,
     attackName: scenario.attackName,
     spatialFacts: [
-      attackTargetInMeleeReachFact(secondTargetId, scenario.attackName),
+      attackTargetInMeleeReachFact(secondTarget, secondTargetId),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
         attackerId,
@@ -952,20 +952,20 @@ function targetFill(input: {
     holeId: input.hole.holeId,
     value: input.targetId,
     spatialFacts: input.spatialFacts ?? [
-      attackTargetInMeleeReachFact(input.targetId, input.attackName),
+      attackTargetInMeleeReachFact(input.hole, input.targetId),
     ],
   };
 }
 
-function attackTargetInMeleeReachFact(
-  targetId: CombatantId,
-  attackName: string,
-) {
+function attackTargetInMeleeReachFact(hole: BattleHole, targetId: CombatantId) {
+  if (hole.kind !== "targetChoice" || hole.attack === undefined) {
+    throw new Error("Expected bound Weapon Mastery attack selection.");
+  }
   return {
     kind: "attackTargetInMeleeReach" as const,
     actorId: attackerId,
     targetId,
-    attackName,
+    ...hole.attack.selection,
   };
 }
 

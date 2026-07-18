@@ -32,7 +32,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleHole,
   type BattleResolutionResult,
   type BattleSpellSavingThrowOutcomeValue,
@@ -317,7 +317,7 @@ function discoverSlowActivePenaltiesCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SlowActivePenaltiesSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
@@ -365,7 +365,7 @@ function slowActivePenaltiesCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",

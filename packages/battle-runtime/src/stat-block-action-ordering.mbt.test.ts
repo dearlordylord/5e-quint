@@ -350,7 +350,6 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         requireHoleFromList(holes, "targetChoice"),
         goblinId,
         fighterId,
-        statBlockAttackName(state, subject),
       );
     }
 
@@ -709,12 +708,7 @@ describe("Stat Block action ordering MBT", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetChoice = attackTargetFill(
-      targetHole,
-      goblinId,
-      fighterId,
-      multiattackDispatchAttackName,
-    );
+    const targetChoice = attackTargetFill(targetHole, goblinId, fighterId);
     const attackRollHole = requireHole(
       resolveBattleSubject({
         state,
@@ -857,12 +851,7 @@ function spendRechargeAttack(): BattleState {
     resolveBattleSubject({ state: battle, subject, fills: [] }),
     "targetChoice",
   );
-  const targetChoice = attackTargetFill(
-    target,
-    goblinId,
-    fighterId,
-    rechargeAttackName,
-  );
+  const targetChoice = attackTargetFill(target, goblinId, fighterId);
   const attackRoll = requireHole(
     resolveBattleSubject({
       state: battle,
@@ -911,29 +900,6 @@ function statBlockAttackAvailable(
       act.subject.actorId === goblinId &&
       act.summary.includes(attackName),
   );
-}
-
-function statBlockAttackName(
-  state: BattleState,
-  subject: BattleSubject,
-): string {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "action" &&
-      candidate.subject.action === "attack" &&
-      subject.tag === "action" &&
-      subject.action === "attack" &&
-      candidate.subject.procedureRef === subject.procedureRef &&
-      candidate.subject.statBlockDamageNotation ===
-        subject.statBlockDamageNotation,
-  );
-  if (act !== undefined) {
-    const prefix = "Take the Attack action with ";
-    return act.summary.startsWith(prefix)
-      ? act.summary.slice(prefix.length, -1)
-      : act.summary;
-  }
-  throw new Error("Expected Stat Block attack subject.");
 }
 
 function requireHoleFromList<K extends BattleHole["kind"]>(

@@ -29,7 +29,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleCreatureState,
   type BattleOngoingSpellEffectRef,
@@ -211,7 +211,7 @@ function discoverOngoingSpellEndCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: OngoingSpellEndInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

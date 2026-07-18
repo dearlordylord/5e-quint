@@ -213,7 +213,6 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       targetHole,
       spellCasterId,
       spellTargetId,
-      "Unarmed Strike",
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({

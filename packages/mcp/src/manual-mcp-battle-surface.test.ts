@@ -484,15 +484,11 @@ describe("manual MCP battle surface coverage", () => {
       afterAttackRoll.result.holes,
       "interruptDecision",
     );
-    const shieldChoice =
-      afterAttackRoll.result.snapshot.pendingInterrupt.choices.find(
-        (choice: Json) =>
-          choice.kind === "castTriggeredReactionSpell" &&
-          choice.invocation.spellId === "shield",
-      );
-    if (shieldChoice === undefined) {
-      throw new Error("Expected Shield reaction choice.");
-    }
+    const shieldChoice = requireTriggeredSpellChoice(
+      afterAttackRoll.result,
+      "fighter",
+      "shield",
+    );
 
     const afterShield = call(root, "fill_battle_hole", {
       subject: goblinAttack.subject,
@@ -504,7 +500,7 @@ describe("manual MCP battle surface coverage", () => {
           responderId: "fighter",
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: shieldChoice.invocation,
+            procedureRef: shieldChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -597,16 +593,12 @@ describe("manual MCP battle surface coverage", () => {
       holes: [expect.objectContaining({ kind: "interruptDecision" })],
       snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
     });
-    const hellishChoice =
-      afterDamage.result.snapshot.pendingInterrupt.choices.find(
-        (choice: Json) =>
-          choice.kind === "castTriggeredReactionSpell" &&
-          choice.invocation.spellId === "hellish_rebuke" &&
-          choice.invocation.slotLevel === 2,
-      );
-    if (hellishChoice === undefined) {
-      throw new Error("Expected Hellish Rebuke reaction choice.");
-    }
+    const hellishChoice = requireTriggeredSpellChoice(
+      afterDamage.result,
+      "fighter",
+      "hellish_rebuke",
+      2,
+    );
     const save = requireHole(hellishChoice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(hellishChoice.initialHoles, "rolledDice");
     const reactionHole = requireHole(
@@ -623,7 +615,7 @@ describe("manual MCP battle surface coverage", () => {
           responderId: "fighter",
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: hellishChoice.invocation,
+            procedureRef: hellishChoice.subject.procedureRef,
             fills: [
               {
                 kind: "savingThrowOutcome",
@@ -700,15 +692,11 @@ describe("manual MCP battle surface coverage", () => {
       holes: [expect.objectContaining({ kind: "interruptDecision" })],
       snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
-    const featherFallChoice =
-      falling.result.snapshot.pendingInterrupt.choices.find(
-        (choice: Json) =>
-          choice.kind === "castTriggeredReactionSpell" &&
-          choice.invocation.spellId === "feather_fall",
-      );
-    if (featherFallChoice === undefined) {
-      throw new Error("Expected Feather Fall reaction choice.");
-    }
+    const featherFallChoice = requireTriggeredSpellChoice(
+      falling.result,
+      "fighter",
+      "feather_fall",
+    );
     const targetList = requireHole(
       featherFallChoice.initialHoles,
       "spellTargetList",
@@ -724,7 +712,7 @@ describe("manual MCP battle surface coverage", () => {
           responderId: "fighter",
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: featherFallChoice.invocation,
+            procedureRef: featherFallChoice.subject.procedureRef,
             fills: [
               {
                 kind: "spellTargetList",
@@ -980,6 +968,44 @@ describe("manual MCP battle surface coverage", () => {
 
 type Root = ReturnType<typeof createMcpCompositionRoot>;
 type Json = Record<string, any>;
+
+function requireTriggeredSpellChoice(
+  result: Json,
+  reactorId: string,
+  spellId: string,
+  slotLevel?: number,
+): Json {
+  const reactor = result.snapshot.combatants.find(
+    (combatant: Json) => combatant.combatantId === reactorId,
+  );
+  const matchingChoices = result.snapshot.pendingInterrupt.choices.filter(
+    (choice: Json) => {
+      if (
+        choice.kind !== "castTriggeredReactionSpell" ||
+        choice.reactorId !== reactorId
+      ) {
+        return false;
+      }
+      const binding = reactor?.origin?.execution?.procedureBindings.find(
+        (candidate: Json) =>
+          candidate.procedureRef === choice.subject?.procedureRef,
+      );
+      const invocation = binding?.procedure?.invocation;
+      return (
+        binding?.procedure?.kind === "spellInvocation" &&
+        invocation?.spell?.id === spellId &&
+        (slotLevel === undefined ||
+          (invocation.resource?.tag === "spellSlot" &&
+            Number(invocation.resource.slotLevel) === slotLevel))
+      );
+    },
+  );
+  const [choice] = matchingChoices;
+  if (matchingChoices.length !== 1 || choice === undefined) {
+    throw new Error(`Expected one ${spellId} triggered spell choice.`);
+  }
+  return choice;
+}
 
 function call(root: Root, toolName: string, args: Json): Json {
   return JSON.parse(

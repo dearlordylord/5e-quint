@@ -264,6 +264,37 @@ describe("character attack execution references", () => {
     ).toBe(true);
   });
 
+  test("rejects character attack snapshots with swapped semantic ordinals", () => {
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(identicalDaggerBattle()),
+    );
+    const swapped = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== fighterId ||
+        combatant.origin.kind !== "character"
+          ? combatant
+          : {
+              ...combatant,
+              origin: {
+                ...combatant.origin,
+                attackExecution: {
+                  ...combatant.origin.attackExecution,
+                  attackProcedureRef:
+                    combatant.origin.attackExecution.unarmedStrikeProcedureRef,
+                  unarmedStrikeProcedureRef:
+                    combatant.origin.attackExecution.attackProcedureRef,
+                },
+              },
+            },
+      ),
+    };
+
+    expect(
+      Either.isLeft(Schema.decodeUnknownEither(BattleSnapshotSchema)(swapped)),
+    ).toBe(true);
+  });
+
   test("codecs preserve complete ranged and Opportunity Attack selections", () => {
     const state = identicalDaggerBattle();
     const attack = fighterOrigin(state).attack;

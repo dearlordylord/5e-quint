@@ -620,7 +620,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     throw new Error("Expected Longsword attack act.");
   }
   const target = findHole(longswordAct.initialHoles, "targetChoice");
-  const targetChoice = attackTargetFill(target, druidId, goblinId, "Longsword");
+  const targetChoice = attackTargetFill(target, druidId, goblinId);
   const needsAttackRoll = resolveBattleSubject({
     state: resolved.state,
     subject: longswordAct.subject,
@@ -750,7 +750,6 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     shortswordTarget,
     druidId,
     goblinId,
-    "Shortsword",
   );
   const needsShortswordAttackRoll = resolveBattleSubject({
     state: battleReadyState,
@@ -790,12 +789,7 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     throw new Error("Expected Dagger off-hand Bonus Action act.");
   }
   const daggerTarget = findHole(daggerAct.initialHoles, "targetChoice");
-  const daggerTargetChoice = attackTargetFill(
-    daggerTarget,
-    druidId,
-    goblinId,
-    "Dagger",
-  );
+  const daggerTargetChoice = attackTargetFill(daggerTarget, druidId, goblinId);
   const needsDaggerAttackRoll = resolveBattleSubject({
     state: afterQualifyingAttack,
     subject: daggerAct.subject,
@@ -1602,7 +1596,7 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
     resolveBattleSubject({
       state: assumed.state,
       subject,
-      fills: [attackTargetFill(targetHole, druidId, goblinId, "Hooves")],
+      fills: [attackTargetFill(targetHole, druidId, goblinId)],
     }),
     "attackRoll",
   );
@@ -1613,7 +1607,7 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
       state: assumed.state,
       subject,
       fills: [
-        attackTargetFill(targetHole, druidId, goblinId, "Hooves", [
+        attackTargetFill(targetHole, druidId, goblinId, undefined, [
           {
             kind: "attackerAllyWithin5FeetOfTarget",
             attackerId: druidId,
@@ -1634,7 +1628,7 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
       state: assumed.state,
       subject,
       fills: [
-        attackTargetFill(targetHole, druidId, goblinId, "Hooves", [
+        attackTargetFill(targetHole, druidId, goblinId, undefined, [
           {
             kind: "attackerAllyWithin5FeetOfTarget",
             attackerId: druidId,

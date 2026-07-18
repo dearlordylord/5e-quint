@@ -304,12 +304,7 @@ export type BoundAttackExecutionSelection =
   | CharacterAttackExecutionSelection
   | StatBlockAttackExecutionSelection;
 
-export type AttackExecutionSelectionIdentity =
-  | BoundAttackExecutionSelection
-  | {
-      readonly attackName: string;
-      readonly procedureRef?: never;
-    };
+export type AttackExecutionSelectionIdentity = BoundAttackExecutionSelection;
 
 export function attackExecutionAbility(
   attack: SupportedAttackActionOption,
@@ -374,9 +369,6 @@ export function boundAttackExecutionSelectionKey(
 export function attackExecutionSelectionKey(
   selection: AttackExecutionSelectionIdentity,
 ): string {
-  if (selection.procedureRef === undefined) {
-    return JSON.stringify(["authoredAttack", selection.attackName]);
-  }
   return JSON.stringify([
     "boundAttack",
     selection.procedureRef,

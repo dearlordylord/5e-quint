@@ -32,7 +32,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BlurAttackRollDefenseSpellInvocation,
@@ -136,7 +136,7 @@ function discoverBlurAttackRollDefenseCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: BlurAttackRollDefenseSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

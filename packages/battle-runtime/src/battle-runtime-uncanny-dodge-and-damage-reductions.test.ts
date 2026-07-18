@@ -19,6 +19,7 @@ import {
   goblinAttacksReactionModifierCharacter,
   goblinScimitarHitReactionSetup,
   resolveGoblinScimitarHitReduction,
+  reactionModifierChoice,
   uncannyDodgeUnit,
   cuttingWordsDamageOnlyUnit,
   fighterId,
@@ -34,7 +35,13 @@ import {
   snapshotBattle,
 } from "./battle-runtime-test-support.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer.ts";
-import { DieRollResult } from "@dnd/shared/types";
+import {
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterUnitProcedureRef,
+} from "./character-execution.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import { DieRollResult, NonNegativeInteger } from "@dnd/shared/types";
+import { battleProcedureExecutionRef } from "./identity.ts";
 import type {
   BattleInterruptCheckpoint,
   BattleState,
@@ -73,6 +80,11 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     if (setup.result.tag !== "needsHoles") {
       throw new Error("Expected attack-hit Reaction window.");
     }
+    const choice = reactionModifierChoice(
+      setup.result.snapshot.pendingInterrupt!.choices,
+      "rogue_uncanny_dodge",
+      "attackDamageReduction",
+    );
     const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
       fill: interruptDecisionFill(
@@ -82,7 +94,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: "rogue_uncanny_dodge",
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -141,6 +153,11 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected attack-hit Reaction window.");
     }
+    const procedureRef = requireCharacterUnitProcedureRef(
+      state,
+      fighterId,
+      "rogue_uncanny_dodge",
+    );
 
     expect(awaitingReaction.snapshot.pendingInterrupt!.choices).toEqual(
       expect.arrayContaining([
@@ -148,7 +165,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           kind: "reactionRollOrDamageReduction",
           choice: expect.objectContaining({
             kind: "attackDamageReduction",
-            unitId: "rogue_uncanny_dodge",
+            procedureRef,
           }),
         }),
       ]),
@@ -271,13 +288,20 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
   });
 
   test("attack damage scalar reductions apply proportionally to mixed damage entries", () => {
+    const cuttingWords = cuttingWordsDamageOnlyUnit();
     const state = goblinAttacksReactionModifierCharacter({
-      unit: uncannyDodgeUnit(),
-      className: "rogue",
-      level: 5,
-      unitId: "rogue_uncanny_dodge",
+      unit: cuttingWords,
+      className: "bard",
+      level: 3,
+      unitId: cuttingWords.id,
+      resources: [cuttingWordsResource({ unit: cuttingWords })],
     });
     const subject = goblinAttackSubject(state, "Scimitar");
+    const procedureRef = requireCharacterUnitProcedureRef(
+      state,
+      fighterId,
+      cuttingWords.id,
+    );
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackDamage",
       eligibleResponders: [fighterId],
@@ -288,14 +312,14 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           reactorId: fighterId,
           choice: {
             kind: "damageRollReduction",
-            unitId: "test_cutting_words",
+            procedureRef,
             label: "Cutting Words",
             reduction: {
               kind: "rolled",
               dice: 1,
               flatModifier: 0,
               dieSize: 6,
-              spends: { resourceUnitId: "test_cutting_words", amount: 1 },
+              spends: { resourceUnitId: cuttingWords.id, amount: 1 },
             },
           },
           initialHoles: [
@@ -305,7 +329,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
               holeInstanceKey: holeInstanceKey("battle:reaction:modifier-roll"),
               label: "Cutting Words reduction roll",
               unitFeature: {
-                unitId: "test_cutting_words",
+                unitId: cuttingWords.id,
                 label: "Cutting Words",
                 modifierKind: "damageRollReduction",
               },
@@ -350,7 +374,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          unitId: "test_cutting_words",
+          procedureRef,
           modifierKind: "damageRollReduction",
           fills: [
             {
@@ -383,6 +407,16 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       ],
     });
     const subject = goblinAttackSubject(state, "Scimitar");
+    const fighter = state.combatants.get(fighterId);
+    if (!isCharacterBattleCreatureState(fighter)) {
+      throw new Error(
+        "Expected the invalid-choice witness owner to be a character.",
+      );
+    }
+    const procedureRef = battleProcedureExecutionRef(
+      fighter.origin.execution.scopeRef,
+      NonNegativeInteger(0),
+    );
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackDamage",
       eligibleResponders: [skeletonId, fighterId],
@@ -393,7 +427,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           reactorId: skeletonId,
           choice: {
             kind: "attackDamageReduction",
-            unitId: "test_uncanny_dodge",
+            procedureRef,
             label: "Uncanny Dodge",
             reduction: { kind: "halfDamage" },
           },
@@ -404,7 +438,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           reactorId: fighterId,
           choice: {
             kind: "damageRollReduction",
-            unitId: "test_cutting_words",
+            procedureRef,
             label: "Cutting Words",
             reduction: {
               kind: "rolled",
@@ -451,7 +485,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         responderId: skeletonId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          unitId: "test_uncanny_dodge",
+          procedureRef,
           modifierKind: "attackDamageReduction",
           fills: [],
         },
@@ -460,9 +494,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
 
     expect(resolved).toMatchObject({
       tag: "invalid",
-      reason: "invalidFill",
+      reason: "staleSubject",
       message:
-        "Attack damage reductions must be chosen when the attack roll hits.",
+        "The selected Reaction modifier is no longer bound to this responder.",
     });
   });
 
@@ -551,3 +585,23 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     expect(blocked).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 });
+
+function requireCharacterUnitProcedureRef(
+  state: BattleState,
+  combatantId: typeof fighterId,
+  unitId: string,
+) {
+  const combatant = state.combatants.get(combatantId);
+  if (!isCharacterBattleCreatureState(combatant)) {
+    throw new Error(`Expected ${combatantId} to be a character.`);
+  }
+  const procedureRef = characterUnitProcedureRef(
+    combatant.origin.execution,
+    unitId,
+    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  );
+  if (procedureRef === undefined) {
+    throw new Error(`Expected ${unitId} procedure reference.`);
+  }
+  return procedureRef;
+}

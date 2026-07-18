@@ -14,7 +14,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
@@ -178,7 +178,7 @@ function discoverChosenDamageResistanceCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ChosenDamageResistanceSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
     return [];

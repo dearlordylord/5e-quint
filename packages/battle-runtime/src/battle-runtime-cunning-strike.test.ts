@@ -641,7 +641,7 @@ function cunningStrikeOffHandDamageWindow(
     target,
     fighterId,
     goblinId,
-    "Dagger",
+    undefined,
     [
       {
         kind: "attackerAllyWithin5FeetOfTarget",

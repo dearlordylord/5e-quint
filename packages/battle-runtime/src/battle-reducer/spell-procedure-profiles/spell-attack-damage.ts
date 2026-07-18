@@ -25,7 +25,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -110,7 +110,7 @@ function discoverSpellAttackDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpellAttackDamageInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "singleCreatureOrObject") {
     const targetHole = spellTargetHole(state, actorId, invocation);
     const initialHoles = [

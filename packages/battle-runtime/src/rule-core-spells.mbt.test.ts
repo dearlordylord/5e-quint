@@ -929,11 +929,17 @@ function createRuleCoreSpellDriver() {
           return;
         }
         state = targetTurn.state;
+        const readiedProcedureRef =
+          state.readiedSpells.get(casterId)?.procedureRef;
+        if (readiedProcedureRef === undefined) {
+          throw new Error("Expected the caster to hold a readied spell.");
+        }
         const releaseSubject: BattleSubject = {
           tag: "runtimeCommand",
           actorId: targetId,
           command: "releaseReadiedSpell",
           readiedSpellCasterId: casterId,
+          procedureRef: readiedProcedureRef,
         };
         const releaseTarget = requireHole(
           resolveBattleSubject({ state, subject: releaseSubject, fills: [] }),
@@ -996,6 +1002,7 @@ function createRuleCoreSpellDriver() {
                 choice: {
                   kind: "releaseReadiedSpell",
                   readiedSpellCasterId: casterId,
+                  procedureRef: releaseChoice.subject.procedureRef,
                   fills: [
                     allocation,
                     damageRollFillWithGroups(damage, [[2, 2, 2]]),
@@ -1818,6 +1825,9 @@ function attackTargetFill(hole: BattleHole): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
   }
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound rule-core spell trigger attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1827,7 +1837,7 @@ function attackTargetFill(hole: BattleHole): BattleFill {
         kind: "attackTargetInMeleeReach",
         actorId: targetId,
         targetId: casterId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };

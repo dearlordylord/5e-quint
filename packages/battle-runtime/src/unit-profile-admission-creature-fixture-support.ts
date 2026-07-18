@@ -560,31 +560,33 @@ export function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
-  attackName = "Unarmed Strike",
+  _attackName = "Unarmed Strike",
   extraSpatialFacts: Extract<
     BattleFill,
     { readonly kind: "targetChoice" }
   >["spatialFacts"] = [],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound creature-fixture attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [
-      hole.attack?.targetConstraint === "rangedRange" ||
-      attackName === "Shortbow"
+      hole.attack.targetConstraint === "rangedRange"
         ? {
             kind: "attackTargetInRangedRange",
             actorId,
             targetId,
-            ...(hole.attack?.selection ?? { attackName }),
+            ...hole.attack.selection,
             rangeBand: "normal",
           }
         : {
             kind: "attackTargetInMeleeReach",
             actorId,
             targetId,
-            ...(hole.attack?.selection ?? { attackName }),
+            ...hole.attack.selection,
           },
       ...extraSpatialFacts,
     ],

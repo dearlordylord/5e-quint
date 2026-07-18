@@ -84,6 +84,7 @@ import {
   type BattleCloudkillAreaMembershipTrigger,
   type BattleSleetStormAreaMembershipTrigger,
   type BattleMovementSpeedKind,
+  type BattleInterruptAttackExecutionSelection,
   type BattleSubject,
 } from "../battle-subjects.ts";
 import { characterBattleResourceIsUseCount } from "../character-battle-resources.ts";
@@ -303,8 +304,8 @@ import type {
   BattleJumpMovementReplacementFact,
   BattleMovementHole,
   BattleMovementFillValue,
-  BattleAttackExecutionSelection,
   BattleOpportunityAttackThreat,
+  AdmittedBattleResolutionInput,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
@@ -7856,7 +7857,7 @@ export function statBlockRechargeRollFillMatchesHole(
 }
 
 export function resolveMoveCommand(
-  input: BattleResolutionInput,
+  input: AdmittedBattleResolutionInput,
 ): BattleResolutionResult {
   if (!canSpendMovement(input.state.currentTurnResources)) {
     return invalidResult(
@@ -8455,7 +8456,7 @@ export function parseBattleMovement(
 
 function opportunityAttackThreatIdentityKey(
   reactorId: CombatantId,
-  selection: BattleAttackExecutionSelection,
+  selection: BattleInterruptAttackExecutionSelection,
 ): string {
   return JSON.stringify([reactorId, attackExecutionSelectionKey(selection)]);
 }

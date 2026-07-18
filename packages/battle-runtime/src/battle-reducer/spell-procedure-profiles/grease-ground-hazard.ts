@@ -22,7 +22,7 @@ import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -203,7 +203,7 @@ function discoverGreaseGroundHazardCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: GreaseGroundHazardSpellInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
@@ -235,9 +235,9 @@ function greaseGroundHazardMetamagicCastActs(input: {
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: GreaseGroundHazardSpellInvocation;
-  readonly baseCastAct: AvailableBattleAct;
+  readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
-}): readonly AvailableBattleAct[] {
+}): readonly BattleActDiscoveryCandidate[] {
   const actor = input.actor;
   if (actor === undefined) {
     return [];
@@ -278,7 +278,7 @@ function greaseGroundHazardCastAct(
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
-): AvailableBattleAct {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "actionSpell",

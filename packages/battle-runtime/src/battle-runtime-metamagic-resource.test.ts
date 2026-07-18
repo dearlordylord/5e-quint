@@ -30,6 +30,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
+  type BattleSubject,
   type CharacterBattleMetamagicOptionFact,
   characterBattleResourceIsPointPool,
   cantripSpellInvocationRef,
@@ -3993,7 +3994,7 @@ function twinnedMetamagicOption(): MetamagicOptionFixture {
 }
 
 function cureWoundsActionSubject(): Extract<
-  AvailableBattleAct["subject"],
+  BattleSubject,
   { readonly tag: "actionSpell" }
 > {
   return {
@@ -4009,7 +4010,7 @@ function cureWoundsActionSubject(): Extract<
 }
 
 function burningHandsActionSubject(): Extract<
-  AvailableBattleAct["subject"],
+  BattleSubject,
   { readonly tag: "actionSpell" }
 > {
   return {
@@ -4021,7 +4022,7 @@ function burningHandsActionSubject(): Extract<
 }
 
 function rayOfFrostActionSubject(): Extract<
-  AvailableBattleAct["subject"],
+  BattleSubject,
   { readonly tag: "actionSpell" }
 > {
   return {
@@ -4165,7 +4166,10 @@ function assertTransmutedDamageHole(damageHole: BattleHole): void {
   }
 }
 
-function quickenedCureWoundsSubject(): QuickenedBonusActionSpellAct["subject"] {
+function quickenedCureWoundsSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+> {
   return {
     tag: "bonusActionSpell",
     actorId: wizardId,
@@ -4179,7 +4183,10 @@ function quickenedCureWoundsSubject(): QuickenedBonusActionSpellAct["subject"] {
   };
 }
 
-function quickenedBurningHandsSubject(): QuickenedBonusActionSpellAct["subject"] {
+function quickenedBurningHandsSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+> {
   return {
     tag: "bonusActionSpell",
     actorId: wizardId,
@@ -4189,7 +4196,10 @@ function quickenedBurningHandsSubject(): QuickenedBonusActionSpellAct["subject"]
   };
 }
 
-function quickenedRayOfFrostSubject(): QuickenedBonusActionSpellAct["subject"] {
+function quickenedRayOfFrostSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+> {
   return {
     tag: "bonusActionSpell",
     actorId: wizardId,
@@ -4199,7 +4209,10 @@ function quickenedRayOfFrostSubject(): QuickenedBonusActionSpellAct["subject"] {
   };
 }
 
-function quickenedEldritchBlastSubject(): QuickenedBonusActionSpellAct["subject"] {
+function quickenedEldritchBlastSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+> {
   return {
     tag: "bonusActionSpell",
     actorId: wizardId,
@@ -4212,7 +4225,10 @@ function quickenedEldritchBlastSubject(): QuickenedBonusActionSpellAct["subject"
   };
 }
 
-function quickenedScorchingRaySubject(): QuickenedBonusActionSpellAct["subject"] {
+function quickenedScorchingRaySubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+> {
   return {
     tag: "bonusActionSpell",
     actorId: wizardId,

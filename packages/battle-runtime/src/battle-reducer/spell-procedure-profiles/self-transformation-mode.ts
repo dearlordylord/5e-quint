@@ -30,7 +30,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
@@ -317,7 +317,7 @@ function discoverSelfTransformationModeCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: SelfTransformationModeInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

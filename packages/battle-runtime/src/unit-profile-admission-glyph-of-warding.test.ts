@@ -47,6 +47,12 @@ import type {
 } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedure,
+  characterSpellProcedureRef,
+  characterStoredSpellProcedureRef,
+} from "./character-execution.ts";
+import {
   addGlyphDurableOccurrence,
   endGlyphDurableOccurrence,
   glyphExplosiveRuneDamageRollHole,
@@ -753,6 +759,47 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(Number(added.state.combatants.get(spellTargetId)?.hp)).toBe(50);
   });
 
+  test("keeps a stale spell procedure ref tombstoned when an equivalent invocation reappears", () => {
+    const invocation = storedSpellInvocation(guidingBoltUnitId, 1);
+    const state = glyphBattle({
+      preparedSpells: [spellRecord(guidingBoltUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const caster = requireCombatant(state, spellCasterId);
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected character spell caster.");
+    }
+    const originalRef = characterSpellProcedureRef(
+      caster.origin.execution,
+      invocation,
+    );
+    if (originalRef === undefined) {
+      throw new Error("Expected original spell procedure binding.");
+    }
+
+    const unavailable = characterExecutionWithSpellInvocations(
+      caster.origin.execution,
+      [],
+    );
+    expect(characterSpellProcedure(unavailable, originalRef)).toBeUndefined();
+
+    const reappeared = characterExecutionWithSpellInvocations(unavailable, [
+      invocation,
+    ]);
+    const replacementRef = characterSpellProcedureRef(reappeared, invocation);
+    if (replacementRef === undefined) {
+      throw new Error("Expected replacement spell procedure binding.");
+    }
+    expect(replacementRef).not.toBe(originalRef);
+    expect(characterSpellProcedure(reappeared, originalRef)).toBeUndefined();
+    expect(characterSpellProcedure(reappeared, replacementRef)).toBe(
+      invocation,
+    );
+    expect(characterStoredSpellProcedureRef(reappeared, invocation)).toBe(
+      originalRef,
+    );
+  });
+
   test("rejects a completed inscription witness below the admitted minimum spell level", () => {
     const profile = requireGlyphProfile();
 
@@ -941,6 +988,58 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         (slot) => slot.spellLevel === 1,
       )?.expended,
     ).toBe(0);
+  });
+
+  test("stored spell glyph release retains its original ref after that procedure becomes unavailable", () => {
+    const storedInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
+    const state = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      glyphBattle({
+        preparedSpells: [spellRecord(guidingBoltUnitId)],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+    );
+    const caster = requireCombatant(state, spellCasterId);
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected character spell caster.");
+    }
+    const originalRef = characterSpellProcedureRef(
+      caster.origin.execution,
+      storedInvocation,
+    );
+    if (originalRef === undefined) {
+      throw new Error("Expected stored spell procedure binding.");
+    }
+    const unavailableExecution = characterExecutionWithSpellInvocations(
+      caster.origin.execution,
+      [],
+    );
+    const unavailableState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...caster,
+        origin: { ...caster.origin, execution: unavailableExecution },
+      }),
+    };
+
+    expect(
+      characterStoredSpellProcedureRef(unavailableExecution, storedInvocation),
+    ).toBe(originalRef);
+
+    const release = releaseGlyphStoredSpell({
+      state: unavailableState,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness([], spellTargetId, []),
+    });
+
+    expect(release.tag).toBe("needsHoles");
+    if (release.tag !== "needsHoles") return;
+    expect(
+      characterSpellProcedure(unavailableExecution, originalRef),
+    ).toBeUndefined();
   });
 
   test("stored Concentration release lasts for full duration without spell Concentration ownership", () => {
@@ -3713,16 +3812,35 @@ function stateWithUnrelatedReadiedSpell(
   const readiedInvocation = requireReadiedSpellInvocation(
     storedSpellInvocation(guidingBoltUnitId, 1),
   );
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected character spell caster.");
+  }
+  const registeredInvocations =
+    caster.origin.execution.procedureBindings.flatMap((binding) =>
+      binding.procedure.kind === "spellInvocation"
+        ? [binding.procedure.invocation]
+        : [],
+    );
+  const execution = characterExecutionWithSpellInvocations(
+    caster.origin.execution,
+    [...registeredInvocations, readiedInvocation],
+  );
+  const procedureRef = characterSpellProcedureRef(execution, readiedInvocation);
+  if (procedureRef === undefined) {
+    throw new Error("Expected bound readied spell procedure.");
+  }
   return {
     ...state,
     combatants: new Map(state.combatants).set(spellCasterId, {
       ...caster,
+      origin: { ...caster.origin, execution },
       concentration: {
         sourceSpellId: guidingBoltUnitId,
         effectKind: "readiedSpell",
       },
     }),
     readiedSpells: new Map(state.readiedSpells).set(spellCasterId, {
+      procedureRef,
       invocation: readiedInvocation,
       trigger,
       expiresAt: {

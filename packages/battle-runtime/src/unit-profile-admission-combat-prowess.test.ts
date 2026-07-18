@@ -188,7 +188,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
           responderId: spellTargetId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: shieldChoice.invocation,
+            procedureRef: shieldChoice.subject.procedureRef,
             fills: [],
           },
         },

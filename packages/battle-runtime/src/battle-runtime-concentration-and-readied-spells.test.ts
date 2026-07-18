@@ -43,6 +43,14 @@ import type {
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
+function readiedSpellProcedureRef(state: BattleState) {
+  const readied = state.readiedSpells.get(wizardId);
+  if (readied === undefined) {
+    throw new Error("Expected the Wizard to hold a readied spell.");
+  }
+  return readied.procedureRef;
+}
+
 describe("battle runtime: Concentration and readied spells", () => {
   test("readied spell attack misses consume next-attack spell riders", () => {
     const state = startBattleRight({
@@ -143,6 +151,7 @@ describe("battle runtime: Concentration and readied spells", () => {
       actorId: goblinId,
       command: "releaseReadiedSpell",
       readiedSpellCasterId: wizardId,
+      procedureRef: readiedSpellProcedureRef(goblinTurn),
     };
     const releaseTarget = requireHole(
       resolveBattleSubject({
@@ -679,6 +688,7 @@ describe("battle runtime: Concentration and readied spells", () => {
       actorId: goblinId,
       command: "releaseReadiedSpell" as const,
       readiedSpellCasterId: wizardId,
+      procedureRef: readiedSpellProcedureRef(goblinTurn.state),
     };
     const target = requireHole(
       resolveBattleSubject({
@@ -777,6 +787,7 @@ describe("battle runtime: Concentration and readied spells", () => {
       actorId: goblinId,
       command: "releaseReadiedSpell" as const,
       readiedSpellCasterId: wizardId,
+      procedureRef: readiedSpellProcedureRef(goblinTurn.state),
     };
     const releaseAct = discoverBattleActs(goblinTurn.state).find(
       (act) =>

@@ -94,7 +94,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: unit.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -184,7 +184,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: unit.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 4)],
           },
@@ -258,7 +258,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: unit.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -354,7 +354,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: unit.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -451,7 +451,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: unit.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -566,7 +566,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: unit.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },

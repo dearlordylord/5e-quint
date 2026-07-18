@@ -3,7 +3,8 @@
 
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
-  sameBattleExecutionSubject,
+  sameAdmittedBattleSubject,
+  type AdmittedBattleSubject,
   type BattleSubject,
 } from "../battle-subjects.ts";
 import { movementFeet } from "@dnd/shared/types";
@@ -182,20 +183,21 @@ export function resolveReleaseReadiedSpellCommand(
   }
   const casterId = subject.readiedSpellCasterId;
   const readied = input.state.readiedSpells.get(casterId);
-  if (readied === undefined) {
+  if (readied === undefined || readied.procedureRef !== subject.procedureRef) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "No readied spell is currently being held.",
+      "No matching readied spell is currently being held.",
     );
   }
 
   const releaseSubject: Extract<
-    BattleSubject,
+    AdmittedBattleSubject,
     { readonly tag: "actionSpell" }
   > = {
     tag: "actionSpell",
     actorId: casterId,
+    procedureRef: readied.procedureRef,
     invocation: supportedSpellInvocationRef(readied.invocation),
     mode: { tag: "cast" },
   };
@@ -246,7 +248,7 @@ export function resolveReleaseReadiedMovementCommand(
   if (
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== readiedMovementActorId ||
-    !sameBattleExecutionSubject(activeInterrupt.subject, input.subject)
+    !sameAdmittedBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,

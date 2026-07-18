@@ -349,7 +349,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -481,7 +481,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -646,7 +646,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -677,7 +677,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -696,7 +696,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [targetFill],
           },
         },
@@ -716,7 +716,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -832,7 +832,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },
@@ -920,7 +920,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
-            invocation: smiteChoice.invocation,
+            procedureRef: smiteChoice.subject.procedureRef,
             fills: [],
           },
         },

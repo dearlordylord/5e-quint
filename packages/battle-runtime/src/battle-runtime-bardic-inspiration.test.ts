@@ -602,7 +602,7 @@ describe("battle runtime: Bardic Inspiration", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: cuttingWordsAttackOnly.id,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackRollReduction",
             fills: [
               {

@@ -11,7 +11,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  characterAttackSubjectForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   canSpendAction,
@@ -1407,7 +1410,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
         responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
@@ -1792,7 +1795,7 @@ function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
         responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
@@ -2089,7 +2092,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castTriggeredReactionSpell",
-              invocation: choice.invocation,
+              procedureRef: choice.subject.procedureRef,
               fills: [
                 featherFallTargetListFill(
                   requireHole(choice.initialHoles, "spellTargetList"),
@@ -4041,13 +4044,19 @@ function featherFallTriggerFact(): Extract<
 function featherFallReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ) {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate) =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === featherFallUnitId &&
-      candidate.invocation.procedure === "featherFallMitigation",
-  );
+  const choice = result.snapshot.pendingInterrupt?.choices.find((candidate) => {
+    if (candidate.kind !== "castTriggeredReactionSpell") return false;
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      result.state,
+      candidate.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === featherFallUnitId &&
+      invocation.procedure === "featherFallMitigation"
+    );
+  });
   if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
     throw new Error("Expected Feather Fall Reaction choice.");
   }
@@ -4279,6 +4288,9 @@ function attackRollModeForMeleeTarget(
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound spatial-witness attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -4288,7 +4300,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: casterId,
         targetId: observerId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };

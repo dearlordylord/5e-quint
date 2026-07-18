@@ -685,9 +685,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       resolveBattleSubject({
         state: afterFighter.state,
         subject: skeletonAttack,
-        fills: [
-          attackTargetFill(skeletonTarget, skeletonId, wizardId, "Longsword"),
-        ],
+        fills: [attackTargetFill(skeletonTarget, skeletonId, wizardId)],
       }),
       "attackRoll",
     );

@@ -193,25 +193,28 @@ function defineSelectedIdentityQntReplayCore<
             observedAction,
           });
         };
-        const runQnt = (step: string) =>
-          (currentQntStep = step,
+        const runQnt = (step: string) => (
+          (currentQntStep = step),
           run({
             spec: witness.specFile,
             init: "init",
             step,
-            driver: () => createSelectedIdentityQntDriver(witness, observeQntAction),
+            driver: () =>
+              createSelectedIdentityQntDriver(witness, observeQntAction),
             backend: "typescript",
             seed: process.env["QUINT_SEED"],
             nTraces: mbtTraceCount(),
             maxSteps: focusedMbtMaxSteps(1),
             stateCheck: selectedIdentityStateCheck(witness),
-          }));
+          })
+        );
         currentQntStep = "step";
         await run({
           spec: witness.specFile,
           init: "init",
           step: "step",
-          driver: () => createSelectedIdentityQntDriver(witness, observeQntAction),
+          driver: () =>
+            createSelectedIdentityQntDriver(witness, observeQntAction),
           backend: "typescript",
           seed: process.env["QUINT_SEED"],
           nTraces: mbtTraceCount(),

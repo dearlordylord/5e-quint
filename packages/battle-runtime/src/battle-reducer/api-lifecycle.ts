@@ -188,6 +188,11 @@ export function startBattle(
       combatant,
       battleExecutionScopeOrdinal(0),
     );
+    if (admission.tag === "invalid") {
+      return battleStateInitIssue(
+        admission.issues.map((issue) => issue.message).join("; "),
+      );
+    }
     combatants.set(combatant.combatantId, admission.creature);
     if (admission.nextScopeOrdinal > 0) {
       executionScopeCursors.set(
@@ -434,6 +439,11 @@ export function addBattleCombatant(input: {
     input.state.executionScopeCursors.get(input.combatant.combatantId) ??
       battleExecutionScopeOrdinal(0),
   );
+  if (admission.tag === "invalid") {
+    return battleStateInitIssue(
+      admission.issues.map((issue) => issue.message).join("; "),
+    );
+  }
   const combatantsWithAdmission = new Map(input.state.combatants).set(
     input.combatant.combatantId,
     admission.creature,

@@ -14,12 +14,13 @@ import type {
   BattleInterruptCheckpoint,
   BattleInterruptProcedureSelection,
   BattleHole,
+  AdmittedBattleResolutionInput,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleState,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
   battleHoleFamilyKind,
@@ -42,8 +43,6 @@ import {
   conditionApplicationPreventedByCreatureTypeProtection,
   resolveBattlePossessionAttempt,
 } from "./spell-condition-effects-helpers.ts";
-import { sameSpellInvocationRef } from "./spells-invocation-ref.ts";
-import { supportedSpellActs } from "./spells-profiles.ts";
 import { characterSpellProcedure } from "../character-execution.ts";
 import {
   conditionSpellEndTurnRepeatSaveHoleIds,
@@ -911,7 +910,7 @@ export function battleReducerRouteEventsForDiscoveredAct(
 }
 
 export function battleReducerRouteForResolution(
-  input: BattleResolutionInput,
+  input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
   const creatureStatProjectionRoute = creatureStatProjectionRouteForResolution(
@@ -3052,13 +3051,19 @@ function afterHitDamageRiderDiscoveryRoutesForResolution(
     if (!isAfterHitDamageRiderChoice(choice)) {
       continue;
     }
-    if (choice.invocation.tag === "spellSlot") {
+    const invocation = spellInvocationForInterruptChoice(
+      result.state,
+      choice.reactorId,
+      choice.subject.procedureRef,
+    );
+    if (invocation === undefined) continue;
+    if (invocation.resource.tag === "spellSlot") {
       owners.add("battleSpellSlotAndActionEconomy");
     }
-    if (choice.invocation.tag === "classFeatureFreeCast") {
+    if (invocation.resource.tag === "classFeatureFreeCast") {
       owners.add("battleFeatureResource");
     }
-    if (choice.invocation.procedure === "afterHitDamageAndIllumination") {
+    if (invocation.procedure === "afterHitDamageAndIllumination") {
       owners.add("battleActiveEffect");
       owners.add("battleConcentration");
     }
@@ -3111,6 +3116,23 @@ function afterHitDamageRiderRouteForInterrupt(input: {
   if (!isAfterHitDamageRiderSelection(choice)) {
     return undefined;
   }
+  const selectedChoice =
+    input.before.interruptStack.length === 0
+      ? undefined
+      : currentInterruptCheckpoint(input.before)?.choices.find(
+          (candidate): candidate is AfterHitDamageRiderChoice =>
+            isAfterHitDamageRiderChoice(candidate) &&
+            candidate.subject.procedureRef === choice.procedureRef,
+        );
+  const invocation =
+    selectedChoice === undefined
+      ? undefined
+      : spellInvocationForInterruptChoice(
+          input.before,
+          selectedChoice.reactorId,
+          selectedChoice.subject.procedureRef,
+        );
+  if (invocation === undefined) return undefined;
 
   const choiceFillKinds = choice.fills
     .map(battleReducerRouteFill)
@@ -3130,7 +3152,7 @@ function afterHitDamageRiderRouteForInterrupt(input: {
     ),
   ];
 
-  if (choice.invocation.tag === "spellSlot") {
+  if (invocation.resource.tag === "spellSlot") {
     route.push(
       afterHitDamageRiderDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -3143,7 +3165,7 @@ function afterHitDamageRiderRouteForInterrupt(input: {
       ),
     );
   }
-  if (choice.invocation.tag === "classFeatureFreeCast") {
+  if (invocation.resource.tag === "classFeatureFreeCast") {
     route.push(
       afterHitDamageRiderDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -3156,7 +3178,7 @@ function afterHitDamageRiderRouteForInterrupt(input: {
       ),
     );
   }
-  if (choice.invocation.procedure === "afterHitSaveGatedCondition") {
+  if (invocation.procedure === "afterHitSaveGatedCondition") {
     if (
       input.result.tag !== "invalid" &&
       combatantConditionsChanged(input.before, input.result.state)
@@ -3191,7 +3213,7 @@ function afterHitDamageRiderRouteForInterrupt(input: {
     }
   }
   if (
-    choice.invocation.procedure === "afterHitDamageAndIllumination" &&
+    invocation.procedure === "afterHitDamageAndIllumination" &&
     input.result.tag !== "invalid"
   ) {
     if (combatantsActiveEffectsChanged(input.before, input.result.state)) {
@@ -3412,6 +3434,7 @@ function reactionSpellRouteForInterrupt(input: {
   });
   if (selectedChoice !== undefined) {
     const payloadSubject = reactionInterruptPayloadRouteSubjectForChoice(
+      input.before,
       frame,
       selectedChoice,
     );
@@ -3476,26 +3499,43 @@ function selectedTriggeredReactionSpellChoice(input: {
     (choice): choice is TriggeredReactionSpellChoice =>
       choice.kind === "castTriggeredReactionSpell" &&
       choice.reactorId === input.responderId &&
-      sameSpellInvocationRef(choice.invocation, input.selection.invocation),
+      choice.subject.procedureRef === input.selection.procedureRef,
   );
 }
 
+function spellInvocationForInterruptChoice(
+  state: BattleState,
+  reactorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): SupportedSpellInvocation | undefined {
+  const reactor = state.combatants.get(reactorId);
+  return isCharacterBattleCreatureState(reactor)
+    ? characterSpellProcedure(reactor.origin.execution, procedureRef)
+    : undefined;
+}
+
 function reactionInterruptPayloadRouteSubjectForChoice(
+  state: BattleState,
   frame: BattleInterruptCheckpoint,
   choice: TriggeredReactionSpellChoice,
 ): ReactionInterruptPayloadRouteSubject | undefined {
-  if (choice.invocation.procedure === "shieldReaction") {
+  const invocation = spellInvocationForInterruptChoice(
+    state,
+    choice.reactorId,
+    choice.subject.procedureRef,
+  );
+  if (invocation?.procedure === "shieldReaction") {
     return "reactionArmorClassEffect";
   }
   if (
     frame.trigger === "afterDamage" &&
-    choice.invocation.procedure === "saveGatedDamage"
+    invocation?.procedure === "saveGatedDamage"
   ) {
     return "reactionAfterDamageEffect";
   }
   if (
     frame.trigger === "spellCast" &&
-    choice.invocation.procedure === "counterspell"
+    invocation?.procedure === "counterspell"
   ) {
     return "reactionSpellInterruption";
   }
@@ -5771,7 +5811,8 @@ function interruptStackResumeDiscoveryRouteForResolution(
     discoversInterruptDecision &&
     frame !== undefined &&
     isReactionSpellCastingTimeFrame(frame)
-      ? (reactionInterruptPayloadRouteSubjectForFrame(frame) ?? "reactionSpell")
+      ? (reactionInterruptPayloadRouteSubjectForFrame(result.state, frame) ??
+        "reactionSpell")
       : "interruptStackResume";
   return {
     kind: "discoverBattleActs",
@@ -5782,6 +5823,7 @@ function interruptStackResumeDiscoveryRouteForResolution(
 }
 
 function reactionInterruptPayloadRouteSubjectForFrame(
+  state: BattleState,
   frame: BattleInterruptCheckpoint,
 ): ReactionInterruptPayloadRouteSubject | undefined {
   const subjects = new Set(
@@ -5791,6 +5833,7 @@ function reactionInterruptPayloadRouteSubjectForFrame(
           return [];
         }
         const subject = reactionInterruptPayloadRouteSubjectForChoice(
+          state,
           frame,
           choice,
         );
@@ -7261,11 +7304,7 @@ function spellInvocationForRouteSubject(
   ) {
     return undefined;
   }
-  return characterSpellProcedure(
-    actor.origin.execution,
-    subject.procedureRef,
-    supportedSpellActs(actor, state),
-  );
+  return characterSpellProcedure(actor.origin.execution, subject.procedureRef);
 }
 
 function protectionCharmDiscover(

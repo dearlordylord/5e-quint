@@ -1083,7 +1083,6 @@ describe("battle runtime: Stat Block actions", () => {
       findHole(shortbow.initialHoles, "targetChoice"),
       goblinId,
       fighterId,
-      "Shortbow",
     );
     const targeted = requireNeedsHoles(
       resolveBattleSubject({
@@ -1812,12 +1811,7 @@ describe("battle runtime: Stat Block actions", () => {
         state,
         subject: distantSubject,
         fills: [
-          attackTargetFill(
-            targetHole,
-            distantSubject.actorId,
-            goblinId,
-            "Longsword",
-          ),
+          attackTargetFill(targetHole, distantSubject.actorId, goblinId),
           attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
           damageRollFillWithGroups(damageHole, [[2]]),
         ],

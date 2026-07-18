@@ -532,8 +532,7 @@ function admitAbsentCompanionToBattle(
           protocol: input.protocol,
           creatureTypeOverride: input.manifestation.creatureTypeOverride,
           hitPoints: input.manifestation.hitPoints,
-          reappearanceCombatantId:
-            input.manifestation.reappearanceCombatantId,
+          reappearanceCombatantId: input.manifestation.reappearanceCombatantId,
           ownerId: input.ownerId,
         })
       : findFamiliarDisappearedAtZeroHitPointsState({
@@ -802,10 +801,7 @@ export function temporarilyDismissFindFamiliar(
   if (spent.tag === "invalid") {
     return spent;
   }
-  const hitPoints = presentFindFamiliarHitPoints(
-    input.state,
-    familiarId,
-  );
+  const hitPoints = presentFindFamiliarHitPoints(input.state, familiarId);
   if (typeof hitPoints === "string") {
     return invalidFindFamiliarResult(input.state, "invalidFill", hitPoints);
   }

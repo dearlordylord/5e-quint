@@ -1502,7 +1502,7 @@ function createRuleCoreFeatureDriver(
             responderId: actorId,
             choice: {
               kind: "reactionRollOrDamageReduction",
-              unitId: input.unitId,
+              procedureRef: choice.choice.procedureRef,
               modifierKind: input.modifierKind,
               fills: reductionFills,
             },
@@ -2327,27 +2327,29 @@ function attackTargetFill(
   hole: BattleHole,
   attackerId: CombatantId,
   defenderId: CombatantId,
-  attackName: string,
+  _attackName: string,
 ): BattleFill {
-  if (hole.kind !== "targetChoice") throw new Error("Expected targetChoice.");
+  if (hole.kind !== "targetChoice" || hole.attack === undefined) {
+    throw new Error("Expected bound targetChoice attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: defenderId,
     spatialFacts: [
-      attackName === "Shortbow"
+      hole.attack.targetConstraint === "rangedRange"
         ? {
             kind: "attackTargetInRangedRange",
             actorId: attackerId,
             targetId: defenderId,
-            attackName,
+            ...hole.attack.selection,
             rangeBand: "normal",
           }
         : {
             kind: "attackTargetInMeleeReach",
             actorId: attackerId,
             targetId: defenderId,
-            attackName,
+            ...hole.attack.selection,
           },
       {
         kind: "attackerAllyWithin5FeetOfTarget",
@@ -2523,7 +2525,6 @@ function reactionModifierChoice(
   const choice = choices.find(
     (candidate) =>
       candidate.kind === "reactionRollOrDamageReduction" &&
-      candidate.choice.unitId === unitId &&
       candidate.choice.kind === modifierKind,
   );
   if (choice?.kind !== "reactionRollOrDamageReduction") {

@@ -4,7 +4,6 @@ import { NonNegativeInteger } from "@dnd/shared/types";
 import {
   combatantId,
   sameAdmittedBattleSubject,
-  sameBattleExecutionSubject,
   sameBattleSubject,
   type BattleSubject,
 } from "./index.ts";
@@ -96,8 +95,6 @@ describe("BattleSubject identity", () => {
 
     expect(sameBattleSubject(subject, otherOccurrence)).toBe(true);
     expect(sameAdmittedBattleSubject(subject, otherOccurrence)).toBe(false);
-    expect(sameBattleExecutionSubject(subject, otherOccurrence)).toBe(false);
-    const { procedureRef: _procedureRef, ...authoredSelection } = subject;
-    expect(sameBattleExecutionSubject(subject, authoredSelection)).toBe(true);
+    expect(sameAdmittedBattleSubject(subject, subject)).toBe(true);
   });
 });

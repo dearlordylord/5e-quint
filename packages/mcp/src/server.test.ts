@@ -5588,16 +5588,20 @@ describe("MCP server route", () => {
     root.sessionStore.battleState = state;
     root.sessionStore.pendingBattleFills = null;
 
+    const rayOfFrostAct = discoverBattleActs(state).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.actorId === fighterId &&
+        act.subject.invocation.spellId === "ray_of_frost",
+    );
+    if (rayOfFrostAct?.subject.tag !== "actionSpell") {
+      throw new Error("Expected Fighter Ray of Frost act.");
+    }
+
     readPayload(
       handleToolCall(root, "resolve_battle_act", {
         subject: {
-          tag: "actionSpell",
-          actorId: "fighter",
-          invocation: {
-            tag: "cantrip",
-            spellId: "ray_of_frost",
-            procedure: "spellAttackDamage",
-          },
+          ...rayOfFrostAct.subject,
           mode: { tag: "ready", trigger: "attackHit" },
         },
       }),
@@ -5647,6 +5651,19 @@ describe("MCP server route", () => {
         pendingInterrupt: { trigger: "attackHit" },
       },
     });
+    const releaseChoices =
+      afterAttackRoll.snapshot.pendingInterrupt.choices.filter(
+        (choice: {
+          readonly kind?: string;
+          readonly readiedSpellCasterId?: string;
+        }) =>
+          choice.kind === "releaseReadiedSpell" &&
+          choice.readiedSpellCasterId === "fighter",
+      );
+    const [releaseChoice] = releaseChoices;
+    if (releaseChoices.length !== 1 || releaseChoice === undefined) {
+      throw new Error("Expected one Fighter readied-spell release choice.");
+    }
 
     const afterReactionDecision = readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -5660,6 +5677,7 @@ describe("MCP server route", () => {
             choice: {
               kind: "releaseReadiedSpell",
               readiedSpellCasterId: "fighter",
+              procedureRef: releaseChoice.subject.procedureRef,
               fills: [],
             },
           },

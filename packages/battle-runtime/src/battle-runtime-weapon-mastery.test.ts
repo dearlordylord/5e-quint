@@ -453,7 +453,7 @@ describe("battle runtime: Weapon Mastery", () => {
       targetHole,
       subject.actorId,
       goblinId,
-      "Longsword",
+      undefined,
       [
         {
           kind: "weaponMasteryPushDisposition" as const,
@@ -2260,7 +2260,7 @@ describe("battle runtime: Weapon Mastery", () => {
       state: rangedCleaveState,
       subject: rangedSubject,
       fills: [
-        attackTargetFill(rangedTarget, fighterId, goblinId, "Longbow"),
+        attackTargetFill(rangedTarget, fighterId, goblinId),
         attackRollFill(rangedRoll, { total: 15, naturalD20: 10 }),
         damageRollFill(rangedDamage, 4),
       ],

@@ -121,6 +121,7 @@ import type {
 import { spellAttackRerollUnsupportedIssue } from "../battle-reducer.ts";
 import {
   boundAttackExecutionSelectionMatchesOption,
+  type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
@@ -201,7 +202,7 @@ type BonusActionAttackConfig = {
     procedureRef: BonusActionAttackBattleResolutionInput["subject"]["procedureRef"],
     attackAbility: BonusActionAttackBattleResolutionInput["subject"]["attackAbility"],
     attackDamageType: BonusActionAttackBattleResolutionInput["subject"]["attackDamageType"],
-  ) => SupportedAttackActionOption | undefined;
+  ) => BoundSupportedAttackActionOption | undefined;
   readonly prerequisiteMet: (
     state: BattleState,
     actorId: BonusActionAttackBattleResolutionInput["subject"]["actorId"],

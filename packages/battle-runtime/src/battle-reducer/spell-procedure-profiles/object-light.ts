@@ -37,7 +37,7 @@ import {
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -322,7 +322,7 @@ function discoverObjectLightCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ObjectLightInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const baseCastAct = {
     subject: {
       tag: "actionSpell" as const,
@@ -489,8 +489,7 @@ function resolveObjectLight(
             | "spellTouchedObjectTarget"
             | "spellDistantTouchedObjectTarget";
         }
-      > =>
-        objectLightTargetFactKinds.has(fact.kind),
+      > => objectLightTargetFactKinds.has(fact.kind),
     ),
     input.actorId,
     objectTarget.objectId,

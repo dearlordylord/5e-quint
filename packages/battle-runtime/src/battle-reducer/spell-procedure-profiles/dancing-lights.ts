@@ -30,7 +30,7 @@ import { Either } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
@@ -233,7 +233,7 @@ function discoverDancingLightsCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: DancingLightsCastInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
@@ -255,7 +255,7 @@ function discoverDancingLightsRepositionAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: DancingLightsRepositionInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const activeEffect = activeDancingLightsEffect(state, actorId, invocation);
   return activeEffect === undefined
     ? []

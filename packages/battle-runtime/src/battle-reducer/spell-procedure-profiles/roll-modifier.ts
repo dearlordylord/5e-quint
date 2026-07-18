@@ -45,7 +45,7 @@ import type { CombatantId } from "../../identity.ts";
 import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -242,7 +242,7 @@ function discoverRollModifierCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: RollModifierInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
     : spellTargetHole(state, actorId, invocation);

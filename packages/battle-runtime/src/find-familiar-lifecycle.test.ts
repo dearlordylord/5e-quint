@@ -59,7 +59,6 @@ import {
   reappearTemporarilyDismissedFindFamiliar,
   removeBattleCombatants,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   shareFindFamiliarSenses,
   snapshotBattle,
   startBattle,
@@ -70,6 +69,7 @@ import {
   type BattleState,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
@@ -2529,7 +2529,7 @@ describe("Find Familiar lifecycle", () => {
           responderId: enemyId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: shieldChoice.invocation,
+            procedureRef: shieldChoice.subject.procedureRef,
             fills: [],
           },
         },

@@ -102,6 +102,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   attackExecutionSelectionForSubjectForTest as interruptAttackExecutionSelectionForSubject,
+  characterSpellInvocationRefForProcedureRefForTest,
   attackInitialTargetHole as interruptAttackInitialTargetHole,
   attackRollHoleAfterTarget as interruptAttackRollHoleAfterTarget,
   attackTargetFill as interruptAttackTargetFill,
@@ -9824,6 +9825,12 @@ export function createInterruptStackResumeRouteDriver() {
         const releaseChoice = interruptReactionChoiceWithSubject(
           awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
         );
+        if (
+          releaseChoice.subject.tag !== "runtimeCommand" ||
+          releaseChoice.subject.command !== "releaseReadiedSpell"
+        ) {
+          throw new Error("Expected a readied-spell release subject.");
+        }
         const released = resolveBattleInterrupt({
           state: awaitingAttackReaction.state,
           fill: interruptDecisionFillSupport(
@@ -9834,6 +9841,7 @@ export function createInterruptStackResumeRouteDriver() {
               choice: {
                 kind: "releaseReadiedSpell",
                 readiedSpellCasterId: interruptWizardId,
+                procedureRef: releaseChoice.subject.procedureRef,
                 fills: [],
               },
             },
@@ -9911,7 +9919,7 @@ export function createInterruptStackResumeRouteDriver() {
               responderId: interruptShieldCasterId,
               choice: {
                 kind: "castTriggeredReactionSpell",
-                invocation: choice.invocation,
+                procedureRef: choice.subject.procedureRef,
                 fills: [],
               },
             },
@@ -16039,6 +16047,9 @@ function interruptShieldUnarmedStrikeAct(
 function interruptShieldAttackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound interrupt-shield attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -16048,7 +16059,7 @@ function interruptShieldAttackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: interruptShieldAttackerId,
         targetId: interruptShieldCasterId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };
@@ -16066,13 +16077,24 @@ function requireInterruptShieldReactionChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === interruptShieldCasterId &&
-      candidate.invocation.tag === "spellSlot" &&
-      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-      candidate.invocation.spellId === interruptShieldUnitId &&
-      candidate.invocation.procedure === "shieldReaction",
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== interruptShieldCasterId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+        invocation.spellId === interruptShieldUnitId &&
+        invocation.procedure === "shieldReaction"
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected interrupt-stack Shield Reaction choice.");

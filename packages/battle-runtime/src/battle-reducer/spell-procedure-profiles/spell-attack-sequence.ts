@@ -16,7 +16,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -91,7 +91,7 @@ function discoverSpellAttackSequenceCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpellAttackSequenceInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const initialHoles = Array.from(
     { length: invocation.targeting.attackCount },
     (_, partIndex) => [

@@ -18,7 +18,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -90,7 +90,7 @@ function discoverChainedSpellAttackDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ChainedSpellAttackDamageInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const castActs = [
     {
       subject: {

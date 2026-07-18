@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import {
   blurUnitId,
   counterspellUnitId,
@@ -694,13 +695,24 @@ function requireTriggeredReactionSpellChoice(input: {
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === input.reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === input.spellId &&
-      candidate.invocation.procedure === input.procedure &&
-      Number(candidate.invocation.slotLevel) === input.slotLevel,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== input.reactorId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        input.result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === input.spellId &&
+        invocation.procedure === input.procedure &&
+        Number(invocation.slotLevel) === input.slotLevel
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
@@ -721,7 +733,7 @@ function triggeredReactionSpellDecision(
     responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
-      invocation: choice.invocation,
+      procedureRef: choice.subject.procedureRef,
       fills,
     },
   };

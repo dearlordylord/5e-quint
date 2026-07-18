@@ -19,7 +19,7 @@ import {
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import type { BattleSubject } from "../battle-subjects.ts";
+import type { AdmittedBattleSubject } from "../battle-subjects.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   isTargetListSpellInvocation,
@@ -163,7 +163,7 @@ type SaveGatedSpellResolutionInput =
 
 function spellReactionContinuationSubject(
   input: SaveGatedSpellResolutionInput,
-): BattleSubject {
+): AdmittedBattleSubject {
   return "reactionContinuationSubject" in input
     ? (input.reactionContinuationSubject ?? input.subject)
     : input.subject;

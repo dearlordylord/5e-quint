@@ -29,7 +29,7 @@ import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
   maybeOpenInterruptWindow,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -140,7 +140,7 @@ function discoverMakeStableCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: MakeStableInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
     return [];

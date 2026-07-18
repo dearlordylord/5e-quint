@@ -364,7 +364,7 @@ export function attackActionOptionForSubject(
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
-): SupportedAttackActionOption | undefined {
+): BoundSupportedAttackActionOption | undefined {
   return attackActionOptionsForActor(state, subject.actorId).find((attack) => {
     return (
       boundAttackExecutionSelectionMatchesOption(subject, attack) &&

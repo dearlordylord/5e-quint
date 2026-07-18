@@ -31,6 +31,7 @@ import type {
 } from "../battle-subjects.ts";
 import {
   attackExecutionSelectionForOption,
+  type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
@@ -77,7 +78,7 @@ import {
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   snapshotBattle,
   spellSaveDcForCaster,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleAbilityCheckHole,
   type BattleActiveEffect,
   type BattleCreatureState,
@@ -95,7 +96,6 @@ import {
   representedMovementSpeedKinds,
   shoveForTarget,
 } from "./movement-speed.ts";
-import { attackActionOptionName } from "./statblock-attacks.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
@@ -662,7 +662,7 @@ export function deduplicateBattleHolesById(
 export function attackTargetHole(
   state: BattleState,
   actorId: CombatantId,
-  attack: SupportedAttackActionOption,
+  attack: BoundSupportedAttackActionOption,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
@@ -672,10 +672,7 @@ export function attackTargetHole(
     requiresTableSpatialFact: true,
     attack: {
       actorId,
-      selection:
-        "procedureRef" in attack
-          ? attackExecutionSelectionForOption(attack)
-          : { attackName: attackActionOptionName(attack) },
+      selection: attackExecutionSelectionForOption(attack),
       targetConstraint: attackTargetConstraint(attack).kind,
     },
     choices: attackTargetChoices(state, actorId, attack),
@@ -847,7 +844,7 @@ export function revealHidden(
 export function bonusActionStandardActionActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     !combatantCanTakeActions(actor) ||

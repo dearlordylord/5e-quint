@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 import { describe, expect, test } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
@@ -1486,13 +1487,24 @@ function requireTriggeredReactionSpellChoice(input: {
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === input.reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === input.spellId &&
-      candidate.invocation.procedure === input.procedure &&
-      Number(candidate.invocation.slotLevel) === input.slotLevel,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== input.reactorId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        input.result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === input.spellId &&
+        invocation.procedure === input.procedure &&
+        Number(invocation.slotLevel) === input.slotLevel
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
@@ -1513,7 +1525,7 @@ function triggeredReactionSpellDecision(
     responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
-      invocation: choice.invocation,
+      procedureRef: choice.subject.procedureRef,
       fills,
     },
   };

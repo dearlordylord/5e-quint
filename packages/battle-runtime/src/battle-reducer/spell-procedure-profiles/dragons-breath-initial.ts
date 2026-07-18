@@ -24,7 +24,7 @@ import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -199,7 +199,7 @@ function discoverDragonsBreathInitialCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: DragonsBreathInitialInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []

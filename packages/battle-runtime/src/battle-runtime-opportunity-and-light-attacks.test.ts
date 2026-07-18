@@ -421,6 +421,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(awaitingReaction).toMatchObject({
       holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
     });
+    const damageReductionChoice = reactionModifierChoice(
+      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      "rogue_uncanny_dodge",
+      "attackDamageReduction",
+    );
 
     const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -431,7 +436,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: rogueTargetId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: "rogue_uncanny_dodge",
+            procedureRef: damageReductionChoice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -686,6 +691,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
     ).state;
     const subject = goblinAttackSubject(state, "Shortbow");
+    const mismatchedSubject = goblinAttackSubject(state, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -701,7 +707,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
               kind: "attackTargetInMeleeReach",
               actorId: goblinId,
               targetId: fighterId,
-              attackName: "Scimitar",
+              ...attackExecutionSelectionForSubjectForTest(mismatchedSubject),
             },
           ]),
         ],
@@ -1430,7 +1436,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: cuttingWordsDamageOnly.id,
+            procedureRef: damageChoice.choice.procedureRef,
             modifierKind: "damageRollReduction",
             fills: [
               {
@@ -1530,6 +1536,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (awaitingHitReaction.tag !== "needsHoles") {
       throw new Error("Expected Opportunity Attack hit Reaction window.");
     }
+    const damageReductionChoice = reactionModifierChoice(
+      awaitingHitReaction.snapshot.pendingInterrupt!.choices,
+      "rogue_uncanny_dodge",
+      "attackDamageReduction",
+    );
     const afterUncannyDodge = resolveBattleInterrupt({
       state: awaitingHitReaction.state,
       fill: interruptDecisionFill(
@@ -1539,7 +1550,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: "rogue_uncanny_dodge",
+            procedureRef: damageReductionChoice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -1645,6 +1656,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (awaitingHitReaction.tag !== "needsHoles") {
       throw new Error("Expected Opportunity Attack hit Reaction window.");
     }
+    const damageReductionChoice = reactionModifierChoice(
+      awaitingHitReaction.snapshot.pendingInterrupt!.choices,
+      "rogue_uncanny_dodge",
+      "attackDamageReduction",
+    );
     const afterUncannyDodge = resolveBattleInterrupt({
       state: awaitingHitReaction.state,
       fill: interruptDecisionFill(
@@ -1654,7 +1670,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: "rogue_uncanny_dodge",
+            procedureRef: damageReductionChoice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },

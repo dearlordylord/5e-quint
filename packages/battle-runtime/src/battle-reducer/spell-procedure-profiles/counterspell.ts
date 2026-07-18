@@ -30,7 +30,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   interruptedProcedureSubject,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleInterruptCheckpoint,
   type BattleInterruptCheckpointFrame,
   type BattleResolutionInputForSubject,
@@ -163,7 +163,7 @@ function counterspellSpellProjection(
   };
 }
 
-function discoverCounterspellCastAct(): readonly AvailableBattleAct[] {
+function discoverCounterspellCastAct(): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
 

@@ -170,9 +170,8 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
     if (eligibilityIssue !== undefined) {
       return Either.left({
         tag: "battleDruidWildShapeKnownFormIssue",
-        message: WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES[
-          eligibilityIssue.code
-        ],
+        message:
+          WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES[eligibilityIssue.code],
       });
     }
     const projected = battleDruidWildShapeFormProjectionStatBlock(form);

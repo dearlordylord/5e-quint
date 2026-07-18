@@ -161,7 +161,10 @@ describe("Stat Block execution references", () => {
     expect(wizardSnapshot?.origin).toMatchObject({
       kind: "character",
       execution: {
-        procedureRefs: expect.arrayContaining([magicMissileRef, rayOfFrostRef]),
+        procedureBindings: expect.arrayContaining([
+          expect.objectContaining({ procedureRef: magicMissileRef }),
+          expect.objectContaining({ procedureRef: rayOfFrostRef }),
+        ]),
       },
     });
 

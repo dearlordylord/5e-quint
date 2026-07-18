@@ -21,7 +21,7 @@ import type {
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import type {
-  AvailableBattleAct,
+  BattleActDiscoveryCandidate,
   AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
   AdmittedMonkFocusOptionBattleResolutionInput,
   BattleCreatureState,
@@ -80,7 +80,7 @@ const HEIGHTENED_FOCUS_MONK_LEVEL = 10;
 export function monkFocusActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) return [];
   if (!combatantCanTakeActions(actor)) return [];
@@ -94,11 +94,11 @@ export function monkFocusActs(
 function monkFocusOptionActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (!canSpendBonusAction(state.currentTurnResources)) return [];
   const focus = monkFocusResourceForActor(state, actor.combatantId);
   if (focus === null) return [];
-  const acts: AvailableBattleAct[] = [];
+  const acts: BattleActDiscoveryCandidate[] = [];
   const hasFocusPoint = resourceHasUsesRemaining(focus.resource);
   const unarmedStrike = flurryOfBlowsUnarmedStrikeForActor(
     state,
@@ -189,7 +189,7 @@ function monkFocusOptionActs(
 function monkFocusFlurryOfBlowsStrikeActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const flurryResource = state.currentTurnResources.actionResources.find(
     (resource): resource is MonkFocusFlurryOfBlowsActionResource =>
       isMonkFocusFlurryOfBlowsActionResource(

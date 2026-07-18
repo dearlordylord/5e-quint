@@ -16,7 +16,12 @@
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
 import { Either, Match } from "effect";
-import { Hp, movementFeet, type Condition } from "@dnd/shared/types";
+import {
+  Hp,
+  movementFeet,
+  type Condition,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { HandUse } from "@dnd/shared/types";
 import {
   applyCondition,
@@ -76,7 +81,10 @@ import {
   type CharacterBattleSpellcastingStateInit,
 } from "../character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
-import { characterExecutionFromUnits } from "../character-execution.ts";
+import {
+  characterExecutionFromUnits,
+  characterProcedureBindingSnapshots,
+} from "../character-execution.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -97,6 +105,7 @@ import {
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
   type BattleUnitSupportProfile,
+  type BattleUnitSupportProfileIssue,
   type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
@@ -189,10 +198,16 @@ export function battleCreatureStateAdmissionFromInit(
   battleId: BattleId,
   input: BattleCreatureInit,
   startingScopeOrdinal: BattleExecutionScopeOrdinal,
-): {
-  readonly creature: BattleCreatureState;
-  readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
-} {
+):
+  | {
+      readonly tag: "admitted";
+      readonly creature: BattleCreatureState;
+      readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly issues: ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>;
+    } {
   const creatureInit = input.creatureInit;
   assertCurrentHpWithinMaxHp(creatureInit);
   const zeroHpLifecycle = initialZeroHpLifecycleForCreatureOrigin(creatureInit);
@@ -254,7 +269,27 @@ export function battleCreatureStateAdmissionFromInit(
     assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
       creatureInit.weaponMasteries ?? [],
     );
+    const characterUnits = [
+      ...(creatureInit.resources ?? []).map((resource) => resource.unit),
+      ...(creatureInit.unitFeatures ?? []).map((feature) => feature.unit),
+    ];
+    const execution = characterExecutionFromUnits({
+      battleId,
+      combatantId: input.combatantId,
+      scopeOrdinal: characterScopeOrdinal,
+      unitFeatureProfiles: characterUnits.flatMap((unit) => {
+        const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+        return profile === null ? [] : [profile];
+      }),
+      units: characterUnits,
+      unitRefs: creatureInit.characterUnitRefs,
+      classLevels,
+    });
+    if (Either.isLeft(execution)) {
+      return { tag: "invalid", issues: execution.left };
+    }
     return {
+      tag: "admitted",
       creature: applyInitialZeroHpLifecycle({
         ...base,
         armorClass: creatureInit.armorClass,
@@ -262,21 +297,7 @@ export function battleCreatureStateAdmissionFromInit(
         origin: {
           kind: "character",
           characterId: creatureInit.characterId,
-          execution: characterExecutionFromUnits({
-            battleId,
-            combatantId: input.combatantId,
-            scopeOrdinal: characterScopeOrdinal,
-            units: [
-              ...(creatureInit.resources ?? []).map(
-                (resource) => resource.unit,
-              ),
-              ...(creatureInit.unitFeatures ?? []).map(
-                (feature) => feature.unit,
-              ),
-            ],
-            unitRefs: creatureInit.characterUnitRefs,
-            classLevels,
-          }),
+          execution: execution.right,
           characterUnitRefs: creatureInit.characterUnitRefs,
           classLevels,
           knownLanguages: creatureInit.knownLanguages,
@@ -444,6 +465,7 @@ export function battleCreatureStateAdmissionFromInit(
     throw new Error("A stat block init always admits its one stat block.");
   }
   return {
+    tag: "admitted",
     creature: applyInitialZeroHpLifecycle({
       ...base,
       armorClass: statBlockArmorClassState(
@@ -766,9 +788,7 @@ export function combatantOriginSnapshot(
       characterId: origin.characterId,
       execution: {
         scopeRef: origin.execution.scopeRef,
-        procedureRefs: origin.execution.procedureBindings.map(
-          (binding) => binding.procedureRef,
-        ),
+        procedureBindings: characterProcedureBindingSnapshots(origin.execution),
       },
       attackExecution: {
         scopeRef: battleAttackExecutionScopeRefForProcedureRef(

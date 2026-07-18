@@ -25,7 +25,8 @@ export function wildShapeKnownFormEligibilityIssue(input: {
     return { code: "creatureType" };
   }
   if (
-    input.form.challengeRating > input.profile.knownFormRoster.maxChallengeRating
+    input.form.challengeRating >
+    input.profile.knownFormRoster.maxChallengeRating
   ) {
     return { code: "challengeRating" };
   }

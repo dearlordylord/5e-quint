@@ -17,7 +17,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   MAGIC_WEAPON_ENHANCEMENT_BONUSES,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleMagicWeaponTargetItemFact,
@@ -199,7 +199,7 @@ function discoverMagicWeaponEnhancementCastAct(
   _state: BattleState,
   actorId: CombatantId,
   invocation: MagicWeaponEnhancementInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {

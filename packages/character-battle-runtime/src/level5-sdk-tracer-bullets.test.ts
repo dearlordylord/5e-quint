@@ -8,6 +8,7 @@ import {
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   combatantId,
+  characterProcedureBinding,
   discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
@@ -811,7 +812,7 @@ describe("level 5 SDK tracer bullets", () => {
           responderId: rogueId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            unitId: rogueUncannyDodgeUnitId,
+            procedureRef: choice.choice.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -3301,14 +3302,29 @@ function requireCounterspellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   reactorId: CombatantId,
 ): CounterspellReactionChoice {
+  const reactor = result.state.combatants.get(reactorId);
   const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is CounterspellReactionChoice =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === counterspellSpellId &&
-      candidate.invocation.procedure === "counterspell" &&
-      Number(candidate.invocation.slotLevel) === counterspellCastLevel,
+    (candidate): candidate is CounterspellReactionChoice => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== reactorId ||
+        reactor?.origin.kind !== "character"
+      ) {
+        return false;
+      }
+      const binding = characterProcedureBinding(
+        reactor.origin.execution,
+        candidate.subject.procedureRef,
+      );
+      return (
+        binding?.procedure.kind === "spellInvocation" &&
+        binding.procedure.invocation.procedure === "counterspell" &&
+        binding.procedure.invocation.spell.id === counterspellSpellId &&
+        binding.procedure.invocation.resource.tag === "spellSlot" &&
+        Number(binding.procedure.invocation.resource.slotLevel) ===
+          counterspellCastLevel
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.");
@@ -3320,12 +3336,27 @@ function requireUncannyDodgeAttackDamageChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   reactorId: CombatantId,
 ): ReactionRollOrDamageReductionChoice {
+  const reactor = result.state.combatants.get(reactorId);
   const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is ReactionRollOrDamageReductionChoice =>
-      candidate.kind === "reactionRollOrDamageReduction" &&
-      candidate.reactorId === reactorId &&
-      candidate.choice.kind === "attackDamageReduction" &&
-      candidate.choice.unitId === rogueUncannyDodgeUnitId,
+    (candidate): candidate is ReactionRollOrDamageReductionChoice => {
+      if (
+        candidate.kind !== "reactionRollOrDamageReduction" ||
+        candidate.reactorId !== reactorId ||
+        candidate.choice.kind !== "attackDamageReduction" ||
+        reactor?.origin.kind !== "character"
+      ) {
+        return false;
+      }
+      const binding = characterProcedureBinding(
+        reactor.origin.execution,
+        candidate.choice.procedureRef,
+      );
+      return (
+        (binding?.procedure.kind === "unitFeature" ||
+          binding?.procedure.kind === "unitSupportProfile") &&
+        binding.procedure.unitId === rogueUncannyDodgeUnitId
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected Uncanny Dodge attack-damage Reaction choice.");
@@ -3343,7 +3374,7 @@ function counterspellDecision(
     responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
-      invocation: choice.invocation,
+      procedureRef: choice.subject.procedureRef,
       fills,
     },
   };

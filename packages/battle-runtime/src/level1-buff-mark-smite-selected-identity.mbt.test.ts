@@ -23,7 +23,10 @@
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  characterAttackSubjectForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -1770,7 +1773,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castAttackHitBonusActionSpell",
-              invocation: smiteChoice.invocation,
+              procedureRef: smiteChoice.subject.procedureRef,
               fills: [],
             },
           },
@@ -1817,7 +1820,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castAttackHitBonusActionSpell",
-              invocation: ensnaringChoice.invocation,
+              procedureRef: ensnaringChoice.subject.procedureRef,
               fills: [
                 savingThrowOutcomeFill(save, [{ targetId, succeeded: false }]),
               ],
@@ -2154,7 +2157,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
             responderId: casterId,
             choice: {
               kind: "castAttackHitBonusActionSpell",
-              invocation: searingSmiteChoice.invocation,
+              procedureRef: searingSmiteChoice.subject.procedureRef,
               fills: [],
             },
           },
@@ -2826,8 +2829,11 @@ function weaponAttackSubject(
 
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  attackName: Level1WeaponAttackName,
+  _attackName: Level1WeaponAttackName,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound level-1 weapon attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -2837,7 +2843,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: casterId,
         targetId,
-        attackName,
+        ...hole.attack.selection,
       },
     ],
   };
@@ -3160,10 +3166,20 @@ function attackHitBonusActionSpellChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castAttackHitBonusActionSpell" }
-    > =>
-      candidate.kind === "castAttackHitBonusActionSpell" &&
-      candidate.reactorId === casterId &&
-      candidate.invocation.spellId === spellId,
+    > => {
+      if (
+        candidate.kind !== "castAttackHitBonusActionSpell" ||
+        candidate.reactorId !== casterId
+      )
+        return false;
+      return (
+        characterSpellInvocationRefForProcedureRefForTest(
+          result.state,
+          candidate.reactorId,
+          candidate.subject.procedureRef,
+        ).spellId === spellId
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error(`Expected ${spellId} after-hit Bonus Action Spell choice.`);

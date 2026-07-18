@@ -471,10 +471,6 @@ const StatBlockAttackExecutionSelectionSchema = Schema.Struct({
 });
 
 export const BattleAttackExecutionSelectionSchema = Schema.Union(
-  Schema.Struct({
-    attackName: BattleSubjectTextSchema,
-    procedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
   CharacterAttackExecutionSelectionSchema,
   StatBlockAttackExecutionSelectionSchema,
 );
@@ -824,6 +820,7 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("releaseReadiedSpell"),
     readiedSpellCasterId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -836,14 +833,14 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("castTriggeredReactionSpell"),
     reactorId: CombatantId,
-    invocation: SpellInvocationRefSchema,
+    procedureRef: BattleProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("castAttackHitBonusActionSpell"),
     casterId: CombatantId,
-    invocation: SpellInvocationRefSchema,
+    procedureRef: BattleProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1142,6 +1139,38 @@ export type AdmittedBattleSubject =
   | Exclude<BattleSubject, CharacterProcedureBattleSubject>
   | AdmittedCharacterProcedureBattleSubject;
 
+function isAdmittedBattleSubject(
+  subject: BattleSubject,
+): subject is AdmittedBattleSubject {
+  return (
+    !isCharacterProcedureBattleSubject(subject) ||
+    subject.procedureRef !== undefined
+  );
+}
+
+export function isCharacterProcedureBattleSubject(
+  subject: BattleSubject,
+): subject is CharacterProcedureBattleSubject {
+  return (
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "findFamiliarTouchSpell" ||
+    subject.tag === "unitFeature" ||
+    subject.tag === "unitFeatureHeldWeaponActivation" ||
+    subject.tag === "druidWildShape" ||
+    subject.tag === "bonusActionStandardAction" ||
+    subject.tag === "monkFocusOption"
+  );
+}
+
+export const AdmittedBattleSubjectSchema = BattleSubjectSchema.pipe(
+  Schema.filter(isAdmittedBattleSubject, {
+    message: () =>
+      "Character procedure Battle subjects require a bound procedure reference.",
+  }),
+);
+
 export type ActionHideSubject = {
   readonly tag: "action";
   readonly actorId: CombatantId;
@@ -1186,21 +1215,6 @@ export function sameAdmittedBattleSubject(
   right: AdmittedBattleSubject,
 ): boolean {
   return battleSubjectKey(left, true) === battleSubjectKey(right, true);
-}
-
-export function sameBattleExecutionSubject(
-  left: BattleSubject,
-  right: BattleSubject,
-): boolean {
-  const bothCarryProcedureRefs =
-    "procedureRef" in left &&
-    left.procedureRef !== undefined &&
-    "procedureRef" in right &&
-    right.procedureRef !== undefined;
-  return (
-    battleSubjectKey(left, bothCarryProcedureRefs) ===
-    battleSubjectKey(right, bothCarryProcedureRefs)
-  );
 }
 
 function spellInvocationRefKey(ref: SpellInvocationRef): readonly unknown[] {
@@ -1496,10 +1510,6 @@ function battleSubjectKey(
           : null,
         "targetId" in command ? command.targetId : null,
         "reactorId" in command ? command.reactorId : null,
-        "invocation" in command
-          ? spellInvocationRefKey(command.invocation)
-          : null,
-        "attackName" in command ? command.attackName : null,
         "procedureRef" in command ? command.procedureRef : null,
         "attackAbility" in command ? (command.attackAbility ?? null) : null,
         "attackDamageType" in command

@@ -43,6 +43,7 @@ import {
 import {
   attackInitialTargetHole,
   attackExecutionSelectionForSubjectForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
   attackRollFill,
   attackRollHoleAfterTarget,
   damageRollFill,
@@ -297,6 +298,12 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   const releaseChoice = reactionChoiceWithSubject(
     awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
   );
+  if (
+    releaseChoice.subject.tag !== "runtimeCommand" ||
+    releaseChoice.subject.command !== "releaseReadiedSpell"
+  ) {
+    throw new Error("Expected a readied-spell release subject.");
+  }
   const released = resolveBattleInterrupt({
     state: awaitingAttackReaction.state,
     fill: interruptDecisionFill(
@@ -307,6 +314,7 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
         choice: {
           kind: "releaseReadiedSpell",
           readiedSpellCasterId: wizardId,
+          procedureRef: releaseChoice.subject.procedureRef,
           fills: [],
         },
       },
@@ -403,7 +411,7 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
         responderId: shieldCasterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          invocation: choice.invocation,
+          procedureRef: choice.subject.procedureRef,
           fills: [],
         },
       },
@@ -643,12 +651,23 @@ function requireShieldReactionChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === shieldCasterId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === shieldUnitId &&
-      candidate.invocation.procedure === "shieldReaction",
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== shieldCasterId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === shieldUnitId &&
+        invocation.procedure === "shieldReaction"
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected Shield Reaction choice.");

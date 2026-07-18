@@ -48,7 +48,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -408,7 +408,7 @@ function discoverSpellCreatedHeldObjectCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpellCreatedHeldObjectInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
   }
@@ -431,7 +431,7 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpellCreatedHeldObjectAttackInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []
@@ -454,7 +454,7 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpellCreatedHeldObjectReEvokeInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
   }

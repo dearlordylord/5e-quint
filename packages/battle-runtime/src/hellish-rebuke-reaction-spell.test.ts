@@ -29,7 +29,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
   type AvailableBattleAct,
@@ -43,6 +42,10 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import {
+  characterSpellInvocationRefForProcedureRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -102,7 +105,7 @@ describe("Hellish Rebuke Reaction spell", () => {
           responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: damagerId, succeeded: false },
@@ -164,7 +167,7 @@ describe("Hellish Rebuke Reaction spell", () => {
           responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: damagerId, succeeded: true },
@@ -367,27 +370,41 @@ describe("Hellish Rebuke Reaction spell", () => {
       ],
     });
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) =>
-        candidate.kind === "castTriggeredReactionSpell" &&
-        candidate.reactorId === spellCasterId &&
-        candidate.invocation.tag === "spellSlot" &&
-        candidate.invocation.slotLevel === 2,
+      (candidate) => {
+        if (
+          candidate.kind !== "castTriggeredReactionSpell" ||
+          candidate.reactorId !== spellCasterId
+        )
+          return false;
+        const invocation = characterSpellInvocationRefForProcedureRefForTest(
+          awaitingReaction.state,
+          candidate.reactorId,
+          candidate.subject.procedureRef,
+        );
+        return invocation.tag === "spellSlot" && invocation.slotLevel === 2;
+      },
     );
     expect(choice).toMatchObject({
       kind: "castTriggeredReactionSpell",
       reactorId: spellCasterId,
-      invocation: {
-        tag: "spellSlot",
-        spellId: hellishRebukeUnitId,
-        procedure: "saveGatedDamage",
-        slotLevel: 2,
-      },
       subject: {
         tag: "runtimeCommand",
         command: "castTriggeredReactionSpell",
         reactorId: spellCasterId,
       },
     });
+    if (choice?.kind !== "castTriggeredReactionSpell") {
+      throw new Error("Expected Hellish Rebuke Reaction choice.");
+    }
+    expect(
+      characterSpellInvocationRefForProcedureRefForTest(
+        awaitingReaction.state,
+        choice.reactorId,
+        choice.subject.procedureRef,
+      ),
+    ).toEqual(
+      spellSlotInvocationRef(hellishRebukeUnitId, 2, "saveGatedDamage"),
+    );
   });
 
   test("opens an after-damage Reaction window for the damage caused by Hellish Rebuke and resumes after decline", () => {
@@ -426,7 +443,7 @@ describe("Hellish Rebuke Reaction spell", () => {
           responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: choice.invocation,
+            procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
                 { targetId: damagerId, succeeded: false },
@@ -444,18 +461,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (afterHellishRebukeDamage.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke damage Reaction window.");
     }
-    expect(afterHellishRebukeDamage.snapshot.pendingInterrupt?.choices).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          kind: "castTriggeredReactionSpell",
-          reactorId: damagerId,
-          invocation: expect.objectContaining({
-            spellId: hellishRebukeUnitId,
-            procedure: "saveGatedDamage",
-          }),
-        }),
-      ]),
-    );
+    expectHellishRebukeChoice(afterHellishRebukeDamage, damagerId);
 
     const resumed = resolveBattleInterrupt({
       state: afterHellishRebukeDamage.state,
@@ -564,18 +570,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (result.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage to offer Hellish Rebuke.");
     }
-    expect(result.snapshot.pendingInterrupt?.choices).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          kind: "castTriggeredReactionSpell",
-          reactorId: spellCasterId,
-          invocation: expect.objectContaining({
-            spellId: hellishRebukeUnitId,
-            procedure: "saveGatedDamage",
-          }),
-        }),
-      ]),
-    );
+    expectHellishRebukeChoice(result, spellCasterId);
   });
 });
 
@@ -782,6 +777,9 @@ function attackTargetFill(input: {
     | undefined;
   readonly includeReciprocalHellishRebukeTriggerFact: boolean;
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (input.hole.attack === undefined) {
+    throw new Error("Expected bound Hellish Rebuke trigger attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: input.hole.holeId,
@@ -791,9 +789,7 @@ function attackTargetFill(input: {
         kind: "attackTargetInMeleeReach",
         actorId: damagerId,
         targetId: spellCasterId,
-        ...(input.hole.attack?.selection ?? {
-          attackName: "Unarmed Strike",
-        }),
+        ...input.hole.attack.selection,
       },
       ...(input.includeHellishRebukeTriggerFact
         ? [
@@ -848,6 +844,33 @@ function requireTopInterruptCheckpoint(
   return frame.frame;
 }
 
+function expectHellishRebukeChoice(
+  result: Extract<
+    ReturnType<typeof resolveBattleSubject>,
+    { readonly tag: "needsHoles" }
+  >,
+  reactorId: CombatantId,
+): void {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (candidate) =>
+      candidate.kind === "castTriggeredReactionSpell" &&
+      candidate.reactorId === reactorId,
+  );
+  if (choice?.kind !== "castTriggeredReactionSpell") {
+    throw new Error("Expected Hellish Rebuke Reaction spell choice.");
+  }
+  expect(
+    characterSpellInvocationRefForProcedureRefForTest(
+      result.state,
+      choice.reactorId,
+      choice.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    spellId: hellishRebukeUnitId,
+    procedure: "saveGatedDamage",
+  });
+}
+
 function requireHellishRebukeChoice(
   result: Extract<
     ReturnType<typeof resolveBattleSubject>,
@@ -864,13 +887,24 @@ function requireHellishRebukeChoice(
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === hellishRebukeUnitId &&
-      candidate.invocation.procedure === "saveGatedDamage" &&
-      candidate.invocation.slotLevel === 2,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== reactorId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === hellishRebukeUnitId &&
+        invocation.procedure === "saveGatedDamage" &&
+        invocation.slotLevel === 2
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error("Expected Hellish Rebuke level 2 Reaction choice.");

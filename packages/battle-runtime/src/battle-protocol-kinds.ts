@@ -353,10 +353,7 @@ function runtimeCommandSubjectKind(
         "insectPlagueAreaHazardSave",
         () => "runtimeSavingThrow" as const,
       ),
-      byCommand(
-        "cloudkillAreaHazardSave",
-        () => "runtimeSavingThrow" as const,
-      ),
+      byCommand("cloudkillAreaHazardSave", () => "runtimeSavingThrow" as const),
       byCommand(
         "webRestrainedNoLongerInArea",
         () => "runtimeEffectCleanup" as const,

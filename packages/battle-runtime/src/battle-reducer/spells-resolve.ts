@@ -160,7 +160,6 @@ import {
 } from "./spell-turn-resources.ts";
 import {
   spellAttackKindForRedirect,
-  supportedSpellActs,
 } from "./spells-profiles.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
@@ -679,7 +678,7 @@ function resolveSpellActInternal(
   const actor = input.state.combatants.get(subject.actorId);
   let invocation =
     actor?.origin.kind === "character"
-      ? supportedActionSpellInvocationForSubject(actor, input.state, subject)
+      ? supportedActionSpellInvocationForSubject(actor, subject)
       : undefined;
   if (
     actor?.origin.kind === "character" &&
@@ -691,7 +690,6 @@ function resolveSpellActInternal(
   ) {
     invocation = supportedActionSpellInvocationForSubject(
       actor,
-      input.state,
       subject,
     );
   }
@@ -2913,14 +2911,12 @@ export function resolveBonusActionSpellAct(
     actor?.origin.kind === "character"
       ? supportedBonusActionSpellInvocationForSubject(
           actor,
-          input.state,
           subject,
         )
       : undefined;
   if (actor?.origin.kind === "character" && invocation == null) {
     invocation = antimagicSuppressedInvocationForStaleSubject(
       actor,
-      input.state,
       subject,
     );
   }
@@ -3228,7 +3224,6 @@ export function resolveBonusActionSpellAttackProxyAct(
 
 function supportedActionSpellInvocationForSubject(
   actor: BattleCreatureState,
-  state: BattleState,
   subject: ActionSpellBattleResolutionInput["subject"],
 ): SupportedSpellInvocation | undefined {
   if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
@@ -3237,7 +3232,6 @@ function supportedActionSpellInvocationForSubject(
   const invocation = characterSpellProcedure(
     actor.origin.execution,
     subject.procedureRef,
-    supportedSpellActs(actor, state),
   );
   if (invocation === undefined) return undefined;
   return invocation.procedure !== "spellHostedWeaponAttack" ||
@@ -3249,7 +3243,6 @@ function supportedActionSpellInvocationForSubject(
 
 function supportedBonusActionSpellInvocationForSubject(
   actor: BattleCreatureState,
-  state: BattleState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
 ): SupportedSpellInvocation | undefined {
   if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
@@ -3258,7 +3251,6 @@ function supportedBonusActionSpellInvocationForSubject(
   const invocation = characterSpellProcedure(
     actor.origin.execution,
     subject.procedureRef,
-    supportedSpellActs(actor, state),
   );
   if (invocation === undefined) return undefined;
   return invocation.procedure !== "weaponAttackOverride" ||
@@ -3270,7 +3262,6 @@ function supportedBonusActionSpellInvocationForSubject(
 
 function antimagicSuppressedInvocationForStaleSubject(
   actor: BattleCreatureState,
-  state: BattleState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
 ): SupportedSpellInvocation | undefined {
   if (
@@ -3280,7 +3271,7 @@ function antimagicSuppressedInvocationForStaleSubject(
   ) {
     return undefined;
   }
-  return supportedBonusActionSpellInvocationForSubject(actor, state, subject);
+  return supportedBonusActionSpellInvocationForSubject(actor, subject);
 }
 
 function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
@@ -3302,7 +3293,6 @@ export function resolveBonusActionDashSpellAct(
       ? characterSpellProcedure(
           actor.origin.execution,
           subject.procedureRef,
-          supportedSpellActs(actor, input.state),
         )
       : undefined;
   if (

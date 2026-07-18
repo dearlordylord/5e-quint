@@ -208,7 +208,10 @@ import type {
   BattleUnitFeatureDecisionHole,
   AttackFillSet,
 } from "../battle-reducer.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import type {
+  BoundSupportedAttackActionOption,
+  SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import { battleTablePositionId, type CombatantId } from "../identity.ts";
 import {
   attackRollHitsWithCriticalThreshold,
@@ -692,7 +695,7 @@ function grapplerPunchAndGrabFillIsAbsent(
 
 export function resolveSelectedAttackProcedure(
   input: AttackProcedureResolutionInput,
-  selectedAttack: SupportedAttackActionOption,
+  selectedAttack: BoundSupportedAttackActionOption,
   spendAttackProcedure: SpendAttackProcedure,
 ): BattleResolutionResult {
   let attack = selectedAttack;

@@ -15,7 +15,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import type {
   ActionSpellBattleResolutionInput,
-  AvailableBattleAct,
+  BattleActDiscoveryCandidate,
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
   BattleResolutionResult,
@@ -240,7 +240,7 @@ export type SpellProcedureProfile<
     state: BattleState,
     actorId: CombatantId,
     invocation: I,
-  ) => readonly AvailableBattleAct[];
+  ) => readonly BattleActDiscoveryCandidate[];
 
   // Discovery: short human-readable label for the cast act.
   readonly castSummary: (invocation: I) => string;

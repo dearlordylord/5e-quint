@@ -22,7 +22,7 @@ import {
   activeOngoingFeaturesPreventSpellInvocation,
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionDashSpellBattleResolutionInput,
@@ -147,7 +147,7 @@ function discoverExpeditiousRetreatDashCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: ExpeditiousRetreatDashInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];

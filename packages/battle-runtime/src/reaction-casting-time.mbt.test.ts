@@ -31,6 +31,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -60,7 +61,6 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
-  spellSlotInvocationRef,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   startBattle,
   type AvailableBattleAct,
@@ -357,7 +357,7 @@ function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
   const damage = requireHole(resumed.holes, "rolledDice");
   const resolved = finishMagicMissile({
     state: resumed.state,
-    slotLevel: magicMissileFourthSlotLevel,
+    subject: resumed.subject,
     targetAllocationFill: awaitingReaction.targetAllocationFill,
     damage,
     dartCount: fourthLevelMagicMissileDartCount,
@@ -637,7 +637,7 @@ function startMagicMissileWithCounterspell(input: {
   readonly slotLevel: number;
   readonly dartCount: number;
 }): StartedMagicMissile {
-  const subject = magicMissileSubject(input.slotLevel);
+  const subject = magicMissileSubject(input.state, input.slotLevel);
   const targetAllocationResult = resolveBattleSubject({
     state: input.state,
     subject,
@@ -675,7 +675,7 @@ function startMagicMissileWithCounterspell(input: {
 
 function finishMagicMissile(input: {
   readonly state: BattleState;
-  readonly slotLevel: number;
+  readonly subject: BattleSubject;
   readonly targetAllocationFill: Extract<
     BattleFill,
     { readonly kind: "spellTargetAllocation" }
@@ -685,7 +685,7 @@ function finishMagicMissile(input: {
 }): ReturnType<typeof resolveBattleSubject> {
   return resolveBattleSubject({
     state: input.state,
-    subject: magicMissileSubject(input.slotLevel),
+    subject: input.subject,
     fills: [
       input.targetAllocationFill,
       damageRollFillWithGroups(input.damage, [
@@ -716,6 +716,11 @@ function resolveUnarmedStrikeAgainstReactor(
     throw new Error("Expected Unarmed Strike attack act.");
   }
   const target = requireHole(attackAct.initialHoles, "targetChoice");
+  if (target.attack === undefined) {
+    throw new Error(
+      "Expected bound reaction-casting trigger attack selection.",
+    );
+  }
   const targetFill = {
     kind: "targetChoice" as const,
     holeId: target.holeId,
@@ -725,7 +730,7 @@ function resolveUnarmedStrikeAgainstReactor(
         kind: "attackTargetInMeleeReach" as const,
         actorId: triggerCreatureId,
         targetId: reactorId,
-        attackName: "Unarmed Strike",
+        ...target.attack.selection,
       },
       {
         kind: "reactionSpellDamagerVisibleWithinRange" as const,
@@ -763,17 +768,23 @@ function resolveUnarmedStrikeAgainstReactor(
   return result;
 }
 
-function magicMissileSubject(slotLevel: number): BattleSubject {
-  return {
-    tag: "actionSpell",
-    actorId: triggerCreatureId,
-    invocation: spellSlotInvocationRef(
-      magicMissileUnitId,
-      slotLevel,
-      "repeatedDamageAllocation",
-    ),
-    mode: { tag: "cast" },
-  };
+function magicMissileSubject(
+  state: BattleState,
+  slotLevel: number,
+): BattleSubject {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === triggerCreatureId &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === magicMissileUnitId &&
+      candidate.subject.invocation.slotLevel === slotLevel &&
+      candidate.subject.invocation.procedure === "repeatedDamageAllocation",
+  );
+  if (act === undefined) {
+    throw new Error("Expected bound Magic Missile action spell.");
+  }
+  return act.subject;
 }
 
 function magicMissileTargetAllocationFill(input: {
@@ -859,13 +870,25 @@ function requireTriggeredReactionSpellChoice(input: {
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === reactorId &&
-      candidate.invocation.tag === "spellSlot" &&
-      candidate.invocation.spellId === input.spellId &&
-      candidate.invocation.procedure === input.procedure &&
-      Number(candidate.invocation.slotLevel) === input.slotLevel,
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== reactorId
+      ) {
+        return false;
+      }
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        input.result.state,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === input.spellId &&
+        invocation.procedure === input.procedure &&
+        Number(invocation.slotLevel) === input.slotLevel
+      );
+    },
   );
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction choice.`);
@@ -895,7 +918,7 @@ function triggeredReactionSpellDecision(
     responderId: reactor,
     choice: {
       kind: "castTriggeredReactionSpell",
-      invocation: choice.invocation,
+      procedureRef: choice.subject.procedureRef,
       fills,
     },
   };

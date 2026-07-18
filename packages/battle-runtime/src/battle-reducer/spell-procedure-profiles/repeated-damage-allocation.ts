@@ -24,7 +24,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -139,7 +139,7 @@ function discoverRepeatedDamageAllocationCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: RepeatedDamageAllocationInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetAllocationHole = spellTargetAllocationHole(
     state,
     actorId,

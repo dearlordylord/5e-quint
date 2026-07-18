@@ -8,6 +8,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import {
   aidUnitId,
   barkskinUnitId,
@@ -1071,14 +1072,23 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     if (fallWitness.reaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall Reaction window.");
     }
+    const reactionState = fallWitness.reaction.state;
 
     const featherFallChoice =
       fallWitness.reaction.snapshot.pendingInterrupt?.choices.find(
-        (candidate) =>
-          candidate.kind === "castTriggeredReactionSpell" &&
-          candidate.invocation.tag === "spellSlot" &&
-          candidate.invocation.spellId === featherFallUnitId &&
-          candidate.invocation.procedure === "featherFallMitigation",
+        (candidate) => {
+          if (candidate.kind !== "castTriggeredReactionSpell") return false;
+          const invocation = characterSpellInvocationRefForProcedureRefForTest(
+            reactionState,
+            candidate.reactorId,
+            candidate.subject.procedureRef,
+          );
+          return (
+            invocation.tag === "spellSlot" &&
+            invocation.spellId === featherFallUnitId &&
+            invocation.procedure === "featherFallMitigation"
+          );
+        },
       );
     if (
       featherFallChoice === undefined ||
@@ -1099,7 +1109,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
           responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
-            invocation: featherFallChoice.invocation,
+            procedureRef: featherFallChoice.subject.procedureRef,
             fills: [
               featherFallTargetListFill(targetList, spellCasterId, [
                 spellCasterId,

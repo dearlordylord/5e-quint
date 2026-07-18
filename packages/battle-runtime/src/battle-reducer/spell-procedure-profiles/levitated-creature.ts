@@ -17,7 +17,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleResolutionResult,
   type BattleState,
@@ -182,7 +182,7 @@ function discoverLevitatedCreatureCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: LevitatedCreatureInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
     targetHole.choices.length === 0

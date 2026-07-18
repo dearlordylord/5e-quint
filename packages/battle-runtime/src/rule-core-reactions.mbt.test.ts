@@ -580,6 +580,9 @@ function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound rule-core reaction attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -589,7 +592,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: interruptedId,
         targetId,
-        attackName: ruleCoreReactionAttackName,
+        ...hole.attack.selection,
       },
     ],
   };

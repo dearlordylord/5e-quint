@@ -181,7 +181,6 @@ const attackerId = combatantId("sanctuary-selected-identity-attacker");
 const replacementId = combatantId("sanctuary-selected-identity-replacement");
 const partySide = battleCombatantSide("party");
 const enemySide = battleCombatantSide("enemy");
-const unarmedStrikeAttackName = "Unarmed Strike";
 const initialWardedHp = 12;
 const damageDealtByWardedCreature = 1;
 
@@ -482,10 +481,8 @@ function observeDirectAttackLostRoute(): SanctuaryRouteProjection {
     castSanctuary(battleWithSanctuary(), wardedId),
   );
   const attack = attackAct(warded, wardedId);
-  const targetFill = attackTargetFill(
-    requireHole(attack.initialHoles, "targetChoice"),
-    wardedId,
-  );
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = attackTargetFill(targetHole, wardedId);
   const needsSanctuary = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -554,10 +551,8 @@ function observeLegalReplacementTargetRoute(): SanctuaryRouteProjection {
     castSanctuary(battleWithSanctuary(), wardedId),
   );
   const attack = attackAct(warded, wardedId);
-  const targetFill = attackTargetFill(
-    requireHole(attack.initialHoles, "targetChoice"),
-    wardedId,
-  );
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = attackTargetFill(targetHole, wardedId);
   const needsSanctuary = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -577,7 +572,7 @@ function observeLegalReplacementTargetRoute(): SanctuaryRouteProjection {
           outcome: {
             kind: "newTarget",
             targetId: replacementId,
-            spatialFacts: [attackTargetFact(replacementId)],
+            spatialFacts: [attackTargetFact(targetHole, replacementId)],
           },
         }),
       ],
@@ -598,10 +593,8 @@ function observeIllegalReplacementTargetRoute(): SanctuaryRouteProjection {
     castSanctuary(battleWithSanctuary(), wardedId),
   );
   const attack = attackAct(warded, wardedId);
-  const targetFill = attackTargetFill(
-    requireHole(attack.initialHoles, "targetChoice"),
-    wardedId,
-  );
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = attackTargetFill(targetHole, wardedId);
   const needsSanctuary = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -620,7 +613,7 @@ function observeIllegalReplacementTargetRoute(): SanctuaryRouteProjection {
         outcome: {
           kind: "newTarget",
           targetId: attackerId,
-          spatialFacts: [attackTargetFact(attackerId)],
+          spatialFacts: [attackTargetFact(targetHole, attackerId)],
         },
       }),
     ],
@@ -741,7 +734,9 @@ function observeDamageEarlyEndRoute(): SanctuaryRouteProjection {
     wardedFlamingSphereRamState(),
   );
   if (sanctuaryWard(afterDamage.state, attackerId) !== undefined) {
-    throw new Error("Expected damage dealt by warded creature to end Sanctuary.");
+    throw new Error(
+      "Expected damage dealt by warded creature to end Sanctuary.",
+    );
   }
   return routeProjection("wardedDamageEarlyEnd", [
     battleReducerStartRouteEvent(),
@@ -843,10 +838,8 @@ function projectDirectAttackLost(): SanctuarySelectedIdentityProjection {
     castSanctuary(battleWithSanctuary(), wardedId),
   );
   const attack = attackAct(warded, wardedId);
-  const targetFill = attackTargetFill(
-    requireHole(attack.initialHoles, "targetChoice"),
-    wardedId,
-  );
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = attackTargetFill(targetHole, wardedId);
   const needsSanctuary = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -926,10 +919,8 @@ function projectLegalReplacementTarget(): SanctuarySelectedIdentityProjection {
     castSanctuary(battleWithSanctuary(), wardedId),
   );
   const attack = attackAct(warded, wardedId);
-  const targetFill = attackTargetFill(
-    requireHole(attack.initialHoles, "targetChoice"),
-    wardedId,
-  );
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = attackTargetFill(targetHole, wardedId);
   const needsSanctuary = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -949,7 +940,7 @@ function projectLegalReplacementTarget(): SanctuarySelectedIdentityProjection {
           outcome: {
             kind: "newTarget",
             targetId: replacementId,
-            spatialFacts: [attackTargetFact(replacementId)],
+            spatialFacts: [attackTargetFact(targetHole, replacementId)],
           },
         }),
       ],
@@ -974,10 +965,8 @@ function projectIllegalReplacementTarget(): SanctuarySelectedIdentityProjection 
     castSanctuary(battleWithSanctuary(), wardedId),
   );
   const attack = attackAct(warded, wardedId);
-  const targetFill = attackTargetFill(
-    requireHole(attack.initialHoles, "targetChoice"),
-    wardedId,
-  );
+  const targetHole = requireHole(attack.initialHoles, "targetChoice");
+  const targetFill = attackTargetFill(targetHole, wardedId);
   const needsSanctuary = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -996,7 +985,7 @@ function projectIllegalReplacementTarget(): SanctuarySelectedIdentityProjection 
         outcome: {
           kind: "newTarget",
           targetId: attackerId,
-          spatialFacts: [attackTargetFact(attackerId)],
+          spatialFacts: [attackTargetFact(targetHole, attackerId)],
         },
       }),
     ],
@@ -1222,9 +1211,7 @@ function characterCreature(
       kind: "character",
       characterId: characterId(`${combatantIdValue}-character`),
       characterUnitRefs: [],
-      classLevels: [
-        { className, level: highestSpellSlotLevel >= 2 ? 3 : 1 },
-      ],
+      classLevels: [{ className, level: highestSpellSlotLevel >= 2 ? 3 : 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
@@ -1326,9 +1313,7 @@ function castFlamingSphereAsAttacker(state: BattleState): BattleState {
       state,
       subject: act.subject,
       fills: [
-        flamingSphereAreaFill(
-          requireHole(act.initialHoles, "spellAreaChoice"),
-        ),
+        flamingSphereAreaFill(requireHole(act.initialHoles, "spellAreaChoice")),
       ],
     }),
   );
@@ -1430,7 +1415,7 @@ function attackTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
-    spatialFacts: [attackTargetFact(targetId)],
+    spatialFacts: [attackTargetFact(hole, targetId)],
   };
 }
 
@@ -1450,12 +1435,18 @@ function spellTargetFill(
   };
 }
 
-function attackTargetFact(targetId: CombatantId) {
+function attackTargetFact(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+) {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound Sanctuary attack selection.");
+  }
   return {
     kind: "attackTargetInMeleeReach" as const,
     actorId: attackerId,
     targetId,
-    attackName: unarmedStrikeAttackName,
+    ...hole.attack.selection,
   };
 }
 

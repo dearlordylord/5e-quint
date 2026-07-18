@@ -42,7 +42,7 @@ import type {
 import { Either } from "effect";
 
 import {
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
@@ -410,7 +410,7 @@ function discoverSpiritualWeaponAttackProxyCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpiritualWeaponAttackProxyInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []
@@ -436,7 +436,7 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: SpiritualWeaponRepeatAttackInvocation,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []

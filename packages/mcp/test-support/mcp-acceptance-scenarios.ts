@@ -795,6 +795,11 @@ export async function verifyWidthVertical(client: Client) {
     "End Turn",
   ]);
   const flailSubject = attackSubjectFromActs(fighterActs, "fighter", "Flail");
+  const actionSurgeSubject = actionSubjectFromActs(
+    fighterActs,
+    "fighter",
+    "Action Surge",
+  );
 
   await callTool(client, "fill_battle_hole", {
     subject: flailSubject,
@@ -813,11 +818,7 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(combatantHp(afterBludgeoning, "skeleton-a"), 5);
 
   await callTool(client, "resolve_battle_act", {
-    subject: {
-      tag: "unitFeature",
-      actorId: "fighter",
-      unitId: "fighter_action_surge",
-    },
+    subject: actionSurgeSubject,
   });
   await callTool(client, "fill_battle_hole", {
     subject: flailSubject,
@@ -840,17 +841,27 @@ export async function verifyWidthVertical(client: Client) {
   const wizardActs = await callTool(client, "discover_battle_acts", {});
   assert.ok(actionLabels(wizardActs).includes("Magic Missile"));
   assert.ok(actionLabels(wizardActs).includes("Ray of Frost"));
+  const rayOfFrostSubject = actionSubjectFromActs(
+    wizardActs,
+    "wizard",
+    "Ray of Frost",
+  );
+  const magicMissileSubject = actionSubjectFromActs(
+    wizardActs,
+    "wizard",
+    "Magic Missile",
+  );
 
   await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "ray_of_frost"),
+    subject: rayOfFrostSubject,
     fill: targetFill("skeleton-b"),
   });
   await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "ray_of_frost"),
+    subject: rayOfFrostSubject,
     fill: attackRollFill(18, 15),
   });
   const afterRayDamage = await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "ray_of_frost"),
+    subject: rayOfFrostSubject,
     fill: rolledDiceFill("battle:spell:damage-result:ray_of_frost:1d8-cold", [
       [4],
     ]),
@@ -918,7 +929,7 @@ export async function verifyWidthVertical(client: Client) {
   );
 
   await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "magic_missile"),
+    subject: magicMissileSubject,
     fill: {
       kind: "spellTargetAllocation",
       holeId: "battle:spell:target-allocation:magic_missile",
@@ -934,7 +945,7 @@ export async function verifyWidthVertical(client: Client) {
     },
   });
   const afterMagicMissile = await callTool(client, "fill_battle_hole", {
-    subject: magicSubject("wizard", "magic_missile"),
+    subject: magicMissileSubject,
     fill: rolledDiceFill(
       "battle:spell:damage-result:magic_missile:3d4+3-force",
       [[2, 2, 2]],
@@ -1041,12 +1052,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
   assert.ok(scorchingRayAct, "Missing Scorching Ray act");
   const targetHoles = initialHolesOfKind(scorchingRayAct, "targetChoice");
   assert.equal(targetHoles.length, 3);
-  const scorchingRaySubject = spellSlotSubject(
-    "wizard-level-3",
-    "scorching_ray",
-    2,
-    "spellAttackSequence",
-  );
+  const scorchingRaySubject = scorchingRayAct.subject;
 
   let pendingScorchingRay = wizardActs;
   for (const hole of targetHoles) {
@@ -3432,6 +3438,27 @@ function attackSubjectFromActs(
   return act.subject;
 }
 
+function actionSubjectFromActs(
+  payload: JsonObject,
+  actorId: string,
+  label: string,
+): JsonObject {
+  const matchingActs = jsonObjectArrayAt(payload, "snapshot.acts").filter(
+    (candidate) =>
+      candidate.label === label &&
+      isJsonObject(candidate.subject) &&
+      candidate.subject.actorId === actorId,
+  );
+  assert.equal(
+    matchingActs.length,
+    1,
+    `Expected exactly one ${actorId} ${label} act.`,
+  );
+  const act = matchingActs[0];
+  assert.ok(act && isJsonObject(act.subject));
+  return act.subject;
+}
+
 function attackTargetFill(subject: JsonObject, value: string) {
   assert.equal(typeof subject.actorId, "string");
   assert.equal(typeof subject.procedureRef, "string");
@@ -3471,40 +3498,6 @@ function statBlockCombatant(
     initiative,
     side: "opposition",
     admissionSource: { kind: "encounterParticipant" },
-  };
-}
-
-function magicSubject(actorId: string, spellId: string) {
-  if (spellId === "magic_missile") {
-    return spellSlotSubject(actorId, spellId, 1, "repeatedDamageAllocation");
-  }
-  return {
-    tag: "actionSpell",
-    actorId,
-    invocation: { tag: "cantrip", spellId, procedure: "spellAttackDamage" },
-    mode: { tag: "cast" },
-  };
-}
-
-function spellSlotSubject(
-  actorId: string,
-  spellId: string,
-  slotLevel: number,
-  procedure:
-    | "repeatedDamageAllocation"
-    | "spellAttackDamage"
-    | "spellAttackSequence",
-) {
-  return {
-    tag: "actionSpell",
-    actorId,
-    invocation: {
-      tag: "spellSlot",
-      spellId,
-      slotLevel,
-      procedure,
-    },
-    mode: { tag: "cast" },
   };
 }
 

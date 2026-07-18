@@ -1,7 +1,4 @@
-import type {
-  CharacterProcedureBattleSubject,
-  SpellInvocationRef,
-} from "./battle-subjects.ts";
+import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import type { CharacterBattleCreatureState } from "./battle-reducer.ts";
 import {
   BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
@@ -125,7 +122,7 @@ function admitSpellSelection(
   return invocation === undefined
     ? characterSpellProcedureRefForInvocationRef(
         actor.origin.execution,
-        subject.invocation as SpellInvocationRef,
+        subject.invocation,
       )
     : characterSpellProcedureRef(actor.origin.execution, invocation);
 }

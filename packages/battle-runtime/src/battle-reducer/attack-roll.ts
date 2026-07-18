@@ -944,15 +944,17 @@ export function tacticalMasterReplacementDecisionHole(
       };
 }
 
-export function tacticalMasterAttackWithReplacement(input: {
+export function tacticalMasterAttackWithReplacement<
+  TAttack extends SupportedAttackActionOption,
+>(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: TAttack;
   readonly decision:
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
     | undefined;
 }):
-  | { readonly tag: "ok"; readonly attack: SupportedAttackActionOption }
+  | { readonly tag: "ok"; readonly attack: TAttack }
   | { readonly tag: "invalid"; readonly message: string } {
   const selection = tacticalMasterReplacementSelection(
     input.state,
@@ -1662,10 +1664,12 @@ function tacticalMasterReplacementSelection(
       };
 }
 
-function weaponAttackWithMasteryProperty(
-  attack: SupportedAttackActionOption,
+function weaponAttackWithMasteryProperty<
+  TAttack extends SupportedAttackActionOption,
+>(
+  attack: TAttack,
   property: TacticalMasterReplacementMasteryProperty,
-): SupportedAttackActionOption {
+): TAttack {
   return attack.kind !== "weapon"
     ? attack
     : {

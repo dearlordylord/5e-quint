@@ -103,7 +103,10 @@ type AttackHitDamageReplayFrame = Extract<
 > & {
   readonly continuation: Extract<
     BattleInterruptedProcedure,
-    { readonly kind: "replay" }
+    {
+      readonly kind: "replay";
+      readonly glyphStoredSpellReleaseReplay?: never;
+    }
   >;
 };
 type AfterHitDamageBattleResolutionInput =
@@ -299,7 +302,7 @@ function resolveAfterHitDamage(
       "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
     );
   }
-
+  const attackContinuation = input.input.frame.continuation;
   const spellCastFrame = spellCastInterruptFrame({
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
@@ -366,9 +369,9 @@ function resolveAfterHitDamage(
   const nextFrame = {
     ...input.input.frame,
     continuation: {
-      ...input.input.frame.continuation,
+      ...attackContinuation,
       attackDamageAdditions: [
-        ...(input.input.frame.continuation.attackDamageAdditions ?? []),
+        ...(attackContinuation.attackDamageAdditions ?? []),
         damageAddition,
       ],
     },

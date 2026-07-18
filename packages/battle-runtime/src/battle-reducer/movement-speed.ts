@@ -70,7 +70,6 @@ import {
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import {
-  attackActionOptionName,
   attackTargetConstraint,
 } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
@@ -570,11 +569,11 @@ export function attackExecutionSelectionMatchesOption(
   selection: BattleAttackExecutionSelection,
   attack: SupportedAttackActionOption,
 ): boolean {
-  return "procedureRef" in attack
-    ? selection.procedureRef !== undefined &&
-        boundAttackExecutionSelectionMatchesOption(selection, attack)
-    : selection.procedureRef === undefined &&
-        attackActionOptionName(attack) === selection.attackName;
+  return (
+    "procedureRef" in attack &&
+    selection.procedureRef !== undefined &&
+    selection.procedureRef === attack.procedureRef
+  );
 }
 
 export function interruptAttackExecutionSelectionMatchesOption(
@@ -588,7 +587,11 @@ export function attackExecutionSelectionsEqual(
   left: BattleAttackExecutionSelection,
   right: BattleAttackExecutionSelection,
 ): boolean {
-  return attackExecutionSelectionIdentitiesEqual(left, right);
+  return (
+    left.procedureRef !== undefined &&
+    right.procedureRef !== undefined &&
+    attackExecutionSelectionIdentitiesEqual(left, right)
+  );
 }
 
 export function interruptAttackExecutionSelectionsEqual(

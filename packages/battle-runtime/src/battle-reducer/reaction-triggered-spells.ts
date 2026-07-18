@@ -6,9 +6,13 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 
 import { CombatantId } from "../identity.ts";
+import { characterSpellProcedureRef } from "../character-execution.ts";
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { currentActorId } from "./creature-state-leaves.ts";
-import { combatantCanTakeReactions } from "./creature-state.ts";
+import {
+  combatantCanTakeReactions,
+  isCharacterBattleCreatureState,
+} from "./creature-state.ts";
 import {
   combatantHasSpellSlotUseThisTurn,
   spellHasAvailableSpend,
@@ -19,7 +23,6 @@ import {
   spellDamageHole,
   spellSavingThrowOutcomeHole,
   spellTargetListHole,
-  supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import {
   counterspellCapableReactors,
@@ -27,6 +30,7 @@ import {
 } from "./counterspell-reaction-discovery.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import type {
   BattleInterruptCheckpointInput,
   BattleInterruptProcedureChoice,
@@ -67,7 +71,7 @@ export function triggeredReactionSpellChoices(
     (reactorId): readonly BattleInterruptProcedureChoice[] => {
       const reactor = state.combatants.get(reactorId);
       if (
-        reactor?.origin.kind !== "character" ||
+        !isCharacterBattleCreatureState(reactor) ||
         !combatantCanTakeReactions(reactor) ||
         combatantInsideActiveAntimagicFieldAura(state, reactorId)
       ) {
@@ -76,10 +80,7 @@ export function triggeredReactionSpellChoices(
       return supportedSpellActs(reactor, state).flatMap(
         (invocation): readonly BattleInterruptProcedureChoice[] => {
           if (
-            (invocation.procedure !== "shieldReaction" &&
-              invocation.procedure !== "saveGatedDamage" &&
-              invocation.procedure !== "featherFallMitigation" &&
-              invocation.procedure !== "counterspell") ||
+            !isTriggeredReactionSpellInvocation(invocation) ||
             !spellHasAvailableSpend(reactor, invocation) ||
             !triggeredReactionSpellTurnResourceAvailable(
               state,
@@ -90,7 +91,11 @@ export function triggeredReactionSpellChoices(
           ) {
             return [];
           }
-          const invocationRef = supportedSpellInvocationRef(invocation);
+          const procedureRef = characterSpellProcedureRef(
+            reactor.origin.execution,
+            invocation,
+          );
+          if (procedureRef === undefined) return [];
           const spellCastReactionFactsHoles = spellCastCanTriggerCounterspell({
             casterId: reactorId,
             invocation,
@@ -122,14 +127,13 @@ export function triggeredReactionSpellChoices(
             {
               kind: "castTriggeredReactionSpell" as const,
               reactorId,
-              invocation: invocationRef,
               initialHoles,
               subject: {
                 tag: "runtimeCommand" as const,
                 actorId: currentActorId(state),
                 command: "castTriggeredReactionSpell" as const,
                 reactorId,
-                invocation: invocationRef,
+                procedureRef,
               },
             },
           ];
@@ -313,7 +317,10 @@ function featherFallTriggerReactors(
 }
 
 function spellCastTriggerReactors(
-  frame: Extract<BattleInterruptCheckpointInput, { readonly trigger: "spellCast" }>,
+  frame: Extract<
+    BattleInterruptCheckpointInput,
+    { readonly trigger: "spellCast" }
+  >,
 ): readonly CombatantId[] {
   return [
     ...new Set([

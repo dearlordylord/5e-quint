@@ -592,6 +592,9 @@ function spellTargetFill(
   spellId: RollModifierBuffSpellId,
   selectedTargetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound roll-modifier attack selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -655,6 +658,9 @@ function attackTargetFill(
   actorId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound attack target selection.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -664,7 +670,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId,
         targetId,
-        attackName: "Unarmed Strike",
+        ...hole.attack.selection,
       },
     ],
   };
