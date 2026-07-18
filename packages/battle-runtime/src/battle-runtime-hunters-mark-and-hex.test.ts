@@ -93,25 +93,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state,
         subject: markAct.subject,
-        fills: [
-          targetFill(markTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
-            },
-          ]),
-        ],
+        fills: [targetFill(markTarget, goblinId)],
       }),
     );
 
     expect(marked.state.combatants.get(fighterId)?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("hunters_mark"),
-      ),
+      sourceProcedureRef: battleActSpellPresentation(markAct)?.procedureRef,
       effectKind: "spellEffect",
     });
     expect(marked.state.combatants.get(fighterId)?.activeEffects).toEqual([
@@ -211,18 +198,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: marked.state,
         subject: spellSubject,
-        fills: [
-          targetFill(spellTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("ray_of_frost"),
-              ),
-            },
-          ]),
-        ],
+        fills: [targetFill(spellTarget, goblinId)],
       }),
       "attackRoll",
     );
@@ -231,16 +207,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state: marked.state,
         subject: spellSubject,
         fills: [
-          targetFill(spellTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("ray_of_frost"),
-              ),
-            },
-          ]),
+          targetFill(spellTarget, goblinId),
           attackRollFill(spellAttack, { total: 15, naturalD20: 10 }),
         ],
       }),
@@ -350,18 +317,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: nextFighterTurn,
         subject: transferAct.subject,
-        fills: [
-          targetFill(transferTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
-            },
-          ]),
-        ],
+        fills: [targetFill(transferTarget, goblinId)],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -417,18 +373,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: restrictedHiddenTransferState,
         subject: restrictedTransferAct.subject,
-        fills: [
-          targetFill(restrictedTransferTarget, skeletonId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
-            },
-          ]),
-        ],
+        fills: [targetFill(restrictedTransferTarget, skeletonId)],
       }),
     );
     expect(
@@ -439,25 +384,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: nextFighterTurn,
         subject: transferAct.subject,
-        fills: [
-          targetFill(transferTarget, skeletonId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
-            },
-          ]),
-        ],
+        fills: [targetFill(transferTarget, skeletonId)],
       }),
     );
 
     expect(transferred.state.combatants.get(fighterId)?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("hunters_mark"),
-      ),
+      sourceProcedureRef: battleActSpellPresentation(transferAct)?.procedureRef,
       effectKind: "spellEffect",
     });
     expect(transferred.state.combatants.get(fighterId)?.activeEffects).toEqual([
@@ -500,16 +432,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: markAct.subject,
         fills: [
-          targetFill(findHole(markAct.initialHoles, "targetChoice"), goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
-            },
-          ]),
+          targetFill(
+            findHole(markAct.initialHoles, "targetChoice"),
+            goblinId,
+          ),
         ],
       }),
     ).state;
@@ -614,16 +540,6 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           targetFill(
             findHole(transferAct.initialHoles, "targetChoice"),
             skeletonId,
-            [
-              {
-                kind: "spellTarget",
-                casterId: fighterId,
-                targetId: skeletonId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("hunters_mark"),
-                ),
-              },
-            ],
           ),
         ],
       }),
@@ -678,18 +594,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state,
         subject: markAct.subject,
-        fills: [
-          targetFill(markTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
-            },
-          ]),
-        ],
+        fills: [targetFill(markTarget, goblinId)],
       }),
     );
 
@@ -738,18 +643,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         resolveBattleSubject({
           state,
           subject,
-          fills: [
-            targetFill(markTarget, goblinId, [
-              {
-                kind: "spellTarget",
-                casterId: fighterId,
-                targetId: goblinId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("hunters_mark"),
-                ),
-              },
-            ]),
-          ],
+          fills: [targetFill(markTarget, goblinId)],
         }),
       );
 
@@ -807,16 +701,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: hexAct.subject,
         fills: [
-          targetFill(hexTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hex"),
-              ),
-            },
-          ]),
+          targetFill(hexTarget, goblinId),
           { kind: "abilityChoice", holeId: hexAbility.holeId, value: "wis" },
         ],
       }),
@@ -923,16 +808,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: hexAct.subject,
         fills: [
-          targetFill(findHole(hexAct.initialHoles, "targetChoice"), goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hex"),
-              ),
-            },
-          ]),
+          targetFill(
+            findHole(hexAct.initialHoles, "targetChoice"),
+            goblinId,
+          ),
           {
             kind: "abilityChoice",
             holeId: findHole(hexAct.initialHoles, "abilityChoice").holeId,
@@ -1012,16 +891,6 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           targetFill(
             findHole(transferAct.initialHoles, "targetChoice"),
             skeletonId,
-            [
-              {
-                kind: "spellTarget",
-                casterId: fighterId,
-                targetId: skeletonId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("hex"),
-                ),
-              },
-            ],
           ),
         ],
       }),
@@ -1070,18 +939,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [
-          targetFill(markTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
-            },
-          ]),
-        ],
+        fills: [targetFill(markTarget, goblinId)],
       }),
     );
     const caster = marked.state.combatants.get(fighterId);

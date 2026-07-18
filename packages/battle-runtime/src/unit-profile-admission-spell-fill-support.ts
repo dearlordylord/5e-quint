@@ -351,6 +351,17 @@ export function spellTargetFill(
         targetId,
         sourceProcedureRef,
       },
+      ...(hole.spellTargetSpatialFactRequest?.requiresKnownWillingTarget ===
+      true
+        ? [
+            {
+              kind: "spellTargetKnownWilling" as const,
+              casterId,
+              targetId,
+              sourceProcedureRef,
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -782,6 +793,15 @@ export function spellTargetListFill(
   const sourceProcedureRef =
     battleProcedureExecutionRefForSpellHoleForTest(hole);
   const relationshipFactRequest = hole.relationshipFactRequest;
+  const knownWillingFacts =
+    hole.requiresKnownWillingTargets === true
+      ? targetIds.map((targetId) => ({
+          kind: "spellTargetKnownWilling" as const,
+          casterId,
+          targetId,
+          sourceProcedureRef,
+        }))
+      : [];
   const selectedRelationshipFacts =
     relationshipFacts ??
     (relationshipFactRequest?.kind === "spellTargetIsHostileToCaster" &&
@@ -820,6 +840,7 @@ export function spellTargetListFill(
           radiusFeet: hole.spell.targeting.area.radiusFeet,
           targetIds,
         },
+        ...knownWillingFacts,
       ],
     };
   }
@@ -830,12 +851,15 @@ export function spellTargetListFill(
     ...(selectedRelationshipFacts === undefined
       ? {}
       : { relationshipFacts: selectedRelationshipFacts }),
-    spatialFacts: targetIds.map((targetId) => ({
-      kind: "spellTarget" as const,
-      casterId,
-      targetId,
-      sourceProcedureRef,
-    })),
+    spatialFacts: [
+      ...targetIds.map((targetId) => ({
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      })),
+      ...knownWillingFacts,
+    ],
   };
 }
 

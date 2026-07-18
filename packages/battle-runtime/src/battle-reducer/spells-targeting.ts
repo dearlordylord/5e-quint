@@ -168,6 +168,9 @@ export function spellTargetHole(
     spellTargetSpatialFactRequest: {
       casterId: actorId,
       sourceProcedureRef: invocation.sourceProcedureRef,
+      ...(spellInvocationRequiresKnownWillingTarget(invocation)
+        ? { requiresKnownWillingTarget: true as const }
+        : {}),
     },
     ...(spellTargetRequiresAttackRollRelationshipFact(invocation) &&
     ongoingFeatureEnemyRelationshipDecisionRequired(
@@ -577,6 +580,9 @@ export function spellTargetListHole(
     minTargets: invocation.targeting.minTargets,
     maxTargets: targetListHoleMaxTargets(invocation, choices.length),
     requiresTableSpatialFact: true,
+    ...(spellInvocationRequiresKnownWillingTarget(invocation)
+      ? { requiresKnownWillingTargets: true as const }
+      : {}),
     ...("saveRollModeRule" in invocation &&
     invocation.saveRollModeRule?.kind === "hostileTarget"
       ? {

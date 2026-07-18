@@ -32,6 +32,7 @@ import {
 } from "../battle-reducer.ts";
 import {
   bindSpellProcedureExecutionFacts,
+  characterExecutionWithSpellInvocations,
   characterSpellProcedureRef,
 } from "../character-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
@@ -129,9 +130,14 @@ export function supportedSpellActs(
   state?: BattleState,
 ): readonly BattleExecutableSpellInvocation[] {
   if (!isCharacterBattleCreatureState(actor)) return [];
-  return admittedSpellActs(actor, state).flatMap((invocation) => {
+  const invocations = admittedSpellActs(actor, state);
+  const execution = characterExecutionWithSpellInvocations(
+    actor.origin.execution,
+    invocations,
+  );
+  return invocations.flatMap((invocation) => {
     const sourceProcedureRef = characterSpellProcedureRef(
-      actor.origin.execution,
+      execution,
       invocation,
     );
     return sourceProcedureRef === undefined

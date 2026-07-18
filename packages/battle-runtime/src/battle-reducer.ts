@@ -4916,11 +4916,13 @@ export type BattleTargetChoiceHole = Extract<
   { readonly kind: "targetChoice" }
 > & {
   readonly choices: readonly CombatantId[];
+  readonly procedureRef?: BattleProcedureExecutionRef;
   readonly requiresTableSpatialFact?: boolean;
   readonly relationshipFactRequest?: BattleTargetChoiceRelationshipFactRequest;
   readonly spellTargetSpatialFactRequest?: {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly requiresKnownWillingTarget?: true;
   };
   readonly attack?: {
     readonly actorId: CombatantId;
@@ -5372,6 +5374,7 @@ export type BattleSpellTargetListHole = {
   readonly maxTargets: number;
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
+  readonly requiresKnownWillingTargets?: true;
   readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;
 };
 export type BattleAttackRollHole = Extract<

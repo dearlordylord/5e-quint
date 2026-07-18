@@ -26,6 +26,7 @@ import {
   interruptDecisionFill,
   reactionModifierChoice,
   requireBardicInspirationD20TestResolved,
+  requireCharacterUnitProcedureRefForTest,
   requireElapsedHours,
   requireResolved,
   resolveBardicInspirationFailedD20Test,
@@ -70,7 +71,11 @@ describe("battle runtime: Bardic Inspiration", () => {
     expect(resolved.state.combatants.get(goblinId)?.activeEffects).toEqual([
       {
         kind: "bardicInspirationDie",
-        sourceUnitId: bardicInspiration.id,
+        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+          state,
+          fighterId,
+          bardicInspiration.id,
+        ),
         sourceCombatantId: fighterId,
         dieSize: 6,
         expiresAt: {
@@ -185,7 +190,11 @@ describe("battle runtime: Bardic Inspiration", () => {
     ).toEqual([
       expect.objectContaining({
         kind: "bardicInspirationDie",
-        sourceUnitId: bardicInspiration.id,
+        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+          state,
+          fighterId,
+          bardicInspiration.id,
+        ),
       }),
     ]);
   });
@@ -243,7 +252,11 @@ describe("battle runtime: Bardic Inspiration", () => {
     ).toEqual([
       expect.objectContaining({
         kind: "bardicInspirationDie",
-        sourceUnitId: bardicInspiration.id,
+        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+          blinded,
+          fighterId,
+          bardicInspiration.id,
+        ),
       }),
     ]);
 
@@ -288,7 +301,7 @@ describe("battle runtime: Bardic Inspiration", () => {
         subject,
         fills: [
           bardicInspirationTargetFill(
-            bardicInspirationStaleTargetHole(),
+            bardicInspirationStaleTargetHole(state),
             goblinId,
             {
               canHear: true,

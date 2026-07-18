@@ -256,6 +256,12 @@ export function battleProcedureExecutionRefForSpellHoleForTest(
     return BattleProcedureExecutionRef.make(hole.sourceProcedureRef);
   }
   if (
+    "procedureRef" in hole &&
+    typeof hole.procedureRef === "string"
+  ) {
+    return BattleProcedureExecutionRef.make(hole.procedureRef);
+  }
+  if (
     "objectContact" in hole &&
     typeof hole.objectContact.sourceProcedureRef === "string"
   ) {
@@ -514,7 +520,10 @@ export function requireResolved(
   { readonly tag: "resolved" }
 > {
   if (result.tag !== "resolved") {
-    throw new Error(`Expected resolved battle result, got ${result.tag}.`);
+    const detail = "message" in result ? `: ${result.message}` : "";
+    throw new Error(
+      `Expected resolved battle result, got ${result.tag}${detail}.`,
+    );
   }
 
   return result;
@@ -3743,14 +3752,14 @@ export function bardicInspirationTargetFill(
   targetId: CombatantId,
   input?: { readonly canHear?: boolean },
 ): BattleFill {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   return targetFill(hole, targetId, [
     {
       kind: "bardicInspirationTargetWithinRange",
       bardId: fighterId,
       targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        bardicInspirationUnit().id,
-      ),
+      sourceProcedureRef,
       rangeFeet: movementFeet(60),
     },
     ...(input?.canHear === true
@@ -3759,9 +3768,7 @@ export function bardicInspirationTargetFill(
             kind: "bardicInspirationTargetCanHear" as const,
             bardId: fighterId,
             targetId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              bardicInspirationUnit().id,
-            ),
+            sourceProcedureRef,
           },
         ]
       : []),
@@ -3795,7 +3802,9 @@ export function combatantHasBardicInspirationDie(
   );
 }
 
-export function bardicInspirationStaleTargetHole(): BattleHole {
+export function bardicInspirationStaleTargetHole(
+  state: BattleState,
+): BattleHole {
   const unit = bardicInspirationUnit();
   const protocolId = `battle:unit-feature:${unit.id}:target`;
   return {
@@ -3803,6 +3812,11 @@ export function bardicInspirationStaleTargetHole(): BattleHole {
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${unit.name} target`,
+    procedureRef: requireCharacterUnitProcedureRefForTest(
+      state,
+      fighterId,
+      unit.id,
+    ),
     requiresTableSpatialFact: true,
     choices: [goblinId],
   };

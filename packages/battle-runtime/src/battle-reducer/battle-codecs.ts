@@ -1355,6 +1355,9 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("targetChoice"),
     choices: Schema.Array(CombatantId),
+    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
+      exact: true,
+    }),
     requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
       exact: true,
     }),
@@ -1366,6 +1369,10 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
       Schema.Struct({
         casterId: CombatantId,
         sourceProcedureRef: BattleProcedureExecutionRef,
+        requiresKnownWillingTarget: Schema.optionalWith(
+          Schema.Literal(true),
+          { exact: true },
+        ),
       }),
       { exact: true },
     ),
@@ -1388,6 +1395,9 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
       rangeFeet: MovementFeet,
     }),
     requiresTableSpatialFact: Schema.Literal(true),
+    requiresKnownWillingTargets: Schema.optionalWith(Schema.Literal(true), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,

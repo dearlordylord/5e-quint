@@ -214,6 +214,10 @@ function admitCharacterProcedureDiscoveryActs(
               {
                 ...act,
                 subject: admittedSubject,
+                initialHoles: admissionBoundProcedureHoles(
+                  act.initialHoles,
+                  procedureRef,
+                ),
                 presentation: characterProcedurePresentation(
                   subject,
                   procedureRef,
@@ -223,6 +227,19 @@ function admitCharacterProcedureDiscoveryActs(
       },
     );
   });
+}
+
+function admissionBoundProcedureHoles(
+  holes: BattleActDiscoveryCandidate["initialHoles"],
+  procedureRef: BattleProcedureExecutionRef,
+): BattleActDiscoveryCandidate["initialHoles"] {
+  return holes.map((hole) =>
+    hole.kind === "targetChoice" &&
+    hole.attack === undefined &&
+    hole.spellTargetSpatialFactRequest === undefined
+      ? { ...hole, procedureRef }
+      : hole,
+  );
 }
 
 function characterProcedurePresentation(
