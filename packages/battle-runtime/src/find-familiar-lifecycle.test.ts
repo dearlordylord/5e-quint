@@ -38,7 +38,6 @@ import {
   applyFindFamiliarZeroHitPointDisappearance,
   battleAvailableDruidWildShapeKnownForms,
   battleDruidWildShapeKnownFormSupportForUnit,
-  battleCombatantSide,
   battleId,
   battleObjectId,
   battleUnitSupportProfilesForUnit,
@@ -79,9 +78,6 @@ import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-st
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
-
-const partySide = battleCombatantSide("party");
-const enemySide = battleCombatantSide("enemy");
 const casterId = combatantId("caster");
 const familiarId = combatantId("caster-familiar");
 const otherCombatantId = combatantId("other-combatant");
@@ -200,7 +196,6 @@ function startFixtureBattle(
         combatantId: casterId,
         displayName: "Caster",
         initiative: initiativeScore(12),
-        side: partySide,
         creatureInit: {
           kind: "statBlock",
           statBlock: skeleton,
@@ -215,7 +210,6 @@ function startFixtureBattle(
               combatantId: enemyId,
               displayName: "Enemy",
               initiative: initiativeScore(10),
-              side: enemySide,
               creatureInit: {
                 kind: "statBlock" as const,
                 statBlock: skeleton,
@@ -233,7 +227,6 @@ function startFixtureBattle(
               combatantId: input.extraCombatantId,
               displayName: "Other Combatant",
               initiative: initiativeScore(10),
-              side: partySide,
               creatureInit: {
                 kind: "statBlock" as const,
                 statBlock: skeleton,
@@ -259,7 +252,6 @@ function startSpellcasterFixtureBattle(): BattleState {
         combatantId: casterId,
         displayName: "Caster",
         initiative: 12,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -277,7 +269,6 @@ function startSpellcasterFixtureBattle(): BattleState {
         combatantId: enemyId,
         displayName: "Target",
         initiative: 10,
-        side: enemySide,
         currentHp: 1,
         maxHp: 12,
       }),
@@ -309,7 +300,6 @@ function startPactWarlockFixtureBattle(
         combatantId: casterId,
         displayName: "Pact Warlock",
         initiative: 12,
-        side: partySide,
         className: "warlock",
         ...(input.ownerCharacterUnitRefs === undefined
           ? {}
@@ -339,7 +329,6 @@ function startPactWarlockFixtureBattle(
         combatantId: enemyId,
         displayName: "Target",
         initiative: 10,
-        side: enemySide,
         currentHp: 12,
         maxHp: 12,
         ...(input.targetHasShield === true
@@ -382,7 +371,6 @@ function startWildCompanionDruidFixtureBattle(input: {
         combatantId: casterId,
         displayName: "Druid",
         initiative: 12,
-        side: partySide,
         className: "druid",
         classLevel: 2,
         spellcasting: {
@@ -439,7 +427,6 @@ function startWrongOwnerPactFixtureBattle(): BattleState {
         combatantId: otherCombatantId,
         displayName: "Other Pact Warlock",
         initiative: 14,
-        side: partySide,
         className: "warlock",
         spellcasting: {
           sourceClassName: "warlock",
@@ -463,13 +450,11 @@ function startWrongOwnerPactFixtureBattle(): BattleState {
         combatantId: casterId,
         displayName: "Caster",
         initiative: 12,
-        side: partySide,
       }),
       characterCreature({
         combatantId: enemyId,
         displayName: "Target",
         initiative: 10,
-        side: enemySide,
         currentHp: 12,
         maxHp: 12,
       }),
@@ -489,7 +474,6 @@ function startFindFamiliarSpellcasterFixtureBattle(): BattleState {
         combatantId: casterId,
         displayName: "Caster",
         initiative: 12,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -646,7 +630,6 @@ function characterCreature(input: {
     | typeof otherCombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof enemySide;
   readonly className?: "wizard" | "warlock" | "druid";
   readonly classLevel?: number;
   readonly spellcasting?: Extract<
@@ -672,7 +655,6 @@ function characterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
@@ -948,7 +930,6 @@ describe("Find Familiar lifecycle", () => {
       combatantId: familiarId,
       displayName: "Cat",
       initiative: initiativeScore(18),
-      side: partySide,
       reactionAvailable: true,
       origin: {
         kind: "statBlock",
@@ -959,6 +940,7 @@ describe("Find Familiar lifecycle", () => {
         }),
       },
     });
+    expect(result.state.combatants.get(familiarId)).not.toHaveProperty("side");
     expect(result.snapshot.turnOrder).toEqual([familiarId, casterId]);
     expect(
       findFamiliarCreatureTypeOverrideForOwner(result.state, casterId),
@@ -979,13 +961,11 @@ describe("Find Familiar lifecycle", () => {
           combatantId: casterId,
           displayName: "Wizard",
           initiative: 12,
-          side: partySide,
         }),
         characterCreature({
           combatantId: otherOwnerId,
           displayName: "Other Wizard",
           initiative: 11,
-          side: partySide,
         }),
       ],
     });
@@ -1080,7 +1060,6 @@ describe("Find Familiar lifecycle", () => {
           combatantId: casterId,
           displayName: "Wizard",
           initiative: 12,
-          side: partySide,
         }),
       ],
     });
@@ -1127,7 +1106,6 @@ describe("Find Familiar lifecycle", () => {
           combatantId: casterId,
           displayName: "Wizard",
           initiative: 12,
-          side: partySide,
         }),
       ],
     });
@@ -1174,7 +1152,6 @@ describe("Find Familiar lifecycle", () => {
           combatantId: casterId,
           displayName: "Wizard",
           initiative: 12,
-          side: partySide,
         }),
       ],
     });
@@ -1512,13 +1489,11 @@ describe("Find Familiar lifecycle", () => {
           combatantId: casterId,
           displayName: "Wizard",
           initiative: 12,
-          side: partySide,
         }),
         characterCreature({
           combatantId: otherCombatantId,
           displayName: "Other Combatant",
           initiative: 10,
-          side: partySide,
         }),
       ],
     });

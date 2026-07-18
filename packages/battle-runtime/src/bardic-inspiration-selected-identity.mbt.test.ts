@@ -20,7 +20,6 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleId,
-  battleCombatantSide,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -47,8 +46,6 @@ type BardicInspirationProjection = {
 
 const bardId = combatantId("bardic-inspiration-selected-identity-bard");
 const targetId = combatantId("bardic-inspiration-selected-identity-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -146,7 +143,6 @@ function bardicInspirationBard(): BattleCreatureInit {
     combatantId: bardId,
     displayName: "Bard",
     initiative: initiativeScore(20),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("bardic-inspiration-selected-identity-bard"),
@@ -183,7 +179,6 @@ function targetCreature(): BattleCreatureInit {
     combatantId: targetId,
     displayName: "Target",
     initiative: initiativeScore(10),
-    side: oppositionSide,
     creatureInit: {
       kind: "character",
       characterId: characterId("bardic-inspiration-selected-identity-target"),

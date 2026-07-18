@@ -6,7 +6,7 @@ RAW anchors:
 
 - `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding`
 - `UBIQUITOUS_LANGUAGE.md#Controlled Creatures And Companions`
-- `UBIQUITOUS_LANGUAGE.md#Encounter Relationships`
+- `UBIQUITOUS_LANGUAGE.md#Table Decisions`
 
 ## Scope
 

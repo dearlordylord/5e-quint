@@ -29,7 +29,6 @@ import {
   attackRollFill,
   damageRollFillWithGroups,
   fighterId,
-  partySide,
   skeletonCreatureInit,
   skeletonId,
   unitLibrary,
@@ -89,7 +88,9 @@ type SpiritualWeaponMbtProjection = {
 
 const spiritualWeaponUnit = unitLibrary.requireUnit("spiritual_weapon");
 if (spiritualWeaponUnit.kind !== "spell") {
-  throw new Error("Expected Spiritual Weapon content to decode as a spell Unit.");
+  throw new Error(
+    "Expected Spiritual Weapon content to decode as a spell Unit.",
+  );
 }
 const spiritualWeaponSpell = spiritualWeaponUnit;
 
@@ -124,10 +125,7 @@ function createSpiritualWeaponDriver() {
       subjectStartState = state;
       subject = spiritualWeaponCastSubject();
       fills = [];
-      holes = discoverSpiritualWeaponHoles(
-        state,
-        "spiritualWeaponAttackProxy",
-      );
+      holes = discoverSpiritualWeaponHoles(state, "spiritualWeaponAttackProxy");
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -327,7 +325,6 @@ function spiritualWeaponCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Spiritual Weapon Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("spiritual-weapon-caster-character"),

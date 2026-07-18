@@ -32,8 +32,6 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   fighterId,
-  oppositionSide,
-  partySide,
   skeletonId,
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
@@ -109,8 +107,7 @@ type SleepRepeatSaveRouteProjection = {
 
 const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
-  InitialSaveConditionAppliedRouteSurface:
-    "initialSaveConditionApplied",
+  InitialSaveConditionAppliedRouteSurface: "initialSaveConditionApplied",
   ConcentrationBrokenBeforeRepeatRouteSurface:
     "concentrationBrokenBeforeRepeat",
   CasterTurnEndedWithEffectRouteSurface: "casterTurnEndedWithEffect",
@@ -120,8 +117,7 @@ const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
     "targetTurnEndedAfterConcentrationBreak",
   RepeatSaveFrontierRouteSurface: "repeatSaveFrontier",
   RepeatSaveSuccessCleanupRouteSurface: "repeatSaveSuccessCleanup",
-  RepeatSaveFailureUnconsciousRouteSurface:
-    "repeatSaveFailureUnconscious",
+  RepeatSaveFailureUnconsciousRouteSurface: "repeatSaveFailureUnconscious",
 } as const satisfies Readonly<Record<string, SleepRepeatSaveRouteSurface>>;
 const SLEEP_REPEAT_SAVE_ROUTE_SUBJECT =
   "repeatSaveConditionEffect" as const satisfies Extract<
@@ -246,9 +242,7 @@ function createSleepRepeatSavePublicRouteDriver() {
     let subject: BattleSubject = sleepSubject();
     let holes: readonly BattleHole[] = [];
     let surface: SleepRepeatSaveRouteSurface = "fresh";
-    let route: readonly ReducerRouteEvent[] = [
-      battleReducerStartRouteEvent(),
-    ];
+    let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
 
     function reset(): void {
       state = sleepRepeatSaveBattle();
@@ -289,7 +283,10 @@ function createSleepRepeatSavePublicRouteDriver() {
       nextSurface: SleepRepeatSaveRouteSurface,
     ): void {
       const fills = fillsWithSleepRepeatSaveSpatialFacts(holes, nextFills);
-      recordResult(resolveBattleSubject({ state, subject, fills }), nextSurface);
+      recordResult(
+        resolveBattleSubject({ state, subject, fills }),
+        nextSurface,
+      );
     }
 
     function fillRepeatSave(
@@ -477,7 +474,9 @@ describe("Sleep repeat-save MBT parity", () => {
       ),
     ).toBe(false);
     expect(
-      target?.activeEffects.some((effect) => effect.kind === "sleepUnconscious"),
+      target?.activeEffects.some(
+        (effect) => effect.kind === "sleepUnconscious",
+      ),
     ).toBe(true);
 
     const nextEndTurn = requireResolved(
@@ -588,7 +587,6 @@ function sleepCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Sleep Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("sleep-caster-character"),
@@ -628,7 +626,6 @@ function sleepTargetCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Sleep Target",
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "character",
       characterId: characterId("sleep-target-character"),

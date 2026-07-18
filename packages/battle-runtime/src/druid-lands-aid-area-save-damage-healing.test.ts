@@ -19,8 +19,6 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   druidLandsAidUnitId,
-  oppositionSide,
-  partySide,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -57,9 +55,7 @@ describe("Druid Land's Aid area save damage and healing", () => {
       actorId: spellCasterId,
       unitId: druidLandsAidUnitId,
     });
-    expect(
-      requireHole(act.initialHoles, "savingThrowOutcome"),
-    ).toMatchObject({
+    expect(requireHole(act.initialHoles, "savingThrowOutcome")).toMatchObject({
       unitFeature: {
         unitId: druidLandsAidUnitId,
         label: "Land's Aid",
@@ -70,9 +66,18 @@ describe("Druid Land's Aid area save damage and healing", () => {
     });
     expect(act.initialHoles).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "rolledDice", label: "Land's Aid damage (2d6)" }),
-        expect.objectContaining({ kind: "targetChoice", label: "Land's Aid healing target" }),
-        expect.objectContaining({ kind: "rolledDice", label: "Land's Aid healing (2d6)" }),
+        expect.objectContaining({
+          kind: "rolledDice",
+          label: "Land's Aid damage (2d6)",
+        }),
+        expect.objectContaining({
+          kind: "targetChoice",
+          label: "Land's Aid healing target",
+        }),
+        expect.objectContaining({
+          kind: "rolledDice",
+          label: "Land's Aid healing (2d6)",
+        }),
       ]),
     );
   });
@@ -165,7 +170,9 @@ describe("Druid Land's Aid area save damage and healing", () => {
 
       expect(currentHp(resolved, spellTargetId)).toBe(expectedTargetHp);
       expect(currentHp(resolved, secondTargetId)).toBe(expectedSecondTargetHp);
-      expect(currentHp(resolved, healingTargetId)).toBe(expectedHealingTargetHp);
+      expect(currentHp(resolved, healingTargetId)).toBe(
+        expectedHealingTargetHp,
+      );
       expect(wildShapeUsesRemaining(resolved)).toBe(1);
       expect(resolved.currentTurnResources.actionResources).toHaveLength(0);
     },
@@ -347,7 +354,6 @@ function landsAidBattle(
         combatantId: spellCasterId,
         displayName: "Land Druid",
         initiative: 20,
-        side: partySide,
         classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
         characterUnitRefs: [requireLandsAidUnitRef(druidLevel)],
         unitFeatures: [{ unit: landsAidUnit }],
@@ -368,7 +374,6 @@ function landsAidBattle(
         combatantId: spellTargetId,
         displayName: "Failed Save Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: input.targetHp ?? 20,
         maxHp: 20,
       }),
@@ -376,7 +381,6 @@ function landsAidBattle(
         combatantId: secondTargetId,
         displayName: "Successful Save Target",
         initiative: 9,
-        side: oppositionSide,
         currentHp: input.secondTargetHp ?? 20,
         maxHp: 20,
       }),
@@ -384,7 +388,6 @@ function landsAidBattle(
         combatantId: healingTargetId,
         displayName: "Healing Target",
         initiative: 8,
-        side: partySide,
         currentHp: input.healingTargetHp ?? 12,
         maxHp: 20,
       }),
@@ -481,9 +484,7 @@ function landsAidSavingThrowFill(
     holeId: hole.holeId,
     value: { outcomes },
     spatialFacts:
-      areaTargetIds.length === 0
-        ? []
-        : [landsAidAreaFact(areaTargetIds)],
+      areaTargetIds.length === 0 ? [] : [landsAidAreaFact(areaTargetIds)],
   };
 }
 

@@ -32,7 +32,6 @@ import {
   type ReducerRouteOwnerGroup,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
-  battleCombatantSide,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -75,8 +74,6 @@ type StatBlockAttack = NonNullable<
 
 const actorId = combatantId("stat-block-multi-damage-mbt-actor");
 const targetId = combatantId("stat-block-multi-damage-mbt-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const multiDamageAttackName = "Venom Dart";
 
 const DAMAGE_MODE_BY_TAG = {
@@ -409,14 +406,12 @@ function statBlockMultiDamageBattle(): BattleState {
         combatantId: actorId,
         displayName: "Stat Block Multi-Damage Attacker",
         initiative: 20,
-        side: partySide,
         statBlock: multiDamageAttackerStatBlock(),
       }),
       statBlockCreature({
         combatantId: targetId,
         displayName: "Stat Block Poison-Immune Target",
         initiative: 10,
-        side: oppositionSide,
         statBlock: poisonImmuneTargetStatBlock(),
       }),
     ],
@@ -437,14 +432,12 @@ function statBlockCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly statBlock: StatBlockRecord;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,

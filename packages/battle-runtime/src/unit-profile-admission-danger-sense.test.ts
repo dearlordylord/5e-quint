@@ -17,9 +17,7 @@ import {
   greaseGroundHazardEndTurnAct,
   greaseGroundHazardSaveAct,
   greaseUnitId,
-  oppositionSide,
   parseSupportedUnitFeatureProfile,
-  partySide,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   requireHole,
   spellCasterId,
@@ -142,10 +140,7 @@ describe("L12G deterministic Danger Sense admission", () => {
       spellTargetId,
       "entersArea",
     );
-    const entrySave = requireHole(
-      entryAct.initialHoles,
-      "savingThrowOutcome",
-    );
+    const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
     expect(entrySave).toMatchObject({
       ability: "dex",
       greaseGroundHazard: {
@@ -187,8 +182,7 @@ describe("L12G deterministic Danger Sense admission", () => {
       "entersArea",
     );
     expect(
-      requireHole(entryAct.initialHoles, "savingThrowOutcome")
-        .targetRollModes,
+      requireHole(entryAct.initialHoles, "savingThrowOutcome").targetRollModes,
     ).toEqual([]);
 
     const endTurnAct = greaseGroundHazardEndTurnAct(state, spellTargetId);
@@ -221,13 +215,11 @@ function dangerSenseBattle(): BattleState {
         combatantId: spellCasterId,
         displayName: "Caster",
         initiative: 20,
-        side: partySide,
       }),
       characterCreature({
         combatantId: spellTargetId,
         displayName: "Danger Sense Barbarian",
         initiative: 10,
-        side: oppositionSide,
         classLevels: [{ className: "barbarian", level: classLevel(2) }],
         unitFeatures: [{ unit }],
         characterUnitRefs: [unitRef.right],

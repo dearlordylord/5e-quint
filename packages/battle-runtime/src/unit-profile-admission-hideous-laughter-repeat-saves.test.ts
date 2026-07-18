@@ -9,8 +9,6 @@ import {
   hideousLaughterDurationTicks,
   hideousLaughterUnitId,
   iceKnifeUnitId,
-  oppositionSide,
-  partySide,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -527,14 +525,12 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
           combatantId: spellCasterId,
           displayName: "Attacker",
           initiative: 20,
-          side: partySide,
           attack: zeroAbilityWeaponAttack("weapon_longsword"),
         }),
         characterCreature({
           combatantId: spellTargetId,
           displayName: "Target",
           initiative: 10,
-          side: oppositionSide,
           currentHp: 20,
           maxHp: 20,
         }),

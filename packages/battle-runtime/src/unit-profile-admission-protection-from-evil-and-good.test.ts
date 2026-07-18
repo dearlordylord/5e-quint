@@ -3,7 +3,6 @@
 import { describe, expect, test } from "vitest";
 import {
   charmPersonUnitId,
-  oppositionSide,
   protectionFromEvilAndGoodUnitId,
   spellCasterId,
   spellTargetId,
@@ -440,7 +439,6 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
           combatantId: feySourceId,
           statBlock: statBlockWithCreatureType("fey"),
           initiative: 9,
-          side: oppositionSide,
         },
       ],
     });
@@ -496,13 +494,11 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
           combatantId: feySourceId,
           statBlock: statBlockWithCreatureType("fey"),
           initiative: 9,
-          side: oppositionSide,
         },
         {
           combatantId: humanoidSourceId,
           statBlock: statBlockWithCreatureType("humanoid"),
           initiative: 8,
-          side: oppositionSide,
         },
       ],
     });

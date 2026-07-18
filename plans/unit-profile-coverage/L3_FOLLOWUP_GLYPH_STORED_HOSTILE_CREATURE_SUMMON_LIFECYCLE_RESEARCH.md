@@ -17,7 +17,7 @@ RAW anchors:
 - `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Summon Dragon`
 - `UBIQUITOUS_LANGUAGE.md#Spell Ownership Terms`
 - `UBIQUITOUS_LANGUAGE.md#Controlled Creatures And Companions`
-- `UBIQUITOUS_LANGUAGE.md#Encounter Relationships`
+- `UBIQUITOUS_LANGUAGE.md#Table Decisions`
 
 ## Scope
 
@@ -25,7 +25,7 @@ Glyph's spell-glyph release rule says a stored spell that summons Hostile
 creatures makes them appear as close as possible to the intruder and attack it.
 That clause cannot be promoted by adding a Glyph-local placement branch alone:
 the runtime owner also needs creature identity, stat-block or creature
-projection, caller/table placement, Encounter Side or hostility relationship,
+projection, caller/table placement, contextual hostility relationship,
 command or turn protocol, attack-target fixation where RAW requires it, and
 duration cleanup including Glyph's full-duration Concentration rule.
 
@@ -84,7 +84,7 @@ Round 1 RAW and ubiquitous-language pass:
 - The SRD summon/control candidates were separated by domain language:
   reanimated creature, object-to-creature, mount companion, spawned stat-block
   companion, spatial manifestation, planar transport, and service binding.
-- `Encounter Side` and `Companion Control` remain runtime relationship/control
+- Contextual hostility and `Companion Control` remain runtime relationship/control
   facts, not provenance, spell authored identity, or Glyph-local metadata.
 
 Round 2 architecture and connascence pass:
@@ -92,7 +92,7 @@ Round 2 architecture and connascence pass:
 - No runtime state was added. The strong couplings stay with their missing
   owners: summon occurrence id plus combatant id, stat-block source plus
   spell-level projections, placement plus occupancy/visibility witnesses,
-  Encounter Side plus attack-target fixation, command protocol plus turn order,
+  contextual hostility plus attack-target fixation, command protocol plus turn order,
   and duration cleanup plus Concentration ownership.
 - Existing Find Familiar support is cited only as source-specific precedent.
   It is not a generic companion adapter for Glyph.

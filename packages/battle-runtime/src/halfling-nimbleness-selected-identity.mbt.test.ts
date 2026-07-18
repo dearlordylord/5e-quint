@@ -19,11 +19,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleSubject,
 } from "./index.ts";
-import {
-  oppositionSide,
-  partySide,
-  unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   characterSeed,
@@ -319,7 +315,6 @@ function halflingNimblenessBattle(input: {
         combatantId: nimbleMoverId,
         displayName: "Nimble Mover",
         initiative: 20,
-        side: partySide,
         size: "small",
         unitFeatures: [{ unit }],
         characterUnitRefs: input.selected ? [unitRef.right] : [],
@@ -328,7 +323,6 @@ function halflingNimblenessBattle(input: {
         combatantId: blockerId,
         displayName: "Blocker",
         initiative: 10,
-        side: oppositionSide,
         size: input.blockerSize ?? "medium",
       }),
     ],
@@ -482,10 +476,11 @@ function observeMovementRouteResult(
     actorId: nimbleMoverId,
     command: "move",
   };
-  const moveAct = discoverBattleActs(state).find((act) =>
-    act.subject.tag === "runtimeCommand" &&
-    act.subject.actorId === nimbleMoverId &&
-    act.subject.command === "move"
+  const moveAct = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.actorId === nimbleMoverId &&
+      act.subject.command === "move",
   );
   if (moveAct === undefined) {
     throw new Error("Expected public Movement act for Halfling Nimbleness.");
@@ -528,10 +523,11 @@ function observeOrdinaryMovementRoute(
     actorId: nimbleMoverId,
     command: "move",
   };
-  const moveAct = discoverBattleActs(state).find((act) =>
-    act.subject.tag === "runtimeCommand" &&
-    act.subject.actorId === nimbleMoverId &&
-    act.subject.command === "move"
+  const moveAct = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.actorId === nimbleMoverId &&
+      act.subject.command === "move",
   );
   if (moveAct === undefined) {
     throw new Error("Expected public Movement act for ordinary Movement.");
@@ -549,7 +545,9 @@ function observeOrdinaryMovementRoute(
     ],
   });
   if (result.tag !== "resolved") {
-    throw new Error(`Expected ordinary Movement to resolve, got ${result.tag}.`);
+    throw new Error(
+      `Expected ordinary Movement to resolve, got ${result.tag}.`,
+    );
   }
   return [
     ...(moveAct.routeEvents ?? []),
@@ -562,8 +560,7 @@ function isCreatureSpaceMovementPermissionRoute(
   event: BattleReducerRouteEvent,
 ): boolean {
   return (
-    "subject" in event &&
-    event.subject === "creatureSpaceMovementPermission"
+    "subject" in event && event.subject === "creatureSpaceMovementPermission"
   );
 }
 

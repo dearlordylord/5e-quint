@@ -38,7 +38,6 @@ import {
   attackRollFill,
   damageRollFillWithGroups,
   fighterId,
-  partySide,
   skeletonCreatureInit,
   startBattleRight,
   unitLibrary,
@@ -714,7 +713,6 @@ function starryWispCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Starry Wisp Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("starry-wisp-caster-character"),

@@ -214,7 +214,6 @@ function startableBattleCombatant(input: {
         displayName: characterBuildDisplayName(root.unitLibrary, session.build),
         sheet: session,
         initiative: character.initiative,
-        side: character.side,
         unitLibrary: root.unitLibrary,
         statBlockCatalog: root.statBlockCatalog,
       });
@@ -250,7 +249,6 @@ function startableBattleCombatant(input: {
             combatantId: statBlockCombatant.combatantId,
             statBlock: statBlock.value,
             initiative: statBlockCombatant.initiative,
-            side: encounterCombatant.side,
             ...(encounterCombatant.currentHp === undefined
               ? {}
               : { currentHp: encounterCombatant.currentHp }),

@@ -5,7 +5,6 @@ import { describe, expect, test } from "vitest";
 import {
   animalFriendshipUnitId,
   charmPersonUnitId,
-  partySide,
   sacredFlameUnitId,
   spellCasterId,
   spellTargetId,
@@ -281,7 +280,6 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         combatantId: allyId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 8,
-        side: partySide,
       },
     ]);
 
@@ -316,7 +314,6 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         combatantId: otherId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 8,
-        side: partySide,
       },
     ]);
 
@@ -351,13 +348,11 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         combatantId: damageSourceId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 8,
-        side: partySide,
       },
       {
         combatantId: secondCasterId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 7,
-        side: partySide,
       },
     ]);
     const target = requireCombatant(charmed, beastId);
@@ -446,7 +441,6 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
           combatantId: friendlyHumanoidId,
           statBlock: statBlockWithCreatureType("humanoid"),
           initiative: 7,
-          side: partySide,
         },
       ],
     });

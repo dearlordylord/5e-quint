@@ -30,7 +30,6 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -99,7 +98,6 @@ const casterId = combatantId("mage-armor-selected-identity-caster");
 const armoredTargetId = combatantId(
   "mage-armor-selected-identity-armored-target",
 );
-const partySide = battleCombatantSide("party");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -182,9 +180,7 @@ describe("Mage Armor selected identity public reducer route replay", () => {
       admissionRoute,
     );
     expect(replayMageArmorArmoredTargetRejectionRoute()).toEqual(
-      spellBaseArmorClassEffectRouteProjection(
-        "doRouteArmoredTargetRejection",
-      ),
+      spellBaseArmorClassEffectRouteProjection("doRouteArmoredTargetRejection"),
     );
     expect(projectionRoute).toEqual(
       spellBaseArmorClassEffectRouteProjection(
@@ -252,7 +248,9 @@ function routeEventsOfSubject(
   label: string,
 ): readonly BattleReducerRouteEvent[] {
   const events = (source.routeEvents ?? []).filter(
-    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+    (
+      event,
+    ): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
       event.kind !== "startBattle" &&
       event.subject === "spellBaseArmorClassEffect",
   );
@@ -428,7 +426,6 @@ function mageArmorBattle(
       combatantId: casterId,
       displayName: "Mage Armor Caster",
       initiative: 20,
-      side: partySide,
       armorClass: unarmoredDexArmorClass(),
       spellcasting: {
         sourceClassName: "wizard",
@@ -449,7 +446,6 @@ function mageArmorBattle(
             combatantId: armoredTargetId,
             displayName: "Armored Target",
             initiative: 10,
-            side: partySide,
             armorClass: mediumArmorClassState(),
           }),
         ]
@@ -475,7 +471,6 @@ function battleCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide;
   readonly armorClass: ArmorClassState;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -486,7 +481,6 @@ function battleCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

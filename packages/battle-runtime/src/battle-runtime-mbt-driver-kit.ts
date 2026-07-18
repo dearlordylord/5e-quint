@@ -73,7 +73,6 @@ import {
   battleObjectId,
   battleUnitRefWithSupportProfiles,
   battleId,
-  battleCombatantSide,
   battleReducerStartRouteEvent,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
@@ -1924,8 +1923,6 @@ const chainedAttackProcedureSecondTargetId = combatantId(
 const chainedAttackProcedureThirdTargetId = combatantId(
   "chained-attack-procedure-third-target",
 );
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
@@ -16400,13 +16397,11 @@ function interruptShieldBattle(): BattleState {
         combatantId: interruptShieldAttackerId,
         displayName: "Attacker",
         initiative: 20,
-        side: oppositionSide,
       }),
       interruptShieldCharacterCreature({
         combatantId: interruptShieldCasterId,
         displayName: "Shield caster",
         initiative: 10,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -16901,7 +16896,6 @@ function rogueCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Rogue",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
@@ -16953,7 +16947,6 @@ function interruptShieldCharacterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -16963,7 +16956,6 @@ function interruptShieldCharacterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
@@ -17003,7 +16995,6 @@ function rogueSteadyAimCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Rogue",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("steady-aim-rogue-character"),
@@ -17046,7 +17037,6 @@ function extraAttackCreatureInit(input: {
     combatantId: fighterId,
     displayName: `${unit.className} Extra Attacker`,
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId(`extra-attack-${unit.className}-character`),
@@ -17090,7 +17080,6 @@ function adrenalineRushCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Orc",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("adrenaline-rush-character"),
@@ -17128,7 +17117,6 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Active Feature Spell Benefit Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("active-feature-spell-benefit-caster"),
@@ -17169,7 +17157,6 @@ function activeFeatureSpellBenefitTargetCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Active Feature Spell Benefit Target",
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "character",
       characterId: characterId("active-feature-spell-benefit-target"),
@@ -17201,7 +17188,6 @@ function scalarBuffCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Longstrider Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("scalar-buff-caster-character"),
@@ -17247,7 +17233,6 @@ function saveGatedSpellOrderingCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Save-Gated Spell Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("save-gated-spell-ordering-caster-character"),
@@ -17291,7 +17276,6 @@ function commandOrderingCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Command Ordering Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("command-ordering-caster-character"),
@@ -17336,7 +17320,6 @@ function spellAttackOrderingCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Spell Attack Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("spell-attack-ordering-caster-character"),
@@ -17383,7 +17366,6 @@ function healingSpellOrderingCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Healing Spell Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("hit-point-restoration-spell-caster"),
@@ -17429,7 +17411,6 @@ function preserveLifeOrderingCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Life Cleric",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("hit-point-restoration-feature-caster"),
@@ -17460,7 +17441,6 @@ function healingOrderingTargetCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Healing Target",
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "character",
       characterId: characterId("hit-point-restoration-target"),
@@ -17510,7 +17490,6 @@ function deathSavingThrowCharacterInit(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.combatantId === fighterId ? partySide : oppositionSide,
     creatureInit: {
       kind: "character",
       characterId: characterId(input.characterId),
@@ -17546,7 +17525,6 @@ function concentrationBreakTeardownCasterInit(input: {
     combatantId: fighterId,
     displayName: "Concentration Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("concentration-break-teardown-route-caster"),
@@ -17731,7 +17709,6 @@ function skeletonCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Skeleton",
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: skeletonMultiattackStatBlock(),

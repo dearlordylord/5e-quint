@@ -65,13 +65,11 @@ import {
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   movementFeet,
-  oppositionSide,
   PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   passiveAbilityCheckRollModeProfileForUnit,
   passiveDamageResistanceProfileForUnit,
-  partySide,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   resolveBattleSubject,
@@ -519,14 +517,12 @@ describe("L3MSPEC species battle support", () => {
           combatantId: targetId,
           displayName: "Dragonborn Target",
           initiative: 10,
-          side: partySide,
           characterUnitRefs: [unitRef.right],
         }),
         characterCreature({
           combatantId: combatantId("dragonborn-damage-resistance-attacker"),
           displayName: "Attacker",
           initiative: 5,
-          side: oppositionSide,
         }),
       ],
     });
@@ -856,13 +852,11 @@ function powerfulBuildEscapeGrappleHole(input: {
         combatantId: grapplerId,
         displayName: "Powerful Build Grappler",
         initiative: 12,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: goliathId,
         displayName: "Powerful Build Goliath",
         initiative: 10,
-        side: partySide,
         characterUnitRefs: input.selected ? [unitRef.right] : [],
         unitFeatures: [{ unit }],
         conditions: input.poisoned === true ? ["poisoned"] : [],
@@ -940,7 +934,6 @@ function dwarvenResilienceBattle() {
         combatantId: targetId,
         displayName: "Dwarf Target",
         initiative: 10,
-        side: partySide,
         unitFeatures: [{ unit }],
         characterUnitRefs: [unitRef.right],
       }),
@@ -948,7 +941,6 @@ function dwarvenResilienceBattle() {
         combatantId: combatantId("dwarven-resilience-attacker"),
         displayName: "Attacker",
         initiative: 5,
-        side: oppositionSide,
       }),
     ],
   });
@@ -977,7 +969,6 @@ function halflingBraveBattle() {
         combatantId: targetId,
         displayName: "Halfling Target",
         initiative: 10,
-        side: partySide,
         unitFeatures: [{ unit }],
         characterUnitRefs: [unitRef.right],
       }),
@@ -985,7 +976,6 @@ function halflingBraveBattle() {
         combatantId: combatantId("halfling-brave-attacker"),
         displayName: "Attacker",
         initiative: 5,
-        side: oppositionSide,
       }),
     ],
   });
@@ -1583,7 +1573,8 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         supportProfiles: [
           {
             kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
-            replacementProperties: TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+            replacementProperties:
+              TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
           },
         ],
       }),
@@ -1601,7 +1592,10 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
     );
     expect(
-      battleUnitRefWithSupportProfiles({ unitRef: { unitId: push.id }, unit: push }),
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: push.id },
+        unit: push,
+      }),
     ).toEqual(
       Either.right({
         unitId: "mastery_push",
@@ -1609,7 +1603,10 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       }),
     );
     expect(
-      battleUnitRefWithSupportProfiles({ unitRef: { unitId: slow.id }, unit: slow }),
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: slow.id },
+        unit: slow,
+      }),
     ).toEqual(
       Either.right({
         unitId: "mastery_slow",

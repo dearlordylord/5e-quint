@@ -30,7 +30,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
 
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -102,8 +101,6 @@ type CharacterSpellcastingInit = NonNullable<
 
 const casterId = combatantId("condition-saving-throw-caster");
 const targetId = combatantId("condition-saving-throw-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -399,7 +396,10 @@ function resolveHoldMonsterFailedSavingThrow(): BattleResolutionResult {
 }
 
 function resolveHoldSpellFailedSavingThrow(
-  spellId: Extract<ConditionSavingThrowSpellUnitId, "hold_monster" | "hold_person">,
+  spellId: Extract<
+    ConditionSavingThrowSpellUnitId,
+    "hold_monster" | "hold_person"
+  >,
   slotLevel: 2 | 5,
 ): BattleResolutionResult {
   const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
@@ -646,7 +646,10 @@ function resolveHoldMonsterFailedSavingThrowRoute(): readonly BattleReducerRoute
 }
 
 function resolveHoldSpellFailedSavingThrowRoute(
-  spellId: Extract<ConditionSavingThrowSpellUnitId, "hold_monster" | "hold_person">,
+  spellId: Extract<
+    ConditionSavingThrowSpellUnitId,
+    "hold_monster" | "hold_person"
+  >,
   slotLevel: 2 | 5,
 ): readonly BattleReducerRouteEvent[] {
   const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
@@ -851,11 +854,7 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
   const targetTurn = requireResolvedResult(
     endTurn({ state: cast.state, actorId: casterId }),
   );
-  const mixedFrontierState = withCombatantHp(
-    targetTurn.state,
-    casterId,
-    Hp(0),
-  );
+  const mixedFrontierState = withCombatantHp(targetTurn.state, casterId, Hp(0));
   const subject = endTurnSubjectFor(targetId);
   const repeat = requireNeedsHolesResult(
     resolveBattleSubject({
@@ -1090,18 +1089,18 @@ function routeResolveSubjectWithoutFill(
   return { kind: "resolveBattleSubjectWithoutFill", holes: [], ...input };
 }
 
-function routeEventsOf(
-  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
-): readonly BattleReducerRouteEvent[] {
+function routeEventsOf(source: {
+  readonly routeEvents?: readonly BattleReducerRouteEvent[];
+}): readonly BattleReducerRouteEvent[] {
   if (source.routeEvents === undefined) {
     throw new Error("Expected public reducer route events.");
   }
   return source.routeEvents;
 }
 
-function optionalRouteEventsOf(
-  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
-): readonly BattleReducerRouteEvent[] {
+function optionalRouteEventsOf(source: {
+  readonly routeEvents?: readonly BattleReducerRouteEvent[];
+}): readonly BattleReducerRouteEvent[] {
   return source.routeEvents ?? [];
 }
 
@@ -1168,7 +1167,6 @@ function conditionSpellBattle(
         combatantId: casterId,
         displayName: "Condition Saving Throw caster",
         initiative: 20,
-        side: partySide,
         className: sourceClassName,
         spellcasting: {
           sourceClassName,
@@ -1185,16 +1183,15 @@ function conditionSpellBattle(
               ? [{ spellLevel: 2, count: 1 }]
               : spell.id === "hold_monster"
                 ? [{ spellLevel: 5, count: 1 }]
-              : spell.id === "hypnotic_pattern"
-                ? [{ spellLevel: 3, count: 1 }]
-                : [{ spellLevel: 1, count: 1 }],
+                : spell.id === "hypnotic_pattern"
+                  ? [{ spellLevel: 3, count: 1 }]
+                  : [{ spellLevel: 1, count: 1 }],
         },
       }),
       conditionSpellCreature({
         combatantId: targetId,
         displayName: "Condition Saving Throw target",
         initiative: 10,
-        side: oppositionSide,
         className: "fighter",
       }),
     ],
@@ -1209,7 +1206,6 @@ function conditionSpellCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly className: CharacterClassName;
   readonly spellcasting?: CharacterSpellcastingInit;
 }): BattleCreatureInit {
@@ -1217,7 +1213,6 @@ function conditionSpellCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
@@ -1324,7 +1319,7 @@ function savingThrowOutcomeFill(
               },
               outcomes,
             }
-        : { outcomes },
+          : { outcomes },
   };
 }
 

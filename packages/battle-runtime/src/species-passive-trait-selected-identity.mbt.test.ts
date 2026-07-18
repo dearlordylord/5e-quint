@@ -45,8 +45,6 @@ import {
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   dwarfDwarvenResilienceUnitId,
-  oppositionSide,
-  partySide,
   speciesHalflingBraveUnitId,
   speciesDragonbornDamageResistanceUnitId,
   unitLibrary,
@@ -245,14 +243,12 @@ function dragonbornDamageResistanceBattle(): BattleState {
         combatantId: dragonbornDamageResistanceTargetId,
         displayName: "Dragonborn Target",
         initiative: 10,
-        side: partySide,
         characterUnitRefs: [unitRef.right],
       }),
       characterCreature({
         combatantId: combatantId("species-passive-dragonborn-attacker"),
         displayName: "Attacker",
         initiative: 5,
-        side: oppositionSide,
       }),
     ],
   });
@@ -265,9 +261,7 @@ function dragonbornDamageResistanceBattle(): BattleState {
 function projectDragonbornDamageResistance(
   state: BattleState,
 ): SpeciesPassiveTraitProjection {
-  const target = state.combatants.get(
-    dragonbornDamageResistanceTargetId,
-  );
+  const target = state.combatants.get(dragonbornDamageResistanceTargetId);
   if (target === undefined) {
     throw new Error("Expected Dragonborn target combatant.");
   }
@@ -302,7 +296,6 @@ function dwarvenResilienceBattle(): BattleState {
         combatantId: dwarvenResilienceTargetId,
         displayName: "Dwarf Target",
         initiative: 10,
-        side: partySide,
         unitFeatures: [{ unit }],
         characterUnitRefs: [unitRef.right],
       }),
@@ -310,7 +303,6 @@ function dwarvenResilienceBattle(): BattleState {
         combatantId: wizardId,
         displayName: "Attacker",
         initiative: 20,
-        side: oppositionSide,
         attack: null,
         spellcasting: wizardSpellcasting({
           preparedSpells: [spellRecord("ray_of_sickness")],
@@ -341,7 +333,6 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
         combatantId: poisonedDwarvenResilienceTargetId,
         displayName: "Poisoned Dwarf Target",
         initiative: 20,
-        side: partySide,
         unitFeatures: [{ unit }],
         characterUnitRefs: [unitRef.right],
       }),
@@ -349,7 +340,6 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
         combatantId: wizardId,
         displayName: "Poison Source",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -439,7 +429,6 @@ function halflingBraveBattle(): BattleState {
         combatantId: targetId,
         displayName: "Halfling Target",
         initiative: 10,
-        side: partySide,
         unitFeatures: [{ unit }],
         characterUnitRefs: [unitRef.right],
       }),
@@ -447,7 +436,6 @@ function halflingBraveBattle(): BattleState {
         combatantId: combatantId("species-passive-halfling-attacker"),
         displayName: "Attacker",
         initiative: 5,
-        side: oppositionSide,
       }),
     ],
   });
@@ -521,13 +509,11 @@ function escapeGrappleRollMode(input: {
         combatantId: grapplerId,
         displayName: "Grappler",
         initiative: 12,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: actorId,
         displayName: "Goliath Target",
         initiative: 10,
-        side: partySide,
         characterUnitRefs: input.selected ? [unitRef.right] : [],
         unitFeatures: [{ unit }],
         conditions: input.poisoned === true ? ["poisoned"] : [],
@@ -653,10 +639,7 @@ function createSpeciesPassiveTraitSubstrateRouteDriver() {
         ];
       },
       doRoutePassiveSavingThrowRollMode: () => {
-        route = [
-          ...route,
-          ...requirePassiveSavingThrowRollModeRoute(),
-        ];
+        route = [...route, ...requirePassiveSavingThrowRollModeRoute()];
       },
       doRoutePassiveAbilityCheckRollMode: () => {
         route = [
@@ -799,10 +782,14 @@ function requirePassiveDamageAdjustmentRoute(
   });
   const damage = requireHole(awaitingDamage, "rolledDice");
   const damageResult = resolveBattleSubject({
-      state,
-      subject: act.subject,
-      fills: [targetChoice, attackRoll, damageRollFillWithGroups(damage, [[3, 5]])],
-    });
+    state,
+    subject: act.subject,
+    fills: [
+      targetChoice,
+      attackRoll,
+      damageRollFillWithGroups(damage, [[3, 5]]),
+    ],
+  });
   if (damageResult.tag !== "resolved") {
     throw new Error(
       `Expected Ray of Sickness damage to resolve, got ${damageResult.tag}: ${
@@ -962,9 +949,9 @@ function routeEventsWithSubject(
   return routeEvents;
 }
 
-function routeStart(route: readonly ReducerRouteEvent[]): readonly [
-  ReducerRouteEvent,
-] {
+function routeStart(
+  route: readonly ReducerRouteEvent[],
+): readonly [ReducerRouteEvent] {
   const [start] = route;
   if (start === undefined || start.kind !== "startBattle") {
     throw new Error("Expected route to start with startBattle.");
@@ -988,13 +975,11 @@ function goliathPowerfulBuildBattle(): BattleState {
         combatantId: combatantId("species-passive-substrate-grappler"),
         displayName: "Grappler",
         initiative: 12,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: combatantId("species-passive-substrate-goliath"),
         displayName: "Goliath Target",
         initiative: 10,
-        side: partySide,
         characterUnitRefs: [unitRef.right],
         unitFeatures: [{ unit }],
       }),
@@ -1031,7 +1016,6 @@ function halflingNimblenessSubstrateBattle(input: {
         combatantId: substrateMoverId,
         displayName: "Nimble Mover",
         initiative: 20,
-        side: partySide,
         size: "small",
         unitFeatures: [{ unit }],
         characterUnitRefs: input.selected ? [unitRef.right] : [],
@@ -1040,7 +1024,6 @@ function halflingNimblenessSubstrateBattle(input: {
         combatantId: substrateBlockerId,
         displayName: "Blocker",
         initiative: 10,
-        side: oppositionSide,
         size: input.blockerSize ?? "medium",
       }),
     ],
@@ -1102,7 +1085,9 @@ function observeCreatureSpaceMovementRoute(
       act.subject.command === "move",
   );
   if (moveAct === undefined) {
-    throw new Error("Expected public Movement act for species substrate route.");
+    throw new Error(
+      "Expected public Movement act for species substrate route.",
+    );
   }
   const hole = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),

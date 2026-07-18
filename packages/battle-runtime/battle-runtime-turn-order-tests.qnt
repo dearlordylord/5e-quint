@@ -7,16 +7,16 @@ module battleRuntimeTurnOrderTests {
     val afterOneTurn = nextInitiative(initialState.initiative)
     val consumedAfterFighterSwap = alertInitiativeSwapConsumedSourcesAfterSwap(Set(), Fighter)
     all {
-      assert(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, true, true, false, false)),
-      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Fighter, true, true, false, false))),
-      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, false, true, false, false))),
-      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, true, false, false, false))),
-      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, true, true, true, false))),
-      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, true, true, false, true))),
-      assert(not(alertInitiativeSwapAllowed(afterOneTurn, Set(), Fighter, Goblin, true, true, false, false))),
-      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(Fighter), Fighter, Goblin, true, true, false, false))),
-      assert(not(alertInitiativeSwapAllowed(initialState.initiative, consumedAfterFighterSwap, Fighter, Goblin, true, true, false, false))),
-      assert(alertInitiativeSwapAllowed(initialState.initiative, Set(Goblin), Fighter, Goblin, true, true, false, false)),
+      assert(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, WillingAlly, false, false)),
+      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Fighter, WillingAlly, false, false))),
+      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, NotAlly, false, false))),
+      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, UnwillingAlly, false, false))),
+      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, WillingAlly, true, false))),
+      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(), Fighter, Goblin, WillingAlly, false, true))),
+      assert(not(alertInitiativeSwapAllowed(afterOneTurn, Set(), Fighter, Goblin, WillingAlly, false, false))),
+      assert(not(alertInitiativeSwapAllowed(initialState.initiative, Set(Fighter), Fighter, Goblin, WillingAlly, false, false))),
+      assert(not(alertInitiativeSwapAllowed(initialState.initiative, consumedAfterFighterSwap, Fighter, Goblin, WillingAlly, false, false))),
+      assert(alertInitiativeSwapAllowed(initialState.initiative, Set(Goblin), Fighter, Goblin, WillingAlly, false, false)),
     }
   }
 

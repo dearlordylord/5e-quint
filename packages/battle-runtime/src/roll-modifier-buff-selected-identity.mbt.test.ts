@@ -25,7 +25,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -120,8 +119,6 @@ type SpellDamageReductionEffect = Extract<
 const casterId = combatantId("roll-modifier-buff-caster");
 const primaryTargetId = combatantId("roll-modifier-buff-target");
 const secondaryTargetId = combatantId("roll-modifier-buff-second-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -456,7 +453,6 @@ function rollModifierBuffBattle(
         combatantId: casterId,
         displayName: "Roll modifier caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "cleric",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -474,7 +470,6 @@ function rollModifierBuffBattle(
         combatantId: primaryTargetId,
         displayName: "Roll modifier target",
         initiative: 10,
-        side: oppositionSide,
       }),
       ...(input.includeSecondaryTarget === true
         ? [
@@ -482,7 +477,6 @@ function rollModifierBuffBattle(
               combatantId: secondaryTargetId,
               displayName: "Roll modifier second target",
               initiative: 9,
-              side: oppositionSide,
             }),
           ]
         : []),
@@ -498,7 +492,6 @@ function rollModifierBuffCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -508,7 +501,6 @@ function rollModifierBuffCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

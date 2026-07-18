@@ -271,13 +271,12 @@ of the unions therefore makes the Oracle schema/projection exhaustiveness check
 fail until the new variant is intentionally admitted.
 
 The Case contains no `caseId`, `requestId`, `draftId`, expected draft revision,
-`characterId`, `battleId`, display name, side name, catalog identity, random
-seed, timestamp, or session token. The application uses reserved call-local
-identities `oracle:character`, `oracle:opponent`, `oracle:characters`, and
-`oracle:opponents`. Those stable values appear where a `BattleSubject`,
-`BattleFill`, or Trace observation needs a combatant or side identity. Other
-runtime object, area, companion, or occurrence identities remain explicit in
-the relevant Battle fills because those facts genuinely vary.
+`characterId`, `battleId`, display name, catalog identity, random seed,
+timestamp, or session token. The application uses reserved call-local
+identities `oracle:character` and `oracle:opponent`. Those stable values appear
+where a `BattleSubject`, `BattleFill`, or Trace observation needs a combatant
+identity. Other runtime object, area, companion, or occurrence identities
+remain explicit in the relevant Battle fills because those facts genuinely vary.
 
 The opponent is a catalog selection boundary, so its SRD `StatBlockId` is
 valid authored identity. Opponent HP starts at the selected Stat Block maximum,

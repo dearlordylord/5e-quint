@@ -29,7 +29,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   battleObjectId,
   characterId,
@@ -248,8 +247,6 @@ const starryWispObjectArmorClass = armorClass(13);
 const starryWispObjectHitPoints = Hp(5);
 const starryWispObjectDamageRoll = 6;
 const starryWispDimLightRadiusFeet = 10;
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -1146,7 +1143,6 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
         combatantId: casterId,
         displayName: "Level 1 damage spell caster",
         initiative: 20,
-        side: partySide,
         className: "wizard",
         spellcasting: {
           sourceClassName: "wizard",
@@ -1165,14 +1161,12 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
         combatantId: primaryTargetId,
         displayName: "Level 1 damage spell primary target",
         initiative: 10,
-        side: oppositionSide,
         className: "fighter",
       }),
       level1DamageSpellCreature({
         combatantId: secondaryTargetId,
         displayName: "Level 1 damage spell secondary target",
         initiative: 8,
-        side: oppositionSide,
         className: "fighter",
       }),
     ],
@@ -1187,7 +1181,6 @@ function level1DamageSpellCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly className: CharacterCreatureInit["classLevels"][number]["className"];
   readonly spellcasting?: CharacterSpellcastingInit;
 }): BattleCreatureInit {
@@ -1195,7 +1188,6 @@ function level1DamageSpellCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

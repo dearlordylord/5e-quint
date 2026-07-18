@@ -11,9 +11,7 @@ import {
   endTurn,
   finishInitialInitiativeSetup,
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
-  oppositionSide,
   parseSupportedUnitFeatureProfile,
-  partySide,
   startBattleWithInitialInitiativeSetup,
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
@@ -94,21 +92,18 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const mechanics = alertPassiveMechanics();
     const [left, right] = mechanics.grants;
     if (left === undefined || right === undefined) {
-      throw new Error("Expected Alert to have Initiative bonus and swap grants.");
+      throw new Error(
+        "Expected Alert to have Initiative bonus and swap grants.",
+      );
     }
     const adjacentUnits = [
-      alertShapedUnitWithMechanics(
-        "synthetic_initiative_training_with_count",
-        {
-          ...mechanics,
-          grants: [
-            left.kind === "modify_roll_numeric" ? { ...left, count: 1 } : left,
-            right.kind === "modify_roll_numeric"
-              ? { ...right, count: 1 }
-              : right,
-          ],
-        },
-      ),
+      alertShapedUnitWithMechanics("synthetic_initiative_training_with_count", {
+        ...mechanics,
+        grants: [
+          left.kind === "modify_roll_numeric" ? { ...left, count: 1 } : left,
+          right.kind === "modify_roll_numeric" ? { ...right, count: 1 } : right,
+        ],
+      }),
       alertShapedUnitWithMechanics(
         "synthetic_initiative_training_with_condition",
         {
@@ -145,9 +140,9 @@ describe("L12G deterministic Alert Initiative admission", () => {
     ] as const satisfies readonly UnitRecord[];
 
     for (const adjacentUnit of adjacentUnits) {
-      expect(battleInitiativeProficiencyAndSwapSupportForUnit(adjacentUnit)).toBe(
-        "unsupported",
-      );
+      expect(
+        battleInitiativeProficiencyAndSwapSupportForUnit(adjacentUnit),
+      ).toBe("unsupported");
       expect(
         battleUnitRefWithSupportProfiles({
           unitRef: { unitId: adjacentUnit.id },
@@ -169,8 +164,8 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const result = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expect(Either.isRight(result)).toBe(true);
@@ -188,14 +183,34 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expect(state.combatants.get(alertAllyId)?.initiative).toBe(12);
   });
 
+  test("Initiative Swap consumes the operation-local ally fact instead of stored creature classification", () => {
+    const tableRejectsRelationship = {
+      setup: alertBattleSetup(),
+      sourceId: alertSourceId,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "notAlly" },
+    } satisfies Parameters<typeof applyInitiativeSwap>[0];
+    expectSwapRejected(tableRejectsRelationship);
+
+    const tableAcceptsRelationship = {
+      setup: alertBattleSetup(),
+      sourceId: alertSourceId,
+      candidateId: alertEnemyId,
+      candidateWitness: { tag: "willingAlly" },
+    } satisfies Parameters<typeof applyInitiativeSwap>[0];
+    expect(Either.isRight(applyInitiativeSwap(tableAcceptsRelationship))).toBe(
+      true,
+    );
+  });
+
   test("Initiative Swap consumes one post-roll opportunity for the source", () => {
     const setup = alertBattleSetup();
 
     const firstSwap = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expect(Either.isRight(firstSwap)).toBe(true);
@@ -203,56 +218,56 @@ describe("L12G deterministic Alert Initiative admission", () => {
       throw new Error(firstSwap.left.message);
     }
     expect(firstSwap.right).toBe(setup);
-    expect(firstSwap.right.state.combatants.get(alertSourceId)?.initiative).toBe(
-      18,
-    );
+    expect(
+      firstSwap.right.state.combatants.get(alertSourceId)?.initiative,
+    ).toBe(18);
     const secondSwapFromStaleSetup = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
-      allyId: alertSecondAllyId,
-      allyWilling: true,
+      candidateId: alertSecondAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
     expect(Either.isLeft(secondSwapFromStaleSetup)).toBe(true);
 
     const secondSwap = applyInitiativeSwap({
       setup: firstSwap.right,
       sourceId: alertSourceId,
-      allyId: alertSecondAllyId,
-      allyWilling: true,
+      candidateId: alertSecondAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expect(Either.isLeft(secondSwap)).toBe(true);
   });
 
-  test("Initiative Swap requires a willing same-side non-Incapacitated ally", () => {
+  test("Initiative Swap requires a willing same-combat non-Incapacitated ally", () => {
     const setup = alertBattleSetup();
 
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      allyWilling: false,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "unwillingAlly" },
     });
 
     expectSwapRejected({
       setup: alertBattleSetup({ sourceConditions: ["incapacitated"] }),
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expectSwapRejected({
       setup: alertBattleSetup({ allyConditions: ["incapacitated"] }),
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: alertEnemyId,
-      allyWilling: true,
+      candidateId: alertEnemyId,
+      candidateWitness: { tag: "notAlly" },
     });
   });
 
@@ -262,14 +277,14 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expectSwapRejected({
       setup,
       sourceId: combatantId("absent-alert-source"),
-      allyId: alertAllyId,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: combatantId("absent-alert-ally"),
-      allyWilling: true,
+      candidateId: combatantId("absent-alert-ally"),
+      candidateWitness: { tag: "willingAlly" },
     });
   });
 
@@ -288,8 +303,8 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
   });
 });
@@ -321,7 +336,6 @@ function alertBattleSetup(
         combatantId: alertSourceId,
         displayName: "Alert source",
         initiative: 12,
-        side: partySide,
         characterUnitRefs: [unitRef.right],
         conditions: input.sourceConditions,
       }),
@@ -329,20 +343,17 @@ function alertBattleSetup(
         combatantId: alertAllyId,
         displayName: "Alert ally",
         initiative: 18,
-        side: partySide,
         conditions: input.allyConditions,
       }),
       characterCreature({
         combatantId: alertEnemyId,
         displayName: "Alert enemy",
         initiative: 15,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: alertSecondAllyId,
         displayName: "Alert second ally",
         initiative: 9,
-        side: partySide,
       }),
     ],
   });

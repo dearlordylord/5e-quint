@@ -10,7 +10,6 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
   battleActTraceCheckpoint,
-  battleCombatantSide,
   battleId,
   battleResolutionTraceCheckpoint,
   combatantId,
@@ -40,8 +39,6 @@ if (statBlockCatalogResult.tag !== "ok") {
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const attackerId = combatantId("trace-attacker");
 const targetId = combatantId("trace-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 describe("battle trace contract", () => {
   test("projects public weapon attack hit replay into QNT-owned checkpoints", () => {
@@ -125,12 +122,10 @@ function startBattleRight(): BattleState {
       statBlockCreatureInit({
         combatantId: attackerId,
         initiative: 20,
-        side: partySide,
       }),
       statBlockCreatureInit({
         combatantId: targetId,
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -228,7 +223,6 @@ function damageRollFill(hole: BattleHole, dieResult: number): BattleFill {
 function statBlockCreatureInit(input: {
   readonly combatantId: CombatantId;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
 }): BattleCreatureInit {
   const statBlock = statBlockRecord();
   if (statBlock.statBlock.hp.kind !== "literal") {
@@ -238,7 +232,6 @@ function statBlockCreatureInit(input: {
     combatantId: input.combatantId,
     displayName: statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock,
