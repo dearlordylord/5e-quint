@@ -23,7 +23,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -184,8 +183,6 @@ const casterId = combatantId("sanctuary-selected-identity-caster");
 const wardedId = combatantId("sanctuary-selected-identity-warded");
 const attackerId = combatantId("sanctuary-selected-identity-attacker");
 const replacementId = combatantId("sanctuary-selected-identity-replacement");
-const partySide = battleCombatantSide("party");
-const enemySide = battleCombatantSide("enemy");
 const initialWardedHp = 12;
 const damageDealtByWardedCreature = 1;
 
@@ -1157,7 +1154,7 @@ function battleWithSanctuary(): BattleState {
   const result = startBattle({
     battleId: battleId("sanctuary-selected-identity"),
     combatants: [
-      characterCreature(casterId, "Caster", 20, partySide, {
+      characterCreature(casterId, "Caster", 20, {
         sourceClassName: "cleric",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
@@ -1173,8 +1170,8 @@ function battleWithSanctuary(): BattleState {
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 2 }],
       }),
-      characterCreature(wardedId, "Warded", 15, partySide),
-      characterCreature(attackerId, "Attacker", 10, enemySide, {
+      characterCreature(wardedId, "Warded", 15),
+      characterCreature(attackerId, "Attacker", 10, {
         sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
@@ -1186,7 +1183,7 @@ function battleWithSanctuary(): BattleState {
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 2, count: 1 }],
       }),
-      characterCreature(replacementId, "Replacement", 9, partySide),
+      characterCreature(replacementId, "Replacement", 9),
     ],
   });
   if (Either.isLeft(result)) {
@@ -1199,7 +1196,6 @@ function characterCreature(
   combatantIdValue: CombatantId,
   displayName: string,
   initiative: number,
-  side: ReturnType<typeof battleCombatantSide>,
   spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1215,7 +1211,6 @@ function characterCreature(
     combatantId: combatantIdValue,
     displayName,
     initiative: initiativeScore(initiative),
-    side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${combatantIdValue}-character`),

@@ -17,8 +17,6 @@ import {
   combatantId,
   discoverBattleActs,
   Either,
-  oppositionSide,
-  partySide,
   requireResultHole,
   resolveBattleSubject,
   snapshotBattle,
@@ -408,7 +406,6 @@ function sacredWeaponBattle(input: {
         combatantId: paladinId,
         displayName: "Sacred Weapon Paladin",
         initiative: 18,
-        side: partySide,
         characterUnitRefs:
           input.selectedProfile === false ? [] : [unitRef.right],
         classLevels: [{ className: "paladin", level: 3 }],
@@ -427,7 +424,6 @@ function sacredWeaponBattle(input: {
         combatantId: targetId,
         displayName: "Sacred Weapon Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });

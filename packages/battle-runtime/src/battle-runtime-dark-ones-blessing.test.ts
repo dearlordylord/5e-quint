@@ -14,7 +14,6 @@ import {
   damageRollFill,
   discoverBattleActs,
   findHole,
-  partySide,
   startBattleRight,
   statBlockCreatureInit,
   testCharacterD20Statistics,
@@ -343,13 +342,12 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     expect(tempHp(result, warlockId)).toBe(6);
   });
 
-  test("uses the event-scoped enemy decision independently of Encounter Side", () => {
+  test("uses the event-scoped enemy decision for each defeated target", () => {
     const result = damageEnemyToZero({
       damageSourceId: allyId,
       targetId: otherEnemyId,
       warlockCha: 16,
       warlockLevel: 3,
-      targetSide: partySide,
       targetIsEnemy: true,
       spatialFacts: [darkOnesBlessingRangeFact(allyId, otherEnemyId)],
     });
@@ -486,7 +484,6 @@ function damageEnemyToZero(input: {
   readonly warlockCha: number;
   readonly warlockLevel: number;
   readonly warlockTempHp?: number;
-  readonly targetSide?: typeof partySide;
   readonly targetIsEnemy?: boolean;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
 }): BattleState {
@@ -529,7 +526,6 @@ function darkOnesBlessingBattle(input: {
   readonly warlockCha: number;
   readonly warlockLevel: number;
   readonly warlockTempHp?: number;
-  readonly targetSide?: typeof partySide;
   readonly secondWarlock?: true;
   readonly preparedSpells?: readonly ReturnType<typeof spellRecord>[];
 }): BattleState {
@@ -589,7 +585,6 @@ function darkOnesBlessingBattle(input: {
         combatantId: allyId,
         displayName: "Ally",
         initiative: 15,
-        side: partySide,
       }),
       statBlockCreatureInit({
         combatantId: enemyId,
@@ -601,11 +596,7 @@ function darkOnesBlessingBattle(input: {
         initiative: 5,
         currentHp: 5,
       }),
-    ].map((combatant) =>
-      combatant.combatantId === otherEnemyId && input.targetSide !== undefined
-        ? { ...combatant, side: input.targetSide }
-        : combatant,
-    ),
+    ],
   });
 }
 

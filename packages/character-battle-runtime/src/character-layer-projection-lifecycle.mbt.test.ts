@@ -2,7 +2,6 @@
 import * as path from "node:path";
 
 import {
-  battleCombatantSide,
   battleCreatureInitFromStatBlock,
   battleId,
   combatantId,
@@ -489,7 +488,6 @@ function startLifecycleBattle(sheet: CharacterSheet): {
       combatantId: lifecycleCharacterCombatantId,
       displayName: "Lifecycle Fighter",
       initiative: initiativeScore(10),
-      side: battleCombatantSide("party"),
     }),
   );
   const state = requireRight(
@@ -501,7 +499,6 @@ function startLifecycleBattle(sheet: CharacterSheet): {
           combatantId: lifecycleSkeletonCombatantId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(20),
-          side: battleCombatantSide("monsters"),
         }),
       ],
     }),

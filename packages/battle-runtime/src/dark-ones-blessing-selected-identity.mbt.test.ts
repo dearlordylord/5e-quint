@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-02 warlock_dark_ones_blessing
-// UNIT-IDENTITY-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doSameSideOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
+// UNIT-IDENTITY-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
 import { Hp, movementFeet } from "@dnd/shared/types";
 
 import {
@@ -9,7 +9,6 @@ import {
   battleId,
   characterSeed,
   combatantId,
-  partySide,
   startBattleRight,
   statBlockCreatureInit,
   testCharacterD20Statistics,
@@ -36,7 +35,6 @@ type DarkOnesBlessingLastResult =
   | "init"
   | "selfKill"
   | "nearbyOtherKill"
-  | "sameSideOtherKill"
   | "outOfRangeRejected"
   | "nonEnemyRejected"
   | "minimumTemporaryHitPoints"
@@ -46,7 +44,6 @@ const DARK_ONES_BLESSING_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   SelfKill: "selfKill",
   NearbyOtherKill: "nearbyOtherKill",
-  SameSideOtherKill: "sameSideOtherKill",
   OutOfRangeRejected: "outOfRangeRejected",
   NonEnemyRejected: "nonEnemyRejected",
   MinimumTemporaryHitPoints: "minimumTemporaryHitPoints",
@@ -123,23 +120,6 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doSameSideOtherKill",
-          discover: () =>
-            projectBattleState(
-              damageEnemyToZero({
-                damageSourceId: otherEnemyId,
-                targetId: enemyId,
-                warlockCha: 16,
-                warlockLevel: 3,
-                spatialRelationships: [
-                  { damageSourceId: otherEnemyId, targetId: enemyId },
-                ],
-              }),
-              enemyId,
-              "sameSideOtherKill",
-            ),
-        },
-        {
           actionName: "doRejectOutOfRangeOtherKill",
           discover: () =>
             projectBattleState(
@@ -160,7 +140,6 @@ defineSelectedIdentityReplayAndQntReplay({
               damageEnemyToZero({
                 damageSourceId: allyId,
                 targetId: otherEnemyId,
-                targetSide: partySide,
                 targetIsEnemy: false,
                 warlockCha: 16,
                 warlockLevel: 3,
@@ -235,7 +214,6 @@ function damageEnemyToZero(input: {
   readonly warlockCha: number;
   readonly warlockLevel: number;
   readonly warlockTempHp?: number;
-  readonly targetSide?: typeof partySide;
   readonly targetIsEnemy?: boolean;
   readonly spatialRelationships?: readonly {
     readonly damageSourceId: CombatantId;
@@ -274,7 +252,6 @@ function darkOnesBlessingBattle(input: {
   readonly warlockCha: number;
   readonly warlockLevel: number;
   readonly warlockTempHp?: number;
-  readonly targetSide?: typeof partySide;
 }): BattleState {
   return startBattleRight({
     battleId: battleId("dark-ones-blessing-selected-battle"),
@@ -299,7 +276,6 @@ function darkOnesBlessingBattle(input: {
         combatantId: allyId,
         displayName: "Ally",
         initiative: 15,
-        side: partySide,
       }),
       statBlockCreatureInit({
         combatantId: enemyId,
@@ -311,11 +287,7 @@ function darkOnesBlessingBattle(input: {
         initiative: 5,
         currentHp: 5,
       }),
-    ].map((combatant) =>
-      combatant.combatantId === otherEnemyId && input.targetSide !== undefined
-        ? { ...combatant, side: input.targetSide }
-        : combatant,
-    ),
+    ],
   });
 }
 

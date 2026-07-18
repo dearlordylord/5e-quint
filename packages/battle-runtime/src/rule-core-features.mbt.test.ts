@@ -89,7 +89,6 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
-  battleCombatantSide,
   battleId,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
@@ -177,8 +176,6 @@ type SaveGateActivationPhase = Extract<
 
 const actorId = combatantId("rule-core-feature-actor");
 const targetId = combatantId("rule-core-feature-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const featureMbtBaselineArmorClass = 10;
 const componentOwner = "RuleCoreFeatureProfileSemanticsOwner";
 const cunningActionSupportProfile = {
@@ -2015,7 +2012,6 @@ function relentlessEnduranceBattle(): BattleState {
             },
           ],
         }),
-        side: oppositionSide,
       },
     ],
   });
@@ -2152,7 +2148,6 @@ function featureActor(input: {
     combatantId: input.combatantId ?? actorId,
     displayName: input.displayName ?? "Feature Actor",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId ?? actorId}-character`),
@@ -2210,7 +2205,6 @@ function featureTarget(initiative: number): BattleCreatureInit {
       initiative,
       attack: zeroAbilityWeaponAttack("weapon_shortsword"),
     }),
-    side: oppositionSide,
   };
 }
 

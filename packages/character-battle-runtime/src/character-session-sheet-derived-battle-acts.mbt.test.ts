@@ -4,7 +4,6 @@ import * as path from "node:path";
 import {
   battleCreatureInitFromStatBlock,
   battleActSpellPresentation,
-  battleCombatantSide,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -620,7 +619,6 @@ function startSheetDerivedSession(
       combatantId: characterCombatantId,
       displayName: "Sheet Derived Caster",
       initiative: initiativeScore(20),
-      side: battleCombatantSide("party"),
     }),
   );
   const targetInit = battleCreatureInitFromRidingHorse();
@@ -643,7 +641,6 @@ function battleCreatureInitFromRidingHorse() {
     combatantId: targetCombatantId,
     statBlock: statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
     initiative: initiativeScore(10),
-    side: battleCombatantSide("monsters"),
   });
 }
 

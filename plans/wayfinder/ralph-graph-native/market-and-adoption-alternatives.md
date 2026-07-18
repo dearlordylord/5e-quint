@@ -6,6 +6,15 @@ Wayfinder map: [Ralph graph-native orchestration](https://github.com/dearlordylo
 
 Research ticket: [Evaluate Gas Town, Beads, and Agent Orchestrator as Ralph adoption alternatives](https://github.com/dearlordylord/5e-quint/issues/180)
 
+## Scope correction
+
+The checked-in shell harness was a one-off experiment, not an incumbent system
+or compatibility baseline. It may supply candidate requirements and failure
+evidence, but the new Ralph orchestrator does not invoke its stages, migrate its
+plan index or runs, preserve behavioral parity with it, or retain it as a
+fallback. The compatibility-executor and shell-cutover hypothesis formerly
+recorded in this research is withdrawn.
+
 ## Conclusion
 
 Parallel coding agents in isolated worktrees are no longer a niche. Dependency-aware task boards, bounded concurrency, review feedback, merge queues, retries, and cleanup also exist in several combinations. What remains uncommon is their composition into Ralph's complete protocol:
@@ -116,24 +125,21 @@ The answer depends on the boundary:
 
 This distinction explains why many tools look like an 80% match in a feature list yet would require replacement of their scheduler, task model, or acceptance lifecycle to preserve Ralph's semantics.
 
-## Extend the current harness or create a clean control plane?
+## Historical-harness evidence or a clean control plane?
 
-### Extend the current harness
+### Extend the historical harness
 
-Advantages:
-
-- preserves already-executable task context, Base SHA checks, prompts, review handbacks, decider behavior, resource locks, evidence layout, and cleanup;
-- permits a smaller first experiment around concurrent frontier dispatch;
-- minimizes migration distance for existing `.ralph` configuration and runbooks.
-
-Risks:
+Rejected because:
 
 - `scripts/ralph-run.sh` is already about 3,000 lines and owns scheduling, process lifecycle, tracker adaptation, worktrees, review parsing, integration, evidence, and cleanup in one mutable shell process;
 - its single launcher lock and single current integration checkout are structural assumptions, not merely a missing `maxParallelism` option;
 - parallel tasks introduce durable state, cancellation, per-task ownership, restart reconciliation, and a serialized integration queue across many shell traps and arrays;
-- keeping compatibility branches beside a second scheduler would make lifecycle facts change together across distant code.
+- keeping compatibility branches beside the new scheduler would make lifecycle facts change together across distant code;
+- the harness's stage boundaries, plan index, run directories, claims, and
+  prompts are not accepted architectural concepts merely because they are
+  executable.
 
-### Create a clean control plane with a compatibility boundary
+### Create a clean control plane
 
 Advantages:
 
@@ -141,25 +147,31 @@ Advantages:
 - makes bounded parallel dispatch and serialized integration separate resources rather than incidental shell order;
 - gives tracker, executor, reviewer, integrator, and evidence storage typed ports;
 - can use Effect for scoped worktree/process acquisition, typed failures, retry schedules, bounded concurrency, interruption, and structured observability;
-- can initially invoke proven Ralph task-stage behavior instead of rewriting every prompt and rule at once.
+- implements accepted requirements directly without inheriting historical
+  stage or state boundaries.
 
 Risks:
 
-- a rewrite can silently lose obscure Ralph semantics unless the execution-contract inventory becomes executable conformance tests;
-- migration needs one authoritative owner for claims, tracker mutations, and integration; two live schedulers cannot safely share a run;
+- candidate requirements can be lost or accidentally promoted unless every one
+  is traced to an owning decision or specification;
 - optional Sandcastle adoption must prove that its worktree and process lifecycle can carry Base SHA, evidence preservation, cancellation, and quarantine requirements without an adapter-owned shadow state.
 
 ### Evidence-weighted direction for the architecture ticket
 
-Do not add parallel lifecycle directly to the monolithic shell runner, and do not adopt a surveyed product wholesale. Test a clean, typed control plane while treating current Ralph as the behavioral oracle and compatibility source.
+Do not extend the monolithic historical harness, and do not adopt a surveyed
+product wholesale. Build and test a clean typed control plane. Use the harness
+only as fallible evidence when evaluating candidate requirements.
 
-The safest transition shape is incremental:
+The safe implementation shape is incremental within the new system:
 
-1. freeze the Ralph execution contract as fixtures and state-transition tests;
-2. put tracker snapshots, claims, frontier derivation, task state, and integration serialization under one new control-plane owner;
-3. initially delegate one claimed task's implementation/review/decider pipeline to a compatibility executor;
-4. replace that executor only after parity is demonstrated, optionally using Sandcastle primitives;
-5. retire the shell scheduler only when restart, quarantine, cleanup, and integration conflict scenarios pass end-to-end.
+1. trace each candidate requirement to an explicit owning decision;
+2. put tracker snapshots, claims, frontier derivation, task workflow, and integration serialization under one new control-plane owner;
+3. implement new typed executor, reviewer, integrator, and evidence ports from
+   those accepted requirements;
+4. qualify optional substrates such as Sandcastle against the new port
+   contracts; and
+5. release the new orchestrator only when its own restart, quarantine, cleanup,
+   and integration-conflict scenarios pass end to end.
 
 Before selecting this direction, prototype the three seams most likely to falsify it:
 
@@ -175,4 +187,4 @@ Before selecting this direction, prototype the three seams most likely to falsif
 - Strongest possible execution substrate: **Sandcastle**, pending its dedicated evaluation.
 - Strongest graph/claim prior art: **Beads/Gas Town and Agent Kanban**.
 - Strongest retry/review/quarantine prior art: **AIF Handoff**.
-- Implementation hypothesis to test: **clean Effect-based control plane with compatibility reuse of Ralph semantics**, not a predetermined final decision.
+- Implementation hypothesis to test: **clean Effect-based control plane implementing independently accepted Ralph requirements**, not compatibility with the historical harness.

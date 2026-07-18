@@ -150,14 +150,12 @@ describe("end-user MCP vertical", () => {
           characterId: testCharacterId(draftId),
           combatantId: "fighter",
           initiative: 18,
-          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
-          side: "opposition",
           admissionSource: { kind: "encounterParticipant" },
         },
       ],
@@ -339,21 +337,18 @@ describe("end-user MCP vertical", () => {
           characterId: testCharacterId(fighterDraftId),
           combatantId: "fighter",
           initiative: 18,
-          side: "party",
         },
         {
           kind: "characterSession",
           characterId: testCharacterId(wizardDraftId),
           combatantId: "wizard",
           initiative: 14,
-          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_skeleton",
           combatantId: "skeleton-a",
           initiative: 8,
-          side: "opposition",
           admissionSource: { kind: "encounterParticipant" },
         },
         {
@@ -361,7 +356,6 @@ describe("end-user MCP vertical", () => {
           statBlockId: "stat_block_skeleton",
           combatantId: "skeleton-b",
           initiative: 7,
-          side: "opposition",
           admissionSource: { kind: "encounterParticipant" },
         },
         {
@@ -369,7 +363,6 @@ describe("end-user MCP vertical", () => {
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 6,
-          side: "opposition",
           admissionSource: { kind: "encounterParticipant" },
         },
       ],
@@ -1761,7 +1754,6 @@ function characterCombatant(
     characterId: testCharacterId(draftId),
     combatantId,
     initiative,
-    side: "party",
   };
 }
 
@@ -1775,7 +1767,6 @@ function statBlockCombatant(
     statBlockId,
     combatantId,
     initiative,
-    side: "opposition",
     admissionSource: { kind: "encounterParticipant" },
   };
 }

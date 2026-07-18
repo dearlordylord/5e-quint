@@ -589,7 +589,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt` | proof-only | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-attack-facts.qnt` | proof-only | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/battle-runtime/battle-runtime-combat-holes.qnt` | proof-only | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
-| `packages/battle-runtime/battle-runtime-combatant-side.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` | bridge | profile-scoped: `unit-feature.brutal-strike` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.fighter-tactical-master` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.magic-action-save-gated-condition` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-mastery-push` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-mastery-slow` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-hidden.qnt` | proof-only | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
@@ -673,7 +672,6 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-combat-holes.qnt` | qnt-owner-role | proof-only |
-| `packages/battle-runtime/battle-runtime-combatant-side.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-command-ordering.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | qnt-owner-role | semantic-core |

@@ -31,7 +31,6 @@ import {
 
 import {
   battleReducerStartRouteEvent,
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -104,8 +103,6 @@ const reactorId = combatantId("reaction-spell-selected-identity-reactor");
 const triggerCreatureId = combatantId(
   "reaction-spell-selected-identity-trigger-creature",
 );
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const counterspellUnitId = "counterspell";
 const magicMissileUnitId = "magic_missile";
 const counterspellSlotLevel = 3;
@@ -636,13 +633,11 @@ function reactionSpellBattle(spell: SpellRecord): BattleState {
         combatantId: triggerCreatureId,
         displayName: "Reaction spell trigger creature",
         initiative: 20,
-        side: oppositionSide,
       }),
       reactionSpellCreature({
         combatantId: reactorId,
         displayName: "Reaction spell caster",
         initiative: 10,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -681,7 +676,6 @@ function counterspellBattle(
         combatantId: triggerCreatureId,
         displayName: "Reaction spell trigger creature",
         initiative: 20,
-        side: oppositionSide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -699,7 +693,6 @@ function counterspellBattle(
         combatantId: reactorId,
         displayName: "Reaction spell caster",
         initiative: 10,
-        side: partySide,
         classLevel: 5,
         spellcasting: {
           sourceClassName: "wizard",
@@ -726,7 +719,6 @@ function reactionSpellCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly classLevel?: number | undefined;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -737,7 +729,6 @@ function reactionSpellCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

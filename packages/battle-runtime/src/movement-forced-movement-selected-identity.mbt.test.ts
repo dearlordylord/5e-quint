@@ -30,7 +30,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   battleReducerStartRouteEvent,
-  battleCombatantSide,
   battleId,
   battleUnitRefWithSupportProfiles,
   characterId,
@@ -152,8 +151,6 @@ type DashAct = AvailableBattleAct & {
 
 const casterId = combatantId("movement-forced-movement-caster");
 const targetId = combatantId("movement-forced-movement-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -1639,7 +1636,6 @@ function movementForcedMovementBattle(input: {
         combatantId: casterId,
         displayName: input.caster?.displayName ?? "Movement spellcaster",
         initiative: 20,
-        side: partySide,
         characterUnitRefs: input.caster?.characterUnitRefs ?? [],
         ...(input.caster?.spellcasting === undefined
           ? {}
@@ -1652,7 +1648,6 @@ function movementForcedMovementBattle(input: {
         combatantId: targetId,
         displayName: "Movement target",
         initiative: 10,
-        side: oppositionSide,
         ...(input.target?.currentHp === undefined
           ? {}
           : { currentHp: input.target.currentHp }),
@@ -1672,7 +1667,6 @@ function movementForcedMovementCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1689,7 +1683,6 @@ function movementForcedMovementCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

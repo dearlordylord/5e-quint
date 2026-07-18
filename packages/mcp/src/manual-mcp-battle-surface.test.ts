@@ -7,7 +7,6 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -36,8 +35,6 @@ import type { BattleToolResult } from "./battle-tools.ts";
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 const allyId = combatantId("ally");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 describe("manual MCP battle surface coverage", () => {
   test("uses Bardic Inspiration grant through MCP battle tools", () => {
@@ -1052,7 +1049,6 @@ function statBlock(
     combatantId: input.combatantId,
     displayName: input.displayName ?? battleStatBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: battleStatBlock,
@@ -1110,7 +1106,6 @@ function character(
     combatantId: input.combatantId,
     displayName: input.displayName ?? "Fighter",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

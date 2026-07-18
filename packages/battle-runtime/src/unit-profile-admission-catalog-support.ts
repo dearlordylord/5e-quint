@@ -12,7 +12,6 @@ import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   battleAreaId,
-  battleCombatantSide,
   battleLineDirectionId,
   battleObjectId,
   combatantId,
@@ -513,10 +512,6 @@ export const massHealingTargetIds = [
   combatantId("unit-profile-spell-target-6"),
   combatantId("unit-profile-spell-target-7"),
 ] as const;
-
-export const partySide = battleCombatantSide("party");
-
-export const oppositionSide = battleCombatantSide("opposition");
 
 export type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;

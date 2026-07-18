@@ -805,10 +805,3 @@ function nonNegativeIntegerProperty(
     typeof property === "number" && Number.isInteger(property) && property >= 0
   );
 }
-
-export const BattleCombatantSide = Schema.NonEmptyTrimmedString.pipe(
-  Schema.brand("BattleCombatantSide"),
-);
-export type BattleCombatantSide = typeof BattleCombatantSide.Type;
-export const battleCombatantSide: (value: string) => BattleCombatantSide =
-  BattleCombatantSide.make;

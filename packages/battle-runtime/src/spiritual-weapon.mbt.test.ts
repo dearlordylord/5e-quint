@@ -31,7 +31,6 @@ import {
   attackRollFill,
   damageRollFillWithGroups,
   fighterId,
-  partySide,
   resolveBattleSubject,
   skeletonCreatureInit,
   skeletonId,
@@ -328,7 +327,6 @@ function spiritualWeaponCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Spiritual Weapon Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("spiritual-weapon-caster-character"),

@@ -32,7 +32,6 @@ import {
   attackRollFill,
   damageRollFillWithGroups,
   fighterId,
-  partySide,
   resolveBattleSubject,
   skeletonCreatureInit,
   skeletonId,
@@ -310,7 +309,6 @@ function eldritchBlastCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Eldritch Blast Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("eldritch-blast-caster-character"),

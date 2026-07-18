@@ -49,7 +49,6 @@ import {
   combatantId,
   damageRollFillWithGroups,
   heavyArmorClassState,
-  oppositionSide,
   requireNeedsHoles,
   requireResolved,
   resolveBattleSubject,
@@ -608,7 +607,6 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
           combatantId: opponentId,
           displayName: "Control Caster",
           initiative: 10,
-          side: oppositionSide,
           spellcasting: {
             ...wizardSpellcasting({
               cantrips: [spellRecord("fire_bolt")],

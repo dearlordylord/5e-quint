@@ -29,9 +29,7 @@ import type {
   CombatantId,
 } from "./index.ts";
 import {
-  oppositionSide,
   paladinChannelDivinityUnitId,
-  partySide,
   spellCasterId,
   spellTargetId,
   unitLibrary,
@@ -200,7 +198,6 @@ function abjureFoesBattle(
         combatantId: spellCasterId,
         displayName: "Devotion Paladin",
         initiative: 20,
-        side: partySide,
         classLevels: [{ className: "paladin", level: paladinLevel }],
         d20Statistics: testCharacterD20Statistics({ cha: 16, wis: 10 }),
         characterUnitRefs: [requireAbjureFoesUnitRef(paladinLevel)],
@@ -222,7 +219,6 @@ function abjureFoesBattle(
         combatantId: spellTargetId,
         displayName: "Failed Save Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: 20,
         maxHp: 20,
       }),
@@ -230,7 +226,6 @@ function abjureFoesBattle(
         combatantId: secondTargetId,
         displayName: "Successful Save Target",
         initiative: 9,
-        side: oppositionSide,
         currentHp: 20,
         maxHp: 20,
       }),

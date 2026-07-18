@@ -21,7 +21,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   activeFeatherFallDescentRateCapFeetPerRound,
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -56,7 +55,6 @@ const fallingCId = combatantId("feather-fall-target-c");
 const fallingDId = combatantId("feather-fall-target-d");
 const fallingEId = combatantId("feather-fall-target-e");
 const fallingFId = combatantId("feather-fall-target-f");
-const partySide = battleCombatantSide("party");
 
 describe("Feather Fall Reaction spell", () => {
   test("opens from a table-supplied falling trigger and applies per-target mitigation effects", () => {
@@ -412,7 +410,6 @@ function characterCreature(
     combatantId: combatantIdValue,
     displayName,
     initiative: initiativeScore(initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${combatantIdValue}-character`),

@@ -29,7 +29,6 @@ import {
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -63,8 +62,6 @@ const hellishRebukeUnitId = "hellish_rebuke";
 const magicMissileUnitId = "magic_missile";
 const spellCasterId = combatantId("hellish-rebuke-caster");
 const damagerId = combatantId("hellish-rebuke-damager");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -606,14 +603,12 @@ function battleWithHellishRebuke(
         combatantId: damagerId,
         displayName: "Damager",
         initiative: 20,
-        side: oppositionSide,
         spellcasting: input.damagerSpellcasting,
       }),
       characterCreature({
         combatantId: spellCasterId,
         displayName: "Hellish Rebuke caster",
         initiative: 10,
-        side: partySide,
         spellcasting: input.casterSpellcasting ?? {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -647,7 +642,6 @@ function battleWithHellishRebukeOnCasterTurn(spell: SpellRecord): BattleState {
         combatantId: spellCasterId,
         displayName: "Hellish Rebuke caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -665,7 +659,6 @@ function battleWithHellishRebukeOnCasterTurn(spell: SpellRecord): BattleState {
         combatantId: damagerId,
         displayName: "Damager",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -680,7 +673,6 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -690,7 +682,6 @@ function characterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

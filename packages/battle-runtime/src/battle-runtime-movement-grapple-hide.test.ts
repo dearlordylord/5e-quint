@@ -65,7 +65,6 @@ import {
   magicSubject,
   movementFeet,
   movementFill,
-  oppositionSide,
   rageResource,
   requireHole,
   requireResolved,
@@ -585,7 +584,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -653,7 +651,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Large Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "large",
         }),
       ],
@@ -740,7 +737,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -803,7 +799,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -883,7 +878,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -971,7 +965,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Medium Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "medium",
         }),
       ],
@@ -1032,7 +1025,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: goblinId,
           displayName: "Small Blocker",
           initiative: 10,
-          side: oppositionSide,
           size: "small",
         }),
       ],
@@ -1342,7 +1334,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
   });
 
-  test("Help attack grants and consumes Advantage for the selected ally and target", () => {
+  test("Help attack consumes procedure-local ally and enemy decisions", () => {
     const state = startBattleRight({
       battleId: battleId("battle-help-attack"),
       combatants: [
@@ -1352,7 +1344,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           combatantId: wizardId,
           displayName: "Wizard",
           initiative: 5,
-          side: oppositionSide,
         }),
       ],
     });

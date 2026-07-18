@@ -15,7 +15,6 @@ import {
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -59,7 +58,6 @@ const myceliumStepUnitId = "mycelium_step";
 const classicMechanicsProvenance = "classic-2024-mechanics-source-lane";
 const myceliumStepSyntheticLabel = "Mycelium Step";
 const actorId = combatantId("mycelium-step-selected-identity-actor");
-const partySide = battleCombatantSide("party");
 const myceliumStepUnit = mechanicsOnlyClassicUnit(myceliumStepInput);
 const myceliumStepSupportProfile =
   requireMyceliumStepAlternateActionCostProfile(myceliumStepUnit);
@@ -143,7 +141,6 @@ function myceliumStepBattle(): BattleState {
         combatantId: actorId,
         displayName: "Mycelium Step Actor",
         initiative: 20,
-        side: partySide,
         characterUnitRefs: [
           {
             unit: myceliumStepUnit,
@@ -169,7 +166,6 @@ function characterCombatant(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide;
   readonly characterUnitRefs: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -179,7 +175,6 @@ function characterCombatant(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

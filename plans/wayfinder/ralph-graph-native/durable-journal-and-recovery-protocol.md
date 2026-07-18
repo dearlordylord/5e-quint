@@ -2,6 +2,12 @@
 
 Decision asset for [Choose Ralph's durable journal and recovery protocol](https://github.com/dearlordylord/5e-quint/issues/183), under [Wayfinder: Ralph graph-native orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
+In this decision, a run, planned attempt, managed namespace, and recoverable or
+untracked execution all belong to the new orchestrator. Historical
+`ralph-run.sh` runs, claims, worktrees, branches, and `.ralph` artifacts are
+outside that namespace: they are evidence, not journal migration or recovery
+inputs.
+
 ## Answer
 
 Ralph will use a logically append-only SQLite journal to record its own

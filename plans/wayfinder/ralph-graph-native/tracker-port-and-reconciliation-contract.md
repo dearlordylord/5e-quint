@@ -5,6 +5,10 @@ contract](https://github.com/dearlordylord/5e-quint/issues/185), under
 [Wayfinder: Ralph graph-native
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
+Claims in this contract are new-orchestrator reservations obtained through the
+tracker port. Historical Git-ref claims created by `ralph-run.sh` are not claim
+state to import, reconcile, release, or preserve in this model.
+
 ## Decision
 
 Ralph will consume each tracker through two Effect V4 services: a complete
@@ -392,8 +396,9 @@ that TypeScript already proves.
 
 ## Decision review record
 
-Round one checked the draft against the current Ralph issue/claim protocol, the
-bounded-leaf decision, the immutable-DAG evaluation, the control-plane
+Round one checked the draft against accepted issue/claim requirements mined
+from the historical harness, the bounded-leaf decision, the immutable-DAG
+evaluation, the control-plane
 prototype, the durable-journal protocol, and the concurrent accepted-head
 integration protocol. It replaced an implicit “completing” convention with
 explicit active and completion claim states, and bound tracker completion to

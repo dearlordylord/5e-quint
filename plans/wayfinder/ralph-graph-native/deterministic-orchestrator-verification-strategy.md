@@ -5,6 +5,11 @@ orchestrator](https://github.com/dearlordylord/5e-quint/issues/187), under
 [Wayfinder: Ralph graph-native
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
+This strategy verifies the new orchestrator against its independently accepted
+contract. Historical-harness traces and artifacts may motivate scenarios, but
+behavioral parity, replay, migration, and compatibility with
+`scripts/ralph-run.sh` are not verification goals.
+
 ## Answer
 
 Verify Ralph with one executable workflow program, one canonical trace
@@ -529,8 +534,8 @@ Use these lanes deliberately:
    local end-to-end scenario.
 4. **Tracker qualification:** serialized credentialed GitHub fixture lane when
    tracker-adapter code changes and on a scheduled cadence.
-5. **Release/cutover:** all preceding lanes against the exact candidate commit,
-   followed by the migration/cutover acceptance selected downstream.
+5. **Release readiness:** all preceding lanes against the exact candidate
+   commit, followed by acceptance of the new orchestrator on its own contract.
 
 Run public root verification scripts directly under their existing shared
 resource guard. Focused package checks stay focused. Never run broad workspace,
@@ -617,7 +622,8 @@ parallel architecture, glossary, acceptance ledger, or test inventory.
 ## Decision review record
 
 Round one reconciled the durable-journal, concurrent-integration, tracker-port,
-immutable-DAG, control-plane-prototype, current Ralph, Effect V4 testing, and
+immutable-DAG, control-plane-prototype, accepted requirements mined from the
+historical harness, Effect V4 testing, and
 property-testing contracts. It separated semantic workflow traces from
 interpreter capability audits, kept dry-run mutation absence both layer-typed
 and observable, and assigned real resources only to adapter qualification and

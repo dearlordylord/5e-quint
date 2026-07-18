@@ -854,7 +854,7 @@
         "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
         "packages/character-battle-runtime/src/battle-creature-init.ts"
       ],
-      "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat, on the same side, distinct, the ally must be willing, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
+      "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat and distinct, the caller must supply operation-local ally and willingness facts, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
       "taskRefs": [
         "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
       ],
@@ -5319,7 +5319,7 @@
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. Battle runtime retains the admitted support profile on character combatants, consumes existing damage-source and side-based beneficiary-target enemy relationship facts plus caller-supplied 10-foot beneficiary range facts, and applies ordinary non-stacking Temporary Hit Point replacement when a qualifying enemy is reduced to 0 Hit Points without requiring the damage source to be an enemy of the defeated creature or dispatching on authored feature identity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. Battle runtime retains the admitted support profile on character combatants, consumes the damage-source fact, a caller-supplied beneficiary-target enemy relationship fact, and caller-supplied 10-foot beneficiary range facts, then applies ordinary non-stacking Temporary Hit Point replacement when a qualifying enemy is reduced to 0 Hit Points without requiring the damage source to be an enemy of the defeated creature or dispatching on authored feature identity.",
       "taskRefs": [
         "L13UG-A16",
         "L3PUTB-02"
@@ -16610,7 +16610,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Animal Friendship's target-damaged-by-caster-or-ally cleanup rule, including a distinct same-side ally damage source.",
+      "note": "Promoted battle-runtime Quint facts for Animal Friendship's target-damaged-by-caster-or-ally cleanup rule, including a distinct caller-supplied ally damage-source fact.",
       "profileIds": [
         "spell.creature-type-protection-and-charm"
       ],
@@ -16618,7 +16618,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Animal Friendship Charmed cleanup from caster damage and ally damage, unrelated damage pass-through, and relationship derivation from existing combatant side state.",
+      "note": "Focused battle-runtime tests cover Animal Friendship Charmed cleanup from caster damage and caller-supplied ally damage, plus unrelated damage pass-through.",
       "profileIds": [
         "spell.creature-type-protection-and-charm"
       ],
@@ -18670,7 +18670,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime turn-order Quint facts cover Alert Initiative Swap legality: initial Initiative window only, one consumed swap opportunity per source, distinct willing same-combat ally, same-side ally modeling, and Incapacitated blocking for either participant, plus initial turn-order exchange.",
+      "note": "Promoted battle-runtime turn-order Quint facts cover Alert Initiative Swap legality: initial Initiative window only, one consumed swap opportunity per source, distinct willing same-combat ally supplied as operation-local facts and Incapacitated blocking for either participant, plus initial turn-order exchange.",
       "profileIds": [
         "unit-feature.initiative-proficiency-and-swap"
       ],
@@ -18754,7 +18754,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused Dark One's Blessing MBT witness models self kill, nearby-other kill, same-side source/target nearby kill, out-of-range rejection, non-enemy rejection, minimum Temporary Hit Points, and ordinary Temporary Hit Point replacement.",
+      "note": "Focused Dark One's Blessing MBT witness models self kill, nearby-other kill, out-of-range rejection, non-enemy rejection, minimum Temporary Hit Points, and ordinary Temporary Hit Point replacement.",
       "profileIds": [
         "unit-feature.enemy-zero-hit-point-temporary-hit-points"
       ],
@@ -19802,7 +19802,7 @@
     },
     {
       "claimKind": "accepted-runtime-closure",
-      "note": "Task 36 researched stored Glyph release families whose invocation creates battle creatures and records no new runtime profile claim. The current stored invocation candidate union has no Hostile creature summon procedure, the release witness has no summoned-Hostile-creature placement variant, and the SRD creature-creation candidates are allied/controlled companions, reanimated creatures, object-to-creature lifecycles, spatial manifestations, planar transport, or service-binding procedures that need concrete owners before Glyph can consume close-as-possible placement, Encounter Side or hostility, command/turn protocol, attack-target fixation, and full-duration cleanup. Future promotion must start in those summon lifecycle/control owners instead of adding Glyph authored-identity dispatch, a generic placement registry, or duplicate summon occurrence state.",
+      "note": "Task 36 researched stored Glyph release families whose invocation creates battle creatures and records no new runtime profile claim. The current stored invocation candidate union has no Hostile creature summon procedure, the release witness has no summoned-Hostile-creature placement variant, and the SRD creature-creation candidates are allied/controlled companions, reanimated creatures, object-to-creature lifecycles, spatial manifestations, planar transport, or service-binding procedures that need concrete owners before Glyph can consume close-as-possible placement, contextual hostility, command/turn protocol, attack-target fixation, and full-duration cleanup. Future promotion must start in those summon lifecycle/control owners instead of adding Glyph authored-identity dispatch, a generic placement registry, or duplicate summon occurrence state.",
       "profileIds": [],
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE"
     },
@@ -27794,7 +27794,7 @@
             "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. Battle runtime retains the admitted support profile on character combatants, consumes existing damage-source and side-based beneficiary-target enemy relationship facts plus caller-supplied 10-foot beneficiary range facts, and applies ordinary non-stacking Temporary Hit Point replacement when a qualifying enemy is reduced to 0 Hit Points without requiring the damage source to be an enemy of the defeated creature or dispatching on authored feature identity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. Battle runtime retains the admitted support profile on character combatants, consumes the damage-source fact, a caller-supplied beneficiary-target enemy relationship fact, and caller-supplied 10-foot beneficiary range facts, then applies ordinary non-stacking Temporary Hit Point replacement when a qualifying enemy is reduced to 0 Hit Points without requiring the damage source to be an enemy of the defeated creature or dispatching on authored feature identity.",
           "taskRefs": [
             "L13UG-A16",
             "L3PUTB-02"
@@ -29012,7 +29012,7 @@
         "supportedMechanics": [
           "Surface Alert records Initiative Proficiency as a Proficiency Bonus Initiative roll modifier and Initiative Swap as an immediately-after-Initiative willing-ally same-combat exchange blocked by either creature being Incapacitated.",
           "Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, retained Alert support profile, and build Proficiency Bonus without duplicating class progression or Proficiency Bonus state.",
-          "Battle runtime applies the immediately-after-Initiative setup swap at most once per source in a start-battle setup workflow that cannot be re-entered from a swapped BattleState, requires a same-side willing ally and both combatants present and not Incapacitated, swaps the existing combatants' Initiative scores, and rebuilds the initial turn order from those single-source Initiative values without dispatching on Alert identity."
+          "Battle runtime applies the immediately-after-Initiative setup swap at most once per source in a start-battle setup workflow that cannot be re-entered from a swapped BattleState, requires caller-supplied operation-local ally and willingness facts and both combatants present and not Incapacitated, swaps the existing combatants' Initiative scores, and rebuilds the initial turn order from those single-source Initiative values without dispatching on Alert identity."
         ],
         "tag": "supported-profile"
       },
@@ -29049,7 +29049,7 @@
             "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
             "packages/character-battle-runtime/src/battle-creature-init.ts"
           ],
-          "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat, on the same side, distinct, the ally must be willing, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
+          "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat and distinct, the caller must supply operation-local ally and willingness facts, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
           "taskRefs": [
             "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
           ],

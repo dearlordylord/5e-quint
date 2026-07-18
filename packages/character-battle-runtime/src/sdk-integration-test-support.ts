@@ -1,5 +1,4 @@
 import {
-  battleCombatantSide,
   battleActSpellSlotPresentation,
   battleCreatureInitFromStatBlock,
   battleCharacterExecutionScopeRef,
@@ -80,9 +79,6 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 
 export const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
-
-const partySide = battleCombatantSide("party");
-const monsterSide = battleCombatantSide("monsters");
 
 export function battleProcedureExecutionRefForTest(
   discriminator: string,
@@ -172,7 +168,6 @@ export function battleFromSheets(input: {
         combatantId: character.combatantId,
         displayName: character.sheet.characterId,
         initiative: initiativeScore(character.initiative),
-        side: partySide,
         unitLibrary,
         statBlockCatalog,
       }),
@@ -1100,7 +1095,6 @@ export function monsterBattleInput(
     combatantId: id,
     statBlock,
     initiative: initiativeScore(initiative),
-    side: monsterSide,
     ...(input.tempHp === undefined ? {} : { tempHp: Hp(input.tempHp) }),
   };
 }

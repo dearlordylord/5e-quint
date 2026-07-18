@@ -27,8 +27,8 @@ and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`
 `battle-runtime-chained-spell-attack.qnt`, and
 `battle-runtime-save-gated-spell.qnt`, `battle-runtime-marked-riders.qnt`, and
 `battle-runtime-marked-spells.qnt`,
-`battle-runtime-reaction-window.qnt`, `battle-runtime-combatant-side.qnt`, and
-`battle-runtime-concentration.qnt`, `battle-runtime-actor-combatants.qnt`, and
+`battle-runtime-reaction-window.qnt`, `battle-runtime-concentration.qnt`,
+`battle-runtime-actor-combatants.qnt`, and
 `battle-runtime-sanctuary.qnt`, `battle-runtime-feather-fall.qnt`, and
 `battle-runtime-jump-movement.qnt`, and
 `battle-runtime-weapon-hit-spell-riders.qnt`,

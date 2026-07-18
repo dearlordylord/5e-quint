@@ -15,8 +15,6 @@ import {
   invisibilityDurationTicks,
   invisibilityUnitId,
   magicMissileUnitId,
-  oppositionSide,
-  partySide,
   shieldUnitId,
   spellCasterId,
   spellTargetId,
@@ -324,7 +322,6 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
           combatantId: counterspellerId,
           displayName: "Counterspeller",
           initiative: 5,
-          side: oppositionSide,
           spellcasting: wizardSpellcasting({
             preparedSpells: [spellRecord(counterspellUnitId)],
             spellSlots: [{ spellLevel: 3, count: 1 }],
@@ -398,7 +395,6 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
           combatantId: magicMissileCasterId,
           displayName: "Magic Missile caster",
           initiative: 5,
-          side: partySide,
           spellcasting: wizardSpellcasting({
             preparedSpells: [spellRecord(magicMissileUnitId)],
             spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -490,7 +486,6 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
           combatantId: magicMissileCasterId,
           displayName: "Counterspell trigger caster",
           initiative: 5,
-          side: partySide,
           spellcasting: wizardSpellcasting({
             preparedSpells: [spellRecord(magicMissileUnitId)],
             spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -627,7 +622,6 @@ function invisibilityReactionBattle(input: {
         combatantId: spellCasterId,
         displayName: "Invisibility caster",
         initiative: 30,
-        side: partySide,
         spellcasting: wizardSpellcasting({
           preparedSpells: [spellRecord(invisibilityUnitId)],
           spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -637,7 +631,6 @@ function invisibilityReactionBattle(input: {
         combatantId: spellTargetId,
         displayName: "Invisible spell target",
         initiative: 20,
-        side: oppositionSide,
         spellcasting: wizardSpellcasting({
           preparedSpells: input.targetPreparedSpells,
           spellSlots: input.targetSpellSlots,

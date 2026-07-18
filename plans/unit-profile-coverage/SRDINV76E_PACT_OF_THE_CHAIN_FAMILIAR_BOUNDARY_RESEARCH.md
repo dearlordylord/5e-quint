@@ -89,7 +89,8 @@ instance created by the Spell Invocation:
 - chosen form reference to a monster/stat-block catalog entry or other typed
   creature-stat source;
 - Celestial, Fey, or Fiend creature-type override chosen at invocation time;
-- ally side relationship;
+- rule-local ally facts projected from the owner link when a procedure needs
+  the RAW-fixed familiar relationship, without a stored global partition;
 - caller-supplied Initiative and independent turn ownership;
 - familiar action and Reaction availability;
 - temporary dismissal, reappearance, 0-HP disappearance, permanent dismissal,

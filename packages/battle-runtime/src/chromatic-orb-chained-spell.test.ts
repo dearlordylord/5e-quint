@@ -10,7 +10,6 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -50,8 +49,6 @@ const spellCasterId = combatantId("chromatic-orb-caster");
 const firstTargetId = combatantId("chromatic-orb-first-target");
 const secondTargetId = combatantId("chromatic-orb-second-target");
 const thirdTargetId = combatantId("chromatic-orb-third-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
@@ -519,7 +516,6 @@ function chromaticOrbBattle(input: {
         combatantId: spellCasterId,
         displayName: "Spellcaster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -537,7 +533,6 @@ function chromaticOrbBattle(input: {
         combatantId: firstTargetId,
         displayName: "First target",
         initiative: 10,
-        side: oppositionSide,
         ...(input.firstTargetHp === undefined
           ? {}
           : { hp: input.firstTargetHp }),
@@ -552,13 +547,11 @@ function chromaticOrbBattle(input: {
             combatantId: secondTargetId,
             displayName: "Second target",
             initiative: 9,
-            side: oppositionSide,
           }),
       characterCreature({
         combatantId: thirdTargetId,
         displayName: "Third target",
         initiative: 8,
-        side: oppositionSide,
       }),
     ],
   });
@@ -946,7 +939,6 @@ function poisonImmuneSkeletonCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
@@ -961,7 +953,6 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -973,7 +964,6 @@ function characterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

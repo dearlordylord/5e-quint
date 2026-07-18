@@ -27,8 +27,6 @@ import {
 import {
   cureWoundsUnitId,
   healingWordUnitId,
-  oppositionSide,
-  partySide,
   statBlockCatalog,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -424,7 +422,6 @@ function startSpellcasterFixtureBattle(): BattleState {
         combatantId: casterId,
         displayName: "Caster",
         initiative: 12,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -442,7 +439,6 @@ function startSpellcasterFixtureBattle(): BattleState {
         combatantId: targetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: 1,
         maxHp: 12,
       }),

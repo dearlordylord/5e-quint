@@ -59,7 +59,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   activeFeatherFallDescentRateCapFeetPerRound,
   battleAreaId,
-  battleCombatantSide,
   battleId,
   battleIlluminationFromLightEmitters,
   battleObjectId,
@@ -476,8 +475,6 @@ const greaseAffectedTargetIds = [
   greaseFailedTargetId,
   greaseSuccessfulTargetId,
 ] as const satisfies ReadonlyArray<CombatantId>;
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const dancingLightsDimLightRadiusFeet = movementFeet(10);
 const dancingLightsSiblingSpacingFeet = movementFeet(10);
 const dancingLightsMoveDistanceFeet = movementFeet(10);
@@ -3048,7 +3045,6 @@ function dancingLightsBattle(): BattleState {
         combatantId: casterId,
         displayName: "Dancing Lights caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3066,7 +3062,6 @@ function dancingLightsBattle(): BattleState {
         combatantId: observerId,
         displayName: "Spatial witness observer",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -3086,7 +3081,6 @@ function faerieFireBattle(): BattleState {
         combatantId: casterId,
         displayName: "Faerie Fire caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "druid",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3104,7 +3098,6 @@ function faerieFireBattle(): BattleState {
         combatantId: observerId,
         displayName: "Faerie Fire target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -3123,7 +3116,6 @@ function featherFallBattle(): BattleState {
         combatantId: casterId,
         displayName: "Feather Fall caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3141,13 +3133,11 @@ function featherFallBattle(): BattleState {
         combatantId: featherFallFallingAllyId,
         displayName: "Feather Fall falling ally A",
         initiative: 15,
-        side: partySide,
       }),
       spatialWitnessCreature({
         combatantId: featherFallOtherFallingAllyId,
         displayName: "Feather Fall falling ally B",
         initiative: 10,
-        side: partySide,
       }),
     ],
   });
@@ -3166,7 +3156,6 @@ function fogCloudBattle(): BattleState {
         combatantId: casterId,
         displayName: "Fog Cloud caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "druid",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3184,7 +3173,6 @@ function fogCloudBattle(): BattleState {
         combatantId: observerId,
         displayName: "Fog Cloud observer",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -3203,7 +3191,6 @@ function greaseBattle(): BattleState {
         combatantId: casterId,
         displayName: "Grease caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3221,13 +3208,11 @@ function greaseBattle(): BattleState {
         combatantId: greaseFailedTargetId,
         displayName: "Grease failed target",
         initiative: 10,
-        side: oppositionSide,
       }),
       spatialWitnessCreature({
         combatantId: greaseSuccessfulTargetId,
         displayName: "Grease successful target",
         initiative: 5,
-        side: oppositionSide,
       }),
     ],
   });
@@ -3246,7 +3231,6 @@ function jumpBattle(): BattleState {
         combatantId: casterId,
         displayName: "Jump caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "druid",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3264,7 +3248,6 @@ function jumpBattle(): BattleState {
         combatantId: jumpTargetId,
         displayName: "Jump willing target",
         initiative: 10,
-        side: partySide,
       }),
     ],
   });
@@ -3283,7 +3266,6 @@ function lightBattle(): BattleState {
         combatantId: casterId,
         displayName: "Light caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3301,7 +3283,6 @@ function lightBattle(): BattleState {
         combatantId: observerId,
         displayName: "Light observer",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -3332,7 +3313,6 @@ function produceFlameBattle(): BattleState {
         combatantId: casterId,
         displayName: "Produce Flame caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "druid",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3350,7 +3330,6 @@ function produceFlameBattle(): BattleState {
         combatantId: observerId,
         displayName: "Produce Flame target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -3384,7 +3363,6 @@ function thunderwaveBattle(): BattleState {
         combatantId: casterId,
         displayName: "Thunderwave caster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "druid",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -3402,19 +3380,16 @@ function thunderwaveBattle(): BattleState {
         combatantId: thunderwaveFailedPushedTargetId,
         displayName: "Thunderwave failed pushed target",
         initiative: 15,
-        side: oppositionSide,
       }),
       spatialWitnessCreature({
         combatantId: thunderwaveFailedBlockedTargetId,
         displayName: "Thunderwave failed blocked target",
         initiative: 10,
-        side: oppositionSide,
       }),
       spatialWitnessCreature({
         combatantId: thunderwaveSuccessfulTargetId,
         displayName: "Thunderwave successful target",
         initiative: 5,
-        side: oppositionSide,
       }),
     ],
   });
@@ -3428,7 +3403,6 @@ function spatialWitnessCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -3438,7 +3412,6 @@ function spatialWitnessCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

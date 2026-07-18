@@ -211,12 +211,7 @@ import type {
   InitiativeScore,
 } from "./identity.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
-import {
-  BattleCombatantSide,
-  BattleId,
-  BattleReplayStackDepth,
-  CombatantId,
-} from "./identity.ts";
+import { BattleId, BattleReplayStackDepth, CombatantId } from "./identity.ts";
 import {
   type BattlePassiveSpeedBonusSupportProfile,
   type BattlePassiveSpeedKindGrantsSupportProfile,
@@ -321,6 +316,7 @@ export {
   requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup,
+  type InitiativeSwapCandidateWitness,
   type InitialInitiativeSetup,
 } from "./battle-reducer/api-lifecycle.ts";
 
@@ -4584,7 +4580,6 @@ type BattleCreatureStateCommon = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
-  readonly side: BattleCombatantSide;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly activeEffects: readonly BattleActiveEffect[];
@@ -7665,7 +7660,6 @@ export type BattleCreatureSnapshot = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
-  readonly side: BattleCombatantSide;
   readonly origin: BattleCreatureOriginSnapshot;
   readonly hp: Hp;
   readonly maxHp: Hp;

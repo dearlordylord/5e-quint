@@ -1,5 +1,4 @@
 import {
-  BattleCombatantSide,
   BattleId as BattleIdSchema,
   characterId,
   combatantId,
@@ -24,7 +23,6 @@ const IntegerSchema = Schema.Number.pipe(Schema.int());
 const NonNegativeIntegerSchema = IntegerSchema.pipe(
   Schema.greaterThanOrEqualTo(0),
 );
-const BattleCombatantSideSchema = BattleCombatantSide;
 const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("characterSession").annotations({
     description: "Initial combatant source: finalized character session.",
@@ -40,10 +38,6 @@ const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
   initiative: IntegerSchema.annotations({
     description: "Caller-supplied Initiative score.",
   }),
-  side: BattleCombatantSideSchema.annotations({
-    description:
-      "Caller-chosen encounter side id; matching side ids are allies and differing side ids are enemies.",
-  }),
 });
 const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("statBlock").annotations({
@@ -58,10 +52,6 @@ const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
   }),
   initiative: IntegerSchema.annotations({
     description: "Caller-supplied Initiative score.",
-  }),
-  side: BattleCombatantSideSchema.annotations({
-    description:
-      "Caller-chosen encounter side id; matching side ids are allies and differing side ids are enemies.",
   }),
   admissionSource: Schema.Struct({
     kind: Schema.Literal("encounterParticipant"),
@@ -140,7 +130,6 @@ export type InitialCharacterSessionCombatantToolInput = {
   readonly characterId: CharacterId;
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
-  readonly side: BattleCombatantSide;
 };
 
 export type InitialStatBlockCombatantToolInput =
@@ -152,7 +141,6 @@ export type InitialEncounterStatBlockCombatantToolInput = {
   readonly initiative: InitiativeScore;
   readonly admissionSource: { readonly kind: "encounterParticipant" };
   readonly statBlockId: StatBlockId;
-  readonly side: BattleCombatantSide;
   readonly currentHp?: HpType;
   readonly tempHp?: HpType;
 };
@@ -206,7 +194,6 @@ function decodeInitialCombatants(
         characterId: characterId(combatant.characterId),
         combatantId: combatantId(combatant.combatantId),
         initiative: initiativeScore(combatant.initiative),
-        side: combatant.side,
       };
     }
     const statBlockCombatant = combatant;
@@ -215,7 +202,6 @@ function decodeInitialCombatants(
       statBlockId: statBlockCombatant.statBlockId,
       combatantId: combatantId(statBlockCombatant.combatantId),
       initiative: initiativeScore(statBlockCombatant.initiative),
-      side: statBlockCombatant.side,
       admissionSource: { kind: "encounterParticipant" },
       ...(statBlockCombatant.currentHp === undefined
         ? {}

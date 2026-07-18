@@ -25,7 +25,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   battleObjectId,
   characterId,
@@ -115,8 +114,6 @@ const casterId = combatantId("beam-sequence-selected-identity-caster");
 const skeletonId = combatantId("beam-sequence-selected-identity-skeleton");
 const zombieId = combatantId("beam-sequence-selected-identity-zombie");
 const objectId = battleObjectId("beam-sequence-selected-identity-object");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -338,7 +335,6 @@ function eldritchBlastBattle(): BattleState {
         combatantId: casterId,
         displayName: "Eldritch Blast Caster",
         initiative: 20,
-        side: partySide,
         currentHp: 12,
         classLevel: 5,
         spellcasting: {
@@ -358,14 +354,12 @@ function eldritchBlastBattle(): BattleState {
         combatantId: skeletonId,
         displayName: "Skeleton Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: initialSkeletonHp,
       }),
       battleCreature({
         combatantId: zombieId,
         displayName: "Zombie Target",
         initiative: 5,
-        side: oppositionSide,
         currentHp: initialZombieHp,
       }),
     ],
@@ -380,7 +374,6 @@ function battleCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly currentHp: number;
   readonly classLevel?: number;
   readonly spellcasting?: Extract<
@@ -392,7 +385,6 @@ function battleCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

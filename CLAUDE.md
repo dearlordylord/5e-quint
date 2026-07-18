@@ -156,14 +156,28 @@ link to detailed evidence over a wall of acceptance jargon.
 
 Do not write to the memory system unless explicitly asked.
 
+## Ralph architecture boundary (CRITICAL)
+
+`scripts/ralph-run.sh` is a one-off historical execution harness. It is not the
+architecture, compatibility baseline, migration source, fallback scheduler, or
+runtime substrate for the new Ralph orchestrator. Its plans, plan index, shell
+stages, claims, run directories, prompts, retained runs, and cleanup conventions
+must not be imported, resumed, wrapped, or preserved for behavioral parity.
+
+The historical harness may be inspected only to mine candidate requirements,
+failure evidence, and design lessons. A candidate becomes a new-orchestrator
+requirement only through an explicit owning decision or specification. The new
+orchestrator implements accepted requirements directly through its own domain
+model and typed ports.
+
 ## Ralph task-base check
 
 Ralph task worktrees are based on the task Base SHA, not necessarily on
 `master`. When launching or reviewing a Ralph task agent, include the
 task-provided base check: log the declared base ref, log `HEAD`, and run
 `git merge-base --is-ancestor <Base SHA> HEAD`. If the ancestor check fails,
-the agent must stop and report the branch-base mismatch; the Ralph runner or
-decider owns branch repair. Do not ask task agents to repair branch state by
+the agent must stop and report the branch-base mismatch; the orchestrator owns
+branch repair. Do not ask task agents to repair branch state by
 rebasing against `master`.
 
 ## MBT tests are nondeterministic

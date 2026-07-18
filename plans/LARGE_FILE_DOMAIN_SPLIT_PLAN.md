@@ -680,7 +680,7 @@ character runtimes.
 | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | 2,239 | Split by procedure family only when battle-runtime QNT imports have narrowed. |
 | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | 1,690 | Split after the battle-runtime spell QNT split identifies stable spell procedure families. |
 | `scripts/srd-unit-inventory.cjs` | 3,632 | Split into inventory IO, source scanning, classification, report writing, and task planning. |
-| `scripts/ralph-run.sh` | 2,594 | Split shell functions into sourced files by queue, GitHub, execution, and reporting if this script remains active. |
+| `scripts/ralph-run.sh` | historical one-off harness | Do not refactor it into the new Ralph architecture. Retain only as evidence while candidate requirements and failure lessons are traced to their owning decisions. |
 | `packages/character-battle-runtime/src/battle-character-build-projection.ts` | 1,181 | Split only if projection broadens: character sheet init, spellcasting projection, invocation projection, and handoff settlement. |
 
 ## Recommended Wave Order

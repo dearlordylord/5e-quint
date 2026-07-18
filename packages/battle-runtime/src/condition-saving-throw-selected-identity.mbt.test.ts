@@ -35,7 +35,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
 
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -109,8 +108,6 @@ type CharacterSpellcastingInit = NonNullable<
 
 const casterId = combatantId("condition-saving-throw-caster");
 const targetId = combatantId("condition-saving-throw-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -1177,7 +1174,6 @@ function conditionSpellBattle(
         combatantId: casterId,
         displayName: "Condition Saving Throw caster",
         initiative: 20,
-        side: partySide,
         className: sourceClassName,
         spellcasting: {
           sourceClassName,
@@ -1203,7 +1199,6 @@ function conditionSpellBattle(
         combatantId: targetId,
         displayName: "Condition Saving Throw target",
         initiative: 10,
-        side: oppositionSide,
         className: "fighter",
       }),
     ],
@@ -1218,7 +1213,6 @@ function conditionSpellCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly className: CharacterClassName;
   readonly spellcasting?: CharacterSpellcastingInit;
 }): BattleCreatureInit {
@@ -1226,7 +1220,6 @@ function conditionSpellCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

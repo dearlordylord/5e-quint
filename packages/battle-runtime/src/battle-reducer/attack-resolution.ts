@@ -256,7 +256,6 @@ export function battleCreatureInitFromStatBlock(
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: input.initiative,
-    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,

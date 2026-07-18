@@ -75,11 +75,7 @@ import {
   requireCombatant,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import {
-  oppositionSide,
-  partySide,
-  statBlockCatalog,
-} from "./unit-profile-admission-catalog-support.ts";
+import { statBlockCatalog } from "./unit-profile-admission-catalog-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
@@ -496,7 +492,6 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
         combatantId: casterId,
         displayName: "Pact Caster",
         initiative: 20,
-        side: partySide,
         classLevels: [{ className: "warlock", level: 1 }],
         spellcasting: {
           sourceClassName: "warlock",
@@ -520,7 +515,6 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
         combatantId: targetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
         currentHp: initialTargetHp,
         maxHp: initialTargetHp,
       }),

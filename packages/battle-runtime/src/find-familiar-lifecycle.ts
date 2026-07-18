@@ -1115,8 +1115,7 @@ function withFindFamiliarCombatant(input: {
 }):
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
-  const owner = input.state.combatants.get(input.casterId);
-  if (owner === undefined) {
+  if (!input.state.combatants.has(input.casterId)) {
     return invalidFindFamiliarResult(
       input.state,
       "missingCombatant",
@@ -1161,7 +1160,6 @@ function withFindFamiliarCombatant(input: {
       combatantId: input.familiarId,
       displayName: input.statBlock.statBlock.displayName,
       initiative: input.initiative,
-      side: owner.side,
       creatureInit: {
         kind: "statBlock",
         statBlock: input.statBlock,

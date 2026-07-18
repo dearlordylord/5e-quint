@@ -111,7 +111,6 @@ import {
 } from "./movement-speed.ts";
 import {
   combatantCanSee,
-  combatantsAreEnemies,
   combatantInvisibleBenefitDenied,
   currentActorId,
   grappledBy,
@@ -1313,9 +1312,7 @@ export function weaponMasteryCleaveTargetHole(
       : {}),
     choices: [...state.combatants.keys()].filter(
       (combatantId) =>
-        combatantId !== attackerId &&
-        combatantId !== firstTargetId &&
-        combatantsAreEnemies(state, attackerId, combatantId),
+        combatantId !== attackerId && combatantId !== firstTargetId,
     ),
   };
 }

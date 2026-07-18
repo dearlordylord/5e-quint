@@ -33,7 +33,6 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -104,7 +103,6 @@ const casterId = combatantId("mage-armor-selected-identity-caster");
 const armoredTargetId = combatantId(
   "mage-armor-selected-identity-armored-target",
 );
-const partySide = battleCombatantSide("party");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -433,7 +431,6 @@ function mageArmorBattle(
       combatantId: casterId,
       displayName: "Mage Armor Caster",
       initiative: 20,
-      side: partySide,
       armorClass: unarmoredDexArmorClass(),
       spellcasting: {
         sourceClassName: "wizard",
@@ -454,7 +451,6 @@ function mageArmorBattle(
             combatantId: armoredTargetId,
             displayName: "Armored Target",
             initiative: 10,
-            side: partySide,
             armorClass: mediumArmorClassState(),
           }),
         ]
@@ -480,7 +476,6 @@ function battleCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide;
   readonly armorClass: ArmorClassState;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -491,7 +486,6 @@ function battleCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

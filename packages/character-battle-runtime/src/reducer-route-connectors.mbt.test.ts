@@ -6,7 +6,6 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
-  battleCombatantSide,
   battleCreatureInitFromStatBlock,
   battleId,
   combatantId,
@@ -152,8 +151,6 @@ const FILL_BY_TAG = {
 const COMPOSITION_FACT_BY_TAG = {
   SheetDerivedParticipantCandidateRouteFact: "sheetDerivedParticipantCandidate",
   NonSheetParticipantMembershipRouteFact: "nonSheetParticipantMembership",
-  EncounterSideRelationshipOwnershipRouteFact:
-    "encounterSideRelationshipOwnership",
   SubjectProfileAvailabilityOwnershipRouteFact:
     "subjectProfileAvailabilityOwnership",
   InitiativeCountOwnershipRouteFact: "initiativeCountOwnership",
@@ -967,7 +964,6 @@ function metamagicBridgeUsesSharedPointPoolRoute(
       combatantId: sorcererCombatantId,
       displayName: "Sorcerer",
       initiative: initiativeScore(12),
-      side: battleCombatantSide("party"),
     }),
   );
   if (characterInit.creatureInit.kind !== "character") {
@@ -983,7 +979,6 @@ function metamagicBridgeUsesSharedPointPoolRoute(
           combatantId: targetCombatantId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         }),
       ],
     }),
@@ -1393,7 +1388,6 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
     combatantId: combatantId("combatant:route-origin-feat-retention"),
     displayName: "Route Origin Feat Retention",
     initiative: alertInitiativeScoreForBuild(build),
-    side: battleCombatantSide("party"),
   });
   if (Either.isLeft(projection)) {
     throw new Error(projection.left.issue.message);
@@ -1414,13 +1408,11 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
       combatantId: combatantId("combatant:route-origin-feat-runtime-entry"),
       displayName: "Route Origin Feat Runtime Entry",
       initiative: alertInitiativeScoreForBuild(build),
-      side: battleCombatantSide("party"),
     },
     statBlockBattleInput: {
       combatantId: combatantId("combatant:route-origin-feat-skeleton"),
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       initiative: initiativeScore(10),
-      side: battleCombatantSide("monsters"),
     },
   });
   if (Either.isLeft(entry)) {

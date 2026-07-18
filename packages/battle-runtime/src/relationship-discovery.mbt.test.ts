@@ -9,8 +9,6 @@ import {
   discoverBattleActs,
   fighterId,
   goblinId,
-  oppositionSide,
-  partySide,
   startBattleRight,
   statBlockCreatureInit,
   wizardId,
@@ -34,13 +32,13 @@ import {
 
 type RelationshipDiscoveryProjection = {
   readonly helpActDiscovered: boolean;
-  readonly helpOppositeSideAllyDiscovered: boolean;
-  readonly helpSameSideEnemyDiscovered: boolean;
+  readonly helpTableChosenAllyDiscovered: boolean;
+  readonly helpTableChosenEnemyDiscovered: boolean;
   readonly helpHelperExcluded: boolean;
   readonly helpSelectedAllyExcludedFromEnemy: boolean;
   readonly helpTerminalCandidateExcluded: boolean;
   readonly helpInsufficientParticipantsRejected: boolean;
-  readonly cleaveSameSideSecondTargetDiscovered: boolean;
+  readonly cleaveTableChosenSecondTargetDiscovered: boolean;
   readonly cleaveAttackerExcluded: boolean;
   readonly cleaveFirstTargetExcluded: boolean;
 };
@@ -56,7 +54,7 @@ const secondTargetId = combatantId("relationship-discovery-second-target");
 
 describe("relationship discovery MBT", () => {
   it(
-    "keeps Help and Cleave candidates independent of stored side values",
+    "keeps Help and Cleave candidates independent of global relationship partitions",
     async () => {
       await run({
         spec: mbtSpecPath(
@@ -101,13 +99,13 @@ const relationshipDiscoveryStateCheck = stateCheck(
     const state = quintStateRecord(raw);
     return {
       helpActDiscovered: booleanField(state, "qHelpActDiscovered"),
-      helpOppositeSideAllyDiscovered: booleanField(
+      helpTableChosenAllyDiscovered: booleanField(
         state,
-        "qHelpOppositeSideAllyDiscovered",
+        "qHelpTableChosenAllyDiscovered",
       ),
-      helpSameSideEnemyDiscovered: booleanField(
+      helpTableChosenEnemyDiscovered: booleanField(
         state,
-        "qHelpSameSideEnemyDiscovered",
+        "qHelpTableChosenEnemyDiscovered",
       ),
       helpHelperExcluded: booleanField(state, "qHelpHelperExcluded"),
       helpSelectedAllyExcludedFromEnemy: booleanField(
@@ -122,9 +120,9 @@ const relationshipDiscoveryStateCheck = stateCheck(
         state,
         "qHelpInsufficientParticipantsRejected",
       ),
-      cleaveSameSideSecondTargetDiscovered: booleanField(
+      cleaveTableChosenSecondTargetDiscovered: booleanField(
         state,
-        "qCleaveSameSideSecondTargetDiscovered",
+        "qCleaveTableChosenSecondTargetDiscovered",
       ),
       cleaveAttackerExcluded: booleanField(state, "qCleaveAttackerExcluded"),
       cleaveFirstTargetExcluded: booleanField(
@@ -148,19 +146,17 @@ function relationshipDiscoveryBattle(input?: {
   return startBattleRight({
     battleId: battleId("relationship-discovery-mbt"),
     combatants: [
-      characterSeed({ initiative: 20, side: partySide }),
-      statBlockCreatureInit({ initiative: 10, side: partySide }),
+      characterSeed({ initiative: 20 }),
+      statBlockCreatureInit({ initiative: 10 }),
       characterSeed({
         combatantId: wizardId,
         displayName: "Wizard",
         initiative: 5,
-        side: oppositionSide,
       }),
       statBlockCreatureInit({
         combatantId: secondTargetId,
         displayName: "Second Target",
         initiative: 1,
-        side: partySide,
         ...(input?.secondTargetHp === undefined
           ? {}
           : { currentHp: input.secondTargetHp }),
@@ -178,12 +174,11 @@ function helpProjection(state: BattleState): RelationshipDiscoveryProjection {
   const insufficientParticipantsState = startBattleRight({
     battleId: battleId("relationship-discovery-insufficient-participants-mbt"),
     combatants: [
-      characterSeed({ initiative: 20, side: partySide }),
+      characterSeed({ initiative: 20 }),
       characterSeed({
         combatantId: wizardId,
         displayName: "Wizard",
         initiative: 5,
-        side: oppositionSide,
       }),
     ],
   });
@@ -193,8 +188,8 @@ function helpProjection(state: BattleState): RelationshipDiscoveryProjection {
   );
   return {
     helpActDiscovered,
-    helpOppositeSideAllyDiscovered: allyChoices.includes(wizardId),
-    helpSameSideEnemyDiscovered: enemyChoices.includes(goblinId),
+    helpTableChosenAllyDiscovered: allyChoices.includes(wizardId),
+    helpTableChosenEnemyDiscovered: enemyChoices.includes(goblinId),
     helpHelperExcluded: !allyChoices.includes(fighterId),
     helpSelectedAllyExcludedFromEnemy: !enemyChoices.includes(wizardId),
     helpTerminalCandidateExcluded: !helpAttackAllyChoices(
@@ -208,7 +203,7 @@ function helpProjection(state: BattleState): RelationshipDiscoveryProjection {
         (act) =>
           act.subject.tag === "action" && act.subject.action === "helpAttack",
       ),
-    cleaveSameSideSecondTargetDiscovered: false,
+    cleaveTableChosenSecondTargetDiscovered: false,
     cleaveAttackerExcluded: false,
     cleaveFirstTargetExcluded: false,
   };
@@ -222,7 +217,7 @@ function cleaveProjection(state: BattleState): RelationshipDiscoveryProjection {
   ).choices;
   return {
     ...initialProjection(),
-    cleaveSameSideSecondTargetDiscovered: choices.includes(secondTargetId),
+    cleaveTableChosenSecondTargetDiscovered: choices.includes(secondTargetId),
     cleaveAttackerExcluded: !choices.includes(fighterId),
     cleaveFirstTargetExcluded: !choices.includes(goblinId),
   };
@@ -231,13 +226,13 @@ function cleaveProjection(state: BattleState): RelationshipDiscoveryProjection {
 function initialProjection(): RelationshipDiscoveryProjection {
   return {
     helpActDiscovered: false,
-    helpOppositeSideAllyDiscovered: false,
-    helpSameSideEnemyDiscovered: false,
+    helpTableChosenAllyDiscovered: false,
+    helpTableChosenEnemyDiscovered: false,
     helpHelperExcluded: false,
     helpSelectedAllyExcludedFromEnemy: false,
     helpTerminalCandidateExcluded: false,
     helpInsufficientParticipantsRejected: false,
-    cleaveSameSideSecondTargetDiscovered: false,
+    cleaveTableChosenSecondTargetDiscovered: false,
     cleaveAttackerExcluded: false,
     cleaveFirstTargetExcluded: false,
   };

@@ -3,7 +3,6 @@ import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-suppor
 import { describe, expect, test } from "vitest";
 import {
   dispelEvilAndGoodUnitId,
-  oppositionSide,
   spellCasterId,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
@@ -37,13 +36,11 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
           combatantId: undeadId,
           statBlock: statBlockWithCreatureType("undead"),
           initiative: 19,
-          side: oppositionSide,
         },
         {
           combatantId: aberrationId,
           statBlock: statBlockWithCreatureType("aberration"),
           initiative: 18,
-          side: oppositionSide,
         },
       ],
     });
@@ -169,7 +166,6 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
           combatantId: feySourceId,
           statBlock: statBlockWithCreatureType("fey"),
           initiative: 19,
-          side: oppositionSide,
         },
       ],
     });

@@ -34,8 +34,6 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   fighterId,
-  oppositionSide,
-  partySide,
   resolveBattleSubject,
   skeletonId,
   unitLibrary,
@@ -591,7 +589,6 @@ function sleepCasterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Sleep Caster",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("sleep-caster-character"),
@@ -631,7 +628,6 @@ function sleepTargetCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Sleep Target",
     initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "character",
       characterId: characterId("sleep-target-character"),

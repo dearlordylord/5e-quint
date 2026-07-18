@@ -63,7 +63,6 @@ describe("Admin Mirror MCP tool publishing", () => {
           combatantId: "goblin",
           initiative: 12,
           kind: "statBlock",
-          side: "demo",
           statBlockId: "stat_block_goblin_warrior",
         },
         {
@@ -71,7 +70,6 @@ describe("Admin Mirror MCP tool publishing", () => {
           combatantId: "skeleton",
           initiative: 8,
           kind: "statBlock",
-          side: "demo",
           statBlockId: "stat_block_skeleton",
         },
       ],
@@ -86,7 +84,6 @@ describe("Admin Mirror MCP tool publishing", () => {
           combatantId: "second-goblin",
           initiative: 10,
           kind: "statBlock",
-          side: "demo",
           statBlockId: "stat_block_goblin_warrior",
         },
       ],

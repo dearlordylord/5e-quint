@@ -47,7 +47,6 @@ import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   battleReducerStartRouteEvent,
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -80,8 +79,6 @@ type WeaponMasteryProjection = {
 const attackerId = combatantId("weapon-mastery-property-attacker");
 const primaryTargetId = combatantId("weapon-mastery-property-primary-target");
 const secondTargetId = combatantId("weapon-mastery-property-second-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -766,7 +763,6 @@ function weaponMasteryAttackerInit(
     combatantId: attackerId,
     displayName: "Mastery Property Fighter",
     initiative: initiativeScore(20),
-    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId(`character:${unitId}`),
@@ -811,7 +807,6 @@ function targetCreatureInit(
     combatantId: combatantIdValue,
     displayName,
     initiative: initiativeScore(initiative),
-    side: oppositionSide,
     creatureInit: {
       kind: "character",
       characterId: characterId(`character:${combatantIdValue}`),

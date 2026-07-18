@@ -1,6 +1,5 @@
 /* eslint-disable max-lines */
 import {
-  battleCombatantSide,
   type BattleCreatureInit,
   type BattleHole,
   battleId,
@@ -58,8 +57,6 @@ const wizardSpellcastingAbilityModifier = 4
 const wizardProficiencyBonus = 3
 const fireballDamageRollResults = [4, 4, 4, 4, 3, 3, 3, 3] as const
 const shatterDamageRollResults = [5, 5, 4] as const
-const partySide = battleCombatantSide("party")
-const oppositionSide = battleCombatantSide("opposition")
 const laserWizardId = combatantId("A")
 const forestWizardId = combatantId("B")
 const bufoId = combatantId("C")
@@ -1040,7 +1037,6 @@ function requireInitialState(spellsById: Readonly<Record<string, SpellRecord>>):
         initiative: combatant.initiative,
         levelThreeSlots: combatant.levelThreeSlots,
         levelTwoSlots: combatant.levelTwoSlots,
-        side: combatant.team === "blue" ? partySide : oppositionSide,
         preparedSpells: combatant.preparedSpellIds.map((spellId) => spellsById[spellId] ?? requireSpellRecord(spellId))
       })
     )
@@ -1057,14 +1053,12 @@ function wizardCreature(input: {
   readonly initiative: number
   readonly levelThreeSlots: number
   readonly levelTwoSlots: number
-  readonly side: typeof partySide | typeof oppositionSide
   readonly preparedSpells: ReadonlyArray<SpellRecord>
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

@@ -32,8 +32,6 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
-  oppositionSide,
-  partySide,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -60,7 +58,6 @@ export function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly attack?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -126,7 +123,6 @@ export function characterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
@@ -237,13 +233,11 @@ export function statBlockCreature(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
-  readonly side?: typeof partySide | typeof oppositionSide;
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side ?? oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,

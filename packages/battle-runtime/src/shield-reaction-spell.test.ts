@@ -21,7 +21,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -56,8 +55,6 @@ const magicMissileUnitId = "magic_missile";
 const rayOfFrostUnitId = "ray_of_frost";
 const spellCasterId = combatantId("shield-reaction-spell-caster");
 const spellTargetId = combatantId("shield-reaction-spell-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -575,7 +572,6 @@ function spellBattle(input: {
         combatantId: spellCasterId,
         displayName: "Spellcaster",
         initiative: 20,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -593,7 +589,6 @@ function spellBattle(input: {
         combatantId: spellTargetId,
         displayName: "Target",
         initiative: 10,
-        side: oppositionSide,
       }),
     ],
   });
@@ -612,13 +607,11 @@ function battleWithShieldReactionSpell(spell: SpellRecord): BattleState {
         combatantId: spellTargetId,
         displayName: "Attacker",
         initiative: 20,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: spellCasterId,
         displayName: "Shield caster",
         initiative: 10,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -652,25 +645,21 @@ function battleWithAttackers(input: {
         combatantId: input.attackerIds[0],
         displayName: "Attacker 1",
         initiative: 30,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: input.attackerIds[1],
         displayName: "Attacker 2",
         initiative: 20,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: input.attackerIds[2],
         displayName: "Attacker 3",
         initiative: 15,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: spellCasterId,
         displayName: "Shield caster",
         initiative: 10,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -704,7 +693,6 @@ function battleWithSpellAttack(input: {
         combatantId: spellTargetId,
         displayName: "Ray caster",
         initiative: 20,
-        side: oppositionSide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -722,7 +710,6 @@ function battleWithSpellAttack(input: {
         combatantId: spellCasterId,
         displayName: "Shield caster",
         initiative: 10,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -756,7 +743,6 @@ function battleWithMagicMissile(input: {
         combatantId: spellTargetId,
         displayName: "Magic Missile caster",
         initiative: 20,
-        side: oppositionSide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -774,7 +760,6 @@ function battleWithMagicMissile(input: {
         combatantId: spellCasterId,
         displayName: "Shield caster",
         initiative: 10,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -801,7 +786,6 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -811,7 +795,6 @@ function characterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

@@ -64,7 +64,6 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { replayContinuationFrame } from "./battle-reducer/dispatcher.ts";
 import {
-  battleCombatantSide,
   battleId,
   characterId,
   combatantId,
@@ -152,8 +151,6 @@ const unitLibrary = unitCatalogResult.catalog;
 const shieldUnitId = "shield";
 const shieldAttackerId = combatantId("interrupt-stack-shield-attacker");
 const shieldCasterId = combatantId("interrupt-stack-shield-caster");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const initialHp = 12;
 const nestedFixtureTargetHp = 10;
 
@@ -509,13 +506,11 @@ function shieldBattle(shield: SpellRecord): BattleState {
         combatantId: shieldAttackerId,
         displayName: "Attacker",
         initiative: 20,
-        side: oppositionSide,
       }),
       characterCreature({
         combatantId: shieldCasterId,
         displayName: "Shield caster",
         initiative: 10,
-        side: partySide,
         spellcasting: {
           sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -541,7 +536,6 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -551,7 +545,6 @@ function characterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

@@ -67,7 +67,6 @@ import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-p
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleAreaId,
-  battleCombatantSide,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -139,8 +138,6 @@ type RuleCoreSpellProjection = RuleCoreComponentRoutedProjection & {
 const casterId = combatantId("rule-core-spell-caster");
 const targetId = combatantId("rule-core-spell-target");
 const secondTargetId = combatantId("rule-core-spell-second-target");
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 const componentOwner = "RuleCoreSpellProcedureProfileOwner";
 
 const spellRecords = new Map(
@@ -1679,7 +1676,6 @@ function spellcaster(input: {
     combatantId: casterId,
     displayName: "Spellcaster",
     initiative: input.initiative,
-    side: partySide,
     spellcasting: {
       sourceClassName: "wizard",
       spellcastingAbilityModifier: 3,
@@ -1710,7 +1706,6 @@ function spellTarget(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: input.initiative,
-    side: oppositionSide,
     currentHp: input.currentHp,
   });
 }
@@ -1719,7 +1714,6 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly currentHp?: number;
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly spellcasting?: Extract<
@@ -1731,7 +1725,6 @@ function characterCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),

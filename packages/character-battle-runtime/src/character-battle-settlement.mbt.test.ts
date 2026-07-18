@@ -2,7 +2,6 @@
 import * as path from "node:path";
 
 import {
-  battleCombatantSide,
   battleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
@@ -773,7 +772,6 @@ function startCharacterBattle(input: {
       combatantId: input.combatantId,
       displayName: "Character",
       initiative: initiativeScore(20),
-      side: battleCombatantSide("party"),
     }),
   );
   const state = requireRight(
@@ -785,7 +783,6 @@ function startCharacterBattle(input: {
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
-          side: battleCombatantSide("monsters"),
         }),
       ],
     }),

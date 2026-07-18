@@ -7,8 +7,7 @@
 //   count and stable ordering from round to round.
 // - .references/srd-5.2.1/Rules-Glossary.md#Initiative defines Initiative as
 //   the combat turn-order fact.
-// - UBIQUITOUS_LANGUAGE.md: Encounter Side, Initiative, Round, Turn, Table
-//   Decision, Creature, and Stat Block.
+// - UBIQUITOUS_LANGUAGE.md: Initiative, Round, Turn, Creature, and Stat Block.
 module characterBattleEncounterCompositionRouteMbt {
   import characterBattleReducerRoute.* from "./character-battle-reducer-route"
 
@@ -43,7 +42,6 @@ module characterBattleEncounterCompositionRouteMbt {
         Set(
           SheetDerivedParticipantCandidateRouteFact,
           NonSheetParticipantMembershipRouteFact,
-          EncounterSideRelationshipOwnershipRouteFact,
         ),
         CharacterBattleEncounterSetupOwner,
       )

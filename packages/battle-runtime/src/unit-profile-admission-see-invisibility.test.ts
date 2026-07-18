@@ -22,7 +22,6 @@ import {
   seeInvisibilityUnitId,
   spellCasterId,
   spellTargetId,
-  partySide,
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
@@ -107,7 +106,6 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
             combatantId: observerId,
             statBlock: statBlockWithCreatureType("humanoid"),
             initiative: 9,
-            side: partySide,
           },
         ],
       }),
@@ -210,7 +208,6 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
             combatantId: observerId,
             statBlock: statBlockWithCreatureType("humanoid"),
             initiative: 9,
-            side: partySide,
           },
         ],
       }),

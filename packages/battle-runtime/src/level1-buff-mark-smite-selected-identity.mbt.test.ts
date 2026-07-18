@@ -57,7 +57,6 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import {
-  battleCombatantSide,
   battleId,
   battleReducerStartRouteEvent,
   characterId,
@@ -505,8 +504,6 @@ const targetId = combatantId("level1-buff-mark-smite-target");
 const markedDamageTransferTargetId = combatantId(
   "level1-buff-mark-smite-marked-damage-transfer-target",
 );
-const partySide = battleCombatantSide("party");
-const oppositionSide = battleCombatantSide("opposition");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -2514,13 +2511,11 @@ function level1BuffMarkSmiteBattle(
           combatantId: targetId,
           displayName: "Level 1 buff target",
           initiative: 10,
-          side: oppositionSide,
         })
       : level1BuffMarkSmiteCreature({
           combatantId: targetId,
           displayName: "Level 1 buff target",
           initiative: 10,
-          side: oppositionSide,
           className: "fighter",
         });
   const result = startBattle({
@@ -2530,7 +2525,6 @@ function level1BuffMarkSmiteBattle(
         combatantId: casterId,
         displayName: "Level 1 buff caster",
         initiative: 20,
-        side: partySide,
         attack: input.attack ?? zeroAbilityLongswordAttack(),
         className: sourceClassName,
         ...(input.weaponProficiencies === undefined
@@ -2556,7 +2550,6 @@ function level1BuffMarkSmiteBattle(
               combatantId: markedDamageTransferTargetId,
               displayName: "Level 1 buff marked damage transfer target",
               initiative: 5,
-              side: oppositionSide,
             }),
           ]
         : []),
@@ -2572,7 +2565,6 @@ function level1BuffMarkSmiteCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
   readonly className?: CharacterClassName;
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly attack?: Extract<
@@ -2590,7 +2582,6 @@ function level1BuffMarkSmiteCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
@@ -2643,7 +2634,6 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly side: typeof partySide | typeof oppositionSide;
 }): BattleCreatureInit {
   const statBlock = statBlockLibrary.requireStatBlock(
     "stat_block_goblin_warrior",
@@ -2653,7 +2643,6 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
-    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock,

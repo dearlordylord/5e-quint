@@ -18,11 +18,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
-import {
-  oppositionSide,
-  partySide,
-  unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   resolveBattleSubject,
@@ -319,7 +315,6 @@ function halflingNimblenessBattle(input: {
         combatantId: nimbleMoverId,
         displayName: "Nimble Mover",
         initiative: 20,
-        side: partySide,
         size: "small",
         unitFeatures: [{ unit }],
         characterUnitRefs: input.selected ? [unitRef.right] : [],
@@ -328,7 +323,6 @@ function halflingNimblenessBattle(input: {
         combatantId: blockerId,
         displayName: "Blocker",
         initiative: 10,
-        side: oppositionSide,
         size: input.blockerSize ?? "medium",
       }),
     ],

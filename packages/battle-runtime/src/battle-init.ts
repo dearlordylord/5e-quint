@@ -30,12 +30,7 @@ import type {
   CharacterBattleSpellcastingInit,
 } from "./character-battle-resources.ts";
 import type { CharacterBattleClassLevelInit } from "./character-class-level.ts";
-import type {
-  BattleCombatantSide,
-  CharacterId,
-  CombatantId,
-  InitiativeScore,
-} from "./identity.ts";
+import type { CharacterId, CombatantId, InitiativeScore } from "./identity.ts";
 import type {
   BattleDruidWildShapeKnownFormSupportProfile,
   BattleUnitSupportSource,
@@ -307,7 +302,6 @@ export type StatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
   readonly initiative: InitiativeScore;
-  readonly side: BattleCombatantSide;
   // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
@@ -325,7 +319,6 @@ export type BattleCreatureInit = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
-  readonly side: BattleCombatantSide;
   // The creature init kind is the zero-HP lifecycle authority:
   // characters use death saves; stat block creatures die at 0 HP.
   readonly creatureInit:
