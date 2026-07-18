@@ -462,8 +462,7 @@ Implementation must prove all of the following:
 ## Decision review record
 
 Round one checked the draft against the durable-journal, accepted-head
-integration, tracker-port, bounded-leaf, accepted execution requirements mined
-from the historical harness, repository
+integration, tracker-port, bounded-leaf, current Ralph execution, repository
 resource-lock, and deterministic-verification contracts. It narrowed drain
 quiescence to locks held by Ralph-owned fragments and made semantic-round
 consumption explicit so technical or verification failures cannot increment the

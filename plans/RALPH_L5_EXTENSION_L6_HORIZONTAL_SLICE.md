@@ -1,8 +1,6 @@
 # Ralph L5 Extension and L6 Horizontal Slice
 
-> **Historical execution artifact:** the `ralph-run.sh` command and task index
-> below document a completed one-off harness run. They are not input formats or
-> compatibility requirements for the new Ralph orchestrator.
+> **Historical execution projection:** see [plan status](README.md#historical-ralph-task-indexes).
 
 <!-- ralph-task-index
 {

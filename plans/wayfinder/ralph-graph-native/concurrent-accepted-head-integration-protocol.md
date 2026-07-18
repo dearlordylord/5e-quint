@@ -372,9 +372,8 @@ Implementation must prove at least these scenarios:
 ## Decision review record
 
 Round one checked the decision against the retained bounded-leaf contract,
-accepted integration requirements mined from the historical harness, the
-control-plane prototype, and the durable journal decision. It corrected the
-initial assumption that textual
+current Ralph integration behavior, the control-plane prototype, and the
+durable journal decision. It corrected the initial assumption that textual
 conflict should immediately create a repair attempt: integration is explicitly
 agentic, while mechanical lineage and ownership gates remain deterministic.
 

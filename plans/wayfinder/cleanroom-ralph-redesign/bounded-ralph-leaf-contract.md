@@ -1,5 +1,16 @@
 # Bounded Ralph Leaf and Non-Convergence Contract
 
+> **Historical decision record:** the body below is retained in its original
+> shell-delivery terms. It is evidence, not a new-orchestrator contract. The
+> coherent-leaf and non-convergence outcomes were subsequently accepted by the
+> [architecture decision](https://github.com/dearlordylord/5e-quint/issues/179).
+> Its plan index, labels, claim representation, run directory, launcher
+> mechanics, and ten-round default did not transfer; current tracker, recovery,
+> and policy semantics belong to [issues 185](https://github.com/dearlordylord/5e-quint/issues/185),
+> [183](https://github.com/dearlordylord/5e-quint/issues/183), and
+> [186](https://github.com/dearlordylord/5e-quint/issues/186), under the
+> [delivery-orchestration boundary](../../../ARCHITECTURE.md#delivery-orchestration-boundary).
+
 ## Decision scope
 
 This is a delivery-execution decision for the Cleanroom Ralph queue. It does

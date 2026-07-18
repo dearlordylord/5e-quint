@@ -158,17 +158,9 @@ Do not write to the memory system unless explicitly asked.
 
 ## Ralph architecture boundary (CRITICAL)
 
-`scripts/ralph-run.sh` is a one-off historical execution harness. It is not the
-architecture, compatibility baseline, migration source, fallback scheduler, or
-runtime substrate for the new Ralph orchestrator. Its plans, plan index, shell
-stages, claims, run directories, prompts, retained runs, and cleanup conventions
-must not be imported, resumed, wrapped, or preserved for behavioral parity.
-
-The historical harness may be inspected only to mine candidate requirements,
-failure evidence, and design lessons. A candidate becomes a new-orchestrator
-requirement only through an explicit owning decision or specification. The new
-orchestrator implements accepted requirements directly through its own domain
-model and typed ports.
+Follow [the delivery-orchestration architecture boundary](ARCHITECTURE.md#delivery-orchestration-boundary).
+Do not promote a historical-harness observation into a new-orchestrator
+requirement without an explicit owning decision or specification.
 
 ## Ralph task-base check
 

@@ -1,8 +1,6 @@
 # Character Levels 1-2 Full Support Backlog
 
-> **Historical execution format:** the `ralph-task-index` below belongs to the
-> one-off shell harness. It is retained as evidence, not as an input or
-> compatibility contract for the new Ralph orchestrator.
+> **Historical execution projection:** see [plan status](README.md#historical-ralph-task-indexes).
 
 This is the single active planning artifact for SRD character levels 1-2 full
 support closure. Character level and spell level are separate axes:

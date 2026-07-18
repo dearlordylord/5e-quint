@@ -30,7 +30,11 @@ Parallel coding agents in isolated worktrees are no longer a niche. Dependency-a
 
 No surveyed tool ships that whole contract. Wholesale adoption would replace or duplicate the tracker, weaken Ralph's acceptance semantics, or require enough new control-plane code that the adopted product would be a substrate rather than the orchestrator.
 
-The evidence therefore supports a **compose or build** hypothesis, not a whole-tool adoption. It also shifts the implementation hypothesis toward a typed control plane that imports Ralph's proven contracts rather than adding parallel lifecycle state to the current shell harness. That is evidence for the architecture decision ticket, not the architecture decision itself.
+The evidence therefore supports a **compose or build** hypothesis, not a
+whole-tool adoption. It also shifts the implementation hypothesis toward a
+typed control plane that directly implements independently accepted
+requirements. That is evidence for the architecture decision ticket, not the
+architecture decision itself.
 
 ## Comparison rubric
 
@@ -123,7 +127,9 @@ The answer depends on the boundary:
 - **Partly:** graph scheduling and autonomous review exist, but usually in different products and under product-owned task state.
 - **Yes, at the complete protocol boundary:** external tracker DAG authority combined with independent converging review, distinct bounded retry scopes, serialized accepted-head integration, and dependency-preserving quarantine remains a niche composition.
 
-This distinction explains why many tools look like an 80% match in a feature list yet would require replacement of their scheduler, task model, or acceptance lifecycle to preserve Ralph's semantics.
+This distinction explains why many tools look like an 80% match in a feature
+list yet would require replacement of their scheduler, task model, or
+acceptance lifecycle to implement the accepted Ralph requirements.
 
 ## Historical-harness evidence or a clean control plane?
 

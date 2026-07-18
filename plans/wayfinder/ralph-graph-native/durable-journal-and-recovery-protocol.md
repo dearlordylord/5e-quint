@@ -285,6 +285,17 @@ retry budget. An established reviewer, tool, or transport failure does.
 Repeated coordinator death is an operator-health problem, not review evidence
 against the leaf.
 
+The same identity rule applies when an implementation-agent process exits
+non-zero, including an OOM termination. Ralph preserves the exact planned
+attempt, worktree mutations, agent-session identity, and partial evidence as
+one lineage. When the execution substrate proves that session resumable,
+technical recovery continues that implementation node by resuming the exact
+session in the exact worktree; it does not start a fresh implementation agent
+over the retained files and does not send incomplete work to semantic review.
+If the session is not resumable, replacement, preservation, or quarantine must
+follow an explicit typed policy. A resource emergency must be diagnosed before
+an unchanged invocation is resumed.
+
 Recovery conflicts are localized by resource ownership. A conflict pauses the
 affected attempt, run, and dependent work. A different run using different
 worktrees and branches may continue. A conflict involving coordinator

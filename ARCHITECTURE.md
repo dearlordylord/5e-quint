@@ -495,6 +495,26 @@ replace parity coverage. A generator-readiness row must distinguish semantic
 core QNT from proof-only QNT and name the small language subset the future
 generator would need.
 
+## Delivery Orchestration Boundary
+
+The new Ralph orchestrator is a clean system. `scripts/ralph-run.sh` is a
+one-off historical execution harness, not its architecture, compatibility
+baseline, migration source, fallback scheduler, or runtime substrate. The
+historical harness may supply candidate requirements, failure evidence, and
+design lessons. A candidate becomes a new-orchestrator requirement only when
+an owning decision or implementation specification explicitly accepts it.
+
+The new orchestrator must not invoke, wrap, resume, migrate, or preserve
+behavioral parity with the historical harness. Historical plan indexes, shell
+stages, claims, run directories, prompts, retained runs, and cleanup
+conventions remain evidence outside the new orchestrator's managed namespace.
+New tracker claims, journal runs, attempts, sessions, evidence, and recovery
+state are allocated and owned only through the new orchestrator's typed ports.
+
+The canonical Wayfinder map records which candidate requirements have been
+accepted during planning. Historical Wayfinder assets and shell-era plans do
+not become parallel architecture or conformance authorities.
+
 ## Dependency Direction
 
 The runtime path uses this dependency direction:
@@ -530,6 +550,7 @@ The runtime path uses this dependency direction:
 | `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md` | Monster Stat Block authoring and provenance | Architectural decision authority for Stat Blocks as authored data with explicit provenance |
 | `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md` | Light/obscurement/cover/sight boundary | Architectural decision authority for runtime source-facts plus table-supplied witnesses |
 | `docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md` | Battle committed-state and continuation boundary | Architectural decision authority for atomic Act commits, deterministic continuation replay, and separate frontiers |
+| `ARCHITECTURE.md#delivery-orchestration-boundary` | New Ralph versus historical harness | Architectural authority for the clean-system and evidence-only boundary |
 | `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms | Character-creation package vocabulary |
 | `plans/rules-kernel-coverage/` | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics |
 | `plans/unit-profile-coverage/` | Authored Surface Unit/profile support breadth | Coverage authority for authored-content support and the generated rules-kernel join view |

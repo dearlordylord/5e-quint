@@ -273,6 +273,11 @@ Use `TestClock` and distinct typed retry variants to prove:
 - starting the exact next attempt supersedes one deferral;
 - technical reviewer retries do not consume semantic handback rounds;
 - coordinator interruption consumes neither technical nor semantic budget;
+- a non-zero implementation-agent exit, including simulated OOM, preserves the
+  exact worktree and session together and resumes that session in the same
+  attempt after the resource cause is addressed;
+- incomplete implementation WIP is not advanced to semantic review merely
+  because its process exited;
 - review rejection returns to the same implementer session and attempt;
 - fresh reviewers see the full unresolved finding history;
 - acceptance occurs only when no reasonable finding remains; and
@@ -622,8 +627,7 @@ parallel architecture, glossary, acceptance ledger, or test inventory.
 ## Decision review record
 
 Round one reconciled the durable-journal, concurrent-integration, tracker-port,
-immutable-DAG, control-plane-prototype, accepted requirements mined from the
-historical harness, Effect V4 testing, and
+immutable-DAG, control-plane-prototype, current Ralph, Effect V4 testing, and
 property-testing contracts. It separated semantic workflow traces from
 interpreter capability audits, kept dry-run mutation absence both layer-typed
 and observable, and assigned real resources only to adapter qualification and

@@ -1,10 +1,9 @@
 # Cleanroom SDK Delivery — Ralph Queue
 
-This is a historical shell-harness execution projection, not a requirements
-authority or an input format for the new Ralph orchestrator. Canonical GitHub
-issues own scope, acceptance, WIP disposition, and focused verification. The
-task index and run conventions below are retained only as evidence of the
-one-off delivery run.
+> **Historical execution projection:** see [plan status](README.md#historical-ralph-task-indexes).
+
+Canonical GitHub issues own scope, acceptance, WIP disposition, and focused
+verification for this delivery record.
 
 <!-- ralph-github-issues: required -->
 
