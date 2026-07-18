@@ -611,6 +611,9 @@ function resolveObjectContactDamage(input: {
   if (damageValidation !== null) {
     return invalidResult(input.errorState, "invalidFill", damageValidation);
   }
+  const relationshipDecisions = input.fillSet.damageRelationshipDecisions.forDamageHole(
+    input.fillSet.damageRoll.holeId,
+  );
   const sourceCombatant = input.state.combatants.get(input.actorId);
   const expectedSourcePenaltyHoles = input.targetIds.flatMap((targetId) => {
     const target = input.state.combatants.get(targetId);
@@ -1000,6 +1003,9 @@ function resolveObjectContactDamage(input: {
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.actorId,
       spatialFacts: [],
+      ...(relationshipDecisions === undefined
+        ? {}
+        : { relationshipDecisions }),
     });
   }, input.state);
   const penalized = applyObjectContactPenalties({

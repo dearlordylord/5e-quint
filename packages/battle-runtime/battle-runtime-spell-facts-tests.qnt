@@ -59,6 +59,7 @@ module battleRuntimeSpellFactsTests {
 
   run test_spell_invocation_executable_spell_facts = {
     val animalFriendshipCharmed = AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 })
+    val goblinAnimalFriendshipCharmed = AnimalFriendshipCharmed({ source: Goblin, durationTicks: 24 * 60 })
     val blindnessDeafnessDeafened = BlindnessDeafnessDeafened({
       source: Fighter,
       heightenedRepeatSaveDisadvantage: false,
@@ -377,14 +378,10 @@ module battleRuntimeSpellFactsTests {
       assert(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, BeastCreature)),
       assert(not(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, HumanoidCreature))),
       assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate, initialState, Fighter) == Set(animalFriendshipCharmed)),
-      assert(actorDamageSource(Fighter) == FighterDamageSource),
-      assert(damageSourceSide(FighterAllyDamageSource) == PartySide),
-      assert(damageSourceIsCasterOrAlly(Fighter, FighterDamageSource)),
-      assert(damageSourceIsCasterOrAlly(Fighter, FighterAllyDamageSource)),
-      assert(not(damageSourceIsCasterOrAlly(Fighter, GoblinDamageSource))),
-      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), FighterDamageSource) == Set()),
-      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), FighterAllyDamageSource) == Set()),
-      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), GoblinDamageSource) == Set(animalFriendshipCharmed)),
+      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), Fighter, Set()) == Set()),
+      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), Goblin, Set(Fighter)) == Set()),
+      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), Goblin, Set()) == Set(animalFriendshipCharmed)),
+      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed, goblinAnimalFriendshipCharmed), Fighter, Set()) == Set(goblinAnimalFriendshipCharmed)),
       assert(saveGatedConditionTargeting(CharmPersonSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(CharmPersonSaveGate), 1) == 1),
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(CharmPersonSaveGate), 2) == 2),

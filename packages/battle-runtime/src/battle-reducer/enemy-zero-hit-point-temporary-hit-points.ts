@@ -4,12 +4,12 @@ import type { MovementFeet } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type {
   BattleCreatureState,
+  BattleDamageRelationshipDecision,
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
-import { combatantsAreEnemies } from "./creature-state-leaves.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 
 export type EnemyZeroHitPointTemporaryHitPointsAward = {
@@ -31,6 +31,7 @@ export function enemyZeroHitPointTemporaryHitPointsAwards(input: {
   readonly priorTarget: BattleCreatureState;
   readonly damagedTarget: BattleCreatureState;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions: readonly BattleDamageRelationshipDecision[];
 }): readonly EnemyZeroHitPointTemporaryHitPointsAward[] {
   if (
     input.damageSourceId === undefined ||
@@ -46,11 +47,11 @@ export function enemyZeroHitPointTemporaryHitPointsAwards(input: {
       continue;
     }
     const awarded = enemyZeroHitPointTemporaryHitPointsAward(
-      input.state,
       beneficiary,
       input.damageSourceId,
       input.targetId,
       input.spatialFacts,
+      input.relationshipDecisions,
     );
     if (awarded === null) {
       continue;
@@ -71,16 +72,23 @@ function isCharacterBattleCreatureState(
 }
 
 function enemyZeroHitPointTemporaryHitPointsAward(
-  state: BattleState,
   beneficiary: CharacterBattleCreatureState,
   damageSourceId: CombatantId,
   targetId: CombatantId,
   spatialFacts: readonly BattleTargetSpatialFact[],
+  relationshipDecisions: readonly BattleDamageRelationshipDecision[],
 ): number | null {
   let highestAward: number | null = null;
   for (const profile of beneficiary.origin.enemyZeroHitPointTemporaryHitPointsProfiles.values()) {
     if (
-      !combatantsAreEnemies(state, beneficiary.combatantId, targetId) ||
+      !relationshipDecisions.some(
+        (decision) =>
+          decision.kind ===
+            "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy" &&
+          decision.beneficiaryId === beneficiary.combatantId &&
+          decision.targetId === targetId &&
+          decision.unitId === profile.unit.id,
+      ) ||
       !profileTriggerApplies({
         profileUnitId: profile.unit.id,
         beneficiaryId: beneficiary.combatantId,

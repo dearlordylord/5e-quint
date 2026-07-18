@@ -13,7 +13,8 @@ module unitFeatureDarkOnesBlessingCore {
   //   Creature.
 
   type DarkOnesBlessingTriggerFacts = {
-    enemyReducedToZeroHitPoints: bool,
+    targetReducedToZeroHitPoints: bool,
+    targetIsEnemyOfBeneficiary: bool,
     reducedByBeneficiary: bool,
     reducedByOtherWithinTenFeet: bool,
   }
@@ -22,7 +23,8 @@ module unitFeatureDarkOnesBlessingCore {
 
   pure def darkOnesBlessingTriggerEligible(facts: DarkOnesBlessingTriggerFacts): bool =
     all {
-      facts.enemyReducedToZeroHitPoints,
+      facts.targetReducedToZeroHitPoints,
+      facts.targetIsEnemyOfBeneficiary,
       facts.reducedByBeneficiary or facts.reducedByOtherWithinTenFeet,
     }
 

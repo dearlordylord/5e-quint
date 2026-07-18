@@ -47,6 +47,11 @@ import {
   startBattleRight,
   testBattleCreatureStateWithConditions,
 } from "./battle-runtime-test-support.ts";
+import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  animalFriendshipUnitId,
+  spellCasterId,
+} from "./unit-profile-admission-catalog-support.ts";
 
 const INITIAL_HP = 20;
 const ATTACKER_A_ID = combatantId("creature-attack-a");
@@ -158,6 +163,103 @@ const creatureAttackRouteStateCheck = stateCheck(
 );
 
 describe("creature-attack public reducer boundaries", () => {
+  it("carries a damage-event ally decision through Creature Attack effect cleanup", () => {
+    const charmWitness = resolvedAnimalFriendshipState(
+      combatantId("creature-attack-charm-witness"),
+      [],
+    );
+    const charmEffect = [...charmWitness.combatants.values()]
+      .flatMap((combatant) => combatant.activeEffects)
+      .find(
+        (effect) =>
+          effect.kind === "spellCondition" &&
+          effect.sourceSpellId === animalFriendshipUnitId,
+      );
+    if (charmEffect === undefined) {
+      throw new Error("Expected an Animal Friendship effect witness.");
+    }
+    const state = updateCreatureAttackCombatant(
+      startCreatureAttackBattle(),
+      ATTACKER_B_ID,
+      (target) => {
+        if (target.positiveHpUnconscious !== null) {
+          throw new Error("Expected a conscious Creature Attack target.");
+        }
+        return {
+          ...target,
+          activeEffects: [charmEffect],
+          conditions: applyCondition(target.conditions, "charmed"),
+        };
+      },
+    );
+    const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
+    const discovered = discoverCreatureAttackAct(state, subject);
+    const attackRoll = creatureAttackRollFill(
+      expectCreatureAttackRollHole(discovered.initialHoles[0]),
+      true,
+    );
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject,
+      fills: [attackRoll],
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected Creature Attack damage hole.");
+    }
+    const damageHole = expectCreatureAttackDamageHole(awaitingDamage.holes[0]);
+    const relationshipFill = {
+      kind: "damageRelationshipDecisions",
+      holeId: damageHole.holeId,
+      decisions: [
+        {
+          kind: "targetDamagedByCasterOrAllySourceIsAlly",
+          targetId: ATTACKER_B_ID,
+          effectSourceId: spellCasterId,
+        },
+      ],
+    } satisfies Extract<
+      BattleFill,
+      { readonly kind: "damageRelationshipDecisions" }
+    >;
+    expect(Schema.decodeUnknownSync(BattleFillSchema)(relationshipFill)).toEqual(
+      relationshipFill,
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(BattleFillSchema)({
+        ...relationshipFill,
+        decisions: [],
+      }),
+    ).toThrow();
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackRoll,
+          creatureAttackDamageRollFill(damageHole, 1),
+          { ...relationshipFill, holeId: attackRoll.holeId },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    const resolved = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        attackRoll,
+        creatureAttackDamageRollFill(damageHole, 1),
+        relationshipFill,
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Creature Attack damage to resolve.");
+    }
+
+    expect(resolved.state.combatants.get(ATTACKER_B_ID)).toMatchObject({
+      activeEffects: [],
+      conditions: expect.not.objectContaining({ charmed: true }),
+    });
+  });
+
   it("rejects a damage fill after a missed attack roll", () => {
     const state = startCreatureAttackBattle();
     const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);

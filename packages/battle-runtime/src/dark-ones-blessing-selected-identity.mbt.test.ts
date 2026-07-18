@@ -17,7 +17,10 @@ import {
   type CombatantId,
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
-import type { BattleTargetSpatialFact } from "./battle-reducer.ts";
+import type {
+  BattleDamageRelationshipDecision,
+  BattleTargetSpatialFact,
+} from "./battle-reducer.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
@@ -154,6 +157,7 @@ defineSelectedIdentityReplayAndQntReplay({
                 damageSourceId: allyId,
                 targetId: otherEnemyId,
                 targetSide: partySide,
+                targetIsEnemy: false,
                 warlockCha: 16,
                 warlockLevel: 3,
                 spatialFacts: [darkOnesBlessingRangeFact(allyId, otherEnemyId)],
@@ -226,6 +230,7 @@ function damageEnemyToZero(input: {
   readonly warlockLevel: number;
   readonly warlockTempHp?: number;
   readonly targetSide?: typeof partySide;
+  readonly targetIsEnemy?: boolean;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
 }): BattleState {
   const state = darkOnesBlessingBattle(input);
@@ -239,7 +244,14 @@ function damageEnemyToZero(input: {
     damageAmount: 5,
     deathFailuresAtZeroHp: 1,
     damageSourceId: input.damageSourceId,
-    spatialFacts: input.spatialFacts ?? [],
+    spatialFacts: [...(input.spatialFacts ?? [])],
+    ...(input.targetIsEnemy === false
+      ? {}
+      : {
+          relationshipDecisions: [
+            darkOnesBlessingEnemyDecision(input.targetId),
+          ],
+        }),
   });
 }
 
@@ -303,6 +315,17 @@ function darkOnesBlessingRangeFact(
     targetId,
     unitId,
     rangeFeet: movementFeet(10),
+  };
+}
+
+function darkOnesBlessingEnemyDecision(
+  targetId: CombatantId,
+): BattleDamageRelationshipDecision {
+  return {
+    kind: "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy",
+    beneficiaryId: warlockId,
+    targetId,
+    unitId,
   };
 }
 

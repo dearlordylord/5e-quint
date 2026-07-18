@@ -23,6 +23,7 @@ import {
   type BattleAttackDamageDispositionHole,
   type BattleConcentrationSavingThrowHole,
   type BattleCreatureState,
+  type BattleDamageRelationshipDecisions,
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
@@ -48,6 +49,9 @@ import {
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
+import {
+  DamageRelationshipDecisionsByHole,
+} from "./damage-relationship-decisions.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
   applyBattleHitPointDamage,
@@ -151,6 +155,7 @@ export type ChainedSpellFillSet =
         { readonly kind: "rolledDice" }
       >[];
       readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
+      readonly damageRelationshipDecisions: DamageRelationshipDecisionsByHole;
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -747,6 +752,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
     for (const hole of hideousLaughterSaveCheck.holes) {
       hideousLaughterDamageRepeatSaveHoleIds.add(String(hole.holeId));
     }
+    const relationshipDecisions = fillSet.damageRelationshipDecisions.forDamageHole(
+      step.damageRoll.holeId,
+    );
     replayState = applyChainedSpellDamage(
       replayState,
       target.combatantId,
@@ -765,6 +773,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
         hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts ?? [],
+        ...(relationshipDecisions === undefined
+          ? {}
+          : { relationshipDecisions }),
       },
     );
     afterDamageEvents.push({
@@ -918,6 +929,9 @@ export function chainedSpellFillSet(
   let reactionSpellTargetFactsFilled = false;
 
   for (const fill of fills) {
+    if (fill.kind === "damageRelationshipDecisions") {
+      continue;
+    }
     if (fill.kind === "slowSomaticSpellFailureOutcome") {
       continue;
     }
@@ -1123,6 +1137,23 @@ export function chainedSpellFillSet(
     };
   }
 
+  const damageRollHoleIds = new Set(
+    steps.flatMap((step) =>
+      step.damageRoll === undefined ? [] : [step.damageRoll.holeId],
+    ),
+  );
+  const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
+    fills,
+    damageRollHoleIds,
+    owner: "a chained Spell",
+  });
+  if (relationshipDecisions.tag === "invalid") {
+    return {
+      tag: "invalid",
+      message: relationshipDecisions.message,
+    };
+  }
+
   return {
     tag: "ok",
     damageType,
@@ -1132,6 +1163,8 @@ export function chainedSpellFillSet(
     damageDispositions,
     sourceDamageRollPenaltyRolls,
     reactionSpellTargetFacts,
+    damageRelationshipDecisions:
+      relationshipDecisions.decisionsByDamageHole,
   };
 }
 
@@ -1364,6 +1397,7 @@ type ChainedSpellDamageContext = {
   readonly hideousLaughterDamageRepeatSaveEventKey?: string;
   readonly damageSourceId: CombatantId;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
 };
 
 export function applyChainedSpellDamage(
@@ -1385,6 +1419,9 @@ export function applyChainedSpellDamage(
     damageDisposition: context.damageDisposition,
     damageSourceId: context.damageSourceId,
     spatialFacts: context.spatialFacts,
+    ...(context.relationshipDecisions === undefined
+      ? {}
+      : { relationshipDecisions: context.relationshipDecisions }),
     concentrationSavingThrow: context.concentrationSavingThrow,
     wardingBondDamageShareConcentrationSavingThrows:
       context.wardingBondDamageShareConcentrationSavingThrows,

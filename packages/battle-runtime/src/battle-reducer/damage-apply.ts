@@ -68,6 +68,8 @@ import {
   type BattleDeathSavingThrowHole,
   type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleFill,
+  type BattleDamageRelationshipDecision,
+  type BattleDamageRelationshipDecisions,
   type BattleReadiedSpell,
   type BattleStatBlockRechargeRollHole,
   type BattleStatBlockRechargeRollResult,
@@ -91,7 +93,6 @@ import { parseSupportedUnitFeatureProfile } from "../unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import { removeBattleCombatants } from "./api-lifecycle.ts";
 import {
-  combatantsAreAllies,
   currentActorId,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
@@ -471,6 +472,7 @@ export function applyBattleHitPointDamage(input: {
   >[];
   readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
   readonly suppressWardingBondDamageShare?: true;
 }): BattleState {
   const damaged = applyHpDamage(input.target, input.damageAmount, {
@@ -513,6 +515,7 @@ export function applyBattleHitPointDamage(input: {
           afterConcentration,
           input.damageSourceId,
           targetId,
+          input.relationshipDecisions ?? [],
         )
       : afterConcentration;
   const afterTargetActionEarlyEnd =
@@ -548,6 +551,7 @@ export function applyBattleHitPointDamage(input: {
           priorTarget: input.target,
           damagedTarget: damaged,
           spatialFacts: input.spatialFacts ?? [],
+          relationshipDecisions: input.relationshipDecisions ?? [],
         })
       : afterHideousLaughter;
   const afterFamiliar = applyFindFamiliarZeroHitPointDisappearanceAfterDamage({
@@ -582,6 +586,7 @@ function applyEnemyZeroHitPointTemporaryHitPointsAwards(input: {
   readonly priorTarget: BattleCreatureState;
   readonly damagedTarget: BattleCreatureState;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions: readonly BattleDamageRelationshipDecision[];
 }): BattleState {
   const awards = enemyZeroHitPointTemporaryHitPointsAwards(input);
   if (awards.length === 0) {
@@ -977,6 +982,10 @@ export function applyAttackDamage(
     damagedTarget,
     damageAmount,
   );
+  const relationshipDecisions =
+    fillSet.damageRelationshipDecisions.forDamageHole(
+      fillSet.damageRoll.holeId,
+    );
   const afterDamage = applyBattleHitPointDamage({
     state,
     target: damagedTarget,
@@ -994,6 +1003,7 @@ export function applyAttackDamage(
       fillSet.concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves: fillSet.hideousLaughterDamageRepeatSaves,
     spatialFacts: fillSet.targetSpatialFacts,
+    ...(relationshipDecisions === undefined ? {} : { relationshipDecisions }),
   });
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(afterDamage, attackDamageRiders),
@@ -1172,6 +1182,7 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
   state: BattleState,
   damageSourceId: CombatantId,
   targetId: CombatantId,
+  relationshipDecisions: readonly BattleDamageRelationshipDecision[],
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -1186,7 +1197,13 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
     > =>
       (effect.kind === "spellCondition" &&
         effect.escape?.kind === "targetDamagedByCasterOrAlly" &&
-        combatantsAreAllies(state, damageSourceId, effect.sourceCombatantId)) ||
+        (damageSourceId === effect.sourceCombatantId ||
+          relationshipDecisions.some(
+            (decision) =>
+              decision.kind === "targetDamagedByCasterOrAllySourceIsAlly" &&
+              decision.targetId === targetId &&
+              decision.effectSourceId === effect.sourceCombatantId,
+          ))) ||
       (effect.kind === "unitFeatureCondition" &&
         effect.earlyEnd?.kind === "targetTakesAnyDamage"),
   );

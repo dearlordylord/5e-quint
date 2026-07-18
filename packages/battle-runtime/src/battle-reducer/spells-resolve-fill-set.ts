@@ -45,6 +45,7 @@ import {
 } from "./damage-helpers.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import {
   isMirrorImageDuplicateRollFill,
   mirrorImageDuplicateRollHoleId,
@@ -180,6 +181,7 @@ export type SpellFillSet =
         { readonly kind: "abilityCheck" }
       >[];
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+      readonly damageRelationshipDecisions: DamageRelationshipDecisionsByHole;
       readonly reactionSpellTargetFacts: readonly SpellCastReactionFact[];
       readonly targetAllocation:
         | {
@@ -412,6 +414,9 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
+    if (fill.kind === "damageRelationshipDecisions") {
+      continue;
+    }
     if (fill.kind === "slowSomaticSpellFailureOutcome") {
       continue;
     }
@@ -1679,6 +1684,25 @@ export function spellFillSet(
     };
   }
 
+  const damageRollHoleIds = new Set(
+    [
+      damageRoll,
+      attackBurstDamageRoll,
+      ...attackSequencePartFills.map((part) => part.damageRoll),
+    ].flatMap((fill) => (fill === undefined ? [] : [fill.holeId])),
+  );
+  const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
+    fills,
+    damageRollHoleIds,
+    owner: "a Spell",
+  });
+  if (relationshipDecisions.tag === "invalid") {
+    return {
+      tag: "invalid",
+      message: relationshipDecisions.message,
+    };
+  }
+
   return {
     tag: "ok",
     targetId,
@@ -1690,6 +1714,8 @@ export function spellFillSet(
     ongoingSpellTarget,
     ongoingSpellAbilityChecks,
     targetSpatialFacts,
+    damageRelationshipDecisions:
+      relationshipDecisions.decisionsByDamageHole,
     reactionSpellTargetFacts,
     targetAllocation,
     targetList,

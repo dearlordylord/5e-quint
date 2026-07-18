@@ -1458,6 +1458,9 @@ export function resolveBattleSubjectInternal(
         actor: combatants.actor,
         target: combatants.target,
         damage: creatureAttackDamageTotal(fills.damageRoll),
+        ...(fills.relationshipDecisions === undefined
+          ? {}
+          : { relationshipDecisions: fills.relationshipDecisions }),
       });
       return {
         tag: "resolved" as const,

@@ -1048,6 +1048,18 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
 
+  const attackRelationshipDecisions =
+    input.fillSet.attackBurstDamageRoll === undefined
+      ? undefined
+      : input.fillSet.damageRelationshipDecisions.forDamageHole(
+          input.fillSet.attackBurstDamageRoll.holeId,
+        );
+  const burstRelationshipDecisions =
+    input.fillSet.damageRoll === undefined
+      ? undefined
+      : input.fillSet.damageRelationshipDecisions.forDamageHole(
+          input.fillSet.damageRoll.holeId,
+        );
   const damagedByAttackWithConcentration =
     hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? applySpellDamage(
@@ -1098,6 +1110,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
               ),
             damageSourceId: input.actorId,
             spatialFacts: input.fillSet.targetSpatialFacts,
+            ...(attackRelationshipDecisions === undefined
+              ? {}
+              : { relationshipDecisions: attackRelationshipDecisions }),
           },
         )
       : postRemarkableAthleteMovementState;
@@ -1151,6 +1166,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             hideousLaughterDamageRepeatSaveEventKey: burstDamageEventKey,
             damageSourceId: input.actorId,
             spatialFacts: input.fillSet.targetSpatialFacts,
+            ...(burstRelationshipDecisions === undefined
+              ? {}
+              : { relationshipDecisions: burstRelationshipDecisions }),
           });
         }, damagedByAttackWithConcentration);
 

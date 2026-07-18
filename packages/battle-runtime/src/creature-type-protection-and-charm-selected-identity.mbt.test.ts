@@ -576,12 +576,13 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
     }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
+  const attackTarget = attackTargetFill(
     targetHole,
     casterAllyId,
     beastTargetId,
     attack.subject,
   );
+  const targetFill = attackTarget;
   const awaitingAttack = resolveBattleSubject({
     state: allyTurn,
     subject: attack.subject,
@@ -606,6 +607,17 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
         targetFill,
         attackFill,
         damageRollFillWithGroups(damageHole, [[1]]),
+        {
+          kind: "damageRelationshipDecisions",
+          holeId: damageHole.holeId,
+          decisions: [
+            {
+              kind: "targetDamagedByCasterOrAllySourceIsAlly",
+              targetId: beastTargetId,
+              effectSourceId: casterId,
+            },
+          ],
+        },
       ],
     }),
     "Expected ally weapon damage to break Animal Friendship.",

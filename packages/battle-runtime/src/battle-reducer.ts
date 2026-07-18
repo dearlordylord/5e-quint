@@ -2105,6 +2105,27 @@ export type BattleSpellCastReactionFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
 >;
+export type BattleDamageRelationshipDecision =
+  | {
+      readonly kind: "targetDamagedByCasterOrAllySourceIsAlly";
+      readonly targetId: CombatantId;
+      readonly effectSourceId: CombatantId;
+    }
+  | {
+      readonly kind: "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy";
+      readonly beneficiaryId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+    };
+export type BattleDamageRelationshipDecisions = readonly [
+  BattleDamageRelationshipDecision,
+  ...BattleDamageRelationshipDecision[],
+];
+export type BattleDamageRelationshipDecisionFill = {
+  readonly kind: "damageRelationshipDecisions";
+  readonly holeId: BattleHoleId;
+  readonly decisions: BattleDamageRelationshipDecisions;
+};
 export type BattleThunderwavePushDisposition =
   | {
       readonly kind: "pushed";
@@ -6924,6 +6945,7 @@ export type BattleFill =
       readonly value: CombatantId;
       readonly spatialFacts?: readonly BattleTargetSpatialFact[];
     }
+  | BattleDamageRelationshipDecisionFill
   | {
       readonly kind: "targetSpatialFacts";
       readonly holeId: BattleHoleId;

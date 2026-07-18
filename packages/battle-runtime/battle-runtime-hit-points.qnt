@@ -10,7 +10,6 @@ module battleRuntimeHitPoints {
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
-  import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
 
   // Rule-core CreatureKind is the HP lifecycle policy, not source provenance.
@@ -113,12 +112,31 @@ module battleRuntimeHitPoints {
     concentrationSaveSucceeded: bool,
     damageDisposition: DamageDisposition,
     damageSource: Actor,
+  ): Combatant =
+    applyDamageFromSourceWithEffectSourceAllies(
+      target,
+      damage,
+      deathFailuresAtZeroHp,
+      concentrationSaveSucceeded,
+      damageDisposition,
+      damageSource,
+      Set(),
+    )
+
+  pure def applyDamageFromSourceWithEffectSourceAllies(
+    target: Combatant,
+    damage: int,
+    deathFailuresAtZeroHp: int,
+    concentrationSaveSucceeded: bool,
+    damageDisposition: DamageDisposition,
+    damageSource: Actor,
+    alliedEffectSources: Set[Actor],
   ): Combatant = {
     val damaged = applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, damageDisposition)
     if (damage > 0 and battleRuntimeSleepEffectEndsOnDamage)
       combatantWithoutSleepEffects({
         ...damaged,
-        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, actorDamageSource(damageSource)),
+        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource, alliedEffectSources),
       })
     else
       damaged

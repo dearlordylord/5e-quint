@@ -301,6 +301,9 @@ export function resolvePreparedSlotSpellAct(input: {
     ]);
   }
   const damageRoll = input.fillSet.damageRoll;
+  const relationshipDecisions = input.fillSet.damageRelationshipDecisions.forDamageHole(
+    damageRoll.holeId,
+  );
   const damageValidation =
     validateSpellDamageFill(damageRoll, input.invocation, false) ??
     validatePreparedSlotSpellDamageGroups(
@@ -601,6 +604,9 @@ export function resolvePreparedSlotSpellAct(input: {
           hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
           damageSourceId: input.actorId,
           spatialFacts: input.fillSet.targetSpatialFacts,
+          ...(relationshipDecisions === undefined
+            ? {}
+            : { relationshipDecisions }),
         },
       );
     },

@@ -994,7 +994,6 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
     ),
     beneficiaryId: CombatantId,
-    damageSourceId: CombatantId,
     targetId: CombatantId,
     unitId: Schema.String,
     rangeFeet: MovementFeet,
@@ -1068,6 +1067,22 @@ const BattleTargetSpatialFactSchema = Schema.Union(
 ) as unknown as Schema.Schema<BattleTargetSpatialFact, unknown, never>;
 const BattleTargetSpatialFactsSchema = Schema.Array(
   BattleTargetSpatialFactSchema,
+);
+const BattleDamageRelationshipDecisionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("targetDamagedByCasterOrAllySourceIsAlly"),
+    targetId: CombatantId,
+    effectSourceId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("enemyZeroHitPointTemporaryHitPointsTargetIsEnemy"),
+    beneficiaryId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+  }),
+);
+const BattleDamageRelationshipDecisionsSchema = Schema.NonEmptyArray(
+  BattleDamageRelationshipDecisionSchema,
 );
 
 export const BattleObjectDamageOutcomeSchema = Schema.Union(
@@ -2667,12 +2682,33 @@ type BattleInterruptAttackExecutionSelectionEncoded =
       readonly attackName?: never;
     };
 
+type BattleDamageRelationshipDecisionEncoded =
+  | {
+      readonly kind: "targetDamagedByCasterOrAllySourceIsAlly";
+      readonly targetId: string;
+      readonly effectSourceId: string;
+    }
+  | {
+      readonly kind: "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy";
+      readonly beneficiaryId: string;
+      readonly targetId: string;
+      readonly unitId: string;
+    };
+
 type BattleFillEncoded =
   | {
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
       readonly spatialFacts?: readonly unknown[];
+    }
+  | {
+      readonly kind: "damageRelationshipDecisions";
+      readonly holeId: string;
+      readonly decisions: readonly [
+        BattleDamageRelationshipDecisionEncoded,
+        ...BattleDamageRelationshipDecisionEncoded[],
+      ];
     }
   | {
       readonly kind: "targetSpatialFacts";
@@ -3697,6 +3733,11 @@ export const BattleFillSchema: Schema.Schema<
       spatialFacts: Schema.optionalWith(BattleTargetSpatialFactsSchema, {
         exact: true,
       }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("damageRelationshipDecisions"),
+      holeId: BattleHoleIdSchema,
+      decisions: BattleDamageRelationshipDecisionsSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("targetSpatialFacts"),

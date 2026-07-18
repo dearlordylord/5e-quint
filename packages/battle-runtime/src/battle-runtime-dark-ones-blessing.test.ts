@@ -16,7 +16,10 @@ import {
   type CombatantId,
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
-import type { BattleTargetSpatialFact } from "./battle-reducer.ts";
+import type {
+  BattleDamageRelationshipDecision,
+  BattleTargetSpatialFact,
+} from "./battle-reducer.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
 import { applyChainedSpellDamage } from "./battle-reducer/spells-resolve-chained.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
@@ -27,6 +30,7 @@ type DarkOnesBlessingSupportProfile = Exclude<
 >;
 
 const warlockId = combatantId("dark-ones-blessing-warlock");
+const secondWarlockId = combatantId("dark-ones-blessing-second-warlock");
 const allyId = combatantId("dark-ones-blessing-ally");
 const enemyId = combatantId("dark-ones-blessing-enemy");
 const otherEnemyId = combatantId("dark-ones-blessing-other-enemy");
@@ -70,6 +74,20 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     expect(tempHp(result, warlockId)).toBe(6);
   });
 
+  test("uses the event-scoped enemy decision independently of Encounter Side", () => {
+    const result = damageEnemyToZero({
+      damageSourceId: allyId,
+      targetId: otherEnemyId,
+      warlockCha: 16,
+      warlockLevel: 3,
+      targetSide: partySide,
+      targetIsEnemy: true,
+      spatialFacts: [darkOnesBlessingRangeFact(allyId, otherEnemyId)],
+    });
+
+    expect(tempHp(result, warlockId)).toBe(6);
+  });
+
   test("prepared-slot spell damage threads source and range facts into zero-HP awards", () => {
     const state = darkOnesBlessingBattle({
       warlockCha: 16,
@@ -78,6 +96,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     const result = applyPreparedSlotSpellDamage(state, enemyId, 5, {
       damageSourceId: allyId,
       spatialFacts: [darkOnesBlessingRangeFact(allyId, enemyId)],
+      relationshipDecisions: [darkOnesBlessingEnemyDecision(enemyId)],
     });
 
     expect(tempHp(result, warlockId)).toBe(6);
@@ -95,6 +114,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       hideousLaughterDamageRepeatSaves: [],
       damageSourceId: warlockId,
       spatialFacts: [],
+      relationshipDecisions: [darkOnesBlessingEnemyDecision(enemyId)],
     });
 
     expect(tempHp(result, warlockId)).toBe(6);
@@ -117,11 +137,41 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       targetId: otherEnemyId,
       warlockCha: 16,
       warlockLevel: 3,
-      targetSide: partySide,
+      targetIsEnemy: false,
       spatialFacts: [darkOnesBlessingRangeFact(allyId, otherEnemyId)],
     });
 
     expect(tempHp(result, warlockId)).toBe(0);
+  });
+
+  test("evaluates enemy decisions independently for multiple beneficiaries", () => {
+    const state = darkOnesBlessingBattle({
+      warlockCha: 16,
+      warlockLevel: 3,
+      secondWarlock: true,
+    });
+    const target = state.combatants.get(enemyId);
+    if (target === undefined) {
+      throw new Error("Dark One's Blessing test target must exist.");
+    }
+
+    const result = applyBattleHitPointDamage({
+      state,
+      target,
+      damageAmount: 5,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: allyId,
+      spatialFacts: [
+        darkOnesBlessingRangeFact(allyId, enemyId, warlockId),
+        darkOnesBlessingRangeFact(allyId, enemyId, secondWarlockId),
+      ],
+      relationshipDecisions: [
+        darkOnesBlessingEnemyDecision(enemyId, warlockId),
+      ],
+    });
+
+    expect(tempHp(result, warlockId)).toBe(6);
+    expect(tempHp(result, secondWarlockId)).toBe(0);
   });
 
   test("applies the minimum Temporary Hit Point amount", () => {
@@ -163,6 +213,7 @@ function damageEnemyToZero(input: {
   readonly warlockLevel: number;
   readonly warlockTempHp?: number;
   readonly targetSide?: typeof partySide;
+  readonly targetIsEnemy?: boolean;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
 }): BattleState {
   const state = darkOnesBlessingBattle(input);
@@ -176,7 +227,14 @@ function damageEnemyToZero(input: {
     damageAmount: 5,
     deathFailuresAtZeroHp: 1,
     damageSourceId: input.damageSourceId,
-    spatialFacts: input.spatialFacts ?? [],
+    spatialFacts: [...(input.spatialFacts ?? [])],
+    ...(input.targetIsEnemy === false
+      ? {}
+      : {
+          relationshipDecisions: [
+            darkOnesBlessingEnemyDecision(input.targetId),
+          ],
+        }),
   });
 }
 
@@ -185,6 +243,7 @@ function darkOnesBlessingBattle(input: {
   readonly warlockLevel: number;
   readonly warlockTempHp?: number;
   readonly targetSide?: typeof partySide;
+  readonly secondWarlock?: true;
 }): BattleState {
   return startBattleRight({
     battleId: battleId("dark-ones-blessing-battle"),
@@ -205,6 +264,29 @@ function darkOnesBlessingBattle(input: {
         d20Statistics: testCharacterD20Statistics({ cha: input.warlockCha }),
         tempHp: input.warlockTempHp ?? 0,
       }),
+      ...(input.secondWarlock === true
+        ? [
+            characterSeed({
+              combatantId: secondWarlockId,
+              displayName: "Second Warlock",
+              initiative: 18,
+              classLevels: [
+                { className: "warlock", level: input.warlockLevel },
+              ],
+              characterUnitRefs: [
+                {
+                  unitId,
+                  supportProfiles: [supportProfile],
+                },
+              ],
+              unitFeatures: [{ unit }],
+              knownLanguages: ["Common"],
+              d20Statistics: testCharacterD20Statistics({
+                cha: input.warlockCha,
+              }),
+            }),
+          ]
+        : []),
       characterSeed({
         combatantId: allyId,
         displayName: "Ally",
@@ -232,14 +314,27 @@ function darkOnesBlessingBattle(input: {
 function darkOnesBlessingRangeFact(
   damageSourceId: CombatantId,
   targetId: CombatantId,
+  beneficiaryId: CombatantId = warlockId,
 ): BattleTargetSpatialFact {
   return {
     kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
-    beneficiaryId: warlockId,
+    beneficiaryId,
     damageSourceId,
     targetId,
     unitId,
     rangeFeet: movementFeet(10),
+  };
+}
+
+function darkOnesBlessingEnemyDecision(
+  targetId: CombatantId,
+  beneficiaryId: CombatantId = warlockId,
+): BattleDamageRelationshipDecision {
+  return {
+    kind: "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy",
+    beneficiaryId,
+    targetId,
+    unitId,
   };
 }
 

@@ -82,6 +82,7 @@ import {
   type BattleActiveEffect,
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
+  type BattleDamageRelationshipDecisions,
   type BattleFill,
   type BattleHoleId,
   type BattleObjectDamageDisposition,
@@ -1753,6 +1754,7 @@ type SpellDamageContext = {
     | undefined;
   readonly damageSourceId?: CombatantId | undefined;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
 };
 
 export function applySpellDamage(
@@ -1781,6 +1783,7 @@ export function applySpellDamage(
     sourcePenaltyDamageByType,
     damageSourceId,
     spatialFacts,
+    relationshipDecisions,
   } = context;
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
@@ -1829,6 +1832,9 @@ export function applySpellDamage(
     damageDisposition,
     damageSourceId,
     spatialFacts,
+    ...(relationshipDecisions === undefined
+      ? {}
+      : { relationshipDecisions }),
     concentrationSavingThrow,
     ...(wardingBondDamageShareConcentrationSavingThrows === undefined
       ? {}
@@ -1859,6 +1865,7 @@ type PreparedSlotSpellDamageContext = {
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly damageSourceId?: CombatantId | undefined;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
 };
 
 export function applyPreparedSlotSpellDamage(
@@ -1879,6 +1886,7 @@ export function applyPreparedSlotSpellDamage(
     damageDisposition = { kind: "ordinaryDamage" },
     damageSourceId,
     spatialFacts,
+    relationshipDecisions,
   } = context;
   return applyBattleHitPointDamage({
     state,
@@ -1888,6 +1896,7 @@ export function applyPreparedSlotSpellDamage(
     damageDisposition,
     damageSourceId,
     spatialFacts,
+    ...(relationshipDecisions === undefined ? {} : { relationshipDecisions }),
     concentrationSavingThrow,
     ...(wardingBondDamageShareConcentrationSavingThrows === undefined
       ? {}
