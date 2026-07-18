@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT see_invisibility
@@ -53,7 +52,11 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
     });
 
     expect(act.initialHoles).toEqual([]);
-    expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
+    const presentation = battleActSpellPresentation(act);
+    if (presentation === undefined) {
+      throw new Error("Expected See Invisibility spell presentation.");
+    }
+    expect(presentation.invocation).toMatchObject({
       tag: "spellSlot",
       spellId: seeInvisibilityUnitId,
       slotLevel: 2,
@@ -74,9 +77,7 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
         activeEffects: [
           expect.objectContaining({
             kind: "seeInvisibleAndEthereal",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(seeInvisibilityUnitId),
-            ),
+            sourceProcedureRef: presentation.procedureRef,
             sourceCombatantId: spellCasterId,
             expiresAt: {
               kind: "duration",
