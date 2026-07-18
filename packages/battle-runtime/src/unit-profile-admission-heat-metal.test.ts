@@ -1,3 +1,6 @@
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY heat_metal
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-contact-damage
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 
 import type { DiceAmount, SpellRecord } from "@dnd/surface/surface/types";

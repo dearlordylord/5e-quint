@@ -53,12 +53,9 @@ import {
   gustOfWindEastDirectionId,
   gustOfWindNorthDirectionId,
   insectPlagueAreaId,
-  insectPlagueUnitId,
   cloudkillAreaId,
-  cloudkillUnitId,
   moonbeamAreaId,
   sleetStormAreaId,
-  sleetStormUnitId,
   spikeGrowthAreaId,
   resistanceUnitId,
   spellCasterId,
@@ -1583,7 +1580,6 @@ function activeInsectPlagueAreaHazardEffect(
       (effect): effect is InsectPlagueAreaHazardEffect =>
         effect.kind === "insectPlagueAreaHazard" &&
         effect.sourceCombatantId === spellCasterId &&
-        effect.sourceProcedureRef === insectPlagueUnitId &&
         effect.areaId === insectPlagueAreaId,
     );
 }
@@ -1597,7 +1593,6 @@ function activeCloudkillAreaHazardEffect(
       (effect): effect is CloudkillAreaHazardEffect =>
         effect.kind === "cloudkillAreaHazard" &&
         effect.sourceCombatantId === spellCasterId &&
-        effect.sourceProcedureRef === cloudkillUnitId &&
         effect.areaId === cloudkillAreaId,
     );
 }
@@ -1611,7 +1606,6 @@ function activeSleetStormAreaHazardEffect(
       (effect): effect is SleetStormAreaHazardEffect =>
         effect.kind === "sleetStormAreaHazard" &&
         effect.sourceCombatantId === spellCasterId &&
-        effect.sourceProcedureRef === sleetStormUnitId &&
         effect.areaId === sleetStormAreaId,
     );
 }

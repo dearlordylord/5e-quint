@@ -426,6 +426,18 @@ function fillSleetStormSave(
 function moveWithDifficultTerrain(
   state: SleetStormRuntimeState,
 ): SleetStormRuntimeState {
+  const hazard = requireCombatant(
+    state.battle,
+    spellCasterId,
+  ).activeEffects.find(
+    (effect): effect is SleetStormAreaHazardEffect =>
+      effect.kind === "sleetStormAreaHazard" &&
+      effect.sourceCombatantId === spellCasterId &&
+      effect.areaId === sleetStormAreaId,
+  );
+  if (hazard === undefined) {
+    throw new Error("Expected active Sleet Storm area hazard.");
+  }
   const moveSubject: BattleSubject = {
     tag: "runtimeCommand",
     actorId: spellTargetId,
@@ -453,9 +465,7 @@ function moveWithDifficultTerrain(
               {
                 kind: "sleetStormHazard",
                 sourceCombatantId: spellCasterId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(sleetStormUnitId),
-                ),
+                sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: sleetStormAreaId,
               },
             ],
@@ -497,7 +507,6 @@ function sleetStormProjection(
   const hazard = caster.activeEffects.find(
     (effect): effect is SleetStormAreaHazardEffect =>
       effect.kind === "sleetStormAreaHazard" &&
-      effect.sourceProcedureRef === sleetStormUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === sleetStormAreaId,
   );
@@ -512,19 +521,22 @@ function sleetStormProjection(
       }) !== undefined,
     hazardActive: hazard !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceProcedureRef === sleetStormUnitId &&
+      hazard !== undefined &&
+      caster.concentration?.sourceProcedureRef === hazard.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     targetConcentrating:
       target.concentration?.sourceProcedureRef ===
-        syntheticTargetConcentrationSpellId &&
-      target.concentration.effectKind === "spellEffect",
+        battleProcedureExecutionRefForTest(
+          String(syntheticTargetConcentrationSpellId),
+        ) && target.concentration.effectKind === "spellEffect",
     targetProne: target.conditions.prone,
     savedThisTurn: hazard?.savedThisTurn.includes(spellTargetId) ?? false,
     movementSpentFeet: Number(target.movementSpentFeet),
     heavilyObscured: battleObscurementZones(state.battle).some(
       (zone) =>
         zone.kind === "spellObscurementZone" &&
-        zone.sourceProcedureRef === sleetStormUnitId &&
+        hazard !== undefined &&
+        zone.sourceProcedureRef === hazard.sourceProcedureRef &&
         zone.sourceCombatantId === spellCasterId &&
         zone.obscurement === "heavilyObscured" &&
         zone.area.kind === "pointOriginCylinder" &&

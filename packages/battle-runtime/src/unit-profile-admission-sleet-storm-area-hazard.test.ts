@@ -76,7 +76,7 @@ function castSleetStorm() {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Sleet Storm caster End Turn to resolve.");
   }
-  return { spell, cast: cast.state, targetTurn: targetTurn.state };
+  return { spell, act, cast: cast.state, targetTurn: targetTurn.state };
 }
 
 function stateWithTargetConcentration(state: BattleState): BattleState {
@@ -265,21 +265,17 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
   });
 
   test("cast records the source-owned Sleet Storm area effect and concentration", () => {
-    const { cast } = castSleetStorm();
+    const { act, cast } = castSleetStorm();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(sleetStormUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "sleetStormAreaHazard",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(sleetStormUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: sleetStormAreaId,
           radiusFeet: movementFeet(20),
@@ -297,7 +293,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
   });
 
   test("active Sleet Storm projects Difficult Terrain and Heavily Obscured Cylinder facts", () => {
-    const { spell, targetTurn } = castSleetStorm();
+    const { act, targetTurn } = castSleetStorm();
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: spellTargetId,
@@ -317,9 +313,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
         {
           kind: "sleetStormHazard" as const,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spell.id),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           areaId: sleetStormAreaId,
         },
       ],
@@ -365,9 +359,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     expect(battleObscurementZones(targetTurn)).toEqual([
       expect.objectContaining({
         kind: "spellObscurementZone",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spell.id),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         obscurement: "heavilyObscured",
         area: {
@@ -660,7 +652,7 @@ defineSelectedIdentityReplayWitness({
             areaEffects: 1,
           },
           discover: () => {
-            const { cast } = castSleetStorm();
+            const { act, cast } = castSleetStorm();
             const caster = requireCombatant(cast, spellCasterId);
             return {
               unitId: sleetStormUnitId,
@@ -668,7 +660,7 @@ defineSelectedIdentityReplayWitness({
               areaEffects: caster.activeEffects.filter(
                 (effect) =>
                   effect.kind === "sleetStormAreaHazard" &&
-                  effect.sourceProcedureRef === sleetStormUnitId,
+                  effect.sourceProcedureRef === act.subject.procedureRef,
               ).length,
             };
           },

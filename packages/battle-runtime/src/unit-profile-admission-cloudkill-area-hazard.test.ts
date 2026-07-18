@@ -1,5 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-03-CLOUDKILL-AREA-HAZARD cloudkill
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-cloudkill-area-hazard
@@ -159,21 +157,17 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   });
 
   test("cast records the active hazard and projects a Heavily Obscured sphere", () => {
-    const { spell, cast } = castCloudkill();
+    const { act, cast } = castCloudkill();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(cloudkillUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "cloudkillAreaHazard",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(cloudkillUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: cloudkillAreaId,
           radiusFeet: movementFeet(20),
@@ -191,9 +185,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(battleObscurementZones(cast)).toEqual([
       expect.objectContaining({
         kind: "spellObscurementZone",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spell.id),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         obscurement: "heavilyObscured",
         area: {
