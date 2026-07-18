@@ -611,7 +611,6 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
   expect(relationshipHole).toMatchObject({
     damageEventHoleId: damageHole.holeId,
     damageSourceId: casterAllyId,
-    targetIds: [beastTargetId],
     questions: [
       {
         kind: "targetDamagedByCasterOrAlly",
@@ -620,6 +619,7 @@ function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEv
       },
     ],
   });
+  expect(relationshipHole).not.toHaveProperty("targetIds");
   const resolvedDamage = requireResolvedResult(
     resolveBattleSubject({
       state: allyTurn,

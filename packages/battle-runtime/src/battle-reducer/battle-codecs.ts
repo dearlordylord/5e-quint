@@ -1268,7 +1268,6 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     damageEventHoleId: BattleHoleIdSchema,
     damageSourceId: CombatantId,
-    targetIds: Schema.NonEmptyArray(CombatantId),
     questions: Schema.NonEmptyArray(BattleDamageRelationshipQuestionSchema),
   }),
   Schema.Struct({
