@@ -402,9 +402,17 @@ function resolveSelfTransformationMode(
   const concentrationBase = spellRequiresConcentration(input.invocation)
     ? breakBattleConcentration(input.input.state, input.actorId)
     : input.input.state;
+  const effectOwner = concentrationBase.combatants.get(input.actorId);
+  if (effectOwner === undefined) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Self-transformation effect owner is no longer in the battle.",
+    );
+  }
   const allocation = allocateBattleActiveEffectRef({
     state: concentrationBase,
-    ownerId: input.actorId,
+    owner: effectOwner,
   });
   const effected = applySelfTransformationModeEffect({
     state: allocation.state,
@@ -461,9 +469,17 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   if (modeEffect.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", modeEffect.message);
   }
+  const effectOwner = input.state.combatants.get(input.targetId);
+  if (effectOwner === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Self-transformation effect owner is no longer in the battle.",
+    );
+  }
   const allocation = allocateBattleActiveEffectRef({
     state: input.state,
-    ownerId: input.targetId,
+    owner: effectOwner,
   });
   const effected = applySelfTransformationModeEffect({
     state: allocation.state,

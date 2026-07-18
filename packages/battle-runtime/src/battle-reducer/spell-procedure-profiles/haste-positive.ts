@@ -499,10 +499,9 @@ function applyHastePositiveEffects(
     }
     const allocation = allocateBattleActiveEffectRef({
       state: nextState,
-      ownerId: targetId,
+      owner: target,
     });
-    const allocatedTarget = allocation.state.combatants.get(targetId);
-    if (allocatedTarget === undefined) return nextState;
+    const allocatedTarget = allocation.owner;
     const nextEffects = hastePositiveEffects(invocation).map((effect) =>
       effect.kind === "spellGrantedActionResource"
         ? {

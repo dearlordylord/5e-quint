@@ -592,9 +592,17 @@ function resolveSpellCreatedHeldObject(
   if (resourced.tag === "invalid") {
     return resourced;
   }
+  const effectOwner = resourced.state.combatants.get(input.actorId);
+  if (effectOwner === undefined) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Held-object effect owner is no longer in the battle.",
+    );
+  }
   const allocation = allocateBattleActiveEffectRef({
     state: resourced.state,
-    ownerId: input.actorId,
+    owner: effectOwner,
   });
   const effected = applySpellCreatedHeldObjectEffect({
     state: allocation.state,

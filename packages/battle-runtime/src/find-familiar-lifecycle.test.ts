@@ -1973,9 +1973,7 @@ describe("Find Familiar lifecycle", () => {
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("cure_wounds"),
-          ),
+          sourceProcedureRef: cureWoundsAct.subject.procedureRef,
         },
       ],
     };
@@ -2046,9 +2044,7 @@ describe("Find Familiar lifecycle", () => {
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("cure_wounds"),
-          ),
+          sourceProcedureRef: cureWoundsAct.subject.procedureRef,
         },
       ],
     } as unknown as Parameters<typeof resolveBattleSubject>[0]["fills"][number];
@@ -2309,9 +2305,7 @@ describe("Find Familiar lifecycle", () => {
           kind: "spellTarget",
           casterId,
           targetId: enemyId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("cure_wounds"),
-          ),
+          sourceProcedureRef: delivery.subject.procedureRef,
         },
       ],
     };
@@ -2345,9 +2339,7 @@ describe("Find Familiar lifecycle", () => {
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("cure_wounds"),
-          ),
+          sourceProcedureRef: delivery.subject.procedureRef,
         },
       ],
     };

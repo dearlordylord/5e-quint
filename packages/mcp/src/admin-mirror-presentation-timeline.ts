@@ -222,7 +222,7 @@ function pendingAction(
   }
 
   if (subject.tag === "actionSpell") {
-    const spell = spellName(pending.presentation);
+    const spell = pending.label;
     if (hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -245,7 +245,7 @@ function pendingAction(
   }
 
   if (subject.tag === "unitFeature") {
-    const feature = unitFeatureName(pending.presentation);
+    const feature = pending.label;
     return {
       detail: `${actor} is resolving ${feature}.`,
       summary: `${actor} uses ${feature}`,
@@ -299,7 +299,7 @@ function resolvedAction(
   }
 
   if (subject.tag === "actionSpell") {
-    const spell = spellName(pending.presentation);
+    const spell = pending.label;
     return {
       detail:
         target === null
@@ -313,7 +313,7 @@ function resolvedAction(
   }
 
   if (subject.tag === "unitFeature") {
-    const feature = unitFeatureName(pending.presentation);
+    const feature = pending.label;
     return {
       detail: `${actor} resolved ${feature}.`,
       summary: `${actor} uses ${feature}`,
@@ -416,26 +416,6 @@ function targetIdFromFills(fills: readonly unknown[]): string | null {
 
 function hasFillKind(fills: readonly unknown[], kind: string): boolean {
   return fills.some((fill) => recordOf(fill).kind === kind);
-}
-
-function spellName(presentationValue: unknown): string {
-  const presentation = recordOf(presentationValue);
-  const invocation = recordOf(presentation.invocation);
-  return titleFromId(stringField(invocation, "spellId") ?? "spell");
-}
-
-function unitFeatureName(presentationValue: unknown): string {
-  return titleFromId(
-    stringField(recordOf(presentationValue), "unitId") ?? "feature",
-  );
-}
-
-function titleFromId(value: string): string {
-  return value
-    .split("_")
-    .filter((part) => part.length > 0)
-    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
-    .join(" ");
 }
 
 function recordOf(value: unknown): Readonly<Record<string, unknown>> {

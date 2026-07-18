@@ -322,10 +322,9 @@ function applyJumpMovementReplacementSpellEffect(
     }
     const allocation = allocateBattleActiveEffectRef({
       state: nextState,
-      ownerId: targetId,
+      owner: target,
     });
-    const allocatedTarget = allocation.state.combatants.get(targetId);
-    if (allocatedTarget === undefined) return nextState;
+    const allocatedTarget = allocation.owner;
     const nextEffect = {
       ...invocation.activeEffect,
       sourceCombatantId: actorId,

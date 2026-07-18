@@ -1,9 +1,5 @@
 import type { BattleActiveEffect } from "./types.ts";
-import type {
-  BattleActiveEffectExecutionRef,
-  BattleId,
-  CombatantId,
-} from "../identity.ts";
+import type { BattleActiveEffectExecutionRef, BattleId } from "../identity.ts";
 import {
   battleActiveEffectExecutionRef,
   battleActiveEffectExecutionOrdinal,
@@ -44,36 +40,29 @@ export function spellActiveEffectForExecutionRef(
 ): ReplayAddressableSpellActiveEffect | undefined {
   return effects.find(
     (effect): effect is ReplayAddressableSpellActiveEffect =>
-      "sourceProcedureRef" in effect &&
-      spellActiveEffectExecutionRef(
-        effect as ReplayAddressableSpellActiveEffect,
-      ) === effectRef,
+      "effectRef" in effect && effect.effectRef === effectRef,
   );
 }
 
 export function allocateBattleActiveEffectRef(input: {
   readonly state: BattleState;
-  readonly ownerId: CombatantId;
+  readonly owner: BattleCreatureState;
 }): {
   readonly state: BattleState;
+  readonly owner: BattleCreatureState;
   readonly effectRef: BattleActiveEffectExecutionRef;
 } {
-  const owner = input.state.combatants.get(input.ownerId);
-  if (owner === undefined) {
-    throw new Error(
-      `BattleState invariant violated: missing active-effect owner ${input.ownerId}.`,
-    );
-  }
   const allocation = allocateBattleActiveEffectRefForCreature({
     battleId: input.state.battleId,
-    owner,
+    owner: input.owner,
   });
   const combatants = new Map(input.state.combatants).set(
-    input.ownerId,
+    input.owner.combatantId,
     allocation.owner,
   );
   return {
     state: { ...input.state, combatants },
+    owner: allocation.owner,
     effectRef: allocation.effectRef,
   };
 }

@@ -1121,7 +1121,7 @@ type DistributiveOmit<T, TKey extends PropertyKey> = T extends unknown
   ? Omit<T, TKey>
   : never;
 
-type SpellProcedureSelectionSubject = DistributiveOmit<
+type SpellProcedureSelectionBase = DistributiveOmit<
   Extract<
     CharacterProcedureBattleSubject,
     {
@@ -1133,10 +1133,22 @@ type SpellProcedureSelectionSubject = DistributiveOmit<
     }
   >,
   "procedureRef" | "invocation"
-> & {
-  readonly procedureRef?: BattleProcedureExecutionRef;
-  readonly invocation: SpellInvocationRef;
-};
+>;
+type SpellProcedureSelectionSubject =
+  | (Exclude<
+      SpellProcedureSelectionBase,
+      { readonly tag: "findFamiliarTouchSpell" }
+    > & {
+      readonly procedureRef?: BattleProcedureExecutionRef;
+      readonly invocation: SpellInvocationRef;
+    })
+  | (Extract<
+      SpellProcedureSelectionBase,
+      { readonly tag: "findFamiliarTouchSpell" }
+    > & {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly invocation: SpellInvocationRef;
+    });
 
 type UnitFeatureProcedureSelectionSubject = DistributiveOmit<
   Extract<

@@ -92,12 +92,18 @@ export function handleBattleToolCall(
           requestedSubject: subject,
         });
       }
+      const discoveredAct = discoverBattleActs(visibleState).find((act) =>
+        sameBattleSubject(act.subject, subject),
+      );
       const presentation =
-        previous?.presentation ??
-        discoverBattleActs(visibleState).find((act) =>
-          sameBattleSubject(act.subject, subject),
-        )?.presentation;
-      if (presentation === undefined) {
+        previous?.presentation ?? discoveredAct?.presentation;
+      const label = previous?.label ?? discoveredAct?.label;
+      const summary = previous?.summary ?? discoveredAct?.summary;
+      if (
+        presentation === undefined ||
+        label === undefined ||
+        summary === undefined
+      ) {
         return errorContent("Battle act is not currently available.", {
           code: "BATTLE_ACT_NOT_AVAILABLE",
           subject,
@@ -129,6 +135,8 @@ export function handleBattleToolCall(
         replayState,
         isInterruptDecision,
         presentation,
+        label,
+        summary,
       });
       if (storeBattleResolution(root, result, pendingTransaction)) {
         publishAdminProjectionBestEffort(root);
@@ -165,6 +173,8 @@ export function handleBattleToolCall(
               replayState: state.right,
               isInterruptDecision: false,
               presentation: { kind: "intrinsic" },
+              label: "Creature Falls",
+              summary: "Resolve a falling creature.",
             }),
           )
         ) {
@@ -208,6 +218,8 @@ export function handleBattleToolCall(
             replayState: state.right,
             isInterruptDecision: false,
             presentation: availableAct.presentation,
+            label: availableAct.label,
+            summary: availableAct.summary,
           }),
         )
       ) {
@@ -250,6 +262,8 @@ export function handleBattleToolCall(
             replayState: state.right,
             isInterruptDecision: false,
             presentation: { kind: "intrinsic" },
+            label: "End Turn",
+            summary: "End the current turn.",
           }),
         )
       ) {
@@ -314,6 +328,8 @@ function pendingTransactionForResult({
   replayState,
   isInterruptDecision,
   presentation,
+  label,
+  summary,
 }: {
   readonly result: BattleResolutionResult;
   readonly filledSubject: BattleFillSession["subject"];
@@ -322,6 +338,8 @@ function pendingTransactionForResult({
   readonly replayState: BattleState;
   readonly isInterruptDecision: boolean;
   readonly presentation: BattleActPresentation;
+  readonly label: string;
+  readonly summary: string;
 }): PendingBattleFillSession | null {
   if (result.tag !== "needsHoles") return null;
   if (
@@ -333,6 +351,8 @@ function pendingTransactionForResult({
       baseState: previous.baseState,
       subject: result.subject,
       presentation: previous.presentation,
+      label: previous.label,
+      summary: previous.summary,
       fills: previous.fills,
     };
   }
@@ -340,6 +360,8 @@ function pendingTransactionForResult({
     baseState: isInterruptDecision ? result.state : replayState,
     subject: result.subject,
     presentation,
+    label,
+    summary,
     fills: isInterruptDecision ? [] : fills,
   };
 }

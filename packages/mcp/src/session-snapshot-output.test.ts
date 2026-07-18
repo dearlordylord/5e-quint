@@ -82,6 +82,8 @@ describe("MCP session wire projections", () => {
       },
       transientBattleFills: {
         presentation: { kind: "intrinsic" },
+        label: "End Turn",
+        summary: "End the current turn.",
         subject: {
           tag: "runtimeCommand",
           actorId: combatantId("combatant:projection-test"),

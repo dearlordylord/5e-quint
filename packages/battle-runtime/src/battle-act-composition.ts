@@ -260,10 +260,7 @@ function characterProcedurePresentationText(
       (candidate) => candidate.sourceProcedureRef === procedureRef,
     );
     if (invocation === undefined) return undefined;
-    return {
-      label: invocation.spell.name,
-      summary: `Use ${invocation.spell.name}.`,
-    };
+    return spellProcedurePresentationText(invocation);
   }
   if (subject.tag === "druidWildShape" && subject.action === "assumeForm") {
     const form = actor.origin.druidWildShapeAvailableForms?.find(
@@ -313,6 +310,26 @@ function characterProcedurePresentationText(
     return { label: name, summary: `${actionName} as a Bonus Action.` };
   }
   return { label: name, summary: `Use ${name}.` };
+}
+
+function spellProcedurePresentationText(
+  invocation: ReturnType<typeof supportedSpellActs>[number],
+): { readonly label: string; readonly summary: string } {
+  if (
+    invocation.procedure === "spiritualWeaponRepeatAttack" ||
+    invocation.procedure === "spellCreatedHeldObjectAttack"
+  ) {
+    const label = `${invocation.spell.name} attack`;
+    return { label, summary: `Make the ${label}.` };
+  }
+  if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
+    const label = `Re-evoke ${invocation.spell.name}`;
+    return { label, summary: `${label}.` };
+  }
+  return {
+    label: invocation.spell.name,
+    summary: `Use ${invocation.spell.name}.`,
+  };
 }
 
 function alternateActionPresentationName(

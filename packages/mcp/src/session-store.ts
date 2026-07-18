@@ -65,6 +65,8 @@ export type CharacterSessionRegistry = {
 export type BattleFillSession = {
   readonly subject: BattleSubject;
   readonly presentation: BattleActPresentation;
+  readonly label: string;
+  readonly summary: string;
   readonly fills: readonly BattleFill[];
 };
 
@@ -177,6 +179,8 @@ export function createMcpSessionStore(
             : {
                 subject: store.pendingBattleFills.subject,
                 presentation: store.pendingBattleFills.presentation,
+                label: store.pendingBattleFills.label,
+                summary: store.pendingBattleFills.summary,
                 fills: store.pendingBattleFills.fills,
               },
       };

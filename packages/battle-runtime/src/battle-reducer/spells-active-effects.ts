@@ -3378,10 +3378,9 @@ export function applyDragonsBreathInitialSpellEffect(
   }
   const allocation = allocateBattleActiveEffectRef({
     state,
-    ownerId: targetId,
+    owner: target,
   });
-  const allocatedTarget = allocation.state.combatants.get(targetId);
-  if (allocatedTarget === undefined) return state;
+  const allocatedTarget = allocation.owner;
   const nextEffect: BattleActiveEffect = {
     ...invocation.activeEffect,
     sourceProcedureRef: procedureRef,

@@ -809,7 +809,8 @@ function findFamiliarTouchSpellActs(input: {
       if (
         !isCharacterProcedureSelectionSubject(subject) ||
         (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
-        subject.mode.tag !== "cast"
+        subject.mode.tag !== "cast" ||
+        subject.procedureRef === undefined
       ) {
         return [];
       }
@@ -828,6 +829,7 @@ function findFamiliarTouchSpellActs(input: {
           subject: {
             tag: "findFamiliarTouchSpell",
             actorId: input.actorId,
+            procedureRef: subject.procedureRef,
             companionId: input.companionId,
             spellAction:
               subject.tag === "actionSpell" ? "action" : "bonusAction",

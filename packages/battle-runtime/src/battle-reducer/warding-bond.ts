@@ -174,12 +174,9 @@ export function applyWardingBondSpellEffect(
   }
   const allocation = allocateBattleActiveEffectRef({
     state: withoutPriorBonds,
-    ownerId: targetId,
+    owner: target,
   });
-  const allocatedTarget = allocation.state.combatants.get(targetId);
-  if (allocatedTarget === undefined) {
-    return withoutPriorBonds;
-  }
+  const allocatedTarget = allocation.owner;
   return {
     ...allocation.state,
     combatants: new Map(allocation.state.combatants).set(targetId, {
