@@ -61,6 +61,8 @@ import {
   attackTargetFill,
   areaSavingThrowOutcomeFill,
   battleFromSheets,
+  battleProcedureExecutionRefForHole,
+  battleProcedureExecutionRefForTest,
   characterResources,
   characterSheet,
   damageRollFillWithGroups,
@@ -1150,6 +1152,7 @@ describe("level 5 SDK tracer bullets", () => {
           fills: [sleetStormAreaChoiceFill(area)],
         }),
       );
+      const sleetStormProcedureRef = battleProcedureExecutionRefForHole(area);
       const caster = requireCharacterCombatant(
         cast.state,
         sleetStormCase.casterId,
@@ -1157,13 +1160,13 @@ describe("level 5 SDK tracer bullets", () => {
 
       expect(caster).toMatchObject({
         concentration: {
-          sourceProcedureRef: sleetStormSpellId,
+          sourceProcedureRef: sleetStormProcedureRef,
           effectKind: "spellEffect",
         },
         activeEffects: expect.arrayContaining([
           expect.objectContaining({
             kind: "sleetStormAreaHazard",
-            sourceProcedureRef: sleetStormSpellId,
+            sourceProcedureRef: sleetStormProcedureRef,
             sourceCombatantId: sleetStormCase.casterId,
             areaId: sleetStormAreaId,
             radiusFeet: movementFeet(20),
@@ -1187,7 +1190,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(battleObscurementZones(targetTurn)).toEqual([
         expect.objectContaining({
           kind: "spellObscurementZone",
-          sourceProcedureRef: sleetStormSpellId,
+          sourceProcedureRef: sleetStormProcedureRef,
           sourceCombatantId: sleetStormCase.casterId,
           obscurement: "heavilyObscured",
           area: {
@@ -1226,7 +1229,7 @@ describe("level 5 SDK tracer bullets", () => {
                   {
                     kind: "sleetStormHazard",
                     sourceCombatantId: sleetStormCase.casterId,
-                    sourceProcedureRef: sleetStormSpellId,
+                    sourceProcedureRef: sleetStormProcedureRef,
                     areaId: sleetStormAreaId,
                   },
                 ],
@@ -3025,7 +3028,7 @@ function bonusActionSpellSlotActForProcedure(
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   casterId: CombatantId,
-  spellId: string,
+  _spellId: string,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -3036,7 +3039,7 @@ function spellTargetListFill(
       kind: "spellTarget" as const,
       casterId,
       targetId,
-      spellId,
+      sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
     })),
   };
 }
@@ -3047,7 +3050,9 @@ function trackedObjectSpellLightEmitter(input: {
 }): BattleTrackedOngoingSpellLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceProcedureRef: continualFlameSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "continual-flame-light-emitter",
+    ),
     sourceCombatantId: input.sourceCombatantId,
     sourceEffectId: battleSpellEffectOccurrenceId(
       `${input.sourceCombatantId}:${continualFlameSpellId}:${input.objectId}:l5-tracer`,
@@ -3091,6 +3096,7 @@ function ongoingSpellTargetFill(input: {
       ongoingSpellTargetWithinRangeFact({
         casterId: input.casterId,
         target: input.target,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(input.hole),
       }),
     ],
   };
@@ -3195,11 +3201,12 @@ function requireSnapshotCombatant(
 function ongoingSpellTargetWithinRangeFact(input: {
   readonly casterId: CombatantId;
   readonly target: OngoingSpellTarget;
+  readonly sourceProcedureRef: OngoingSpellTargetWithinRangeFact["sourceProcedureRef"];
 }): OngoingSpellTargetWithinRangeFact {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: input.casterId,
-    spellId: dispelMagicSpellId,
+    sourceProcedureRef: input.sourceProcedureRef,
     target: input.target,
     rangeFeet: movementFeet(120),
   };
@@ -3238,6 +3245,7 @@ function startCounterspellableMagicMissile(input: {
         counterspellTriggerFact({
           reactorId: input.reactorId,
           casterId: input.casterId,
+          sourceProcedureRef: battleProcedureExecutionRefForHole(allocation),
         }),
       ]),
     ],
@@ -3272,7 +3280,7 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: input.casterId,
         targetId: input.targetId,
-        spellId: magicMissileSpellId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(input.hole),
       },
     ],
   };
@@ -3289,12 +3297,13 @@ type CounterspellTriggerFact = Extract<
 function counterspellTriggerFact(input: {
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
+  readonly sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"];
 }): CounterspellTriggerFact {
   return {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    spellId: counterspellSpellId,
+    sourceProcedureRef: input.sourceProcedureRef,
     rangeFeet: movementFeet(60),
   };
 }
@@ -3774,7 +3783,9 @@ function stateWithSleetStormTargetConcentration(
   const target = requireCombatant(state, sleetStormTargetId);
   const concentrationEffect: BattleActiveEffect = {
     kind: "spellArmorClassBonus",
-    sourceProcedureRef: syntheticSleetStormTargetConcentrationSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "sleet-storm-target-concentration",
+    ),
     sourceCombatantId: sleetStormTargetId,
     bonus: 1,
     negatedSpellIds: [],
@@ -3783,12 +3794,13 @@ function stateWithSleetStormTargetConcentration(
       combatantId: sleetStormTargetId,
     },
   };
+  const concentrationProcedureRef = concentrationEffect.sourceProcedureRef;
   return {
     ...state,
     combatants: new Map(state.combatants).set(sleetStormTargetId, {
       ...target,
       concentration: {
-        sourceProcedureRef: syntheticSleetStormTargetConcentrationSpellId,
+        sourceProcedureRef: concentrationProcedureRef,
         effectKind: "spellEffect",
       },
       activeEffects: [...target.activeEffects, concentrationEffect],

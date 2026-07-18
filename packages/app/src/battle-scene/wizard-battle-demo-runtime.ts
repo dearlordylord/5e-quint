@@ -18,7 +18,7 @@ import { DieRollResult, movementFeet } from "@dnd/shared/types"
 
 type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
 
-type CounterspellTriggerFact = Extract<
+export type CounterspellTriggerFact = Extract<
   Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>["spatialFacts"][number],
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
 >
@@ -107,14 +107,14 @@ export function spellCastReactionFactsFill(
 export function counterspellTriggerFact(input: {
   readonly reactorId: CombatantId
   readonly casterId: CombatantId
-  readonly spellId: string
+  readonly sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"]
   readonly rangeFeet: number
 }): CounterspellTriggerFact {
   return {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    spellId: input.spellId,
+    sourceProcedureRef: input.sourceProcedureRef,
     rangeFeet: movementFeet(input.rangeFeet)
   }
 }

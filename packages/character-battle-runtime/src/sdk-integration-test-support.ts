@@ -2,7 +2,12 @@ import {
   battleCombatantSide,
   battleActSpellSlotPresentation,
   battleCreatureInitFromStatBlock,
+  battleCharacterExecutionScopeRef,
+  battleExecutionScopeOrdinal,
   battleId,
+  battleProcedureExecutionRef,
+  battleResourcePoolExecutionRef,
+  combatantId,
   discoverBattleActs,
   initiativeScore,
   resolveBattleSubject,
@@ -13,6 +18,8 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  BattleProcedureExecutionRef,
+  BattleResourcePoolExecutionRef,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -47,7 +54,7 @@ import {
   type CharacterSheet,
   type CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
-import { DieRollResult, Hp } from "@dnd/shared/types";
+import { DieRollResult, Hp, NonNegativeInteger } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -76,6 +83,55 @@ const statBlockCatalog = statBlockCatalogResult.catalog;
 
 const partySide = battleCombatantSide("party");
 const monsterSide = battleCombatantSide("monsters");
+
+export function battleProcedureExecutionRefForTest(
+  discriminator: string,
+): BattleProcedureExecutionRef {
+  let ordinal = 2_166_136_261;
+  for (const character of discriminator) {
+    ordinal = Math.imul(ordinal ^ character.charCodeAt(0), 16_777_619) >>> 0;
+  }
+  const scopeRef = battleCharacterExecutionScopeRef(
+    battleId("battle-sdk-integration-test-reference"),
+    combatantId("sdk-integration-test-reference-owner"),
+    battleExecutionScopeOrdinal(ordinal),
+  );
+  return battleProcedureExecutionRef(scopeRef, NonNegativeInteger(0));
+}
+
+export function battleResourcePoolExecutionRefForTest(
+  discriminator: string,
+): BattleResourcePoolExecutionRef {
+  let ordinal = 2_166_136_261;
+  for (const character of discriminator) {
+    ordinal = Math.imul(ordinal ^ character.charCodeAt(0), 16_777_619) >>> 0;
+  }
+  const scopeRef = battleCharacterExecutionScopeRef(
+    battleId("battle-sdk-integration-test-resource-reference"),
+    combatantId("sdk-integration-test-resource-owner"),
+    battleExecutionScopeOrdinal(ordinal),
+  );
+  return battleResourcePoolExecutionRef(scopeRef, NonNegativeInteger(0));
+}
+
+export function battleProcedureExecutionRefForHole(
+  hole: BattleHole,
+): BattleProcedureExecutionRef {
+  if ("procedureRef" in hole && hole.procedureRef !== undefined) {
+    return hole.procedureRef;
+  }
+  if ("sourceProcedureRef" in hole) return hole.sourceProcedureRef;
+  if (
+    "spell" in hole &&
+    typeof hole.spell === "object" &&
+    hole.spell !== null &&
+    "sourceProcedureRef" in hole.spell &&
+    typeof hole.spell.sourceProcedureRef === "string"
+  ) {
+    return BattleProcedureExecutionRef.make(hole.spell.sourceProcedureRef);
+  }
+  throw new Error("Expected an execution-bound Battle hole.");
+}
 
 type CharacterCombatantState = BattleCreatureState & {
   readonly origin: Extract<
@@ -1157,10 +1213,11 @@ export function attackTargetFill(
 
 export function knownWillingSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: string,
+  _spellId: string,
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef = battleProcedureExecutionRefForHole(hole);
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1170,13 +1227,13 @@ export function knownWillingSpellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
       {
         kind: "spellTargetKnownWilling",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ],
   };

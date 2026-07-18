@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
 import {
   CreatureId as CreatureIdSchema,
+  type BattleActiveEffectExecutionRef,
   type BattleProcedureExecutionRef,
 } from "@dnd/shared/types";
 import { Index, Initiative, Round } from "@dnd/shared/types";
@@ -50,6 +51,8 @@ import {
 const sourceOwnerId = Schema.decodeUnknownSync(CreatureIdSchema)("owner-a");
 const unitActionId: UnitRecord["id"] = "unit-action-a";
 const unitActionProcedureRef = unitActionId as BattleProcedureExecutionRef;
+const spellEffectRef =
+  "synthetic-active-effect-ref-a" as BattleActiveEffectExecutionRef;
 const attackOnlyRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],
@@ -238,6 +241,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       sourceOwnerId,
+      spellEffectRef,
       oneAttackDashDisengageHideUtilizeRestriction,
     );
     expect(Either.isRight(granted)).toBe(true);
@@ -261,6 +265,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       sourceOwnerId,
+      spellEffectRef,
       {
         kind: "allow_only",
         actions: [{ action: "dash" }],
@@ -283,6 +288,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       sourceOwnerId,
+      spellEffectRef,
       oneAttackDashDisengageHideUtilizeRestriction,
     );
     expect(Either.isRight(granted)).toBe(true);
@@ -292,6 +298,7 @@ describe("action-economy-algebra", () => {
       grantSpellEffectActionResource(
         granted.right,
         sourceOwnerId,
+        spellEffectRef,
         oneAttackDashDisengageHideUtilizeRestriction,
       ),
     ).toEqual(Either.left("spell-effect action resource already granted"));

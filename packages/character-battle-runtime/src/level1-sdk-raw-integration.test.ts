@@ -82,6 +82,7 @@ import {
   attackTargetFill,
   areaSavingThrowOutcomeFill,
   battleFromSheets,
+  battleProcedureExecutionRefForHole,
   characterResources,
   characterSheet,
   damageRollFillWithGroups,
@@ -3859,7 +3860,10 @@ function assertLevelOneBless(input: {
   });
   const act = spellSlotActForProcedure(state, blessSpellId, 1, "rollModifier");
   const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
-  const expectedEffect = expectedLevelOneBlessEffect(input.casterId);
+  const expectedEffect = expectedLevelOneBlessEffect(
+    input.casterId,
+    battleProcedureExecutionRefForHole(targetList),
+  );
 
   expect({
     ...act.subject,
@@ -3920,10 +3924,14 @@ function assertLevelOneBless(input: {
 
 function expectedLevelOneBlessEffect(
   casterId: CombatantId,
+  sourceProcedureRef: Extract<
+    BattleActiveEffect,
+    { readonly kind: "d20RollModifier" }
+  >["sourceProcedureRef"],
 ): Extract<BattleActiveEffect, { readonly kind: "d20RollModifier" }> {
   return {
     kind: "d20RollModifier",
-    sourceProcedureRef: blessSpellId,
+    sourceProcedureRef,
     sourceCombatantId: casterId,
     on: ["attack_roll", "saving_throw"],
     delta: { sign: "+", dice: 1, dieSize: 4 },
@@ -3971,7 +3979,10 @@ function assertLevelOneShieldOfFaith(input: {
     state,
     input.targetId,
   ).armorClass;
-  const expectedEffect = expectedLevelOneShieldOfFaithEffect(input.casterId);
+  const expectedEffect = expectedLevelOneShieldOfFaithEffect(
+    input.casterId,
+    battleProcedureExecutionRefForHole(target),
+  );
 
   expect(initialActionResources).toEqual(expectedPreservedActionResources);
   expect({
@@ -4032,10 +4043,14 @@ function assertLevelOneShieldOfFaith(input: {
 
 function expectedLevelOneShieldOfFaithEffect(
   casterId: CombatantId,
+  sourceProcedureRef: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellArmorClassBonus" }
+  >["sourceProcedureRef"],
 ): Extract<BattleActiveEffect, { readonly kind: "spellArmorClassBonus" }> {
   return {
     kind: "spellArmorClassBonus",
-    sourceProcedureRef: shieldOfFaithSpellId,
+    sourceProcedureRef,
     sourceCombatantId: casterId,
     bonus: 2,
     negatedSpellIds: [],
@@ -8182,7 +8197,7 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId,
       targetId: allocation.targetId,
-      spellId: hole.spell.spell.id,
+      sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
     })),
   };
 }
@@ -8610,7 +8625,7 @@ function abilityChoiceFill(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: UnitRecord["id"],
+  _spellId: UnitRecord["id"],
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -8618,7 +8633,14 @@ function spellTargetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
-    spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+      },
+    ],
   };
 }
 
@@ -8632,7 +8654,12 @@ function sanctuaryTargetListFill(
     holeId: hole.holeId,
     value: { targetIds: [targetId] },
     spatialFacts: [
-      { kind: "spellTarget", casterId, targetId, spellId: sanctuarySpellId },
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+      },
     ],
   };
 }
@@ -8651,7 +8678,7 @@ function animalFriendshipTargetListFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId: animalFriendshipSpellId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
       },
     ],
   };
@@ -8667,7 +8694,12 @@ function blessTargetListFill(
     holeId: hole.holeId,
     value: { targetIds: [targetId] },
     spatialFacts: [
-      { kind: "spellTarget", casterId, targetId, spellId: blessSpellId },
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+      },
     ],
   };
 }
@@ -8717,7 +8749,7 @@ function walkMovementFill(
 
 function spellLeapTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: UnitRecord["id"],
+  _spellId: UnitRecord["id"],
   previousTargetId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -8730,7 +8762,7 @@ function spellLeapTargetFill(
         kind: "spellLeapTargetWithinRange",
         previousTargetId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
         rangeFeet: movementFeet(30),
       },
     ],
@@ -8763,7 +8795,7 @@ function bardicInspirationTargetFill(
         kind: "bardicInspirationTargetWithinRange",
         bardId,
         targetId,
-        unitId: bardBardicInspirationUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
         rangeFeet: movementFeet(60),
       },
     ],

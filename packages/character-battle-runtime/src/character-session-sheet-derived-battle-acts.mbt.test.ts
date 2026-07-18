@@ -56,6 +56,7 @@ import {
   characterSheetBattleInit,
   settleCharacterSheetFromBattle,
 } from "./index.ts";
+import { battleProcedureExecutionRefForHole } from "./sdk-integration-test-support.ts";
 
 const sheetDerivedOutcomes = [
   "init",
@@ -376,7 +377,7 @@ function createSheetDerivedBattleActsDriver(input: {
             kind: "spellTarget",
             casterId: characterCombatantId,
             targetId: targetCombatantId,
-            spellId: "ray_of_sickness",
+            sourceProcedureRef: battleProcedureExecutionRefForHole(targetHole),
           },
         ]);
         const attackHole = requireHole(
