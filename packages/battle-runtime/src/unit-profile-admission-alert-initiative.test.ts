@@ -165,7 +165,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup,
       sourceId: alertSourceId,
       allyId: alertAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
 
@@ -189,7 +189,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup: alertBattleSetup(),
       sourceId: alertSourceId,
       allyId: alertAllyId,
-      allyInSameCombat: false,
+      targetIsAlly: false,
       allyWilling: true,
     };
     expectSwapRejected(tableRejectsRelationship);
@@ -198,7 +198,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup: alertBattleSetup(),
       sourceId: alertSourceId,
       allyId: alertEnemyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     };
     expect(
@@ -213,7 +213,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup,
       sourceId: alertSourceId,
       allyId: alertAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
 
@@ -229,7 +229,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup,
       sourceId: alertSourceId,
       allyId: alertSecondAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
     expect(Either.isLeft(secondSwapFromStaleSetup)).toBe(true);
@@ -238,7 +238,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup: firstSwap.right,
       sourceId: alertSourceId,
       allyId: alertSecondAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
 
@@ -252,7 +252,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup,
       sourceId: alertSourceId,
       allyId: alertAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: false,
     });
 
@@ -260,7 +260,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup: alertBattleSetup({ sourceConditions: ["incapacitated"] }),
       sourceId: alertSourceId,
       allyId: alertAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
 
@@ -268,7 +268,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup: alertBattleSetup({ allyConditions: ["incapacitated"] }),
       sourceId: alertSourceId,
       allyId: alertAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
 
@@ -276,7 +276,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup,
       sourceId: alertSourceId,
       allyId: alertEnemyId,
-      allyInSameCombat: false,
+      targetIsAlly: false,
       allyWilling: true,
     });
   });
@@ -288,14 +288,14 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup,
       sourceId: combatantId("absent-alert-source"),
       allyId: alertAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
       allyId: combatantId("absent-alert-ally"),
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
   });
@@ -316,7 +316,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       setup,
       sourceId: alertSourceId,
       allyId: alertAllyId,
-      allyInSameCombat: true,
+      targetIsAlly: true,
       allyWilling: true,
     });
   });

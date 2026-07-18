@@ -111,7 +111,7 @@ module battleRuntimeTurnOrder {
     consumedSwapSources: Set[Actor],
     source: Actor,
     ally: Actor,
-    allyInSameCombat: bool,
+    targetIsAlly: bool,
     allyWilling: bool,
     sourceIncapacitated: bool,
     allyIncapacitated: bool,
@@ -119,7 +119,7 @@ module battleRuntimeTurnOrder {
     initiative.alreadyActed.length() == 0 and
     not(consumedSwapSources.contains(source)) and
     source != ally and
-    allyInSameCombat and
+    targetIsAlly and
     allyWilling and
     not(sourceIncapacitated) and
     not(allyIncapacitated)

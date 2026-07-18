@@ -17,7 +17,7 @@ RAW anchors:
 - `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Summon Dragon`
 - `UBIQUITOUS_LANGUAGE.md#Spell Ownership Terms`
 - `UBIQUITOUS_LANGUAGE.md#Controlled Creatures And Companions`
-- `UBIQUITOUS_LANGUAGE.md#Encounter Relationships`
+- `UBIQUITOUS_LANGUAGE.md#Table Decisions`
 
 ## Scope
 
