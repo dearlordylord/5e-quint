@@ -5,6 +5,8 @@ import type {
   AdminMirrorProjectionEnvelope,
   AdminSessionProjection,
 } from "./admin-mirror-contract.ts";
+import type { BattleActPresentation } from "@dnd/battle-runtime";
+import { Match } from "effect";
 
 type EventAction = {
   readonly detail: string;
@@ -14,10 +16,11 @@ type EventAction = {
 export function createAdminMirrorPresentationTimelineEntry(
   envelope: AdminMirrorProjectionEnvelope,
   receivedAtEpochMs: number,
-  previousProjection: AdminSessionProjection | undefined,
+  previousEnvelope: AdminMirrorProjectionEnvelope | undefined,
 ): AdminMirrorPresentationTimelineEntry {
   const battle = envelope.projection.battle;
-  const action = eventAction(previousProjection, envelope.projection);
+  const previousProjection = previousEnvelope?.projection;
+  const action = eventAction(previousEnvelope, envelope);
   const changes = hpChanges(previousProjection, envelope.projection);
   return {
     actionDetail: action?.detail ?? null,
@@ -143,11 +146,15 @@ function eventDebug(
 }
 
 function eventAction(
-  previousProjection: AdminSessionProjection | undefined,
-  projection: AdminSessionProjection,
+  previousEnvelope: AdminMirrorProjectionEnvelope | undefined,
+  envelope: AdminMirrorProjectionEnvelope,
 ): EventAction | null {
+  const previousProjection = previousEnvelope?.projection;
+  const projection = envelope.projection;
   const currentPending = projection.session.transientBattleFills;
-  if (currentPending !== null) return pendingAction(currentPending, projection);
+  if (currentPending !== null) {
+    return pendingAction(currentPending, projection, envelope.selectedContent);
+  }
 
   const previousPending = previousProjection?.session.transientBattleFills;
   if (
@@ -155,7 +162,12 @@ function eventAction(
     previousPending !== undefined &&
     previousPending !== null
   ) {
-    return resolvedAction(previousPending, previousProjection, projection);
+    return resolvedAction(
+      previousPending,
+      previousProjection,
+      projection,
+      previousEnvelope?.selectedContent ?? null,
+    );
   }
 
   if (previousProjection?.battle === null && projection.battle !== null) {
@@ -189,7 +201,8 @@ function pendingAction(
     AdminSessionProjection["session"]["transientBattleFills"]
   >,
   projection: AdminSessionProjection,
-): EventAction {
+  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
+): EventAction | null {
   const subject = recordOf(pending.subject);
   const actorId = stringField(subject, "actorId");
   const actor =
@@ -221,8 +234,9 @@ function pendingAction(
     };
   }
 
-  if (subject.tag === "actionSpell") {
-    const spell = pending.label;
+  if (pending.presentation.kind === "spell") {
+    const spell = battleActTimelineLabel(pending.presentation, selectedContent);
+    if (spell === null) return null;
     if (hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -244,8 +258,15 @@ function pendingAction(
     };
   }
 
-  if (subject.tag === "unitFeature") {
-    const feature = pending.label;
+  if (
+    pending.presentation.kind === "unit" ||
+    pending.presentation.kind === "druidWildShapeForm"
+  ) {
+    const feature = battleActTimelineLabel(
+      pending.presentation,
+      selectedContent,
+    );
+    if (feature === null) return null;
     return {
       detail: `${actor} is resolving ${feature}.`,
       summary: `${actor} uses ${feature}`,
@@ -264,7 +285,8 @@ function resolvedAction(
   >,
   previousProjection: AdminSessionProjection,
   projection: AdminSessionProjection,
-): EventAction {
+  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
+): EventAction | null {
   const subject = recordOf(pending.subject);
   const actorId = stringField(subject, "actorId");
   const actor =
@@ -298,8 +320,9 @@ function resolvedAction(
     };
   }
 
-  if (subject.tag === "actionSpell") {
-    const spell = pending.label;
+  if (pending.presentation.kind === "spell") {
+    const spell = battleActTimelineLabel(pending.presentation, selectedContent);
+    if (spell === null) return null;
     return {
       detail:
         target === null
@@ -312,8 +335,15 @@ function resolvedAction(
     };
   }
 
-  if (subject.tag === "unitFeature") {
-    const feature = pending.label;
+  if (
+    pending.presentation.kind === "unit" ||
+    pending.presentation.kind === "druidWildShapeForm"
+  ) {
+    const feature = battleActTimelineLabel(
+      pending.presentation,
+      selectedContent,
+    );
+    if (feature === null) return null;
     return {
       detail: `${actor} resolved ${feature}.`,
       summary: `${actor} uses ${feature}`,
@@ -416,6 +446,37 @@ function targetIdFromFills(fills: readonly unknown[]): string | null {
 
 function hasFillKind(fills: readonly unknown[], kind: string): boolean {
   return fills.some((fill) => recordOf(fill).kind === kind);
+}
+
+export function battleActTimelineLabel(
+  presentation: BattleActPresentation,
+  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
+): string | null {
+  return Match.value(presentation).pipe(
+    Match.when({ kind: "intrinsic" }, () => null),
+    Match.when({ kind: "spell" }, ({ invocation }) =>
+      selectedContent?.kind === "spell" &&
+      selectedContent.id === invocation.spellId
+        ? selectedContent.name
+        : null,
+    ),
+    Match.when({ kind: "unit" }, ({ unitId }) => {
+      if (selectedContent === null || selectedContent.id !== unitId)
+        return null;
+      return "syntheticLabel" in selectedContent
+        ? selectedContent.syntheticLabel
+        : selectedContent.kind === "statBlock"
+          ? null
+          : selectedContent.name;
+    }),
+    Match.when({ kind: "druidWildShapeForm" }, ({ formStatBlockId }) =>
+      selectedContent?.kind === "statBlock" &&
+      selectedContent.id === formStatBlockId
+        ? selectedContent.name
+        : null,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function recordOf(value: unknown): Readonly<Record<string, unknown>> {

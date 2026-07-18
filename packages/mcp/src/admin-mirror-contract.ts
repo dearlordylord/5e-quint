@@ -1,4 +1,8 @@
-import { BattleSnapshotSchema } from "@dnd/battle-runtime";
+import {
+  BattleSnapshotSchema,
+  BattleUnitSupportSourceSchema,
+} from "@dnd/battle-runtime";
+import { StatBlockRecordSchema } from "@dnd/surface/surface/schema";
 import { Schema } from "effect";
 
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
@@ -109,6 +113,11 @@ export const AdminMirrorProjectionEnvelopeSchema = Schema.Struct({
   sourceProcessId: Schema.Number.pipe(
     Schema.int(),
     Schema.greaterThanOrEqualTo(0),
+  ),
+  selectedContent: Schema.Union(
+    BattleUnitSupportSourceSchema,
+    StatBlockRecordSchema,
+    Schema.Null,
   ),
   projection: AdminSessionProjectionSchema,
 });

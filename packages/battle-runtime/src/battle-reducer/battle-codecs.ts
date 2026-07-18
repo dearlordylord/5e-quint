@@ -40,6 +40,7 @@ import type {
 import {
   CreatureNamedAttackRollSchema,
   CreatureRechargeMinimumRollSchema,
+  UnitRecordSchema,
 } from "@dnd/surface/surface/schema";
 import {
   BATTLE_UNIT_SUPPORT_PROFILES,
@@ -1086,7 +1087,7 @@ const BattleDamageRelationshipQuestionSchema = Schema.Union(
     questionId: BattleDamageRelationshipQuestionIdSchema,
     beneficiaryId: CombatantId,
     targetId: CombatantId,
-    unitId: Schema.String,
+    procedureRef: BattleProcedureExecutionRef,
   }),
 );
 const BattleDamageRelationshipDecisionsSchema = Schema.NonEmptyArray(
@@ -5592,6 +5593,26 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
         "Execution scopes, procedure refs, and resource refs must be unique and owned by their combatant.",
     },
   ),
+);
+
+export const BattleUnitSupportSourceSchema = Schema.Union(
+  UnitRecordSchema,
+  Schema.Struct({
+    id: Schema.String,
+    syntheticLabel: Schema.String,
+    provenance: Schema.Struct({
+      kind: Schema.Literal("classic-2024-mechanics-source-lane"),
+    }),
+    kind: Schema.Literal("class_feature"),
+    mechanics: Schema.Struct({
+      family: Schema.Literal("alternate_action_cost"),
+      from: Schema.Struct({
+        kind: Schema.Literal("standard_action"),
+        actions: Schema.Array(Schema.Literal(...STANDARD_ACTION_KINDS)),
+      }),
+      to: Schema.Struct({ kind: Schema.Literal("bonus_action") }),
+    }),
+  }),
 );
 
 export const BattleActPresentationSchema = Schema.Union(

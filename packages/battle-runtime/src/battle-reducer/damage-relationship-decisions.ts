@@ -180,7 +180,7 @@ export function damageRelationshipDecisionHole(input: {
             question.kind,
             question.beneficiaryId,
             question.targetId,
-            question.unitId,
+            question.procedureRef,
           ]),
   }));
   const first = questionsWithIds[0];
@@ -274,7 +274,7 @@ function damageRelationshipQuestions(input: {
           kind: "enemyZeroHitPointTemporaryHitPoints",
           beneficiaryId: beneficiary.combatantId,
           targetId: input.targetId,
-          unitId: profile.unit.id,
+          procedureRef,
         });
       }
     }
@@ -312,7 +312,7 @@ function resolveDecisionAnswers(
       kind: question.kind,
       beneficiaryId: question.beneficiaryId,
       targetId: question.targetId,
-      unitId: question.unitId,
+      procedureRef: question.procedureRef,
       targetIsEnemy: answer?.answer === true,
     };
   });

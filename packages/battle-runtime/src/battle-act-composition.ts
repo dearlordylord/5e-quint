@@ -350,6 +350,13 @@ function spellProcedurePresentationText(
     const label = `Re-evoke ${invocation.spell.name}`;
     return { label, summary: `${label}.` };
   }
+  if (
+    invocation.procedure === "markedDamageRider" &&
+    invocation.action === "transfer"
+  ) {
+    const label = `Transfer ${invocation.spell.name}`;
+    return { label, summary: `${label} to a new target.` };
+  }
   if (subject.tag === "bonusActionDashSpell") {
     return {
       label: invocation.spell.name,
@@ -357,15 +364,64 @@ function spellProcedurePresentationText(
     };
   }
   if (subject.metamagic !== undefined) {
+    const metamagic = subject.metamagic
+      .map(metamagicSelectionPresentationName)
+      .join(" and ");
     return {
-      label: invocation.spell.name,
-      summary: `Use ${invocation.spell.name} with the selected Metamagic.`,
+      label: `${invocation.spell.name} — ${metamagic}`,
+      summary: `Use ${invocation.spell.name} with ${metamagic}.`,
     };
   }
   return {
     label: invocation.spell.name,
     summary: `Use ${invocation.spell.name}.`,
   };
+}
+
+function metamagicSelectionPresentationName(
+  selection: NonNullable<
+    Extract<
+      CharacterProcedureSelectionSubject,
+      { readonly tag: "actionSpell" }
+    >["metamagic"]
+  >[number],
+): string {
+  return Match.value(selection).pipe(
+    Match.when(
+      { effectKind: "saving_throw_protection" },
+      () => "Careful Spell",
+    ),
+    Match.when({ effectKind: "spell_range_increase" }, () => "Distant Spell"),
+    Match.when({ effectKind: "damage_dice_reroll" }, () => "Empowered Spell"),
+    Match.when(
+      { effectKind: "duration_extension_and_concentration_save_advantage" },
+      () => "Extended Spell",
+    ),
+    Match.when(
+      { effectKind: "saving_throw_disadvantage" },
+      () => "Heightened Spell",
+    ),
+    Match.when(
+      {
+        effectKind: "action_casting_time_to_bonus_action_with_spell_turn_limit",
+      },
+      () => "Quickened Spell",
+    ),
+    Match.when(
+      { effectKind: "missed_spell_attack_reroll" },
+      () => "Seeking Spell",
+    ),
+    Match.when({ effectKind: "component_suppression" }, () => "Subtle Spell"),
+    Match.when(
+      { effectKind: "damage_type_substitution" },
+      ({ targetDamageType }) => `Transmuted Spell (${targetDamageType})`,
+    ),
+    Match.when(
+      { effectKind: "effective_spell_level_increase_for_extra_target" },
+      () => "Twinned Spell",
+    ),
+    Match.exhaustive,
+  );
 }
 
 function readiedSpellTriggerPresentationName(
@@ -413,21 +469,40 @@ function characterProcedurePresentation(
   subject: CharacterProcedureSelectionSubject,
   procedureRef: BattleProcedureExecutionRef,
 ): BattleActPresentation | undefined {
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "character") return undefined;
   if (
     subject.tag === "actionSpell" ||
     subject.tag === "bonusActionSpell" ||
     subject.tag === "bonusActionDashSpell" ||
     subject.tag === "findFamiliarTouchSpell"
   ) {
-    return { kind: "spell", procedureRef, invocation: subject.invocation };
+    return {
+      kind: "spell",
+      procedureRef,
+      invocation: subject.invocation,
+    };
   }
   if (
     subject.tag === "unitFeature" ||
     subject.tag === "unitFeatureHeldWeaponActivation"
   ) {
-    return { kind: "unit", procedureRef, unitId: subject.unitId };
+    const selectedUnit = actor.origin.characterUnitRefs.find(
+      (candidate) => candidate.unit.id === subject.unitId,
+    )?.unit;
+    return selectedUnit === undefined
+      ? undefined
+      : {
+          kind: "unit",
+          procedureRef,
+          unitId: selectedUnit.id,
+        };
   }
   if (subject.tag === "druidWildShape") {
+    const selectedUnit = actor.origin.characterUnitRefs.find(
+      (candidate) => candidate.unit.id === subject.unitId,
+    )?.unit;
+    if (selectedUnit === undefined) return undefined;
     return subject.action === "assumeForm"
       ? {
           kind: "druidWildShapeForm",
@@ -435,14 +510,25 @@ function characterProcedurePresentation(
           unitId: subject.unitId,
           formStatBlockId: subject.formStatBlockId,
         }
-      : { kind: "unit", procedureRef, unitId: subject.unitId };
+      : {
+          kind: "unit",
+          procedureRef,
+          unitId: selectedUnit.id,
+        };
   }
   if (subject.tag === "bonusActionStandardAction") {
     if ("sourceUnitId" in subject) {
-      return { kind: "unit", procedureRef, unitId: subject.sourceUnitId };
+      const selectedUnit = actor.origin.characterUnitRefs.find(
+        (candidate) => candidate.unit.id === subject.sourceUnitId,
+      )?.unit;
+      return selectedUnit === undefined
+        ? undefined
+        : {
+            kind: "unit",
+            procedureRef,
+            unitId: selectedUnit.id,
+          };
     }
-    const actor = state.combatants.get(subject.actorId);
-    if (actor?.origin.kind !== "character") return undefined;
     const invocation = characterSpellProcedureInvocationRef(
       actor.origin.execution,
       procedureRef,
@@ -451,7 +537,16 @@ function characterProcedurePresentation(
       ? undefined
       : { kind: "spell", procedureRef, invocation };
   }
-  return { kind: "unit", procedureRef, unitId: subject.resourceUnitId };
+  const selectedUnit = actor.origin.characterUnitRefs.find(
+    (candidate) => candidate.unit.id === subject.resourceUnitId,
+  )?.unit;
+  return selectedUnit === undefined
+    ? undefined
+    : {
+        kind: "unit",
+        procedureRef,
+        unitId: selectedUnit.id,
+      };
 }
 
 function boundCharacterProcedureSubject(

@@ -68,7 +68,10 @@ export {
   type BattleTraceHoleKind,
 } from "./battle-trace-contract.ts";
 export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
-export { BattleActPresentationSchema } from "./battle-reducer/battle-codecs.ts";
+export {
+  BattleActPresentationSchema,
+  BattleUnitSupportSourceSchema,
+} from "./battle-reducer/battle-codecs.ts";
 export {
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,

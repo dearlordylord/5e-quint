@@ -28,8 +28,6 @@ export const McpSessionSnapshotSchema = Schema.Struct({
     Schema.Struct({
       subject: BattleSubjectSchema,
       presentation: BattleActPresentationSchema,
-      label: Schema.String,
-      summary: Schema.String,
       fills: Schema.Array(BattleFillSchema),
     }),
     Schema.Null,

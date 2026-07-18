@@ -1,5 +1,5 @@
 import { snapshotBattle } from "@dnd/battle-runtime";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Either, Match, Option, Schema } from "effect";
 
 import { characterListRows } from "./character-session-rows.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -155,9 +155,43 @@ function publishAdminProjection(root: McpCompositionRoot): Effect.Effect<void> {
     mirrorSessionId: publication.mirrorSessionId,
     projection: projection.right,
     publisherInstanceId: publication.publisherInstanceId,
+    selectedContent: selectedContentForProjection(root, projection.right),
     sequence: publication.nextSequence(),
     sourceProcessId: process.pid,
   });
+}
+
+function selectedContentForProjection(
+  root: McpCompositionRoot,
+  projection: AdminSessionProjection,
+): AdminMirrorProjectionEnvelope["selectedContent"] {
+  const presentation =
+    projection.session.transientBattleFills?.presentation ?? null;
+  if (presentation === null) return null;
+  return Match.value(presentation).pipe(
+    Match.when({ kind: "intrinsic" }, () => null),
+    Match.when({ kind: "spell" }, ({ invocation }) =>
+      Option.getOrNull(root.unitLibrary.getUnit(invocation.spellId)),
+    ),
+    Match.when({ kind: "druidWildShapeForm" }, ({ formStatBlockId }) =>
+      Option.getOrNull(root.statBlockCatalog.getStatBlock(formStatBlockId)),
+    ),
+    Match.when({ kind: "unit" }, ({ unitId }) => {
+      const catalogUnit = Option.getOrNull(root.unitLibrary.getUnit(unitId));
+      if (catalogUnit !== null) return catalogUnit;
+      const battle = root.sessionStore.battleState;
+      if (battle === null) return null;
+      for (const combatant of battle.combatants.values()) {
+        if (combatant.origin.kind !== "character") continue;
+        const selected = combatant.origin.characterUnitRefs.find(
+          (candidate) => candidate.unit.id === unitId,
+        )?.unit;
+        if (selected !== undefined) return selected;
+      }
+      return null;
+    }),
+    Match.exhaustive,
+  );
 }
 
 export function publishAdminProjectionBestEffort(

@@ -166,7 +166,11 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
           kind: "enemyZeroHitPointTemporaryHitPoints",
           beneficiaryId: warlockId,
           targetId: enemyId,
-          unitId,
+          procedureRef: darkOnesBlessingRangeFactForState(
+            state,
+            warlockId,
+            enemyId,
+          ).sourceProcedureRef,
         },
       ],
     });
@@ -230,14 +234,15 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     if (target.kind !== "targetChoice") {
       throw new Error("Expected a spell target hole.");
     }
+    if (act.presentation.kind !== "spell") {
+      throw new Error("Expected spell presentation selection.");
+    }
     const targetChoice = targetFill(target, enemyId, [
       {
         kind: "spellTarget",
         casterId: warlockId,
         targetId: enemyId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(sacredFlameId),
-        ),
+        sourceProcedureRef: act.presentation.procedureRef,
       },
     ]);
     const awaitingSave = resolveBattleSubject({
@@ -624,7 +629,12 @@ function darkOnesBlessingRangeFactForState(
   damageSourceId: CombatantId,
   targetId: CombatantId,
   beneficiaryId: CombatantId = warlockId,
-): BattleTargetSpatialFact {
+): Extract<
+  BattleTargetSpatialFact,
+  {
+    readonly kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange";
+  }
+> {
   const beneficiary = state.combatants.get(beneficiaryId);
   if (beneficiary?.origin.kind !== "character") {
     throw new Error("Dark One's Blessing beneficiary must be a character.");
@@ -656,11 +666,29 @@ function darkOnesBlessingEnemyDecision(
   targetId: CombatantId,
   beneficiaryId: CombatantId = warlockId,
 ): BattleDamageRelationshipDecision {
+  const state = darkOnesBlessingBattle({ warlockCha: 16, warlockLevel: 3 });
+  const beneficiary = state.combatants.get(beneficiaryId);
+  if (beneficiary?.origin.kind !== "character") {
+    throw new Error("Dark One's Blessing beneficiary must be a character.");
+  }
+  const procedureRef = characterUnitProcedureRef(
+    beneficiary.origin.execution,
+    unit.id,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([
+        ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+      ]),
+    },
+  );
+  if (procedureRef === undefined) {
+    throw new Error("Dark One's Blessing execution binding must exist.");
+  }
   return {
     kind: "enemyZeroHitPointTemporaryHitPoints",
     beneficiaryId,
     targetId,
-    unitId,
+    procedureRef,
     targetIsEnemy: true,
   };
 }

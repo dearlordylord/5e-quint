@@ -2186,7 +2186,7 @@ export type BattleDamageRelationshipQuestionFacts =
       readonly kind: "enemyZeroHitPointTemporaryHitPoints";
       readonly beneficiaryId: CombatantId;
       readonly targetId: CombatantId;
-      readonly unitId: UnitRecord["id"];
+      readonly procedureRef: BattleProcedureExecutionRef;
     };
 export type BattleDamageRelationshipQuestion =
   BattleDamageRelationshipQuestionFacts & {

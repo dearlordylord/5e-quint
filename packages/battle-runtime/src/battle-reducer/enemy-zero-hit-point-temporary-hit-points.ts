@@ -105,7 +105,7 @@ function enemyZeroHitPointTemporaryHitPointsAward(
           decision.kind === "enemyZeroHitPointTemporaryHitPoints" &&
           decision.beneficiaryId === beneficiary.combatantId &&
           decision.targetId === targetId &&
-          decision.unitId === profile.unit.id &&
+          decision.procedureRef === procedureRef &&
           decision.targetIsEnemy,
       ) ||
       !enemyZeroHitPointTemporaryHitPointsTriggerApplies({

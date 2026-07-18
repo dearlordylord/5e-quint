@@ -23,7 +23,9 @@ import type {
 } from "./battle-reducer.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { characterUnitProcedureRef } from "./character-execution.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
+import { ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 
 type DarkOnesBlessingSupportProfile = Exclude<
   ReturnType<typeof battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit>,
@@ -112,7 +114,9 @@ defineSelectedIdentityReplayAndQntReplay({
                 targetId: enemyId,
                 warlockCha: 16,
                 warlockLevel: 3,
-                spatialFacts: [darkOnesBlessingRangeFact(allyId, enemyId)],
+                spatialRelationships: [
+                  { damageSourceId: allyId, targetId: enemyId },
+                ],
               }),
               enemyId,
               "nearbyOtherKill",
@@ -127,8 +131,8 @@ defineSelectedIdentityReplayAndQntReplay({
                 targetId: enemyId,
                 warlockCha: 16,
                 warlockLevel: 3,
-                spatialFacts: [
-                  darkOnesBlessingRangeFact(otherEnemyId, enemyId),
+                spatialRelationships: [
+                  { damageSourceId: otherEnemyId, targetId: enemyId },
                 ],
               }),
               enemyId,
@@ -160,7 +164,9 @@ defineSelectedIdentityReplayAndQntReplay({
                 targetIsEnemy: false,
                 warlockCha: 16,
                 warlockLevel: 3,
-                spatialFacts: [darkOnesBlessingRangeFact(allyId, otherEnemyId)],
+                spatialRelationships: [
+                  { damageSourceId: allyId, targetId: otherEnemyId },
+                ],
               }),
               otherEnemyId,
               "nonEnemyRejected",
@@ -231,7 +237,10 @@ function damageEnemyToZero(input: {
   readonly warlockTempHp?: number;
   readonly targetSide?: typeof partySide;
   readonly targetIsEnemy?: boolean;
-  readonly spatialFacts?: readonly BattleTargetSpatialFact[];
+  readonly spatialRelationships?: readonly {
+    readonly damageSourceId: CombatantId;
+    readonly targetId: CombatantId;
+  }[];
 }): BattleState {
   const state = darkOnesBlessingBattle(input);
   const target = state.combatants.get(input.targetId);
@@ -244,12 +253,18 @@ function damageEnemyToZero(input: {
     damageAmount: 5,
     deathFailuresAtZeroHp: 1,
     damageSourceId: input.damageSourceId,
-    spatialFacts: [...(input.spatialFacts ?? [])],
+    spatialFacts: (input.spatialRelationships ?? []).map((relationship) =>
+      darkOnesBlessingRangeFact(
+        state,
+        relationship.damageSourceId,
+        relationship.targetId,
+      ),
+    ),
     ...(input.targetIsEnemy === false
       ? {}
       : {
           relationshipDecisions: [
-            darkOnesBlessingEnemyDecision(input.targetId),
+            darkOnesBlessingEnemyDecision(state, input.targetId),
           ],
         }),
   });
@@ -305,29 +320,53 @@ function darkOnesBlessingBattle(input: {
 }
 
 function darkOnesBlessingRangeFact(
+  state: BattleState,
   damageSourceId: CombatantId,
   targetId: CombatantId,
 ): BattleTargetSpatialFact {
+  const sourceProcedureRef = darkOnesBlessingProcedureRef(state);
   return {
     kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
     beneficiaryId: warlockId,
     damageSourceId,
     targetId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
+    sourceProcedureRef,
     rangeFeet: movementFeet(10),
   };
 }
 
 function darkOnesBlessingEnemyDecision(
+  state: BattleState,
   targetId: CombatantId,
 ): BattleDamageRelationshipDecision {
   return {
     kind: "enemyZeroHitPointTemporaryHitPoints",
     beneficiaryId: warlockId,
     targetId,
-    unitId,
+    procedureRef: darkOnesBlessingProcedureRef(state),
     targetIsEnemy: true,
   };
+}
+
+function darkOnesBlessingProcedureRef(state: BattleState) {
+  const beneficiary = state.combatants.get(warlockId);
+  if (beneficiary?.origin.kind !== "character") {
+    throw new Error("Dark One's Blessing beneficiary must be a character.");
+  }
+  const procedureRef = characterUnitProcedureRef(
+    beneficiary.origin.execution,
+    unit.id,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([
+        ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+      ]),
+    },
+  );
+  if (procedureRef === undefined) {
+    throw new Error("Dark One's Blessing execution binding must exist.");
+  }
+  return procedureRef;
 }
 
 function requireDarkOnesBlessingSupportProfile(): DarkOnesBlessingSupportProfile {
@@ -337,4 +376,3 @@ function requireDarkOnesBlessingSupportProfile(): DarkOnesBlessingSupportProfile
   }
   return profile;
 }
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
