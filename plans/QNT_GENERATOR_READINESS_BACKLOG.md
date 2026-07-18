@@ -3,8 +3,10 @@
 This is the parked task queue for work removed from the active Ralph A/B lane
 plans when those lanes were drained on 2026-05-25. It is not an active Ralph
 plan: do not run `ralph-run.sh` against this file directly. When reopening this
-work, split a small coherent group into a fresh lane plan with a
-`ralph-task-index`, reviewer-loop verification, and current checker-owned inputs.
+work, split a small coherent group into tracker-authoritative delivery issues
+under the then-current orchestrator, with reviewer-loop verification and
+current checker-owned inputs. Do not reuse the historical harness's plan-index
+or run-directory conventions.
 
 The drained A/B lane plans were merged, then deleted. Their remaining
 not-yet-runnable work is parked here so future lanes can reopen it deliberately.

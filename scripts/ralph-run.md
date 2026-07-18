@@ -1,6 +1,13 @@
-# Ralph Loop Harness
+# Historical Ralph Loop Harness
 
-`scripts/ralph-run.sh` runs a per-task fresh-context implementation harness for a plan file:
+> **Status:** `scripts/ralph-run.sh` is a one-off historical execution harness,
+> not the architecture, compatibility baseline, migration source, or runtime
+> substrate for the new Ralph orchestrator. This document remains available to
+> explain retained runs and to mine candidate requirements and failure evidence.
+> A candidate becomes a new-orchestrator requirement only through an explicit
+> owning decision or specification.
+
+`scripts/ralph-run.sh` ran a per-task fresh-context implementation harness for a plan file:
 
 1. Parses the plan's `ralph-task-index` JSON block and uses `### Task N` headings only as body anchors, validating any heading ID against the indexed ID.
 2. Creates an integration branch from the current main `HEAD`.
@@ -264,7 +271,11 @@ still-desired work into prose instead of executable tasks, interrupt the run,
 repair the source plan in the launcher worktree, verify the plan/index
 consistency, and commit the corrected closeout manually.
 
-## Usage
+## Historical usage
+
+The commands below document how retained shell-harness runs were launched. Do
+not use them to launch new Ralph work or treat their flags as new-orchestrator
+CLI requirements.
 
 ```bash
 scripts/ralph-run.sh plans/some-plan.md

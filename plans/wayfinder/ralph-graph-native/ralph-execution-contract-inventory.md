@@ -6,21 +6,37 @@ semantics](https://github.com/dearlordylord/5e-quint/issues/177), under
 
 Baseline inspected: local `master` at
 `f7c203daa2cf61abaefac53113fbdad620929a79` on 2026-07-17. This inventory
-describes the current repository at that commit. Historical evidence is used to
-test the contract, not to override current code.
+describes the historical one-off shell harness at that commit.
+
+## Scope boundary
+
+This asset is an evidence inventory, not the architecture or a compatibility
+contract for the new Ralph orchestrator. The historical harness can reveal a
+useful requirement, failure mode, or design lesson. None of its scheduler
+stages, plan-index state, claim representation, run-directory layout, prompts,
+shell functions, or retained runs transfers into the new system merely because
+it existed or worked once.
+
+A **candidate requirement** is an observation mined from the historical
+harness. An **accepted requirement** is a requirement explicitly selected by
+an owning Wayfinder decision or later implementation specification. The new
+orchestrator implements accepted requirements directly through its own domain
+model and ports; it does not preserve behavioral parity with, invoke, resume,
+or migrate the historical harness.
 
 ## Answer
 
-Ralph currently implements a fail-closed, single-launcher task executor whose
-unit of work is an indexed plan task projected to one canonical GitHub issue.
+The inspected harness implemented a fail-closed, single-launcher task executor
+whose unit of work is an indexed plan task projected to one canonical GitHub
+issue.
 It creates a per-attempt worktree from the integration branch, runs a bounded
 implement/review handback loop, lets a fresh decider apply accepted work to the
 integration branch, and re-reads the task graph before dispatching again.
 Git-ref claims exclude competing runners; completion separately proves Base,
 output, and acceptance ancestry before closing an issue and deleting its claim.
 
-The durable contract is stronger than the implementation in three decisive
-places:
+Three previously accepted requirements were stronger than the inspected
+implementation:
 
 1. non-convergence promises quarantine of the claim, branch, worktree, and
    evidence, while default EXIT cleanup deletes the worktree and task branch;
@@ -39,17 +55,18 @@ silently promoted into product requirements.
 
 | Source | Role in this inventory | Authority limit |
 | --- | --- | --- |
-| [`scripts/ralph-run.sh`](../../../scripts/ralph-run.sh) and [`scripts/ralph-issue-context.ts`](../../../scripts/ralph-issue-context.ts) | Current executable behavior | Decisive for what the checked-in harness does now |
-| [`scripts/ralph-run.test.ts`](../../../scripts/ralph-run.test.ts) and the `ralph-issue-context` test files | Executable invariants and edge cases | Prove selected behavior, not untested prose claims |
-| [`scripts/ralph-run.md`](../../../scripts/ralph-run.md) | Current operator promise | Normative intent where code agrees; contradiction where code differs |
+| [`scripts/ralph-run.sh`](../../../scripts/ralph-run.sh) and [`scripts/ralph-issue-context.ts`](../../../scripts/ralph-issue-context.ts) | Historical executable behavior | Evidence of what the one-off harness did; no authority over the new orchestrator |
+| [`scripts/ralph-run.test.ts`](../../../scripts/ralph-run.test.ts) and the `ralph-issue-context` test files | Historical executable invariants and edge cases | Evidence for candidate requirements, not conformance tests for the new orchestrator |
+| [`scripts/ralph-run.md`](../../../scripts/ralph-run.md) | Historical operator promise | Evidence of intended behavior and contradictions in the one-off harness |
 | [Bounded Ralph Leaf and Non-Convergence Contract](../cleanroom-ralph-redesign/bounded-ralph-leaf-contract.md) | Accepted durable delivery decision | Owns leaf, handback, cap, quarantine, and redesign semantics; its historical numeric default is superseded |
 | [Cleanroom Ralph Delivery Post-mortem](../../../docs/cleanroom/postmortems/2026-07-16-cleanroom-ralph-delivery.md) | Retained observed evidence | Establishes failures and operator recovery; does not make accidental mechanics durable |
 | `AGENTS.md` and [code-review rules](../../../.claude/review-rules.md) | Repository quality and resource contract | Applies to workers and reviewers; not all of it is machine-enforced by Ralph |
 
 The exact model names, shell layout, Markdown parser forms, directory names,
-GitHub CLI calls, and current numeric defaults are implementation mechanics.
-The safety, ownership, convergence, graph, evidence, and acceptance properties
-below are durable requirements unless explicitly marked as a gap.
+GitHub CLI calls, numeric defaults, stage boundaries, and orchestration order
+are historical mechanics. Safety, ownership, convergence, graph, evidence, and
+acceptance observations below are candidate requirements unless another linked
+owner explicitly accepts them.
 
 Key executable anchors at the inspected baseline:
 
@@ -278,9 +295,9 @@ Cross-run evaluator/artifact cleanup runs only when the current and legacy
 resource locks are all idle. The configured broad command is diagnostic: an
 unrelated baseline failure must not expand the task.
 
-These safeguards are both product requirements and substantially executable.
-The shell's exact three-lock compatibility sequence and current process-name
-filters are migration mechanics.
+The resource bounds are candidate requirements backed by repository policy.
+The shell's exact three-lock sequence and process-name filters are historical
+mechanics, not new-orchestrator requirements.
 
 ### 9. Evidence, observation, and cleanup
 

@@ -1,5 +1,9 @@
 # Ralph Full Level 1-8 Support Plan
 
+> **Historical execution artifact:** the `ralph-run.sh` command and task index
+> below document a completed one-off harness run. They are not input formats or
+> compatibility requirements for the new Ralph orchestrator.
+
 <!-- ralph-task-index
 {
   "schema": "ralph-plan.v1",

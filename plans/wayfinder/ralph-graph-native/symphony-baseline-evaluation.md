@@ -210,9 +210,9 @@ This research makes the build/adopt choice answerable: the architecture ticket
 can select an Effect implementation of Symphony plus Ralph extensions. It does
 not settle the already-visible follow-up decisions for the precise tracker-port
 schema, durable journal/store, concurrent integration algorithm, operator
-pause/drain/cancel surface, migration, or deterministic scheduler/failure-
-injection verification. Those remain beyond this research ticket and should be
-specified after the architecture boundary is accepted.
+pause/drain/cancel surface, release readiness, or deterministic
+scheduler/failure-injection verification. Those remain beyond this research
+ticket and should be specified after the architecture boundary is accepted.
 
 No D&D rule or ubiquitous language is changed by this decision. RAW and
 `UBIQUITOUS_LANGUAGE.md` are therefore not applicable verification authorities

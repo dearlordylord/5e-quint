@@ -1,5 +1,9 @@
 # Ralph Full Level 1-9 Lane D: Spell Frontier
 
+> **Historical execution format:** the `ralph-task-index` below belongs to the
+> one-off shell harness. It is retained as evidence, not as an input or
+> compatibility contract for the new Ralph orchestrator.
+
 <!-- ralph-task-index
 {
   "schema": "ralph-plan.v1",

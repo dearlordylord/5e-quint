@@ -128,13 +128,14 @@ already discarded it.
 Carry Sandcastle forward as the strongest surveyed candidate for the
 **task-execution substrate**, not as the graph-native orchestrator. The
 architecture choice should compare the cost of qualifying this modified
-substrate with retaining the proven Ralph shell primitives behind the same
-typed execution port.
+substrate with building a Ralph-owned implementation behind the same typed
+execution port. The historical shell harness is evidence for candidate
+requirements, not an executor implementation to retain.
 
-This research does not choose the control plane and does not graduate the map's
-crash recovery, tracker-port, integration, operator-surface, migration, or
-orchestrator-verification fog. Those questions still depend on the combined
-Ralph contract inventory and control-plane evaluation.
+This research does not choose the control plane and does not graduate the
+map's crash recovery, tracker-port, integration, operator-surface, release
+readiness, or orchestrator-verification fog. Those questions still depend on
+the combined Ralph contract inventory and control-plane evaluation.
 
 ## Documentation ownership
 

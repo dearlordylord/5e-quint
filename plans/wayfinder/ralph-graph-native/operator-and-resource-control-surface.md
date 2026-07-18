@@ -5,6 +5,10 @@ surface](https://github.com/dearlordylord/5e-quint/issues/186), under
 [Wayfinder: Ralph graph-native
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
+Every run, attempt, claim, session, resource, and disposition in this decision
+belongs to the new orchestrator. The control surface does not adopt or dispose
+historical shell-harness runs.
+
 ## Answer
 
 Ralph exposes a closed, state-typed operator-control algebra over run scheduling,
@@ -458,7 +462,8 @@ Implementation must prove all of the following:
 ## Decision review record
 
 Round one checked the draft against the durable-journal, accepted-head
-integration, tracker-port, bounded-leaf, current Ralph execution, repository
+integration, tracker-port, bounded-leaf, accepted execution requirements mined
+from the historical harness, repository
 resource-lock, and deterministic-verification contracts. It narrowed drain
 quiescence to locks held by Ralph-owned fragments and made semantic-round
 consumption explicit so technical or verification failures cannot increment the
