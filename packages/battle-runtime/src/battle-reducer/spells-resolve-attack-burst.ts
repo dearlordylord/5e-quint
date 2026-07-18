@@ -1073,7 +1073,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         ? [
             {
               targetId: target.combatantId,
-              damageAmount: attackDamageAmount,
+              damageAmount: toDamageAmount(attackDamageAmount),
               damageDisposition: attackDamageDisposition,
             },
           ]
@@ -1105,7 +1105,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         ? [
             {
               targetId,
-              damageAmount,
+              damageAmount: toDamageAmount(damageAmount),
               damageDisposition: damageDispositionForTarget(
                 burstDamageDispositionHoles,
                 input.fillSet.damageDispositions,

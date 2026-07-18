@@ -9,6 +9,7 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import {
   attackRollHits,
   attackRollResultIsValid,
@@ -1186,7 +1187,7 @@ export function resolveSpellRelease(
         : [
             {
               targetId: target.combatantId,
-              damageAmount: spellDamageAmount,
+              damageAmount: toDamageAmount(spellDamageAmount),
               damageDisposition,
             },
           ],

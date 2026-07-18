@@ -560,7 +560,7 @@ export function resolvePreparedSlotSpellAct(input: {
           : [
               {
                 targetId: allocation.targetId,
-                damageAmount,
+                damageAmount: toDamageAmount(damageAmount),
                 damageDisposition: damageDispositionForTarget(
                   damageDispositionHoles,
                   input.fillSet.damageDispositions,

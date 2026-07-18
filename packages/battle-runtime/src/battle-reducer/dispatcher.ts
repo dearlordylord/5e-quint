@@ -1471,7 +1471,9 @@ export function resolveBattleSubjectInternal(
                 targets: [
                   {
                     targetId: subject.targetId,
-                    damageAmount: creatureAttackDamageTotal(fills.damageRoll),
+                    damageAmount: toDamageAmount(
+                      creatureAttackDamageTotal(fills.damageRoll),
+                    ),
                   },
                 ],
                 spatialFacts: [],
@@ -4483,7 +4485,7 @@ function resolveHellishRebukeReactionSpellCommand(
           targets: [
             {
               targetId: input.frame.damageSourceId,
-              damageAmount,
+              damageAmount: toDamageAmount(damageAmount),
               damageDisposition,
             },
           ],

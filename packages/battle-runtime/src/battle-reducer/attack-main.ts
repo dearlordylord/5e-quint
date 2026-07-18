@@ -1631,7 +1631,7 @@ export function resolveSelectedAttackProcedure(
           : [
               {
                 targetId: target.combatantId,
-                damageAmount: Number(reducedFixedDamageAmount),
+                damageAmount: toDamageAmount(Number(reducedFixedDamageAmount)),
                 damageDisposition: fillSet.damageDisposition,
               },
             ],
@@ -2068,7 +2068,7 @@ export function resolveSelectedAttackProcedure(
           : [
               {
                 targetId: target.combatantId,
-                damageAmount: Number(reducedDamageAmount),
+                damageAmount: toDamageAmount(Number(reducedDamageAmount)),
                 damageDisposition: fillSet.damageDisposition,
               },
             ],
@@ -2985,7 +2985,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         : [
             {
               targetId: secondTargetId,
-              damageAmount: Number(cleaveDamageAmount),
+              damageAmount: toDamageAmount(Number(cleaveDamageAmount)),
               damageDisposition:
                 input.fillSet.weaponMasteryCleaveDamageDisposition,
             },
@@ -3691,7 +3691,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         : [
             {
               targetId: secondTargetId,
-              damageAmount: Number(damageAmount),
+              damageAmount: toDamageAmount(Number(damageAmount)),
               damageDisposition:
                 input.fillSet.huntersPreyHordeBreakerDamageDisposition,
             },

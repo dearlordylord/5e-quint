@@ -973,7 +973,7 @@ function resolveObjectContactDamage(input: {
         ? [
             {
               targetId,
-              damageAmount,
+              damageAmount: toDamageAmount(damageAmount),
               damageDisposition: damageDispositionByTargetId.get(targetId),
             },
           ]

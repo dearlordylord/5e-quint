@@ -6,6 +6,7 @@
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
@@ -561,7 +562,7 @@ export function resolveOpportunityAttackCommand(
           : [
               {
                 targetId: subject.targetId,
-                damageAmount: Number(reducedFixedDamageAmount),
+                damageAmount: toDamageAmount(Number(reducedFixedDamageAmount)),
                 damageDisposition: fillSet.damageDisposition,
               },
             ],
@@ -879,7 +880,7 @@ export function resolveOpportunityAttackCommand(
         : [
             {
               targetId: subject.targetId,
-              damageAmount: Number(reducedDamageAmount),
+              damageAmount: toDamageAmount(Number(reducedDamageAmount)),
               damageDisposition: fillSet.damageDisposition,
             },
           ],

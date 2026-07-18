@@ -935,7 +935,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         : [
             {
               targetId: target.combatantId,
-              damageAmount: spellDamageAmount,
+              damageAmount: toDamageAmount(spellDamageAmount),
               damageDisposition,
             },
           ],

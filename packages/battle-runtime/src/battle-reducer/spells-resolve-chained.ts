@@ -786,7 +786,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           : [
               {
                 targetId: target.combatantId,
-                damageAmount,
+                damageAmount: toDamageAmount(damageAmount),
                 damageDisposition,
               },
             ],

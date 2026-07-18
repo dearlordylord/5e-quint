@@ -2056,7 +2056,7 @@ function resolveSpellActInternal(
         : [
             {
               targetId: target.combatantId,
-              damageAmount: spellDamageAmount,
+              damageAmount: toDamageAmount(spellDamageAmount),
               damageDisposition,
             },
           ],

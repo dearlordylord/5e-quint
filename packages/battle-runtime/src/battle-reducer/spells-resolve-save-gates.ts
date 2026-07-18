@@ -1850,7 +1850,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         ? [
             {
               targetId,
-              damageAmount,
+              damageAmount: toDamageAmount(damageAmount),
               damageDisposition: damageDispositionByTargetId.get(targetId),
             },
           ]

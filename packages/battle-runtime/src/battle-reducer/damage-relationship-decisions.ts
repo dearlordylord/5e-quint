@@ -2,6 +2,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { DamageAmount } from "@dnd/shared/types";
 
 import type {
   BattleDamageRelationshipDecisionFill,
@@ -40,6 +41,12 @@ export type DamageRelationshipDecisionFillCheck =
       readonly holes: readonly [BattleDamageRelationshipDecisionHole];
     }
   | { readonly tag: "invalid"; readonly message: string };
+
+type DamageRelationshipApplication = {
+  readonly targetId: CombatantId;
+  readonly damageAmount: DamageAmount;
+  readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
+};
 
 export class DamageRelationshipDecisionsByHole {
   readonly #fills: ReadonlyMap<
@@ -122,11 +129,7 @@ export function damageRelationshipDecisionHole(input: {
   readonly state: BattleState;
   readonly damageEventHoleId: BattleHoleId;
   readonly damageSourceId: CombatantId;
-  readonly targets: readonly {
-    readonly targetId: CombatantId;
-    readonly damageAmount: number;
-    readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
-  }[];
+  readonly targets: readonly DamageRelationshipApplication[];
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
 }): BattleDamageRelationshipDecisionHole | null {
   const projectedTargets = new Map<CombatantId, BattleCreatureState>();
@@ -199,11 +202,7 @@ export function damageRelationshipDecisionFillCheck(input: {
   readonly state: BattleState;
   readonly damageEventHoleId: BattleHoleId;
   readonly damageSourceId: CombatantId;
-  readonly targets: readonly {
-    readonly targetId: CombatantId;
-    readonly damageAmount: number;
-    readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
-  }[];
+  readonly targets: readonly DamageRelationshipApplication[];
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
   readonly decisionsByRelationshipHole: DamageRelationshipDecisionsByHole;
 }): DamageRelationshipDecisionFillCheck {

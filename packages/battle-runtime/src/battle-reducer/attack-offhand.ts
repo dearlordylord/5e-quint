@@ -12,6 +12,7 @@ import { spendActivationResource } from "@dnd/shared-algebras/action-economy-alg
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 
 import * as Either from "effect/Either";
 
@@ -741,7 +742,7 @@ function resolveBonusActionAttack(
           : [
               {
                 targetId: target.combatantId,
-                damageAmount: Number(damageAmount),
+                damageAmount: toDamageAmount(Number(damageAmount)),
                 damageDisposition: fillSet.damageDisposition,
               },
             ],
