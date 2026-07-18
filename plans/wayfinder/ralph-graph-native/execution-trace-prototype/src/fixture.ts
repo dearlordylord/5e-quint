@@ -12,6 +12,7 @@ import type {
   CausalPredecessor,
   EvidenceId,
   IntegrationNode,
+  OperationId,
   ObservationCapability,
   ObservationId,
   OccurrenceId,
@@ -22,9 +23,11 @@ import type {
   TaskDagRevision,
   TaskFact,
   TaskId,
-  TraceRun,
+  TrackerRevision,
+  ValidatedTraceRun,
   WorktreeId,
 } from "./trace-contract.ts";
+import { assertValidTraceRun } from "./trace-contract.ts";
 
 const task = (name: string): TaskId => `task:${name}`;
 const issueTask = (number: number): TaskId => `github-issue:${number}`;
@@ -35,6 +38,7 @@ const session = (name: string): AgentSessionId => `session:${name}`;
 const evidence = (name: string): EvidenceId => `evidence:${name}`;
 const observation = (name: string): ObservationId => `observation:${name}`;
 const occurrenceId = (name: string): OccurrenceId => `occurrence:${name}`;
+const operationId = (name: string): OperationId => `operation:${name}`;
 
 export const TRACKER_STRUCTURAL_FOLLOW_UP_TASK_ID: TaskId = task(
   "simulated-structural-follow-up",
@@ -63,6 +67,52 @@ const integrationNode = (issueNumber: number): IntegrationNode => ({
   tag: "IntegrationLifecycle",
   taskId: issueTask(issueNumber),
   integrationId: `integration:gh-${issueNumber}-main`,
+  targetId: "integration-target:main",
+});
+
+const authorityObservationAt = (
+  cursor: number,
+  occurrenceName: string,
+): {
+  readonly observationId: ObservationId;
+  readonly trackerRevision: TrackerRevision;
+} =>
+  occurrenceName.startsWith("stress-")
+    ? {
+        observationId: observation("stress-tracker-88"),
+        trackerRevision: "tracker-revision:88",
+      }
+    : cursor >= 22
+      ? {
+          observationId: observation("simulation-after-gh-170"),
+          trackerRevision: "tracker-revision:simulation-after-gh-170",
+        }
+      : cursor >= 19
+        ? {
+            observationId: observation("simulation-after-gh-46"),
+            trackerRevision: "tracker-revision:simulation-after-gh-46",
+          }
+        : {
+            observationId: observation("github-issue-12-tree"),
+            trackerRevision: trackerTaskDagSnapshot.revision,
+          };
+
+const occurrenceFacts = (
+  cursor: number,
+  name: string,
+  completedActorInvocationId?: ActorInvocationId,
+) => ({
+  id: occurrenceId(name),
+  operationId: operationId(name),
+  evidenceIds: [evidence(name)] as const,
+  authorityObservations: [authorityObservationAt(cursor, name)] as const,
+  actorCompletion:
+    completedActorInvocationId === undefined
+      ? ({ tag: "NoActorCompleted" } as const)
+      : ({
+          tag: "ActorCompleted",
+          actorInvocationId: completedActorInvocationId,
+        } as const),
 });
 
 const occurred = (
@@ -84,6 +134,7 @@ interface InvocationOccurrenceInput {
   readonly observedAt: string;
   readonly name: string;
   readonly predecessors: ReadonlyArray<CausalPredecessor>;
+  readonly completesActorInvocationId?: ActorInvocationId;
 }
 
 type InvocationWorkflowInput = InvocationOccurrenceInput &
@@ -121,9 +172,12 @@ const invocationOccurrence = (
   input: InvocationWorkflowInput,
 ): OperationOccurrence => {
   const facts = {
-    id: occurrenceId(input.name),
+    ...occurrenceFacts(
+      input.cursor,
+      input.name,
+      input.completesActorInvocationId,
+    ),
     predecessors: input.predecessors,
-    evidenceIds: [evidence(input.name)],
   };
   if (input.stage === "implementation") {
     return {
@@ -194,12 +248,11 @@ const reviewVerdictOccurred = (
   predecessor: OccurrenceId,
 ): SemanticTraceItem => {
   const predecessors: ReadonlyArray<CausalPredecessor> = [
-    { occurrenceId: predecessor, relation: "workflow-handback" },
+    { occurrenceId: predecessor, relation: "workflow-progression" },
   ];
   const facts = {
-    id: occurrenceId(name),
+    ...occurrenceFacts(cursor, name, reviewer.invocationId),
     predecessors,
-    evidenceIds: [evidence(name)],
   };
   return verdict === "findings"
     ? occurred(cursor, journalPosition, observedAt, {
@@ -233,13 +286,12 @@ const acceptedResultOccurred = (
   predecessor: OccurrenceId,
 ): SemanticTraceItem =>
   occurred(cursor, journalPosition, observedAt, {
-    id: occurrenceId(`gh-${issueNumber}-accepted-result-queued`),
+    ...occurrenceFacts(cursor, `gh-${issueNumber}-accepted-result-queued`),
     operation: { tag: "AcceptedResultQueued", node },
     predecessors: [
-      { occurrenceId: predecessor, relation: "workflow-handback" },
+      { occurrenceId: predecessor, relation: "workflow-progression" },
     ],
     decisionReason: "accepted-result-queued",
-    evidenceIds: [evidence(`gh-${issueNumber}-accepted-result`)],
   });
 
 const completionOccurred = (
@@ -248,16 +300,20 @@ const completionOccurred = (
   observedAt: string,
   issueNumber: number,
   node: IntegrationNode,
+  integrator: ActorIdentity<"integration-agent">,
   predecessor: OccurrenceId,
 ): SemanticTraceItem =>
   occurred(cursor, journalPosition, observedAt, {
-    id: occurrenceId(`gh-${issueNumber}-completion-acknowledged`),
+    ...occurrenceFacts(
+      cursor,
+      `gh-${issueNumber}-completion-acknowledged`,
+      integrator.invocationId,
+    ),
     operation: { tag: "TrackerCompletionAcknowledged", node },
     predecessors: [
       { occurrenceId: predecessor, relation: "authority-acknowledgement" },
     ],
     decisionReason: "tracker-completion-confirmed",
-    evidenceIds: [evidence(`gh-${issueNumber}-integration`)],
   });
 
 const trackerRevisionObserved = (
@@ -288,7 +344,7 @@ const closeTasks = (
 
 export const makeTrackerDagRun = (
   continuationChoice: SessionContinuationChoice,
-): TraceRun => {
+): ValidatedTraceRun => {
   const gh170 = taskAttempt(170);
   const gh46 = taskAttempt(46);
   const gh99 = taskAttempt(99);
@@ -407,7 +463,7 @@ export const makeTrackerDagRun = (
     "simulation-after-gh-99",
   );
 
-  return {
+  return assertValidTraceRun({
     schemaVersion: 1,
     mode: "simulation",
     scenarioId: "scenario:parallel-tracker-task-workflows",
@@ -453,6 +509,7 @@ export const makeTrackerDagRun = (
         node: gh46,
         stage: "fresh-task-review",
         actor: gh46Reviewer,
+        completesActorInvocationId: gh46Implementer.invocationId,
         predecessors: [
           {
             occurrenceId: occurrenceId("gh-46-implementation"),
@@ -469,6 +526,7 @@ export const makeTrackerDagRun = (
         node: gh170,
         stage: "fresh-task-review",
         actor: gh170Reviewer1,
+        completesActorInvocationId: gh170Implementer1.invocationId,
         predecessors: [
           {
             occurrenceId: occurrenceId("gh-170-implementation-round-1"),
@@ -543,7 +601,7 @@ export const makeTrackerDagRun = (
         predecessors: [
           {
             occurrenceId: occurrenceId("gh-46-accepted-result-queued"),
-            relation: "resource-serialization",
+            relation: "workflow-progression",
           },
         ],
         decisionReason: "integration-target-lease-acquired",
@@ -556,6 +614,7 @@ export const makeTrackerDagRun = (
         node: gh99,
         stage: "fresh-task-review",
         actor: gh99Reviewer,
+        completesActorInvocationId: gh99Implementer.invocationId,
         predecessors: [
           {
             occurrenceId: occurrenceId("gh-99-implementation"),
@@ -572,6 +631,7 @@ export const makeTrackerDagRun = (
         node: gh170,
         stage: "fresh-task-review",
         actor: gh170Reviewer2,
+        completesActorInvocationId: gh170Implementer2.invocationId,
         predecessors: [
           {
             occurrenceId: occurrenceId("gh-170-implementation-round-2"),
@@ -622,6 +682,7 @@ export const makeTrackerDagRun = (
         "21:25:00",
         46,
         gh46Integration,
+        gh46Integrator,
         occurrenceId("gh-46-integration"),
       ),
       trackerRevisionObserved(
@@ -641,7 +702,7 @@ export const makeTrackerDagRun = (
         predecessors: [
           {
             occurrenceId: occurrenceId("gh-170-accepted-result-queued"),
-            relation: "workflow-handback",
+            relation: "workflow-progression",
           },
           {
             occurrenceId: occurrenceId("gh-46-completion-acknowledged"),
@@ -656,6 +717,7 @@ export const makeTrackerDagRun = (
         "21:29:00",
         170,
         gh170Integration,
+        gh170Integrator,
         occurrenceId("gh-170-integration"),
       ),
       trackerRevisionObserved(
@@ -675,7 +737,7 @@ export const makeTrackerDagRun = (
         predecessors: [
           {
             occurrenceId: occurrenceId("gh-99-accepted-result-queued"),
-            relation: "workflow-handback",
+            relation: "workflow-progression",
           },
           {
             occurrenceId: occurrenceId("gh-170-completion-acknowledged"),
@@ -690,6 +752,7 @@ export const makeTrackerDagRun = (
         "21:33:00",
         99,
         gh99Integration,
+        gh99Integrator,
         occurrenceId("gh-99-integration"),
       ),
       trackerRevisionObserved(
@@ -699,7 +762,7 @@ export const makeTrackerDagRun = (
         afterGh99,
       ),
     ],
-  };
+  });
 };
 
 export const trackerDagFixturePresentation = {
@@ -710,7 +773,7 @@ export const trackerDagFixturePresentation = {
     issueTask(99),
     TRACKER_STRUCTURAL_FOLLOW_UP_TASK_ID,
   ],
-  demonstrationCursor: (run: TraceRun): number =>
+  demonstrationCursor: (run: ValidatedTraceRun): number =>
     run.items.find(
       (item) =>
         item.tag === "OperationOccurred" &&
@@ -719,7 +782,7 @@ export const trackerDagFixturePresentation = {
     )?.cursor ?? Math.max(...run.items.map((item) => item.cursor)),
 } as const;
 
-const makeLargeRun = (): TraceRun => {
+const makeLargeRun = (): ValidatedTraceRun => {
   const taskCount = 60;
   const tasks: ReadonlyArray<TaskFact> = Array.from(
     { length: taskCount },
@@ -801,6 +864,7 @@ const makeLargeRun = (): TraceRun => {
         node,
         stage: "fresh-task-review",
         actor: reviewer,
+        completesActorInvocationId: implementer.invocationId,
         predecessors: [
           {
             occurrenceId: occurrenceId(implementName),
@@ -812,13 +876,13 @@ const makeLargeRun = (): TraceRun => {
     );
   }
 
-  return {
+  return assertValidTraceRun({
     schemaVersion: 1,
     mode: "simulation",
     scenarioId: "scenario:large-legibility-stress",
     basis: { tag: "SyntheticStress" },
     items: [initial, ...remainder],
-  };
+  });
 };
 
 export const largeRun = makeLargeRun();

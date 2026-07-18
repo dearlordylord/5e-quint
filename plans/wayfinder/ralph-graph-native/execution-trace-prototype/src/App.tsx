@@ -20,7 +20,7 @@ import type {
   SemanticTraceItem,
   SessionContinuationChoice,
   TaskId,
-  TraceRun,
+  ValidatedTraceRun,
 } from "./trace-contract.ts";
 
 const NO_GRAPH_FOCUS_TASKS: ReadonlySet<TaskId> = new Set();
@@ -74,6 +74,7 @@ const traceItemDetail = (
     const node = item.occurrence.operation.node;
     return [
       ["occurrence", item.occurrence.id],
+      ["operation", item.occurrence.operationId],
       [
         "actor",
         actor !== null
@@ -91,6 +92,18 @@ const traceItemDetail = (
             ["worktree", node.worktreeId] as const,
           ]
         : [["integration", node.integrationId] as const]),
+      ...(node.tag === "IntegrationLifecycle"
+        ? [["integration target", node.targetId] as const]
+        : []),
+      [
+        "authority observations",
+        item.occurrence.authorityObservations
+          .map(
+            (reference) =>
+              `${reference.observationId} @ ${reference.trackerRevision}`,
+          )
+          .join(" · "),
+      ],
       ["why", item.occurrence.decisionReason],
       ["evidence", item.occurrence.evidenceIds.join(", ")],
       [
@@ -118,7 +131,7 @@ const traceItemDetail = (
   ];
 };
 
-const runLabel = (run: TraceRun): string =>
+const runLabel = (run: ValidatedTraceRun): string =>
   run.mode === "observed" ? run.runId : run.scenarioId;
 
 const GraphPanel = ({
@@ -404,7 +417,7 @@ export const App = () => {
               }
             >
               <option value="resume-bound-session">
-                Resume bound implementer session (Codex .ralph path)
+                Resume exact bound implementer session
               </option>
               <option value="start-fresh-session">
                 Start replacement implementer session

@@ -8,8 +8,10 @@ export type ActorInvocationId = `actor:${string}`;
 export type AgentSessionId = `session:${string}`;
 export type EvidenceId = `evidence:${string}`;
 export type ObservationId = `observation:${string}`;
+export type OperationId = `operation:${string}`;
 export type TrackerRevision = `tracker-revision:${string}`;
 export type IntegrationId = `integration:${string}`;
+export type IntegrationTargetId = `integration-target:${string}`;
 
 export const TASK_LIFECYCLES = ["open", "closed"] as const;
 export type TaskLifecycle = (typeof TASK_LIFECYCLES)[number];
@@ -82,6 +84,7 @@ export interface IntegrationNode {
   readonly tag: "IntegrationLifecycle";
   readonly taskId: TaskId;
   readonly integrationId: IntegrationId;
+  readonly targetId: IntegrationTargetId;
 }
 
 export type WorkflowNode = TaskAttemptNode | IntegrationNode;
@@ -97,6 +100,7 @@ export type ActorStage = (typeof ACTOR_STAGES)[number];
 export const CAUSAL_RELATIONS = [
   "task-prerequisite",
   "workflow-handback",
+  "workflow-progression",
   "resource-serialization",
   "authority-acknowledgement",
 ] as const;
@@ -106,6 +110,18 @@ export interface CausalPredecessor {
   readonly occurrenceId: OccurrenceId;
   readonly relation: CausalRelation;
 }
+
+export interface AuthorityObservationRef {
+  readonly observationId: ObservationId;
+  readonly trackerRevision: TrackerRevision;
+}
+
+export type ActorCompletion =
+  | { readonly tag: "NoActorCompleted" }
+  | {
+      readonly tag: "ActorCompleted";
+      readonly actorInvocationId: ActorInvocationId;
+    };
 
 export const DECISION_REASONS = [
   "frontier-eligible",
@@ -167,8 +183,14 @@ export type WorkflowOperation =
 
 interface OperationOccurrenceFacts {
   readonly id: OccurrenceId;
+  readonly operationId: OperationId;
   readonly predecessors: ReadonlyArray<CausalPredecessor>;
   readonly evidenceIds: ReadonlyArray<EvidenceId>;
+  readonly authorityObservations: readonly [
+    AuthorityObservationRef,
+    ...ReadonlyArray<AuthorityObservationRef>,
+  ];
+  readonly actorCompletion: ActorCompletion;
 }
 
 type OccurrenceFor<
@@ -283,6 +305,234 @@ export type TraceRun =
         | { readonly tag: "SyntheticStress" };
       readonly items: TraceItems;
     };
+
+declare const validatedTraceRun: unique symbol;
+
+export type ValidatedTraceRun = TraceRun & {
+  readonly [validatedTraceRun]: true;
+};
+
+export type TraceValidationIssue =
+  | { readonly tag: "DuplicateTask"; readonly taskId: TaskId }
+  | { readonly tag: "DuplicatePrerequisite"; readonly taskId: TaskId }
+  | { readonly tag: "DanglingTaskParent"; readonly taskId: TaskId }
+  | { readonly tag: "DanglingPrerequisite"; readonly taskId: TaskId }
+  | { readonly tag: "TaskDependencyCycle"; readonly taskId: TaskId }
+  | { readonly tag: "NonIncreasingCursor"; readonly cursor: number }
+  | {
+      readonly tag: "DuplicateObservation";
+      readonly observationId: ObservationId;
+    }
+  | { readonly tag: "DuplicateOccurrence"; readonly occurrenceId: OccurrenceId }
+  | { readonly tag: "DuplicateOperation"; readonly operationId: OperationId }
+  | {
+      readonly tag: "DuplicateActorInvocation";
+      readonly actorInvocationId: ActorInvocationId;
+    }
+  | { readonly tag: "UnknownOperationTask"; readonly taskId: TaskId }
+  | {
+      readonly tag: "DanglingCausalPredecessor";
+      readonly occurrenceId: OccurrenceId;
+    }
+  | {
+      readonly tag: "DanglingAuthorityObservation";
+      readonly observationId: ObservationId;
+    }
+  | {
+      readonly tag: "AuthorityRevisionMismatch";
+      readonly observationId: ObservationId;
+    }
+  | {
+      readonly tag: "UnknownActor";
+      readonly actorInvocationId: ActorInvocationId;
+    };
+
+export type TraceValidationResult =
+  | { readonly tag: "ValidTrace"; readonly trace: ValidatedTraceRun }
+  | {
+      readonly tag: "InvalidTrace";
+      readonly issues: readonly [
+        TraceValidationIssue,
+        ...ReadonlyArray<TraceValidationIssue>,
+      ];
+    };
+
+const taskDagIssues = (
+  revision: TaskDagRevision,
+): ReadonlyArray<TraceValidationIssue> => {
+  const issues: Array<TraceValidationIssue> = [];
+  const taskIds = new Set<TaskId>();
+  for (const task of revision.tasks) {
+    if (taskIds.has(task.id))
+      issues.push({ tag: "DuplicateTask", taskId: task.id });
+    taskIds.add(task.id);
+  }
+  for (const task of revision.tasks) {
+    if (task.parentTaskId !== null && !taskIds.has(task.parentTaskId)) {
+      issues.push({ tag: "DanglingTaskParent", taskId: task.id });
+    }
+    const prerequisiteIds = new Set<TaskId>();
+    for (const prerequisiteId of task.prerequisiteIds) {
+      if (prerequisiteIds.has(prerequisiteId)) {
+        issues.push({ tag: "DuplicatePrerequisite", taskId: task.id });
+      }
+      prerequisiteIds.add(prerequisiteId);
+      if (!taskIds.has(prerequisiteId)) {
+        issues.push({ tag: "DanglingPrerequisite", taskId: task.id });
+      }
+    }
+  }
+  const byId = new Map(revision.tasks.map((task) => [task.id, task]));
+  const visiting = new Set<TaskId>();
+  const visited = new Set<TaskId>();
+  const visit = (taskId: TaskId): void => {
+    if (visiting.has(taskId)) {
+      issues.push({ tag: "TaskDependencyCycle", taskId });
+      return;
+    }
+    if (visited.has(taskId)) return;
+    visiting.add(taskId);
+    const task = byId.get(taskId);
+    const dependencies = [
+      ...(task?.parentTaskId === null || task?.parentTaskId === undefined
+        ? []
+        : [task.parentTaskId]),
+      ...(task?.prerequisiteIds ?? []),
+    ];
+    for (const dependencyId of dependencies) {
+      if (byId.has(dependencyId)) visit(dependencyId);
+    }
+    visiting.delete(taskId);
+    visited.add(taskId);
+  };
+  for (const taskId of taskIds) visit(taskId);
+  return issues;
+};
+
+export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
+  const issues: Array<TraceValidationIssue> = [];
+  const observations = new Map<ObservationId, TrackerRevision>();
+  const occurrences = new Set<OccurrenceId>();
+  const operations = new Set<OperationId>();
+  const actors = new Set<ActorInvocationId>();
+  let authoritativeTaskIds = new Set<TaskId>();
+  let previousCursor = -1;
+
+  for (const item of trace.items) {
+    if (item.cursor <= previousCursor) {
+      issues.push({ tag: "NonIncreasingCursor", cursor: item.cursor });
+    }
+    previousCursor = item.cursor;
+    if (item.tag === "TrackerRevisionObserved") {
+      if (observations.has(item.observationId)) {
+        issues.push({
+          tag: "DuplicateObservation",
+          observationId: item.observationId,
+        });
+      }
+      observations.set(item.observationId, item.taskDag.revision);
+      authoritativeTaskIds = new Set(item.taskDag.tasks.map((task) => task.id));
+      issues.push(...taskDagIssues(item.taskDag));
+      continue;
+    }
+    if (item.tag === "OperationOccurred") {
+      const occurrence = item.occurrence;
+      if (occurrences.has(occurrence.id)) {
+        issues.push({
+          tag: "DuplicateOccurrence",
+          occurrenceId: occurrence.id,
+        });
+      }
+      if (operations.has(occurrence.operationId)) {
+        issues.push({
+          tag: "DuplicateOperation",
+          operationId: occurrence.operationId,
+        });
+      }
+      if (!authoritativeTaskIds.has(occurrence.operation.node.taskId)) {
+        issues.push({
+          tag: "UnknownOperationTask",
+          taskId: occurrence.operation.node.taskId,
+        });
+      }
+      for (const predecessor of occurrence.predecessors) {
+        if (!occurrences.has(predecessor.occurrenceId)) {
+          issues.push({
+            tag: "DanglingCausalPredecessor",
+            occurrenceId: predecessor.occurrenceId,
+          });
+        }
+      }
+      for (const reference of occurrence.authorityObservations) {
+        const revision = observations.get(reference.observationId);
+        if (revision === undefined) {
+          issues.push({
+            tag: "DanglingAuthorityObservation",
+            observationId: reference.observationId,
+          });
+        } else if (revision !== reference.trackerRevision) {
+          issues.push({
+            tag: "AuthorityRevisionMismatch",
+            observationId: reference.observationId,
+          });
+        }
+      }
+      if (
+        occurrence.actorCompletion.tag === "ActorCompleted" &&
+        !actors.has(occurrence.actorCompletion.actorInvocationId)
+      ) {
+        issues.push({
+          tag: "UnknownActor",
+          actorInvocationId: occurrence.actorCompletion.actorInvocationId,
+        });
+      }
+      if (occurrence.operation.tag === "ActorInvocationStarted") {
+        if (actors.has(occurrence.operation.actor.invocationId)) {
+          issues.push({
+            tag: "DuplicateActorInvocation",
+            actorInvocationId: occurrence.operation.actor.invocationId,
+          });
+        }
+        actors.add(occurrence.operation.actor.invocationId);
+      } else if (
+        occurrence.operation.tag === "TaskReviewVerdictReturned" &&
+        !actors.has(occurrence.operation.actorInvocationId)
+      ) {
+        issues.push({
+          tag: "UnknownActor",
+          actorInvocationId: occurrence.operation.actorInvocationId,
+        });
+      }
+      occurrences.add(occurrence.id);
+      operations.add(occurrence.operationId);
+      continue;
+    }
+    if (!actors.has(item.actorInvocationId)) {
+      issues.push({
+        tag: "UnknownActor",
+        actorInvocationId: item.actorInvocationId,
+      });
+    }
+  }
+
+  return issues.length === 0
+    ? { tag: "ValidTrace", trace: trace as ValidatedTraceRun }
+    : {
+        tag: "InvalidTrace",
+        issues: issues as [
+          TraceValidationIssue,
+          ...Array<TraceValidationIssue>,
+        ],
+      };
+};
+
+export const assertValidTraceRun = (trace: TraceRun): ValidatedTraceRun => {
+  const result = validateTraceRun(trace);
+  if (result.tag === "ValidTrace") return result.trace;
+  throw new Error(
+    `Invalid internal trace fixture: ${JSON.stringify(result.issues)}`,
+  );
+};
 
 export const SESSION_CONTINUATION_CHOICES = [
   "resume-bound-session",

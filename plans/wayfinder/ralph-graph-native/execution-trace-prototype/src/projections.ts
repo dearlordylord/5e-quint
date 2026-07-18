@@ -10,7 +10,7 @@ import type {
   SemanticTraceItem,
   TaskDagRevision,
   TaskId,
-  TraceRun,
+  ValidatedTraceRun,
   TrackerRevision,
 } from "./trace-contract.ts";
 
@@ -182,24 +182,20 @@ const actorsAt = (
   occurrences: ReadonlyArray<OperationOccurrence>,
 ): ReadonlyArray<ActorProjection> => {
   const identities = new Map<ActorInvocationId, ActorIdentity>();
+  const completedActors = new Set<ActorInvocationId>();
   for (const occurrence of occurrences) {
     const actor = operationActor(occurrence);
     if (actor !== null) identities.set(actor.invocationId, actor);
+    if (occurrence.actorCompletion.tag === "ActorCompleted") {
+      completedActors.add(occurrence.actorCompletion.actorInvocationId);
+    }
   }
   return [...identities.values()].map((actor) => {
     const actorOccurrences = occurrences.filter(
       (occurrence) =>
         operationActor(occurrence)?.invocationId === actor.invocationId,
     );
-    const actorOccurrenceIds = new Set(
-      actorOccurrences.map((occurrence) => occurrence.id),
-    );
-    const handedOff = occurrences.some((occurrence) =>
-      occurrence.predecessors.some((predecessor) =>
-        actorOccurrenceIds.has(predecessor.occurrenceId),
-      ),
-    );
-    const phase = handedOff
+    const phase = completedActors.has(actor.invocationId)
       ? "completed"
       : actorOccurrences.length === 0
         ? "observed"
@@ -250,12 +246,12 @@ const actorSpansAt = (
   return operationItems.flatMap((startItem): ReadonlyArray<ActorSpan> => {
     const operation = startItem.occurrence.operation;
     if (operation.tag !== "ActorInvocationStarted") return [];
-    const successor = operationItems.find(
+    const completion = operationItems.find(
       (candidate) =>
         candidate.cursor > startItem.cursor &&
-        candidate.occurrence.predecessors.some(
-          (predecessor) => predecessor.occurrenceId === startItem.occurrence.id,
-        ),
+        candidate.occurrence.actorCompletion.tag === "ActorCompleted" &&
+        candidate.occurrence.actorCompletion.actorInvocationId ===
+          operation.actor.invocationId,
     );
     const base: ActorSpanBase = {
       taskId: operation.node.taskId,
@@ -263,13 +259,13 @@ const actorSpansAt = (
       stage: operation.stage,
       startCursor: startItem.cursor,
     };
-    return successor === undefined
+    return completion === undefined
       ? [{ ...base, tag: "ActiveActorSpan", throughCursor: cursor }]
       : [
           {
             ...base,
             tag: "CompletedActorSpan",
-            endCursor: successor.cursor,
+            endCursor: completion.cursor,
           },
         ];
   });
@@ -315,7 +311,7 @@ const taskExecutionsAt = (
 };
 
 export const projectRun = (
-  run: TraceRun,
+  run: ValidatedTraceRun,
   requestedCursor: number,
 ): RunProjection => {
   const cursor = Math.max(0, Math.min(requestedCursor, traceEndCursor(run)));
@@ -339,7 +335,7 @@ export const projectRun = (
   };
 };
 
-export const traceEndCursor = (run: TraceRun): number =>
+export const traceEndCursor = (run: ValidatedTraceRun): number =>
   Math.max(...run.items.map((item) => item.cursor));
 
 export interface OccurrencePresentation {
@@ -402,6 +398,9 @@ const isConvergenceMember = (occurrence: OperationOccurrence): boolean => {
   );
 };
 
+const isConvergenceRelation = (relation: CausalRelation): boolean =>
+  relation === "workflow-progression" || relation === "workflow-handback";
+
 const collapseConvergenceLoops = (
   occurrences: ReadonlyArray<OperationOccurrence>,
 ): ReadonlyArray<OccurrencePresentation> => {
@@ -425,7 +424,7 @@ const collapseConvergenceLoops = (
           isConvergenceMember(candidate) &&
           candidate.predecessors.some(
             (predecessor) =>
-              predecessor.relation === "workflow-handback" &&
+              isConvergenceRelation(predecessor.relation) &&
               predecessor.occurrenceId === member.id,
           ),
       );

@@ -4,6 +4,7 @@ import {
   makeTrackerDagRun,
   TRACKER_STRUCTURAL_FOLLOW_UP_TASK_ID,
 } from "./fixture.ts";
+import { trackerTaskDagSnapshot } from "./tracker-task-dag-snapshot.generated.ts";
 import { occurrenceGraph, taskGraph } from "./graph.ts";
 import {
   focusTaskDag,
@@ -11,9 +12,58 @@ import {
   projectRun,
   traceEndCursor,
 } from "./projections.ts";
-import type { TaskId } from "./trace-contract.ts";
+import {
+  validateTraceRun,
+  type TaskId,
+  type TraceRun,
+} from "./trace-contract.ts";
 
 describe("trace projections", () => {
+  it("rejects invalid trace ordering before projection", () => {
+    const valid = makeTrackerDagRun("resume-bound-session");
+    const invalid = {
+      ...valid,
+      items: [valid.items[0], { ...valid.items[1], cursor: 0 }],
+    } as TraceRun;
+
+    const result = validateTraceRun(invalid);
+    expect(result.tag).toBe("InvalidTrace");
+    if (result.tag === "InvalidTrace") {
+      expect(result.issues).toContainEqual({
+        tag: "NonIncreasingCursor",
+        cursor: 0,
+      });
+    }
+  });
+
+  it("retains canonical operation, authority, target, and causal identity", () => {
+    const projection = projectRun(
+      makeTrackerDagRun("resume-bound-session"),
+      10,
+    );
+    const integration = projection.occurrences.find(
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted" &&
+        occurrence.operation.stage === "integration",
+    );
+
+    expect(integration?.operationId).toBe("operation:gh-46-integration");
+    expect(integration?.authorityObservations).toEqual([
+      {
+        observationId: "observation:github-issue-12-tree",
+        trackerRevision: trackerTaskDagSnapshot.revision,
+      },
+    ]);
+    expect(integration?.operation.node).toMatchObject({
+      targetId: "integration-target:main",
+    });
+    expect(integration?.predecessors).toEqual([
+      {
+        occurrenceId: "occurrence:gh-46-accepted-result-queued",
+        relation: "workflow-progression",
+      },
+    ]);
+  });
   it("mirrors the captured GH-12 tracker hierarchy and native blocker DAG", () => {
     const run = makeTrackerDagRun("resume-bound-session");
     const projection = projectRun(run, 0);
