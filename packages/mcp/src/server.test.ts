@@ -5926,7 +5926,7 @@ function characterUnitRef(
     throw new Error(`Expected character combatant: ${combatantId}`);
   }
   return combatant.origin.characterUnitRefs.find(
-    (ref) => ref.unitId === unitId,
+    (ref) => ref.unit.id === unitId,
   );
 }
 

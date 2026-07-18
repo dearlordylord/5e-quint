@@ -15,6 +15,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackTargetSpatialFact,
   battleId,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSeed,
   damageRollFillWithGroups,
   discoverBattleActs,
@@ -42,8 +43,6 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 import type { BattleState, BattleUnitRef } from "./index.ts";
-
-const syntheticExtraAttackUnitId = "test_hunters_prey_extra_attack";
 
 function huntersPreyUnitRef(
   optionId: "colossusSlayer" | "hordeBreaker",
@@ -77,7 +76,7 @@ function huntersPreyUnitRef(
           },
         };
   return {
-    unitId: unit.id,
+    unit: unitLibrary.requireUnit(unit.id),
     supportProfiles: [
       {
         kind: "huntersPrey",
@@ -89,7 +88,7 @@ function huntersPreyUnitRef(
 
 function extraAttackUnitRef(): BattleUnitRef {
   return {
-    unitId: syntheticExtraAttackUnitId,
+    unit: unitLibrary.requireUnit("fighter_extra_attack"),
     supportProfiles: [
       {
         kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
@@ -149,9 +148,8 @@ function resolveHordeBreakerUse(
     {
       kind: "hordeBreakerSecondTargetEligible",
       attackerId: fighterId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("ranger_hunters_prey"),
-      ),
+      sourceProcedureRef:
+        battleProcedureExecutionRefForSpellHoleForTest(target),
       originalTargetId: goblinId,
       secondTargetId: skeletonId,
     },
@@ -379,9 +377,8 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("ranger_hunters_prey"),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -527,9 +524,8 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("ranger_hunters_prey"),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -700,9 +696,8 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("ranger_hunters_prey"),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -836,9 +831,8 @@ describe("battle runtime: Hunter's Prey", () => {
             {
               kind: "hordeBreakerSecondTargetEligible",
               attackerId: fighterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("ranger_hunters_prey"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(target),
               originalTargetId: goblinId,
               secondTargetId: goblinId,
             },
@@ -895,9 +889,8 @@ describe("battle runtime: Hunter's Prey", () => {
               kind: "spellTarget",
               casterId: fighterId,
               targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(markTarget),
             },
           ]),
         ],
@@ -946,9 +939,8 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("ranger_hunters_prey"),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -1000,4 +992,3 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(5);
   });
 });
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

@@ -128,7 +128,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: speciesHalflingLuckUnitId,
+        unit: unitLibrary.requireUnit(speciesHalflingLuckUnitId),
         supportProfiles: [expectedSupport],
       }),
     );

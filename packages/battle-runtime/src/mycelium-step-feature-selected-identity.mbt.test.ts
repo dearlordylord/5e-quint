@@ -146,7 +146,7 @@ function myceliumStepBattle(): BattleState {
         side: partySide,
         characterUnitRefs: [
           {
-            unitId: myceliumStepUnitId,
+            unit: myceliumStepUnit,
             supportProfiles: [myceliumStepSupportProfile],
           },
         ],

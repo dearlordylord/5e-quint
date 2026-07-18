@@ -1102,7 +1102,7 @@ export function characterSpellcastingInitIssue(
   for (const access of creatureInit.spellcasting.spellbookRitualSpellAccesses) {
     if (
       !creatureInit.characterUnitRefs.some(
-        (unitRef) => unitRef.unitId === access.featureUnitId,
+        (unitRef) => unitRef.unit.id === access.featureUnitId,
       )
     ) {
       return battleStateInitIssue(
@@ -1840,7 +1840,7 @@ export function unitRefSupportsProfile(
 ): boolean {
   return unitRefs.some(
     (unitRef) =>
-      unitRef.unitId === unitId &&
+      unitRef.unit.id === unitId &&
       unitRef.supportProfiles.some((profile) => profile === supportProfile) ===
         true,
   );
@@ -1853,7 +1853,7 @@ export function unitRefSupportsProfileKind(
 ): boolean {
   return unitRefs.some(
     (unitRef) =>
-      unitRef.unitId === unitId &&
+      unitRef.unit.id === unitId &&
       unitRef.supportProfiles.some(
         (profile) =>
           typeof profile === "object" && profile.kind === supportProfileKind,

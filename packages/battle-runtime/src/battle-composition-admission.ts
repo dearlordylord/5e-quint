@@ -8,6 +8,7 @@ import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
+  characterSpellProcedureInvocationRef,
   characterSpellProcedureRef,
   characterSpellProcedureRefForInvocationRef,
   characterUnitProcedureRef,
@@ -72,20 +73,25 @@ export function admitCharacterProcedureSelection(
     );
   }
   if (subject.tag === "bonusActionStandardAction") {
+    if ("sourceProcedureRef" in subject) {
+      const invocationRef = characterSpellProcedureInvocationRef(
+        actor.origin.execution,
+        subject.sourceProcedureRef,
+      );
+      if (invocationRef === undefined) return undefined;
+      const invocation = supportedSpellActs(actor).find(
+        (candidate) =>
+          candidate.procedure === "expeditiousRetreatDash" &&
+          supportedSpellInvocationMatchesRef(candidate, invocationRef),
+      );
+      return invocation === undefined ? undefined : subject.sourceProcedureRef;
+    }
     const unitProcedureRef = characterUnitProcedureRef(
       actor.origin.execution,
       subject.sourceUnitId,
       BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
     );
-    if (unitProcedureRef !== undefined) return unitProcedureRef;
-    const invocation = supportedSpellActs(actor).find(
-      (candidate) =>
-        candidate.procedure === "expeditiousRetreatDash" &&
-        candidate.spell.id === subject.sourceUnitId,
-    );
-    return invocation === undefined
-      ? undefined
-      : characterSpellProcedureRef(actor.origin.execution, invocation);
+    return unitProcedureRef;
   }
   return characterUnitProcedureRef(
     actor.origin.execution,

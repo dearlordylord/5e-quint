@@ -143,7 +143,7 @@ function barbarianRetaliationBattle(input?: {
         characterUnitRefs: includeRetaliationUnit
           ? [
               {
-                unitId: retaliationUnit.id,
+                unit: unitLibrary.requireUnit(retaliationUnit.id),
                 supportProfiles: retaliationSupportProfiles(),
               },
             ]

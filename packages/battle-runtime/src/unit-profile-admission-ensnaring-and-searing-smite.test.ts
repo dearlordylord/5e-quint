@@ -1,4 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike

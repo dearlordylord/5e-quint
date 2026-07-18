@@ -1379,7 +1379,7 @@ function spendWildCompanionCost(input: {
 
 function characterHasWildCompanionFeature(
   characterUnitRefs: readonly {
-    readonly unitId: UnitRecord["id"];
+    readonly unit: { readonly id: UnitRecord["id"] };
     readonly supportProfiles: readonly unknown[];
   }[],
 ): boolean {

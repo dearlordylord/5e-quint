@@ -1255,7 +1255,7 @@ export type ClassicNonSrdMechanicsUnit = {
   };
 };
 
-type BattleUnitSupportSource = UnitRecord | ClassicNonSrdMechanicsUnit;
+export type BattleUnitSupportSource = UnitRecord | ClassicNonSrdMechanicsUnit;
 
 function battleUnitSupportProfileIssue(
   message: string,
@@ -1983,7 +1983,7 @@ export function battleUnitRefWithSupportProfiles(input: {
     );
   }
   return Either.right({
-    unitId: input.unitRef.unitId,
+    unit: input.unit,
     supportProfiles:
       huntersPreySupport === null
         ? supportProfiles.right

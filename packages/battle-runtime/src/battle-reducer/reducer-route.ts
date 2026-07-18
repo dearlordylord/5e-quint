@@ -3063,7 +3063,7 @@ function isAttackActionAreaSaveDamageReplacementSubject(
   if (unitId === undefined) return false;
   return actor.origin.characterUnitRefs.some(
     (unitRef) =>
-      unitRef.unitId === unitId &&
+      unitRef.unit.id === unitId &&
       unitRef.supportProfiles.some(
         (profile) =>
           typeof profile === "object" &&

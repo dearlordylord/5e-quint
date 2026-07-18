@@ -772,7 +772,7 @@ function weaponMasteryAttackerInit(
       characterId: characterId(`character:${unitId}`),
       characterUnitRefs: [
         {
-          unitId,
+          unit: unitLibrary.requireUnit(unitId),
           supportProfiles: [scenario.supportProfile],
         },
       ],

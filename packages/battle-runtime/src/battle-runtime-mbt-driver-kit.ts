@@ -16948,7 +16948,7 @@ function rogueCreatureInit(input: {
       characterId: characterId("fighter-character"),
       characterUnitRefs: [
         {
-          unitId: "rogue_sneak_attack",
+          unit: unitLibrary.requireUnit("rogue_sneak_attack"),
           supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
         },
       ],

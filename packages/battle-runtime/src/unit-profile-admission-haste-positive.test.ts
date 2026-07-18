@@ -743,7 +743,7 @@ function extraAttackBattleUnitRef() {
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: fighterExtraAttackUnitId,
+      unit: unitLibrary.requireUnit(fighterExtraAttackUnitId),
       supportProfiles: [extraAttackSupportProfile],
     }),
   );

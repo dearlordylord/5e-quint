@@ -16,6 +16,7 @@ import {
   monksFocusResource,
   movementFeet,
   requireHole,
+  requireCharacterUnitProcedureRefForTest,
   requireResolved,
   resolveBattleSubject,
   savingThrowOutcomeFill,
@@ -52,7 +53,11 @@ describe("battle runtime: Open Hand Technique", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "opportunityAttackDenied",
-          sourceUnitId: "monk_open_hand_technique",
+          sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+            window.state,
+            fighterId,
+            "monk_open_hand_technique",
+          ),
           sourceCombatantId: fighterId,
           expiresAt: { kind: "startOfTurn", combatantId: goblinId },
         }),
@@ -398,7 +403,7 @@ function openHandTechniqueUnitRef() {
   if (support === null || support === "unsupported") {
     throw new Error("Expected Open Hand Technique support profile.");
   }
-  return { unitId: unit.id, supportProfiles: [support] };
+  return { unit, supportProfiles: [support] };
 }
 
 function openHandSubject(

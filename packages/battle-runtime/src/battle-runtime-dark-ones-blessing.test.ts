@@ -516,7 +516,7 @@ function darkOnesBlessingBattle(input: {
         classLevels: [{ className: "warlock", level: input.warlockLevel }],
         characterUnitRefs: [
           {
-            unitId,
+            unit,
             supportProfiles: [supportProfile],
           },
         ],
@@ -546,7 +546,7 @@ function darkOnesBlessingBattle(input: {
               ],
               characterUnitRefs: [
                 {
-                  unitId,
+                  unit,
                   supportProfiles: [supportProfile],
                 },
               ],

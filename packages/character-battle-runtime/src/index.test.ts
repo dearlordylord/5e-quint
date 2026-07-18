@@ -1376,7 +1376,7 @@ describe("Character Sheet battle handoff", () => {
       ),
     );
     const wildShapeRef = refs.find(
-      (candidate) => candidate.unitId === "druid_wild_shape",
+      (candidate) => candidate.unit.id === "druid_wild_shape",
     );
 
     expect(wildShapeRef?.supportProfiles).toContainEqual(
@@ -1413,7 +1413,7 @@ describe("Character Sheet battle handoff", () => {
       ]),
     );
     expect(
-      refs.find((ref) => ref.unitId === "ranger_hunters_prey"),
+      refs.find((ref) => ref.unit.id === "ranger_hunters_prey"),
     ).not.toHaveProperty("selectedOption");
   });
 

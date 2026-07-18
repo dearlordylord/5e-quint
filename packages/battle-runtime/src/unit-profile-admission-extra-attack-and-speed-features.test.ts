@@ -104,7 +104,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
         }),
       ).toEqual(
         Either.right({
-          unitId,
+          unit,
           supportProfiles: [extraAttackSupportProfile],
         }),
       );
@@ -441,7 +441,7 @@ function syntheticExtraAttackBattleUnitRef(
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: unit.id,
+      unit,
       supportProfiles: [{ ...extraAttackSupportProfile, additionalAttacks }],
     }),
   );
@@ -533,7 +533,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: barbarianFastMovementUnitId,
+        unit: unitLibrary.requireUnit(barbarianFastMovementUnitId),
         supportProfiles: [fastMovementSupportProfile()],
       }),
     );
@@ -673,7 +673,7 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: monkUnarmoredMovementUnitId,
+        unit: unitLibrary.requireUnit(monkUnarmoredMovementUnitId),
         supportProfiles: [monkUnarmoredMovementSupportProfile()],
       }),
     );
@@ -830,7 +830,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: monkAcrobaticMovementUnitId,
+        unit: unitLibrary.requireUnit(monkAcrobaticMovementUnitId),
         supportProfiles: [acrobaticMovementSupportProfile()],
       }),
     );
@@ -1002,7 +1002,7 @@ describe("CRPI-READY-028 deterministic Second-Story Work admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: rogueSecondStoryWorkUnitId,
+        unit: unitLibrary.requireUnit(rogueSecondStoryWorkUnitId),
         supportProfiles: [secondStoryWorkSupportProfile()],
       }),
     );
@@ -1081,7 +1081,7 @@ describe("QMBT44 deterministic Roving admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: rangerRovingUnitId,
+        unit: unitLibrary.requireUnit(rangerRovingUnitId),
         supportProfiles: [rovingSupportProfile()],
       }),
     );
@@ -1318,7 +1318,7 @@ function acrobaticMovementBattle(
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: monkAcrobaticMovementUnitId,
+      unit: unitLibrary.requireUnit(monkAcrobaticMovementUnitId),
       supportProfiles: [acrobaticMovementSupportProfile()],
     }),
   );
@@ -1392,7 +1392,7 @@ function secondStoryWorkBattle(): BattleState {
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: rogueSecondStoryWorkUnitId,
+      unit: unitLibrary.requireUnit(rogueSecondStoryWorkUnitId),
       supportProfiles: [secondStoryWorkSupportProfile()],
     }),
   );

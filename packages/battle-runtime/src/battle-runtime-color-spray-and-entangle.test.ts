@@ -1,4 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
 import {
   startBattleRight,
   requireResolved,

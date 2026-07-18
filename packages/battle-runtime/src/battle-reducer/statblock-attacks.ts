@@ -538,7 +538,7 @@ function huntersPreyColossusSlayerRiders(input: {
       input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
         (usage) =>
           usage.attackerId === input.attackerId &&
-          usage.unitId === unitRef.unitId,
+          usage.unitId === unitRef.unit.id,
       )
     ) {
       return [];
@@ -561,7 +561,7 @@ function huntersPreyColossusSlayerRiders(input: {
     return [
       {
         attackerId: input.attackerId,
-        unitId: unitRef.unitId,
+        unitId: unitRef.unit.id,
         label: "Colossus Slayer",
         optional: true,
         damage: {
@@ -925,9 +925,9 @@ export function eligibleWeaponDamageDiceRollChoiceUnitIds(
     ) &&
     !state.currentTurnResources.weaponDamageDiceRollChoicesUsedThisTurn.some(
       (usage) =>
-        usage.attackerId === attackerId && usage.unitId === unitRef.unitId,
+        usage.attackerId === attackerId && usage.unitId === unitRef.unit.id,
     )
-      ? [unitRef.unitId]
+      ? [unitRef.unit.id]
       : [],
   );
 }
@@ -965,7 +965,7 @@ export function eligibleAttackDamageDieFloorUnitIdsForAttacker(
   }
   return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.includes(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE)
-      ? [unitRef.unitId]
+      ? [unitRef.unit.id]
       : [],
   );
 }
@@ -1010,9 +1010,9 @@ export function eligibleAttackRollMissToHitReplacements(
         profile.kind === ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
     ) &&
     !attacker.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
-      (usage) => usage.unitId === unitRef.unitId,
+      (usage) => usage.unitId === unitRef.unit.id,
     )
-      ? [{ unitId: unitRef.unitId, label: unitRef.unitId }]
+      ? [{ unitId: unitRef.unit.id, label: unitRef.unit.id }]
       : [],
   );
 }
@@ -1055,7 +1055,7 @@ export function attackRollMissToHitReplacementForUnit(
   }
   const hasReplacementProfile = attacker.origin.characterUnitRefs.some(
     (unitRef) =>
-      unitRef.unitId === unitId &&
+      unitRef.unit.id === unitId &&
       unitRef.supportProfiles.some(
         (profile) =>
           typeof profile === "object" &&

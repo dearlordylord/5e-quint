@@ -66,6 +66,7 @@ import {
   movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  unitLibrary,
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
@@ -348,12 +349,11 @@ describe("battle runtime: Weapon Mastery", () => {
   });
 
   test("Weapon Mastery Sap dispatches by property support profile, not mastery unit identity", () => {
-    const syntheticSapSupportUnitId = "test_sap_property_support";
     const hit = resolveLongswordHit(
       fighterVsGoblinBattle({
         characterUnitRefs: [
           {
-            unitId: syntheticSapSupportUnitId,
+            unit: unitLibrary.requireUnit("fighter_second_wind"),
             supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
           },
         ],
@@ -364,7 +364,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "nextAttackRollBySelf",
-        sourceUnitId: syntheticSapSupportUnitId,
+        sourceUnitId: "fighter_second_wind",
       }),
     );
   });

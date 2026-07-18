@@ -23,7 +23,7 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   battleSubjectForReplay,
   type BattleMovementSpeedKind,
@@ -914,29 +914,54 @@ export function bonusActionStandardActionActs(
         if (!alternateActionCostActionAvailable(state, actorId, action)) {
           return [];
         }
+        if (entry.source.kind === "spellEffect" && action !== "dash") {
+          return [];
+        }
         const speedKinds =
           action === "dash"
             ? representedMovementSpeedKinds(actor)
             : ["walk" as const];
-        return speedKinds.map((speedKind) => ({
-          subject:
-            action === "dash"
-              ? bonusActionDashSubjectForSpeedKind(
-                  actorId,
-                  entry.unitId,
-                  speedKind,
-                )
-              : {
-                  tag: "bonusActionStandardAction" as const,
-                  actorId,
-                  sourceUnitId: entry.unitId,
-                  action,
-                },
-          label: alternateActionCostActionLabel(action),
-          summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
-          initialHoles:
-            action === "hide" ? [hideAbilityCheckHole(state, actorId)] : [],
-        }));
+        return speedKinds.map((speedKind): BattleActDiscoveryCandidate => {
+          const presentation = {
+            label: alternateActionCostActionLabel(action),
+            summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
+            initialHoles:
+              action === "hide" ? [hideAbilityCheckHole(state, actorId)] : [],
+          };
+          if (entry.source.kind === "spellEffect") {
+            return {
+              ...presentation,
+              subject: {
+                tag: "bonusActionStandardAction",
+                actorId,
+                sourceProcedureRef: entry.source.procedureRef,
+                action: "dash",
+                speedKind,
+              },
+            };
+          }
+          if (action === "dash") {
+            return {
+              ...presentation,
+              subject: {
+                tag: "bonusActionStandardAction",
+                actorId,
+                sourceUnitId: entry.source.unitId,
+                action,
+                speedKind,
+              },
+            };
+          }
+          return {
+            ...presentation,
+            subject: {
+              tag: "bonusActionStandardAction",
+              actorId,
+              sourceUnitId: entry.source.unitId,
+              action,
+            },
+          };
+        });
       }),
   );
   const dashTemporaryHitPointActs =
@@ -964,7 +989,12 @@ export function bonusActionStandardActionActs(
 export function alternateActionCostProfilesForActor(
   combatant: BattleCreatureState | undefined,
 ): readonly {
-  readonly unitId: UnitRecord["id"];
+  readonly source:
+    | { readonly kind: "unit"; readonly unitId: UnitRecord["id"] }
+    | {
+        readonly kind: "spellEffect";
+        readonly procedureRef: BattleProcedureExecutionRef;
+      };
   readonly profile: Extract<
     BattleUnitSupportProfile,
     { readonly kind: "alternateActionCost" }
@@ -977,7 +1007,12 @@ export function alternateActionCostProfilesForActor(
     (unitRef) =>
       unitRef.supportProfiles.flatMap((profile) =>
         typeof profile === "object" && profile.kind === "alternateActionCost"
-          ? [{ unitId: unitRef.unitId, profile }]
+          ? [
+              {
+                source: { kind: "unit" as const, unitId: unitRef.unit.id },
+                profile,
+              },
+            ]
           : [],
       ),
   );
@@ -985,7 +1020,10 @@ export function alternateActionCostProfilesForActor(
     effect.kind === "spellDashBonusAction"
       ? [
           {
-            unitId: effect.sourceProcedureRef,
+            source: {
+              kind: "spellEffect" as const,
+              procedureRef: effect.sourceProcedureRef,
+            },
             profile: {
               kind: "alternateActionCost" as const,
               from: {
@@ -1021,10 +1059,10 @@ export function bonusActionDashTemporaryHitPointsProfilesForActor(
         return [];
       }
       const resource = origin.resources.find(
-        (candidate) => candidate.unit.id === unitRef.unitId,
+        (candidate) => candidate.unit.id === unitRef.unit.id,
       );
       return resource !== undefined && resourceHasUsesRemaining(resource)
-        ? [{ unitId: unitRef.unitId, profile, resource }]
+        ? [{ unitId: unitRef.unit.id, profile, resource }]
         : [];
     }),
   );
@@ -1050,7 +1088,8 @@ export function actorHasAlternateActionCost(
 ): boolean {
   return alternateActionCostProfilesForActor(combatant).some(
     (entry) =>
-      entry.unitId === sourceUnitId &&
+      entry.source.kind === "unit" &&
+      entry.source.unitId === sourceUnitId &&
       entry.profile.to.kind === "bonusAction" &&
       entry.profile.from.actions.some((candidate) => candidate === action),
   );

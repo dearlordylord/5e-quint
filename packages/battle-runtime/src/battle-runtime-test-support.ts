@@ -734,7 +734,7 @@ export function criticalRange19UnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "fighter_improved_critical",
+      unit: unitLibrary.requireUnit("fighter_improved_critical"),
       supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
     },
   ];
@@ -746,7 +746,7 @@ export function sneakAttackUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "rogue_sneak_attack",
+      unit: unitLibrary.requireUnit("rogue_sneak_attack"),
       supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
     },
   ];
@@ -764,7 +764,7 @@ export function cunningStrikeUnitRefs(): Extract<
   return [
     ...sneakAttackUnitRefs(),
     {
-      unitId: unit.id,
+      unit: unitLibrary.requireUnit(unit.id),
       supportProfiles: [support],
     },
   ];
@@ -776,7 +776,7 @@ export function masterySapUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "mastery_sap",
+      unit: unitLibrary.requireUnit("mastery_sap"),
       supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
     },
   ];
@@ -788,7 +788,7 @@ export function masteryToppleUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "mastery_topple",
+      unit: unitLibrary.requireUnit("mastery_topple"),
       supportProfiles: [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE],
     },
   ];
@@ -800,7 +800,7 @@ export function masteryCleaveUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "mastery_cleave",
+      unit: unitLibrary.requireUnit("mastery_cleave"),
       supportProfiles: [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE],
     },
   ];
@@ -812,7 +812,7 @@ export function tacticalMasterReplacementUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "fighter_tactical_master",
+      unit: unitLibrary.requireUnit("fighter_tactical_master"),
       supportProfiles: [
         {
           kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
@@ -821,15 +821,15 @@ export function tacticalMasterReplacementUnitRefs(): Extract<
       ],
     },
     {
-      unitId: "mastery_push",
+      unit: unitLibrary.requireUnit("mastery_push"),
       supportProfiles: [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE],
     },
     {
-      unitId: "mastery_sap",
+      unit: unitLibrary.requireUnit("mastery_sap"),
       supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
     },
     {
-      unitId: "mastery_slow",
+      unit: unitLibrary.requireUnit("mastery_slow"),
       supportProfiles: [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE],
     },
   ];
@@ -848,7 +848,7 @@ export function grapplerUnitRefs(): Extract<
   }
   return [
     {
-      unitId: "feat_grappler",
+      unit: unitLibrary.requireUnit("feat_grappler"),
       supportProfiles: supportProfiles.right,
     },
   ];
@@ -867,7 +867,7 @@ export function halflingNimblenessUnitRefs(): Extract<
   }
   return [
     {
-      unitId: "species_halfling_nimbleness",
+      unit: unitLibrary.requireUnit("species_halfling_nimbleness"),
       supportProfiles: supportProfiles.right,
     },
   ];
@@ -2907,6 +2907,24 @@ export function characterSeed(input: {
     druidWildShapeAvailableForms === undefined
       ? undefined
       : druidWildShapeAvailableForms.right;
+  const resourceUnitRefs = (input.resources ?? []).map((resource) => {
+    const supportProfiles = battleUnitSupportProfilesForUnit({
+      unit: resource.unit,
+      classLevels: parseCharacterBattleClassLevels(classLevels),
+    });
+    if (Either.isLeft(supportProfiles)) {
+      throw new Error(supportProfiles.left.message);
+    }
+    return { unit: resource.unit, supportProfiles: supportProfiles.right };
+  });
+  const characterUnitRefs = [
+    ...new Map(
+      [...resourceUnitRefs, ...(input.characterUnitRefs ?? [])].map((ref) => [
+        ref.unit.id,
+        ref,
+      ]),
+    ).values(),
+  ];
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
@@ -2915,7 +2933,7 @@ export function characterSeed(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
-      characterUnitRefs: input.characterUnitRefs ?? [],
+      characterUnitRefs,
       classLevels,
       knownLanguages: input.knownLanguages ?? ["Common"],
       d20Statistics:
@@ -3441,7 +3459,7 @@ export function supportedBattleUnitRef(unit: UnitRecord): BattleUnitRef {
     throw new Error(profiles.left.message);
   }
   return {
-    unitId: unit.id,
+    unit,
     supportProfiles: profiles.right,
   };
 }
@@ -3592,7 +3610,7 @@ export function reactionModifierUnitRef(
   >["characterUnitRefs"]
 >[number] {
   return {
-    unitId,
+    unit: unitLibrary.requireUnit(unitId),
     supportProfiles: [REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE],
   };
 }
@@ -3609,7 +3627,7 @@ export function reactionModifierUnitRefWithProfile(
   >["characterUnitRefs"]
 >[number] {
   return {
-    unitId,
+    unit: unitLibrary.requireUnit(unitId),
     supportProfiles: [profile],
   };
 }
@@ -3713,7 +3731,7 @@ export function bardicInspirationBattle(input: {
         ],
         characterUnitRefs: [
           {
-            unitId: bardicInspirationUnit().id,
+            unit: unitLibrary.requireUnit(bardicInspirationUnit().id),
             supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
           },
         ],
@@ -4682,7 +4700,7 @@ export function wizardVsRogueBattle(input: {
         characterUnitRefs: supportEvasion
           ? [
               {
-                unitId: "rogue_evasion",
+                unit: unitLibrary.requireUnit("rogue_evasion"),
                 supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
               },
             ]

@@ -3265,7 +3265,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         targetMaxHp: 50,
         targetUnitRefs: [
           {
-            unitId: speciesHalflingLuckUnitId,
+            unit: unitLibrary.requireUnit(speciesHalflingLuckUnitId),
             supportProfiles: [luckSupport],
           },
         ],
@@ -3476,7 +3476,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         targetResources: [{ unit: targetResource }],
         targetUnitRefs: [
           {
-            unitId: orcRelentlessEnduranceUnitId,
+            unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
             supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
           },
         ],

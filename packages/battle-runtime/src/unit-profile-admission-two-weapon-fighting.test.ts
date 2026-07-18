@@ -54,7 +54,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: twoWeaponFightingUnitId,
+        unit: unitLibrary.requireUnit(twoWeaponFightingUnitId),
         supportProfiles: [twoWeaponFightingSupportProfile()],
       }),
     );
@@ -532,7 +532,7 @@ function twoWeaponFightingBattleUnitRef(): BattleUnitRef {
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: twoWeaponFightingUnitId,
+      unit: unitLibrary.requireUnit(twoWeaponFightingUnitId),
       supportProfiles: [twoWeaponFightingSupportProfile()],
     }),
   );

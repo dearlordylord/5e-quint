@@ -57,7 +57,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: alertUnitId,
+        unit: unitLibrary.requireUnit(alertUnitId),
         supportProfiles: [alertSupportProfile],
       }),
     );
@@ -94,21 +94,18 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const mechanics = alertPassiveMechanics();
     const [left, right] = mechanics.grants;
     if (left === undefined || right === undefined) {
-      throw new Error("Expected Alert to have Initiative bonus and swap grants.");
+      throw new Error(
+        "Expected Alert to have Initiative bonus and swap grants.",
+      );
     }
     const adjacentUnits = [
-      alertShapedUnitWithMechanics(
-        "synthetic_initiative_training_with_count",
-        {
-          ...mechanics,
-          grants: [
-            left.kind === "modify_roll_numeric" ? { ...left, count: 1 } : left,
-            right.kind === "modify_roll_numeric"
-              ? { ...right, count: 1 }
-              : right,
-          ],
-        },
-      ),
+      alertShapedUnitWithMechanics("synthetic_initiative_training_with_count", {
+        ...mechanics,
+        grants: [
+          left.kind === "modify_roll_numeric" ? { ...left, count: 1 } : left,
+          right.kind === "modify_roll_numeric" ? { ...right, count: 1 } : right,
+        ],
+      }),
       alertShapedUnitWithMechanics(
         "synthetic_initiative_training_with_condition",
         {
@@ -145,9 +142,9 @@ describe("L12G deterministic Alert Initiative admission", () => {
     ] as const satisfies readonly UnitRecord[];
 
     for (const adjacentUnit of adjacentUnits) {
-      expect(battleInitiativeProficiencyAndSwapSupportForUnit(adjacentUnit)).toBe(
-        "unsupported",
-      );
+      expect(
+        battleInitiativeProficiencyAndSwapSupportForUnit(adjacentUnit),
+      ).toBe("unsupported");
       expect(
         battleUnitRefWithSupportProfiles({
           unitRef: { unitId: adjacentUnit.id },
@@ -203,9 +200,9 @@ describe("L12G deterministic Alert Initiative admission", () => {
       throw new Error(firstSwap.left.message);
     }
     expect(firstSwap.right).toBe(setup);
-    expect(firstSwap.right.state.combatants.get(alertSourceId)?.initiative).toBe(
-      18,
-    );
+    expect(
+      firstSwap.right.state.combatants.get(alertSourceId)?.initiative,
+    ).toBe(18);
     const secondSwapFromStaleSetup = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
@@ -307,7 +304,7 @@ function alertBattleSetup(
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: alertUnitId,
+      unit: unitLibrary.requireUnit(alertUnitId),
       supportProfiles: [alertSupportProfile],
     }),
   );

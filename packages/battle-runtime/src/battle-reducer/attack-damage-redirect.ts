@@ -535,7 +535,7 @@ export function attackDamageReductionRedirectResource(
   const characterOrigin = reactor.origin;
   const reducingFeatureIsProjected = characterOrigin.characterUnitRefs.some(
     (unitRef) =>
-      unitRef.unitId === unitId &&
+      unitRef.unit.id === unitId &&
       unitRef.supportProfiles.includes(
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
       ),

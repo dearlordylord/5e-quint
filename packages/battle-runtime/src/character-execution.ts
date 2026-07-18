@@ -5,7 +5,7 @@ import {
   NonNegativeInteger,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type {
   BattleCharacterExecutionScopeRef,
   BattleActiveEffectExecutionRef,
@@ -232,7 +232,7 @@ export function characterExecutionFromUnits(input: {
   }
   const explicitUnitSupportProcedures = input.unitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.map((profile) => ({
-      unitId: unitRef.unitId,
+      unitId: unitRef.unit.id,
       profile,
     })),
   );
@@ -417,6 +417,24 @@ export function characterSpellProcedureRef(
       binding.procedure.kind === "spellInvocation" &&
       sameSpellInvocationOccurrence(binding.procedure.invocation, invocation),
   )?.procedureRef;
+}
+
+export function characterSpellProcedureRefsForAdmissionContent(
+  execution: CharacterExecutionState,
+  spell: SpellRecord,
+): readonly BattleProcedureExecutionRef[] {
+  return execution.procedureBindings.flatMap((binding) => {
+    const procedure = binding.procedure;
+    if (procedure.kind === "spellInvocation") {
+      return procedure.invocation.spell.id === spell.id
+        ? [binding.procedureRef]
+        : [];
+    }
+    return procedure.kind === "unavailableSpellInvocation" &&
+      procedure.occurrence.invocationRef.spellId === spell.id
+      ? [binding.procedureRef]
+      : [];
+  });
 }
 
 export function characterStoredSpellProcedureRef(

@@ -63,7 +63,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: orcRelentlessEnduranceUnitId,
+        unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
         supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
       }),
     );
@@ -141,7 +141,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       targetResources: [{ unit }],
       targetUnitRefs: [
         {
-          unitId: orcRelentlessEnduranceUnitId,
+          unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
           supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
         },
       ],
@@ -218,7 +218,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       targetResources: [{ unit }],
       targetUnitRefs: [
         {
-          unitId: orcRelentlessEnduranceUnitId,
+          unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
           supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
         },
       ],
@@ -416,7 +416,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
               tag: "battleUnitSupportProfileIssue",
               message: `Unsupported battle zero-Hit-Point replacement Unit hook: ${unit.id}.`,
             })
-          : Either.right({ unitId: unit.id, supportProfiles: [] }),
+          : Either.right({ unit, supportProfiles: [] }),
       );
     }
   });
@@ -434,7 +434,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: orcAdrenalineRushUnitId,
+        unit: unitLibrary.requireUnit(orcAdrenalineRushUnitId),
         supportProfiles: [adrenalineRushSupportProfile()],
       }),
     );

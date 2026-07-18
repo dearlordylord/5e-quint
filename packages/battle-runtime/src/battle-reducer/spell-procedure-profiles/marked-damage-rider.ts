@@ -39,7 +39,7 @@ import type {
 import { Either, Match } from "effect";
 import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 
-import { characterSpellProcedureInvocationRef } from "../../character-execution.ts";
+import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 import {
   classFeatureFreeCastSpellInvocationRef,
   spellEffectInvocationRef,
@@ -127,14 +127,17 @@ function admitMarkedDamageRider(
   }
   const { abilityCheckBehavior, damageType, expr, rangeFeet, retargetTiming } =
     projection;
+  const selectedExecutionRefs = new Set(
+    characterSpellProcedureRefsForAdmissionContent(
+      ctx.actor.origin.execution,
+      spell,
+    ),
+  );
   const activeMark =
     ctx.actor.activeEffects.find(
       (effect): effect is SpellMarkedDamageRider =>
         effect.kind === "spellMarkedDamageRider" &&
-        characterSpellProcedureInvocationRef(
-          ctx.actor.origin.execution,
-          effect.sourceProcedureRef,
-        )?.spellId === spell.id,
+        selectedExecutionRefs.has(effect.sourceProcedureRef),
     ) ?? null;
   if (activeMark !== null) {
     // TODO: Allow an ordinary recast while the current mark is still active.

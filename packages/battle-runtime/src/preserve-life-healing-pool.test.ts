@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import {
   battleActSpellPresentation,
@@ -87,7 +86,7 @@ describe("Preserve Life Magic Action healing pool", () => {
         state,
         subject: act.subject,
         fills: [
-          preserveLifeDistributionFill(hole, [
+          preserveLifeDistributionFill(state, hole, [
             { targetId: spellTargetId, hitPoints: 8 },
             { targetId: secondTargetId, hitPoints: 7 },
           ]),
@@ -110,7 +109,7 @@ describe("Preserve Life Magic Action healing pool", () => {
         state,
         subject: act.subject,
         fills: [
-          preserveLifeDistributionFill(hole, [
+          preserveLifeDistributionFill(state, hole, [
             { targetId: spellCasterId, hitPoints: 6 },
           ]),
         ],
@@ -187,7 +186,7 @@ describe("Preserve Life Magic Action healing pool", () => {
       subject: act.subject,
       fills: [
         {
-          ...preserveLifeDistributionFill(hole, [
+          ...preserveLifeDistributionFill(state, hole, [
             { targetId: spellTargetId, hitPoints: 8 },
           ]),
           spatialFacts: [],
@@ -251,7 +250,7 @@ describe("Preserve Life Magic Action healing pool", () => {
       state,
       subject,
       fills: [
-        preserveLifeDistributionFill(hole, [
+        preserveLifeDistributionFill(state, hole, [
           { targetId: spellTargetId, hitPoints: 8 },
         ]),
       ],
@@ -339,6 +338,7 @@ function preserveLifeActOrUndefined(state: BattleState) {
 }
 
 function preserveLifeDistributionFill(
+  state: BattleState,
   hole: BattleHitPointHealingPoolDistributionHole,
   allocations: readonly {
     readonly targetId: CombatantId;
@@ -360,8 +360,10 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: spellCasterId,
         targetId: allocation.targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(clericPreserveLifeUnitId),
+        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+          state,
+          spellCasterId,
+          clericPreserveLifeUnitId,
         ),
         rangeFeet: movementFeet(30),
       })),
@@ -380,7 +382,7 @@ function resolvePreserveLife(
   return resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [preserveLifeDistributionFill(hole, allocations)],
+    fills: [preserveLifeDistributionFill(state, hole, allocations)],
   });
 }
 

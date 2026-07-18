@@ -231,7 +231,7 @@ describe("L3MSPEC species battle support", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: speciesDragonbornBreathWeaponUnitId,
+        unit: unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId),
         supportProfiles: [expectedBreathWeaponSupport],
       }),
     );
@@ -439,7 +439,7 @@ describe("L3MSPEC species battle support", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: speciesDragonbornDamageResistanceUnitId,
+        unit: unitLibrary.requireUnit(speciesDragonbornDamageResistanceUnitId),
         supportProfiles: [expectedDamageResistanceSupport],
       }),
     );
@@ -550,7 +550,7 @@ describe("L3MSPEC species battle support", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: dwarfDwarvenResilienceUnitId,
+        unit: unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId),
         supportProfiles: [
           expectedPoisonedSaveAdvantageSupport,
           expectedPoisonResistanceSupport,
@@ -637,7 +637,7 @@ describe("L3MSPEC species battle support", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: speciesHalflingBraveUnitId,
+        unit: unitLibrary.requireUnit(speciesHalflingBraveUnitId),
         supportProfiles: [expectedFrightenedSaveAdvantageSupport],
       }),
     );
@@ -675,7 +675,7 @@ describe("L3MSPEC species battle support", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: speciesHalflingNimblenessUnitId,
+        unit: unitLibrary.requireUnit(speciesHalflingNimblenessUnitId),
         supportProfiles: [expectedCreatureSpaceMovementPermissionSupport],
       }),
     );
@@ -765,7 +765,7 @@ describe("L3MSPEC species battle support", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: speciesGoliathPowerfulBuildUnitId,
+        unit: unitLibrary.requireUnit(speciesGoliathPowerfulBuildUnitId),
         supportProfiles: [expectedPowerfulBuildSupport],
       }),
     );
@@ -1004,7 +1004,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: monkMartialArtsUnitId,
+        unit: unitLibrary.requireUnit(monkMartialArtsUnitId),
         supportProfiles: [MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE],
       }),
     );
@@ -1219,7 +1219,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: monkMonksFocusUnitId,
+        unit: unitLibrary.requireUnit(monkMonksFocusUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -1301,7 +1301,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: monkStunningStrikeUnitId,
+        unit: unitLibrary.requireUnit(monkStunningStrikeUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -1348,7 +1348,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: monkDeflectAttacksUnitId,
+        unit: unitLibrary.requireUnit(monkDeflectAttacksUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -1407,7 +1407,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: monkSlowFallUnitId,
+        unit: unitLibrary.requireUnit(monkSlowFallUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -1528,7 +1528,10 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({ unitId: fighterActionSurgeUnitId, supportProfiles: [] }),
+      Either.right({
+        unit: unitLibrary.requireUnit(fighterActionSurgeUnitId),
+        supportProfiles: [],
+      }),
     );
     expect(profile).toEqual(
       expect.objectContaining({
@@ -1546,7 +1549,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: fighterImprovedCriticalUnitId,
+        unit: unitLibrary.requireUnit(fighterImprovedCriticalUnitId),
         supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
       }),
     );
@@ -1567,7 +1570,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: fighterTacticalMasterUnitId,
+        unit: unitLibrary.requireUnit(fighterTacticalMasterUnitId),
         supportProfiles: [],
       }),
     );
@@ -1579,7 +1582,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: fighterTacticalMasterUnitId,
+        unit: unitLibrary.requireUnit(fighterTacticalMasterUnitId),
         supportProfiles: [
           {
             kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
@@ -1608,7 +1611,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: "mastery_push",
+        unit: unitLibrary.requireUnit("mastery_push"),
         supportProfiles: [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE],
       }),
     );
@@ -1619,7 +1622,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: "mastery_slow",
+        unit: unitLibrary.requireUnit("mastery_slow"),
         supportProfiles: [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE],
       }),
     );
@@ -1634,7 +1637,10 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({ unitId: barbarianRageUnitId, supportProfiles: [] }),
+      Either.right({
+        unit: unitLibrary.requireUnit(barbarianRageUnitId),
+        supportProfiles: [],
+      }),
     );
     expect(profile).toEqual(
       expect.objectContaining({
@@ -1675,7 +1681,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: rogueCunningActionUnitId,
+        unit: unitLibrary.requireUnit(rogueCunningActionUnitId),
         supportProfiles: [
           {
             kind: "alternateActionCost",
@@ -1700,7 +1706,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: rogueUncannyDodgeUnitId,
+        unit: unitLibrary.requireUnit(rogueUncannyDodgeUnitId),
         supportProfiles: [REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE],
       }),
     );
@@ -1730,7 +1736,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: rogueSneakAttackUnitId,
+        unit: unitLibrary.requireUnit(rogueSneakAttackUnitId),
         supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
       }),
     );
@@ -1774,7 +1780,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: barbarianFrenzyUnitId,
+        unit: unitLibrary.requireUnit(barbarianFrenzyUnitId),
         supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
       }),
     );

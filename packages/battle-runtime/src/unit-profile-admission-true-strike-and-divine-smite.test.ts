@@ -1,4 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS

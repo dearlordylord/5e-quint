@@ -706,7 +706,7 @@ describe("battle runtime: Eldritch Blast", () => {
           resources: [{ unit: relentlessEndurance }],
           characterUnitRefs: [
             {
-              unitId: "orc_relentless_endurance",
+              unit: unitLibrary.requireUnit("orc_relentless_endurance"),
               supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
             },
           ],

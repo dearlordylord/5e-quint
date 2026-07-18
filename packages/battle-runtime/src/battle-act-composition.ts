@@ -4,6 +4,8 @@ import type {
   BattleState,
   AvailableBattleAct,
 } from "./battle-reducer.ts";
+import type { BattleUnitRef } from "./battle-init.ts";
+import { Match } from "effect";
 import type {
   CharacterProcedureBattleSubject,
   CharacterProcedureSelectionSubject,
@@ -20,7 +22,7 @@ import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
   characterExecutionWithSpellInvocations,
-  characterSpellProcedureRef,
+  characterSpellProcedureInvocationRef,
   characterUnitProcedureRefs,
 } from "./character-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
@@ -149,22 +151,21 @@ function characterProcedureRefsForSelection(
     );
   }
   if (subject.tag === "bonusActionStandardAction") {
+    if ("sourceProcedureRef" in subject) {
+      const invocation = invocations.find(
+        (candidate) =>
+          candidate.sourceProcedureRef === subject.sourceProcedureRef &&
+          candidate.procedure === "expeditiousRetreatDash",
+      );
+      return invocation === undefined ? [] : [subject.sourceProcedureRef];
+    }
     const refs = characterUnitProcedureRefs(
       execution,
       subject.sourceUnitId,
       BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
     );
     if (refs.length > 0) return refs;
-    const invocation = invocations.find(
-      (candidate) =>
-        candidate.procedure === "expeditiousRetreatDash" &&
-        candidate.spell.id === subject.sourceUnitId,
-    );
-    const procedureRef =
-      invocation === undefined
-        ? undefined
-        : characterSpellProcedureRef(execution, invocation);
-    return procedureRef === undefined ? [] : [procedureRef];
+    return refs;
   }
   return characterUnitProcedureRefs(
     execution,
@@ -216,7 +217,12 @@ function admitCharacterProcedureDiscoveryActs(
                 subject,
                 procedureRef,
               );
-              return text === undefined
+              const presentation = characterProcedurePresentation(
+                state,
+                subject,
+                procedureRef,
+              );
+              return text === undefined || presentation === undefined
                 ? []
                 : [
                     {
@@ -228,10 +234,7 @@ function admitCharacterProcedureDiscoveryActs(
                         act.initialHoles,
                         procedureRef,
                       ),
-                      presentation: characterProcedurePresentation(
-                        subject,
-                        procedureRef,
-                      ),
+                      presentation,
                     },
                   ];
             })();
@@ -266,21 +269,28 @@ function characterProcedurePresentationText(
     const form = actor.origin.druidWildShapeAvailableForms?.find(
       (candidate) => candidate.statBlock.id === subject.formStatBlockId,
     );
-    const profile = actor.origin.characterUnitRefs
-      .find((ref) => ref.unitId === subject.unitId)
-      ?.supportProfiles.find(
-        (candidate) => typeof candidate === "object" && "unit" in candidate,
-      );
-    if (
-      form === undefined ||
-      profile === undefined ||
-      typeof profile !== "object" ||
-      !("unit" in profile)
-    ) {
+    const unit = actor.origin.characterUnitRefs.find(
+      (ref) => ref.unit.id === subject.unitId,
+    )?.unit;
+    if (form === undefined || unit === undefined) {
       return undefined;
     }
-    const label = `${profile.unit.name}: ${form.statBlock.statBlock.displayName}`;
+    const label = `${battleUnitPresentationName(unit)}: ${form.statBlock.statBlock.displayName}`;
     return { label, summary: `Use ${label}.` };
+  }
+  if (
+    subject.tag === "bonusActionStandardAction" &&
+    "sourceProcedureRef" in subject
+  ) {
+    const invocation = supportedSpellActs(actor, state).find(
+      (candidate) => candidate.sourceProcedureRef === procedureRef,
+    );
+    if (invocation === undefined) return undefined;
+    const actionName = alternateActionPresentationName(subject.action);
+    return {
+      label: invocation.spell.name,
+      summary: `${actionName} as a Bonus Action.`,
+    };
   }
   const unitId =
     subject.tag === "unitFeature" ||
@@ -288,21 +298,36 @@ function characterProcedurePresentationText(
     subject.tag === "druidWildShape"
       ? subject.unitId
       : subject.tag === "bonusActionStandardAction"
-        ? subject.sourceUnitId
+        ? "sourceUnitId" in subject
+          ? subject.sourceUnitId
+          : undefined
         : subject.resourceUnitId;
-  const profile = actor.origin.characterUnitRefs
-    .find((ref) => ref.unitId === unitId)
-    ?.supportProfiles.find(
-      (candidate) => typeof candidate === "object" && "unit" in candidate,
-    );
-  if (
-    profile === undefined ||
-    typeof profile !== "object" ||
-    !("unit" in profile)
-  ) {
-    return undefined;
+  if (unitId === undefined) return undefined;
+  const unit = actor.origin.characterUnitRefs.find(
+    (ref) => ref.unit.id === unitId,
+  )?.unit;
+  if (unit === undefined) return undefined;
+  const name = battleUnitPresentationName(unit);
+  if (subject.tag === "bonusActionStandardAction") {
+    const actionName = alternateActionPresentationName(subject.action);
+    return { label: name, summary: `${actionName} as a Bonus Action.` };
   }
-  return { label: profile.unit.name, summary: `Use ${profile.unit.name}.` };
+  return { label: name, summary: `Use ${name}.` };
+}
+
+function alternateActionPresentationName(
+  action: "dash" | "disengage" | "hide",
+): string {
+  return Match.value(action).pipe(
+    Match.when("dash", () => "Dash"),
+    Match.when("disengage", () => "Disengage"),
+    Match.when("hide", () => "Hide"),
+    Match.exhaustive,
+  );
+}
+
+function battleUnitPresentationName(unit: BattleUnitRef["unit"]): string {
+  return "syntheticLabel" in unit ? unit.syntheticLabel : unit.name;
 }
 
 function admissionBoundProcedureHoles(
@@ -319,9 +344,10 @@ function admissionBoundProcedureHoles(
 }
 
 function characterProcedurePresentation(
+  state: BattleState,
   subject: CharacterProcedureSelectionSubject,
   procedureRef: BattleProcedureExecutionRef,
-): BattleActPresentation {
+): BattleActPresentation | undefined {
   if (
     subject.tag === "actionSpell" ||
     subject.tag === "bonusActionSpell" ||
@@ -346,9 +372,21 @@ function characterProcedurePresentation(
         }
       : { kind: "unit", procedureRef, unitId: subject.unitId };
   }
-  return subject.tag === "bonusActionStandardAction"
-    ? { kind: "unit", procedureRef, unitId: subject.sourceUnitId }
-    : { kind: "unit", procedureRef, unitId: subject.resourceUnitId };
+  if (subject.tag === "bonusActionStandardAction") {
+    if ("sourceUnitId" in subject) {
+      return { kind: "unit", procedureRef, unitId: subject.sourceUnitId };
+    }
+    const actor = state.combatants.get(subject.actorId);
+    if (actor?.origin.kind !== "character") return undefined;
+    const invocation = characterSpellProcedureInvocationRef(
+      actor.origin.execution,
+      procedureRef,
+    );
+    return invocation === undefined
+      ? undefined
+      : { kind: "spell", procedureRef, invocation };
+  }
+  return { kind: "unit", procedureRef, unitId: subject.resourceUnitId };
 }
 
 function boundCharacterProcedureSubject(
@@ -390,6 +428,11 @@ function boundCharacterProcedureSubject(
       : { ...replaySubject, procedureRef, formExecutionRef };
   }
   if (subject.tag === "bonusActionStandardAction") {
+    if ("sourceProcedureRef" in subject) {
+      const { sourceProcedureRef: _sourceProcedureRef, ...replaySubject } =
+        subject;
+      return { ...replaySubject, procedureRef };
+    }
     const { sourceUnitId: _sourceUnitId, ...replaySubject } = subject;
     return { ...replaySubject, procedureRef };
   }

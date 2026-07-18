@@ -1246,7 +1246,7 @@ function characterLightExtraAttackDamageAbilityModifierSupportUnitIds(
         profile.kind ===
           LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
     )
-      ? [unitRef.unitId]
+      ? [unitRef.unit.id]
       : [],
   );
 }

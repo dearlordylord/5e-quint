@@ -2915,7 +2915,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: [
             {
-              unitId: "rogue_cunning_action",
+              unit: unitLibrary.requireUnit("rogue_cunning_action"),
               supportProfiles: [ROGUE_CUNNING_ACTION_SUPPORT_PROFILE],
             },
           ],
@@ -2982,7 +2982,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: [
             {
-              unitId: "rogue_cunning_action",
+              unit: unitLibrary.requireUnit("rogue_cunning_action"),
               supportProfiles: [ROGUE_CUNNING_ACTION_SUPPORT_PROFILE],
             },
           ],

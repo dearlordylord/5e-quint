@@ -2509,7 +2509,7 @@ function attackActionAreaSaveDamageReplacementProfileForResource(
   resource: CharacterBattleResourceState,
 ): AttackActionAreaSaveDamageReplacementProfile | null {
   const support = actor.origin.characterUnitRefs
-    .find((unitRef) => unitRef.unitId === resource.unit.id)
+    .find((unitRef) => unitRef.unit.id === resource.unit.id)
     ?.supportProfiles.find(
       (
         profile,

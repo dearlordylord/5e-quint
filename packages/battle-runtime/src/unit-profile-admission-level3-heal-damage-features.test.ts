@@ -80,7 +80,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: clericDiscipleOfLifeUnitId,
+        unit: unitLibrary.requireUnit(clericDiscipleOfLifeUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -149,7 +149,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: clericPreserveLifeUnitId,
+        unit: unitLibrary.requireUnit(clericPreserveLifeUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -237,7 +237,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: druidLandsAidUnitId,
+        unit: unitLibrary.requireUnit(druidLandsAidUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -376,7 +376,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: warlockDarkOnesBlessingUnitId,
+        unit: unitLibrary.requireUnit(warlockDarkOnesBlessingUnitId),
         supportProfiles: [supportProfile],
       }),
     );

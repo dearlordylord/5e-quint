@@ -1,7 +1,5 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
 import { describe, expect, test } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";

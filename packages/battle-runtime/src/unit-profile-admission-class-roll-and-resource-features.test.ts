@@ -193,7 +193,10 @@ describe("QMBT7 deterministic Unit profile admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({ unitId: fighterSecondWindUnitId, supportProfiles: [] }),
+      Either.right({
+        unit: unitLibrary.requireUnit(fighterSecondWindUnitId),
+        supportProfiles: [],
+      }),
     );
     expect(profile).toEqual(
       expect.objectContaining({
@@ -220,7 +223,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: barbarianRecklessAttackUnitId,
+        unit: unitLibrary.requireUnit(barbarianRecklessAttackUnitId),
         supportProfiles: [],
       }),
     );
@@ -311,7 +314,7 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: fighterTacticalMindUnitId,
+        unit: unitLibrary.requireUnit(fighterTacticalMindUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -406,7 +409,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: fighterIndomitableUnitId,
+        unit: unitLibrary.requireUnit(fighterIndomitableUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -658,7 +661,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: bardBardicInspirationUnitId,
+        unit: unitLibrary.requireUnit(bardBardicInspirationUnitId),
         supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
       }),
     );
@@ -819,7 +822,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: bardCuttingWordsUnitId,
+        unit: unitLibrary.requireUnit(bardCuttingWordsUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -1016,7 +1019,7 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: sorcererInnateSorceryUnitId,
+        unit: unitLibrary.requireUnit(sorcererInnateSorceryUnitId),
         supportProfiles: [],
       }),
     );

@@ -462,7 +462,7 @@ function openHandTechniqueFlurryHit(
   if (focusUnitId === undefined) return null;
   const selectedProfile = actor.origin.characterUnitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.flatMap((supportProfile) =>
-      openHandTechniqueSupportProfile(unitRef.unitId, supportProfile),
+      openHandTechniqueSupportProfile(unitRef.unit.id, supportProfile),
     ),
   )[0];
   if (selectedProfile === undefined) return null;

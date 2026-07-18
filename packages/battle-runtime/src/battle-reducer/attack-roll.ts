@@ -1387,6 +1387,7 @@ export function weaponMasteryCleaveExtraAttack(
 
 export type HuntersPreyHordeBreakerSelection = {
   readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
 };
 
 export function huntersPreyHordeBreakerDecisionHole(
@@ -1420,6 +1421,7 @@ export function huntersPreyHordeBreakerTargetHole(
   state: BattleState,
   attackerId: CombatantId,
   firstTargetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
@@ -1427,6 +1429,7 @@ export function huntersPreyHordeBreakerTargetHole(
     holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
     label: "Horde Breaker second target",
     requiresTableSpatialFact: true,
+    procedureRef: sourceProcedureRef,
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
       attackerId,
@@ -1516,7 +1519,7 @@ export function huntersPreyHordeBreakerDamageHole(
 export function huntersPreyHordeBreakerTargetIsLegal(input: {
   readonly state: BattleState;
   readonly attackerId: CombatantId;
-  readonly unitId: UnitRecord["id"];
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly firstTargetId: CombatantId;
   readonly secondTargetId: CombatantId;
   readonly attack: CharacterWeaponAttackActionOption;
@@ -1535,7 +1538,7 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
       (fact) =>
         fact.kind === "hordeBreakerSecondTargetEligible" &&
         fact.attackerId === input.attackerId &&
-        fact.sourceProcedureRef === input.unitId &&
+        fact.sourceProcedureRef === input.sourceProcedureRef &&
         fact.originalTargetId === input.firstTargetId &&
         fact.secondTargetId === input.secondTargetId,
     )
@@ -1563,7 +1566,7 @@ export function recordHuntersPreyHordeBreakerUsed(
       };
 }
 
-function huntersPreyHordeBreakerSelection(
+export function huntersPreyHordeBreakerSelection(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
@@ -1584,7 +1587,7 @@ function huntersPreyHordeBreakerSelection(
     (candidate) =>
       !state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
         (usage) =>
-          usage.attackerId === attackerId && usage.unitId === candidate.unitId,
+          usage.attackerId === attackerId && usage.unitId === candidate.unit.id,
       ) &&
       candidate.supportProfiles.some(
         (profile) =>
@@ -1593,7 +1596,18 @@ function huntersPreyHordeBreakerSelection(
           profile.huntersPrey.kind === "nearbyDifferentTargetSameWeaponAttack",
       ),
   );
-  return unitRef === undefined ? null : { unitId: unitRef.unitId };
+  if (unitRef === undefined) return null;
+  const procedureRef = characterUnitProcedureRef(
+    attacker.origin.execution,
+    unitRef.unit.id,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([HUNTERS_PREY_SUPPORT_PROFILE]),
+    },
+  );
+  return procedureRef === undefined
+    ? null
+    : { unitId: unitRef.unit.id, procedureRef };
 }
 
 function cleaveAbilityChoices(
@@ -1728,7 +1742,7 @@ function tacticalMasterReplacementSelection(
     typeof supportProfile !== "object"
     ? null
     : {
-        unitId: unitRef.unitId,
+        unitId: unitRef.unit.id,
         replacementProperties: supportProfile.replacementProperties,
       };
 }
@@ -1797,7 +1811,7 @@ function selectedWeaponMasteryProperty(input: {
   if (unitRef === undefined) return null;
   const procedureRef = characterUnitProcedureRef(
     attacker.origin.execution,
-    unitRef.unitId,
+    unitRef.unit.id,
     {
       kind: "unitSupportProfile",
       supportKinds: new Set([input.supportProfile]),
@@ -1805,7 +1819,7 @@ function selectedWeaponMasteryProperty(input: {
   );
   return procedureRef === undefined
     ? null
-    : { attack, unitId: unitRef.unitId, procedureRef };
+    : { attack, unitId: unitRef.unit.id, procedureRef };
 }
 
 function weaponMasteryPropertySupportProfiles(

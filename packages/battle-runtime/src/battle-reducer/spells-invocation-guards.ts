@@ -18,7 +18,10 @@ import {
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
-import { characterUnitFeatureProcedureId } from "../character-execution.ts";
+import {
+  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  characterUnitProcedureId,
+} from "../character-execution.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import type { SpellProcedureAnyTargetListInvocationClassifier } from "./spell-procedure-profiles/profile.ts";
 import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
@@ -151,13 +154,13 @@ function activeDruidWildShapeSupportProfile(
   if (activeWildShape === null) {
     return null;
   }
+  const selectedUnitId = characterUnitProcedureId(
+    origin.execution,
+    activeWildShape.sourceProcedureRef,
+    DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  );
   const unitRef = origin.characterUnitRefs.find(
-    (candidate) =>
-      candidate.unitId ===
-      characterUnitFeatureProcedureId(
-        origin.execution,
-        activeWildShape.sourceProcedureRef,
-      ),
+    (candidate) => candidate.unit.id === selectedUnitId,
   );
   const profileFromUnitRef =
     unitRef?.supportProfiles.find(
@@ -170,12 +173,7 @@ function activeDruidWildShapeSupportProfile(
   }
 
   const resource = origin.resources.find(
-    (candidate) =>
-      candidate.unit.id ===
-      characterUnitFeatureProcedureId(
-        origin.execution,
-        activeWildShape.sourceProcedureRef,
-      ),
+    (candidate) => candidate.unit.id === selectedUnitId,
   );
   if (resource === undefined) {
     return null;

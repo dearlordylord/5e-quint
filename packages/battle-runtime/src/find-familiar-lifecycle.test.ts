@@ -143,7 +143,7 @@ function halflingLuckUnitRef(): Extract<
     throw new Error(supportProfiles.left.message);
   }
   return {
-    unitId: unit.id,
+    unit: unitCatalog.requireUnit(unit.id),
     supportProfiles: supportProfiles.right,
   };
 }
@@ -400,12 +400,12 @@ function startWildCompanionDruidFixtureBattle(input: {
           spellSlots: input.spellSlots ?? [],
         },
         characterUnitRefs: [
-          { unitId: "druid_wild_shape", supportProfiles: [] },
+          { unit: druidWildShapeUnit, supportProfiles: [] },
           ...(input.includeWildCompanionFeature === false
             ? []
             : [
                 {
-                  unitId: "druid_wild_companion",
+                  unit: unitCatalog.requireUnit("druid_wild_companion"),
                   supportProfiles: [
                     DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
                   ] as const,
@@ -511,7 +511,10 @@ function startFindFamiliarSpellcasterFixtureBattle(): BattleState {
           spellSlots: [],
         },
         characterUnitRefs: [
-          { unitId: "wizard_ritual_adept", supportProfiles: [] },
+          {
+            unit: unitCatalog.requireUnit("wizard_ritual_adept"),
+            supportProfiles: [],
+          },
         ],
       }),
     ],

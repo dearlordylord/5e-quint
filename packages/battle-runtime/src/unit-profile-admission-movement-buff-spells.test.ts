@@ -1,8 +1,6 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
-  battleActUnitPresentation,
 } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV49 expeditious_retreat
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV53 jump
@@ -106,16 +104,12 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       expect.arrayContaining([expect.objectContaining({ source: "turn" })]),
     );
     expect(caster.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(expeditiousRetreatUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toContainEqual({
       kind: "spellDashBonusAction",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(expeditiousRetreatUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       expiresAt: { kind: "concentration", combatantId: spellCasterId },
     });
@@ -153,7 +147,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     const laterDashAct = discoverBattleActs(nextCasterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionStandardAction" &&
-        battleActUnitPresentation(candidate)?.unitId ===
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
           expeditiousRetreatUnitId &&
         candidate.subject.action === "dash" &&
         candidate.subject.speedKind === "walk",
@@ -294,9 +288,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "jumpMovementReplacement",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(jumpUnitId),
-        ),
+        sourceProcedureRef: castAct.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         movementCostFeet: movementFeet(10),
         maxJumpDistanceFeet: movementFeet(30),

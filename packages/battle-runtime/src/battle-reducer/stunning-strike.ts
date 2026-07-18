@@ -391,7 +391,7 @@ function stunningStrikeHit(input: {
   }
   const selectedProfile = actor.origin.characterUnitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.flatMap((supportProfile) =>
-      stunningStrikeSupportProfile(unitRef.unitId, supportProfile),
+      stunningStrikeSupportProfile(unitRef.unit.id, supportProfile),
     ),
   )[0];
   if (selectedProfile === undefined) return null;

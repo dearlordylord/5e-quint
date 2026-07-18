@@ -524,7 +524,7 @@ function supremeSneakUnitRefs(): ReturnType<typeof cunningStrikeUnitRefs> {
   return [
     ...cunningStrikeUnitRefs(),
     {
-      unitId: unit.id,
+      unit: unitLibrary.requireUnit(unit.id),
       supportProfiles: [support],
     },
   ];

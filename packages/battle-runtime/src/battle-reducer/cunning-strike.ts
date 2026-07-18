@@ -125,7 +125,7 @@ export function eligibleCunningStrikeContexts(input: {
       unitRef.supportProfiles.flatMap((supportProfile) =>
         typeof supportProfile === "object" &&
         supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
-          ? [{ unitId: unitRef.unitId, supportProfile }]
+          ? [{ unitId: unitRef.unit.id, supportProfile }]
           : [],
       ),
   );
@@ -161,7 +161,7 @@ export function eligibleCunningStrikeContexts(input: {
           : [supportProfile.optionGrant.option];
       const procedureRef = characterUnitProcedureRef(
         execution,
-        unitRef.unitId,
+        unitRef.unit.id,
         {
           kind: "unitSupportProfile",
           supportKinds: new Set([supportProfile.kind]),
@@ -178,7 +178,7 @@ export function eligibleCunningStrikeContexts(input: {
               {
                 attackerId: input.attackerId,
                 targetId: input.targetId,
-                unitId: unitRef.unitId,
+                unitId: unitRef.unit.id,
                 procedureRef,
                 label: supportProfile.unit.name,
                 sourceDamageRiderUnitId: sourceRider.unitId,

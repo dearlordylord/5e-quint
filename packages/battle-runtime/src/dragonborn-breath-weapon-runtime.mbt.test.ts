@@ -802,7 +802,7 @@ function breathWeaponUnitRef() {
   }
   expect(unitRef).toEqual(
     Either.right({
-      unitId: speciesDragonbornBreathWeaponUnitId,
+      unit: unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId),
       supportProfiles: [support],
     }),
   );

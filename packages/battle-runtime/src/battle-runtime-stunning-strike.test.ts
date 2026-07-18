@@ -284,7 +284,7 @@ function stunningStrikeUnitRef() {
   if (support === null || support === "unsupported") {
     throw new Error("Expected Stunning Strike support profile.");
   }
-  return { unitId: unit.id, supportProfiles: [support] };
+  return { unit, supportProfiles: [support] };
 }
 
 function attackSubject(state: BattleState): BattleSubject {

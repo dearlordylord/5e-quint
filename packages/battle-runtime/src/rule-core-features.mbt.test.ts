@@ -1798,7 +1798,9 @@ function cunningActionBattle(): BattleState {
         initiative: 20,
         characterUnitRefs: [
           {
-            unitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+            ),
             supportProfiles: [cunningActionSupportProfile],
           },
         ],
@@ -1886,7 +1888,9 @@ function sneakAttackBattle(): BattleState {
         ],
         characterUnitRefs: [
           {
-            unitId: recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+            ),
             supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
           },
         ],
@@ -1915,7 +1919,7 @@ function frenzyBattle(): BattleState {
         ],
         characterUnitRefs: [
           {
-            unitId: frenzyUnitId,
+            unit: unitLibrary.requireUnit(frenzyUnitId),
             supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
           },
         ],
@@ -1933,8 +1937,8 @@ function improvedCriticalBattle(): BattleState {
         initiative: 20,
         characterUnitRefs: [
           {
-            unitId: recordSelectedUnitRuntimeBoundaryId(
-              "fighter_improved_critical",
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("fighter_improved_critical"),
             ),
             supportProfiles: [
               WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -1955,7 +1959,9 @@ function savageAttackerBattle(): BattleState {
         initiative: 20,
         characterUnitRefs: [
           {
-            unitId: recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
+            ),
             supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
           },
         ],
@@ -2004,7 +2010,7 @@ function relentlessEnduranceBattle(): BattleState {
           resources: [{ unit, usesRemaining: 1 }],
           characterUnitRefs: [
             {
-              unitId: "orc_relentless_endurance",
+              unit: unitLibrary.requireUnit("orc_relentless_endurance"),
               supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
             },
           ],
@@ -2056,7 +2062,9 @@ function evasionBattle(unitId: EvasionUnitId = "rogue_evasion"): BattleState {
         ],
         characterUnitRefs: [
           {
-            unitId: recordSelectedUnitRuntimeBoundaryId(unit.id),
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId(unit.id),
+            ),
             supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
           },
         ],
@@ -2092,7 +2100,7 @@ function reactionModifierBattle(input: {
         unitFeatures: [{ unit: input.unit }],
         characterUnitRefs: [
           {
-            unitId,
+            unit: input.unit,
             supportProfiles: [
               input.supportProfile ??
                 REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,

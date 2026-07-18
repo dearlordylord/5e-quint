@@ -1163,13 +1163,21 @@ type DruidWildShapeProcedureSelectionSubject =
       { readonly action: "dismiss" }
     > & { readonly unitId: UnitRecord["id"] });
 
-type BonusActionStandardActionProcedureSelectionSubject = DistributiveOmit<
+type BonusActionStandardActionProcedureSelectionBase = DistributiveOmit<
   Extract<
     CharacterProcedureBattleSubject,
     { readonly tag: "bonusActionStandardAction" }
   >,
   "procedureRef" | "sourceUnitId"
-> & { readonly sourceUnitId: UnitRecord["id"] };
+>;
+type BonusActionStandardActionProcedureSelectionSubject =
+  | (BonusActionStandardActionProcedureSelectionBase & {
+      readonly sourceUnitId: UnitRecord["id"];
+    })
+  | (Extract<
+      BonusActionStandardActionProcedureSelectionBase,
+      { readonly action: "dash" }
+    > & { readonly sourceProcedureRef: BattleProcedureExecutionRef });
 
 type MonkFocusProcedureSelectionSubject = DistributiveOmit<
   Extract<CharacterProcedureBattleSubject, { readonly tag: "monkFocusOption" }>,

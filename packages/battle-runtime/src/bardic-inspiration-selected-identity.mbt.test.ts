@@ -154,7 +154,7 @@ function bardicInspirationBard(): BattleCreatureInit {
       characterId: characterId("bardic-inspiration-selected-identity-bard"),
       characterUnitRefs: [
         {
-          unitId: unit.id,
+          unit: unitLibrary.requireUnit(unit.id),
           supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
         },
       ],

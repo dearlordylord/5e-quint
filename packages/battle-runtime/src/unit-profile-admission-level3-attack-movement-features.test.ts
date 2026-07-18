@@ -414,7 +414,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: rangerHuntersPreyUnitId,
+        unit: unitLibrary.requireUnit(rangerHuntersPreyUnitId),
         supportProfiles: [huntersPreyWoundedTargetWeaponDamageSupport],
       }),
     );
@@ -431,7 +431,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: rangerHuntersPreyUnitId,
+        unit: unitLibrary.requireUnit(rangerHuntersPreyUnitId),
         supportProfiles: [
           huntersPreyNearbyDifferentTargetSameWeaponAttackSupport,
         ],

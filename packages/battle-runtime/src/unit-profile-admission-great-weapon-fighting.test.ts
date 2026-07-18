@@ -46,7 +46,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: greatWeaponFightingUnitId,
+        unit: unitLibrary.requireUnit(greatWeaponFightingUnitId),
         supportProfiles: [ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE],
       }),
     );

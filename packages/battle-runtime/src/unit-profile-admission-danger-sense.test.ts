@@ -61,7 +61,7 @@ describe("L12G deterministic Danger Sense admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: barbarianDangerSenseUnitId,
+        unit: unitLibrary.requireUnit(barbarianDangerSenseUnitId),
         supportProfiles: [dangerSenseSupportProfile],
       }),
     );
@@ -208,7 +208,7 @@ function dangerSenseBattle(): BattleState {
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: barbarianDangerSenseUnitId,
+      unit: unitLibrary.requireUnit(barbarianDangerSenseUnitId),
       supportProfiles: [dangerSenseSupportProfile],
     }),
   );

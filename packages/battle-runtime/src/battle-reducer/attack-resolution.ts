@@ -2443,7 +2443,7 @@ export function classFeatureExtraAttackForActor(
           (candidate) =>
             candidate.procedure.kind !== "spellInvocation" &&
             candidate.procedure.kind !== "unavailableSpellInvocation" &&
-            candidate.procedure.unitId === unitRef.unitId &&
+            candidate.procedure.unitId === unitRef.unit.id &&
             candidate.procedure.supportKind ===
               ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
         );

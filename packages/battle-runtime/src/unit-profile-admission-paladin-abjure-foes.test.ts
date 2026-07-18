@@ -25,6 +25,7 @@ import type {
   BattleResolutionResult,
   BattleState,
   BattleTargetSpatialFact,
+  BattleProcedureExecutionRef,
   CombatantId,
 } from "./index.ts";
 import {
@@ -93,7 +94,7 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
         state,
         subject: act.subject,
         fills: [
-          abjureFoesSavingThrowFill(save, [
+          abjureFoesSavingThrowFill(procedureRef, save, [
             { targetId: spellTargetId, succeeded: false },
             { targetId: secondTargetId, succeeded: true },
           ]),
@@ -111,9 +112,7 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "unitFeatureCondition",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(procedureRef),
-          ),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "frightened",
           earlyEnd: { kind: "targetTakesAnyDamage" },
@@ -257,6 +256,7 @@ function abjureFoesAct(state: BattleState) {
 }
 
 function abjureFoesSavingThrowFill(
+  sourceProcedureRef: BattleProcedureExecutionRef,
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   outcomes: readonly {
     readonly targetId: CombatantId;
@@ -266,21 +266,20 @@ function abjureFoesSavingThrowFill(
   return {
     ...savingThrowOutcomeFill(hole, outcomes),
     spatialFacts: outcomes.map((outcome) =>
-      abjureFoesVisibleWithinRangeFact(outcome.targetId),
+      abjureFoesVisibleWithinRangeFact(sourceProcedureRef, outcome.targetId),
     ),
   };
 }
 
 function abjureFoesVisibleWithinRangeFact(
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetId: CombatantId,
 ): BattleTargetSpatialFact {
   return {
     kind: "unitFeatureVisibleTargetWithinRange",
     actorId: spellCasterId,
     targetId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(paladinAbjureFoesUnitId),
-    ),
+    sourceProcedureRef,
     rangeFeet: movementFeet(60),
   };
 }
@@ -343,4 +342,3 @@ function requireAbjureFoesUnitRef(paladinLevel: ClassLevel) {
   expect(unitRef.right.supportProfiles).toContainEqual(support);
   return unitRef.right;
 }
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

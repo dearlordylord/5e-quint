@@ -1,4 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME alter_self
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-transformation-mode

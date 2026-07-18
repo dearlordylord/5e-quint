@@ -579,7 +579,7 @@ function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {
           },
         };
   return {
-    unitId: unit.id,
+    unit: unitLibrary.requireUnit(unit.id),
     supportProfiles: [
       {
         kind: "huntersPrey",
@@ -591,7 +591,7 @@ function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {
 
 function extraAttackUnitRef(): BattleUnitRef {
   return {
-    unitId: syntheticExtraAttackUnitId,
+    unit: unitLibrary.requireUnit(syntheticExtraAttackUnitId),
     supportProfiles: [
       {
         kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
