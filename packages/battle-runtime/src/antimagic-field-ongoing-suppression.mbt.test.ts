@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
@@ -66,6 +69,9 @@ import {
 const antimagicFieldAreaId = battleAreaId("focused-antimagic-field-area");
 const spiritualWeaponEffectId = battleSpellEffectOccurrenceId(
   "focused-antimagic-spiritual-weapon",
+);
+const spiritualWeaponEffectRef = battleActiveEffectExecutionRefForTest(
+  String(spiritualWeaponEffectId),
 );
 
 type AntimagicLastResult =
@@ -403,12 +409,12 @@ function antimagicProjection(
   const ongoingSpell = ongoingCaster.activeEffects.find(
     (effect) =>
       effect.kind === "spiritualWeapon" &&
-      effect.sourceEffectId === spiritualWeaponEffectId,
+      effect.effectRef === spiritualWeaponEffectRef,
   );
   const ongoingSpellRef = {
     kind: "spellActiveEffect" as const,
     activeEffectKind: "spiritualWeapon" as const,
-    sourceEffectId: spiritualWeaponEffectId,
+    effectRef: spiritualWeaponEffectRef,
   };
   const projection = {
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
@@ -467,7 +473,7 @@ function antimagicAffectedSpiritualWeapon(
     effect: {
       kind: "spellActiveEffect",
       activeEffectKind: "spiritualWeapon",
-      sourceEffectId: spiritualWeaponEffectId,
+      effectRef: spiritualWeaponEffectRef,
     },
     sourceKind,
   };
@@ -483,7 +489,7 @@ function assertSuppressionActiveEffectShape(
           {
             kind: "spellActiveEffect",
             activeEffectKind: "spiritualWeapon",
-            sourceEffectId: spiritualWeaponEffectId,
+            effectRef: spiritualWeaponEffectRef,
           },
         ]
       : [];
@@ -536,7 +542,7 @@ function spiritualWeaponActiveEffect(): Extract<
   }
   return {
     kind: "spiritualWeapon",
-    sourceEffectId: spiritualWeaponEffectId,
+    effectRef: spiritualWeaponEffectRef,
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),
     ),

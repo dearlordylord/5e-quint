@@ -28,6 +28,7 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 
 import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
@@ -181,10 +182,14 @@ function applyHeldLightEffect(
   if (caster === undefined) {
     return state;
   }
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    battleId: state.battleId,
+    owner: caster,
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
-      ...caster,
+      ...allocation.owner,
       activeEffects: [
         ...caster.activeEffects.filter(
           (effect) =>
@@ -196,6 +201,7 @@ function applyHeldLightEffect(
         ),
         {
           kind: "heldLight",
+          effectRef: allocation.effectRef,
           sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: actorId,
           brightRadiusFeet: invocation.light.brightRadiusFeet,

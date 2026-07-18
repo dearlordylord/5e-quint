@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-action-interdiction
@@ -49,7 +52,6 @@ import {
 import {
   battleAreaId,
   battleId,
-  battleSpellEffectOccurrenceId,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
   combatantId,
@@ -385,7 +387,7 @@ function spiritualWeaponActiveEffect(): Extract<
   }
   return {
     kind: "spiritualWeapon",
-    sourceEffectId: battleSpellEffectOccurrenceId(
+    effectRef: battleActiveEffectExecutionRefForTest(
       "antimagic-action-spiritual-weapon",
     ),
     sourceProcedureRef: battleProcedureExecutionRefForTest(

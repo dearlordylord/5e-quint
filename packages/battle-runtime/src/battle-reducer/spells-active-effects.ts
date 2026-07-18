@@ -41,10 +41,7 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
-import {
-  battleDancingLightId,
-  battleSpellEffectOccurrenceId,
-} from "../identity.ts";
+import { battleDancingLightId } from "../identity.ts";
 import type {
   BattleActiveEffectExecutionRef,
   BattleAreaId,
@@ -2072,6 +2069,10 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   if (caster === undefined) {
     return input.state;
   }
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    battleId: input.state.battleId,
+    owner: caster,
+  });
   const activeEffects = [
     ...caster.activeEffects.filter(
       (effect) =>
@@ -2083,13 +2084,9 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
     ),
     {
       kind: "spiritualWeapon" as const,
+      effectRef: allocation.effectRef,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
-      sourceEffectId: spiritualWeaponSpellEffectOccurrenceId(
-        input.state,
-        input.actorId,
-        input.invocation,
-      ),
       sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
       forcePositionId: input.forcePositionId,
       forceReachFeet: input.invocation.forceReachFeet,
@@ -2109,35 +2106,8 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
       },
     },
   ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
+  combatants.set(input.actorId, { ...allocation.owner, activeEffects });
   return { ...input.state, combatants };
-}
-
-function spiritualWeaponSpellEffectOccurrenceId(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "spiritualWeaponAttackProxy" }
-  >,
-) {
-  const prefix = `${actorId}:${invocation.spell.id}:spiritual-weapon:`;
-  const actor = state.combatants.get(actorId);
-  const nextOrdinal =
-    Math.max(
-      0,
-      ...(actor?.activeEffects.flatMap((effect) => {
-        if (
-          effect.kind !== "spiritualWeapon" ||
-          !effect.sourceEffectId.startsWith(prefix)
-        ) {
-          return [];
-        }
-        const ordinal = Number(effect.sourceEffectId.slice(prefix.length));
-        return Number.isInteger(ordinal) && ordinal > 0 ? [ordinal] : [];
-      }) ?? []),
-    ) + 1;
-  return battleSpellEffectOccurrenceId(`${prefix}${nextOrdinal}`);
 }
 
 export function repositionSpiritualWeaponAttackProxyEffect(input: {
@@ -2159,7 +2129,7 @@ export function repositionSpiritualWeaponAttackProxyEffect(input: {
     ...caster,
     activeEffects: caster.activeEffects.map((effect) =>
       effect.kind === "spiritualWeapon" &&
-      effect.sourceEffectId === input.invocation.activeEffect.sourceEffectId
+      effect.effectRef === input.invocation.activeEffect.effectRef
         ? { ...effect, forcePositionId: input.forcePositionId }
         : effect,
     ),
@@ -3382,7 +3352,7 @@ export function endHeldLightSpellEffect(
         (effect) =>
           !(
             effect.kind === "heldLight" &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+            effect.effectRef === invocation.sourceEffectRef &&
             effect.sourceCombatantId === actorId
           ),
       ),

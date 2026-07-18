@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
@@ -204,7 +207,9 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
             effect: {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
-              sourceEffectId: selectedActiveEffectId,
+              effectRef: battleActiveEffectExecutionRefForTest(
+                String(selectedActiveEffectId),
+              ),
             },
           },
         }),
@@ -376,7 +381,7 @@ function heatMetalObjectContactDamageEffect(input: {
 }): Extract<BattleActiveEffect, { readonly kind: "spellObjectContactDamage" }> {
   return {
     kind: "spellObjectContactDamage",
-    effectId: input.effectId,
+    effectRef: battleActiveEffectExecutionRefForTest(String(input.effectId)),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(heatMetalUnitId),
     ),
@@ -432,7 +437,8 @@ function hasActiveEffect(
     combatant.activeEffects.some(
       (effect) =>
         effect.kind === "spellObjectContactDamage" &&
-        effect.effectId === effectId,
+        effect.effectRef ===
+          battleActiveEffectExecutionRefForTest(String(effectId)),
     ),
   );
 }

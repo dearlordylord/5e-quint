@@ -1,7 +1,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING dispel_magic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Round } from "@dnd/shared/types";
 import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
@@ -716,9 +719,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             effect: {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
-              sourceEffectId: battleSpellEffectOccurrenceId(
-                selectedEffect.effectId,
-              ),
+              effectRef: selectedEffect.effectRef,
             },
           },
         }),
@@ -751,7 +752,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     expect(remaining).toHaveLength(1);
     expect(remaining?.[0]).toMatchObject({
       kind: "spellObjectContactDamage",
-      effectId: retainedEffect.effectId,
+      effectRef: retainedEffect.effectRef,
     });
   });
 
@@ -778,7 +779,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       effect: {
         kind: "spellActiveEffect" as const,
         activeEffectKind: "spiritualWeapon" as const,
-        sourceEffectId: effect.sourceEffectId,
+        effectRef: effect.effectRef,
       },
     };
 
@@ -938,7 +939,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       effect: {
         kind: "spellActiveEffect" as const,
         activeEffectKind: "spiritualWeapon" as const,
-        sourceEffectId: effect.sourceEffectId,
+        effectRef: effect.effectRef,
       },
     };
     const targetFill = ongoingSpellTargetFill({
@@ -1158,7 +1159,7 @@ function heatMetalObjectContactDamageEffect(input: {
   const sourceCombatantId = input.sourceCombatantId ?? spellCasterId;
   return {
     kind: "spellObjectContactDamage",
-    effectId: battleSpellEffectOccurrenceId(
+    effectRef: battleActiveEffectExecutionRefForTest(
       input.effectId ??
         `${sourceCombatantId}:${heatMetalUnitId}:${input.objectId}`,
     ),
@@ -1188,11 +1189,11 @@ function spiritualWeaponEffect(input: {
 }): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
   return {
     kind: "spiritualWeapon",
+    effectRef: battleActiveEffectExecutionRefForTest(input.sourceEffectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),
     ),
     sourceCombatantId: spellCasterId,
-    sourceEffectId: battleSpellEffectOccurrenceId(input.sourceEffectId),
     sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     forcePositionId: battleTablePositionId("dispel-spiritual-weapon-force"),
     forceReachFeet: movementFeet(5),

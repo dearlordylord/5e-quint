@@ -1283,7 +1283,7 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union(
       "spellObjectContactDamage",
       "spiritualWeapon",
     ),
-    sourceEffectId: BattleSpellEffectOccurrenceId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     kind: Schema.Literal("antimagicFieldAura"),
@@ -1302,7 +1302,7 @@ const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union(
       "spellObjectContactDamage",
       "spiritualWeapon",
     ),
-    sourceEffectId: BattleSpellEffectOccurrenceId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
 );
 
@@ -1369,10 +1369,9 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
       Schema.Struct({
         casterId: CombatantId,
         sourceProcedureRef: BattleProcedureExecutionRef,
-        requiresKnownWillingTarget: Schema.optionalWith(
-          Schema.Literal(true),
-          { exact: true },
-        ),
+        requiresKnownWillingTarget: Schema.optionalWith(Schema.Literal(true), {
+          exact: true,
+        }),
       }),
       { exact: true },
     ),
@@ -3088,7 +3087,7 @@ type BattleFillEncoded =
                   readonly activeEffectKind:
                     | "spellObjectContactDamage"
                     | "spiritualWeapon";
-                  readonly sourceEffectId: string;
+                  readonly effectRef: string;
                 }
               | {
                   readonly kind: "antimagicFieldAura";
@@ -3121,7 +3120,7 @@ type BattleFillEncoded =
                     readonly activeEffectKind:
                       | "spellObjectContactDamage"
                       | "spiritualWeapon";
-                    readonly sourceEffectId: string;
+                    readonly effectRef: string;
                   }
                 | {
                     readonly kind: "antimagicFieldAura";
@@ -3242,7 +3241,7 @@ type BattleFillEncoded =
                     readonly activeEffectKind:
                       | "spellObjectContactDamage"
                       | "spiritualWeapon";
-                    readonly sourceEffectId: string;
+                    readonly effectRef: string;
                   };
               readonly sourceKind: "ordinarySpell" | "artifact" | "deity";
             }[];
@@ -5439,7 +5438,7 @@ const BattleCreatureOriginSnapshotSchema = Schema.Union(
                 Schema.Struct({
                   invocationRef: SpellInvocationRefSchema,
                   kind: Schema.Literal("activeEffect"),
-                  effectId: Schema.String,
+                  effectRef: BattleActiveEffectExecutionRef,
                 }),
                 Schema.Struct({
                   invocationRef: SpellInvocationRefSchema,
@@ -6183,6 +6182,57 @@ function serializedAvailableActOwnsBoundProcedure(
       subject.procedureRef !== act.presentation.procedureRef)
   ) {
     return false;
+  }
+  if (act.presentation.kind === "spell") {
+    const binding = characterProcedureBinding(
+      combatants,
+      subject.actorId,
+      act.presentation.procedureRef,
+    );
+    if (
+      binding?.procedure.kind !== "spellInvocation" ||
+      !sameSpellInvocationRef(
+        supportedSpellInvocationRef(binding.procedure.invocation),
+        act.presentation.invocation,
+      )
+    ) {
+      return false;
+    }
+  }
+  if (
+    act.presentation.kind === "unit" ||
+    act.presentation.kind === "druidWildShapeForm"
+  ) {
+    const binding = characterProcedureBinding(
+      combatants,
+      subject.actorId,
+      act.presentation.procedureRef,
+    );
+    if (
+      (binding?.procedure.kind !== "unitFeature" &&
+        binding?.procedure.kind !== "unitSupportProfile") ||
+      binding.procedure.unitId !== act.presentation.unitId
+    ) {
+      return false;
+    }
+    if (act.presentation.kind === "druidWildShapeForm") {
+      const presentation = act.presentation;
+      const owner = combatants.find(
+        (combatant) => combatant.combatantId === subject.actorId,
+      );
+      if (
+        subject.tag !== "druidWildShape" ||
+        subject.action !== "assumeForm" ||
+        owner?.origin.kind !== "character" ||
+        !owner.origin.druidWildShapeAvailableForms.some(
+          (form) =>
+            form.statBlockId === presentation.formStatBlockId &&
+            form.execution.scopeRef === subject.formExecutionRef,
+        )
+      ) {
+        return false;
+      }
+    }
   }
   if (!("procedureRef" in subject)) return true;
   const procedureRef = subject.procedureRef;

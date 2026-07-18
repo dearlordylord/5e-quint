@@ -196,6 +196,7 @@ import type {
   BattleCharacterExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleDancingLightId,
+  BattleActiveEffectExecutionRef,
   BattleActiveEffectExecutionOrdinal,
   BattleLineDirectionId,
   BattleObjectId,
@@ -824,7 +825,7 @@ export type BattleOngoingSpellEffectRef =
   | {
       readonly kind: "spellActiveEffect";
       readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly effectRef: BattleActiveEffectExecutionRef;
     }
   | {
       readonly kind: "antimagicFieldAura";
@@ -3378,10 +3379,11 @@ export type OngoingSpellEndSpellInvocation = {
   readonly actionCost: "magicAction";
   readonly rangeFeet: MovementFeet;
 };
-export type HeldLightHurlSpellInvocation = DamageSpellSource & {
+export type HeldLightHurlSpellInvocation = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "heldLightHurl";
+  readonly sourceEffectRef: BattleActiveEffectExecutionRef;
   readonly spell: SpellRecord;
   readonly targeting: Extract<
     SpellTargeting,

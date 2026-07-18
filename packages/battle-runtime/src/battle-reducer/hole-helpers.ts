@@ -540,7 +540,7 @@ function activeAbilityCheckRollModeEffectMatches(
             !ongoingSpellEffectSuppressedByAntimagicField(state, {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
-              sourceEffectId: effect.sourceEffectId,
+              effectRef: effect.sourceEffectRef,
             }))) &&
         effect.mode === mode,
     ) ??
@@ -561,7 +561,7 @@ function activeAnyAbilityCheckRollModeEffectMatches(
         !ongoingSpellEffectSuppressedByAntimagicField(state, {
           kind: "spellActiveEffect",
           activeEffectKind: "spellObjectContactDamage",
-          sourceEffectId: effect.sourceEffectId,
+          effectRef: effect.sourceEffectRef,
         }) &&
         effect.mode === mode,
     ) ?? false

@@ -20,6 +20,7 @@ import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
   characterExecutionWithSpellInvocations,
+  characterSpellProcedure,
   characterSpellProcedureRef,
   characterUnitProcedureRefs,
 } from "./character-execution.ts";
@@ -210,23 +211,100 @@ function admitCharacterProcedureDiscoveryActs(
         );
         return admittedSubject === undefined
           ? []
-          : [
-              {
-                ...act,
-                subject: admittedSubject,
-                initialHoles: admissionBoundProcedureHoles(
-                  act.initialHoles,
-                  procedureRef,
-                ),
-                presentation: characterProcedurePresentation(
-                  subject,
-                  procedureRef,
-                ),
-              },
-            ];
+          : (() => {
+              const text = characterProcedurePresentationText(
+                state,
+                subject,
+                procedureRef,
+                { label: act.label, summary: act.summary },
+              );
+              return [
+                {
+                  ...act,
+                  label: text.label,
+                  summary: text.summary,
+                  subject: admittedSubject,
+                  initialHoles: admissionBoundProcedureHoles(
+                    act.initialHoles,
+                    procedureRef,
+                  ),
+                  presentation: characterProcedurePresentation(
+                    subject,
+                    procedureRef,
+                  ),
+                },
+              ];
+            })();
       },
     );
   });
+}
+
+function characterProcedurePresentationText(
+  state: BattleState,
+  subject: CharacterProcedureSelectionSubject,
+  procedureRef: BattleProcedureExecutionRef,
+  fallback: { readonly label: string; readonly summary: string },
+): { readonly label: string; readonly summary: string } {
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "character") return fallback;
+  if (
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "findFamiliarTouchSpell"
+  ) {
+    const invocation = characterSpellProcedure(
+      actor.origin.execution,
+      procedureRef,
+    );
+    if (invocation === undefined) return fallback;
+    return {
+      label: invocation.spell.name,
+      summary: `Use ${invocation.spell.name}.`,
+    };
+  }
+  if (subject.tag === "druidWildShape" && subject.action === "assumeForm") {
+    const form = actor.origin.druidWildShapeAvailableForms?.find(
+      (candidate) => candidate.statBlock.id === subject.formStatBlockId,
+    );
+    const profile = actor.origin.characterUnitRefs
+      .find((ref) => ref.unitId === subject.unitId)
+      ?.supportProfiles.find(
+        (candidate) => typeof candidate === "object" && "unit" in candidate,
+      );
+    if (
+      form === undefined ||
+      profile === undefined ||
+      typeof profile !== "object" ||
+      !("unit" in profile)
+    ) {
+      return fallback;
+    }
+    const label = `${profile.unit.name}: ${form.statBlock.statBlock.displayName}`;
+    return { label, summary: `Use ${label}.` };
+  }
+  const unitId =
+    subject.tag === "unitFeature" ||
+    subject.tag === "unitFeatureHeldWeaponActivation" ||
+    subject.tag === "druidWildShape"
+      ? subject.unitId
+      : subject.tag === "bonusActionStandardAction"
+        ? subject.sourceUnitId
+        : subject.resourceUnitId;
+  const profile = actor.origin.characterUnitRefs
+    .find((ref) => ref.unitId === unitId)
+    ?.supportProfiles.find(
+      (candidate) => typeof candidate === "object" && "unit" in candidate,
+    );
+  if (
+    profile === undefined ||
+    typeof profile !== "object" ||
+    !("unit" in profile)
+  ) {
+    return fallback;
+  }
+  return { label: profile.unit.name, summary: `Use ${profile.unit.name}.` };
 }
 
 function admissionBoundProcedureHoles(

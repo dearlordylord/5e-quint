@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION antimagic_field
@@ -10,6 +13,12 @@ import { describe, expect, test } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
+
+function effectRefForTest(
+  effectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
+) {
+  return battleActiveEffectExecutionRefForTest(String(effectId));
+}
 import {
   battleAreaId,
   battleObjectId,
@@ -271,7 +280,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "spellObjectContactDamage" &&
-            effect.effectId === sourceEffectId,
+            effect.effectRef === effectRefForTest(sourceEffectId),
         ),
     ).toBe(true);
     expect(
@@ -300,7 +309,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       ?.activeEffects.find(
         (effect) =>
           effect.kind === "spellObjectContactDamage" &&
-          effect.effectId === sourceEffectId,
+          effect.effectRef === effectRefForTest(sourceEffectId),
       );
     expect(tickedEffect).toMatchObject({
       kind: "spellObjectContactDamage",
@@ -345,7 +354,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "spiritualWeapon" &&
-            effect.sourceEffectId === sourceEffectId,
+            effect.effectRef === effectRefForTest(sourceEffectId),
         ),
     ).toBe(true);
     expect(maybeSpiritualWeaponRepeatAct(suppressed)).toBeUndefined();
@@ -372,7 +381,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       ?.activeEffects.find(
         (effect) =>
           effect.kind === "spiritualWeapon" &&
-          effect.sourceEffectId === sourceEffectId,
+          effect.effectRef === effectRefForTest(sourceEffectId),
       );
     expect(tickedEffect).toMatchObject({
       kind: "spiritualWeapon",
@@ -447,7 +456,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         ?.activeEffects.find(
           (effect) =>
             effect.kind === "spiritualWeapon" &&
-            effect.sourceEffectId === sourceEffectId,
+            effect.effectRef === effectRefForTest(sourceEffectId),
         ),
     ).toMatchObject({
       kind: "spiritualWeapon",
@@ -573,7 +582,7 @@ function antimagicAffectedSpellObjectContactDamage(
     effect: {
       kind: "spellActiveEffect",
       activeEffectKind: "spellObjectContactDamage",
-      sourceEffectId,
+      effectRef: effectRefForTest(sourceEffectId),
     },
     sourceKind,
   };
@@ -588,7 +597,7 @@ function antimagicAffectedSpiritualWeapon(
     effect: {
       kind: "spellActiveEffect",
       activeEffectKind: "spiritualWeapon",
-      sourceEffectId,
+      effectRef: effectRefForTest(sourceEffectId),
     },
     sourceKind,
   };
@@ -684,7 +693,7 @@ function heatMetalObjectContactDamageEffect(input: {
   }
   return {
     kind: "spellObjectContactDamage",
-    effectId: input.effectId,
+    effectRef: effectRefForTest(input.effectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(heatMetalUnitId),
     ),
@@ -718,7 +727,7 @@ function spiritualWeaponActiveEffect(input: {
   }
   return {
     kind: "spiritualWeapon",
-    sourceEffectId: input.effectId,
+    effectRef: effectRefForTest(input.effectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),
     ),

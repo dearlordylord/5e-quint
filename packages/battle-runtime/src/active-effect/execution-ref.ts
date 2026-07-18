@@ -16,7 +16,10 @@ export type ReplayAddressableSpellActiveEffect = Extract<
     readonly kind:
       | "commandPending"
       | "dragonsBreath"
+      | "heldLight"
       | "jumpMovementReplacement"
+      | "spellObjectContactDamage"
+      | "spiritualWeapon"
       | "possession"
       | "selfTransformation"
       | "spellCondition"

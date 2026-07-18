@@ -1,4 +1,4 @@
-import { Brand } from "effect";
+import { Brand, Schema } from "effect";
 import * as Either from "effect/Either";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
@@ -8,12 +8,14 @@ import {
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type {
   BattleCharacterExecutionScopeRef,
+  BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
   BattleId,
   CombatantId,
   BattleExecutionScopeOrdinal,
 } from "./identity.ts";
 import {
+  BattleActiveEffectExecutionRef as BattleActiveEffectExecutionRefSchema,
   battleCharacterExecutionScopeRef,
   battleProcedureExecutionRef,
 } from "./identity.ts";
@@ -125,7 +127,10 @@ export type SpellInvocationOccurrence = {
   readonly invocationRef: SpellInvocationRef;
 } & (
   | { readonly kind: "invocationRefOnly" }
-  | { readonly kind: "activeEffect"; readonly effectId: string }
+  | {
+      readonly kind: "activeEffect";
+      readonly effectRef: BattleActiveEffectExecutionRef;
+    }
   | { readonly kind: "componentWeapon"; readonly itemId: string }
   | { readonly kind: "attachedWeapon"; readonly itemId: string }
 );
@@ -443,9 +448,9 @@ function spellInvocationOccurrence(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationOccurrence {
   const invocationRef = supportedSpellInvocationRef(invocation);
-  const effectId = spellInvocationEffectOccurrenceId(invocation);
-  if (effectId !== undefined) {
-    return { invocationRef, kind: "activeEffect", effectId };
+  const effectRef = spellInvocationEffectExecutionRef(invocation);
+  if (effectRef !== undefined) {
+    return { invocationRef, kind: "activeEffect", effectRef };
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return {
@@ -478,7 +483,7 @@ function spellInvocationMatchesOccurrence(
   }
   if (occurrence.kind === "activeEffect") {
     return (
-      spellInvocationEffectOccurrenceId(invocation) === occurrence.effectId
+      spellInvocationEffectExecutionRef(invocation) === occurrence.effectRef
     );
   }
   if (occurrence.kind === "componentWeapon") {
@@ -496,28 +501,22 @@ function spellInvocationMatchesOccurrence(
   return (
     invocation.procedure !== "spellHostedWeaponAttack" &&
     invocation.procedure !== "weaponAttackOverride" &&
-    spellInvocationEffectOccurrenceId(invocation) === undefined
+    spellInvocationEffectExecutionRef(invocation) === undefined
   );
 }
 
-function spellInvocationEffectOccurrenceId(
+function spellInvocationEffectExecutionRef(
   invocation: SupportedSpellInvocation,
-): string | undefined {
+): BattleActiveEffectExecutionRef | undefined {
   if ("activeEffect" in invocation) {
     const activeEffect: unknown = invocation.activeEffect;
-    if (typeof activeEffect === "object" && activeEffect !== null) {
-      if (
-        "sourceEffectId" in activeEffect &&
-        typeof activeEffect.sourceEffectId === "string"
-      ) {
-        return activeEffect.sourceEffectId;
-      }
-      if (
-        "effectId" in activeEffect &&
-        typeof activeEffect.effectId === "string"
-      ) {
-        return activeEffect.effectId;
-      }
+    if (
+      typeof activeEffect === "object" &&
+      activeEffect !== null &&
+      "effectRef" in activeEffect &&
+      Schema.is(BattleActiveEffectExecutionRefSchema)(activeEffect.effectRef)
+    ) {
+      return activeEffect.effectRef;
     }
   }
   return undefined;

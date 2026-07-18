@@ -567,7 +567,7 @@ export function spellInvocationCasterPrerequisiteIsMet(
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "heldLight" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.effectRef === invocation.sourceEffectRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
     (invocation.procedure !== "spellCreatedHeldObjectAttack" ||
@@ -590,15 +590,14 @@ export function spellInvocationCasterPrerequisiteIsMet(
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "spellObjectContactDamage" &&
-          effect.effectId === invocation.activeEffect.effectId &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.effectRef === invocation.activeEffect.effectRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
     (invocation.procedure !== "spiritualWeaponRepeatAttack" ||
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "spiritualWeapon" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.effectRef === invocation.activeEffect.effectRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
     (invocation.procedure !== "dancingLightsReposition" ||

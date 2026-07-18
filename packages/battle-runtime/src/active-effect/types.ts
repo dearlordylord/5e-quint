@@ -291,22 +291,22 @@ export type SpellCreatedHeldObjectActiveEffect = BattleSpellEffectBase &
       { readonly kind: "concentration" }
     > & { readonly durationTicks: ElapsedTimeTicks };
   };
-export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
-  readonly kind: "spellObjectContactDamage";
-  readonly effectId: BattleSpellEffectOccurrenceId;
-  readonly sourceSpellLevel: BattleSpellEffectLevel;
-  readonly objectId: BattleObjectId;
-  readonly rangeFeet: MovementFeet;
-  readonly damage: {
-    readonly expr: DiceExpr;
-    readonly damageType: DamageType;
+export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase &
+  BattleReplayAddressableEffect & {
+    readonly kind: "spellObjectContactDamage";
+    readonly sourceSpellLevel: BattleSpellEffectLevel;
+    readonly objectId: BattleObjectId;
+    readonly rangeFeet: MovementFeet;
+    readonly damage: {
+      readonly expr: DiceExpr;
+      readonly damageType: DamageType;
+    };
+    readonly startedOn: BattleTurnAnchor;
+    readonly expiresAt: Extract<
+      BattleActiveEffectExpiration,
+      { readonly kind: "concentration" }
+    > & { readonly durationTicks: ElapsedTimeTicks };
   };
-  readonly startedOn: BattleTurnAnchor;
-  readonly expiresAt: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "concentration" }
-  > & { readonly durationTicks: ElapsedTimeTicks };
-};
 export type SpiritualWeaponRepeatTargeting =
   | { readonly kind: "unrestricted" }
   | {
@@ -319,24 +319,24 @@ type SpellConcentrationOrStoredDurationExpiration =
       { readonly kind: "concentration" }
     > & { readonly durationTicks: ElapsedTimeTicks })
   | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
-export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
-  readonly kind: "spiritualWeapon";
-  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-  readonly sourceSpellLevel: BattleSpellEffectLevel;
-  readonly forcePositionId: BattleTablePositionId;
-  readonly forceReachFeet: MovementFeet;
-  readonly repeatMoveMaxFeet: MovementFeet;
-  readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
-  readonly startedOn: BattleTurnAnchor;
-  readonly damage: {
-    readonly kind: "fixedSpellAttackDamage";
-    readonly expr: DiceExpr;
-    readonly damageType: DamageType;
+export type SpiritualWeaponActiveEffect = BattleSpellEffectBase &
+  BattleReplayAddressableEffect & {
+    readonly kind: "spiritualWeapon";
+    readonly sourceSpellLevel: BattleSpellEffectLevel;
+    readonly forcePositionId: BattleTablePositionId;
+    readonly forceReachFeet: MovementFeet;
+    readonly repeatMoveMaxFeet: MovementFeet;
+    readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
+    readonly startedOn: BattleTurnAnchor;
+    readonly damage: {
+      readonly kind: "fixedSpellAttackDamage";
+      readonly expr: DiceExpr;
+      readonly damageType: DamageType;
+    };
+    readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
+    readonly attackBonus: AttackBonus;
+    readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
   };
-  readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
-  readonly attackBonus: AttackBonus;
-  readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
-};
 export const SPELL_TURN_START_DAMAGE_AND_SAVE_SOURCES = [
   "afterHitTimedDamageAndSave",
   "turnBoundaryEffectLifecycle",
@@ -598,7 +598,7 @@ export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
 };
 export type ObjectContactPenaltyActiveEffect = BattleSpellEffectBase & {
   readonly kind: "selfAttackRollAndAbilityCheckRollMode";
-  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly sourceEffectRef: BattleActiveEffectExecutionRef;
   readonly mode: Extract<AttackRollMode, "disadvantage">;
   readonly expiresAt: Extract<
     BattleActiveEffectExpiration,
@@ -1302,12 +1302,13 @@ export type BattleActiveEffect =
         { readonly kind: "duration" }
       >;
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "heldLight";
-      readonly brightRadiusFeet: MovementFeet;
-      readonly dimAdditionalFeet: MovementFeet;
-      readonly expiresAt: BattleActiveEffectExpiration;
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "heldLight";
+        readonly brightRadiusFeet: MovementFeet;
+        readonly dimAdditionalFeet: MovementFeet;
+        readonly expiresAt: BattleActiveEffectExpiration;
+      })
   | SpellCreatedHeldObjectActiveEffect
   | SpellObjectContactDamageActiveEffect
   | SpiritualWeaponActiveEffect

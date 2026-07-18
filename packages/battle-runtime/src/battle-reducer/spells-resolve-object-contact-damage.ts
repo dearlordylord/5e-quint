@@ -11,12 +11,14 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
+import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
 import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
+  type BattleActiveEffect,
   type BattleCreatureState,
   type BattleDroppedObjectOutcome,
   type BattleHoleId,
@@ -32,10 +34,9 @@ import {
 } from "../battle-reducer.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
-  battleSpellEffectOccurrenceId,
+  type BattleActiveEffectExecutionRef,
   type BattleObjectId,
   type BattleProcedureExecutionRef,
-  type BattleSpellEffectOccurrenceId,
   type CombatantId,
 } from "../identity.ts";
 import {
@@ -1246,16 +1247,29 @@ function applyObjectContactPenalties(input: {
   if (input.targetIds.length === 0) {
     return input.state;
   }
-  const sourceEffectId = objectContactDamageEffectId({
-    actorId: input.actorId,
-    spellId: input.invocation.spell.id,
-    objectId: input.objectId,
-  });
+  const sourceEffectRef =
+    input.invocation.procedure === "objectContactDamageRepeat"
+      ? input.invocation.activeEffect.effectRef
+      : input.state.combatants
+          .get(input.actorId)
+          ?.activeEffects.find(
+            (
+              effect,
+            ): effect is Extract<
+              BattleActiveEffect,
+              { readonly kind: "spellObjectContactDamage" }
+            > =>
+              effect.kind === "spellObjectContactDamage" &&
+              effect.sourceProcedureRef === input.invocation.sourceProcedureRef,
+          )?.effectRef;
+  if (sourceEffectRef === undefined) {
+    return input.state;
+  }
   if (
     !objectContactDamageEffectIsActive({
       state: input.state,
       actorId: input.actorId,
-      effectId: sourceEffectId,
+      effectRef: sourceEffectRef,
     })
   ) {
     return input.state;
@@ -1268,7 +1282,7 @@ function applyObjectContactPenalties(input: {
     }
     const effect: ObjectContactPenaltyActiveEffect = {
       kind: "selfAttackRollAndAbilityCheckRollMode",
-      sourceEffectId,
+      sourceEffectRef,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       mode: "disadvantage",
@@ -1284,7 +1298,7 @@ function applyObjectContactPenalties(input: {
           (candidate) =>
             !(
               candidate.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-              candidate.sourceEffectId === effect.sourceEffectId
+              candidate.sourceEffectRef === effect.sourceEffectRef
             ),
         ),
         effect,
@@ -1297,14 +1311,14 @@ function applyObjectContactPenalties(input: {
 function objectContactDamageEffectIsActive(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly effectId: BattleSpellEffectOccurrenceId;
+  readonly effectRef: BattleActiveEffectExecutionRef;
 }): boolean {
   const actor = input.state.combatants.get(input.actorId);
   return (
     actor?.activeEffects.some(
       (effect) =>
         effect.kind === "spellObjectContactDamage" &&
-        effect.effectId === input.effectId,
+        effect.effectRef === input.effectRef,
     ) ?? false
   );
 }
@@ -1319,13 +1333,13 @@ function applyObjectContactDamageActiveEffect(input: {
   if (actor === undefined) {
     return input.state;
   }
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    battleId: input.state.battleId,
+    owner: actor,
+  });
   const effect = {
     kind: "spellObjectContactDamage" as const,
-    effectId: objectContactDamageEffectId({
-      actorId: input.actorId,
-      spellId: input.invocation.spell.id,
-      objectId: input.objectId,
-    }),
+    effectRef: allocation.effectRef,
     sourceProcedureRef: input.invocation.sourceProcedureRef,
     sourceCombatantId: input.actorId,
     sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
@@ -1345,29 +1359,19 @@ function applyObjectContactDamageActiveEffect(input: {
   return {
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.actorId, {
-      ...actor,
+      ...allocation.owner,
       activeEffects: [
         ...actor.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "spellObjectContactDamage" &&
-              candidate.effectId === effect.effectId
+              candidate.sourceProcedureRef === effect.sourceProcedureRef
             ),
         ),
         effect,
       ],
     }),
   };
-}
-
-function objectContactDamageEffectId(input: {
-  readonly actorId: CombatantId;
-  readonly spellId: string;
-  readonly objectId: BattleObjectId;
-}): BattleSpellEffectOccurrenceId {
-  return battleSpellEffectOccurrenceId(
-    `${input.actorId}:${input.spellId}:${input.objectId}`,
-  );
 }
 
 function finishObjectContactDamageResolution(input: {

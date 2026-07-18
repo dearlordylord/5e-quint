@@ -496,6 +496,7 @@ type SelectedCharacterProcedureInput =
 
 function selectCharacterProcedureForResolution(
   input: BattleResolutionInput,
+  refreshSpellBindings = true,
 ): SelectedCharacterProcedureInput {
   if (!isCharacterProcedureBattleSubject(input.subject)) {
     return {
@@ -509,10 +510,12 @@ function selectCharacterProcedureForResolution(
     return { tag: "invalid" };
   }
   let actor: CharacterBattleCreatureState = currentActor;
-  const execution = characterExecutionWithSpellInvocations(
-    actor.origin.execution,
-    supportedSpellActs(actor, input.state),
-  );
+  const execution = refreshSpellBindings
+    ? characterExecutionWithSpellInvocations(
+        actor.origin.execution,
+        supportedSpellActs(actor, input.state),
+      )
+    : actor.origin.execution;
   if (execution !== actor.origin.execution) {
     actor = { ...actor, origin: { ...actor.origin, execution } };
     input = {
@@ -5638,11 +5641,14 @@ export function resolveReplayContinuationFromState(
       fills,
     );
   }
-  const selected = selectCharacterProcedureForResolution({
-    state,
-    subject: continuation.subject,
-    fills,
-  });
+  const selected = selectCharacterProcedureForResolution(
+    {
+      state,
+      subject: continuation.subject,
+      fills,
+    },
+    false,
+  );
   if (selected.tag === "invalid") {
     return invalidResult(
       state,

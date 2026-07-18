@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
@@ -503,7 +506,8 @@ function dispelProjection(
     highLevelEffectActive: caster.activeEffects.some(
       (effect) =>
         effect.kind === "spellObjectContactDamage" &&
-        effect.effectId === highLevelEffectId,
+        effect.effectRef ===
+          battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
     ),
     antimagicAuraActive: requireCombatant(
       state.battle,
@@ -576,7 +580,7 @@ function highLevelObjectContactEffect(): Extract<
 > {
   return {
     kind: "spellObjectContactDamage",
-    effectId: highLevelEffectId,
+    effectRef: battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(heatMetalUnitId),
     ),
