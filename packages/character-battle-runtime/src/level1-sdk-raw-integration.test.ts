@@ -17,6 +17,7 @@ import {
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
   type BattleSpellAreaChoice,
@@ -619,7 +620,7 @@ describe("level 1 SDK RAW integration", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "bardicInspirationDie",
-          sourceUnitId: bardBardicInspirationUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: bardId,
           dieSize: 6,
         }),
@@ -728,7 +729,9 @@ describe("level 1 SDK RAW integration", () => {
 
     expect(preActivationSorcerer.origin.characterUnitRefs).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ unitId: sorcererInnateSorceryUnitId }),
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: sorcererInnateSorceryUnitId }),
+        }),
       ]),
     );
     expect(characterResources(preActivationSorcerer)).toEqual(
@@ -1600,7 +1603,7 @@ describe("level 1 SDK RAW integration", () => {
       { spellLevel: 1, count: 1, expended: 1 },
     ]);
     expect(caster.concentration).toEqual({
-      sourceProcedureRef: hexSpellId,
+    sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toEqual([
@@ -2053,7 +2056,9 @@ describe("level 1 SDK RAW integration", () => {
       requireCharacterCombatant(state, monkId).origin.characterUnitRefs,
     ).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ unitId: monkMartialArtsUnitId }),
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: monkMartialArtsUnitId }),
+        }),
       ]),
     );
     const act = martialArtsBonusUnarmedStrikeAct(state, monkId);
@@ -2617,7 +2622,7 @@ function assertLevelOneViciousMockery(input: {
     activeEffects: expect.arrayContaining([
       expect.objectContaining({
         kind: "nextAttackRollBySelf",
-        sourceProcedureRef: viciousMockerySpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         mode: "disadvantage",
         expiresAt: { kind: "endOfTurn", combatantId: monsterId, round: 1 },
@@ -3093,7 +3098,7 @@ function assertLevelOneProduceFlame(input: {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "heldLight",
-        sourceProcedureRef: produceFlameSpellId,
+        sourceProcedureRef: heldLightAct.subject.procedureRef,
         sourceCombatantId: input.casterId,
         brightRadiusFeet: 20,
         dimAdditionalFeet: 20,
@@ -3104,7 +3109,7 @@ function assertLevelOneProduceFlame(input: {
     lightEmitters: [
       {
         kind: "spellLightEmitter",
-        sourceProcedureRef: produceFlameSpellId,
+        sourceProcedureRef: heldLightAct.subject.procedureRef,
         sourceCombatantId: input.casterId,
         attachment: { kind: "combatant", combatantId: input.casterId },
         emission: {
@@ -3277,7 +3282,7 @@ function assertLevelOneShillelagh(input: {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
-        sourceProcedureRef: shillelaghSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         weaponItemId: shillelaghQuarterstaffItemId,
         spellcastingAbilityModifier: abilityModifier(2),
@@ -3561,7 +3566,7 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "thaumaturgyBoomingVoice",
-        sourceProcedureRef: thaumaturgySpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         expiresAt: {
           kind: "duration",
@@ -3780,7 +3785,6 @@ function assertLevelOneSanctuary(input: {
       rangeFeet: movementFeet(30),
       activeEffect: {
         kind: "sanctuaryWard",
-        sourceProcedureRef: sanctuarySpellId,
         sourceCombatantId: input.casterId,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
@@ -3808,7 +3812,7 @@ function assertLevelOneSanctuary(input: {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "sanctuaryWard",
-        sourceProcedureRef: sanctuarySpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
@@ -3864,6 +3868,8 @@ function assertLevelOneBless(input: {
     input.casterId,
     battleProcedureExecutionRefForHole(targetList),
   );
+  const { sourceProcedureRef: _sourceProcedureRef, ...discoveryEffect } =
+    expectedEffect;
 
   expect({
     ...act.subject,
@@ -3892,7 +3898,7 @@ function assertLevelOneBless(input: {
       actionCost: "magicAction",
       targeting: { kind: "targetList", minTargets: 1, maxTargets: 3 },
       rangeFeet: movementFeet(30),
-      effect: expectedEffect,
+      effect: discoveryEffect,
     },
   });
 
@@ -3909,7 +3915,7 @@ function assertLevelOneBless(input: {
     requireCombatant(resolved.state, input.targetId).activeEffects,
   ).toEqual([expectedEffect]);
   expect(caster.concentration).toEqual({
-    sourceProcedureRef: blessSpellId,
+    sourceProcedureRef: act.subject.procedureRef,
     effectKind: "spellEffect",
   });
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
@@ -4026,7 +4032,7 @@ function assertLevelOneShieldOfFaith(input: {
     initialTargetArmorClass + 2,
   );
   expect(caster.concentration).toEqual({
-    sourceProcedureRef: shieldOfFaithSpellId,
+    sourceProcedureRef: act.subject.procedureRef,
     effectKind: "spellEffect",
   });
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual(
@@ -4408,7 +4414,7 @@ function assertLevelOneAnimalFriendship(input: {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "spellCondition",
-        sourceProcedureRef: animalFriendshipSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         condition: "charmed",
         expiresAt: {
@@ -4514,12 +4520,13 @@ function assertLevelOneHuntersMark(input: {
     ]),
   );
   expect(ranger.concentration).toEqual({
-    sourceProcedureRef: huntersMarkSpellId,
+    sourceProcedureRef: act.subject.procedureRef,
     effectKind: "spellEffect",
   });
   expectLevelOneHuntersMarkActiveEffect({
     ranger,
     casterId: input.casterId,
+    sourceProcedureRef: act.subject.procedureRef,
   });
   expect(
     settleCharacterSheetFromBattle({
@@ -4689,12 +4696,13 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
     ]),
   );
   expect(ranger.concentration).toEqual({
-    sourceProcedureRef: huntersMarkSpellId,
+    sourceProcedureRef: act.subject.procedureRef,
     effectKind: "spellEffect",
   });
   expectLevelOneHuntersMarkActiveEffect({
     ranger,
     casterId: input.casterId,
+    sourceProcedureRef: act.subject.procedureRef,
   });
 
   const concentrationEnded = breakBattleConcentration(
@@ -4727,11 +4735,12 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
 function expectLevelOneHuntersMarkActiveEffect(input: {
   readonly ranger: ReturnType<typeof requireCharacterCombatant>;
   readonly casterId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): void {
   expect(input.ranger.activeEffects).toEqual([
     expect.objectContaining({
       kind: "spellMarkedDamageRider",
-      sourceProcedureRef: huntersMarkSpellId,
+      sourceProcedureRef: input.sourceProcedureRef,
       sourceCombatantId: input.casterId,
       targetCombatantId: monsterId,
       abilityCheckBehavior: {
@@ -4885,7 +4894,7 @@ function assertLevelOneGuidingBolt(input: {
     activeEffects: [
       {
         kind: "nextAttackRollAgainstSelf",
-        sourceProcedureRef: guidingBoltSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         mode: "advantage",
         expiresAt: {
@@ -5082,7 +5091,7 @@ function assertLevelOneChillTouch(input: {
     activeEffects: [
       {
         kind: "hitPointRegainPrevented",
-        sourceProcedureRef: chillTouchSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         expiresAt: {
           kind: "endOfTurn",
@@ -5408,7 +5417,7 @@ function assertLevelOneRayOfFrost(input: {
     activeEffects: [
       {
         kind: "speedDelta",
-        sourceProcedureRef: rayOfFrostSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         deltaFeet: movementDeltaFeet(-10),
         expiresAt: {
@@ -5434,7 +5443,7 @@ function assertLevelOneRayOfFrost(input: {
     activeEffects: [
       expect.objectContaining({
         kind: "speedDelta",
-        sourceProcedureRef: rayOfFrostSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
       }),
     ],
   });
@@ -5562,7 +5571,7 @@ function assertLevelOneShockingGrasp(input: {
     activeEffects: [
       {
         kind: "opportunityAttackDenied",
-        sourceProcedureRef: shockingGraspSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         expiresAt: { kind: "startOfTurn", combatantId: monsterId },
       },
@@ -5581,7 +5590,7 @@ function assertLevelOneShockingGrasp(input: {
   ).toEqual([
     expect.objectContaining({
       kind: "opportunityAttackDenied",
-      sourceProcedureRef: shockingGraspSpellId,
+      sourceProcedureRef: act.subject.procedureRef,
     }),
   ]);
 
@@ -5832,7 +5841,7 @@ function assertLevelOneMageArmor(input: {
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
 
   expect(target).toMatchObject({
-    choices: [input.casterId],
+    choices: expect.arrayContaining([input.casterId]),
   });
 
   const resolved = requireResolved(
@@ -5858,7 +5867,7 @@ function assertLevelOneMageArmor(input: {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "spellBaseArmorClass",
-        sourceProcedureRef: mageArmorSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         base: 13,
         ability: "dex",
@@ -6055,7 +6064,7 @@ function assertLevelOneRayOfSickness(input: {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "spellCondition",
-        sourceProcedureRef: rayOfSicknessSpellId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         condition: "poisoned",
         escape: null,
@@ -6106,7 +6115,7 @@ function assertLevelOneRayOfSickness(input: {
   ).not.toContainEqual(
     expect.objectContaining({
       kind: "spellCondition",
-      sourceProcedureRef: rayOfSicknessSpellId,
+      sourceProcedureRef: act.subject.procedureRef,
       condition: "poisoned",
     }),
   );

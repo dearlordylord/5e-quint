@@ -526,6 +526,12 @@ function spellInvocationMatchesOccurrence(
 function spellInvocationEffectExecutionRef(
   invocation: SupportedSpellInvocation,
 ): BattleActiveEffectExecutionRef | undefined {
+  if (
+    "activeEffectRef" in invocation &&
+    Schema.is(BattleActiveEffectExecutionRefSchema)(invocation.activeEffectRef)
+  ) {
+    return invocation.activeEffectRef;
+  }
   if ("activeEffect" in invocation) {
     const activeEffect: unknown = invocation.activeEffect;
     if (

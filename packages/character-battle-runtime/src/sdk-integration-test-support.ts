@@ -118,6 +118,12 @@ export function battleProcedureExecutionRefForHole(
   }
   if ("sourceProcedureRef" in hole) return hole.sourceProcedureRef;
   if (
+    hole.kind === "targetChoice" &&
+    hole.spellTargetSpatialFactRequest !== undefined
+  ) {
+    return hole.spellTargetSpatialFactRequest.sourceProcedureRef;
+  }
+  if (
     "spell" in hole &&
     typeof hole.spell === "object" &&
     hole.spell !== null &&
