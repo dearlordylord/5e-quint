@@ -228,6 +228,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           target,
           facts: [
             ongoingSpellTargetWithinRangeFact({
+              sourceProcedureRef: targetHole.procedureRef,
               target: { kind: "object", objectId: otherObjectId },
             }),
           ],
@@ -243,6 +244,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           target,
           facts: [
             ongoingSpellTargetWithinRangeFact({
+              sourceProcedureRef: targetHole.procedureRef,
               target,
               rangeFeet: movementFeet(121),
             }),
@@ -296,9 +298,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         dc: 14,
         spellcastingAbilityCheck: expect.objectContaining({
           casterId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(dispelMagicUnitId),
-          ),
+          sourceProcedureRef: targetHole.procedureRef,
           contestedSpellLevel: 4,
         }),
       }),
@@ -656,9 +656,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       state: {
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(retainedEmitter.sourceProcedureRef),
-            ),
+            sourceProcedureRef: retainedEmitter.sourceProcedureRef,
           }),
         ],
       },
@@ -1436,21 +1434,23 @@ function ongoingSpellTargetFill(input: {
     holeId: input.hole.holeId,
     value: input.target,
     spatialFacts: input.facts ?? [
-      ongoingSpellTargetWithinRangeFact({ target: input.target }),
+      ongoingSpellTargetWithinRangeFact({
+        sourceProcedureRef: input.hole.procedureRef,
+        target: input.target,
+      }),
     ],
   };
 }
 
 function ongoingSpellTargetWithinRangeFact(input: {
+  readonly sourceProcedureRef: OngoingSpellTargetWithinRangeFact["sourceProcedureRef"];
   readonly target: OngoingSpellTarget;
   readonly rangeFeet?: ReturnType<typeof movementFeet>;
 }): OngoingSpellTargetWithinRangeFact {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(dispelMagicUnitId),
-    ),
+    sourceProcedureRef: input.sourceProcedureRef,
     target: input.target,
     rangeFeet: input.rangeFeet ?? movementFeet(120),
   };

@@ -3212,7 +3212,7 @@ function assertLevelOneProduceFlame(input: {
     requireCombatant(resolved.state, input.casterId).activeEffects.some(
       (effect) =>
         effect.kind === "heldLight" &&
-        effect.sourceProcedureRef === produceFlameSpellId,
+        effect.sourceProcedureRef === heldLightAct.subject.procedureRef,
     ),
   ).toBe(false);
   expect(snapshotBattle(resolved.state).lightEmitters).toEqual([]);

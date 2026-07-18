@@ -5,8 +5,15 @@ import type {
   AdminMirrorProjectionEnvelope,
   AdminSessionProjection,
 } from "./admin-mirror-contract.ts";
-import type { BattleActPresentation } from "@dnd/battle-runtime";
-import { Match } from "effect";
+import { battleActTimelineLabel } from "./battle-act-timeline-label.ts";
+import {
+  hasFillKind,
+  recordOf,
+  stringField,
+  targetIdFromFills,
+} from "./admin-mirror-presentation-input.ts";
+
+export { battleActTimelineLabel } from "./battle-act-timeline-label.ts";
 
 type EventAction = {
   readonly detail: string;
@@ -427,68 +434,4 @@ function battleSummary(
     round: battle.round,
     turnOrder: battle.turnOrder,
   };
-}
-
-function targetIdFromFills(fills: readonly unknown[]): string | null {
-  for (const fill of fills) {
-    const record = recordOf(fill);
-    if (record.kind === "targetChoice") return stringField(record, "value");
-    if (record.kind === "spellTargetAllocation") {
-      const value = recordOf(record.value);
-      const allocations = Array.isArray(value.allocations)
-        ? value.allocations
-        : [];
-      return stringField(recordOf(allocations[0]), "targetId");
-    }
-  }
-  return null;
-}
-
-function hasFillKind(fills: readonly unknown[], kind: string): boolean {
-  return fills.some((fill) => recordOf(fill).kind === kind);
-}
-
-export function battleActTimelineLabel(
-  presentation: BattleActPresentation,
-  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
-): string | null {
-  return Match.value(presentation).pipe(
-    Match.when({ kind: "intrinsic" }, () => null),
-    Match.when({ kind: "spell" }, ({ invocation }) =>
-      selectedContent?.kind === "spell" &&
-      selectedContent.id === invocation.spellId
-        ? selectedContent.name
-        : null,
-    ),
-    Match.when({ kind: "unit" }, ({ unitId }) => {
-      if (selectedContent === null || selectedContent.id !== unitId)
-        return null;
-      return "syntheticLabel" in selectedContent
-        ? selectedContent.syntheticLabel
-        : selectedContent.kind === "statBlock"
-          ? null
-          : selectedContent.name;
-    }),
-    Match.when({ kind: "druidWildShapeForm" }, ({ formStatBlockId }) =>
-      selectedContent?.kind === "statBlock" &&
-      selectedContent.id === formStatBlockId
-        ? selectedContent.name
-        : null,
-    ),
-    Match.exhaustive,
-  );
-}
-
-function recordOf(value: unknown): Readonly<Record<string, unknown>> {
-  return value !== null && typeof value === "object"
-    ? (value as Readonly<Record<string, unknown>>)
-    : {};
-}
-
-function stringField(
-  value: Readonly<Record<string, unknown>>,
-  key: string,
-): string | null {
-  const field = value[key];
-  return typeof field === "string" ? field : null;
 }

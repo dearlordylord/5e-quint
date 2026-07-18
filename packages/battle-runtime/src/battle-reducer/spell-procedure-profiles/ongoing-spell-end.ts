@@ -291,7 +291,7 @@ type OngoingSpellEndDispelException =
 function ongoingSpellTargetChoiceHole(
   state: BattleState,
   casterId: CombatantId,
-  invocation: OngoingSpellEndInvocation,
+  invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>,
 ): BattleOngoingSpellTargetChoiceHole {
   return {
     holeInstanceKey: ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE,
@@ -300,6 +300,7 @@ function ongoingSpellTargetChoiceHole(
     label: `${invocation.spell.name} target`,
     requiresTableSpatialFact: true,
     casterId,
+    procedureRef: invocation.sourceProcedureRef,
     spellId: invocation.spell.id,
     rangeFeet: invocation.rangeFeet,
     choices: ongoingSpellTargetChoices(state),

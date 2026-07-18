@@ -1457,6 +1457,7 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
     label: Schema.String,
     requiresTableSpatialFact: Schema.Literal(true),
     casterId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
     spellId: Schema.String,
     rangeFeet: MovementFeet,
     choices: Schema.Array(BattleOngoingSpellTargetSchema),

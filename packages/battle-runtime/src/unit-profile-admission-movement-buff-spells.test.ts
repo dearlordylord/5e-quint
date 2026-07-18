@@ -170,7 +170,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
         subject: laterDashAct.subject,
         fills: [],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
     const dashed = resolveBattleSubject({
       state: nextCasterTurn.state,

@@ -392,6 +392,7 @@ function bonusActionStandardActionProcedure(
   subject: BonusActionStandardActionBattleResolutionInput["subject"],
 ):
   | { readonly kind: "spell" }
+  | { readonly kind: "staleSpell" }
   | { readonly kind: "unit"; readonly unitId: UnitRecord["id"] }
   | undefined {
   if (!isCharacterBattleCreatureState(actor)) return undefined;
@@ -401,17 +402,18 @@ function bonusActionStandardActionProcedure(
   );
   if (
     binding?.procedure.kind === "spellInvocation" &&
-    binding.procedure.invocation.procedure === "expeditiousRetreatDash" &&
-    "sourceEffectRef" in subject &&
-    actor.activeEffects.some(
+    binding.procedure.invocation.procedure === "expeditiousRetreatDash"
+  ) {
+    return "sourceEffectRef" in subject &&
+      actor.activeEffects.some(
       (effect) =>
         effect.kind === "spellDashBonusAction" &&
         effect.effectRef === subject.sourceEffectRef &&
         effect.sourceProcedureRef === subject.procedureRef &&
         effect.sourceCombatantId === actor.combatantId,
-    )
-  ) {
-    return { kind: "spell" };
+      )
+      ? { kind: "spell" }
+      : { kind: "staleSpell" };
   }
   return binding?.procedure.kind === "unitFeature" ||
     binding?.procedure.kind === "unitSupportProfile"
@@ -424,6 +426,13 @@ export function resolveBonusActionStandardAction(
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
   const procedure = bonusActionStandardActionProcedure(actor, input.subject);
+  if (procedure?.kind === "staleSpell") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The spell effect that granted this Bonus Action is no longer active.",
+    );
+  }
   if (
     (procedure?.kind !== "unit" ||
       !actorHasAlternateActionCost(

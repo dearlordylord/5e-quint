@@ -37,7 +37,10 @@ export type {
   CharacterExecutionState,
   CharacterProcedureBinding,
 } from "./character-execution.ts";
-export { characterProcedureBinding } from "./character-execution.ts";
+export {
+  characterProcedureBinding,
+  characterProcedureBindingSnapshots,
+} from "./character-execution.ts";
 export type {
   StatBlockExecutionAdmission,
   StatBlockExecutionRestoreIssue,

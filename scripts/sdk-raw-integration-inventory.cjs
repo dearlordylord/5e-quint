@@ -3631,7 +3631,7 @@ const seededSdkScenarioRows = [
         needles: [
           "resolveWeaponAttackMiss({",
           'source: "classFeatureExtraAttack"',
-          "unitId: input.sourceUnitId",
+          "unit: expect.objectContaining({ id: input.sourceUnitId })",
         ],
       },
     ],
@@ -3676,7 +3676,7 @@ const seededSdkScenarioRows = [
         needles: [
           "resolveWeaponAttackMiss({",
           'source: "classFeatureExtraAttack"',
-          "unitId: input.sourceUnitId",
+          "unit: expect.objectContaining({ id: input.sourceUnitId })",
         ],
       },
     ],
@@ -3696,7 +3696,7 @@ const seededSdkScenarioRows = [
         needles: [
           "resolveWeaponAttackMiss({",
           'source: "classFeatureExtraAttack"',
-          "unitId: input.sourceUnitId",
+          "unit: expect.objectContaining({ id: input.sourceUnitId })",
         ],
       },
     ],
@@ -3716,7 +3716,7 @@ const seededSdkScenarioRows = [
         needles: [
           "resolveWeaponAttackMiss({",
           'source: "classFeatureExtraAttack"',
-          "unitId: input.sourceUnitId",
+          "unit: expect.objectContaining({ id: input.sourceUnitId })",
         ],
       },
     ],

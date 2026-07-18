@@ -97716,7 +97716,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "unitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],
@@ -97771,7 +97771,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "unitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],
@@ -97796,7 +97796,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "unitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],
@@ -97821,7 +97821,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "unitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],

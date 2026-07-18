@@ -6759,6 +6759,7 @@ export type BattleOngoingSpellTargetChoiceHole = {
   readonly label: string;
   readonly requiresTableSpatialFact: true;
   readonly casterId: CombatantId;
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly spellId: SpellRecord["id"];
   readonly rangeFeet: MovementFeet;
   readonly choices: readonly BattleOngoingSpellTarget[];

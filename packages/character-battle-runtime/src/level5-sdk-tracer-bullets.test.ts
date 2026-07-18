@@ -11,6 +11,7 @@ import {
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   combatantId,
   characterProcedureBinding,
+  characterProcedureBindingSnapshots,
   discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
@@ -24,6 +25,7 @@ import {
   type BattleHole,
   type BattleInterruptProcedureChoice,
   type BattleObjectIgnitionDisposition,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
@@ -567,13 +569,22 @@ describe("level 5 SDK tracer bullets", () => {
     );
     const monk = requireCharacterCombatant(resolved.state, monkId);
     const targetAfterStrike = requireCombatant(resolved.state, monsterId);
+    const stunningStrikeProcedureRef =
+      characterProcedureBindingSnapshots(monk.origin.execution).find(
+        (binding) =>
+          binding.procedure.kind === "unitSupportProfile" &&
+          binding.procedure.unitId === monkStunningStrikeUnitId &&
+          binding.procedure.supportKind === "stunningStrike",
+      )?.procedureRef;
+
+    expect(stunningStrikeProcedureRef).toBeDefined();
 
     expect(hasCondition(targetAfterStrike.conditions, "stunned")).toBe(true);
     expect(targetAfterStrike.activeEffects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "unitFeatureCondition",
-          sourceUnitId: monkStunningStrikeUnitId,
+          sourceProcedureRef: stunningStrikeProcedureRef,
           sourceCombatantId: monkId,
           condition: "stunned",
           expiresAt: { kind: "startOfTurn", combatantId: monkId },
@@ -761,7 +772,7 @@ describe("level 5 SDK tracer bullets", () => {
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: rogueUncannyDodgeUnitId,
+          unit: expect.objectContaining({ id: rogueUncannyDodgeUnitId }),
           supportProfiles: expect.arrayContaining([
             REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
           ]),
@@ -928,21 +939,21 @@ describe("level 5 SDK tracer bullets", () => {
         expect.arrayContaining([
           expect.objectContaining({
             kind: "speedRatio",
-            sourceProcedureRef: hasteSpellId,
+            sourceProcedureRef: act.subject.procedureRef,
           }),
           expect.objectContaining({
             kind: "spellArmorClassBonus",
-            sourceProcedureRef: hasteSpellId,
+            sourceProcedureRef: act.subject.procedureRef,
           }),
           expect.objectContaining({
             kind: "savingThrowRollMode",
-            sourceProcedureRef: hasteSpellId,
+            sourceProcedureRef: act.subject.procedureRef,
             ability: "dex",
             mode: "advantage",
           }),
           expect.objectContaining({
             kind: "spellGrantedActionResource",
-            sourceProcedureRef: hasteSpellId,
+            sourceProcedureRef: act.subject.procedureRef,
           }),
         ]),
       );
@@ -986,7 +997,7 @@ describe("level 5 SDK tracer bullets", () => {
         lethargic.activeEffects.some(
           (effect) =>
             effect.kind === "spellGrantedActionResource" &&
-            effect.sourceProcedureRef === hasteSpellId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
       ).toBe(false);
     }
@@ -1031,7 +1042,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "damageResistance",
-          sourceProcedureRef: protectionFromEnergySpellId,
+          sourceProcedureRef: matching.sourceProcedureRef,
           sourceCombatantId: wizardId,
           damageType: "fire",
         }),
@@ -1256,14 +1267,14 @@ describe("level 5 SDK tracer bullets", () => {
       );
 
       expect(entrySave).toMatchObject({
-        label: "sleet_storm entry DEX save",
+        label: "Entry DEX save",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
         sleetStormAreaHazard: {
           trigger: "entersArea",
           areaId: sleetStormAreaId,
           sourceCombatantId: sleetStormCase.casterId,
-          sourceProcedureRef: sleetStormSpellId,
+          sourceProcedureRef: sleetStormProcedureRef,
         },
       });
 
@@ -1451,7 +1462,7 @@ describe("level 5 SDK tracer bullets", () => {
 
       expect(caster).toMatchObject({
         concentration: {
-          sourceProcedureRef: slowSpellId,
+          sourceProcedureRef: act.subject.procedureRef,
           effectKind: "spellEffect",
         },
       });
@@ -1467,7 +1478,7 @@ describe("level 5 SDK tracer bullets", () => {
         expect.arrayContaining([
           expect.objectContaining({
             kind: "slowActivePenalties",
-            sourceProcedureRef: slowSpellId,
+            sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: slowCase.casterId,
             save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
             expiresAt: {
@@ -1838,7 +1849,7 @@ describe("level 5 SDK tracer bullets", () => {
           kind: "startsBurning",
           objectId: fireballObjectId,
           sourceCombatantId: fireballCase.casterId,
-          sourceProcedureRef: fireballSpellId,
+          sourceProcedureRef: act.subject.procedureRef,
         },
       ]);
       expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
@@ -1943,7 +1954,7 @@ describe("level 5 SDK tracer bullets", () => {
         expect.arrayContaining([
           expect.objectContaining({
             kind: "specialSpeedGrant",
-            sourceProcedureRef: flySpellId,
+            sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: flyCase.casterId,
             speedKind: "fly",
             speed: { kind: "fixed", speedFeet: movementFeet(flySpeedFeet) },
@@ -2128,7 +2139,7 @@ describe("level 5 SDK tracer bullets", () => {
         expect.arrayContaining([
           expect.objectContaining({
             kind: "hypnoticPatternControl",
-            sourceProcedureRef: hypnoticPatternSpellId,
+            sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: hypnoticPatternCase.casterId,
           }),
         ]),
@@ -3231,21 +3242,37 @@ function startCounterspellableMagicMissile(input: {
     act.initialHoles,
     "spellTargetAllocation",
   );
+  const allocationFill = magicMissileTargetAllocationFill({
+    hole: allocation,
+    casterId: input.casterId,
+    targetId: input.targetId,
+    dartCount: allocation.allocationCount,
+  });
+  const reactor = requireCharacterCombatant(input.state, input.reactorId);
+  const counterspellProcedureRef = characterProcedureBindingSnapshots(
+    reactor.origin.execution,
+  ).find(
+    (binding) =>
+      binding.procedure.kind === "spellInvocation" &&
+      binding.procedure.invocation.procedure === "counterspell" &&
+      binding.procedure.invocation.spell.id === counterspellSpellId &&
+      binding.procedure.invocation.resource.tag === "spellSlot" &&
+      Number(binding.procedure.invocation.resource.slotLevel) ===
+        counterspellCastLevel,
+  )?.procedureRef;
+  if (counterspellProcedureRef === undefined) {
+    throw new Error("Expected admitted Counterspell execution binding.");
+  }
   const result = resolveBattleSubject({
     state: input.state,
     subject: act.subject,
     fills: [
-      magicMissileTargetAllocationFill({
-        hole: allocation,
-        casterId: input.casterId,
-        targetId: input.targetId,
-        dartCount: allocation.allocationCount,
-      }),
+      allocationFill,
       spellCastReactionFactsFill([
         counterspellTriggerFact({
           reactorId: input.reactorId,
           casterId: input.casterId,
-          sourceProcedureRef: battleProcedureExecutionRefForHole(allocation),
+          sourceProcedureRef: counterspellProcedureRef,
         }),
       ]),
     ],
@@ -3459,6 +3486,7 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
   readonly protectedTarget: BattleCreatureState;
   readonly beforeDamageHp: Hp;
   readonly afterDamageHp: Hp;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 } {
   const state = battleFromSheets({
     battleIdText: `battle:l5-tracer-protection-from-energy-${damageType}`,
@@ -3552,6 +3580,7 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
     protectedTarget: requireCombatant(cast.state, wardedId),
     beforeDamageHp,
     afterDamageHp: requireCombatant(resolved.state, wardedId).hp,
+    sourceProcedureRef: act.subject.procedureRef,
   };
 }
 
@@ -3596,7 +3625,7 @@ function assertLevelFiveFastMovementHandoff(input: {
   ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        unitId: input.sourceUnitId,
+        unit: expect.objectContaining({ id: input.sourceUnitId }),
         supportProfiles: expect.arrayContaining([
           expect.objectContaining({
             kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
@@ -3689,7 +3718,7 @@ function assertLevelFiveExtraAttackHandoff(input: {
   ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        unitId: input.sourceUnitId,
+        unit: expect.objectContaining({ id: input.sourceUnitId }),
         supportProfiles: expect.arrayContaining([
           expect.objectContaining({
             kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
