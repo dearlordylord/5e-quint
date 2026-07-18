@@ -1681,7 +1681,7 @@ function boundCharacterProcedureSelectionForTest(
       : battleActSpellPresentation(selectedSpellAct)?.procedureRef;
   return procedureRef === undefined
     ? selection
-    : ({ ...selection, procedureRef } as CharacterProcedureSelectionSubject);
+    : { ...selection, procedureRef };
 }
 
 export function findAct(
@@ -1721,7 +1721,10 @@ function resolveBattleSubject(
     boundSelection.procedureRef !== undefined
       ? (() => {
           const { invocation: _invocation, ...replaySubject } = boundSelection;
-          return replaySubject as BattleSubject;
+          return {
+            ...replaySubject,
+            procedureRef: boundSelection.procedureRef,
+          };
         })()
       : isCharacterProcedureSelectionSubject(boundSelection)
         ? admitCharacterProcedureSelectionSubject(input.state, boundSelection)

@@ -798,15 +798,15 @@ export function activeSpellWeaponDamageRiders(
 
 export function activeMarkedDamageRiderEffect(
   attacker: BattleCreatureState | undefined,
-  effectRef?: BattleActiveEffectExecutionRef,
+  effectRef: BattleActiveEffectExecutionRef,
 ): SpellMarkedDamageRider | null {
-  const effects =
-    attacker?.activeEffects.filter(
+  return (
+    attacker?.activeEffects.find(
       (effect): effect is SpellMarkedDamageRider =>
         effect.kind === "spellMarkedDamageRider" &&
-        (effectRef === undefined || effect.effectRef === effectRef),
-    ) ?? [];
-  return effects[0] ?? null;
+        effect.effectRef === effectRef,
+    ) ?? null
+  );
 }
 
 export function activeMarkedDamageRiders(

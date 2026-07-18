@@ -1125,10 +1125,14 @@ export function applyDancingLightsSpellEffect(
   if (dancingLights === null) {
     return state;
   }
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    battleId: state.battleId,
+    owner: caster,
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
-      ...caster,
+      ...allocation.owner,
       activeEffects: [
         ...caster.activeEffects.filter(
           (effect) =>
@@ -1140,6 +1144,7 @@ export function applyDancingLightsSpellEffect(
         ),
         {
           kind: "dancingLights",
+          effectRef: allocation.effectRef,
           sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: actorId,
           expiresAt: invocation.expiresAt,
@@ -1173,8 +1178,7 @@ export function repositionDancingLightsSpellEffect(
       activeEffects: caster.activeEffects.flatMap((effect) => {
         if (
           effect.kind !== "dancingLights" ||
-          effect.sourceProcedureRef !==
-            invocation.activeEffect.sourceProcedureRef ||
+          effect.effectRef !== invocation.activeEffectRef ||
           effect.sourceCombatantId !== actorId
         ) {
           return [effect];

@@ -1234,15 +1234,15 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         Schema.Schema<SupportedSpellInvocation>,
         ...Schema.Schema<SupportedSpellInvocation>[],
       ];
-    return Schema.Union(...supportedSpellInvocationSchemas).annotations({
-      identifier: "SupportedSpellInvocation",
-    });
+    return Schema.Union(...supportedSpellInvocationSchemas);
+  }).annotations({
+    identifier: "SupportedSpellInvocation",
   }) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
 const BattleExecutableSpellInvocationSchema = Schema.extend(
   SupportedSpellInvocationSchema,
   Schema.Struct({ sourceProcedureRef: BattleProcedureExecutionRef }),
-);
+).annotations({ identifier: "BattleExecutableSpellInvocation" });
 
 const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({
   targetId: CombatantId,

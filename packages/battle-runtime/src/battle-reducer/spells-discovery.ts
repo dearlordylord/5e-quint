@@ -604,8 +604,7 @@ export function spellInvocationCasterPrerequisiteIsMet(
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "dancingLights" &&
-          effect.sourceProcedureRef ===
-            invocation.activeEffect.sourceProcedureRef &&
+          effect.effectRef === invocation.activeEffectRef &&
           effect.sourceCombatantId === actor.combatantId,
       ))
   );

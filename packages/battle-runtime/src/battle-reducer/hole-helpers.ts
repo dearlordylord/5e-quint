@@ -23,7 +23,11 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import {
   battleSubjectForReplay,
   type BattleMovementSpeedKind,
@@ -935,6 +939,7 @@ export function bonusActionStandardActionActs(
                 tag: "bonusActionStandardAction",
                 actorId,
                 sourceProcedureRef: entry.source.procedureRef,
+                sourceEffectRef: entry.source.effectRef,
                 action: "dash",
                 speedKind,
               },
@@ -994,6 +999,7 @@ export function alternateActionCostProfilesForActor(
     | {
         readonly kind: "spellEffect";
         readonly procedureRef: BattleProcedureExecutionRef;
+        readonly effectRef: BattleActiveEffectExecutionRef;
       };
   readonly profile: Extract<
     BattleUnitSupportProfile,
@@ -1023,6 +1029,7 @@ export function alternateActionCostProfilesForActor(
             source: {
               kind: "spellEffect" as const,
               procedureRef: effect.sourceProcedureRef,
+              effectRef: effect.effectRef,
             },
             profile: {
               kind: "alternateActionCost" as const,

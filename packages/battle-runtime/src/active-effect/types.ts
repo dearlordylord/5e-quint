@@ -1256,7 +1256,8 @@ export type BattleActiveEffect =
         };
         readonly expiresAt: BattleActiveEffectExpiration;
       })
-  | (BattleSpellEffectBase & {
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
       readonly kind: "spellDashBonusAction";
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
@@ -1315,7 +1316,8 @@ export type BattleActiveEffect =
   | SpiritualWeaponActiveEffect
   | GlyphDurableOccurrenceActiveEffect
   | ObjectContactPenaltyActiveEffect
-  | (BattleSpellEffectBase & {
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
       readonly kind: "dancingLights";
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,

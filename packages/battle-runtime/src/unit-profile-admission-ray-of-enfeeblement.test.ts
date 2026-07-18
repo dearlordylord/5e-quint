@@ -99,11 +99,13 @@ function resolveRayOfEnfeeblementCast(input: {
   readonly succeeded: boolean;
 }) {
   const invocation = rayOfEnfeeblementInvocation(input.state, input.spell);
+  const act = spellAct({
+    state: input.state,
+    spellId: rayOfEnfeeblementUnitId,
+  });
   const executableInvocation = {
     ...invocation,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(rayOfEnfeeblementUnitId),
-    ),
+    sourceProcedureRef: act.subject.procedureRef,
   };
   const targetHole = spellTargetListHole(
     input.state,
@@ -136,10 +138,6 @@ function resolveRayOfEnfeeblementCast(input: {
   if (fillSet.tag !== "ok") {
     throw new Error(fillSet.message);
   }
-  const act = spellAct({
-    state: input.state,
-    spellId: rayOfEnfeeblementUnitId,
-  });
   return abilityD20TestRollModeSaveGateProfile.resolve({
     input: {
       state: input.state,
@@ -169,15 +167,19 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
     const target = requireCombatant(cast.state, spellTargetId);
+    const attackEffect = target.activeEffects.find(
+      (effect) => effect.kind === "nextAttackRollBySelf",
+    );
+    expect(attackEffect).toBeDefined();
     expect(requireCombatant(cast.state, spellCasterId).concentration).toEqual(
-      expect.objectContaining({ sourceProcedureRef: rayOfEnfeeblementUnitId }),
+      expect.objectContaining({
+        sourceProcedureRef: attackEffect?.sourceProcedureRef,
+      }),
     );
     expect(target.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "nextAttackRollBySelf",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(rayOfEnfeeblementUnitId),
-        ),
+        sourceProcedureRef: attackEffect?.sourceProcedureRef,
         mode: "disadvantage",
       }),
     );

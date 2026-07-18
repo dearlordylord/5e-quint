@@ -107,12 +107,15 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
-    expect(caster.activeEffects).toContainEqual({
-      kind: "spellDashBonusAction",
-      sourceProcedureRef: act.subject.procedureRef,
-      sourceCombatantId: spellCasterId,
-      expiresAt: { kind: "concentration", combatantId: spellCasterId },
-    });
+    expect(caster.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "spellDashBonusAction",
+        effectRef: expect.any(String),
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    );
   });
 
   test("expeditious_retreat grants later Bonus Action Dash until Concentration ends", () => {
@@ -156,6 +159,18 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     if (laterDashAct === undefined) {
       throw new Error("Expected Expeditious Retreat Bonus Action Dash act.");
     }
+
+    const withoutConcentration = breakBattleConcentration(
+      nextCasterTurn.state,
+      spellCasterId,
+    );
+    expect(
+      resolveBattleSubject({
+        state: withoutConcentration,
+        subject: laterDashAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
 
     const dashed = resolveBattleSubject({
       state: nextCasterTurn.state,

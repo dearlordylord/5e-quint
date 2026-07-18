@@ -633,6 +633,15 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
     sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sourceEffectRef: BattleActiveEffectExecutionRef,
+    action: Schema.Literal("dash"),
+    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("bonusActionStandardAction"),
+    actorId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
+    sourceEffectRef: Schema.optionalWith(Schema.Never, { exact: true }),
     action: Schema.Literal("dash"),
     speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
   }),
@@ -641,6 +650,7 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
     sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sourceEffectRef: Schema.optionalWith(Schema.Never, { exact: true }),
     action: Schema.Literal("disengage", "hide"),
   }),
   Schema.Union(
@@ -1180,7 +1190,7 @@ type BonusActionStandardActionProcedureSelectionBase = DistributiveOmit<
     CharacterProcedureBattleSubject,
     { readonly tag: "bonusActionStandardAction" }
   >,
-  "procedureRef" | "sourceUnitId"
+  "procedureRef" | "sourceUnitId" | "sourceEffectRef"
 >;
 type BonusActionStandardActionProcedureSelectionSubject =
   | (BonusActionStandardActionProcedureSelectionBase & {
@@ -1189,7 +1199,10 @@ type BonusActionStandardActionProcedureSelectionSubject =
   | (Extract<
       BonusActionStandardActionProcedureSelectionBase,
       { readonly action: "dash" }
-    > & { readonly sourceProcedureRef: BattleProcedureExecutionRef });
+    > & {
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+    });
 
 type MonkFocusProcedureSelectionSubject = DistributiveOmit<
   Extract<CharacterProcedureBattleSubject, { readonly tag: "monkFocusOption" }>,

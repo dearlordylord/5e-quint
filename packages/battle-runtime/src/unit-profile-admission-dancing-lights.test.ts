@@ -363,6 +363,13 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     expect(battleActSpellPresentation(moveAct)?.invocation).toEqual(
       cantripSpellInvocationRef(dancingLightsUnitId, "dancingLightsReposition"),
     );
+    expect(
+      resolveBattleSubject({
+        state: recast.state,
+        subject: moveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     const moved = resolveBattleSubject({
       state: resolved.state,
       subject: moveAct.subject,

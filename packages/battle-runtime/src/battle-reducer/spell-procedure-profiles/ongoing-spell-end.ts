@@ -44,7 +44,11 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import {
+  spellId,
+  type BattleProcedureExecutionRef,
+  type CombatantId,
+} from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import {
@@ -853,11 +857,11 @@ function ongoingSpellOccurrenceSourceSpellLevel(
 function uniqueConcentrationSources(
   sources: readonly {
     readonly sourceCombatantId: CombatantId;
-    readonly sourceProcedureRef: string;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
   }[],
 ): readonly {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceProcedureRef: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }[] {
   const unique: (typeof sources)[number][] = [];
   for (const source of sources) {

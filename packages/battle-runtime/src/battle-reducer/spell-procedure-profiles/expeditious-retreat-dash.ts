@@ -30,6 +30,7 @@ import {
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 import { applyDashToActor } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { revealHidden } from "../hole-helpers.ts";
@@ -302,8 +303,12 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    battleId: slotted.battleId,
+    owner: effectHost,
+  });
   const effectedActor = {
-    ...effectHost,
+    ...allocation.owner,
     concentration: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       effectKind: "spellEffect" as const,
@@ -312,6 +317,7 @@ function resolveExpeditiousRetreatDash(
       ...effectHost.activeEffects,
       {
         ...input.invocation.activeEffect,
+        effectRef: allocation.effectRef,
         sourceProcedureRef: input.invocation.sourceProcedureRef,
       },
     ],

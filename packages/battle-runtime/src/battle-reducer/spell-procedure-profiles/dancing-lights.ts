@@ -40,7 +40,11 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import {
+  BattleActiveEffectExecutionRef,
+  spellId,
+  type CombatantId,
+} from "../../identity.ts";
 import {
   DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
   dancingLightsFromEffect,
@@ -161,7 +165,7 @@ function admitDancingLightsReposition(
             procedure: "dancingLightsReposition",
             spell,
             actionCost: "bonusAction",
-            activeEffect,
+            activeEffectRef: activeEffect.effectRef,
             maxMoveFeet: profile.maxMoveFeet,
             rangeFeet: profile.rangeFeet,
             spacingFeet: profile.spacingFeet,
@@ -315,8 +319,7 @@ function activeDancingLightsEffect(
         { readonly kind: "dancingLights" }
       > =>
         effect.kind === "dancingLights" &&
-        effect.sourceProcedureRef ===
-          invocation.activeEffect.sourceProcedureRef &&
+        effect.effectRef === invocation.activeEffectRef &&
         effect.sourceCombatantId === actorId,
     );
 }
@@ -419,7 +422,7 @@ const DancingLightsRepositionInvocationSchema = spellProcedureInvocationSchema<
     procedure: Schema.Literal("dancingLightsReposition"),
     spell: BattleRuntimeObjectSchema,
     actionCost: Schema.Literal("bonusAction"),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffectRef: BattleActiveEffectExecutionRef,
     maxMoveFeet: MovementFeet,
     rangeFeet: MovementFeet,
     spacingFeet: MovementFeet,

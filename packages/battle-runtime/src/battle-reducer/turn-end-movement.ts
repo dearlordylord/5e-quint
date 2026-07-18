@@ -97,6 +97,7 @@ import {
   battleObjectId,
   type BattleAreaId,
   type BattleObjectId,
+  type BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
 
@@ -6491,7 +6492,7 @@ export function tickDurationEffects(
 
 type ConcentrationEffectSource = {
   readonly combatantId: CombatantId;
-  readonly sourceProcedureRef: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };
 
 function activeEffectDurationTicks(

@@ -12,10 +12,12 @@ export type ReplayAddressableSpellActiveEffect = Extract<
     readonly kind:
       | "commandPending"
       | "dragonsBreath"
+      | "dancingLights"
       | "heldLight"
       | "jumpMovementReplacement"
       | "spellObjectContactDamage"
       | "spellMarkedDamageRider"
+      | "spellDashBonusAction"
       | "spiritualWeapon"
       | "possession"
       | "selfTransformation"

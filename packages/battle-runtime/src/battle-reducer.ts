@@ -3433,10 +3433,7 @@ export type DancingLightsSpellInvocation =
       readonly procedure: "dancingLightsReposition";
       readonly spell: SpellRecord;
       readonly actionCost: "bonusAction";
-      readonly activeEffect: Extract<
-        BattleActiveEffect,
-        { readonly kind: "dancingLights" }
-      >;
+      readonly activeEffectRef: BattleActiveEffectExecutionRef;
       readonly maxMoveFeet: MovementFeet;
       readonly rangeFeet: MovementFeet;
       readonly spacingFeet: MovementFeet;

@@ -401,7 +401,15 @@ function bonusActionStandardActionProcedure(
   );
   if (
     binding?.procedure.kind === "spellInvocation" &&
-    binding.procedure.invocation.procedure === "expeditiousRetreatDash"
+    binding.procedure.invocation.procedure === "expeditiousRetreatDash" &&
+    "sourceEffectRef" in subject &&
+    actor.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellDashBonusAction" &&
+        effect.effectRef === subject.sourceEffectRef &&
+        effect.sourceProcedureRef === subject.procedureRef &&
+        effect.sourceCombatantId === actor.combatantId,
+    )
   ) {
     return { kind: "spell" };
   }
@@ -442,7 +450,12 @@ export function resolveBonusActionStandardAction(
     Match.when("hide", () =>
       resolveHide({
         ...input,
-        subject: { ...input.subject, action: "hide" },
+        subject: {
+          tag: "bonusActionStandardAction",
+          actorId: input.subject.actorId,
+          procedureRef: input.subject.procedureRef,
+          action: "hide",
+        },
       }),
     ),
     Match.exhaustive,

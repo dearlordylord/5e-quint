@@ -18,7 +18,10 @@ import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
-import type { BattleActiveEffectExecutionRef } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+} from "../identity.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import type {
   BattleActiveEffect,
@@ -56,7 +59,7 @@ type HypnoticPatternControlEffect = Extract<
 >;
 export type SpellConcentrationEffectSource = {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceProcedureRef: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };
 
 export function spellConcentrationEffectSourceFromEffect(
