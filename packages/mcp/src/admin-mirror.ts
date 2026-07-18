@@ -166,7 +166,10 @@ function publishAdminProjection(root: McpCompositionRoot): Effect.Effect<void> {
 function selectedContentForProjection(
   root: McpCompositionRoot,
   projection: AdminSessionProjection,
-): Either.Either<AdminMirrorProjectionEnvelope["selectedContent"], string> {
+): Either.Either<
+  AdminMirrorProjectionEnvelope["selectedContent"],
+  AdminMirrorSelectedContentIssue
+> {
   const presentation =
     projection.session.transientBattleFills?.presentation ?? null;
   if (presentation === null) return Either.right(null);
@@ -175,18 +178,20 @@ function selectedContentForProjection(
     Match.when({ kind: "spell" }, ({ invocation }) =>
       Option.match(root.unitLibrary.getUnit(invocation.spellId), {
         onNone: () =>
-          Either.left(
-            `Selected spell content ${invocation.spellId} is unavailable.`,
-          ),
+          Either.left({
+            tag: "selectedSpellContentUnavailable",
+            spellId: invocation.spellId,
+          } as const),
         onSome: Either.right,
       }),
     ),
     Match.when({ kind: "druidWildShapeForm" }, ({ formStatBlockId }) =>
       Option.match(root.statBlockCatalog.getStatBlock(formStatBlockId), {
         onNone: () =>
-          Either.left(
-            `Selected Wild Shape form content ${formStatBlockId} is unavailable.`,
-          ),
+          Either.left({
+            tag: "selectedWildShapeFormContentUnavailable",
+            formStatBlockId,
+          } as const),
         onSome: Either.right,
       }),
     ),
@@ -195,7 +200,10 @@ function selectedContentForProjection(
       if (catalogUnit !== null) return Either.right(catalogUnit);
       const battle = root.sessionStore.battleState;
       if (battle === null) {
-        return Either.left(`Selected Unit content ${unitId} is unavailable.`);
+        return Either.left({
+          tag: "selectedUnitContentUnavailable",
+          unitId,
+        } as const);
       }
       for (const combatant of battle.combatants.values()) {
         if (combatant.origin.kind !== "character") continue;
@@ -204,11 +212,41 @@ function selectedContentForProjection(
         )?.unit;
         if (selected !== undefined) return Either.right(selected);
       }
-      return Either.left(`Selected Unit content ${unitId} is unavailable.`);
+      return Either.left({
+        tag: "selectedUnitContentUnavailable",
+        unitId,
+      } as const);
     }),
     Match.exhaustive,
   );
 }
+
+type AdminMirrorPendingPresentation = NonNullable<
+  AdminSessionProjection["session"]["transientBattleFills"]
+>["presentation"];
+
+type AdminMirrorSelectedContentIssue =
+  | {
+      readonly tag: "selectedSpellContentUnavailable";
+      readonly spellId: Extract<
+        AdminMirrorPendingPresentation,
+        { readonly kind: "spell" }
+      >["invocation"]["spellId"];
+    }
+  | {
+      readonly tag: "selectedUnitContentUnavailable";
+      readonly unitId: Extract<
+        AdminMirrorPendingPresentation,
+        { readonly kind: "unit" }
+      >["unitId"];
+    }
+  | {
+      readonly tag: "selectedWildShapeFormContentUnavailable";
+      readonly formStatBlockId: Extract<
+        AdminMirrorPendingPresentation,
+        { readonly kind: "druidWildShapeForm" }
+      >["formStatBlockId"];
+    };
 
 export function publishAdminProjectionBestEffort(
   root: McpCompositionRoot,
