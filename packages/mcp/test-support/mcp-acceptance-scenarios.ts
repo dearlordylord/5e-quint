@@ -16,8 +16,9 @@ import { characterProgressionEntry } from "../../character-creation-runtime/src/
 import { CHARACTER_CREATION_SUPPORT_PROFILE } from "../../character-creation-runtime/src/support-gates.ts";
 
 import {
-  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+  GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
 } from "./battle-act-labels.ts";
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 
@@ -609,7 +610,7 @@ export async function verifyBaselineVertical(client: Client) {
   assert.deepEqual(actionLabels(fighterActs), [
     "Attack",
     "Attack",
-    ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+    ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
     "Adrenaline Rush",
     "Second Wind",
     "Move",
@@ -649,7 +650,7 @@ export async function verifyBaselineVertical(client: Client) {
     "Attack",
     "Attack",
     "Attack",
-    ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+    ...GENERIC_COMBAT_ACTION_LABELS,
     "Nimble Escape",
     "Move",
     "End Turn",
