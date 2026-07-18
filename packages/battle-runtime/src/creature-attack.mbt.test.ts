@@ -234,7 +234,6 @@ describe("creature-attack public reducer boundaries", () => {
     expect(relationshipHole).toMatchObject({
       damageEventHoleId: damageHole.holeId,
       damageSourceId: ATTACKER_A_ID,
-      targetIds: [ATTACKER_B_ID],
       questions: [
         {
           kind: "targetDamagedByCasterOrAlly",
@@ -248,6 +247,10 @@ describe("creature-attack public reducer boundaries", () => {
         },
       ],
     });
+    expect(relationshipHole).not.toHaveProperty("targetIds");
+    expect([
+      ...new Set(relationshipHole.questions.map(({ targetId }) => targetId)),
+    ]).toEqual([ATTACKER_B_ID]);
     expect(
       Schema.encodeSync(BattleHoleSchema)(
         Schema.decodeUnknownSync(BattleHoleSchema)(relationshipHole),

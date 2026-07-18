@@ -180,8 +180,7 @@ export function damageRelationshipDecisionHole(input: {
           ]),
   }));
   const first = questionsWithIds[0];
-  const firstTargetId = targetIds[0];
-  if (first === undefined || firstTargetId === undefined) {
+  if (first === undefined) {
     return null;
   }
   const key = relationshipHoleKey(input.damageEventHoleId);
@@ -192,7 +191,6 @@ export function damageRelationshipDecisionHole(input: {
     label: "Damage event relationships",
     damageEventHoleId: input.damageEventHoleId,
     damageSourceId: input.damageSourceId,
-    targetIds: [firstTargetId, ...targetIds.slice(1)],
     questions: [first, ...questionsWithIds.slice(1)],
   };
 }

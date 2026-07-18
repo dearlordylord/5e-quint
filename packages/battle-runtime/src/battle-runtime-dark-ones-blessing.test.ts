@@ -156,7 +156,6 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     expect(relationship).toMatchObject({
       damageEventHoleId: damage.holeId,
       damageSourceId: warlockId,
-      targetIds: [enemyId],
       questions: [
         {
           kind: "enemyZeroHitPointTemporaryHitPoints",
@@ -166,6 +165,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
         },
       ],
     });
+    expect(relationship).not.toHaveProperty("targetIds");
     const relationshipAnswer = {
       questionId: relationship.questions[0].questionId,
       answer: true,

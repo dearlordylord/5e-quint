@@ -2193,7 +2193,6 @@ export type BattleDamageRelationshipDecisionHole = {
   readonly label: string;
   readonly damageEventHoleId: BattleHoleId;
   readonly damageSourceId: CombatantId;
-  readonly targetIds: readonly [CombatantId, ...CombatantId[]];
   readonly questions: readonly [
     BattleDamageRelationshipQuestion,
     ...BattleDamageRelationshipQuestion[],
