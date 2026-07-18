@@ -43,6 +43,7 @@
     "test:mbt:sorcerer-metamagic-subtle-selected-identity": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
     "test:mbt:ray-of-enfeeblement-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
     "test:mbt:reaction-casting-time": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/reaction-casting-time.mbt.test.ts",
+    "test:mbt:relationship-discovery": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/relationship-discovery.mbt.test.ts",
     "test:mbt:roll-modifier-active-effects": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/roll-modifier-active-effects.mbt.test.ts",
     "test:mbt:turn-boundary-effect-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts",
     "test:mbt:zero-hit-point-mid-resolution": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/zero-hit-point-mid-resolution.mbt.test.ts",
