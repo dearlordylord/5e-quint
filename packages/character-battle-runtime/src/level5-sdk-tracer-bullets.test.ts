@@ -569,13 +569,14 @@ describe("level 5 SDK tracer bullets", () => {
     );
     const monk = requireCharacterCombatant(resolved.state, monkId);
     const targetAfterStrike = requireCombatant(resolved.state, monsterId);
-    const stunningStrikeProcedureRef =
-      characterProcedureBindingSnapshots(monk.origin.execution).find(
-        (binding) =>
-          binding.procedure.kind === "unitSupportProfile" &&
-          binding.procedure.unitId === monkStunningStrikeUnitId &&
-          binding.procedure.supportKind === "stunningStrike",
-      )?.procedureRef;
+    const stunningStrikeProcedureRef = characterProcedureBindingSnapshots(
+      monk.origin.execution,
+    ).find(
+      (binding) =>
+        binding.procedure.kind === "unitSupportProfile" &&
+        binding.procedure.unitId === monkStunningStrikeUnitId &&
+        binding.procedure.supportKind === "stunningStrike",
+    )?.procedureRef;
 
     expect(stunningStrikeProcedureRef).toBeDefined();
 
@@ -1313,7 +1314,7 @@ describe("level 5 SDK tracer bullets", () => {
         requireCombatant(ended, sleetStormCase.casterId).activeEffects.some(
           (effect) =>
             effect.kind === "sleetStormAreaHazard" &&
-            effect.sourceProcedureRef === sleetStormSpellId,
+            effect.sourceProcedureRef === sleetStormProcedureRef,
         ),
       ).toBe(false);
       expect(battleObscurementZones(ended)).toEqual([]);
@@ -1493,7 +1494,7 @@ describe("level 5 SDK tracer bullets", () => {
         successfulSaveTarget.activeEffects.some(
           (effect) =>
             effect.kind === "slowActivePenalties" &&
-            effect.sourceProcedureRef === slowSpellId,
+            effect.sourceProcedureRef === act.subject.procedureRef,
         ),
       ).toBe(false);
       expect(Number(afterFailedSaveTarget.movement.speedFeet)).toBe(

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
+import type { BattleActPresentation } from "@dnd/battle-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -1018,10 +1019,11 @@ describe("end-user MCP vertical", () => {
     });
 
     const lightAct = requireSpellAct(root, wizardCombatantId, selectedSpellId);
-    expect(lightAct.subject).toMatchObject(
-      cantripSubject(wizardCombatantId, selectedSpellId, "objectLight"),
-    );
-    expect("procedureRef" in lightAct.subject).toBe(true);
+    expect(lightAct.subject).toMatchObject({
+      tag: "actionSpell",
+      actorId: wizardCombatantId,
+      procedureRef: expect.any(String),
+    });
     const objectTarget = requireHole(
       lightAct.initialHoles,
       "objectTargetChoice",
@@ -1038,7 +1040,7 @@ describe("end-user MCP vertical", () => {
             kind: "spellObjectLightTarget",
             casterId: wizardCombatantId,
             objectId: lightObjectId,
-            spellId: selectedSpellId,
+            sourceProcedureRef: lightAct.subject.procedureRef,
             size: "tiny",
             wornOrCarried: { kind: "caster" },
           },
@@ -1049,7 +1051,7 @@ describe("end-user MCP vertical", () => {
     expect(resolved.result.tag).toBe("resolved");
     expect(resolved.snapshot.lightEmitters).toEqual([
       expect.objectContaining({
-        sourceProcedureRef: selectedSpellId,
+        sourceProcedureRef: lightAct.subject.procedureRef,
         sourceCombatantId: wizardCombatantId,
         attachment: { kind: "object", objectId: lightObjectId },
         emission: {
@@ -1804,6 +1806,7 @@ function requireHole(
 type BattleActView = {
   readonly summary: string;
   readonly subject: BattleSubjectView;
+  readonly presentation: BattleActPresentation;
   readonly initialHoles: readonly BattleHoleView[];
 };
 
@@ -1886,16 +1889,25 @@ function requireSpellAct(
   root: ReturnType<typeof createMcpCompositionRoot>,
   actorId: string,
   spellId: string,
-): BattleActView {
-  return requireBattleAct(
+): BattleActView & {
+  readonly subject: BattleSubjectView & { readonly procedureRef: string };
+} {
+  const act = requireBattleAct(
     root,
     (act) =>
       act.subject.tag === "actionSpell" &&
       act.subject.actorId === actorId &&
-      "invocation" in act.subject &&
-      act.subject.invocation.spellId === spellId,
+      act.presentation.kind === "spell" &&
+      act.presentation.invocation.spellId === spellId,
     `${actorId} ${spellId}`,
   );
+  if (!("procedureRef" in act.subject)) {
+    throw new Error(`Expected bound spell procedure: ${actorId} ${spellId}`);
+  }
+  return {
+    ...act,
+    subject: { ...act.subject, procedureRef: act.subject.procedureRef },
+  };
 }
 
 type TriggeredSpellChoiceView = {
