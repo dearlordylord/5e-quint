@@ -34,6 +34,7 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   addDamageAmountForType,
   applyAvailableSourceDamageRollPenalty,
@@ -301,9 +302,6 @@ export function resolvePreparedSlotSpellAct(input: {
     ]);
   }
   const damageRoll = input.fillSet.damageRoll;
-  const relationshipDecisions = input.fillSet.damageRelationshipDecisions.forDamageHole(
-    damageRoll.holeId,
-  );
   const damageValidation =
     validateSpellDamageFill(damageRoll, input.invocation, false) ??
     validatePreparedSlotSpellDamageGroups(
@@ -543,6 +541,46 @@ export function resolvePreparedSlotSpellAct(input: {
     );
   }
 
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: input.input.state,
+    damageEventHoleId: damageRoll.holeId,
+    damageSourceId: input.actorId,
+    targets: targetAllocation.allocations.flatMap(
+      (allocation, allocationIndex) => {
+        const damageAmount =
+          damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
+        return damageAmount <= 0
+          ? []
+          : [
+              {
+                targetId: allocation.targetId,
+                damageAmount,
+                damageDisposition: damageDispositionForTarget(
+                  damageDispositionHoles,
+                  input.fillSet.damageDispositions,
+                  allocation.targetId,
+                ),
+              },
+            ];
+      },
+    ),
+    spatialFacts: input.fillSet.targetSpatialFacts,
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      relationshipCheck.message,
+    );
+  }
   const spellEffectState =
     input.spendsCastResources === false
       ? input.input.state
@@ -604,9 +642,9 @@ export function resolvePreparedSlotSpellAct(input: {
           hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
           damageSourceId: input.actorId,
           spatialFacts: input.fillSet.targetSpatialFacts,
-          ...(relationshipDecisions === undefined
+          ...(relationshipCheck.decisions === undefined
             ? {}
-            : { relationshipDecisions }),
+            : { relationshipDecisions: relationshipCheck.decisions }),
         },
       );
     },

@@ -241,7 +241,10 @@ export function creatureAttackFillSequence(
       readonly tag: "damageRoll";
       readonly attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }>;
       readonly damageRoll: CreatureAttackDamageFill;
-      readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
+      readonly relationshipFill?: Extract<
+        BattleFill,
+        { readonly kind: "damageRelationshipDecisions" }
+      >;
     }
   | { readonly tag: "invalid"; readonly message: string } {
   const [attackRoll, damageRoll, relationshipFill, extra] = input.fills;
@@ -265,14 +268,12 @@ export function creatureAttackFillSequence(
   }
   if (
     relationshipFill !== undefined &&
-    (relationshipFill.kind !== "damageRelationshipDecisions" ||
-      damageRoll.kind !== "rolledDice" ||
-      relationshipFill.holeId !== damageRoll.holeId)
+    relationshipFill.kind !== "damageRelationshipDecisions"
   ) {
     return {
       tag: "invalid",
       message:
-        "Creature Attack relationship decisions must match its damage roll.",
+        "Creature Attack relationship decisions must fill its emitted relationship hole.",
     };
   }
   if (extra !== undefined) {
@@ -286,9 +287,7 @@ export function creatureAttackFillSequence(
     tag: "damageRoll",
     attackRoll,
     damageRoll,
-    ...(relationshipFill === undefined
-      ? {}
-      : { relationshipDecisions: relationshipFill.decisions }),
+    ...(relationshipFill === undefined ? {} : { relationshipFill }),
   };
 }
 

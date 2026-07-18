@@ -2,25 +2,39 @@
 import { describe, expect, test } from "vitest";
 
 import { Hp, movementFeet } from "@dnd/shared/types";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 
 import {
   applyBattleHitPointDamage,
+  attackRollFill,
   battleId,
   characterSeed,
   combatantId,
+  damageRollFill,
+  discoverBattleActs,
+  findHole,
   partySide,
   startBattleRight,
   statBlockCreatureInit,
   testCharacterD20Statistics,
+  targetFill,
+  resolveBattleSubject,
+  spellRecord,
   type BattleState,
   type CombatantId,
   unitLibrary,
+  wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import {
+  savingThrowOutcomeFill,
+  spellAct,
+} from "./unit-profile-admission-spell-fill-support.ts";
 import type {
   BattleDamageRelationshipDecision,
   BattleTargetSpatialFact,
 } from "./battle-reducer.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
+import { damageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
 import { applyChainedSpellDamage } from "./battle-reducer/spells-resolve-chained.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
 
@@ -39,6 +53,249 @@ const unit = unitLibrary.requireUnit(unitId);
 const supportProfile = requireDarkOnesBlessingSupportProfile();
 
 describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
+  test("ordinary Attack damage emits and consumes an event-scoped enemy decision", () => {
+    const state = darkOnesBlessingBattle({
+      warlockCha: 16,
+      warlockLevel: 3,
+    });
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack",
+    );
+    if (act?.subject.tag !== "action" || act.subject.action !== "attack") {
+      throw new Error("Expected an ordinary Attack act.");
+    }
+    const target = findHole(act.initialHoles, "targetChoice");
+    const targetChoice = targetFill(target, enemyId);
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    });
+    const attackRoll = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const attack = attackRollFill(attackRoll, {
+      total: 20,
+      naturalD20: 15,
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetChoice,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 2 }),
+          {
+            kind: "damageRelationshipDecisions",
+            holeId: holeId(`${String(attackRoll.holeId)}:relationships`),
+            answers: [
+              {
+                questionId: damageRelationshipQuestionId(["orphan"]),
+                answer: true,
+              },
+            ],
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, attack],
+    });
+    const damage = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetChoice, attack, damageRollFill(damage, 1)],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+    const damageFill = damageRollFill(damage, 8);
+    const awaitingDisposition = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, attack, damageFill],
+    });
+    const disposition = findHole(
+      awaitingDisposition.tag === "needsHoles" ? awaitingDisposition.holes : [],
+      "attackDamageDisposition",
+    );
+    const dispositionFill = {
+      kind: "attackDamageDisposition",
+      holeId: disposition.holeId,
+      value: { kind: "ordinaryDamage" },
+    } as const;
+    const awaitingRelationship = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, attack, damageFill, dispositionFill],
+    });
+    if (awaitingRelationship.tag !== "needsHoles") {
+      throw new Error(
+        `Expected Attack relationship holes, received ${awaitingRelationship.tag}${
+          awaitingRelationship.tag === "invalid"
+            ? `: ${awaitingRelationship.message}`
+            : ""
+        }.`,
+      );
+    }
+    const relationship = findHole(
+      awaitingRelationship.holes,
+      "damageRelationshipDecisions",
+    );
+    if (relationship.kind !== "damageRelationshipDecisions") {
+      throw new Error("Expected a damage relationship hole.");
+    }
+    expect(relationship).toMatchObject({
+      damageEventHoleId: damage.holeId,
+      damageSourceId: warlockId,
+      targetIds: [enemyId],
+      questions: [
+        {
+          kind: "enemyZeroHitPointTemporaryHitPoints",
+          beneficiaryId: warlockId,
+          targetId: enemyId,
+          unitId,
+        },
+      ],
+    });
+    const relationshipAnswer = {
+      questionId: relationship.questions[0].questionId,
+      answer: true,
+    } as const;
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetChoice,
+          attack,
+          damageFill,
+          dispositionFill,
+          {
+            kind: "damageRelationshipDecisions",
+            holeId: relationship.holeId,
+            answers: [relationshipAnswer],
+          },
+          {
+            kind: "damageRelationshipDecisions",
+            holeId: holeId(`${String(attack.holeId)}:relationships`),
+            answers: [relationshipAnswer],
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetChoice,
+          attack,
+          damageFill,
+          dispositionFill,
+          {
+            kind: "damageRelationshipDecisions",
+            holeId: relationship.holeId,
+            answers: [relationshipAnswer],
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
+
+  test("ordinary save-gated spell damage carries the event relationship decision", () => {
+    const sacredFlameId = "sacred_flame";
+    const state = darkOnesBlessingBattle({
+      warlockCha: 16,
+      warlockLevel: 3,
+      preparedSpells: [spellRecord(sacredFlameId)],
+    });
+    const act = spellAct({ state, spellId: sacredFlameId });
+    const target = findHole(act.initialHoles, "targetChoice");
+    if (target.kind !== "targetChoice") {
+      throw new Error("Expected a spell target hole.");
+    }
+    const targetChoice = targetFill(target, enemyId, [
+      {
+        kind: "spellTarget",
+        casterId: warlockId,
+        targetId: enemyId,
+        spellId: sacredFlameId,
+      },
+    ]);
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    });
+    const save = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+    if (save.kind !== "savingThrowOutcome") {
+      throw new Error("Expected a saving-throw outcome hole.");
+    }
+    const saveFill = savingThrowOutcomeFill(save, [
+      { targetId: enemyId, succeeded: false },
+    ]);
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, saveFill],
+    });
+    const damage = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const damageFill = damageRollFill(damage, 5);
+    const awaitingRelationship = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, saveFill, damageFill],
+    });
+    const relationship = findHole(
+      awaitingRelationship.tag === "needsHoles"
+        ? awaitingRelationship.holes
+        : [],
+      "damageRelationshipDecisions",
+    );
+    if (relationship.kind !== "damageRelationshipDecisions") {
+      throw new Error("Expected a spell damage relationship hole.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetChoice,
+          saveFill,
+          damageFill,
+          {
+            kind: "damageRelationshipDecisions",
+            holeId: relationship.holeId,
+            answers: [
+              {
+                questionId: relationship.questions[0].questionId,
+                answer: true,
+              },
+            ],
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
+
   test("grants Temporary Hit Points when the Warlock reduces an enemy to 0 Hit Points", () => {
     const result = damageEnemyToZero({
       damageSourceId: warlockId,
@@ -244,6 +501,7 @@ function darkOnesBlessingBattle(input: {
   readonly warlockTempHp?: number;
   readonly targetSide?: typeof partySide;
   readonly secondWarlock?: true;
+  readonly preparedSpells?: readonly ReturnType<typeof spellRecord>[];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("dark-ones-blessing-battle"),
@@ -262,6 +520,16 @@ function darkOnesBlessingBattle(input: {
         unitFeatures: [{ unit }],
         knownLanguages: ["Common"],
         d20Statistics: testCharacterD20Statistics({ cha: input.warlockCha }),
+        spellcasting:
+          input.preparedSpells === undefined
+            ? undefined
+            : {
+                ...wizardSpellcasting({
+                  cantrips: input.preparedSpells,
+                  preparedSpells: [],
+                }),
+                sourceClassName: "warlock",
+              },
         tempHp: input.warlockTempHp ?? 0,
       }),
       ...(input.secondWarlock === true
@@ -331,10 +599,11 @@ function darkOnesBlessingEnemyDecision(
   beneficiaryId: CombatantId = warlockId,
 ): BattleDamageRelationshipDecision {
   return {
-    kind: "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy",
+    kind: "enemyZeroHitPointTemporaryHitPoints",
     beneficiaryId,
     targetId,
     unitId,
+    targetIsEnemy: true,
   };
 }
 

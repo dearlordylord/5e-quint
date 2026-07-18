@@ -290,9 +290,10 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       spatialFacts: [],
       relationshipDecisions: [
         {
-          kind: "targetDamagedByCasterOrAllySourceIsAlly",
+          kind: "targetDamagedByCasterOrAlly",
           targetId: beastId,
           effectSourceId: spellCasterId,
+          sourceIsAlly: true,
         },
       ],
     });
@@ -384,9 +385,10 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       spatialFacts: [],
       relationshipDecisions: [
         {
-          kind: "targetDamagedByCasterOrAllySourceIsAlly",
+          kind: "targetDamagedByCasterOrAlly",
           targetId: beastId,
           effectSourceId: spellCasterId,
+          sourceIsAlly: true,
         },
       ],
     });

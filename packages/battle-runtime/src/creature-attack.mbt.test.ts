@@ -7,6 +7,7 @@ import { Schema } from "effect";
 
 import {
   BattleFillSchema,
+  BattleHoleSchema,
   battleReducerStartRouteEvent,
   discoverBattleActs,
   endTurn,
@@ -187,7 +188,15 @@ describe("creature-attack public reducer boundaries", () => {
         }
         return {
           ...target,
-          activeEffects: [charmEffect],
+          activeEffects: [
+            charmEffect,
+            {
+              ...charmEffect,
+              sourceCombatantId: combatantId(
+                "creature-attack-second-charm-source",
+              ),
+            },
+          ],
           conditions: applyCondition(target.conditions, "charmed"),
         };
       },
@@ -207,27 +216,63 @@ describe("creature-attack public reducer boundaries", () => {
       throw new Error("Expected Creature Attack damage hole.");
     }
     const damageHole = expectCreatureAttackDamageHole(awaitingDamage.holes[0]);
-    const relationshipFill = {
-      kind: "damageRelationshipDecisions",
-      holeId: damageHole.holeId,
-      decisions: [
+    const damageFill = creatureAttackDamageRollFill(damageHole, 1);
+    const awaitingRelationships = resolveBattleSubject({
+      state,
+      subject,
+      fills: [attackRoll, damageFill],
+    });
+    if (awaitingRelationships.tag !== "needsHoles") {
+      throw new Error("Expected Creature Attack relationship hole.");
+    }
+    const relationshipHole = awaitingRelationships.holes.find(
+      (hole) => hole.kind === "damageRelationshipDecisions",
+    );
+    if (relationshipHole?.kind !== "damageRelationshipDecisions") {
+      throw new Error("Expected event-scoped relationship decisions.");
+    }
+    expect(relationshipHole).toMatchObject({
+      damageEventHoleId: damageHole.holeId,
+      damageSourceId: ATTACKER_A_ID,
+      targetIds: [ATTACKER_B_ID],
+      questions: [
         {
-          kind: "targetDamagedByCasterOrAllySourceIsAlly",
+          kind: "targetDamagedByCasterOrAlly",
           targetId: ATTACKER_B_ID,
           effectSourceId: spellCasterId,
+        },
+        {
+          kind: "targetDamagedByCasterOrAlly",
+          targetId: ATTACKER_B_ID,
+          effectSourceId: combatantId("creature-attack-second-charm-source"),
+        },
+      ],
+    });
+    expect(
+      Schema.encodeSync(BattleHoleSchema)(
+        Schema.decodeUnknownSync(BattleHoleSchema)(relationshipHole),
+      ),
+    ).toEqual(relationshipHole);
+    const relationshipFill = {
+      kind: "damageRelationshipDecisions",
+      holeId: relationshipHole.holeId,
+      answers: [
+        {
+          questionId: relationshipHole.questions[0].questionId,
+          answer: true,
         },
       ],
     } satisfies Extract<
       BattleFill,
       { readonly kind: "damageRelationshipDecisions" }
     >;
-    expect(Schema.decodeUnknownSync(BattleFillSchema)(relationshipFill)).toEqual(
-      relationshipFill,
-    );
+    expect(
+      Schema.decodeUnknownSync(BattleFillSchema)(relationshipFill),
+    ).toEqual(relationshipFill);
     expect(() =>
       Schema.decodeUnknownSync(BattleFillSchema)({
         ...relationshipFill,
-        decisions: [],
+        answers: [],
       }),
     ).toThrow();
     expect(
@@ -236,18 +281,63 @@ describe("creature-attack public reducer boundaries", () => {
         subject,
         fills: [
           attackRoll,
-          creatureAttackDamageRollFill(damageHole, 1),
-          { ...relationshipFill, holeId: attackRoll.holeId },
+          damageFill,
+          { ...relationshipFill, holeId: damageHole.holeId },
         ],
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [attackRoll, damageFill, relationshipFill],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    const declined = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        attackRoll,
+        damageFill,
+        {
+          ...relationshipFill,
+          answers: [
+            {
+              ...relationshipFill.answers[0],
+              answer: false,
+            },
+            {
+              questionId: relationshipHole.questions[1].questionId,
+              answer: false,
+            },
+          ],
+        },
+      ],
+    });
+    if (declined.tag !== "resolved") {
+      throw new Error(
+        "Expected an explicit no relationship decision to resolve.",
+      );
+    }
+    expect(declined.state.combatants.get(ATTACKER_B_ID)).toMatchObject({
+      conditions: expect.objectContaining({ charmed: true }),
+    });
     const resolved = resolveBattleSubject({
       state,
       subject,
       fills: [
         attackRoll,
-        creatureAttackDamageRollFill(damageHole, 1),
-        relationshipFill,
+        damageFill,
+        {
+          ...relationshipFill,
+          answers: [
+            ...relationshipFill.answers,
+            {
+              questionId: relationshipHole.questions[1].questionId,
+              answer: false,
+            },
+          ],
+        },
       ],
     });
     if (resolved.tag !== "resolved") {
@@ -255,8 +345,12 @@ describe("creature-attack public reducer boundaries", () => {
     }
 
     expect(resolved.state.combatants.get(ATTACKER_B_ID)).toMatchObject({
-      activeEffects: [],
-      conditions: expect.not.objectContaining({ charmed: true }),
+      activeEffects: [
+        expect.objectContaining({
+          sourceCombatantId: combatantId("creature-attack-second-charm-source"),
+        }),
+      ],
+      conditions: expect.objectContaining({ charmed: true }),
     });
   });
 
@@ -311,6 +405,26 @@ describe("creature-attack public reducer boundaries", () => {
         value: [],
       }),
     ).toThrow();
+  });
+
+  it("round-trips the damage source on enemy-zero-HP range facts", () => {
+    const fill = {
+      kind: "targetSpatialFacts",
+      holeId: CREATURE_ATTACK_DAMAGE_HOLE_ID,
+      spatialFacts: [
+        {
+          kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
+          beneficiaryId: ATTACKER_A_ID,
+          damageSourceId: ATTACKER_B_ID,
+          targetId: ATTACKER_A_ID,
+          unitId: "synthetic_zero_hp_reward",
+          rangeFeet: 10,
+        },
+      ],
+    } as const;
+
+    const decoded = Schema.decodeUnknownSync(BattleFillSchema)(fill);
+    expect(Schema.encodeSync(BattleFillSchema)(decoded)).toEqual(fill);
   });
 
   it("does not expose an unsupported attack bonus for creature attacks", () => {
@@ -623,7 +737,10 @@ function resolveCreatureAttackThroughPublicReducer(input: {
   readonly targetId: typeof ATTACKER_A_ID | typeof ATTACKER_B_ID;
   readonly damage: number;
   readonly hit: boolean;
-}): { readonly state: BattleState; readonly route: readonly ReducerRouteEvent[] } {
+}): {
+  readonly state: BattleState;
+  readonly route: readonly ReducerRouteEvent[];
+} {
   const state = prepareCreatureAttackActorTurn(input.state, input.actorId);
   const subject = creatureAttackSubject(input.actorId, input.targetId);
   const discovered = discoverCreatureAttackAct(state, subject);
@@ -686,7 +803,9 @@ function prepareCreatureAttackActorTurn(
       actorId: snapshotBattle(currentState).currentActorId,
     });
     if (result.tag !== "resolved") {
-      throw new Error("Expected public endTurn to rotate Creature Attack actor.");
+      throw new Error(
+        "Expected public endTurn to rotate Creature Attack actor.",
+      );
     }
     currentState = result.state;
   }

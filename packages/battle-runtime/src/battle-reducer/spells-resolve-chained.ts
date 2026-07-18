@@ -51,6 +51,7 @@ import {
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import {
   DamageRelationshipDecisionsByHole,
+  damageRelationshipDecisionFillCheck,
 } from "./damage-relationship-decisions.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
@@ -752,9 +753,42 @@ export function resolveChainedSpellAttackDamageAct(input: {
     for (const hole of hideousLaughterSaveCheck.holes) {
       hideousLaughterDamageRepeatSaveHoleIds.add(String(hole.holeId));
     }
-    const relationshipDecisions = fillSet.damageRelationshipDecisions.forDamageHole(
-      step.damageRoll.holeId,
+    const damageDisposition = damageDispositionForTarget(
+      dispositionHole === null ? [] : [dispositionHole],
+      fillSet.damageDispositions,
+      target.combatantId,
     );
+    const relationshipCheck = damageRelationshipDecisionFillCheck({
+      state: replayState,
+      damageEventHoleId: step.damageRoll.holeId,
+      damageSourceId: input.actorId,
+      targets:
+        damageAmount <= 0
+          ? []
+          : [
+              {
+                targetId: target.combatantId,
+                damageAmount,
+                damageDisposition,
+              },
+            ],
+      spatialFacts: step.target.spatialFacts ?? [],
+      decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
+    });
+    if (relationshipCheck.tag === "needsHoles") {
+      return needsHolesResult(
+        replayState,
+        input.input.subject,
+        relationshipCheck.holes,
+      );
+    }
+    if (relationshipCheck.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        relationshipCheck.message,
+      );
+    }
     replayState = applyChainedSpellDamage(
       replayState,
       target.combatantId,
@@ -762,20 +796,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
       critical,
       {
         concentrationSavingThrow: concentrationFill,
-        damageDisposition: damageDispositionForTarget(
-          dispositionHole === null ? [] : [dispositionHole],
-          fillSet.damageDispositions,
-          target.combatantId,
-        ),
+        damageDisposition,
         wardingBondDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
         hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
         hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts ?? [],
-        ...(relationshipDecisions === undefined
+        ...(relationshipCheck.decisions === undefined
           ? {}
-          : { relationshipDecisions }),
+          : { relationshipDecisions: relationshipCheck.decisions }),
       },
     );
     afterDamageEvents.push({
@@ -1137,14 +1167,15 @@ export function chainedSpellFillSet(
     };
   }
 
-  const damageRollHoleIds = new Set(
-    steps.flatMap((step) =>
-      step.damageRoll === undefined ? [] : [step.damageRoll.holeId],
-    ),
-  );
   const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
     fills,
-    damageRollHoleIds,
+    damageEventHoleIds: new Set(
+      steps.flatMap((step) =>
+        [step.damageRoll].flatMap((fill) =>
+          fill === undefined ? [] : [fill.holeId],
+        ),
+      ),
+    ),
     owner: "a chained Spell",
   });
   if (relationshipDecisions.tag === "invalid") {
@@ -1164,7 +1195,7 @@ export function chainedSpellFillSet(
     sourceDamageRollPenaltyRolls,
     reactionSpellTargetFacts,
     damageRelationshipDecisions:
-      relationshipDecisions.decisionsByDamageHole,
+      relationshipDecisions.decisionsByRelationshipHole,
   };
 }
 

@@ -1684,16 +1684,15 @@ export function spellFillSet(
     };
   }
 
-  const damageRollHoleIds = new Set(
-    [
-      damageRoll,
-      attackBurstDamageRoll,
-      ...attackSequencePartFills.map((part) => part.damageRoll),
-    ].flatMap((fill) => (fill === undefined ? [] : [fill.holeId])),
-  );
   const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
     fills,
-    damageRollHoleIds,
+    damageEventHoleIds: new Set(
+      [
+        damageRoll,
+        attackBurstDamageRoll,
+        ...attackSequencePartFills.map((part) => part.damageRoll),
+      ].flatMap((fill) => (fill === undefined ? [] : [fill.holeId])),
+    ),
     owner: "a Spell",
   });
   if (relationshipDecisions.tag === "invalid") {
@@ -1715,7 +1714,7 @@ export function spellFillSet(
     ongoingSpellAbilityChecks,
     targetSpatialFacts,
     damageRelationshipDecisions:
-      relationshipDecisions.decisionsByDamageHole,
+      relationshipDecisions.decisionsByRelationshipHole,
     reactionSpellTargetFacts,
     targetAllocation,
     targetList,

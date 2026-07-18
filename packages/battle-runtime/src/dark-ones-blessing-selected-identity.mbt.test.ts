@@ -322,10 +322,11 @@ function darkOnesBlessingEnemyDecision(
   targetId: CombatantId,
 ): BattleDamageRelationshipDecision {
   return {
-    kind: "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy",
+    kind: "enemyZeroHitPointTemporaryHitPoints",
     beneficiaryId: warlockId,
     targetId,
     unitId,
+    targetIsEnemy: true,
   };
 }
 

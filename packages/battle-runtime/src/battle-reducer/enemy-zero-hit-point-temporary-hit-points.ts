@@ -35,8 +35,10 @@ export function enemyZeroHitPointTemporaryHitPointsAwards(input: {
 }): readonly EnemyZeroHitPointTemporaryHitPointsAward[] {
   if (
     input.damageSourceId === undefined ||
-    Number(input.priorTarget.hp) <= 0 ||
-    Number(input.damagedTarget.hp) !== 0
+    !enemyZeroHitPointTransitionOccurs({
+      priorHitPoints: Number(input.priorTarget.hp),
+      nextHitPoints: Number(input.damagedTarget.hp),
+    })
   ) {
     return [];
   }
@@ -65,6 +67,13 @@ export function enemyZeroHitPointTemporaryHitPointsAwards(input: {
   return awards;
 }
 
+export function enemyZeroHitPointTransitionOccurs(input: {
+  readonly priorHitPoints: number;
+  readonly nextHitPoints: number;
+}): boolean {
+  return input.priorHitPoints > 0 && input.nextHitPoints === 0;
+}
+
 function isCharacterBattleCreatureState(
   creature: BattleCreatureState,
 ): creature is CharacterBattleCreatureState {
@@ -83,13 +92,13 @@ function enemyZeroHitPointTemporaryHitPointsAward(
     if (
       !relationshipDecisions.some(
         (decision) =>
-          decision.kind ===
-            "enemyZeroHitPointTemporaryHitPointsTargetIsEnemy" &&
+          decision.kind === "enemyZeroHitPointTemporaryHitPoints" &&
           decision.beneficiaryId === beneficiary.combatantId &&
           decision.targetId === targetId &&
-          decision.unitId === profile.unit.id,
+          decision.unitId === profile.unit.id &&
+          decision.targetIsEnemy,
       ) ||
-      !profileTriggerApplies({
+      !enemyZeroHitPointTemporaryHitPointsTriggerApplies({
         profileUnitId: profile.unit.id,
         beneficiaryId: beneficiary.combatantId,
         damageSourceId,
@@ -112,7 +121,7 @@ function enemyZeroHitPointTemporaryHitPointsAward(
   return highestAward;
 }
 
-function profileTriggerApplies(input: {
+export function enemyZeroHitPointTemporaryHitPointsTriggerApplies(input: {
   readonly profileUnitId: UnitRecord["id"];
   readonly beneficiaryId: CombatantId;
   readonly damageSourceId: CombatantId;

@@ -50,6 +50,7 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   deduplicateBattleHolesById,
   needsHolesResult,
@@ -611,9 +612,6 @@ function resolveObjectContactDamage(input: {
   if (damageValidation !== null) {
     return invalidResult(input.errorState, "invalidFill", damageValidation);
   }
-  const relationshipDecisions = input.fillSet.damageRelationshipDecisions.forDamageHole(
-    input.fillSet.damageRoll.holeId,
-  );
   const sourceCombatant = input.state.combatants.get(input.actorId);
   const expectedSourcePenaltyHoles = input.targetIds.flatMap((targetId) => {
     const target = input.state.combatants.get(targetId);
@@ -955,6 +953,49 @@ function resolveObjectContactDamage(input: {
       (outcome): readonly CombatantId[] =>
         outcome.result.kind === "notDropped" ? [outcome.targetId] : [],
     ) ?? [];
+  const damageDispositionByTargetId = new Map(
+    input.targetIds.map((targetId) => [
+      targetId,
+      damageDispositionForTarget(
+        damageDispositionHoles,
+        input.fillSet.damageDispositions,
+        targetId,
+      ),
+    ]),
+  );
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: input.state,
+    damageEventHoleId: input.fillSet.damageRoll.holeId,
+    damageSourceId: input.actorId,
+    targets: input.targetIds.flatMap((targetId) => {
+      const damageAmount = damageAmountByTargetId.get(targetId) ?? 0;
+      return damageAmount > 0
+        ? [
+            {
+              targetId,
+              damageAmount,
+              damageDisposition: damageDispositionByTargetId.get(targetId),
+            },
+          ]
+        : [];
+    }),
+    spatialFacts: input.fillSet.targetSpatialFacts,
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(
+      input.errorState,
+      "invalidFill",
+      relationshipCheck.message,
+    );
+  }
   const damaged = input.targetIds.reduce((state, targetId) => {
     const target = state.combatants.get(targetId);
     const damageAmount = damageAmountByTargetId.get(targetId);
@@ -995,17 +1036,13 @@ function resolveObjectContactDamage(input: {
             ),
       wardingBondDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
-      damageDisposition: damageDispositionForTarget(
-        damageDispositionHoles,
-        input.fillSet.damageDispositions,
-        targetId,
-      ),
+      damageDisposition: damageDispositionByTargetId.get(targetId),
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.actorId,
-      spatialFacts: [],
-      ...(relationshipDecisions === undefined
+      spatialFacts: input.fillSet.targetSpatialFacts,
+      ...(relationshipCheck.decisions === undefined
         ? {}
-        : { relationshipDecisions }),
+        : { relationshipDecisions: relationshipCheck.decisions }),
     });
   }, input.state);
   const penalized = applyObjectContactPenalties({

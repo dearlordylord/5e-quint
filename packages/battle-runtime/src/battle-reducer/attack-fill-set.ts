@@ -764,16 +764,18 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     };
   }
 
-  const damageRollHoleIds = new Set(
-    [
-      damageRoll,
-      weaponMasteryCleaveDamageRoll,
-      huntersPreyHordeBreakerDamageRoll,
-    ].flatMap((fill) => (fill === undefined ? [] : [fill.holeId])),
-  );
   const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
     fills,
-    damageRollHoleIds,
+    damageEventHoleIds: new Set(
+      [
+        damageRoll,
+        weaponMasteryCleaveDamageRoll,
+        huntersPreyHordeBreakerDamageRoll,
+        attackDamageReductionRedirectDamage,
+      ]
+        .flatMap((fill) => (fill === undefined ? [] : [fill.holeId]))
+        .concat(damageRoll === undefined ? [ATTACK_ROLL_HOLE_ID] : []),
+    ),
     owner: "an Attack",
   });
   if (relationshipDecisions.tag === "invalid") {
@@ -788,7 +790,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     targetId,
     targetSpatialFacts,
     damageRelationshipDecisions:
-      relationshipDecisions.decisionsByDamageHole,
+      relationshipDecisions.decisionsByRelationshipHole,
     attackRoll,
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,

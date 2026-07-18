@@ -51,6 +51,7 @@ import {
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 
 import {
   activeMarkedDamageRiders,
@@ -118,7 +119,10 @@ import type {
   MartialArtsBonusUnarmedStrikeBattleResolutionInput,
   OffHandAttackBattleResolutionInput,
 } from "../battle-reducer.ts";
-import { spellAttackRerollUnsupportedIssue } from "../battle-reducer.ts";
+import {
+  ATTACK_ROLL_HOLE_ID,
+  spellAttackRerollUnsupportedIssue,
+} from "../battle-reducer.ts";
 import {
   boundAttackExecutionSelectionMatchesOption,
   type BoundSupportedAttackActionOption,
@@ -146,12 +150,11 @@ export function resolveOffHandAttack(
       attackAbility,
       attackDamageType,
     ) =>
-      offHandAttackActionOptionsForActor(state, actorId).find(
-        (attack) =>
-          boundAttackExecutionSelectionMatchesOption(
-            { procedureRef, attackAbility, attackDamageType },
-            attack,
-          ),
+      offHandAttackActionOptionsForActor(state, actorId).find((attack) =>
+        boundAttackExecutionSelectionMatchesOption(
+          { procedureRef, attackAbility, attackDamageType },
+          attack,
+        ),
       ),
     prerequisiteMet: (state, actorId, attack) =>
       attack.kind === "weapon" &&
@@ -567,6 +570,13 @@ function resolveBonusActionAttack(
     );
   }
   if (!hit) {
+    const relationshipIssue =
+      fillSet.damageRelationshipDecisions.unexpectedFillForAbsentEvent(
+        ATTACK_ROLL_HOLE_ID,
+      );
+    if (relationshipIssue !== null) {
+      return invalidResult(input.state, "invalidFill", relationshipIssue);
+    }
     return spendOffHandBonusAction(attackRolledState);
   }
   if (hit && fillSet.damageRoll != null) {
@@ -716,6 +726,37 @@ function resolveBonusActionAttack(
         ]);
       }
     }
+    const relationshipCheck = damageRelationshipDecisionFillCheck({
+      state: spellReducedState,
+      damageEventHoleId: fillSet.damageRoll.holeId,
+      damageSourceId: input.subject.actorId,
+      targets:
+        Number(damageAmount) <= 0
+          ? []
+          : [
+              {
+                targetId: target.combatantId,
+                damageAmount: Number(damageAmount),
+                damageDisposition: fillSet.damageDisposition,
+              },
+            ],
+      spatialFacts: fillSet.targetSpatialFacts,
+      decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
+    });
+    if (relationshipCheck.tag === "needsHoles") {
+      return needsHolesResult(
+        spellReducedState,
+        input.subject,
+        relationshipCheck.holes,
+      );
+    }
+    if (relationshipCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        relationshipCheck.message,
+      );
+    }
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
       spellReducedState,
       {
@@ -731,6 +772,9 @@ function resolveBonusActionAttack(
             concentrationSavingThrows: fillSet.concentrationSavingThrows,
             damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+            ...(relationshipCheck.decisions === undefined
+              ? {}
+              : { relationshipDecisions: relationshipCheck.decisions }),
             ...(selectedDamageDiceChoice === null
               ? {}
               : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
@@ -801,20 +845,23 @@ function resolveBonusActionAttack(
         hideousLaughterSaveCheck.message,
       );
     }
-    const damaged = applyAttackDamageAmount(
-      spellReducedState,
-      input.subject.actorId,
-      target.combatantId,
+    const damaged = applyAttackDamageAmount({
+      state: spellReducedState,
+      attackerId: input.subject.actorId,
+      targetId: target.combatantId,
       damageAmount,
-      critical ? 2 : 1,
-      fillSet.damageDisposition,
-      selectedDamageRidersAfterCunningStrikeCost,
-      selectedDamageDiceChoice ?? undefined,
-      primaryConcentrationSavingThrow,
-      fillSet.hideousLaughterDamageRepeatSaves,
-      fillSet.concentrationSavingThrows,
-      fillSet.targetSpatialFacts,
-    );
+      deathFailuresAtZeroHp: critical ? 2 : 1,
+      damageDisposition: fillSet.damageDisposition,
+      attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+      weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
+      concentrationSavingThrow: primaryConcentrationSavingThrow,
+      hideousLaughterDamageRepeatSaves:
+        fillSet.hideousLaughterDamageRepeatSaves,
+      wardingBondDamageShareConcentrationSavingThrows:
+        fillSet.concentrationSavingThrows,
+      spatialFacts: fillSet.targetSpatialFacts,
+      relationshipDecisions: relationshipCheck.decisions,
+    });
     const cunningStrike = resolveCunningStrikeAfterAttackDamage({
       state: damaged,
       selected: selectedCunningStrike,

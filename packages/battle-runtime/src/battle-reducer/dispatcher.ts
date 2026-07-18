@@ -99,9 +99,7 @@ import {
   characterSpellProcedureRef,
   characterUnitProcedureId,
 } from "../character-execution.ts";
-import {
-  characterUnitProcedureQueryForSubject,
-} from "../battle-composition-admission.ts";
+import { characterUnitProcedureQueryForSubject } from "../battle-composition-admission.ts";
 
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 
@@ -144,6 +142,10 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import {
+  damageRelationshipDecisionHole,
+  DamageRelationshipDecisionsByHole,
+} from "./damage-relationship-decisions.ts";
 
 import {
   attackActionOptionsForActor,
@@ -1445,6 +1447,46 @@ export function resolveBattleSubjectInternal(
           creatureAttackDamageHole(subject),
         ]);
       }
+      const parsedRelationships = DamageRelationshipDecisionsByHole.parse({
+        fills: input.fills,
+        damageEventHoleIds: new Set([fills.damageRoll.holeId]),
+        owner: "an Attack",
+      });
+      if (parsedRelationships.tag === "invalid") {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          parsedRelationships.message,
+        );
+      }
+      const relationshipCheck =
+        parsedRelationships.decisionsByRelationshipHole.check(
+          fills.damageRoll.holeId,
+          creatureAttackDamageTotal(fills.damageRoll) <= 0
+            ? null
+            : damageRelationshipDecisionHole({
+                state: input.state,
+                damageEventHoleId: fills.damageRoll.holeId,
+                damageSourceId: subject.actorId,
+                targets: [
+                  {
+                    targetId: subject.targetId,
+                    damageAmount: creatureAttackDamageTotal(fills.damageRoll),
+                  },
+                ],
+                spatialFacts: [],
+              }),
+        );
+      if (relationshipCheck.tag === "needsHoles") {
+        return needsHolesResult(input.state, subject, relationshipCheck.holes);
+      }
+      if (relationshipCheck.tag === "invalid") {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          relationshipCheck.message,
+        );
+      }
       const spent = spendAction(input.state.currentTurnResources, "attack");
       if (Either.isLeft(spent)) {
         return invalidResult(
@@ -1458,9 +1500,9 @@ export function resolveBattleSubjectInternal(
         actor: combatants.actor,
         target: combatants.target,
         damage: creatureAttackDamageTotal(fills.damageRoll),
-        ...(fills.relationshipDecisions === undefined
+        ...(relationshipCheck.decisions === undefined
           ? {}
-          : { relationshipDecisions: fills.relationshipDecisions }),
+          : { relationshipDecisions: relationshipCheck.decisions }),
       });
       return {
         tag: "resolved" as const,
@@ -3857,8 +3899,8 @@ export function resolveCastTriggeredReactionSpellCommand(
   }
   if (
     reactor?.origin.kind !== "character" ||
-    (invocation === undefined ||
-      !isTriggeredReactionSpellInvocation(invocation))
+    invocation === undefined ||
+    !isTriggeredReactionSpellInvocation(invocation)
   ) {
     return invalidResult(
       input.state,
@@ -4393,6 +4435,39 @@ function resolveHellishRebukeReactionSpellCommand(
     fillSet.hideousLaughterDamageRepeatSaves,
     hideousLaughterSaveCheck.holes,
   );
+  const damageDisposition = damageDispositionForTarget(
+    damageDispositionHoles,
+    fillSet.damageDispositions,
+    input.frame.damageSourceId,
+  );
+  const relationshipCheck = fillSet.damageRelationshipDecisions.check(
+    fillSet.damageRoll.holeId,
+    damageAmount <= 0
+      ? null
+      : damageRelationshipDecisionHole({
+          state: input.state,
+          damageEventHoleId: fillSet.damageRoll.holeId,
+          damageSourceId: input.subject.reactorId,
+          targets: [
+            {
+              targetId: input.frame.damageSourceId,
+              damageAmount,
+              damageDisposition,
+            },
+          ],
+          spatialFacts: fillSet.targetSpatialFacts,
+        }),
+  );
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", relationshipCheck.message);
+  }
   const castingState = stateAfterSpellCastDeclared({
     state: input.state,
     casterId: input.subject.reactorId,
@@ -4409,15 +4484,14 @@ function resolveHellishRebukeReactionSpellCommand(
       wardingBondDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       saveDamageResult,
-      damageDisposition: damageDispositionForTarget(
-        damageDispositionHoles,
-        fillSet.damageDispositions,
-        input.frame.damageSourceId,
-      ),
+      damageDisposition,
       sourceDamageRollPenaltyRoll,
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.reactorId,
       spatialFacts: fillSet.targetSpatialFacts,
+      ...(relationshipCheck.decisions === undefined
+        ? {}
+        : { relationshipDecisions: relationshipCheck.decisions }),
     },
   );
   const slotted = expendSpellSlot(
@@ -4516,8 +4590,8 @@ export function resolveCastAttackHitBonusActionSpellCommand(
   }
   if (
     !isCharacterBattleCreatureState(actor) ||
-    (invocation === undefined ||
-      !isAttackHitBonusActionSpellInvocation(invocation))
+    invocation === undefined ||
+    !isAttackHitBonusActionSpellInvocation(invocation)
   ) {
     return invalidResult(
       input.state,
@@ -5173,20 +5247,25 @@ export function resumeInterruptedProcedure(
     }
     const continuationConcentrationSavingThrows =
       attackDamageContinuationConcentrationFills(continuation);
-    const damagedState = applyAttackDamageAmount(
+    const damagedState = applyAttackDamageAmount({
       state,
-      attackDamageInterruptionParticipantId(continuation),
-      continuation.target.combatantId,
+      attackerId: attackDamageInterruptionParticipantId(continuation),
+      targetId: continuation.target.combatantId,
       damageAmount,
-      attackDamageDeathFailuresAtZeroHp(continuation),
-      continuation.continuation.damageDisposition,
-      continuation.continuation.attackDamageRiders,
-      continuation.continuation.weaponDamageDiceRollChoice,
-      attackDamageContinuationTargetConcentrationFill(state, continuation),
-      [],
-      continuationConcentrationSavingThrows,
-      attackDamageContinuationTargetSpatialFacts(continuation),
-    );
+      deathFailuresAtZeroHp: attackDamageDeathFailuresAtZeroHp(continuation),
+      damageDisposition: continuation.continuation.damageDisposition,
+      attackDamageRiders: continuation.continuation.attackDamageRiders,
+      weaponDamageDiceRollChoice:
+        continuation.continuation.weaponDamageDiceRollChoice,
+      concentrationSavingThrow: attackDamageContinuationTargetConcentrationFill(
+        state,
+        continuation,
+      ),
+      wardingBondDamageShareConcentrationSavingThrows:
+        continuationConcentrationSavingThrows,
+      spatialFacts: attackDamageContinuationTargetSpatialFacts(continuation),
+      relationshipDecisions: continuation.continuation.relationshipDecisions,
+    });
     const afterDamageEvent = {
       damageSourceId: attackDamageInterruptionParticipantId(continuation),
       damagedId: continuation.target.combatantId,
