@@ -11,6 +11,7 @@ import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   AvailableBattleAct,
   BattleCreatureState,
+  BattleDamageRelationshipDecisions,
   BattleFill,
   BattleHole,
   BattleResolutionInput,
@@ -214,6 +215,7 @@ export function battleStateAfterCreatureAttackDamage(input: {
   readonly actor: BattleCreatureState;
   readonly target: BattleCreatureState;
   readonly damage: number;
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
 }): BattleState {
   return applyBattleHitPointDamage({
     state: input.state,
@@ -221,6 +223,9 @@ export function battleStateAfterCreatureAttackDamage(input: {
     damageAmount: input.damage,
     deathFailuresAtZeroHp: 1,
     damageSourceId: input.actor.combatantId,
+    ...(input.relationshipDecisions === undefined
+      ? {}
+      : { relationshipDecisions: input.relationshipDecisions }),
   });
 }
 
@@ -236,9 +241,13 @@ export function creatureAttackFillSequence(
       readonly tag: "damageRoll";
       readonly attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }>;
       readonly damageRoll: CreatureAttackDamageFill;
+      readonly relationshipFill?: Extract<
+        BattleFill,
+        { readonly kind: "damageRelationshipDecisions" }
+      >;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const [attackRoll, damageRoll, extra] = input.fills;
+  const [attackRoll, damageRoll, relationshipFill, extra] = input.fills;
   if (attackRoll === undefined) return { tag: "empty" };
   if (
     attackRoll.kind !== "attackRoll" ||
@@ -257,13 +266,29 @@ export function creatureAttackFillSequence(
         "Creature Attack damage requires a Rolled Dice fill or zero-damage Creature Attack fill.",
     };
   }
+  if (
+    relationshipFill !== undefined &&
+    relationshipFill.kind !== "damageRelationshipDecisions"
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Creature Attack relationship decisions must fill its emitted relationship hole.",
+    };
+  }
   if (extra !== undefined) {
     return {
       tag: "invalid",
-      message: "Creature Attack accepts only Attack Roll and damage fills.",
+      message:
+        "Creature Attack accepts only Attack Roll, damage, and relationship-decision fills.",
     };
   }
-  return { tag: "damageRoll", attackRoll, damageRoll };
+  return {
+    tag: "damageRoll",
+    attackRoll,
+    damageRoll,
+    ...(relationshipFill === undefined ? {} : { relationshipFill }),
+  };
 }
 
 function creatureAttackDamageFillMatchesSubject(

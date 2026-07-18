@@ -9,7 +9,6 @@
 module battleRuntimeConcentration {
   import reactionsContinuationsConcentration as RC from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
 
   pure def concentrationSavingThrowDc(damage: int): int = {
@@ -261,10 +260,14 @@ module battleRuntimeConcentration {
     else
       { ...state, fighter: damagedFighter }
 
-  pure def activeEffectsAfterTargetDamagedByCasterOrAlly(effects: Set[ActiveEffect], damageSource: DamageSourceActor): Set[ActiveEffect] =
+  pure def activeEffectsAfterTargetDamagedByCasterOrAlly(
+    effects: Set[ActiveEffect],
+    damageSource: Actor,
+    alliedEffectSources: Set[Actor],
+  ): Set[ActiveEffect] =
     effects.filter(effect => match effect {
-      | AnimalFriendshipCharmed(data) => not(damageSourceIsCasterOrAlly(data.source, damageSource))
-      | CharmPersonCharmed(data) => not(damageSourceIsCasterOrAlly(data.source, damageSource))
+      | AnimalFriendshipCharmed(data) => not(data.source == damageSource or alliedEffectSources.contains(data.source))
+      | CharmPersonCharmed(data) => not(data.source == damageSource or alliedEffectSources.contains(data.source))
       | _ => true
     })
 

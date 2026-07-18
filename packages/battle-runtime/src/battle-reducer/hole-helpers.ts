@@ -144,6 +144,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         "cunningStrikeEndTurnCoverFacts",
         () => "cunningStrikeEndTurnCoverFacts" as const,
       ),
+      byBattleHoleKind(
+        "damageRelationshipDecisions",
+        () => "damageRelationshipDecisions" as const,
+      ),
       byBattleHoleKind("damageTypeChoice", () => "damageTypeChoice" as const),
       byBattleHoleKind(
         "dancingLightsPlacement",

@@ -143,6 +143,7 @@ import {
   SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
+import { BattleDamageRelationshipQuestionIdSchema } from "./damage-relationship-question-id.ts";
 import {
   AbilityModifier,
   AbilitySchema,
@@ -1069,6 +1070,27 @@ const BattleTargetSpatialFactSchema = Schema.Union(
 const BattleTargetSpatialFactsSchema = Schema.Array(
   BattleTargetSpatialFactSchema,
 );
+const BattleDamageRelationshipQuestionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("targetDamagedByCasterOrAlly"),
+    questionId: BattleDamageRelationshipQuestionIdSchema,
+    targetId: CombatantId,
+    effectSourceId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("enemyZeroHitPointTemporaryHitPoints"),
+    questionId: BattleDamageRelationshipQuestionIdSchema,
+    beneficiaryId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+  }),
+);
+const BattleDamageRelationshipDecisionsSchema = Schema.NonEmptyArray(
+  Schema.Struct({
+    questionId: BattleDamageRelationshipQuestionIdSchema,
+    answer: Schema.Boolean,
+  }),
+);
 
 export const BattleObjectDamageOutcomeSchema = Schema.Union(
   Schema.Struct({
@@ -1240,6 +1262,15 @@ const BattleOngoingSpellTargetWithinRangeFactSchema = Schema.Struct({
 });
 
 export const BattleHoleSchema = Schema.Union(
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("damageRelationshipDecisions"),
+    label: Schema.String,
+    damageEventHoleId: BattleHoleIdSchema,
+    damageSourceId: CombatantId,
+    targetIds: Schema.NonEmptyArray(CombatantId),
+    questions: Schema.NonEmptyArray(BattleDamageRelationshipQuestionSchema),
+  }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("targetChoice"),
@@ -2667,12 +2698,25 @@ type BattleInterruptAttackExecutionSelectionEncoded =
       readonly attackName?: never;
     };
 
+type BattleDamageRelationshipDecisionEncoded = {
+  readonly questionId: string;
+  readonly answer: boolean;
+};
+
 type BattleFillEncoded =
   | {
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
       readonly spatialFacts?: readonly unknown[];
+    }
+  | {
+      readonly kind: "damageRelationshipDecisions";
+      readonly holeId: string;
+      readonly answers: readonly [
+        BattleDamageRelationshipDecisionEncoded,
+        ...BattleDamageRelationshipDecisionEncoded[],
+      ];
     }
   | {
       readonly kind: "targetSpatialFacts";
@@ -3697,6 +3741,11 @@ export const BattleFillSchema: Schema.Schema<
       spatialFacts: Schema.optionalWith(BattleTargetSpatialFactsSchema, {
         exact: true,
       }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("damageRelationshipDecisions"),
+      holeId: BattleHoleIdSchema,
+      answers: BattleDamageRelationshipDecisionsSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("targetSpatialFacts"),
@@ -5667,11 +5716,8 @@ function characterProcedureBindingKind(
   | "spellInvocation"
   | "unavailableSpellInvocation"
   | undefined {
-  return characterProcedureBinding(
-    combatants,
-    combatantId,
-    procedureRef,
-  )?.procedure.kind;
+  return characterProcedureBinding(combatants, combatantId, procedureRef)
+    ?.procedure.kind;
 }
 
 function characterProcedureBinding(
@@ -5785,7 +5831,8 @@ function serializedAttackProcedureRefIsBound(
       combatant.origin.attackExecution.attackProcedureRef === procedureRef ||
       combatant.origin.attackExecution.unarmedStrikeProcedureRef ===
         procedureRef ||
-      combatant.origin.attackExecution.offHandAttackProcedureRef === procedureRef
+      combatant.origin.attackExecution.offHandAttackProcedureRef ===
+        procedureRef
     );
   }
   return combatant.origin.execution.procedureBindings.some(
@@ -5825,16 +5872,14 @@ function serializedAvailableActOwnsBoundProcedure(
       procedureRef,
     );
   }
-  if (
-    subject.tag === "action" &&
-    subject.action === "attack"
-  ) {
+  if (subject.tag === "action" && subject.action === "attack") {
     const owner = combatants.find(
       (combatant) => combatant.combatantId === subject.actorId,
     );
     return owner?.origin.kind === "character"
       ? owner.origin.attackExecution.attackProcedureRef === procedureRef ||
-          owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef
+          owner.origin.attackExecution.unarmedStrikeProcedureRef ===
+            procedureRef
       : serializedAttackProcedureRefIsBound(
           combatants,
           subject.actorId,
@@ -5842,8 +5887,7 @@ function serializedAvailableActOwnsBoundProcedure(
         );
   }
   if (
-    (subject.tag === "bonusAction" &&
-      subject.action === "offHandAttack") ||
+    (subject.tag === "bonusAction" && subject.action === "offHandAttack") ||
     (subject.tag === "bonusAction" &&
       subject.action === "martialArtsUnarmedStrike") ||
     subject.tag === "monkFocusFlurryOfBlowsStrike"
@@ -5926,7 +5970,7 @@ function serializedAvailableActOwnsBoundProcedure(
       ? binding.procedure.invocation.procedure === "expeditiousRetreatDash" &&
           binding.procedure.invocation.spell.id === subject.sourceUnitId
       : (binding?.procedure.kind === "unitFeature" ||
-            binding?.procedure.kind === "unitSupportProfile") &&
+          binding?.procedure.kind === "unitSupportProfile") &&
           binding.procedure.unitId === subject.sourceUnitId;
   }
   if (
@@ -6071,10 +6115,7 @@ export const BattleSnapshotSchema = Schema.Struct({
             ),
           ) &&
           snapshot.readiedResponses.spells.every((readied) =>
-            serializedReadiedSpellOwnsInvocation(
-              snapshot.combatants,
-              readied,
-            ),
+            serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
           ) &&
           (snapshot.pendingInterrupt === null ||
             snapshot.pendingInterrupt.choices.every((choice) =>

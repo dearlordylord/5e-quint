@@ -5,7 +5,6 @@ import { describe, expect, test } from "vitest";
 import {
   animalFriendshipUnitId,
   charmPersonUnitId,
-  oppositionSide,
   partySide,
   sacredFlameUnitId,
   spellCasterId,
@@ -289,6 +288,14 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
       damageSourceId: allyId,
       spatialFacts: [],
+      relationshipDecisions: [
+        {
+          kind: "targetDamagedByCasterOrAlly",
+          targetId: beastId,
+          effectSourceId: spellCasterId,
+          sourceIsAlly: true,
+        },
+      ],
     });
 
     expect(damaged.combatants.get(beastId)).toMatchObject({
@@ -301,20 +308,20 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       ]),
     });
   });
-  test("animal friendship ignores damage from combatants outside the caster's side", () => {
-    const enemyId = combatantId("unit-profile-animal-friendship-enemy-damager");
+  test("animal friendship ignores damage without the rule-local ally decision", () => {
+    const otherId = combatantId("unit-profile-animal-friendship-other-damager");
     const beastId = combatantId("unit-profile-animal-friendship-enemy-damaged");
     const charmed = resolvedAnimalFriendshipState(beastId, [
       {
-        combatantId: enemyId,
+        combatantId: otherId,
         statBlock: statBlockWithCreatureType("humanoid"),
         initiative: 8,
-        side: oppositionSide,
+        side: partySide,
       },
     ]);
 
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
-      damageSourceId: enemyId,
+      damageSourceId: otherId,
       spatialFacts: [],
     });
 
@@ -327,6 +334,74 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
           escape: { kind: "targetDamagedByCasterOrAlly" },
         }),
       ]),
+    });
+  });
+  test("evaluates the damage source independently for each effect source", () => {
+    const damageSourceId = combatantId(
+      "unit-profile-animal-friendship-independent-damager",
+    );
+    const secondCasterId = combatantId(
+      "unit-profile-animal-friendship-second-caster",
+    );
+    const beastId = combatantId(
+      "unit-profile-animal-friendship-independent-target",
+    );
+    const charmed = resolvedAnimalFriendshipState(beastId, [
+      {
+        combatantId: damageSourceId,
+        statBlock: statBlockWithCreatureType("humanoid"),
+        initiative: 8,
+        side: partySide,
+      },
+      {
+        combatantId: secondCasterId,
+        statBlock: statBlockWithCreatureType("humanoid"),
+        initiative: 7,
+        side: partySide,
+      },
+    ]);
+    const target = requireCombatant(charmed, beastId);
+    const firstEffect = target.activeEffects.find(
+      (effect) =>
+        effect.kind === "spellCondition" &&
+        effect.sourceSpellId === animalFriendshipUnitId,
+    );
+    if (firstEffect?.kind !== "spellCondition") {
+      throw new Error("Expected Animal Friendship effect.");
+    }
+    const twoEffectState = {
+      ...charmed,
+      combatants: new Map(charmed.combatants).set(beastId, {
+        ...target,
+        activeEffects: [
+          firstEffect,
+          { ...firstEffect, sourceCombatantId: secondCasterId },
+        ],
+      }),
+    };
+
+    const damaged = applyPreparedSlotSpellDamage(twoEffectState, beastId, 4, {
+      damageSourceId,
+      spatialFacts: [],
+      relationshipDecisions: [
+        {
+          kind: "targetDamagedByCasterOrAlly",
+          targetId: beastId,
+          effectSourceId: spellCasterId,
+          sourceIsAlly: true,
+        },
+      ],
+    });
+
+    expect(damaged.combatants.get(beastId)).toMatchObject({
+      conditions: expect.objectContaining({ charmed: true }),
+      activeEffects: [
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceCombatantId: secondCasterId,
+          sourceSpellId: animalFriendshipUnitId,
+        }),
+      ],
     });
   });
   test("animal friendship stores the caster source and damage-break rule without ally lists", () => {

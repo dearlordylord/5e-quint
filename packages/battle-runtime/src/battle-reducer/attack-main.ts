@@ -82,6 +82,7 @@ import {
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 
 import {
   activeMarkedDamageRiders,
@@ -1547,6 +1548,7 @@ export function resolveSelectedAttackProcedure(
         redirectTarget: fillSet.attackDamageReductionRedirectTarget,
         redirectSave: fillSet.attackDamageReductionRedirectSave,
         redirectDamage: fillSet.attackDamageReductionRedirectDamage,
+        damageRelationshipDecisions: fillSet.damageRelationshipDecisions,
       });
     if (redirectState.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", redirectState.message);
@@ -1595,6 +1597,37 @@ export function resolveSelectedAttackProcedure(
     }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
+    const relationshipCheck = damageRelationshipDecisionFillCheck({
+      state: grapplerPunchAndGrab.state,
+      damageEventHoleId: ATTACK_ROLL_HOLE_ID,
+      damageSourceId: attackerId,
+      targets:
+        Number(reducedFixedDamageAmount) <= 0
+          ? []
+          : [
+              {
+                targetId: target.combatantId,
+                damageAmount: Number(reducedFixedDamageAmount),
+                damageDisposition: fillSet.damageDisposition,
+              },
+            ],
+      spatialFacts: fillSet.targetSpatialFacts,
+      decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
+    });
+    if (relationshipCheck.tag === "needsHoles") {
+      return needsHolesResult(
+        grapplerPunchAndGrab.state,
+        input.subject,
+        relationshipCheck.holes,
+      );
+    }
+    if (relationshipCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        relationshipCheck.message,
+      );
+    }
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
       grapplerPunchAndGrab.state,
       {
@@ -1610,6 +1643,9 @@ export function resolveSelectedAttackProcedure(
             concentrationSavingThrows: primaryConcentrationSavingThrows,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: [],
+            ...(relationshipCheck.decisions === undefined
+              ? {}
+              : { relationshipDecisions: relationshipCheck.decisions }),
           },
         }),
       },
@@ -1665,6 +1701,9 @@ export function resolveSelectedAttackProcedure(
               concentrationSavingThrows: primaryConcentrationSavingThrows,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: [],
+              ...(relationshipCheck.decisions === undefined
+                ? {}
+                : { relationshipDecisions: relationshipCheck.decisions }),
             },
           }),
           concentrationSave: pendingConcentrationSave,
@@ -1697,20 +1736,22 @@ export function resolveSelectedAttackProcedure(
         hideousLaughterSaveCheck.message,
       );
     }
-    const fixedDamageAppliedState = applyAttackDamageAmount(
-      grapplerPunchAndGrab.state,
+    const fixedDamageAppliedState = applyAttackDamageAmount({
+      state: grapplerPunchAndGrab.state,
       attackerId,
-      target.combatantId,
-      toDamageAmount(reducedFixedDamageAmount),
-      critical ? 2 : 1,
-      fillSet.damageDisposition,
-      [],
-      undefined,
-      primaryConcentrationSavingThrow,
-      fillSet.hideousLaughterDamageRepeatSaves,
-      primaryConcentrationSavingThrows,
-      fillSet.targetSpatialFacts,
-    );
+      targetId: target.combatantId,
+      damageAmount: toDamageAmount(reducedFixedDamageAmount),
+      deathFailuresAtZeroHp: critical ? 2 : 1,
+      damageDisposition: fillSet.damageDisposition,
+      attackDamageRiders: [],
+      concentrationSavingThrow: primaryConcentrationSavingThrow,
+      hideousLaughterDamageRepeatSaves:
+        fillSet.hideousLaughterDamageRepeatSaves,
+      wardingBondDamageShareConcentrationSavingThrows:
+        primaryConcentrationSavingThrows,
+      spatialFacts: fillSet.targetSpatialFacts,
+      relationshipDecisions: relationshipCheck.decisions,
+    });
     const fixedDamageWithSlowState = applyWeaponMasterySlowAfterDamage({
       state: fixedDamageAppliedState,
       attackerId,
@@ -1802,6 +1843,15 @@ export function resolveSelectedAttackProcedure(
       "invalidFill",
       "Attack damage can only be filled after a hit.",
     );
+  }
+  if (!hit) {
+    const relationshipIssue =
+      fillSet.damageRelationshipDecisions.unexpectedFillForAbsentEvent(
+        ATTACK_ROLL_HOLE_ID,
+      );
+    if (relationshipIssue !== null) {
+      return invalidResult(input.state, "invalidFill", relationshipIssue);
+    }
   }
   if (hit && fillSet.damageRoll != null) {
     const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
@@ -1935,6 +1985,7 @@ export function resolveSelectedAttackProcedure(
         redirectTarget: fillSet.attackDamageReductionRedirectTarget,
         redirectSave: fillSet.attackDamageReductionRedirectSave,
         redirectDamage: fillSet.attackDamageReductionRedirectDamage,
+        damageRelationshipDecisions: fillSet.damageRelationshipDecisions,
       });
     if (redirectState.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", redirectState.message);
@@ -1983,6 +2034,37 @@ export function resolveSelectedAttackProcedure(
     }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
+    const relationshipCheck = damageRelationshipDecisionFillCheck({
+      state: grapplerPunchAndGrab.state,
+      damageEventHoleId: fillSet.damageRoll.holeId,
+      damageSourceId: attackerId,
+      targets:
+        Number(reducedDamageAmount) <= 0
+          ? []
+          : [
+              {
+                targetId: target.combatantId,
+                damageAmount: Number(reducedDamageAmount),
+                damageDisposition: fillSet.damageDisposition,
+              },
+            ],
+      spatialFacts: fillSet.targetSpatialFacts,
+      decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
+    });
+    if (relationshipCheck.tag === "needsHoles") {
+      return needsHolesResult(
+        grapplerPunchAndGrab.state,
+        input.subject,
+        relationshipCheck.holes,
+      );
+    }
+    if (relationshipCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        relationshipCheck.message,
+      );
+    }
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
       grapplerPunchAndGrab.state,
       {
@@ -1998,6 +2080,9 @@ export function resolveSelectedAttackProcedure(
             concentrationSavingThrows: primaryConcentrationSavingThrows,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+            ...(relationshipCheck.decisions === undefined
+              ? {}
+              : { relationshipDecisions: relationshipCheck.decisions }),
             ...(selectedDamageDiceChoice === null
               ? {}
               : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
@@ -2059,6 +2144,9 @@ export function resolveSelectedAttackProcedure(
               concentrationSavingThrows: primaryConcentrationSavingThrows,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+              ...(relationshipCheck.decisions === undefined
+                ? {}
+                : { relationshipDecisions: relationshipCheck.decisions }),
               ...(selectedDamageDiceChoice === null
                 ? {}
                 : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
@@ -2097,20 +2185,23 @@ export function resolveSelectedAttackProcedure(
         hideousLaughterSaveCheck.message,
       );
     }
-    const damageAppliedState = applyAttackDamageAmount(
-      grapplerPunchAndGrab.state,
+    const damageAppliedState = applyAttackDamageAmount({
+      state: grapplerPunchAndGrab.state,
       attackerId,
-      target.combatantId,
-      toDamageAmount(reducedDamageAmount),
-      critical ? 2 : 1,
-      fillSet.damageDisposition,
-      selectedDamageRidersAfterCunningStrikeCost,
-      selectedDamageDiceChoice ?? undefined,
-      primaryConcentrationSavingThrow,
-      fillSet.hideousLaughterDamageRepeatSaves,
-      primaryConcentrationSavingThrows,
-      fillSet.targetSpatialFacts,
-    );
+      targetId: target.combatantId,
+      damageAmount: toDamageAmount(reducedDamageAmount),
+      deathFailuresAtZeroHp: critical ? 2 : 1,
+      damageDisposition: fillSet.damageDisposition,
+      attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+      weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
+      concentrationSavingThrow: primaryConcentrationSavingThrow,
+      hideousLaughterDamageRepeatSaves:
+        fillSet.hideousLaughterDamageRepeatSaves,
+      wardingBondDamageShareConcentrationSavingThrows:
+        primaryConcentrationSavingThrows,
+      spatialFacts: fillSet.targetSpatialFacts,
+      relationshipDecisions: relationshipCheck.decisions,
+    });
     const cunningStrike = resolveCunningStrikeAfterAttackDamage({
       state: damageAppliedState,
       selected: selectedCunningStrike,
@@ -2855,6 +2946,44 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ]),
     };
   }
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: cleaveAttackRolledState,
+    damageEventHoleId: input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
+    damageSourceId: input.subject.actorId,
+    targets:
+      Number(cleaveDamageAmount) <= 0
+        ? []
+        : [
+            {
+              targetId: secondTargetId,
+              damageAmount: Number(cleaveDamageAmount),
+              damageDisposition:
+                input.fillSet.weaponMasteryCleaveDamageDisposition,
+            },
+          ],
+    spatialFacts: input.fillSet.weaponMasteryCleaveTarget.spatialFacts ?? [],
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return {
+      tag: "result",
+      result: needsHolesResult(
+        cleaveAttackRolledState,
+        input.subject,
+        relationshipCheck.holes,
+      ),
+    };
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        relationshipCheck.message,
+      ),
+    };
+  }
   const cleaveUsedState = recordWeaponMasteryCleaveUsed(
     cleaveAttackRolledState,
     input.subject.actorId,
@@ -2871,6 +3000,9 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
       damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
       attackDamageRiders: [],
+      ...(relationshipCheck.decisions === undefined
+        ? {}
+        : { relationshipDecisions: relationshipCheck.decisions }),
     },
   });
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
@@ -3515,6 +3647,45 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ]),
     };
   }
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: rolledState,
+    damageEventHoleId: input.fillSet.huntersPreyHordeBreakerDamageRoll.holeId,
+    damageSourceId: input.subject.actorId,
+    targets:
+      Number(damageAmount) <= 0
+        ? []
+        : [
+            {
+              targetId: secondTargetId,
+              damageAmount: Number(damageAmount),
+              damageDisposition:
+                input.fillSet.huntersPreyHordeBreakerDamageDisposition,
+            },
+          ],
+    spatialFacts:
+      input.fillSet.huntersPreyHordeBreakerTarget.spatialFacts ?? [],
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return {
+      tag: "result",
+      result: needsHolesResult(
+        rolledState,
+        input.subject,
+        relationshipCheck.holes,
+      ),
+    };
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        relationshipCheck.message,
+      ),
+    };
+  }
   const usedState = recordHuntersPreyHordeBreakerUsed(
     rolledState,
     input.subject.actorId,
@@ -3532,6 +3703,9 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
       damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
       attackDamageRiders: hordeBreakerSelectedDamageRiders,
+      ...(relationshipCheck.decisions === undefined
+        ? {}
+        : { relationshipDecisions: relationshipCheck.decisions }),
     },
   });
   const attackDamageReactionWindow = maybeOpenInterruptWindow(

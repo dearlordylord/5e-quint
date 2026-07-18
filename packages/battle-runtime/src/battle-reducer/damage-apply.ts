@@ -51,7 +51,6 @@ import {
   unavailableStatBlockRechargePoolRefs,
 } from "../stat-block-execution.ts";
 import { KNOCKED_OUT_UNCONSCIOUS } from "../battle-init.ts";
-import type { AttackFillSet } from "../battle-reducer.ts";
 import {
   CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,
   DEATH_SAVING_THROW_HOLE_ID,
@@ -68,13 +67,13 @@ import {
   type BattleDeathSavingThrowHole,
   type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleFill,
+  type BattleDamageRelationshipDecision,
+  type BattleDamageRelationshipDecisions,
   type BattleReadiedSpell,
   type BattleStatBlockRechargeRollHole,
   type BattleStatBlockRechargeRollResult,
   type BattleState,
   type BattleTargetSpatialFact,
-  type SpellMarkedDamageRider,
-  type SpellAttackDamageComponent,
   type WeaponDamageDiceRollChoiceFill,
   type WeaponDamageDiceRollChoiceUsage,
 } from "../battle-reducer.ts";
@@ -91,7 +90,6 @@ import { parseSupportedUnitFeatureProfile } from "../unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import { removeBattleCombatants } from "./api-lifecycle.ts";
 import {
-  combatantsAreAllies,
   currentActorId,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
@@ -106,11 +104,6 @@ import {
   activeDruidWildShape,
   applyActiveDruidWildShapeRechargeRolls,
 } from "./druid-wild-shape.ts";
-import {
-  applySpellDamageReductions,
-  attackDamageByType,
-  damageAmountByTypeAfterTargetAdjustments,
-} from "./damage-helpers.ts";
 import { concentrationSavingThrowDc } from "./domain-helpers.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
@@ -471,6 +464,7 @@ export function applyBattleHitPointDamage(input: {
   >[];
   readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
   readonly suppressWardingBondDamageShare?: true;
 }): BattleState {
   const damaged = applyHpDamage(input.target, input.damageAmount, {
@@ -513,6 +507,7 @@ export function applyBattleHitPointDamage(input: {
           afterConcentration,
           input.damageSourceId,
           targetId,
+          input.relationshipDecisions ?? [],
         )
       : afterConcentration;
   const afterTargetActionEarlyEnd =
@@ -548,6 +543,7 @@ export function applyBattleHitPointDamage(input: {
           priorTarget: input.target,
           damagedTarget: damaged,
           spatialFacts: input.spatialFacts ?? [],
+          relationshipDecisions: input.relationshipDecisions ?? [],
         })
       : afterHideousLaughter;
   const afterFamiliar = applyFindFamiliarZeroHitPointDisappearanceAfterDamage({
@@ -582,6 +578,7 @@ function applyEnemyZeroHitPointTemporaryHitPointsAwards(input: {
   readonly priorTarget: BattleCreatureState;
   readonly damagedTarget: BattleCreatureState;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions: readonly BattleDamageRelationshipDecision[];
 }): BattleState {
   const awards = enemyZeroHitPointTemporaryHitPointsAwards(input);
   if (awards.length === 0) {
@@ -932,74 +929,6 @@ function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
   return { ...stateWithoutCombatant, companions };
 }
 
-export function applyAttackDamage(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: import("../battle-action-options.ts").SupportedAttackActionOption,
-  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
-  critical: boolean,
-  attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
-  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
-): BattleState {
-  if (fillSet.damageRoll == null) {
-    return state;
-  }
-
-  const target = state.combatants.get(targetId);
-  if (target == null) {
-    return state;
-  }
-  const reduction = applySpellDamageReductions(
-    target,
-    attackDamageByType(
-      state.combatants.get(attackerId),
-      attack,
-      fillSet.damageRoll,
-      critical,
-      fillSet.attackRoll,
-      attackDamageRiders,
-      spellWeaponDamageRiders,
-      spellMarkedDamageRiders,
-    ),
-    [],
-  );
-  if (reduction.tag === "invalid") {
-    return state;
-  }
-  const damageAmount = damageAmountByTypeAfterTargetAdjustments(
-    reduction.target,
-    reduction.damageByType,
-  );
-  const damagedTarget = reduction.target;
-  const concentrationSave = concentrationSavingThrowHole(
-    damagedTarget,
-    damageAmount,
-  );
-  const afterDamage = applyBattleHitPointDamage({
-    state,
-    target: damagedTarget,
-    damageAmount,
-    deathFailuresAtZeroHp: critical ? 2 : 1,
-    damageDisposition: fillSet.damageDisposition,
-    damageSourceId: attackerId,
-    concentrationSavingThrow:
-      concentrationSave === null
-        ? undefined
-        : fillSet.concentrationSavingThrows.find(
-            (fill) => fill.holeId === concentrationSave.holeId,
-          ),
-    wardingBondDamageShareConcentrationSavingThrows:
-      fillSet.concentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves: fillSet.hideousLaughterDamageRepeatSaves,
-    spatialFacts: fillSet.targetSpatialFacts,
-  });
-  return normalizeBattleGrapples(
-    recordAttackDamageUnitsUsed(afterDamage, attackDamageRiders),
-  );
-}
-
 function applyHideousLaughterDamageRepeatSaves(
   state: BattleState,
   targetId: CombatantId,
@@ -1044,49 +973,66 @@ function applyHideousLaughterDamageRepeatSaves(
   );
 }
 
-export function applyAttackDamageAmount(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  damageAmount: DamageAmount,
-  deathFailuresAtZeroHp: 1 | 2,
-  damageDisposition: BattleAttackDamageDisposition,
-  attackDamageRiders: readonly AttackDamageRider[],
-  weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill,
-  concentrationSavingThrow?: Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  >,
-  hideousLaughterDamageRepeatSaves: readonly Extract<
+export function applyAttackDamageAmount(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly damageAmount: DamageAmount;
+  readonly deathFailuresAtZeroHp: 1 | 2;
+  readonly damageDisposition: BattleAttackDamageDisposition;
+  readonly attackDamageRiders: readonly AttackDamageRider[];
+  readonly weaponDamageDiceRollChoice?:
+    | WeaponDamageDiceRollChoiceFill
+    | undefined;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+  readonly hideousLaughterDamageRepeatSaves?: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  wardingBondDamageShareConcentrationSavingThrows: readonly ConcentrationSavingThrowFill[] = [],
-  spatialFacts: readonly BattleTargetSpatialFact[] = [],
-): BattleState {
-  const target = state.combatants.get(targetId);
+  >[];
+  readonly wardingBondDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
+  readonly spatialFacts?: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions?:
+    | BattleDamageRelationshipDecisions
+    | undefined;
+}): BattleState {
+  const target = input.state.combatants.get(input.targetId);
   if (target == null) {
-    return state;
+    return input.state;
   }
   const afterDamage = applyBattleHitPointDamage({
-    state,
+    state: input.state,
     target,
-    damageAmount: Number(damageAmount),
-    deathFailuresAtZeroHp,
-    damageDisposition,
-    damageSourceId: attackerId,
-    concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
-    spatialFacts,
+    damageAmount: Number(input.damageAmount),
+    deathFailuresAtZeroHp: input.deathFailuresAtZeroHp,
+    damageDisposition: input.damageDisposition,
+    damageSourceId: input.attackerId,
+    concentrationSavingThrow: input.concentrationSavingThrow,
+    wardingBondDamageShareConcentrationSavingThrows:
+      input.wardingBondDamageShareConcentrationSavingThrows ?? [],
+    hideousLaughterDamageRepeatSaves:
+      input.hideousLaughterDamageRepeatSaves ?? [],
+    spatialFacts: input.spatialFacts ?? [],
+    ...(input.relationshipDecisions === undefined
+      ? {}
+      : { relationshipDecisions: input.relationshipDecisions }),
   });
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(
       afterDamage,
-      attackDamageRiders.map((rider) => ({ ...rider, attackerId })),
-      weaponDamageDiceRollChoice === undefined
+      input.attackDamageRiders.map((rider) => ({
+        ...rider,
+        attackerId: input.attackerId,
+      })),
+      input.weaponDamageDiceRollChoice === undefined
         ? []
-        : [{ attackerId, unitId: weaponDamageDiceRollChoice.unitId }],
+        : [
+            {
+              attackerId: input.attackerId,
+              unitId: input.weaponDamageDiceRollChoice.unitId,
+            },
+          ],
     ),
   );
 }
@@ -1172,6 +1118,7 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
   state: BattleState,
   damageSourceId: CombatantId,
   targetId: CombatantId,
+  relationshipDecisions: readonly BattleDamageRelationshipDecision[],
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -1186,7 +1133,14 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
     > =>
       (effect.kind === "spellCondition" &&
         effect.escape?.kind === "targetDamagedByCasterOrAlly" &&
-        combatantsAreAllies(state, damageSourceId, effect.sourceCombatantId)) ||
+        (damageSourceId === effect.sourceCombatantId ||
+          relationshipDecisions.some(
+            (decision) =>
+              decision.kind === "targetDamagedByCasterOrAlly" &&
+              decision.targetId === targetId &&
+              decision.effectSourceId === effect.sourceCombatantId &&
+              decision.sourceIsAlly,
+          ))) ||
       (effect.kind === "unitFeatureCondition" &&
         effect.earlyEnd?.kind === "targetTakesAnyDamage"),
   );

@@ -148,6 +148,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
       byBattleFillKind("targetChoice", () => "targetChoice" as const),
       byBattleFillKind(
+        "damageRelationshipDecisions",
+        () => "damageRelationshipDecisions" as const,
+      ),
+      byBattleFillKind(
         "targetSpatialFacts",
         () => "targetSpatialFacts" as const,
       ),

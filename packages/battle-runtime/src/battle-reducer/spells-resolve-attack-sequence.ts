@@ -61,6 +61,7 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
 } from "./damage-helpers.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   hideousLaughterDamageRepeatSaveFillCheck,
   hideousLaughterDamageRepeatSaveFillsForTarget,
@@ -910,6 +911,42 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     spellDamageByType,
     input.partFill.damageRoll.holeId,
   );
+  const damageDisposition = damageDispositionForTarget(
+    damageDispositionHole === null ? [] : [damageDispositionHole],
+    relevantDamageDispositionFills,
+    target.combatantId,
+  );
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: postRemarkableAthleteMovementState,
+    damageEventHoleId: input.partFill.damageRoll.holeId,
+    damageSourceId: input.actorId,
+    targets:
+      spellDamageAmount <= 0
+        ? []
+        : [
+            {
+              targetId: target.combatantId,
+              damageAmount: spellDamageAmount,
+              damageDisposition,
+            },
+          ],
+    spatialFacts: input.target.spatialFacts,
+    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      relationshipCheck.message,
+    );
+  }
   const damaged = applySpellDamage(
     postRemarkableAthleteMovementState,
     target.combatantId,
@@ -920,11 +957,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       concentrationSavingThrow: concentrationFill,
       wardingBondDamageShareConcentrationSavingThrows:
         input.fillSet.concentrationSavingThrows,
-      damageDisposition: damageDispositionForTarget(
-        damageDispositionHole === null ? [] : [damageDispositionHole],
-        relevantDamageDispositionFills,
-        target.combatantId,
-      ),
+      damageDisposition,
       spellMarkedDamageRiders,
       spellDamageReductionRoll: spellReductionRoll,
       spellDamageReductionRollHoleForReduction: spellReductionRollHoleForPart,
@@ -934,6 +967,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
       damageSourceId: input.actorId,
       spatialFacts: input.target.spatialFacts,
+      ...(relationshipCheck.decisions === undefined
+        ? {}
+        : { relationshipDecisions: relationshipCheck.decisions }),
     },
   );
   const usedExtraFillHoleIds = [

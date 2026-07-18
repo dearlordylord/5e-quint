@@ -52,6 +52,7 @@ import {
 } from "./domain-constants.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
+import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 
 export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetId: CombatantId | undefined;
@@ -164,6 +165,9 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
     | undefined;
   for (const fill of fills) {
+    if (fill.kind === "damageRelationshipDecisions") {
+      continue;
+    }
     if (fill.kind === "sanctuaryInterdictionOutcome") {
       continue;
     }
@@ -760,10 +764,33 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     };
   }
 
+  const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
+    fills,
+    damageEventHoleIds: new Set(
+      [
+        damageRoll,
+        weaponMasteryCleaveDamageRoll,
+        huntersPreyHordeBreakerDamageRoll,
+        attackDamageReductionRedirectDamage,
+      ]
+        .flatMap((fill) => (fill === undefined ? [] : [fill.holeId]))
+        .concat(damageRoll === undefined ? [ATTACK_ROLL_HOLE_ID] : []),
+    ),
+    owner: "an Attack",
+  });
+  if (relationshipDecisions.tag === "invalid") {
+    return {
+      tag: "invalid",
+      message: relationshipDecisions.message,
+    };
+  }
+
   return {
     tag: "ok",
     targetId,
     targetSpatialFacts,
+    damageRelationshipDecisions:
+      relationshipDecisions.decisionsByRelationshipHole,
     attackRoll,
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,

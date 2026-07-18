@@ -8,18 +8,27 @@ module unitFeatureDarkOnesBlessingCoreExamples {
     all {
       assert(darkOnesBlessingRangeFeet == 10),
       assert(darkOnesBlessingTriggerEligible({
-        enemyReducedToZeroHitPoints: true,
+        targetReducedToZeroHitPoints: true,
+        targetIsEnemyOfBeneficiary: true,
         reducedByBeneficiary: true,
         reducedByOtherWithinTenFeet: false,
       })),
       assert(darkOnesBlessingTriggerEligible({
-        enemyReducedToZeroHitPoints: true,
+        targetReducedToZeroHitPoints: true,
+        targetIsEnemyOfBeneficiary: true,
         reducedByBeneficiary: false,
         reducedByOtherWithinTenFeet: true,
       })),
       assert(not(darkOnesBlessingTriggerEligible({
-        enemyReducedToZeroHitPoints: true,
+        targetReducedToZeroHitPoints: true,
+        targetIsEnemyOfBeneficiary: true,
         reducedByBeneficiary: false,
+        reducedByOtherWithinTenFeet: false,
+      }))),
+      assert(not(darkOnesBlessingTriggerEligible({
+        targetReducedToZeroHitPoints: true,
+        targetIsEnemyOfBeneficiary: false,
+        reducedByBeneficiary: true,
         reducedByOtherWithinTenFeet: false,
       }))),
       assert(darkOnesBlessingTemporaryHitPoints(3, 3) == 6),
