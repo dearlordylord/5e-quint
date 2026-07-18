@@ -808,7 +808,11 @@ function resolveAnimalFriendshipFailedSaveWalk(
 ): AnimalFriendshipFailedSaveWalk {
   const act = animalFriendshipSpellAct(state);
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(targetHole, [beastTargetId]);
+  const targetFill = spellTargetListFill(
+    targetHole,
+    [beastTargetId],
+    act.subject.procedureRef,
+  );
   const awaitingSave = requireNeedsHolesResult(
     resolveBattleSubject({
       state,
@@ -852,7 +856,7 @@ function resolveProtectionFromEvilAndGoodWalk(): ProtectionFromEvilAndGoodWalk {
       fills: [
         knownWillingSpellTargetChoiceFill(
           targetHole,
-          protectionFromEvilAndGoodUnitId,
+          act.subject.procedureRef,
           casterId,
           protectedTargetId,
         ),
@@ -1104,7 +1108,7 @@ function resolveProtectionFromEvilAndGood(): {
     fills: [
       spellTargetChoiceFill(
         targetHole,
-        protectionFromEvilAndGoodUnitId,
+        act.subject.procedureRef,
         casterId,
         protectedTargetId,
       ),
@@ -1117,7 +1121,7 @@ function resolveProtectionFromEvilAndGood(): {
       fills: [
         knownWillingSpellTargetChoiceFill(
           targetHole,
-          protectionFromEvilAndGoodUnitId,
+          act.subject.procedureRef,
           casterId,
           protectedTargetId,
         ),
@@ -1528,7 +1532,11 @@ function animalFriendshipTargetAdmission(
 function resolveAnimalFriendshipFailedSave(state: BattleState): BattleState {
   const act = animalFriendshipSpellAct(state);
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(targetHole, [beastTargetId]);
+  const targetFill = spellTargetListFill(
+    targetHole,
+    [beastTargetId],
+    act.subject.procedureRef,
+  );
   const saveHole = requireResultHole(
     resolveBattleSubject({
       state,
@@ -1572,6 +1580,7 @@ function animalFriendshipSpellAct(state: BattleState): ActionSpellAct {
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   targetIds: readonly CombatantId[],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
     kind: "spellTargetList",
@@ -1581,16 +1590,14 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId,
       targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(animalFriendshipUnitId),
-      ),
+      sourceProcedureRef,
     })),
   };
 }
 
 function spellTargetChoiceFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  unitId: string,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   actorId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -1603,7 +1610,7 @@ function spellTargetChoiceFill(
         kind: "spellTarget",
         casterId: actorId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
+        sourceProcedureRef,
       },
     ],
   };
@@ -1611,11 +1618,16 @@ function spellTargetChoiceFill(
 
 function knownWillingSpellTargetChoiceFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  unitId: string,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   actorId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  const base = spellTargetChoiceFill(hole, unitId, actorId, targetId);
+  const base = spellTargetChoiceFill(
+    hole,
+    sourceProcedureRef,
+    actorId,
+    targetId,
+  );
   return {
     ...base,
     spatialFacts: [
@@ -1624,7 +1636,7 @@ function knownWillingSpellTargetChoiceFill(
         kind: "spellTargetKnownWilling",
         casterId: actorId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
+        sourceProcedureRef,
       },
     ],
   };

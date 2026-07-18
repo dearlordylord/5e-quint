@@ -65,6 +65,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
+  type BattleProcedureExecutionRef,
   type BattleTrackedOngoingSpellLightEmitter,
   type CharacterBattleCreatureState,
 } from "./index.ts";
@@ -344,6 +345,7 @@ function requestHigherLevelCheck(
   });
   const targetFill = ongoingSpellTargetFill(
     requireOngoingSpellTargetChoiceHole(act.initialHoles),
+    act.subject.procedureRef,
   );
   const result = requireNeedsHoles(
     resolveBattleSubject({
@@ -366,14 +368,11 @@ function requestHigherLevelCheck(
     dc: HIGHER_LEVEL_CHECK_DC,
     spellcastingAbilityCheck: {
       casterId: spellCasterId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(dispelMagicUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       target: { kind: "object", objectId: dispelledObjectId },
       effect: {
         kind: "spellActiveEffect",
         activeEffectKind: "spellObjectContactDamage",
-        sourceEffectId: highLevelEffectId,
       },
       contestedSpellLevel: HIGHER_LEVEL_SOURCE_SPELL_LEVEL,
     },
@@ -410,6 +409,7 @@ function resolveHigherLevelCheck(
       fills: [
         ongoingSpellTargetFill(
           requireOngoingSpellTargetChoiceHole(act.initialHoles),
+          act.subject.procedureRef,
         ),
         abilityCheckFill(checkHole, total),
       ],
@@ -438,6 +438,7 @@ function upcastAutoEnd(
       fills: [
         ongoingSpellTargetFill(
           requireOngoingSpellTargetChoiceHole(act.initialHoles),
+          act.subject.procedureRef,
         ),
       ],
     }),
@@ -476,6 +477,7 @@ function targetAntimagicAura(
       fills: [
         ongoingSpellTargetFill(
           requireOngoingSpellTargetChoiceHole(act.initialHoles),
+          act.subject.procedureRef,
           target,
         ),
       ],
@@ -606,6 +608,7 @@ function highLevelObjectContactEffect(): Extract<
 
 function ongoingSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "ongoingSpellTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   target: BattleOngoingSpellTarget = {
     kind: "object",
     objectId: dispelledObjectId,
@@ -615,19 +618,20 @@ function ongoingSpellTargetFill(
     kind: "ongoingSpellTargetChoice",
     holeId: hole.holeId,
     value: target,
-    spatialFacts: [ongoingSpellTargetWithinRangeFact(target)],
+    spatialFacts: [
+      ongoingSpellTargetWithinRangeFact(target, sourceProcedureRef),
+    ],
   };
 }
 
 function ongoingSpellTargetWithinRangeFact(
   target: BattleOngoingSpellTarget,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleOngoingSpellTargetWithinRangeFact {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(dispelMagicUnitId),
-    ),
+    sourceProcedureRef,
     target,
     rangeFeet: movementFeet(120),
   };

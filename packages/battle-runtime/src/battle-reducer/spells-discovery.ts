@@ -574,7 +574,7 @@ export function spellInvocationCasterPrerequisiteIsMet(
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "spellCreatedHeldObject" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.effectRef === invocation.activeEffect.effectRef &&
           effect.sourceCombatantId === actor.combatantId &&
           effect.objectState.kind === "held",
       )) &&
@@ -582,7 +582,7 @@ export function spellInvocationCasterPrerequisiteIsMet(
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "spellCreatedHeldObject" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.effectRef === invocation.activeEffect.effectRef &&
           effect.sourceCombatantId === actor.combatantId &&
           effect.objectState.kind === "notHeld",
       )) &&
@@ -604,7 +604,8 @@ export function spellInvocationCasterPrerequisiteIsMet(
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "dancingLights" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.sourceProcedureRef ===
+            invocation.activeEffect.sourceProcedureRef &&
           effect.sourceCombatantId === actor.combatantId,
       ))
   );

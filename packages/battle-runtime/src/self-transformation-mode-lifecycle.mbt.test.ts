@@ -258,8 +258,7 @@ describe("Self-transformation mode lifecycle MBT parity", () => {
       effect: {
         kind: "damage",
         damage: {
-          kind: "authoredReplacement",
-          sourceUnitId: alterSelfUnitId,
+          kind: "procedureReplacement",
           dice: 1,
           dieSize: 6,
           damageType: "slashing",

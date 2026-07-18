@@ -1506,7 +1506,7 @@ function movementSubstrateRouteForDiscoveredAct(
       },
     ];
   }
-  if (isSpellGrantedDashSubject(state, act.subject)) {
+  if (isSpellGrantedDashSubject(act.subject)) {
     return [
       {
         kind: "discoverBattleActs",
@@ -1581,7 +1581,7 @@ function movementSubstrateRouteForResolution(
   if (commandFleeRoute !== undefined) {
     return commandFleeRoute;
   }
-  if (isSpellGrantedDashSubject(input.state, input.subject)) {
+  if (isSpellGrantedDashSubject(input.subject)) {
     return [
       movementSubstrateResolveWithoutFill(
         "movementResource",
@@ -1728,17 +1728,12 @@ function isForcedReactionMovementSpellSubject(
 }
 
 function isSpellGrantedDashSubject(
-  state: BattleState,
   subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
 ): subject is Extract<
   BattleResolutionInput["subject"],
   { readonly tag: "bonusActionDashSpell" }
 > {
-  return (
-    subject.tag === "bonusActionDashSpell" &&
-    spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "expeditiousRetreatDash"
-  );
+  return subject.tag === "bonusActionDashSpell";
 }
 
 function isPassiveSpeedDashSubject(
@@ -2729,7 +2724,11 @@ function weaponHostedSpellRouteSubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
 ): BattleReducerRouteSubjectFamily | undefined {
-  if (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") {
+  if (
+    subject.tag !== "actionSpell" &&
+    subject.tag !== "bonusActionSpell" &&
+    subject.tag !== "bonusActionDashSpell"
+  ) {
     return undefined;
   }
   const invocation = spellInvocationForRouteSubject(state, subject);

@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-granted-action
@@ -449,9 +448,6 @@ function requestSavingThrow(
     ability: "dex",
     dragonsBreath: {
       sourceCombatantId: spellCasterId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(dragonsBreathUnitId),
-      ),
       lengthFeet: 15,
     },
   });
@@ -488,9 +484,7 @@ function resolveSavingThrow(
   expect(damageHole).toMatchObject({
     dragonsBreath: {
       sourceCombatantId: spellCasterId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(dragonsBreathUnitId),
-      ),
+      sourceProcedureRef: effect.sourceProcedureRef,
       damageType: effect.damageType,
       expr: {
         dice: Number(effect.originalSlotLevel) + 1,

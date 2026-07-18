@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-blur-attack-roll-defense
@@ -193,20 +192,20 @@ const blurAttackRollDefenseStateCheck = stateCheck(
 describe("Blur attack-roll defense lifecycle MBT parity", () => {
   it("creates a self Spell Effect with Concentration and Attack Roll Disadvantage", () => {
     const cast = castBlur(initialRuntimeState());
+    const caster = requireCombatant(cast.battle, spellCasterId);
+    const blurredEffect = caster.activeEffects.find(
+      (effect) => effect.kind === "blurred",
+    );
+    expect(blurredEffect).toBeDefined();
 
-    expect(requireCombatant(cast.battle, spellCasterId)).toMatchObject({
+    expect(caster).toMatchObject({
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(blurUnitId),
-        ),
+        sourceProcedureRef: blurredEffect?.sourceProcedureRef,
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "blurred",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(blurUnitId),
-          ),
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",

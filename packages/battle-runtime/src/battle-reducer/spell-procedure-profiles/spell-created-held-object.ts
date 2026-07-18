@@ -43,6 +43,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
+import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 
 import {
   maybeOpenInterruptWindow,
@@ -66,7 +67,6 @@ import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
 import { applySpellCreatedHeldObjectEffect } from "../spells-active-effects.ts";
-import { spellCreatedHeldObjectEffectForSource } from "../spells-active-effects.ts";
 import { setSpellCreatedHeldObjectState } from "../spells-active-effects.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
@@ -239,12 +239,19 @@ function admitSpellCreatedHeldObjectReEvoke(
 
 function spellCreatedHeldObjectEffectsForSpell(
   ctx: SpellAdmissionContext,
-  _spell: SpellRecord,
+  spell: SpellRecord,
 ): readonly SpellCreatedHeldObjectActiveEffect[] {
+  const selectedExecutionRefs = new Set(
+    characterSpellProcedureRefsForAdmissionContent(
+      ctx.actor.origin.execution,
+      spell,
+    ),
+  );
   return ctx.actor.activeEffects.filter(
     (effect): effect is SpellCreatedHeldObjectActiveEffect =>
       effect.kind === "spellCreatedHeldObject" &&
-      effect.sourceCombatantId === ctx.actor.combatantId,
+      effect.sourceCombatantId === ctx.actor.combatantId &&
+      selectedExecutionRefs.has(effect.sourceProcedureRef),
   );
 }
 
@@ -657,10 +664,12 @@ function resolveSpellCreatedHeldObjectReEvoke(
     );
   }
   const actor = input.input.state.combatants.get(input.actorId);
-  const activeEffect = spellCreatedHeldObjectEffectForSource(
-    actor,
-    input.invocation.activeEffect.sourceCombatantId,
-    input.invocation.spell.id,
+  const activeEffect = actor?.activeEffects.find(
+    (effect): effect is SpellCreatedHeldObjectActiveEffect =>
+      effect.kind === "spellCreatedHeldObject" &&
+      effect.effectRef === input.invocation.activeEffect.effectRef &&
+      effect.sourceCombatantId ===
+        input.invocation.activeEffect.sourceCombatantId,
   );
   if (
     activeEffect === undefined ||

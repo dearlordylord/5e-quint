@@ -1,5 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
@@ -66,19 +64,19 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         "dancingLightsCombinedCast",
       ),
     ]);
+    const castAct = castActs[0];
+    if (castAct === undefined) {
+      throw new Error("Expected Dancing Lights separate-cast act.");
+    }
 
     const resolved = resolveBattleSubject({
       state,
-      subject:
-        castActs[0]?.subject ??
-        spellAct({ state, spellId: dancingLightsUnitId }).subject,
+      subject: castAct.subject,
       fills: [
         {
           kind: "dancingLightsPlacement",
-          holeId: requireHole(
-            castActs[0]?.initialHoles ?? [],
-            "dancingLightsPlacement",
-          ).holeId,
+          holeId: requireHole(castAct.initialHoles, "dancingLightsPlacement")
+            .holeId,
           value: {
             mode: "cast",
             form: "separateLights",
@@ -113,9 +111,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "dancingLights",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(dancingLightsUnitId),
-        ),
+        sourceProcedureRef: castAct.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         form: "separateLights",
       }),
@@ -125,9 +121,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "spellLightEmitter",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(dancingLightsUnitId),
-          ),
+          sourceProcedureRef: castAct.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           attachment: expect.objectContaining({
             kind: "dancingLight",
@@ -147,9 +141,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     );
     expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
       {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(dancingLightsUnitId),
-        ),
+        sourceProcedureRef: castAct.subject.procedureRef,
         effectKind: "spellEffect",
       },
     );

@@ -1,12 +1,11 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY heat_metal
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
 import type { DiceAmount, SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import type { BattleActiveEffect } from "./index.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
   concentrationSavingThrowFill,
@@ -240,9 +239,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       expect.objectContaining({
         objectContact: {
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(heatMetalUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           objectId,
           rangeFeet: movementFeet(60),
           requiresObjectWithinRange: false,
@@ -295,19 +292,14 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(13));
     const caster = requireCombatant(resolved.state, spellCasterId);
     expect(caster.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(heatMetalUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "spellObjectContactDamage",
-          effectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(heatMetalUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           sourceSpellLevel: 2,
           objectId,
@@ -687,9 +679,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     );
     expect(repeatContact.objectContact).toEqual({
       sourceCombatantId: spellCasterId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(heatMetalUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       objectId,
       rangeFeet: movementFeet(60),
       requiresObjectWithinRange: true,
@@ -742,9 +732,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     expect(
       requireCombatant(repeated.state, spellCasterId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(heatMetalUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
   });
@@ -799,9 +787,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     expect(saveHole).toMatchObject({
       objectContactSave: {
         sourceCombatantId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(heatMetalUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         objectId,
         targetIds: [spellTargetId],
       },
@@ -825,9 +811,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     expect(dropHole).toMatchObject({
       objectDrop: {
         sourceCombatantId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(heatMetalUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         objectId,
         targetIds: [spellTargetId],
       },
@@ -857,16 +841,30 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(21));
     expect(resolved.droppedObjects).toBeUndefined();
+    const heatMetalEffect = requireCombatant(
+      resolved.state,
+      spellCasterId,
+    ).activeEffects.find(
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "spellObjectContactDamage" }
+      > =>
+        effect.kind === "spellObjectContactDamage" &&
+        effect.objectId === objectId,
+    );
+    if (heatMetalEffect === undefined) {
+      throw new Error("Expected active Heat Metal object effect.");
+    }
     expect(
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "selfAttackRollAndAbilityCheckRollMode",
-          sourceEffectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(heatMetalUnitId),
-          ),
+          sourceEffectRef: heatMetalEffect.effectRef,
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           mode: "disadvantage",
           expiresAt: { kind: "startOfTurn", combatantId: spellCasterId },
@@ -1017,9 +1015,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
           source: {
             kind: "spell",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(heatMetalUnitId),
-            ),
+            sourceProcedureRef: act.subject.procedureRef,
           },
         },
       ],

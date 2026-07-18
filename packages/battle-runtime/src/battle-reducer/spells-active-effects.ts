@@ -1173,7 +1173,8 @@ export function repositionDancingLightsSpellEffect(
       activeEffects: caster.activeEffects.flatMap((effect) => {
         if (
           effect.kind !== "dancingLights" ||
-          effect.sourceProcedureRef !== invocation.sourceProcedureRef ||
+          effect.sourceProcedureRef !==
+            invocation.activeEffect.sourceProcedureRef ||
           effect.sourceCombatantId !== actorId
         ) {
           return [effect];

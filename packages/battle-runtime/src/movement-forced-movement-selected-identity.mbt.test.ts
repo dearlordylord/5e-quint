@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
@@ -44,6 +43,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
@@ -444,7 +444,7 @@ function replayDissonantWhispersForcedReactionMovementRoute(): readonly BattleRe
   });
   const act = actionSpellAct(state, "dissonant_whispers");
   const target = requireHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, "dissonant_whispers");
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const savingThrow = requireResultHole(
     resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
     "savingThrowOutcome",
@@ -498,7 +498,9 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
   const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-  const targetFill = spellTargetListFill(target, "command", [targetId]);
+  const targetFill = spellTargetListFill(target, act.subject.procedureRef, [
+    targetId,
+  ]);
   const optionFill: Extract<
     BattleFill,
     { readonly kind: "commandOptionChoice" }
@@ -1364,7 +1366,7 @@ function resolveDissonantWhispersForcedReactionMovement(
 ): BattleResolutionResult {
   const act = actionSpellAct(state, "dissonant_whispers");
   const target = requireHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, "dissonant_whispers");
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const savingThrow = requireResultHole(
     resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
     "savingThrowOutcome",
@@ -1414,7 +1416,9 @@ function resolveCommandFleeTargetTurn(
   const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-  const targetFill = spellTargetListFill(target, "command", [targetId]);
+  const targetFill = spellTargetListFill(target, act.subject.procedureRef, [
+    targetId,
+  ]);
   const optionFill: Extract<
     BattleFill,
     { readonly kind: "commandOptionChoice" }
@@ -1841,7 +1845,7 @@ function requireHole<K extends BattleHole["kind"]>(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Extract<MovementForcedMovementSpellId, "dissonant_whispers">,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -1852,7 +1856,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+        sourceProcedureRef,
       },
     ],
   };
@@ -1860,7 +1864,7 @@ function spellTargetFill(
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  sourceProcedureRef: Extract<MovementForcedMovementSpellId, "command">,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -1871,8 +1875,7 @@ function spellTargetListFill(
       kind: "spellTarget" as const,
       casterId,
       targetId,
-      sourceProcedureRef:
-        battleProcedureExecutionRefForTest(sourceProcedureRef),
+      sourceProcedureRef,
     })),
   };
 }

@@ -81,6 +81,7 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import {
   spellManufacturedMetalObjectTargetFact,
+  objectContactDamageSourceProcedureRef,
   spellObjectContactTargetsHole,
   spellObjectContactTargetsHoleId,
   spellObjectTargetHole,
@@ -444,7 +445,7 @@ function validateObjectContactTargets(input: {
   const matchingRangeFacts = rangeFacts.filter(
     (fact) =>
       fact.sourceCombatantId === input.actorId &&
-      fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      fact.sourceProcedureRef === hole.objectContact.sourceProcedureRef &&
       fact.objectId === input.objectId &&
       fact.rangeFeet === input.invocation.rangeFeet,
   );
@@ -481,7 +482,7 @@ function validateObjectContactTargets(input: {
   const matchingContactFacts = contactFacts.filter(
     (fact) =>
       fact.sourceCombatantId === input.actorId &&
-      fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      fact.sourceProcedureRef === hole.objectContact.sourceProcedureRef &&
       fact.objectId === input.objectId &&
       selectedTargetIds.has(fact.targetId),
   );
@@ -514,7 +515,7 @@ function validateObjectContactTargets(input: {
   const matchingHoldingOrWearingFacts = holdingOrWearingFacts.filter(
     (fact) =>
       fact.sourceCombatantId === input.actorId &&
-      fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      fact.sourceProcedureRef === hole.objectContact.sourceProcedureRef &&
       fact.objectId === input.objectId &&
       selectedTargetIds.has(fact.targetId),
   );
@@ -944,7 +945,9 @@ function resolveObjectContactDamage(input: {
                 source: {
                   kind: "spell",
                   sourceCombatantId: input.actorId,
-                  sourceProcedureRef: input.invocation.sourceProcedureRef,
+                  sourceProcedureRef: objectContactDamageSourceProcedureRef(
+                    input.invocation,
+                  ),
                 },
               },
             ]
@@ -1120,7 +1123,7 @@ function objectContactSavingThrowOutcomeHole(input: {
   }
   const key = objectContactSavingThrowOutcomeHoleKey({
     actorId: input.actorId,
-    procedureRef: input.invocation.sourceProcedureRef,
+    procedureRef: objectContactDamageSourceProcedureRef(input.invocation),
     objectId: input.objectId,
   });
   return {
@@ -1130,7 +1133,9 @@ function objectContactSavingThrowOutcomeHole(input: {
     label: `${input.invocation.spell.name} holding or wearing Constitution save`,
     objectContactSave: {
       sourceCombatantId: input.actorId,
-      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceProcedureRef: objectContactDamageSourceProcedureRef(
+        input.invocation,
+      ),
       objectId: input.objectId,
       targetIds: input.targets.map((target) => target.targetId),
     },
@@ -1178,7 +1183,7 @@ function objectDropResolutionHole(input: {
 }): BattleObjectDropResolutionHole {
   const key = objectDropResolutionHoleKey({
     actorId: input.actorId,
-    procedureRef: input.invocation.sourceProcedureRef,
+    procedureRef: objectContactDamageSourceProcedureRef(input.invocation),
     objectId: input.objectId,
   });
   return {
@@ -1188,7 +1193,9 @@ function objectDropResolutionHole(input: {
     label: `${input.invocation.spell.name} object drop resolution`,
     objectDrop: {
       sourceCombatantId: input.actorId,
-      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceProcedureRef: objectContactDamageSourceProcedureRef(
+        input.invocation,
+      ),
       objectId: input.objectId,
       targetIds: input.targetIds,
     },
@@ -1283,7 +1290,9 @@ function applyObjectContactPenalties(input: {
     const effect: ObjectContactPenaltyActiveEffect = {
       kind: "selfAttackRollAndAbilityCheckRollMode",
       sourceEffectRef,
-      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceProcedureRef: objectContactDamageSourceProcedureRef(
+        input.invocation,
+      ),
       sourceCombatantId: input.actorId,
       mode: "disadvantage",
       expiresAt: {

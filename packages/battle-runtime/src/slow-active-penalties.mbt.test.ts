@@ -697,6 +697,18 @@ function slowActivePenaltiesProjection(
   const slowEffect = target.activeEffects.find(
     (effect) => effect.kind === "slowActivePenalties",
   );
+  const casterConcentrationSourceProcedureRef =
+    caster.concentration?.sourceProcedureRef;
+  const casterHasConcentratedSlowEffect =
+    casterConcentrationSourceProcedureRef !== undefined &&
+    [...state.battle.combatants.values()].some((combatant) =>
+      combatant.activeEffects.some(
+        (effect) =>
+          effect.kind === "slowActivePenalties" &&
+          effect.sourceCombatantId === spellCasterId &&
+          effect.sourceProcedureRef === casterConcentrationSourceProcedureRef,
+      ),
+    );
   return {
     currentTurnRole: state.currentTurnRole,
     turnActionOrBonusChoice: actionOrBonusChoice(turnResources),
@@ -718,10 +730,7 @@ function slowActivePenaltiesProjection(
     targetArmorClass: Number(currentArmorClass(activeEffectArmorClass(target))),
     dexteritySavingThrowDelta,
     targetCanReact: combatantCanTakeReactions(target),
-    casterConcentrating:
-      slowEffect !== undefined &&
-      caster.concentration?.sourceProcedureRef ===
-        slowEffect.sourceProcedureRef,
+    casterConcentrating: casterHasConcentratedSlowEffect,
     holes: state.holes.map(slowHole),
     lastResult: state.lastResult,
   };

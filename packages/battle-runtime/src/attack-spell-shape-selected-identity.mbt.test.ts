@@ -42,6 +42,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
+  type BattleProcedureExecutionRef,
   type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
@@ -373,7 +374,7 @@ function resolveSpellAttackHitRoute(input: {
 }): readonly BattleReducerRouteEvent[] {
   const act = actionSpellAct(input.state, input.spellId);
   const target = requireTypedHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const awaitingAttack = requireNeedsHoles(
     resolveBattleSubject({
       state: input.state,
@@ -422,7 +423,7 @@ function resolveSaveDamageRoute(input: {
 }): readonly BattleReducerRouteEvent[] {
   const act = actionSpellAct(input.state, input.spellId);
   const target = requireTypedHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const awaitingSave = requireNeedsHoles(
     resolveBattleSubject({
       state: input.state,
@@ -656,7 +657,7 @@ function resolveSpellAttackHit(input: {
     }),
     "targetChoice",
   );
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const attack = requireResultHole(
     resolveBattleSubject({
       state: input.state,
@@ -703,7 +704,7 @@ function resolveSaveDamageSpell(input: {
     }),
     "targetChoice",
   );
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const save = requireResultHole(
     resolveBattleSubject({
       state: input.state,
@@ -848,7 +849,7 @@ function actionSpellAct(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: AttackSpellShapeSpellId,
+  procedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -859,7 +860,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
+        sourceProcedureRef: procedureRef,
       },
     ],
   };
@@ -1039,4 +1040,3 @@ function level1SlotsRemaining(
   );
   return slot === undefined ? 0 : Number(slot.count) - Number(slot.expended);
 }
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

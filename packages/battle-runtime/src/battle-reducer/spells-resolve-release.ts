@@ -296,7 +296,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
         > =>
           candidate.kind === "dancingLights" &&
           candidate.sourceProcedureRef ===
-            input.invocation.sourceProcedureRef &&
+            input.invocation.activeEffect.sourceProcedureRef &&
           candidate.sourceCombatantId === input.actorId,
       );
     if (activeEffect === undefined) {
@@ -405,7 +405,8 @@ function dancingLightsRepositionPlacementError(
         { readonly kind: "dancingLights" }
       > =>
         candidate.kind === "dancingLights" &&
-        candidate.sourceProcedureRef === invocation.sourceProcedureRef &&
+        candidate.sourceProcedureRef ===
+          invocation.activeEffect.sourceProcedureRef &&
         candidate.sourceCombatantId === actorId,
     );
   if (effect === undefined) {

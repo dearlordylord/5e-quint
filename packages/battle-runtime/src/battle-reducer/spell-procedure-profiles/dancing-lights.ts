@@ -27,6 +27,7 @@ import {
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
+import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 
 import {
   type ActionSpellBattleResolutionInput,
@@ -137,23 +138,37 @@ function admitDancingLightsCombinedCast(
 
 function admitDancingLightsReposition(
   spell: SpellRecord,
-  _ctx: SpellAdmissionContext,
+  ctx: SpellAdmissionContext,
 ): readonly DancingLightsRepositionInvocation[] {
   const profile = dancingLightsSpell(spell);
-  return profile === null
-    ? []
-    : [
-        {
-          access: { tag: "classCantrip" },
-          resource: { tag: "none" },
-          procedure: "dancingLightsReposition",
-          spell,
-          actionCost: "bonusAction",
-          maxMoveFeet: profile.maxMoveFeet,
-          rangeFeet: profile.rangeFeet,
-          spacingFeet: profile.spacingFeet,
-        },
-      ];
+  if (profile === null) {
+    return [];
+  }
+  const selectedExecutionRefs = new Set(
+    characterSpellProcedureRefsForAdmissionContent(
+      ctx.actor.origin.execution,
+      spell,
+    ),
+  );
+  return ctx.actor.activeEffects.flatMap((activeEffect) =>
+    activeEffect.kind === "dancingLights" &&
+    activeEffect.sourceCombatantId === ctx.actor.combatantId &&
+    selectedExecutionRefs.has(activeEffect.sourceProcedureRef)
+      ? [
+          {
+            access: { tag: "classCantrip" },
+            resource: { tag: "none" },
+            procedure: "dancingLightsReposition",
+            spell,
+            actionCost: "bonusAction",
+            activeEffect,
+            maxMoveFeet: profile.maxMoveFeet,
+            rangeFeet: profile.rangeFeet,
+            spacingFeet: profile.spacingFeet,
+          },
+        ]
+      : [],
+  );
 }
 
 function dancingLightsCantripBase(
@@ -300,7 +315,8 @@ function activeDancingLightsEffect(
         { readonly kind: "dancingLights" }
       > =>
         effect.kind === "dancingLights" &&
-        effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+        effect.sourceProcedureRef ===
+          invocation.activeEffect.sourceProcedureRef &&
         effect.sourceCombatantId === actorId,
     );
 }
@@ -403,6 +419,7 @@ const DancingLightsRepositionInvocationSchema = spellProcedureInvocationSchema<
     procedure: Schema.Literal("dancingLightsReposition"),
     spell: BattleRuntimeObjectSchema,
     actionCost: Schema.Literal("bonusAction"),
+    activeEffect: BattleRuntimeObjectSchema,
     maxMoveFeet: MovementFeet,
     rangeFeet: MovementFeet,
     spacingFeet: MovementFeet,

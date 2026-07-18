@@ -1,7 +1,4 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
+import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
@@ -20,6 +17,7 @@ import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
   characterSpellInvocationRefForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
 import {
@@ -76,6 +74,7 @@ import {
   resolveBattleInterrupt,
   resolveFeatherFallLanding,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
   type AvailableBattleAct,
   type BattleActiveEffect,
@@ -88,6 +87,7 @@ import {
   type BattleLightEmitterProjectionFact,
   type BattleObscurementZone,
   type BattleObjectId,
+  type BattleProcedureExecutionRef,
   type BattleReducerRouteEvent,
   type BattleReducerRouteSubjectFamily,
   type BattleResolutionResult,
@@ -1393,7 +1393,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
   const state = featherFallBattle();
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const awaitingReaction = openFeatherFallWindow(state, [
-    featherFallTriggerFact(),
+    featherFallTriggerFact(featherFallProcedureRef(state)),
   ]);
   route.push(
     ...routeEventsOfSubject(
@@ -1419,6 +1419,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
+              choice.subject.procedureRef,
               [featherFallFallingAllyId, featherFallOtherFallingAllyId],
             ),
           ],
@@ -1507,6 +1508,8 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+          .sourceProcedureRef,
       }),
     ],
   });
@@ -1582,6 +1585,8 @@ function replayAreaHazardMovementRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+          .sourceProcedureRef,
       }),
     ],
   });
@@ -1602,9 +1607,11 @@ function replayMovementReplacementRoute(): readonly BattleReducerRouteEvent[] {
     state: initial,
     subject: castAct.subject,
     fills: [
-      jumpTargetListFill(requireHole(castAct.initialHoles, "spellTargetList"), [
-        jumpTargetId,
-      ]),
+      jumpTargetListFill(
+        requireHole(castAct.initialHoles, "spellTargetList"),
+        [jumpTargetId],
+        castAct.subject.procedureRef,
+      ),
     ],
   });
   if (cast.tag !== "resolved") {
@@ -1655,6 +1662,7 @@ function replayObjectLightEmitterRoute(): readonly BattleReducerRouteEvent[] {
     fills: [
       lightObjectTargetFill(
         requireHole(act.initialHoles, "objectTargetChoice"),
+        act.subject.procedureRef,
         {
           objectId: lightObjectId,
           size: "large",
@@ -1778,7 +1786,7 @@ function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
   const state = featherFallBattle();
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const awaitingReaction = openFeatherFallWindow(state, [
-    featherFallTriggerFact(),
+    featherFallTriggerFact(featherFallProcedureRef(state)),
   ]);
   route.push(
     ...routeEventsOfSubject(
@@ -1804,6 +1812,7 @@ function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
+              choice.subject.procedureRef,
               [featherFallFallingAllyId, featherFallOtherFallingAllyId],
             ),
           ],
@@ -2076,7 +2085,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         unwitnessedTrigger.tag === "resolved" &&
         unwitnessedTrigger.snapshot.pendingInterrupt === null;
       const awaitingReaction = openFeatherFallWindow(state, [
-        featherFallTriggerFact(),
+        featherFallTriggerFact(featherFallProcedureRef(state)),
       ]);
       const triggerOffered =
         awaitingReaction.tag === "needsHoles" &&
@@ -2101,6 +2110,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
               fills: [
                 featherFallTargetListFill(
                   requireHole(choice.initialHoles, "spellTargetList"),
+                  choice.subject.procedureRef,
                   [featherFallFallingAllyId, featherFallOtherFallingAllyId],
                 ),
               ],
@@ -2267,6 +2277,8 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: staleGreaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+              .sourceProcedureRef,
           }),
         ],
       });
@@ -2278,6 +2290,8 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: greaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+              .sourceProcedureRef,
           }),
         ],
       });
@@ -2399,7 +2413,13 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const cast = resolveBattleSubject({
         state,
         subject: castAct.subject,
-        fills: [jumpTargetListFill(targetList, [jumpTargetId])],
+        fills: [
+          jumpTargetListFill(
+            targetList,
+            [jumpTargetId],
+            castAct.subject.procedureRef,
+          ),
+        ],
       });
       if (cast.tag !== "resolved") {
         throw new Error(`Expected Jump cast to resolve, got ${cast.tag}.`);
@@ -2497,7 +2517,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             size: "huge",
           }),
@@ -2507,7 +2527,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             wornOrCarried: { kind: "someoneElse", relation: "worn" },
           }),
@@ -2517,7 +2537,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             wornOrCarried: { kind: "someoneElse", relation: "carried" },
           }),
@@ -2527,7 +2547,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             size: "large",
             wornOrCarried: { kind: "caster" },
@@ -2556,6 +2576,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         fills: [
           lightObjectTargetFill(
             requireHole(recastAct.initialHoles, "objectTargetChoice"),
+            recastAct.subject.procedureRef,
             {
               objectId: lightRecastObjectId,
               size: "large",
@@ -2638,7 +2659,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const target = requireHole(hurlAct.initialHoles, "targetChoice");
       const targetFill = spellTargetFill(
         target,
-        produceFlameUnitId,
+        hurlAct.subject.procedureRef,
         casterId,
         observerId,
       );
@@ -3293,12 +3314,14 @@ function lightBattle(): BattleState {
 }
 
 function lightOneRoundRemainingBattle(): BattleState {
+  const battle = lightBattle();
   return {
-    ...lightBattle(),
+    ...battle,
     lightEmitters: [
       lightObjectSpellEmitter({
         objectId: lightExpiringObjectId,
         durationTicks: lightExpiringDurationTicks,
+        sourceProcedureRef: lightAct(battle).subject.procedureRef,
       }),
     ],
   };
@@ -3348,7 +3371,10 @@ function produceFlameOneRoundRemainingBattle(): BattleState {
       ...caster,
       activeEffects: [
         ...caster.activeEffects,
-        produceFlameHeldLightEffectValue(produceFlameExpiringDurationTicks),
+        produceFlameHeldLightEffectValue(
+          produceFlameExpiringDurationTicks,
+          produceFlameHeldLightAct(battle).subject.procedureRef,
+        ),
       ],
     }),
   };
@@ -3661,8 +3687,7 @@ function maybeJumpMovementReplacementAct(
     (candidate): candidate is JumpMovementReplacementAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "jumpMovementReplacement" &&
-      candidate.subject.actorId === actorId &&
-      candidate.subject.sourceCombatantId === casterId,
+      candidate.subject.actorId === actorId,
   );
 }
 
@@ -3870,6 +3895,7 @@ function greaseMovementFill(
   input: {
     readonly areaId: BattleAreaId;
     readonly movementCostFeet: MovementFeet;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -3885,9 +3911,7 @@ function greaseMovementFill(
           {
             kind: "greaseGroundHazard",
             sourceCombatantId: casterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(spellRecord(greaseUnitId).id),
-            ),
+            sourceProcedureRef: input.sourceProcedureRef,
             areaId: input.areaId,
           },
         ],
@@ -3901,6 +3925,7 @@ function greaseMovementFill(
 function jumpTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   targetIds: readonly CombatantId[],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
     kind: "spellTargetList",
@@ -3911,17 +3936,13 @@ function jumpTargetListFill(
         kind: "spellTarget" as const,
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(jumpUnitId),
-        ),
+        sourceProcedureRef,
       },
       {
         kind: "spellTargetKnownWilling" as const,
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(jumpUnitId),
-        ),
+        sourceProcedureRef,
       },
     ]),
   };
@@ -3974,6 +3995,7 @@ function jumpMovementReplacementFill(
 
 function lightObjectTargetFill(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   input: {
     readonly objectId: BattleObjectId;
     readonly size?: LightObjectTargetFact["size"];
@@ -3989,9 +4011,7 @@ function lightObjectTargetFill(
         kind: "spellObjectLightTarget",
         casterId,
         objectId: input.objectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(lightUnitId),
-        ),
+        sourceProcedureRef,
         size: input.size ?? "medium",
         wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
       },
@@ -4034,7 +4054,19 @@ function openFeatherFallWindow(
   });
 }
 
-function featherFallTriggerFact(): Extract<
+function featherFallProcedureRef(
+  state: BattleState,
+): BattleProcedureExecutionRef {
+  return requireCharacterSpellProcedureRefForTest(
+    state,
+    casterId,
+    spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
+  );
+}
+
+function featherFallTriggerFact(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+): Extract<
   BattleTargetSpatialFact,
   { readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange" }
 > {
@@ -4042,9 +4074,7 @@ function featherFallTriggerFact(): Extract<
     kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
     reactorId: casterId,
     fallingCreatureId: featherFallFallingAllyId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(featherFallUnitId),
-    ),
+    sourceProcedureRef,
     rangeFeet: movementFeet(60),
   };
 }
@@ -4073,6 +4103,7 @@ function featherFallReactionChoice(
 
 function featherFallTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -4083,9 +4114,7 @@ function featherFallTargetListFill(
       kind: "featherFallTargetFallingWithinRange",
       casterId,
       targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(featherFallUnitId),
-      ),
+      sourceProcedureRef,
       rangeFeet: movementFeet(60),
     })),
   };
@@ -4126,7 +4155,7 @@ function interruptDecisionFill(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Level1SpatialWitnessCatalogSpellId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -4139,7 +4168,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: sourceCombatantId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
+        sourceProcedureRef,
       },
     ],
   };
@@ -4323,7 +4352,7 @@ function attackRollModeForFaerieFireObject(
     resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [spellObjectTargetFill(objectTarget)],
+      fills: [spellObjectTargetFill(objectTarget, act.subject.procedureRef)],
     }),
     "attackRoll",
   );
@@ -4347,6 +4376,7 @@ function actionSpellAct(
 
 function spellObjectTargetFill(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "objectTargetChoice" }> {
   return {
     kind: "objectTargetChoice",
@@ -4357,9 +4387,7 @@ function spellObjectTargetFill(
         kind: "spellObjectTarget",
         casterId,
         objectId: faerieFireObjectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(starryWispUnitId),
-        ),
+        sourceProcedureRef,
         rangeFeet: starryWispObjectTargetRangeFeet,
         armorClass: faerieFireObjectArmorClass,
         damageDisposition: { kind: "tableResolved" },
@@ -4368,9 +4396,7 @@ function spellObjectTargetFill(
         kind: "spellObjectTargetSight",
         casterId,
         objectId: faerieFireObjectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(starryWispUnitId),
-        ),
+        sourceProcedureRef,
         attackerCanSeeObject: true,
       },
     ],
@@ -4568,6 +4594,16 @@ function greaseActiveEffects(
       effect.sourceCombatantId === casterId &&
       effect.areaId === greaseAreaId,
   );
+}
+
+function greaseGroundHazardEffect(
+  state: BattleState,
+): GreaseGroundHazardEffect {
+  const effect = greaseActiveEffects(state)[0];
+  if (effect === undefined) {
+    throw new Error("Expected active Grease ground hazard.");
+  }
+  return effect;
 }
 
 function greaseTargetProne(state: BattleState, targetId: CombatantId): boolean {
@@ -5237,10 +5273,11 @@ function lightObjectTargetRejected(result: BattleResolutionResult): boolean {
 function lightObjectSpellEmitter(input: {
   readonly objectId: BattleObjectId;
   readonly durationTicks: ElapsedTimeTicks;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): ObjectLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(String(lightUnitId)),
+    sourceProcedureRef: input.sourceProcedureRef,
     sourceCombatantId: casterId,
     attachment: {
       kind: "object",
@@ -5297,15 +5334,14 @@ function produceFlameHeldLightDurationTicks(
 
 function produceFlameHeldLightEffectValue(
   durationTicks: ElapsedTimeTicks,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleActiveEffect, { readonly kind: "heldLight" }> {
   return {
     kind: "heldLight",
     effectRef: battleActiveEffectExecutionRefForTest(
       "synthetic-produce-flame-held-light",
     ),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(produceFlameUnitId),
-    ),
+    sourceProcedureRef,
     sourceCombatantId: casterId,
     brightRadiusFeet: produceFlameBrightRadiusFeet,
     dimAdditionalFeet: produceFlameDimAdditionalFeet,

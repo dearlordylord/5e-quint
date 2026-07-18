@@ -1,5 +1,4 @@
 import {
-  battleProcedureExecutionRefForTest,
   characterSpellProcedureRefMatchesSpellForTest,
 } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
@@ -42,6 +41,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
+  type BattleProcedureExecutionRef,
   type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
@@ -470,6 +470,7 @@ function observeWardCreationRoute(): SanctuaryRouteProjection {
         sanctuaryTargetListFill(
           requireHole(act.initialHoles, "spellTargetList"),
           wardedId,
+          act.subject.procedureRef,
         ),
       ],
     }),
@@ -520,7 +521,7 @@ function observeDirectSpellSuccessfulSaveRoute(): SanctuaryRouteProjection {
   const act = actionSpellAct(warded, fireBoltUnitId);
   const targetFill = spellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
-    fireBoltUnitId,
+    act.subject.procedureRef,
     casterId,
     wardedId,
   );
@@ -720,7 +721,7 @@ function observeSpellCastEarlyEndRoute(): SanctuaryRouteProjection {
       fills: [
         spellTargetFill(
           requireHole(act.initialHoles, "targetChoice"),
-          longstriderUnitId,
+          act.subject.procedureRef,
           casterId,
           casterId,
         ),
@@ -883,7 +884,7 @@ function projectDirectSpellSuccessfulSave(): SanctuarySelectedIdentityProjection
   const act = actionSpellAct(warded, fireBoltUnitId);
   const targetFill = spellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
-    fireBoltUnitId,
+    act.subject.procedureRef,
     casterId,
     wardedId,
   );
@@ -1097,7 +1098,7 @@ function projectSpellCastEarlyEnd(): SanctuarySelectedIdentityProjection {
       fills: [
         spellTargetFill(
           requireHole(act.initialHoles, "targetChoice"),
-          longstriderUnitId,
+          act.subject.procedureRef,
           casterId,
           casterId,
         ),
@@ -1261,6 +1262,7 @@ function castSanctuary(state: BattleState, targetId: CombatantId): BattleState {
         sanctuaryTargetListFill(
           requireHole(act.initialHoles, "spellTargetList"),
           targetId,
+          act.subject.procedureRef,
         ),
       ],
     }),
@@ -1409,6 +1411,7 @@ function endTurnFor(state: BattleState, actorId: CombatantId): BattleState {
 function sanctuaryTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
     kind: "spellTargetList",
@@ -1419,7 +1422,7 @@ function sanctuaryTargetListFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(sanctuaryUnitId),
+        sourceProcedureRef,
       },
     ],
   };
@@ -1451,7 +1454,7 @@ function attackTargetFill(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: SanctuarySelectedIdentitySpellUnitId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   casterIdValue: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -1476,7 +1479,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: casterIdValue,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+        sourceProcedureRef,
       },
     ],
   };

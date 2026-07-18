@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
@@ -52,6 +51,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleObjectDamageDisposition,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
@@ -124,7 +124,9 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type ActionSpellAct = AvailableBattleAct;
+type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
 type ObjectTargetChoiceFill = Extract<
   BattleFill,
   { readonly kind: "objectTargetChoice" }
@@ -689,7 +691,7 @@ function resolveChromaticOrbDuplicateDamageLeap(
   assertSinglePrimaryTargetChoiceProfile(primaryTarget, "Chromatic Orb");
   const primaryTargetChoice = spellTargetFill(
     primaryTarget,
-    "chromatic_orb",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const primaryAttack = requireResultHole(
@@ -732,7 +734,7 @@ function resolveChromaticOrbDuplicateDamageLeap(
   assertChromaticOrbLeapTargetProfile(leapTarget);
   const leapTargetChoice = spellLeapTargetFill(
     leapTarget,
-    "chromatic_orb",
+    act.subject.procedureRef,
     primaryTargetId,
     secondaryTargetId,
   );
@@ -797,7 +799,11 @@ function resolvePoisonSpraySpellAttackDamage(
   const act = actionSpellAct(state, "poison_spray");
   const target = requireHole(act.initialHoles, "targetChoice");
   assertSinglePrimaryTargetChoiceProfile(target, "Poison Spray");
-  const targetChoice = spellTargetFill(target, "poison_spray", primaryTargetId);
+  const targetChoice = spellTargetFill(
+    target,
+    act.subject.procedureRef,
+    primaryTargetId,
+  );
   const attack = requireResultHole(
     resolveBattleSubject({
       state,
@@ -835,7 +841,7 @@ function resolveRayOfSicknessSpellAttackDamageAndPoisoned(
   assertSinglePrimaryTargetChoiceProfile(target, "Ray of Sickness");
   const targetChoice = spellTargetFill(
     target,
-    "ray_of_sickness",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const attack = requireResultHole(
@@ -873,7 +879,11 @@ function resolveSacredFlameDexteritySavingThrowRadiantDamage(
   const act = actionSpellAct(state, "sacred_flame");
   const target = requireHole(act.initialHoles, "targetChoice");
   assertSinglePrimaryTargetChoiceProfile(target, "Sacred Flame");
-  const targetChoice = spellTargetFill(target, "sacred_flame", primaryTargetId);
+  const targetChoice = spellTargetFill(
+    target,
+    act.subject.procedureRef,
+    primaryTargetId,
+  );
   const savingThrow = requireResultHole(
     resolveBattleSubject({
       state,
@@ -914,7 +924,7 @@ function resolveSorcerousBurstSpellAttackDamage(
   const damageTypeChoice = damageTypeChoiceFill(damageType, "thunder");
   const targetChoice = spellTargetFill(
     target,
-    "sorcerous_burst",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const attack = requireResultHole(
@@ -959,6 +969,7 @@ function resolveStarryWispObjectSpellAttackDamageAndDimLight(
   assertStarryWispObjectTargetProfile(objectTarget);
   const objectChoice = starryWispObjectTargetFill(
     objectTarget,
+    act.subject.procedureRef,
     starryWispObjectId,
     { kind: "hitPoints", hitPoints: starryWispObjectHitPoints },
   );
@@ -1005,7 +1016,7 @@ function resolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadva
   assertSinglePrimaryTargetChoiceProfile(target, "Vicious Mockery");
   const targetChoice = spellTargetFill(
     target,
-    "vicious_mockery",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const savingThrow = requireResultHole(
@@ -1044,7 +1055,11 @@ function resolveIceKnifeAttackAndBurstSavingThrows(
   const act = actionSpellAct(state, "ice_knife");
   const target = requireHole(act.initialHoles, "targetChoice");
   assertSinglePrimaryTargetChoiceProfile(target, "Ice Knife");
-  const targetChoice = spellTargetFill(target, "ice_knife", primaryTargetId);
+  const targetChoice = spellTargetFill(
+    target,
+    act.subject.procedureRef,
+    primaryTargetId,
+  );
   const attack = requireResultHole(
     resolveBattleSubject({
       state,
@@ -1227,7 +1242,7 @@ function actionSpellAct(
   spellId: Level1DamageSpellUnitId,
 ): ActionSpellAct {
   const act = discoverBattleActs(state).find(
-    (candidate) =>
+    (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       isExpectedLevel1DamageSpellInvocation(
         battleActSpellPresentation(candidate)?.invocation,
@@ -1265,7 +1280,7 @@ function isExpectedLevel1DamageSpellInvocation(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Level1DamageSpellUnitId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -1277,7 +1292,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+        sourceProcedureRef,
       },
     ],
   };
@@ -1285,7 +1300,7 @@ function spellTargetFill(
 
 function spellLeapTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  sourceProcedureRef: Level1DamageSpellUnitId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   previousTargetId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -1298,8 +1313,7 @@ function spellLeapTargetFill(
         kind: "spellLeapTargetWithinRange",
         previousTargetId,
         targetId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForTest(sourceProcedureRef),
+        sourceProcedureRef,
         rangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
       },
     ],
@@ -1308,6 +1322,7 @@ function spellLeapTargetFill(
 
 function starryWispObjectTargetFill(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   objectId: ObjectTargetChoiceFill["value"],
   damageDisposition: BattleObjectDamageDisposition,
 ): ObjectTargetChoiceFill {
@@ -1320,9 +1335,7 @@ function starryWispObjectTargetFill(
         kind: "spellObjectTarget",
         casterId,
         objectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("starry_wisp"),
-        ),
+        sourceProcedureRef,
         rangeFeet: movementFeet(starryWispRangeFeet),
         armorClass: starryWispObjectArmorClass,
         damageDisposition,

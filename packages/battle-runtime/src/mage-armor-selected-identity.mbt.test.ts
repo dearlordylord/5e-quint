@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MAGE-ARMOR mage_armor
@@ -51,6 +50,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
+  type BattleProcedureExecutionRef,
   type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
@@ -205,7 +205,7 @@ function replayMageArmorBaseArmorClassProjectionRoute(): readonly BattleReducerR
   const result = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetChoiceFill(target, casterId)],
+    fills: [spellTargetChoiceFill(target, casterId, act.subject.procedureRef)],
   });
   requireResolved(result);
   return [
@@ -222,7 +222,9 @@ function replayMageArmorArmoredTargetRejectionRoute(): readonly BattleReducerRou
   const result = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetChoiceFill(target, armoredTargetId)],
+    fills: [
+      spellTargetChoiceFill(target, armoredTargetId, act.subject.procedureRef),
+    ],
   });
   if (result.tag !== "invalid" || result.reason !== "invalidFill") {
     throw new Error(
@@ -307,7 +309,9 @@ function projectArmoredTargetRejection(): MageArmorSelectedIdentityProjection {
   const result = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetChoiceFill(target, armoredTargetId)],
+    fills: [
+      spellTargetChoiceFill(target, armoredTargetId, act.subject.procedureRef),
+    ],
   });
   return {
     ...projectBattleState(state),
@@ -381,7 +385,9 @@ function resolveMageArmorSelf(): ResolvedBattleResult {
     resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [spellTargetChoiceFill(target, casterId)],
+      fills: [
+        spellTargetChoiceFill(target, casterId, act.subject.procedureRef),
+      ],
     }),
   );
 }
@@ -560,6 +566,7 @@ function targetChoiceHole(
 function spellTargetChoiceFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -570,17 +577,13 @@ function spellTargetChoiceFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(mageArmorUnitId),
-        ),
+        sourceProcedureRef,
       },
       {
         kind: "spellTargetKnownWilling",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(mageArmorUnitId),
-        ),
+        sourceProcedureRef,
       },
     ],
   };

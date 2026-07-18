@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-gust-of-wind-line
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
@@ -54,6 +53,7 @@ import {
   type BattleLineDirectionId,
   type BattleResolutionResult,
   type BattleState,
+  type BattleProcedureExecutionRef,
   type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import type { GustOfWindLineEffect } from "./battle-reducer/turn-end-movement.ts";
@@ -376,7 +376,11 @@ function fillEndTurnLineSave(
   state: GustRuntimeState,
   succeeded: boolean,
 ): GustRuntimeState {
-  const directionId = effectDirectionId(state.battle);
+  const effect = gustLineEffect(state.battle);
+  if (effect === undefined) {
+    throw new Error("Expected active Gust of Wind Line.");
+  }
+  const directionId = effect.directionId;
   const save = requireEndTurnLineSaveHole(state.holes);
   const act = gustOfWindLineEndTurnSaveAct(
     state.battle,
@@ -414,6 +418,10 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
     command: "move",
   };
   const directionId = effectDirectionId(state.battle);
+  const effect = gustLineEffect(state.battle);
+  if (effect === undefined) {
+    throw new Error("Expected active Gust of Wind Line.");
+  }
   const moveHole = requireResultHole(
     resolveBattleSubject({
       state: state.battle,
@@ -431,6 +439,7 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
           movementCostFeet: gustMovementCostFeet,
           provokedOpportunityAttacks: [],
           gustOfWindLineMovement: gustOfWindLineMovementFact({
+            sourceProcedureRef: effect.sourceProcedureRef,
             directionId,
             totalDistanceFeet: gustMovementTotalFeet,
             closerDistanceFeet: gustMovementCloserFeet,
@@ -555,6 +564,7 @@ function lineDirection(effect: GustOfWindLineEffect): GustLineDirection {
 }
 
 function gustOfWindLineMovementFact(input: {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly directionId: BattleLineDirectionId;
   readonly totalDistanceFeet: number;
   readonly closerDistanceFeet: number;
@@ -565,9 +575,7 @@ function gustOfWindLineMovementFact(input: {
   return {
     kind: "gustOfWindLineMovement",
     sourceCombatantId: spellCasterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(gustOfWindUnitId),
-    ),
+    sourceProcedureRef: input.sourceProcedureRef,
     areaId: gustOfWindAreaId,
     directionId: input.directionId,
     totalDistanceFeet: movementFeet(input.totalDistanceFeet),

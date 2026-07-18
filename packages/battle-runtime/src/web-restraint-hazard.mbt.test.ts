@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
@@ -393,6 +392,16 @@ function resolveNoLongerInArea(state: WebRuntimeState): WebRuntimeState {
 }
 
 function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
+  const hazard = requireCombatant(
+    state.battle,
+    spellCasterId,
+  ).activeEffects.find(
+    (effect): effect is WebRestraintHazardEffect =>
+      effect.kind === "webRestraintHazard" && effect.areaId === webAreaId,
+  );
+  if (hazard === undefined) {
+    throw new Error("Expected active Web hazard.");
+  }
   const moveSubject: BattleSubject = {
     tag: "runtimeCommand",
     actorId: spellTargetId,
@@ -420,9 +429,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
               {
                 kind: "webAreaHazard",
                 sourceCombatantId: spellCasterId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(webUnitId),
-                ),
+                sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: webAreaId,
               },
             ],

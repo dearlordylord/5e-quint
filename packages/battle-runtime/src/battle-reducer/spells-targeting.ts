@@ -55,6 +55,7 @@ import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/regi
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   type BattleObjectId,
+  type BattleProcedureExecutionRef,
   type BattleTablePositionId,
   type CombatantId,
 } from "../identity.ts";
@@ -445,7 +446,9 @@ export function spellObjectContactTargetsHole(input: {
     label: `${input.invocation.spell.name} contact creatures`,
     objectContact: {
       sourceCombatantId: input.sourceCombatantId,
-      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceProcedureRef: objectContactDamageSourceProcedureRef(
+        input.invocation,
+      ),
       objectId: input.objectId,
       rangeFeet: input.invocation.rangeFeet,
       requiresObjectWithinRange: input.requiresObjectWithinRange,
@@ -460,6 +463,17 @@ export function spellObjectContactTargetsHole(input: {
     ),
     requiresTableSpatialFact: true,
   };
+}
+
+export function objectContactDamageSourceProcedureRef(
+  invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "objectContactDamage" | "objectContactDamageRepeat" }
+  >,
+): BattleProcedureExecutionRef {
+  return invocation.procedure === "objectContactDamageRepeat"
+    ? invocation.activeEffect.sourceProcedureRef
+    : invocation.sourceProcedureRef;
 }
 
 export function spellObjectContactTargetsHoleId(input: {

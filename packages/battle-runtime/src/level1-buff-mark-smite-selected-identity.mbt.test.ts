@@ -1173,7 +1173,7 @@ function observeMarkedRiderSameTurnTransferRoute(): readonly BattleReducerRouteE
     fills: [
       spellTargetFill(
         transferTarget,
-        huntersMarkUnitId,
+        transferAct.subject.procedureRef,
         casterId,
         markedDamageTransferTargetId,
       ),
@@ -1198,7 +1198,7 @@ function observeMarkedRiderLaterTurnTransferRoute(): readonly BattleReducerRoute
     fills: [
       spellTargetFill(
         transferTarget,
-        hexUnitId,
+        transferAct.subject.procedureRef,
         casterId,
         markedDamageTransferTargetId,
       ),
@@ -1315,7 +1315,9 @@ function castHuntersMarkForRoute(): {
   const cast = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetFill(target, huntersMarkUnitId, casterId, targetId)],
+    fills: [
+      spellTargetFill(target, act.subject.procedureRef, casterId, targetId),
+    ],
   });
   return {
     state: requireResolvedResult(
@@ -1338,7 +1340,12 @@ function castHexForRoute(): {
   });
   const act = bonusActionSpellAct(state, hexUnitId);
   const target = requireHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, hexUnitId, casterId, targetId);
+  const targetFill = spellTargetFill(
+    target,
+    act.subject.procedureRef,
+    casterId,
+    targetId,
+  );
   const awaitingAbility = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -1377,7 +1384,9 @@ function castHeroismForRoute(input: {
   const cast = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
+    fills: [
+      spellTargetFill(target, act.subject.procedureRef, casterId, casterId),
+    ],
   });
   const sources = [act, cast] as const;
   return {
@@ -1626,6 +1635,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
   let damageRider:
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined;
+  let projectedDamageRiderSourceSpellId: DamageRiderSourceSpellId = "none";
   let hexDamageHoleRider:
     | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
     | undefined;
@@ -1651,6 +1661,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
   function resetProcedureProjections(): void {
     damageRider = undefined;
+    projectedDamageRiderSourceSpellId = "none";
     hexDamageHoleRider = undefined;
     huntersMarkDamageHoleRider = undefined;
     huntersMarkTransferKindOnDropTurn = "none";
@@ -1711,7 +1722,9 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
     const cast = resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
+      fills: [
+        spellTargetFill(target, act.subject.procedureRef, casterId, casterId),
+      ],
     });
     if (cast.tag !== "resolved") {
       throw new Error(`Expected Heroism to resolve, got ${cast.tag}.`);
@@ -1772,6 +1785,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
       const attack = resolveLongswordHit({ state });
       damageRider = attack.damageRider;
+      projectedDamageRiderSourceSpellId = divineFavorUnitId;
       recordRouteEvents(act, cast, attack);
       recordResolvedResult(attack.result, "divineFavor");
     },
@@ -1809,6 +1823,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         damage,
         divineSmiteUnitId,
       );
+      projectedDamageRiderSourceSpellId = divineSmiteUnitId;
       const resolved = resolveBattleSubject({
         state: afterSmiteDamage.state,
         subject: hit.subject,
@@ -1989,7 +2004,12 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         state,
         subject: castAct.subject,
         fills: [
-          spellTargetFill(castTarget, huntersMarkUnitId, casterId, targetId),
+          spellTargetFill(
+            castTarget,
+            castAct.subject.procedureRef,
+            casterId,
+            targetId,
+          ),
         ],
       });
       if (cast.tag !== "resolved") {
@@ -2052,7 +2072,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         fills: [
           spellTargetFill(
             transferTarget,
-            huntersMarkUnitId,
+            transferAct.subject.procedureRef,
             casterId,
             markedDamageTransferTargetId,
           ),
@@ -2077,7 +2097,12 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         state,
         subject: castAct.subject,
         fills: [
-          spellTargetFill(castTarget, hexUnitId, casterId, targetId),
+          spellTargetFill(
+            castTarget,
+            castAct.subject.procedureRef,
+            casterId,
+            targetId,
+          ),
           abilityChoiceFill(chosenAbility, "wis"),
         ],
       });
@@ -2136,7 +2161,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         fills: [
           spellTargetFill(
             transferTarget,
-            hexUnitId,
+            transferAct.subject.procedureRef,
             casterId,
             markedDamageTransferTargetId,
           ),
@@ -2162,7 +2187,9 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const resolved = resolveBattleSubject({
         state,
         subject: act.subject,
-        fills: [spellTargetFill(target, longstriderUnitId, casterId, targetId)],
+        fills: [
+          spellTargetFill(target, act.subject.procedureRef, casterId, targetId),
+        ],
       });
       recordRouteEvents(act, resolved);
       recordResolvedResult(resolved, "longstrider");
@@ -2366,6 +2393,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       projectLevel1BuffMarkSmiteSelectedIdentityState(
         state,
         damageRider,
+        projectedDamageRiderSourceSpellId,
         huntersMarkDamageHoleRider,
         huntersMarkTransferKindOnDropTurn,
         huntersMarkTransferVisibleOnDropTurn,
@@ -2894,7 +2922,7 @@ function attackTargetFill(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Level1BuffMarkSmiteSpellId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -2907,7 +2935,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
+        sourceProcedureRef,
       },
     ],
   };
@@ -3702,6 +3730,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   damageRider:
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined,
+  projectedDamageRiderSourceSpellId: DamageRiderSourceSpellId,
   huntersMarkDamageHoleRider:
     | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
     | undefined,
@@ -3746,7 +3775,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
       ),
     level1SlotsRemaining: level1SlotsRemaining(state),
     divineFavorActiveRiderCount: divineFavorActiveRiderCount(state),
-    damageRiderSourceSpellId: damageRiderSourceSpellId(state, damageRider),
+    damageRiderSourceSpellId: projectedDamageRiderSourceSpellId,
     damageRiderDamageType:
       damageRider?.damage.damageType === "radiant" ? "radiant" : "none",
     damageRiderDice: damageRider?.damage.expr.dice ?? 0,
@@ -4242,30 +4271,6 @@ function hexActiveMarkRetargetTiming(
   );
 }
 
-function damageRiderSourceSpellId(
-  state: BattleState,
-  damageRider:
-    | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
-    | undefined,
-): Level1BuffMarkSmiteSelectedIdentityProjection["damageRiderSourceSpellId"] {
-  if (damageRider === undefined) {
-    return "none";
-  }
-  if (
-    characterSpellProcedureRefMatchesSpellForTest(
-      state,
-      damageRider.sourceCombatantId,
-      damageRider.sourceProcedureRef,
-      divineFavorUnitId,
-    )
-  ) {
-    return divineFavorUnitId;
-  }
-  throw new Error(
-    `Unexpected damage rider source spell id ${damageRider.sourceProcedureRef}.`,
-  );
-}
-
 function isDamageRiderSourceSpellId(
   value: string,
 ): value is Exclude<DamageRiderSourceSpellId, "none"> {
@@ -4286,12 +4291,7 @@ function divineFavorActiveRiderCount(state: BattleState): number {
       ?.activeEffects.filter(
         (effect) =>
           effect.kind === "spellWeaponDamageRider" &&
-          characterSpellProcedureRefMatchesSpellForTest(
-            state,
-            effect.sourceCombatantId,
-            effect.sourceProcedureRef,
-            divineFavorUnitId,
-          ),
+          effect.sourceCombatantId === casterId,
       ).length ?? 0
   );
 }
