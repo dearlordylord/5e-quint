@@ -3319,8 +3319,9 @@ export type MarkedDamageRiderSpellInvocation =
         readonly damageType: DamageType;
       };
       readonly rangeFeet: MovementFeet;
-      readonly activeEffect: BattleSpellActiveEffectTemplate<
-        Extract<BattleActiveEffect, { readonly kind: "spellMarkedDamageRider" }>
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "spellMarkedDamageRider" }
       >;
     };
 export type HeldLightSpellInvocation = {

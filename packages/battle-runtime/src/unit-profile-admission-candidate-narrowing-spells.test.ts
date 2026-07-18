@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
@@ -297,6 +300,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     }
     const markedDamageRider = {
       kind: "spellMarkedDamageRider" as const,
+      effectRef: battleActiveEffectExecutionRefForTest("candidate-mark"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(spellId("hunters_mark")),
       ),

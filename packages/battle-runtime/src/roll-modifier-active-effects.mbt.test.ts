@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-roll-modifier spell.invocation-self-ability-check-advantage
@@ -1491,6 +1494,7 @@ function withCharismaDisadvantageAgainstCaster(
   const source = requireCombatant(state, spellTargetId);
   const hexEffect = {
     kind: "spellMarkedDamageRider",
+    effectRef: battleActiveEffectExecutionRefForTest("roll-modifier-hex"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(String("hex")),
     sourceCombatantId: spellTargetId,
     targetCombatantId: spellCasterId,

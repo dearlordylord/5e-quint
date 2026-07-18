@@ -20,7 +20,6 @@ import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
   characterExecutionWithSpellInvocations,
-  characterSpellProcedure,
   characterSpellProcedureRef,
   characterUnitProcedureRefs,
 } from "./character-execution.ts";
@@ -216,24 +215,25 @@ function admitCharacterProcedureDiscoveryActs(
                 state,
                 subject,
                 procedureRef,
-                { label: act.label, summary: act.summary },
               );
-              return [
-                {
-                  ...act,
-                  label: text.label,
-                  summary: text.summary,
-                  subject: admittedSubject,
-                  initialHoles: admissionBoundProcedureHoles(
-                    act.initialHoles,
-                    procedureRef,
-                  ),
-                  presentation: characterProcedurePresentation(
-                    subject,
-                    procedureRef,
-                  ),
-                },
-              ];
+              return text === undefined
+                ? []
+                : [
+                    {
+                      ...act,
+                      label: text.label,
+                      summary: text.summary,
+                      subject: admittedSubject,
+                      initialHoles: admissionBoundProcedureHoles(
+                        act.initialHoles,
+                        procedureRef,
+                      ),
+                      presentation: characterProcedurePresentation(
+                        subject,
+                        procedureRef,
+                      ),
+                    },
+                  ];
             })();
       },
     );
@@ -244,21 +244,19 @@ function characterProcedurePresentationText(
   state: BattleState,
   subject: CharacterProcedureSelectionSubject,
   procedureRef: BattleProcedureExecutionRef,
-  fallback: { readonly label: string; readonly summary: string },
-): { readonly label: string; readonly summary: string } {
+): { readonly label: string; readonly summary: string } | undefined {
   const actor = state.combatants.get(subject.actorId);
-  if (actor?.origin.kind !== "character") return fallback;
+  if (actor?.origin.kind !== "character") return undefined;
   if (
     subject.tag === "actionSpell" ||
     subject.tag === "bonusActionSpell" ||
     subject.tag === "bonusActionDashSpell" ||
     subject.tag === "findFamiliarTouchSpell"
   ) {
-    const invocation = characterSpellProcedure(
-      actor.origin.execution,
-      procedureRef,
+    const invocation = supportedSpellActs(actor, state).find(
+      (candidate) => candidate.sourceProcedureRef === procedureRef,
     );
-    if (invocation === undefined) return fallback;
+    if (invocation === undefined) return undefined;
     return {
       label: invocation.spell.name,
       summary: `Use ${invocation.spell.name}.`,
@@ -279,7 +277,7 @@ function characterProcedurePresentationText(
       typeof profile !== "object" ||
       !("unit" in profile)
     ) {
-      return fallback;
+      return undefined;
     }
     const label = `${profile.unit.name}: ${form.statBlock.statBlock.displayName}`;
     return { label, summary: `Use ${label}.` };
@@ -302,7 +300,7 @@ function characterProcedurePresentationText(
     typeof profile !== "object" ||
     !("unit" in profile)
   ) {
-    return fallback;
+    return undefined;
   }
   return { label: profile.unit.name, summary: `Use ${profile.unit.name}.` };
 }

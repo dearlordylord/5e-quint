@@ -1,5 +1,8 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE web
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
@@ -22,10 +25,7 @@ import {
   webRestraintSaveAct,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import {
-  battleActiveEffectExecutionRef,
-  type CombatantId,
-} from "./identity.ts";
+import { type CombatantId } from "./identity.ts";
 import {
   battleObscurementZones,
   battlePerceptionRollModeForObscurement,
@@ -465,7 +465,9 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           actorId: ensnaringStrikeHelperId,
           action: "escapeSpellRestraint",
           targetId: spellTargetId,
-          effectRef: battleActiveEffectExecutionRef("stale-web-restraint"),
+          effectRef: battleActiveEffectExecutionRefForTest(
+            "stale-web-restraint",
+          ),
         },
         fills: [],
       }),

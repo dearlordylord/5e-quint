@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -955,6 +958,7 @@ function withSyntheticMarkedDamageRider(state: BattleState): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const markedRider = {
     kind: "spellMarkedDamageRider",
+    effectRef: battleActiveEffectExecutionRefForTest("reduce-floor-mark"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spellId("synthetic_reduce_floor_mark")),
     ),

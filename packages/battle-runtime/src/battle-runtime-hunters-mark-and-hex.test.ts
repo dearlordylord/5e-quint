@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
@@ -148,8 +151,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           kind: "spellTarget",
           casterId: fighterId,
           targetId: goblinId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("magic_missile"),
+          sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+            magicMissileTargetAllocation,
           ),
         },
       ],
@@ -389,7 +392,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     );
 
     expect(transferred.state.combatants.get(fighterId)?.concentration).toEqual({
-      sourceProcedureRef: battleActSpellPresentation(transferAct)?.procedureRef,
+      sourceProcedureRef: battleActSpellPresentation(markAct)?.procedureRef,
       effectKind: "spellEffect",
     });
     expect(transferred.state.combatants.get(fighterId)?.activeEffects).toEqual([
@@ -432,10 +435,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: markAct.subject,
         fills: [
-          targetFill(
-            findHole(markAct.initialHoles, "targetChoice"),
-            goblinId,
-          ),
+          targetFill(findHole(markAct.initialHoles, "targetChoice"), goblinId),
         ],
       }),
     ).state;
@@ -808,10 +808,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: hexAct.subject,
         fills: [
-          targetFill(
-            findHole(hexAct.initialHoles, "targetChoice"),
-            goblinId,
-          ),
+          targetFill(findHole(hexAct.initialHoles, "targetChoice"), goblinId),
           {
             kind: "abilityChoice",
             holeId: findHole(hexAct.initialHoles, "abilityChoice").holeId,

@@ -233,6 +233,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     const fillSet = spellFillSet(
       fills,
       input.invocation,
+      input.invocation.sourceProcedureRef,
       input.actorId,
       input.input.state,
     );

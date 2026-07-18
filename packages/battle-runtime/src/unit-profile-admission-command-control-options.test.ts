@@ -1,9 +1,11 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
 import { describe, expect, test } from "vitest";
-import { battleActiveEffectExecutionRef } from "./identity.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterBonusAttackSubjectForTest,
@@ -404,7 +406,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellTargetId,
         command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRef("stale-command-grovel"),
+        effectRef: battleActiveEffectExecutionRefForTest(
+          "stale-command-grovel",
+        ),
       },
       fills: [],
     });
@@ -801,7 +805,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellCasterId,
         command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRef("premature-command-grovel"),
+        effectRef: battleActiveEffectExecutionRefForTest(
+          "premature-command-grovel",
+        ),
       },
       fills: [],
     });

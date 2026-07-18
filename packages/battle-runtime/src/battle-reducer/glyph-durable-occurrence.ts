@@ -1833,6 +1833,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
+      input.effect.sourceProcedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1856,6 +1857,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
+      input.effect.sourceProcedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1881,6 +1883,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
+      input.effect.sourceProcedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1904,6 +1907,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
+      input.effect.sourceProcedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1930,6 +1934,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
+      input.effect.sourceProcedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -1963,6 +1968,7 @@ function resolveStoredSpellGlyphRelease(input: {
     const fillSet = spellFillSet(
       fills,
       invocation,
+      input.effect.sourceProcedureRef,
       input.effect.sourceCombatantId,
       input.state,
     );
@@ -2026,6 +2032,7 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
   const fillSet = spellFillSet(
     fills,
     input.invocation,
+    input.effect.sourceProcedureRef,
     input.effect.sourceCombatantId,
     input.state,
   );

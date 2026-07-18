@@ -23,9 +23,11 @@ import {
   type AttackRollResult,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -796,13 +798,13 @@ export function activeSpellWeaponDamageRiders(
 
 export function activeMarkedDamageRiderEffect(
   attacker: BattleCreatureState | undefined,
-  spellId?: SpellRecord["id"],
+  effectRef?: BattleActiveEffectExecutionRef,
 ): SpellMarkedDamageRider | null {
   const effects =
     attacker?.activeEffects.filter(
       (effect): effect is SpellMarkedDamageRider =>
         effect.kind === "spellMarkedDamageRider" &&
-        (spellId === undefined || effect.sourceProcedureRef === spellId),
+        (effectRef === undefined || effect.effectRef === effectRef),
     ) ?? [];
   return effects[0] ?? null;
 }

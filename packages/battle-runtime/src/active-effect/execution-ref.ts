@@ -19,6 +19,7 @@ export type ReplayAddressableSpellActiveEffect = Extract<
       | "heldLight"
       | "jumpMovementReplacement"
       | "spellObjectContactDamage"
+      | "spellMarkedDamageRider"
       | "spiritualWeapon"
       | "possession"
       | "selfTransformation"

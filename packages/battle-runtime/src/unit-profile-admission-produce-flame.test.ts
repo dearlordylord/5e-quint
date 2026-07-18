@@ -4,6 +4,8 @@ import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87A produce_flame
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-held-light-emitter
 import { describe, expect, test } from "vitest";
+import { Either, Schema } from "effect";
+import { BattleHoleSchema } from "./index.ts";
 import {
   produceFlameUnitId,
   shieldUnitId,
@@ -378,6 +380,48 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         label: "Produce Flame object target",
       }),
     ]);
+  });
+  test("produce_flame hurl hole codec requires its stored effect execution ref", () => {
+    const spell = spellRecord(produceFlameUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const lit = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      fills: [],
+    });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const targetFill = spellTargetFill(
+      requireHole(hurl.initialHoles, "targetChoice"),
+      produceFlameUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attackHole = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const encoded = Schema.encodeUnknownSync(BattleHoleSchema)(attackHole);
+    const legacySpell = {
+      ...(encoded as { readonly spell: object }).spell,
+    } as {
+      sourceEffectRef?: unknown;
+    };
+    delete legacySpell.sourceEffectRef;
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...encoded,
+          spell: legacySpell,
+        }),
+      ),
+    ).toBe(true);
   });
   test("produce_flame hurl resolves ranged spell attack Fire damage and ends the held flame", () => {
     const spell = spellRecord(produceFlameUnitId);

@@ -3988,6 +3988,7 @@ function maybeOpenTriggeredReactionSpellCastInterrupt(input: {
   const fillSet = spellFillSet(
     input.fills,
     input.invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );
@@ -4099,6 +4100,7 @@ function resolveCounterspellReactionSpellCommand(
   const fillSet = spellFillSet(
     input.fills,
     input.invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );
@@ -4133,6 +4135,7 @@ function resolveFeatherFallReactionSpellCommand(
   const fillSet = spellFillSet(
     input.fills,
     input.invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );
@@ -4167,6 +4170,7 @@ function resolveShieldReactionSpellCommand(
   const fillSet = spellFillSet(
     input.fills,
     input.invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );
@@ -4215,6 +4219,7 @@ function resolveHellishRebukeReactionSpellCommand(
   const fillSet = spellFillSet(
     input.fills,
     input.invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );
@@ -4794,6 +4799,7 @@ function attackHitBonusActionSpellFillValidation(
   const fillSet = spellFillSet(
     input.fills,
     invocation,
+    invocation.sourceProcedureRef,
     input.subject.actorId,
     input.state,
   );

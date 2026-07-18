@@ -381,6 +381,7 @@ function afterHitSaveGatedConditionFillSet(
   const fillSet = spellFillSet(
     fills,
     invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );

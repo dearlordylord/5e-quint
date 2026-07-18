@@ -1,7 +1,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -301,6 +304,7 @@ function withHexCharismaDisadvantage(state: BattleState): BattleState {
   }
   const hexEffect = {
     kind: "spellMarkedDamageRider",
+    effectRef: battleActiveEffectExecutionRefForTest("booming-voice-hex"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(String("hex")),
     sourceCombatantId: goblinId,
     targetCombatantId: fighterId,

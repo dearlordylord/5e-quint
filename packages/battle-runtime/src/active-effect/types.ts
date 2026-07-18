@@ -1244,17 +1244,18 @@ export type BattleActiveEffect =
         { readonly kind: "duration" }
       >;
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "spellMarkedDamageRider";
-      readonly targetCombatantId: CombatantId;
-      readonly transfer: MarkedDamageRiderTransferState;
-      readonly abilityCheckBehavior: MarkedDamageRiderAbilityCheckBehavior;
-      readonly damage: {
-        readonly expr: DiceExpr;
-        readonly damageType: DamageType;
-      };
-      readonly expiresAt: BattleActiveEffectExpiration;
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "spellMarkedDamageRider";
+        readonly targetCombatantId: CombatantId;
+        readonly transfer: MarkedDamageRiderTransferState;
+        readonly abilityCheckBehavior: MarkedDamageRiderAbilityCheckBehavior;
+        readonly damage: {
+          readonly expr: DiceExpr;
+          readonly damageType: DamageType;
+        };
+        readonly expiresAt: BattleActiveEffectExpiration;
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "spellDashBonusAction";
       readonly expiresAt: Extract<

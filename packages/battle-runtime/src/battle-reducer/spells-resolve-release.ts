@@ -528,6 +528,7 @@ export function resolveReadySpellAct(
   const fillSet = spellFillSet(
     input.fills,
     invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );
@@ -682,6 +683,7 @@ export function resolveSpellRelease(
   const fillSet = spellFillSet(
     input.fills,
     invocation,
+    invocation.sourceProcedureRef,
     input.subject.actorId,
     input.state,
   );

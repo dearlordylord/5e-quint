@@ -1202,6 +1202,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       const rewrittenFillSet = spellFillSet(
         rewrittenFills,
         input.invocation,
+        input.invocation.sourceProcedureRef,
         input.actorId,
         input.input.state,
       );

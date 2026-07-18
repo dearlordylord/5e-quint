@@ -948,6 +948,7 @@ function resolveSpellActInternal(
   const fillSet = spellFillSet(
     input.fills,
     invocation,
+    invocation.sourceProcedureRef,
     subject.actorId,
     input.state,
   );
@@ -2314,6 +2315,7 @@ function spiritualWeaponResolutionCommitAlreadyApplied(input: {
   const fillSet = spellFillSet(
     input.fills,
     input.invocation,
+    input.invocation.sourceProcedureRef,
     input.actorId,
     input.state,
   );
@@ -3235,6 +3237,7 @@ export function resolveBonusActionSpellAct(
   const fillSet = spellFillSet(
     input.fills,
     invocation,
+    invocation.sourceProcedureRef,
     subject.actorId,
     input.state,
   );
@@ -3382,6 +3385,7 @@ export function resolveBonusActionDashSpellAct(
   const fillSet = spellFillSet(
     input.fills,
     invocation,
+    invocation.sourceProcedureRef,
     subject.actorId,
     input.state,
   );

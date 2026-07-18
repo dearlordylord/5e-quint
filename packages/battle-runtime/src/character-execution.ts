@@ -569,6 +569,18 @@ export function characterSpellProcedure(
     : undefined;
 }
 
+export function characterSpellProcedureInvocationRef(
+  execution: CharacterExecutionState,
+  procedureRef: BattleProcedureExecutionRef,
+): SpellInvocationRef | undefined {
+  const binding = characterProcedureBinding(execution, procedureRef);
+  return binding?.procedure.kind === "spellInvocation"
+    ? supportedSpellInvocationRef(binding.procedure.invocation)
+    : binding?.procedure.kind === "unavailableSpellInvocation"
+      ? binding.procedure.occurrence.invocationRef
+      : undefined;
+}
+
 export function bindSpellProcedureExecutionFacts<
   I extends SupportedSpellInvocation,
 >(

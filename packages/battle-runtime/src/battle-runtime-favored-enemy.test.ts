@@ -241,12 +241,18 @@ describe("battle runtime: Favored Enemy", () => {
         },
       ]),
     ];
-    const fillSet = spellFillSet(fills, invocation, fighterId, staleState);
-    if (fillSet.tag === "invalid") {
-      throw new Error(fillSet.message);
-    }
     if (act.subject.tag !== "bonusActionSpell") {
       throw new Error("Expected bound Favored Enemy Bonus Action spell.");
+    }
+    const fillSet = spellFillSet(
+      fills,
+      invocation,
+      act.subject.procedureRef,
+      fighterId,
+      staleState,
+    );
+    if (fillSet.tag === "invalid") {
+      throw new Error(fillSet.message);
     }
 
     const result = markedDamageRiderProfile.resolve({

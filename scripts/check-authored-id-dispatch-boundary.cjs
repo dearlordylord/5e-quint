@@ -242,7 +242,11 @@ function assertBattleReplayExecutionBoundary() {
     },
     {
       relativePath: "packages/battle-runtime/src/active-effect/types.ts",
-      patterns: [/readonly effectRef\?:/],
+      patterns: [
+        /readonly effectRef\?:/,
+        /type SpellObjectContactDamageActiveEffect[\s\S]{0,250}readonly effectId:/,
+        /type SpiritualWeaponActiveEffect[\s\S]{0,250}readonly sourceEffectId:/,
+      ],
     },
     {
       relativePath:
@@ -277,6 +281,35 @@ function assertBattleReplayExecutionBoundary() {
       patterns: [
         /Object\.entries\([^)]*\)[\s\S]{0,500}sourceProcedureRef/,
         /sourceProcedureRef:\s*(?:spell|invocation\.spell)\.id/,
+        /kind: "activeEffect"; readonly effectId:/,
+        /spellInvocationEffectOccurrenceId/,
+      ],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+      patterns: [
+        /spiritualWeaponSpellEffectOccurrenceId/,
+        /nextOrdinal[\s\S]{0,500}spiritualWeapon/,
+      ],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+      patterns: [/objectContactDamageEffectId/],
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-act-composition.ts",
+      patterns: [
+        /characterProcedurePresentationText[\s\S]{0,1500}\bfallback\b/,
+        /characterProcedurePresentationText[\s\S]{0,1500}characterSpellProcedure\(/,
+      ],
+    },
+    {
+      relativePath: "packages/battle-runtime/src/identity.ts",
+      patterns: [
+        /BattleActiveEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
+        /BattleSpellDamageDieExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
       ],
     },
   ];

@@ -255,10 +255,7 @@ export function battleProcedureExecutionRefForSpellHoleForTest(
   ) {
     return BattleProcedureExecutionRef.make(hole.sourceProcedureRef);
   }
-  if (
-    "procedureRef" in hole &&
-    typeof hole.procedureRef === "string"
-  ) {
+  if ("procedureRef" in hole && typeof hole.procedureRef === "string") {
     return BattleProcedureExecutionRef.make(hole.procedureRef);
   }
   if (
@@ -287,8 +284,17 @@ export function battleProcedureExecutionRefForSpellHoleForTest(
 export function battleActiveEffectExecutionRefForTest(
   discriminator: string,
 ): BattleActiveEffectExecutionRef {
+  let ordinal = 2_166_136_261;
+  for (const character of discriminator) {
+    ordinal = Math.imul(ordinal ^ character.charCodeAt(0), 16_777_619) >>> 0;
+  }
   return battleActiveEffectExecutionRef(
-    JSON.stringify({ kind: "testActiveEffectOccurrence", discriminator }),
+    JSON.stringify({
+      battleId: "test-battle",
+      kind: "activeEffectOccurrence",
+      ownerId: "test-active-effect-owner",
+      ordinal,
+    }),
   );
 }
 

@@ -128,6 +128,7 @@ function resolveRayOfEnfeeblementCast(input: {
   const fillSet = spellFillSet(
     fills,
     executableInvocation,
+    executableInvocation.sourceProcedureRef,
     spellCasterId,
     input.state,
   );

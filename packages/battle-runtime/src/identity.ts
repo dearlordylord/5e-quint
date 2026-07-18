@@ -51,6 +51,9 @@ export type BattleSpellEffectOccurrenceId =
   typeof BattleSpellEffectOccurrenceId.Type;
 
 export const BattleActiveEffectExecutionRef = Schema.NonEmptyTrimmedString.pipe(
+  Schema.filter(battleActiveEffectExecutionReferenceIsCanonical, {
+    message: () => "Invalid canonical Battle active-effect execution ref.",
+  }),
   Schema.brand("BattleActiveEffectExecutionRef"),
 );
 export type BattleActiveEffectExecutionRef =
@@ -73,6 +76,9 @@ export const battleActiveEffectExecutionOrdinal: (
 
 export const BattleSpellDamageDieExecutionRef =
   Schema.NonEmptyTrimmedString.pipe(
+    Schema.filter(battleSpellDamageDieExecutionReferenceIsCanonical, {
+      message: () => "Invalid canonical Battle spell damage-die execution ref.",
+    }),
     Schema.brand("BattleSpellDamageDieExecutionRef"),
   );
 export type BattleSpellDamageDieExecutionRef =
@@ -575,6 +581,60 @@ function battleOwnedExecutionScopeReferenceIsCanonical(
     decoded.combatantId.trim() === decoded.combatantId &&
     decoded.combatantId.length > 0 &&
     scopeReferenceEncodingIsCanonical(reference, decoded, kind)
+  );
+}
+
+function battleActiveEffectExecutionReferenceIsCanonical(
+  reference: string,
+): boolean {
+  const decoded = parseExecutionReference(reference);
+  return (
+    decoded !== null &&
+    hasExactKeys(decoded, ["battleId", "kind", "ownerId", "ordinal"]) &&
+    decoded.kind === "activeEffectOccurrence" &&
+    nonEmptyCanonicalStringProperty(decoded, "battleId") &&
+    nonEmptyCanonicalStringProperty(decoded, "ownerId") &&
+    nonNegativeIntegerProperty(decoded, "ordinal") &&
+    reference ===
+      JSON.stringify({
+        battleId: decoded.battleId,
+        kind: "activeEffectOccurrence",
+        ownerId: decoded.ownerId,
+        ordinal: decoded.ordinal,
+      })
+  );
+}
+
+function battleSpellDamageDieExecutionReferenceIsCanonical(
+  reference: string,
+): boolean {
+  const decoded = parseExecutionReference(reference);
+  return (
+    decoded !== null &&
+    hasExactKeys(decoded, ["holeId", "kind", "groupOrdinal", "dieOrdinal"]) &&
+    decoded.kind === "spellDamageDie" &&
+    nonEmptyCanonicalStringProperty(decoded, "holeId") &&
+    nonNegativeIntegerProperty(decoded, "groupOrdinal") &&
+    nonNegativeIntegerProperty(decoded, "dieOrdinal") &&
+    reference ===
+      JSON.stringify({
+        holeId: decoded.holeId,
+        kind: "spellDamageDie",
+        groupOrdinal: decoded.groupOrdinal,
+        dieOrdinal: decoded.dieOrdinal,
+      })
+  );
+}
+
+function nonEmptyCanonicalStringProperty(
+  value: Readonly<Record<string, unknown>>,
+  key: string,
+): boolean {
+  const property = value[key];
+  return (
+    typeof property === "string" &&
+    property.length > 0 &&
+    property.trim() === property
   );
 }
 

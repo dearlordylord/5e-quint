@@ -4,9 +4,8 @@ import type {
   BattleFill,
   BattleAttackRollRelationshipFact,
   BattleSpellTargetListRelationshipFact,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 
 type TargetChoiceFill = Extract<BattleFill, { readonly kind: "targetChoice" }>;
 export type BattleAttackTargetChoiceFill = Omit<
@@ -75,7 +74,7 @@ export function parseAttackRollRelationshipFacts(
 export function parseSpellTargetListRelationshipFacts(
   facts: readonly BattleSpellTargetListRelationshipFact[],
   casterId: CombatantId,
-  spellId: SupportedSpellInvocation["spell"]["id"],
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): readonly BattleSpellTargetListRelationshipFact[] | null {
   return relationshipFactsAnswerEachTargetExactlyOnce(
@@ -83,7 +82,7 @@ export function parseSpellTargetListRelationshipFacts(
     targetIds,
     (fact, targetId) =>
       fact.casterId === casterId &&
-      fact.sourceProcedureRef === spellId &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.targetId === targetId,
   )
     ? facts

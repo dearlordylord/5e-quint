@@ -30,10 +30,13 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   BattleCharacterExecutionScopeRef,
+  BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
   battleCharacterExecutionScopeRef,
+  battleActiveEffectExecutionRef,
+  battleSpellDamageDieExecutionRef,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
@@ -86,6 +89,48 @@ function executionReferenceView(
 }
 
 describe("Stat Block execution references", () => {
+  test("rejects noncanonical replay occurrence references", () => {
+    const activeEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        battleId: "battle-reference-codec",
+        kind: "activeEffectOccurrence",
+        ownerId: "character-a",
+        ordinal: 0,
+      }),
+    );
+    expect(BattleActiveEffectExecutionRef.make(activeEffectRef)).toBe(
+      activeEffectRef,
+    );
+    expect(() =>
+      BattleActiveEffectExecutionRef.make("active-effect-0"),
+    ).toThrow();
+    expect(() =>
+      BattleActiveEffectExecutionRef.make(
+        JSON.stringify({
+          kind: "activeEffectOccurrence",
+          battleId: "battle-reference-codec",
+          ownerId: "character-a",
+          ordinal: 0,
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      BattleActiveEffectExecutionRef.make(
+        JSON.stringify({
+          battleId: "battle-reference-codec",
+          kind: "activeEffectOccurrence",
+          ownerId: "character-a",
+          ordinal: 0,
+          authoredId: "synthetic-effect",
+        }),
+      ),
+    ).toThrow();
+
+    expect(() =>
+      battleSpellDamageDieExecutionRef("damage-hole", -1, 0),
+    ).toThrow();
+  });
+
   test("allocates exact character procedure references without authored identity", () => {
     const scopeRef = battleCharacterExecutionScopeRef(
       battleId("battle-character-execution"),
@@ -104,9 +149,9 @@ describe("Stat Block execution references", () => {
       kind: "resourcePool",
       ordinal: 0,
     });
-    expect(() =>
-      BattleResourcePoolExecutionRef.make(characterResourcePoolRef),
-    ).toThrow();
+    expect(BattleResourcePoolExecutionRef.make(characterResourcePoolRef)).toBe(
+      characterResourcePoolRef,
+    );
     expect(JSON.parse(first)).toEqual({
       scopeRef,
       kind: "procedure",
