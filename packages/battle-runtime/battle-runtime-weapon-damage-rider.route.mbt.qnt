@@ -28,19 +28,12 @@ module battleRuntimeWeaponDamageRiderRouteMbt {
     routeStartBattle(BattleActionEconomyOwner)
 
   pure def routeWeaponDamageRiderWithResolve(
-    holes: Set[BattleHoleFamilyKind],
-    discoverOwner: ReducerRouteOwnerGroup,
     fill: BattleFillKind,
     nextHoles: Set[BattleHoleFamilyKind],
     resolveOwner: ReducerRouteOwnerGroup,
   ): List[ReducerRouteEvent] =
     List(
       startRoute,
-      routeDiscoverBattleActs(
-        WeaponDamageRiderRouteSubject,
-        holes,
-        discoverOwner,
-      ),
       routeResolveBattleSubject(
         WeaponDamageRiderRouteSubject,
         fill,
@@ -50,18 +43,11 @@ module battleRuntimeWeaponDamageRiderRouteMbt {
     )
 
   pure def routeWeaponDamageRiderWithoutFill(
-    holes: Set[BattleHoleFamilyKind],
-    discoverOwner: ReducerRouteOwnerGroup,
     nextHoles: Set[BattleHoleFamilyKind],
     resolveOwner: ReducerRouteOwnerGroup,
   ): List[ReducerRouteEvent] =
     List(
       startRoute,
-      routeDiscoverBattleActs(
-        WeaponDamageRiderRouteSubject,
-        holes,
-        discoverOwner,
-      ),
       routeResolveBattleSubjectWithoutFill(
         WeaponDamageRiderRouteSubject,
         nextHoles,
@@ -85,8 +71,6 @@ module battleRuntimeWeaponDamageRiderRouteMbt {
       WeaponDamageRiderActiveEffectRouteSurface,
       routeWeaponDamageRiderWithoutFill(
         Set(),
-        BattleSpellSlotAndActionEconomyOwner,
-        Set(),
         BattleActiveEffectOwner,
       ),
     ),
@@ -97,8 +81,6 @@ module battleRuntimeWeaponDamageRiderRouteMbt {
     recordSurface(
       WeaponDamageRiderDamageRouteSurface,
       routeWeaponDamageRiderWithResolve(
-        Set(RolledDiceHoleKind),
-        BattleActiveEffectOwner,
         RolledDiceFillKind,
         Set(),
         BattleHitPointOwner,

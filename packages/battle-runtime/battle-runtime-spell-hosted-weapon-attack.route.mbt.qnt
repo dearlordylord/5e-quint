@@ -31,24 +31,34 @@ module battleRuntimeSpellHostedWeaponAttackRouteMbt {
     routeStartBattle(BattleActionEconomyOwner)
 
   pure def routeSpellHostedAttack(
-    holes: Set[BattleHoleFamilyKind],
-    discoverOwner: ReducerRouteOwnerGroup,
     fill: BattleFillKind,
     nextHoles: Set[BattleHoleFamilyKind],
     resolveOwner: ReducerRouteOwnerGroup,
+    discoverOwner: ReducerRouteOwnerGroup,
   ): List[ReducerRouteEvent] =
     List(
       startRoute,
-      routeDiscoverBattleActs(
-        SpellHostedWeaponAttackRouteSubject,
-        holes,
-        discoverOwner,
-      ),
       routeResolveBattleSubject(
         SpellHostedWeaponAttackRouteSubject,
         fill,
         nextHoles,
         resolveOwner,
+      ),
+      routeDiscoverBattleActs(
+        SpellHostedWeaponAttackRouteSubject,
+        nextHoles,
+        discoverOwner,
+      ),
+    )
+
+  pure def routeFinalSpellHostedDamage: List[ReducerRouteEvent] =
+    List(
+      startRoute,
+      routeResolveBattleSubject(
+        SpellHostedWeaponAttackRouteSubject,
+        RolledDiceFillKind,
+        Set(),
+        BattleHitPointOwner,
       ),
     )
 
@@ -67,11 +77,10 @@ module battleRuntimeSpellHostedWeaponAttackRouteMbt {
     recordSurface(
       SpellHostedDamageTypeChoiceRouteSurface,
       routeSpellHostedAttack(
-        Set(DamageTypeChoiceHoleKind, TargetChoiceHoleKind),
-        BattleActionEconomyOwner,
         DamageTypeChoiceFillKind,
         Set(TargetChoiceHoleKind),
         BattleHoleFrontierOwner,
+        BattleTargetSelectionOwner,
       ),
     ),
   }
@@ -81,11 +90,10 @@ module battleRuntimeSpellHostedWeaponAttackRouteMbt {
     recordSurface(
       SpellHostedTargetChoiceRouteSurface,
       routeSpellHostedAttack(
-        Set(TargetChoiceHoleKind),
-        BattleTargetSelectionOwner,
         TargetChoiceFillKind,
         Set(AttackRollHoleKind),
         BattleTargetSelectionOwner,
+        BattleAttackRollOwner,
       ),
     ),
   }
@@ -95,11 +103,10 @@ module battleRuntimeSpellHostedWeaponAttackRouteMbt {
     recordSurface(
       SpellHostedAttackRollRouteSurface,
       routeSpellHostedAttack(
-        Set(AttackRollHoleKind),
-        BattleAttackRollOwner,
         AttackRollFillKind,
         Set(RolledDiceHoleKind),
         BattleAttackRollOwner,
+        BattleHitPointOwner,
       ),
     ),
   }
@@ -108,13 +115,7 @@ module battleRuntimeSpellHostedWeaponAttackRouteMbt {
     qSurface == SpellHostedAttackRollRouteSurface,
     recordSurface(
       SpellHostedDamageRouteSurface,
-      routeSpellHostedAttack(
-        Set(RolledDiceHoleKind),
-        BattleHitPointOwner,
-        RolledDiceFillKind,
-        Set(),
-        BattleHitPointOwner,
-      ),
+      routeFinalSpellHostedDamage,
     ),
   }
 

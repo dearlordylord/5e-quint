@@ -23,10 +23,7 @@
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
-import {
-  characterAttackSubjectForTest,
-  characterSpellInvocationRefForProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -93,7 +90,9 @@ import {
   applyBattleHitPointDamage,
   breakBattleConcentration,
 } from "./battle-reducer/damage-apply.ts";
+import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import {
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
@@ -2742,19 +2741,9 @@ function resolveWeaponHitWithAttackRoll(input: {
   readonly afterAttackRoll: BattleResolutionResult;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const subject = weaponAttackSubject(input.state, input.attackName);
-  const act = discoverBattleActs(input.state).find(
-    (candidate) =>
-      candidate.subject.tag === "action" &&
-      candidate.subject.action === "attack" &&
-      candidate.subject.procedureRef === subject.procedureRef,
-  );
-  const awaitingTarget = resolveBattleSubject({
-    state: input.state,
-    subject,
-    fills: [],
-  });
-  const target = requireResultHole(awaitingTarget, "targetChoice");
+  const act = weaponAttackAct(input.state, input.attackName);
+  const subject = act.subject;
+  const target = requireHole(act.initialHoles, "targetChoice");
   const targetFill = attackTargetFill(target, input.attackName);
   const awaitingAttackRoll = resolveBattleSubject({
     state: input.state,
@@ -2780,8 +2769,7 @@ function resolveWeaponHitWithAttackRoll(input: {
     attackRoll: attack,
     afterAttackRoll,
     routeEvents: [
-      ...(act?.routeEvents ?? []),
-      ...(awaitingTarget.routeEvents ?? []),
+      ...(act.routeEvents ?? []),
       ...(awaitingAttackRoll.routeEvents ?? []),
       ...(afterAttackRoll.routeEvents ?? []),
     ],
@@ -2820,11 +2808,37 @@ function zeroAbilityWeaponAttack(
   };
 }
 
-function weaponAttackSubject(
+function weaponAttackAct(
   state: BattleState,
   attackName: Level1WeaponAttackName,
-): ReturnType<typeof characterAttackSubjectForTest> {
-  return characterAttackSubjectForTest(state, casterId, attackName);
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+} {
+  const act = discoverBattleActs(state).find((candidate) => {
+    if (
+      candidate.subject.tag !== "action" ||
+      candidate.subject.action !== "attack"
+    ) {
+      return false;
+    }
+    const attack = attackActionOptionForSubject(state, candidate.subject);
+    return (
+      attack !== undefined && attackActionOptionName(attack) === attackName
+    );
+  });
+  if (
+    act === undefined ||
+    act.subject.tag !== "action" ||
+    act.subject.action !== "attack"
+  ) {
+    throw new Error(
+      `Expected discovered ${attackName} attack for ${casterId}.`,
+    );
+  }
+  return { ...act, subject: act.subject };
 }
 
 function attackTargetFill(
