@@ -569,7 +569,7 @@ acceptance, WIP disposition, and focused verification.
     {
       "number": 61,
       "id": "GH-163",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Replace relationship partitions in Battle roll and trigger resolution",
       "dependencies": []
     },
