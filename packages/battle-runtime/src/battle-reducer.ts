@@ -310,6 +310,7 @@ export {
   requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup,
+  type InitiativeSwapCandidateWitness,
   type InitialInitiativeSetup,
 } from "./battle-reducer/api-lifecycle.ts";
 

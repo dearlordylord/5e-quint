@@ -376,6 +376,7 @@ export {
   type BattleInterruptedProcedure,
   type BattleInvalidReasonCode,
   type InitialInitiativeSetup,
+  type InitiativeSwapCandidateWitness,
   type BattleIllumination,
   type BattleLightEmission,
   type BattleSeeInvisibleEtherealWitness,

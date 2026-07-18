@@ -19,6 +19,8 @@ import * as Either from "effect/Either";
 
 import * as Option from "effect/Option";
 
+import { Match } from "effect";
+
 import type { BattleCreatureInit } from "../battle-init.ts";
 
 import {
@@ -303,12 +305,18 @@ export function createInitialInitiativeForCombatants(input: {
     : Either.right(initiative.right);
 }
 
+export type InitiativeSwapCandidateWitness =
+  | { readonly tag: "notAlly" }
+  | { readonly tag: "unwillingAlly" }
+  | { readonly tag: "willingAlly" };
+
+const byInitiativeSwapCandidateWitnessTag = Match.discriminator("tag");
+
 export function applyInitiativeSwap(input: {
   readonly setup: InitialInitiativeSetup;
   readonly sourceId: CombatantId;
-  readonly allyId: CombatantId;
-  readonly targetIsAlly: boolean;
-  readonly allyWilling: boolean;
+  readonly candidateId: CombatantId;
+  readonly candidateWitness: InitiativeSwapCandidateWitness;
 }): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
   const state = input.setup.state;
   if (!input.setup.setupOpen) {
@@ -316,7 +324,7 @@ export function applyInitiativeSwap(input: {
       "Initial Initiative setup is already complete.",
     );
   }
-  if (input.sourceId === input.allyId) {
+  if (input.sourceId === input.candidateId) {
     return battleStateInitIssue(
       "Initiative Swap requires a distinct willing ally.",
     );
@@ -337,10 +345,10 @@ export function applyInitiativeSwap(input: {
       "Initiative Swap source must be a combatant in this battle.",
     );
   }
-  const ally = state.combatants.get(input.allyId);
-  if (ally === undefined) {
+  const candidate = state.combatants.get(input.candidateId);
+  if (candidate === undefined) {
     return battleStateInitIssue(
-      "Initiative Swap ally must be a combatant in this battle.",
+      "Initiative Swap candidate must be a combatant in this battle.",
     );
   }
   if (!combatantHasInitiativeProficiencyAndSwap(source)) {
@@ -348,15 +356,25 @@ export function applyInitiativeSwap(input: {
       "Initiative Swap source lacks an admitted Initiative swap support profile.",
     );
   }
-  if (!input.targetIsAlly) {
-    return battleStateInitIssue(
-      "Initiative Swap requires an ally in the same combat.",
-    );
+  const candidateIssue = Match.value(input.candidateWitness).pipe(
+    byInitiativeSwapCandidateWitnessTag("notAlly", () =>
+      battleStateInitIssue(
+        "Initiative Swap requires an ally in the same combat.",
+      ),
+    ),
+    byInitiativeSwapCandidateWitnessTag("unwillingAlly", () =>
+      battleStateInitIssue("Initiative Swap requires a willing ally."),
+    ),
+    byInitiativeSwapCandidateWitnessTag("willingAlly", () => null),
+    Match.exhaustive,
+  );
+  if (candidateIssue !== null) {
+    return candidateIssue;
   }
-  if (!input.allyWilling) {
-    return battleStateInitIssue("Initiative Swap requires a willing ally.");
-  }
-  if (isIncapacitated(source.conditions) || isIncapacitated(ally.conditions)) {
+  if (
+    isIncapacitated(source.conditions) ||
+    isIncapacitated(candidate.conditions)
+  ) {
     return battleStateInitIssue(
       "Initiative Swap is blocked while either combatant is Incapacitated.",
     );
@@ -365,7 +383,7 @@ export function applyInitiativeSwap(input: {
   const initiative = swapInitialInitiativeScores(
     state.initiative,
     input.sourceId,
-    input.allyId,
+    input.candidateId,
   );
   if (Option.isNone(initiative)) {
     return battleStateInitIssue("Initiative Swap could not update Initiative.");
@@ -374,10 +392,10 @@ export function applyInitiativeSwap(input: {
   const combatants = new Map(state.combatants);
   combatants.set(input.sourceId, {
     ...source,
-    initiative: ally.initiative,
+    initiative: candidate.initiative,
   });
-  combatants.set(input.allyId, {
-    ...ally,
+  combatants.set(input.candidateId, {
+    ...candidate,
     initiative: source.initiative,
   });
   input.setup.consumeInitiativeSwap(input.sourceId, {

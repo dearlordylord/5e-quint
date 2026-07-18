@@ -164,9 +164,8 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const result = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expect(Either.isRight(result)).toBe(true);
@@ -188,22 +187,20 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const tableRejectsRelationship = {
       setup: alertBattleSetup(),
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      targetIsAlly: false,
-      allyWilling: true,
-    };
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "notAlly" },
+    } satisfies Parameters<typeof applyInitiativeSwap>[0];
     expectSwapRejected(tableRejectsRelationship);
 
     const tableAcceptsRelationship = {
       setup: alertBattleSetup(),
       sourceId: alertSourceId,
-      allyId: alertEnemyId,
-      targetIsAlly: true,
-      allyWilling: true,
-    };
-    expect(
-      Either.isRight(applyInitiativeSwap(tableAcceptsRelationship)),
-    ).toBe(true);
+      candidateId: alertEnemyId,
+      candidateWitness: { tag: "willingAlly" },
+    } satisfies Parameters<typeof applyInitiativeSwap>[0];
+    expect(Either.isRight(applyInitiativeSwap(tableAcceptsRelationship))).toBe(
+      true,
+    );
   });
 
   test("Initiative Swap consumes one post-roll opportunity for the source", () => {
@@ -212,9 +209,8 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const firstSwap = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expect(Either.isRight(firstSwap)).toBe(true);
@@ -228,18 +224,16 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const secondSwapFromStaleSetup = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
-      allyId: alertSecondAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertSecondAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
     expect(Either.isLeft(secondSwapFromStaleSetup)).toBe(true);
 
     const secondSwap = applyInitiativeSwap({
       setup: firstSwap.right,
       sourceId: alertSourceId,
-      allyId: alertSecondAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertSecondAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expect(Either.isLeft(secondSwap)).toBe(true);
@@ -251,33 +245,29 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      targetIsAlly: true,
-      allyWilling: false,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "unwillingAlly" },
     });
 
     expectSwapRejected({
       setup: alertBattleSetup({ sourceConditions: ["incapacitated"] }),
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expectSwapRejected({
       setup: alertBattleSetup({ allyConditions: ["incapacitated"] }),
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
 
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: alertEnemyId,
-      targetIsAlly: false,
-      allyWilling: true,
+      candidateId: alertEnemyId,
+      candidateWitness: { tag: "notAlly" },
     });
   });
 
@@ -287,16 +277,14 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expectSwapRejected({
       setup,
       sourceId: combatantId("absent-alert-source"),
-      allyId: alertAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: combatantId("absent-alert-ally"),
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: combatantId("absent-alert-ally"),
+      candidateWitness: { tag: "willingAlly" },
     });
   });
 
@@ -315,9 +303,8 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expectSwapRejected({
       setup,
       sourceId: alertSourceId,
-      allyId: alertAllyId,
-      targetIsAlly: true,
-      allyWilling: true,
+      candidateId: alertAllyId,
+      candidateWitness: { tag: "willingAlly" },
     });
   });
 });

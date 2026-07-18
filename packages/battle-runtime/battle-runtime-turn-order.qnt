@@ -38,6 +38,11 @@ module battleRuntimeTurnOrder {
     | AlertInitiativeSwapUnavailable
     | AlertInitiativeSwapped(AlertInitiative)
 
+  type InitiativeSwapCandidateWitness =
+    | NotAlly
+    | UnwillingAlly
+    | WillingAlly
+
   type InitiativeStillToActInputResult =
     | InitiativeStillToActAccepted(InitiativeStillToAct)
     | InitiativeStillToActRejectedEmpty
@@ -106,23 +111,30 @@ module battleRuntimeTurnOrder {
 
   // RAW Alert: immediately after rolling Initiative, swap once with one willing
   // ally in the same combat unless either creature is Incapacitated.
+  pure def initiativeSwapCandidateIsWillingAlly(
+    candidateWitness: InitiativeSwapCandidateWitness,
+  ): bool =
+    match candidateWitness {
+      | NotAlly => false
+      | UnwillingAlly => false
+      | WillingAlly => true
+    }
+
   pure def alertInitiativeSwapAllowed(
     initiative: Initiative,
     consumedSwapSources: Set[Actor],
     source: Actor,
-    ally: Actor,
-    targetIsAlly: bool,
-    allyWilling: bool,
+    candidate: Actor,
+    candidateWitness: InitiativeSwapCandidateWitness,
     sourceIncapacitated: bool,
-    allyIncapacitated: bool,
+    candidateIncapacitated: bool,
   ): bool =
     initiative.alreadyActed.length() == 0 and
     not(consumedSwapSources.contains(source)) and
-    source != ally and
-    targetIsAlly and
-    allyWilling and
+    source != candidate and
+    initiativeSwapCandidateIsWillingAlly(candidateWitness) and
     not(sourceIncapacitated) and
-    not(allyIncapacitated)
+    not(candidateIncapacitated)
 
   pure def alertInitiativeSwapConsumedSourcesAfterSwap(
     consumedSwapSources: Set[Actor],
