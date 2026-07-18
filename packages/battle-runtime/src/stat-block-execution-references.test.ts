@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { NonNegativeInteger } from "@dnd/shared/types";
@@ -11,11 +12,11 @@ import {
   addBattleCombatant,
   discoverBattleActs,
   removeBattleCombatants,
-  resolveBattleSubject,
   snapshotBattle,
   type BattleState,
 } from "./index.ts";
 import {
+  resolveBattleSubject,
   battleId,
   characterSeed,
   fighterId,
@@ -134,12 +135,12 @@ describe("Stat Block execution references", () => {
     const magicMissileActs = spellActs.filter(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "magic_missile",
+        battleActSpellPresentation(act)?.invocation.spellId === "magic_missile",
     );
     const rayOfFrostActs = spellActs.filter(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "ray_of_frost",
+        battleActSpellPresentation(act)?.invocation.spellId === "ray_of_frost",
     );
     const magicMissileRef = magicMissileActs[0]?.subject.procedureRef;
     const rayOfFrostRef = rayOfFrostActs[0]?.subject.procedureRef;
@@ -177,7 +178,7 @@ describe("Stat Block execution references", () => {
     const forgedAuthoredIdentity = {
       ...castAct.subject,
       invocation: {
-        ...castAct.subject.invocation,
+        ...battleActSpellPresentation(castAct)?.invocation,
         spellId: spellId("synthetic-lookalike"),
       },
     };

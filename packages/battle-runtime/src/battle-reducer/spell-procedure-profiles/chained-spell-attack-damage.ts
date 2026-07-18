@@ -30,7 +30,7 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   readiedSpellAct,
-  spellSubjectTagForInvocation,
+  spellCastSelectionSubject,
 } from "../spells-discovery.ts";
 import { supportedPreparedChainedSpellAttackDamageProfile } from "../spells-profiles-attack-damage.ts";
 import {
@@ -89,16 +89,15 @@ function admitChainedSpellAttackDamage(
 function discoverChainedSpellAttackDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ChainedSpellAttackDamageInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ChainedSpellAttackDamageInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const castActs = [
     {
-      subject: {
-        tag: spellSubjectTagForInvocation(invocation),
+      subject: spellCastSelectionSubject(
         actorId,
-        invocation: chainedSpellAttackDamageInvocationRef(invocation),
-        mode: { tag: "cast" as const },
-      },
+        invocation,
+        chainedSpellAttackDamageInvocationRef(invocation),
+      ),
       label: invocation.spell.name,
       summary: chainedSpellAttackDamageCastSummary(invocation),
       initialHoles: [spellDamageTypeChoiceHole(invocation)],

@@ -72,7 +72,7 @@ export function creatureSizeChangeStrengthRollMode(
 }
 
 export function creatureSizeChangeProcedure(
-  effect: SpellCreatureSizeChangeEffect,
+  effect: Pick<SpellCreatureSizeChangeEffect, "direction">,
 ): CreatureSizeChangeSpellInvocation["procedure"] {
   return CREATURE_SIZE_CHANGE_PROCEDURE_BY_DIRECTION[effect.direction];
 }
@@ -83,7 +83,7 @@ export function creatureSizeChangeAttackDamageComponent(
 ): SpellAttackDamageComponent {
   const decrease = effect.direction === "decrease";
   return {
-    sourceSpellId: effect.sourceSpellId,
+    sourceProcedureRef: effect.sourceProcedureRef,
     sourceCombatantId: effect.sourceCombatantId,
     damage: {
       expr: {

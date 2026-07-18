@@ -15,6 +15,7 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { Either } from "effect";
+import { spellActiveEffectForExecutionRef } from "../active-effect/execution-ref.ts";
 import {
   attackRollIsCriticalHit,
   maybeOpenInterruptWindow,
@@ -26,12 +27,12 @@ import {
   type BattleResolutionResult,
   type BattleDancingLightsPlacementValue,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type ReadiedSpellInvocation,
   type SpiritualWeaponRepeatTargeting,
   type SupportedDamageSpellInvocation,
   type SpellMarkedDamageRider,
-  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleTablePositionId, CombatantId } from "../identity.ts";
@@ -79,7 +80,6 @@ import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyDancingLightsSpellEffect,
   setSpellCreatedHeldObjectState,
-  spellCreatedHeldObjectEffectForSource,
   repositionDancingLightsSpellEffect,
   dancingLightsFromEffect,
   applySpellActiveEffects,
@@ -119,9 +119,9 @@ import {
 } from "./spells-targeting.ts";
 
 type ReleasableSpellInvocation =
-  | ReadiedSpellInvocation
+  | BattleExecutableSpellInvocation<ReadiedSpellInvocation>
   | Extract<
-      SupportedDamageSpellInvocation,
+      BattleExecutableSpellInvocation<SupportedDamageSpellInvocation>,
       { readonly procedure: "spiritualWeaponAttackProxy" }
     >;
 
@@ -144,12 +144,22 @@ export function resolveReleaseSpellCreatedHeldObjectCommand(
     );
   }
   const actor = input.state.combatants.get(input.subject.actorId);
-  const effect = spellCreatedHeldObjectEffectForSource(
-    actor,
-    input.subject.sourceCombatantId,
-    input.subject.sourceSpellId,
-  );
-  if (effect === undefined || effect.objectState.kind !== "held") {
+  const selectedEffect =
+    actor === undefined
+      ? undefined
+      : spellActiveEffectForExecutionRef(
+          actor.activeEffects,
+          input.subject.effectRef,
+        );
+  const effect =
+    selectedEffect?.kind === "spellCreatedHeldObject"
+      ? selectedEffect
+      : undefined;
+  if (
+    effect === undefined ||
+    effect.sourceCombatantId !== input.subject.actorId ||
+    effect.objectState.kind !== "held"
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -176,7 +186,7 @@ export function resolveDancingLightsCastSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     {
       readonly procedure:
         | "dancingLightsSeparateCast"
@@ -261,7 +271,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
   readonly input: BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "dancingLightsReposition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -285,7 +295,8 @@ export function resolveDancingLightsRepositionSpellAct(input: {
           { readonly kind: "dancingLights" }
         > =>
           candidate.kind === "dancingLights" &&
-          candidate.sourceSpellId === input.invocation.spell.id &&
+          candidate.sourceProcedureRef ===
+            input.invocation.sourceProcedureRef &&
           candidate.sourceCombatantId === input.actorId,
       );
     if (activeEffect === undefined) {
@@ -348,7 +359,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
 
 function dancingLightsCastPlacementError(
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     {
       readonly procedure:
         | "dancingLightsSeparateCast"
@@ -376,7 +387,7 @@ function dancingLightsRepositionPlacementError(
   state: BattleState,
   actorId: CombatantId,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "dancingLightsReposition" }
   >,
   placement: BattleDancingLightsPlacementValue,
@@ -394,7 +405,7 @@ function dancingLightsRepositionPlacementError(
         { readonly kind: "dancingLights" }
       > =>
         candidate.kind === "dancingLights" &&
-        candidate.sourceSpellId === invocation.spell.id &&
+        candidate.sourceProcedureRef === invocation.sourceProcedureRef &&
         candidate.sourceCombatantId === actorId,
     );
   if (effect === undefined) {
@@ -589,7 +600,7 @@ export function resolveReadySpellAct(
   const concentratingActor = {
     ...refreshedActor,
     concentration: {
-      sourceSpellId: invocation.spell.id,
+      sourceProcedureRef: input.subject.procedureRef,
       effectKind: "readiedSpell" as const,
     },
   };
@@ -1258,7 +1269,7 @@ function spiritualWeaponReleaseEffectAlreadyApplied(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedDamageSpellInvocation,
+    BattleExecutableSpellInvocation<SupportedDamageSpellInvocation>,
     { readonly procedure: "spiritualWeaponAttackProxy" }
   >;
   readonly forcePositionId: BattleTablePositionId;
@@ -1270,7 +1281,7 @@ function spiritualWeaponReleaseEffectAlreadyApplied(input: {
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "spiritualWeapon" &&
-          effect.sourceSpellId === input.invocation.spell.id &&
+          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
           effect.sourceCombatantId === input.actorId &&
           effect.forcePositionId === input.forcePositionId &&
           spiritualWeaponRepeatTargetingEquals(

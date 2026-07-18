@@ -37,6 +37,7 @@ import {
   type BattleResolutionResult,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -316,7 +317,7 @@ function sameStringSet(
 function discoverSlowActivePenaltiesCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SlowActivePenaltiesSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const savingThrowHole = spellSavingThrowOutcomeHole(
@@ -361,7 +362,7 @@ function discoverSlowActivePenaltiesCastAct(
 
 function slowActivePenaltiesCastAct(
   actorId: CombatantId,
-  invocation: SlowActivePenaltiesSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -370,6 +371,7 @@ function slowActivePenaltiesCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: slowActivePenaltiesInvocationRef(invocation),
       mode: { tag: "cast" },
     },
@@ -524,7 +526,7 @@ function resolveSlowActivePenalties(
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject:
@@ -582,7 +584,7 @@ function applySlowActivePenaltyEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: SlowActivePenaltiesSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
 ): {
   readonly state: BattleState;
   readonly appliedTargetIds: readonly CombatantId[];
@@ -599,13 +601,13 @@ function applySlowActivePenaltyEffects(
         (effect) =>
           !(
             effect.kind === "slowActivePenalties" &&
-            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
             effect.sourceCombatantId === actorId
           ),
       ),
       {
         kind: "slowActivePenalties" as const,
-        sourceSpellId: invocation.spell.id,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         save: {
           ability: invocation.ability,

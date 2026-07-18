@@ -27,6 +27,7 @@ import {
   type BattleHole,
   type BattleState,
   type BattleSubject,
+  type BattleProcedureExecutionRef,
 } from "./index.ts";
 import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -534,14 +535,16 @@ function isBonusActionWalkDashAct(
   );
 }
 
-export function adrenalineRushDashSubject(): Extract<
+export function adrenalineRushDashSubject(
+  procedureRef: BattleProcedureExecutionRef,
+): Extract<
   BattleSubject,
   { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
 > {
   return {
     tag: "bonusActionStandardAction",
     actorId: spellCasterId,
-    sourceUnitId: orcAdrenalineRushUnitId,
+    procedureRef,
     action: "dash",
     speedKind: "walk",
   };

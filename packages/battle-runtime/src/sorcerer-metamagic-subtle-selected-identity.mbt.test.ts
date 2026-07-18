@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-component-suppression
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic
 // UNIT-IDENTITY-REPLAY: PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic doResolveSubtleFalseLife doRejectSubtleFalseLifeWithoutSorceryPoints
@@ -49,7 +50,7 @@ import {
   discoverBattleActs,
   type AvailableBattleAct,
   type BattleReducerRouteEvent,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   resolveBattleSubject,
@@ -81,7 +82,10 @@ type SubtleMetamagicRouteReplayProjection = {
 };
 
 type SubtleFalseLifeAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 
 defineSelectedIdentityReplayAndQntReplay({
@@ -177,8 +181,10 @@ it("does not discover Subtle bonus-action scalar-buff acts rejected by admission
     acts.some(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === barkskinUnitId &&
-        candidate.subject.invocation.procedure === "scalarBuff" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          barkskinUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "scalarBuff" &&
         candidate.subject.metamagic === undefined,
     ),
   ).toBe(true);
@@ -186,8 +192,10 @@ it("does not discover Subtle bonus-action scalar-buff acts rejected by admission
     acts.some(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === barkskinUnitId &&
-        candidate.subject.invocation.procedure === "scalarBuff" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          barkskinUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "scalarBuff" &&
         candidate.subject.metamagic?.some(
           (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
         ) === true,
@@ -340,8 +348,10 @@ function subtleFalseLifeAct(state: BattleState): SubtleFalseLifeAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is SubtleFalseLifeAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === falseLifeUnitId &&
-      candidate.subject.invocation.procedure === "scalarBuff" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        falseLifeUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "scalarBuff" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
       ) === true,

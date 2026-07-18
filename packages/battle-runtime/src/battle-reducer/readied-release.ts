@@ -2,11 +2,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import {
-  sameAdmittedBattleSubject,
-  type AdmittedBattleSubject,
-  type BattleSubject,
-} from "../battle-subjects.ts";
+import { bindSpellProcedureExecutionFacts } from "../character-execution.ts";
+import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import { movementFeet } from "@dnd/shared/types";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { markMovementSpentForMovementActionBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
@@ -18,7 +15,6 @@ import {
   spellSavingThrowOutcomeHole,
   spellTargetAllocationHole,
   spellTargetHole,
-  supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import { resolveSpellRelease } from "./spells-resolve.ts";
 import {
@@ -119,7 +115,7 @@ export function applyBattleMovement(
         state: movedState,
         targetId: movement.moverId,
         sourceCombatantId: levitatedMovement.sourceCombatantId,
-        sourceSpellId: levitatedMovement.sourceSpellId,
+        sourceProcedureRef: levitatedMovement.sourceProcedureRef,
         change: levitatedMovement.altitudeChange,
       });
 }
@@ -129,27 +125,31 @@ export function readiedSpellInitialHoles(
   casterId: CombatantId,
   readied: BattleReadiedSpell,
 ): readonly BattleHole[] {
-  if (readied.invocation.procedure === "saveGatedDamage") {
-    return readied.invocation.targeting.kind === "singleCombatant"
-      ? [spellTargetHole(state, casterId, readied.invocation)]
-      : [spellSavingThrowOutcomeHole(state, casterId, readied.invocation)];
+  const invocation = bindSpellProcedureExecutionFacts(
+    readied.invocation,
+    readied.procedureRef,
+  );
+  if (invocation.procedure === "saveGatedDamage") {
+    return invocation.targeting.kind === "singleCombatant"
+      ? [spellTargetHole(state, casterId, invocation)]
+      : [spellSavingThrowOutcomeHole(state, casterId, invocation)];
   }
-  if (readied.invocation.procedure === "repeatedDamageAllocation") {
-    return [spellTargetAllocationHole(state, casterId, readied.invocation)];
+  if (invocation.procedure === "repeatedDamageAllocation") {
+    return [spellTargetAllocationHole(state, casterId, invocation)];
   }
-  if (readied.invocation.procedure === "chainedSpellAttackDamage") {
-    return [spellDamageTypeChoiceHole(readied.invocation)];
+  if (invocation.procedure === "chainedSpellAttackDamage") {
+    return [spellDamageTypeChoiceHole(invocation)];
   }
   if (
-    readied.invocation.procedure === "spellAttackDamage" &&
-    readied.invocation.targeting.kind === "singleCreatureOrObject"
+    invocation.procedure === "spellAttackDamage" &&
+    invocation.targeting.kind === "singleCreatureOrObject"
   ) {
     return [
-      spellTargetHole(state, casterId, readied.invocation),
-      spellObjectTargetHole(readied.invocation),
+      spellTargetHole(state, casterId, invocation),
+      spellObjectTargetHole(invocation),
     ];
   }
-  return [spellTargetHole(state, casterId, readied.invocation)];
+  return [spellTargetHole(state, casterId, invocation)];
 }
 
 export function readiedMovementInitialHoles(
@@ -192,13 +192,12 @@ export function resolveReleaseReadiedSpellCommand(
   }
 
   const releaseSubject: Extract<
-    AdmittedBattleSubject,
+    BattleSubject,
     { readonly tag: "actionSpell" }
   > = {
     tag: "actionSpell",
     actorId: casterId,
     procedureRef: readied.procedureRef,
-    invocation: supportedSpellInvocationRef(readied.invocation),
     mode: { tag: "cast" },
   };
   const released = resolveSpellRelease(
@@ -209,7 +208,7 @@ export function resolveReleaseReadiedSpellCommand(
       handledInterruptTrigger: options.handledInterruptTrigger,
       reactionContinuationSubject: input.subject,
     },
-    readied.invocation,
+    bindSpellProcedureExecutionFacts(readied.invocation, readied.procedureRef),
   );
   if (released.tag === "needsHoles") {
     return { ...released, subject: input.subject };
@@ -248,7 +247,7 @@ export function resolveReleaseReadiedMovementCommand(
   if (
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== readiedMovementActorId ||
-    !sameAdmittedBattleSubject(activeInterrupt.subject, input.subject)
+    !sameBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,

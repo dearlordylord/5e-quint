@@ -313,7 +313,7 @@ function darkOnesBlessingRangeFact(
     beneficiaryId: warlockId,
     damageSourceId,
     targetId,
-    unitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
     rangeFeet: movementFeet(10),
   };
 }
@@ -337,3 +337,4 @@ function requireDarkOnesBlessingSupportProfile(): DarkOnesBlessingSupportProfile
   }
   return profile;
 }
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

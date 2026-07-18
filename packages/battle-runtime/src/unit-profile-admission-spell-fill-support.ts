@@ -19,10 +19,10 @@ import {
 } from "./battle-reducer.ts";
 import {
   battleAreaId,
+  battleActSpellPresentation,
   battleObjectId,
   battleTablePositionId,
   discoverBattleActs,
-  spellId,
   type AvailableBattleAct,
   type BattleAreaId,
   type BattleAntimagicFieldTransitWitness,
@@ -38,6 +38,7 @@ import {
   type BattleSubject,
   type BattleTargetSpatialFact,
   type CombatantId,
+  type SpellInvocationRef,
   type SupportedSpellInvocation,
 } from "./index.ts";
 import type {
@@ -66,6 +67,16 @@ import {
   webAreaId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+function spellInvocationForAvailableAct(
+  _state: BattleState,
+  act: AvailableBattleAct,
+): SpellInvocationRef | undefined {
+  return battleActSpellPresentation(act)?.invocation;
+}
 
 type SleetStormAreaHazardEffect = Extract<
   BattleActiveEffect,
@@ -102,12 +113,16 @@ export function maybeSpellAct(input: {
   readonly slotLevel?: number;
 }): ActionSpellAct | undefined {
   return discoverBattleActs(input.state).find(
-    (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === input.spellId &&
-      (input.slotLevel === undefined ||
-        (candidate.subject.invocation.tag === "spellSlot" &&
-          Number(candidate.subject.invocation.slotLevel) === input.slotLevel)),
+    (candidate): candidate is ActionSpellAct => {
+      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      return (
+        candidate.subject.tag === "actionSpell" &&
+        invocation?.spellId === input.spellId &&
+        (input.slotLevel === undefined ||
+          (invocation.tag === "spellSlot" &&
+            Number(invocation.slotLevel) === input.slotLevel))
+      );
+    },
   );
 }
 
@@ -130,12 +145,16 @@ export function maybeBonusSpellAct(input: {
   readonly slotLevel?: number;
 }): BonusActionSpellAct | undefined {
   return discoverBattleActs(input.state).find(
-    (candidate): candidate is BonusActionSpellAct =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === input.spellId &&
-      (input.slotLevel === undefined ||
-        (candidate.subject.invocation.tag === "spellSlot" &&
-          Number(candidate.subject.invocation.slotLevel) === input.slotLevel)),
+    (candidate): candidate is BonusActionSpellAct => {
+      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      return (
+        candidate.subject.tag === "bonusActionSpell" &&
+        invocation?.spellId === input.spellId &&
+        (input.slotLevel === undefined ||
+          (invocation.tag === "spellSlot" &&
+            Number(invocation.slotLevel) === input.slotLevel))
+      );
+    },
   );
 }
 
@@ -145,10 +164,14 @@ export function bonusSpellActForItem(input: {
   readonly componentWeaponItemId: string;
 }): BonusActionSpellAct {
   const act = discoverBattleActs(input.state).find(
-    (candidate): candidate is BonusActionSpellAct =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === input.spellId &&
-      candidate.subject.componentWeaponItemId === input.componentWeaponItemId,
+    (candidate): candidate is BonusActionSpellAct => {
+      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      return (
+        candidate.subject.tag === "bonusActionSpell" &&
+        invocation?.spellId === input.spellId &&
+        candidate.subject.componentWeaponItemId === input.componentWeaponItemId
+      );
+    },
   );
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -182,9 +205,13 @@ export function bonusActionDashSpellAct(input: {
   readonly spellId: string;
 }): BonusActionDashSpellAct {
   const act = discoverBattleActs(input.state).find(
-    (candidate): candidate is BonusActionDashSpellAct =>
-      candidate.subject.tag === "bonusActionDashSpell" &&
-      candidate.subject.invocation.spellId === input.spellId,
+    (candidate): candidate is BonusActionDashSpellAct => {
+      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      return (
+        candidate.subject.tag === "bonusActionDashSpell" &&
+        invocation?.spellId === input.spellId
+      );
+    },
   );
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -276,7 +303,9 @@ export function withResistanceEffect(
         ...target.activeEffects,
         {
           kind: "spellDamageReduction" as const,
-          sourceSpellId: resistanceUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(resistanceUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           damageType,
           amount: { dice: 1 as const, dieSize: 4 as const },
@@ -293,10 +322,12 @@ export function withResistanceEffect(
 
 export function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: string,
+  _spellId: string,
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -318,7 +349,7 @@ export function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ],
   };
@@ -333,11 +364,13 @@ export function damageTypeChoiceFill(
 
 export function spiritualWeaponTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: string,
+  _spellId: string,
   casterId: CombatantId,
   targetId: CombatantId,
   forcePositionId = battleTablePositionId("spiritual-weapon-force"),
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -347,7 +380,7 @@ export function spiritualWeaponTargetFill(
         kind: "spiritualWeaponTargetWithinForceReach",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
         forcePositionId,
         reachFeet: movementFeet(5),
       },
@@ -393,6 +426,8 @@ export function knownWillingSpellTargetFill(
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   const base = spellTargetFill(hole, spellId, casterId, targetId);
   return {
     ...base,
@@ -402,7 +437,7 @@ export function knownWillingSpellTargetFill(
         kind: "spellTargetKnownWilling",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ],
   };
@@ -414,6 +449,8 @@ export function wardingBondSpellTargetFill(
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   const base = knownWillingSpellTargetFill(hole, spellId, casterId, targetId);
   return {
     ...base,
@@ -423,13 +460,13 @@ export function wardingBondSpellTargetFill(
         kind: "wardingBondPairedWornPlatinumRings",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
       {
         kind: "wardingBondCreaturesDistance",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
         distanceFeet: movementFeet(60),
       },
     ],
@@ -448,7 +485,9 @@ export function teleportDestinationFill(input: {
     value: {
       kind: "unoccupiedVisibleDestination",
       actorId: input.hole.actorId,
-      spellId: spellId(input.hole.spell.spell.id),
+      sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+        input.hole,
+      ),
       destinationId: battleTablePositionId(
         input.destinationId ?? "misty-step-destination",
       ),
@@ -474,6 +513,9 @@ export function spellObjectTargetFill(input: {
   readonly attackerCanSeeObject?: boolean;
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("produce-flame-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -483,7 +525,7 @@ export function spellObjectTargetFill(input: {
         kind: "spellObjectTarget",
         casterId: input.casterId,
         objectId,
-        spellId: input.spellId,
+        sourceProcedureRef,
         rangeFeet: input.rangeFeet ?? movementFeet(60),
         armorClass: armorClass(13),
         damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
@@ -495,7 +537,7 @@ export function spellObjectTargetFill(input: {
               kind: "spellObjectIgnition" as const,
               casterId: input.casterId,
               objectId,
-              spellId: input.spellId,
+              sourceProcedureRef,
               disposition: input.ignitionDisposition,
             },
           ]),
@@ -506,7 +548,7 @@ export function spellObjectTargetFill(input: {
               kind: "spellObjectTargetSight" as const,
               casterId: input.casterId,
               objectId,
-              spellId: input.spellId,
+              sourceProcedureRef,
               attackerCanSeeObject: input.attackerCanSeeObject,
             },
           ]),
@@ -522,6 +564,9 @@ export function spellManufacturedMetalObjectTargetFill(input: {
   readonly rangeFeet?: ReturnType<typeof movementFeet>;
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("heat-metal-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -531,7 +576,7 @@ export function spellManufacturedMetalObjectTargetFill(input: {
         kind: "spellManufacturedMetalObjectTarget",
         casterId: input.casterId,
         objectId,
-        spellId: input.spellId,
+        sourceProcedureRef,
         rangeFeet: input.rangeFeet ?? movementFeet(60),
         casterCanSeeObject: true,
       },
@@ -554,7 +599,7 @@ export function spellObjectContactTargetsFill(input: {
             {
               kind: "spellObjectWithinSpellRange" as const,
               sourceCombatantId: input.hole.objectContact.sourceCombatantId,
-              sourceSpellId: input.hole.objectContact.sourceSpellId,
+              sourceProcedureRef: input.hole.objectContact.sourceProcedureRef,
               objectId: input.hole.objectContact.objectId,
               rangeFeet: input.hole.objectContact.rangeFeet,
             },
@@ -563,7 +608,7 @@ export function spellObjectContactTargetsFill(input: {
       ...input.targetIds.map((targetId) => ({
         kind: "spellObjectPhysicalContact" as const,
         sourceCombatantId: input.hole.objectContact.sourceCombatantId,
-        sourceSpellId: input.hole.objectContact.sourceSpellId,
+        sourceProcedureRef: input.hole.objectContact.sourceProcedureRef,
         objectId: input.hole.objectContact.objectId,
         targetId,
       })),
@@ -575,7 +620,7 @@ export function spellObjectContactTargetsFill(input: {
               {
                 kind: "spellObjectHoldingOrWearing" as const,
                 sourceCombatantId: input.hole.objectContact.sourceCombatantId,
-                sourceSpellId: input.hole.objectContact.sourceSpellId,
+                sourceProcedureRef: input.hole.objectContact.sourceProcedureRef,
                 objectId: input.hole.objectContact.objectId,
                 targetId,
                 relation,
@@ -612,6 +657,9 @@ export function spellObjectLightTargetFill(input: {
   >["wornOrCarried"];
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("light-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -621,7 +669,7 @@ export function spellObjectLightTargetFill(input: {
         kind: "spellObjectLightTarget",
         casterId: input.casterId,
         objectId,
-        spellId: input.spellId,
+        sourceProcedureRef,
         size: input.size ?? "medium",
         wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
       },
@@ -645,6 +693,9 @@ export function spellDistantObjectLightTargetFill(input: {
   >["wornOrCarried"];
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("distant-light-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -654,7 +705,7 @@ export function spellDistantObjectLightTargetFill(input: {
         kind: "spellDistantObjectLightTarget",
         casterId: input.casterId,
         objectId,
-        spellId: input.spellId,
+        sourceProcedureRef,
         rangeFeet: input.rangeFeet,
         size: input.size ?? "medium",
         wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
@@ -670,6 +721,9 @@ export function spellTouchedObjectTargetFill(input: {
   readonly casterId: CombatantId;
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("touched-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -679,7 +733,7 @@ export function spellTouchedObjectTargetFill(input: {
         kind: "spellTouchedObjectTarget",
         casterId: input.casterId,
         objectId,
-        spellId: input.spellId,
+        sourceProcedureRef,
       },
     ],
   };
@@ -696,6 +750,9 @@ export function spellDistantTouchedObjectTargetFill(input: {
   >["rangeFeet"];
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("distant-touched-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -705,7 +762,7 @@ export function spellDistantTouchedObjectTargetFill(input: {
         kind: "spellDistantTouchedObjectTarget",
         casterId: input.casterId,
         objectId,
-        spellId: input.spellId,
+        sourceProcedureRef,
         rangeFeet: input.rangeFeet,
       },
     ],
@@ -722,6 +779,8 @@ export function spellTargetListFill(
     ...BattleSpellTargetListRelationshipFact[],
   ],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   const relationshipFactRequest = hole.relationshipFactRequest;
   const selectedRelationshipFacts =
     relationshipFacts ??
@@ -732,14 +791,14 @@ export function spellTargetListFill(
             kind: "spellTargetIsHostileToCaster" as const,
             casterId: relationshipFactRequest.casterId,
             targetId: targetIds[0],
-            spellId: relationshipFactRequest.spellId,
+            sourceProcedureRef: relationshipFactRequest.sourceProcedureRef,
             targetIsHostileToCaster: true,
           },
           ...targetIds.slice(1).map((targetId) => ({
             kind: "spellTargetIsHostileToCaster" as const,
             casterId: relationshipFactRequest.casterId,
             targetId,
-            spellId: relationshipFactRequest.spellId,
+            sourceProcedureRef: relationshipFactRequest.sourceProcedureRef,
             targetIsHostileToCaster: true,
           })),
         ]
@@ -756,7 +815,7 @@ export function spellTargetListFill(
         {
           kind: "spellTargetsInPointOriginSphere",
           casterId,
-          spellId,
+          sourceProcedureRef,
           areaId: battleAreaId(`test:${spellId}:point-origin-sphere`),
           radiusFeet: hole.spell.targeting.area.radiusFeet,
           targetIds,
@@ -775,7 +834,7 @@ export function spellTargetListFill(
       kind: "spellTarget" as const,
       casterId,
       targetId,
-      spellId,
+      sourceProcedureRef,
     })),
   };
 }
@@ -783,9 +842,11 @@ export function spellTargetListFill(
 export function knownWillingSpellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   casterId: CombatantId,
-  spellId: string,
+  _spellId: string,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   return {
     kind: "spellTargetList",
     holeId: hole.holeId,
@@ -795,13 +856,13 @@ export function knownWillingSpellTargetListFill(
         kind: "spellTarget" as const,
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
       {
         kind: "spellTargetKnownWilling" as const,
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ]),
   };
@@ -1342,12 +1403,11 @@ export function sleetStormAreaHazardSaveAct(
     command: "sleetStormAreaHazardSave",
     areaMembershipTrigger: {
       kind: trigger === "entersArea" ? "firstEntryOnTurn" : "turnStartInArea",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
     },
   };
   return {
+    presentation: { kind: "intrinsic" },
     subject,
     label:
       trigger === "entersArea"
@@ -1402,12 +1462,11 @@ export function insectPlagueAreaHazardSaveAct(
           : trigger === "entersArea"
             ? "firstEntryOnTurn"
             : "turnEndInArea",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
     },
   };
   return {
+    presentation: { kind: "intrinsic" },
     subject,
     label:
       trigger === "appearsInArea"
@@ -1464,12 +1523,11 @@ export function cloudkillAreaHazardSaveAct(
             : trigger === "entersArea"
               ? "firstEntryOnTurn"
               : "turnEndInArea",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
     },
   };
   return {
+    presentation: { kind: "intrinsic" },
     subject,
     label:
       trigger === "appearsInArea"
@@ -1501,7 +1559,7 @@ function activeInsectPlagueAreaHazardEffect(
       (effect): effect is InsectPlagueAreaHazardEffect =>
         effect.kind === "insectPlagueAreaHazard" &&
         effect.sourceCombatantId === spellCasterId &&
-        effect.sourceSpellId === insectPlagueUnitId &&
+        effect.sourceProcedureRef === insectPlagueUnitId &&
         effect.areaId === insectPlagueAreaId,
     );
 }
@@ -1515,7 +1573,7 @@ function activeCloudkillAreaHazardEffect(
       (effect): effect is CloudkillAreaHazardEffect =>
         effect.kind === "cloudkillAreaHazard" &&
         effect.sourceCombatantId === spellCasterId &&
-        effect.sourceSpellId === cloudkillUnitId &&
+        effect.sourceProcedureRef === cloudkillUnitId &&
         effect.areaId === cloudkillAreaId,
     );
 }
@@ -1529,7 +1587,7 @@ function activeSleetStormAreaHazardEffect(
       (effect): effect is SleetStormAreaHazardEffect =>
         effect.kind === "sleetStormAreaHazard" &&
         effect.sourceCombatantId === spellCasterId &&
-        effect.sourceSpellId === sleetStormUnitId &&
+        effect.sourceProcedureRef === sleetStormUnitId &&
         effect.areaId === sleetStormAreaId,
     );
 }

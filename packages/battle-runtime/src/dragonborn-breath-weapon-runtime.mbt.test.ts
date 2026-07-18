@@ -1,3 +1,8 @@
+import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
@@ -357,10 +362,17 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const state = breathWeaponBattle();
     const act = breathWeaponAct(state);
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
-      unitId: speciesDragonbornBreathWeaponUnitId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        spellCasterId,
+        speciesDragonbornBreathWeaponUnitId,
+      ),
     });
     expect(requireHole(act.initialHoles, "savingThrowOutcome")).toMatchObject({
       unitFeature: {
@@ -540,7 +552,8 @@ function breathWeaponAct(state: BattleState) {
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&
-      candidate.subject.unitId === speciesDragonbornBreathWeaponUnitId,
+      battleActUnitPresentation(candidate)?.unitId ===
+        speciesDragonbornBreathWeaponUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Breath Weapon act.");

@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // RAW trace:
@@ -42,7 +43,6 @@ import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/
 import {
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
@@ -71,7 +71,10 @@ import {
   spellAct,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { monsterMultiattackStatBlock } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  monsterMultiattackStatBlock,
+} from "./battle-runtime-test-support.ts";
 
 const LAST_RESULTS = [
   "init",
@@ -714,7 +717,8 @@ function slowActivePenaltiesProjection(
     targetArmorClass: Number(currentArmorClass(activeEffectArmorClass(target))),
     dexteritySavingThrowDelta,
     targetCanReact: combatantCanTakeReactions(target),
-    casterConcentrating: caster.concentration?.sourceSpellId === slowUnitId,
+    casterConcentrating:
+      caster.concentration?.sourceProcedureRef === slowUnitId,
     holes: state.holes.map(slowHole),
     lastResult: state.lastResult,
   };
@@ -945,7 +949,7 @@ function spellActForActor(
         candidate.subject.tag === "bonusActionSpell" ||
         candidate.subject.tag === "bonusActionDashSpell") &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.invocation.spellId === unitId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === unitId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${unitId} spell act for ${actorId}.`);

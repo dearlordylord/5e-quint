@@ -23,13 +23,14 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import { spellSubjectTagForInvocation } from "../spells-discovery.ts";
+import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
@@ -127,7 +128,7 @@ function admitHeldLightHurl(
 function discoverHeldLightHurlCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HeldLightHurlInvocation,
+  invocation: BattleExecutableSpellInvocation<HeldLightHurlInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles = [
@@ -136,12 +137,11 @@ function discoverHeldLightHurlCastAct(
   ];
   return [
     {
-      subject: {
-        tag: spellSubjectTagForInvocation(invocation),
+      subject: spellCastSelectionSubject(
         actorId,
-        invocation: heldLightHurlInvocationRef(invocation),
-        mode: { tag: "cast" as const },
-      },
+        invocation,
+        heldLightHurlInvocationRef(invocation),
+      ),
       label: invocation.spell.name,
       summary: heldLightHurlCastSummary(invocation),
       initialHoles,

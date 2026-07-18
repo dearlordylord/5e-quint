@@ -1,5 +1,6 @@
 import {
   battleCombatantSide,
+  battleActSpellSlotPresentation,
   battleCreatureInitFromStatBlock,
   battleId,
   discoverBattleActs,
@@ -1098,10 +1099,12 @@ export function spellSlotActForProcedure(
     (candidate): candidate is CastActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.mode.tag === "cast" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === expectedInvocation.spellId &&
-      candidate.subject.invocation.slotLevel === expectedInvocation.slotLevel &&
-      candidate.subject.invocation.procedure === expectedInvocation.procedure,
+      battleActSpellSlotPresentation(candidate)?.invocation.spellId ===
+        expectedInvocation.spellId &&
+      battleActSpellSlotPresentation(candidate)?.invocation.slotLevel ===
+        expectedInvocation.slotLevel &&
+      battleActSpellSlotPresentation(candidate)?.invocation.procedure ===
+        expectedInvocation.procedure,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} spell action.`);

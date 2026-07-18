@@ -1,4 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hideous-laughter-repeat-save-lifecycle
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   colorSprayUnitId,
@@ -91,7 +95,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
           ...target.activeEffects,
           {
             kind: "spellCondition",
-            sourceSpellId: ensnaringStrikeUnitId,
+            effectRef:
+              battleActiveEffectExecutionRefForTest("laughter-condition"),
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(ensnaringStrikeUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             condition: "restrained",
             conditionHadNonSpellSource: false,
@@ -107,7 +115,9 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
           },
           {
             kind: "hideousLaughter",
-            sourceSpellId: hideousLaughterUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(hideousLaughterUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             conditionHadNonSpellProneSource: false,
             conditionHadNonSpellIncapacitatedSource: false,
@@ -186,7 +196,9 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const target = requireCombatant(baseState, spellTargetId);
     const hideousLaughterEffect = {
       kind: "hideousLaughter",
-      sourceSpellId: hideousLaughterUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hideousLaughterUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
@@ -214,7 +226,9 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         .set(spellCasterId, {
           ...requireCombatant(baseState, spellCasterId),
           concentration: {
-            sourceSpellId: hideousLaughterUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(hideousLaughterUnitId),
+            ),
             effectKind: "spellEffect",
           },
         })
@@ -363,7 +377,9 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const target = requireCombatant(baseState, spellTargetId);
     const hideousLaughterEffect = {
       kind: "hideousLaughter",
-      sourceSpellId: hideousLaughterUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hideousLaughterUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
@@ -548,7 +564,9 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const target = requireCombatant(baseState, spellTargetId);
     const hideousLaughterEffect = {
       kind: "hideousLaughter",
-      sourceSpellId: hideousLaughterUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hideousLaughterUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,

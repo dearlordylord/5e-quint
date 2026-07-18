@@ -324,6 +324,11 @@ export function unarmedStrikeAttackDamage(
       dieSize: damage.dieSize,
       damageType: damage.damageType,
     })),
+    Match.when({ kind: "procedureReplacement" }, (damage) => ({
+      dice: damage.dice,
+      dieSize: damage.dieSize,
+      damageType: damage.damageType,
+    })),
     Match.exhaustive,
   );
 }
@@ -335,6 +340,10 @@ export function unarmedStrikeDamageDiceExpr(
   return Match.value(attack.effect.damage).pipe(
     Match.when({ kind: "base" }, () => null),
     Match.when({ kind: "authoredReplacement" }, (damage) => ({
+      dice: critical ? damage.dice * 2 : damage.dice,
+      dieSize: damage.dieSize,
+    })),
+    Match.when({ kind: "procedureReplacement" }, (damage) => ({
       dice: critical ? damage.dice * 2 : damage.dice,
       dieSize: damage.dieSize,
     })),

@@ -1,48 +1,50 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-PALADINS-SMITE paladin_paladins_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-marked-damage-rider
+import { describe, expect, test } from "vitest";
+import { markedDamageRiderProfile } from "./battle-reducer/spell-procedure-profiles/marked-damage-rider.ts";
+import type { BattleState } from "./battle-runtime-test-support.ts";
 import {
+  attackDamageDispositionFill,
   attackRollFill,
   attackTargetFill,
-  attackDamageDispositionFill,
-  damageRollFillWithGroups,
-  startBattleRight,
-  requireResolved,
-  requireHole,
-  findHole,
-  findAct,
-  targetFill,
-  characterSeed,
-  statBlockCreatureInit,
-  paladinsSmiteResource,
-  rangerFavoredEnemyResource,
-  interruptDecisionFill,
-  wizardSpellcasting,
-  spellRecord,
-  fighterId,
-  fighterAttackSubject,
-  goblinId,
-  unitLibrary,
   battleId,
-  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
+  characterBattleResourceIsUseCount,
   characterBattleResourceSupportedForUnit,
+  characterSeed,
   characterSpellInvocationRefForProcedureRefForTest,
   classFeatureFreeCastSpellInvocationRef,
+  damageRollFillWithGroups,
   discoverBattleActs,
   elapsedTimeTicks,
+  fighterAttackSubject,
+  fighterId,
+  findAct,
+  findHole,
+  goblinId,
+  interruptDecisionFill,
+  paladinsSmiteResource,
+  rangerFavoredEnemyResource,
   requiredAbilityCheckRollMode,
-  resolveBattleSubject,
+  requireHole,
+  requireResolved,
   resolveBattleInterrupt,
+  resolveBattleSubject,
   resourceCount,
   snapshotBattle,
   spellFillSet,
+  spellRecord,
   spellSlotInvocationRef,
+  startBattleRight,
+  statBlockCreatureInit,
   supportedSpellActs,
   supportedSpellInvocationMatchesRef,
+  targetFill,
+  unitLibrary,
+  wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import type { BattleState } from "./battle-runtime-test-support.ts";
-import { markedDamageRiderProfile } from "./battle-reducer/spell-procedure-profiles/marked-damage-rider.ts";
-import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Favored Enemy", () => {
   test("Favored Enemy casts Hunter's Mark without expending a Spell Slot", () => {
@@ -93,7 +95,9 @@ describe("battle runtime: Favored Enemy", () => {
               kind: "spellTarget",
               casterId: fighterId,
               targetId: goblinId,
-              spellId: "hunters_mark",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("hunters_mark"),
+              ),
             },
           ]),
         ],
@@ -118,7 +122,9 @@ describe("battle runtime: Favored Enemy", () => {
       marked.state.currentTurnResources.levelOnePlusSpellCastsThisTurn,
     ).toContain(fighterId);
     expect(ranger.concentration).toEqual({
-      sourceSpellId: "hunters_mark",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("hunters_mark"),
+      ),
       effectKind: "spellEffect",
     });
     expect(ranger.activeEffects).toEqual([
@@ -195,7 +201,9 @@ describe("battle runtime: Favored Enemy", () => {
       throw new Error("Expected Favored Enemy Hunter's Mark invocation.");
     }
     const existingConcentration = {
-      sourceSpellId: "existing_concentration",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("existing_concentration"),
+      ),
       effectKind: "spellEffect",
     } as const;
     const [favoredEnemyResource] = ranger.origin.resources;
@@ -227,7 +235,9 @@ describe("battle runtime: Favored Enemy", () => {
           kind: "spellTarget",
           casterId: fighterId,
           targetId: goblinId,
-          spellId: "hunters_mark",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("hunters_mark"),
+          ),
         },
       ]),
     ];
@@ -335,8 +345,10 @@ describe("battle runtime: Favored Enemy", () => {
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
-          candidate.subject.invocation.tag === "classFeatureFreeCast" &&
-          candidate.subject.invocation.spellId === "hunters_mark",
+          battleActSpellPresentation(candidate)?.invocation.tag ===
+            "classFeatureFreeCast" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "hunters_mark",
       ),
     ).toBe(false);
 
@@ -362,7 +374,9 @@ describe("battle runtime: Favored Enemy", () => {
               kind: "spellTarget",
               casterId: fighterId,
               targetId: goblinId,
-              spellId: "hunters_mark",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("hunters_mark"),
+              ),
             },
           ]),
         ],
@@ -471,7 +485,9 @@ describe("battle runtime: Paladin's Smite", () => {
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: "divine_smite",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("divine_smite"),
+            ),
             damage: {
               expr: { dice: 2, dieSize: 8 },
               damageType: "radiant",

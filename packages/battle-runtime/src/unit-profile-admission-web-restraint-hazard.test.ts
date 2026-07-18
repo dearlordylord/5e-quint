@@ -1,3 +1,5 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE web
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
@@ -20,7 +22,10 @@ import {
   webRestraintSaveAct,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { spellId, type CombatantId } from "./identity.ts";
+import {
+  battleActiveEffectExecutionRef,
+  type CombatantId,
+} from "./identity.ts";
 import {
   battleObscurementZones,
   battlePerceptionRollModeForObscurement,
@@ -107,10 +112,17 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       slotLevel: 3,
     });
 
-    expect(secondLevelAct.subject).toMatchObject({
+    expect({
+      ...secondLevelAct.subject,
+      invocation: battleActSpellPresentation(secondLevelAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(webUnitId, 2, "webRestraintHazard"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(webUnitId, 2, "webRestraintHazard"),
+      ),
       mode: { tag: "cast" },
     });
     const area = requireHole(secondLevelAct.initialHoles, "spellAreaChoice");
@@ -144,11 +156,14 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     const { cast } = castWeb();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
-      concentration: { sourceSpellId: webUnitId, effectKind: "spellEffect" },
+      concentration: {
+        sourceProcedureRef: expect.any(String),
+        effectKind: "spellEffect",
+      },
       activeEffects: [
         expect.objectContaining({
           kind: "webRestraintHazard",
-          sourceSpellId: webUnitId,
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           areaId: webAreaId,
           sideFeet: movementFeet(20),
@@ -166,7 +181,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
   });
 
   test("active Web area projects Difficult Terrain movement cost and Lightly Obscured sight", () => {
-    const { spell, targetTurn } = castWeb();
+    const { targetTurn } = castWeb();
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: spellTargetId,
@@ -180,13 +195,20 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       }),
       "movement",
     );
+    const activeWeb = requireCombatant(
+      targetTurn,
+      spellCasterId,
+    ).activeEffects.find((effect) => effect.kind === "webRestraintHazard");
+    if (activeWeb === undefined) {
+      throw new Error("Expected active Web hazard.");
+    }
     const webDifficultTerrain = {
       kind: "areaDifficultTerrain" as const,
       sources: [
         {
           kind: "webAreaHazard" as const,
           sourceCombatantId: spellCasterId,
-          sourceSpellId: spell.id,
+          sourceProcedureRef: activeWeb.sourceProcedureRef,
           areaId: webAreaId,
         },
       ],
@@ -233,7 +255,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     expect(battleObscurementZones(targetTurn)).toEqual([
       expect.objectContaining({
         kind: "spellObscurementZone",
-        sourceSpellId: spell.id,
+        sourceProcedureRef: activeWeb.sourceProcedureRef,
         sourceCombatantId: spellCasterId,
         obscurement: "lightlyObscured",
         area: {
@@ -256,7 +278,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: webUnitId,
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           condition: "restrained",
           escape: {
@@ -387,7 +409,10 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       conditions: expect.objectContaining({ restrained: false }),
     });
     expect(requireCombatant(escaped.state, spellCasterId)).toMatchObject({
-      concentration: { sourceSpellId: webUnitId, effectKind: "spellEffect" },
+      concentration: {
+        sourceProcedureRef: expect.any(String),
+        effectKind: "spellEffect",
+      },
       activeEffects: [expect.objectContaining({ kind: "webRestraintHazard" })],
     });
   });
@@ -440,8 +465,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           actorId: ensnaringStrikeHelperId,
           action: "escapeSpellRestraint",
           targetId: spellTargetId,
-          sourceSpellId: spellId(webUnitId),
-          sourceCombatantId: spellCasterId,
+          effectRef: battleActiveEffectExecutionRef("stale-web-restraint"),
         },
         fills: [],
       }),

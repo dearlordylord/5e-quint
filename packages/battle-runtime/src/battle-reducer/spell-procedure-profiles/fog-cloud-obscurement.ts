@@ -166,13 +166,14 @@ function fogCloudObscurementSpell(
 function discoverFogCloudObscurementCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: FogCloudObscurementSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<FogCloudObscurementSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: fogCloudObscurementInvocationRef(invocation),
         mode: { tag: "cast" },
       },

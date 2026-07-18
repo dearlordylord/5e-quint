@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87A produce_flame
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-held-light-emitter
 import { describe, expect, test } from "vitest";
@@ -51,10 +54,6 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
           procedureRef: expect.any(String),
           tag: "bonusActionSpell",
           actorId: spellCasterId,
-          invocation: cantripSpellInvocationRef(
-            produceFlameUnitId,
-            "heldLight",
-          ),
           mode: { tag: "cast" },
         },
         initialHoles: [],
@@ -76,7 +75,9 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "heldLight",
-        sourceSpellId: produceFlameUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(produceFlameUnitId),
+        ),
         brightRadiusFeet: 20,
         dimAdditionalFeet: 20,
       }),
@@ -84,7 +85,9 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceSpellId: produceFlameUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(produceFlameUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellCasterId },
         emission: {
@@ -130,7 +133,10 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     });
     const act = bonusSpellAct({ state, spellId: produceFlameUnitId });
 
-    expect(act.subject).toMatchObject(
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject(
       expect.objectContaining({
         tag: "bonusActionSpell",
         invocation: cantripSpellInvocationRef(produceFlameUnitId, "heldLight"),
@@ -152,7 +158,9 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
           ...caster.activeEffects,
           {
             kind: "heldLight",
-            sourceSpellId: produceFlameUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(produceFlameUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             brightRadiusFeet: movementFeet(20),
             dimAdditionalFeet: movementFeet(20),
@@ -184,7 +192,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         ?.activeEffects.filter(
           (effect) =>
             effect.kind === "heldLight" &&
-            effect.sourceSpellId === produceFlameUnitId,
+            effect.sourceProcedureRef === produceFlameUnitId,
         ) ?? [];
     expect(heldLightEffects).toHaveLength(1);
     expect(heldLightEffects[0]).toEqual(
@@ -200,7 +208,9 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     expect(resolved.snapshot.lightEmitters[0]).toEqual(
       expect.objectContaining({
         kind: "spellLightEmitter",
-        sourceSpellId: produceFlameUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(produceFlameUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellCasterId },
         emission: {
@@ -239,7 +249,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "heldLight" &&
-        effect.sourceSpellId === produceFlameUnitId
+        effect.sourceProcedureRef === produceFlameUnitId
           ? {
               ...effect,
               expiresAt: {
@@ -303,7 +313,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "heldLight" &&
-            effect.sourceSpellId === produceFlameUnitId,
+            effect.sourceProcedureRef === produceFlameUnitId,
         ),
     ).toBe(false);
     expect(expired.snapshot.lightEmitters).toEqual([]);
@@ -331,12 +341,16 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
 
     const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
 
-    expect(hurl.subject).toMatchObject({
+    expect({
+      ...hurl.subject,
+      invocation: battleActSpellPresentation(hurl)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: cantripSpellInvocationRef(
-        produceFlameUnitId,
-        "heldLightHurl",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        unlitState,
+        spellCasterId,
+        cantripSpellInvocationRef(produceFlameUnitId, "heldLightHurl"),
       ),
       mode: { tag: "cast" },
     });
@@ -460,7 +474,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "heldLight" &&
-            effect.sourceSpellId === produceFlameUnitId,
+            effect.sourceProcedureRef === produceFlameUnitId,
         ),
     ).toBe(false);
     expect(resolved.snapshot.lightEmitters).toEqual([]);
@@ -529,7 +543,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "heldLight" &&
-            effect.sourceSpellId === produceFlameUnitId,
+            effect.sourceProcedureRef === produceFlameUnitId,
         ),
     ).toBe(false);
 
@@ -677,7 +691,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "heldLight" &&
-            effect.sourceSpellId === produceFlameUnitId,
+            effect.sourceProcedureRef === produceFlameUnitId,
         ),
     ).toBe(false);
     expect(resolved.snapshot.lightEmitters).toEqual([]);

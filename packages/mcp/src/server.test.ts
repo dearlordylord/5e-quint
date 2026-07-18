@@ -5,6 +5,7 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  battleActSpellPresentation,
   battleId,
   battleCombatantSide,
   characterId,
@@ -5050,7 +5051,7 @@ describe("MCP server route", () => {
           kind: "startsBurning",
           objectId: "dry-training-dummy",
           sourceCombatantId: "fighter",
-          sourceSpellId: "fire_bolt",
+          sourceProcedureRef: "fire_bolt",
         },
       ],
     });
@@ -5592,7 +5593,7 @@ describe("MCP server route", () => {
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.actorId === fighterId &&
-        act.subject.invocation.spellId === "ray_of_frost",
+        battleActSpellPresentation(act)?.invocation.spellId === "ray_of_frost",
     );
     if (rayOfFrostAct?.subject.tag !== "actionSpell") {
       throw new Error("Expected Fighter Ray of Frost act.");

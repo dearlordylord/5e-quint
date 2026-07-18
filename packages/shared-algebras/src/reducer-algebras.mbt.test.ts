@@ -455,7 +455,7 @@ function restrictedUnitActionIds(
 ): readonly UnitRecord["id"][] {
   return resources
     .filter((resource) => resource.source === "unit")
-    .map((resource) => resource.sourceUnitId);
+    .map((resource) => resource.sourceProcedureRef as UnitRecord["id"]);
 }
 
 function projectConditions(state: ConditionState): ConditionsProjection {

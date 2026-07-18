@@ -18,6 +18,7 @@ import {
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
+import { characterUnitFeatureProcedureId } from "../character-execution.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import type { SpellProcedureAnyTargetListInvocationClassifier } from "./spell-procedure-profiles/profile.ts";
 import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
@@ -141,14 +142,22 @@ function druidBeastSpellsAllowsInvocation(
 
 function activeDruidWildShapeSupportProfile(
   actor: BattleCreatureState,
-  origin: Extract<BattleCreatureState["origin"], { readonly kind: "character" }>,
+  origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "character" }
+  >,
 ): BattleDruidWildShapeKnownFormSupportProfile | null {
   const activeWildShape = activeDruidWildShapeEffect(actor);
   if (activeWildShape === null) {
     return null;
   }
   const unitRef = origin.characterUnitRefs.find(
-    (candidate) => candidate.unitId === activeWildShape.sourceUnitId,
+    (candidate) =>
+      candidate.unitId ===
+      characterUnitFeatureProcedureId(
+        origin.execution,
+        activeWildShape.sourceProcedureRef,
+      ),
   );
   const profileFromUnitRef =
     unitRef?.supportProfiles.find(
@@ -161,7 +170,12 @@ function activeDruidWildShapeSupportProfile(
   }
 
   const resource = origin.resources.find(
-    (candidate) => candidate.unit.id === activeWildShape.sourceUnitId,
+    (candidate) =>
+      candidate.unit.id ===
+      characterUnitFeatureProcedureId(
+        origin.execution,
+        activeWildShape.sourceProcedureRef,
+      ),
   );
   if (resource === undefined) {
     return null;
@@ -187,8 +201,7 @@ export function spellDefinitionHasPricedOrConsumedMaterialComponent(
     return (
       ("materialCostGp" in components &&
         components.materialCostGp !== undefined) ||
-      ("materialConsumed" in components &&
-        components.materialConsumed === true)
+      ("materialConsumed" in components && components.materialConsumed === true)
     );
   }
   return structuredMaterialComponentHasSpecifiedCostOrConsumes(components.m);

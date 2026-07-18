@@ -1,4 +1,8 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spiritual-weapon-attack-proxy
+import { Either } from "effect";
+import { describe, expect, it } from "vitest";
 import {
   booleanField,
   decodeWitnessProtocolState,
@@ -12,8 +16,6 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -30,6 +32,7 @@ import {
   damageRollFillWithGroups,
   fighterId,
   partySide,
+  resolveBattleSubject,
   skeletonCreatureInit,
   skeletonId,
   unitLibrary,
@@ -40,7 +43,6 @@ import {
   characterId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
   startBattle,
@@ -49,7 +51,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -89,7 +91,9 @@ type SpiritualWeaponMbtProjection = {
 
 const spiritualWeaponUnit = unitLibrary.requireUnit("spiritual_weapon");
 if (spiritualWeaponUnit.kind !== "spell") {
-  throw new Error("Expected Spiritual Weapon content to decode as a spell Unit.");
+  throw new Error(
+    "Expected Spiritual Weapon content to decode as a spell Unit.",
+  );
 }
 const spiritualWeaponSpell = spiritualWeaponUnit;
 
@@ -124,10 +128,7 @@ function createSpiritualWeaponDriver() {
       subjectStartState = state;
       subject = spiritualWeaponCastSubject();
       fills = [];
-      holes = discoverSpiritualWeaponHoles(
-        state,
-        "spiritualWeaponAttackProxy",
-      );
+      holes = discoverSpiritualWeaponHoles(state, "spiritualWeaponAttackProxy");
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -383,8 +384,10 @@ function spiritualWeaponRepeatSubject(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === fighterId &&
-      candidate.subject.invocation.spellId === "spiritual_weapon" &&
-      candidate.subject.invocation.procedure === "spiritualWeaponRepeatAttack",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "spiritual_weapon" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spiritualWeaponRepeatAttack",
   );
   if (act === undefined || act.subject.tag !== "bonusActionSpell") {
     throw new Error("Expected Spiritual Weapon repeat act.");
@@ -400,8 +403,9 @@ function discoverSpiritualWeaponHoles(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === fighterId &&
-      candidate.subject.invocation.spellId === "spiritual_weapon" &&
-      candidate.subject.invocation.procedure === procedure,
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "spiritual_weapon" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure === procedure,
   );
   if (act === undefined) {
     throw new Error(`Expected Spiritual Weapon ${procedure} act.`);
@@ -523,7 +527,9 @@ function spiritualWeaponTargetFill(
         kind: "spiritualWeaponTargetWithinForceReach",
         casterId: fighterId,
         targetId: skeletonId,
-        spellId: "spiritual_weapon",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("spiritual_weapon"),
+        ),
         forcePositionId: positionId,
         reachFeet: movementFeet(5),
       },

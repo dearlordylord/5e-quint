@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLUR blur
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
@@ -43,13 +45,17 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
 
     expect(cast.state.combatants.get(spellCasterId)).toMatchObject({
       concentration: {
-        sourceSpellId: blurUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(blurUnitId),
+        ),
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "blurred",
-          sourceSpellId: blurUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(blurUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",
@@ -146,10 +152,13 @@ function blurBattle(attackerId: CombatantId): BattleState {
 
 function castBlur(
   state: BattleState,
-): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
   const act = spellAct({ state, spellId: blurUnitId, slotLevel: 2 });
   expect(act.initialHoles).toEqual([]);
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
     spellId: blurUnitId,
     slotLevel: 2,

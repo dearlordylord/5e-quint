@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 import type {
+  BattleExecutableSpellInvocation,
   BattleActiveEffect,
   BattleCreatureState,
   BattleSavingThrowFlatBonusProjection,
@@ -9,7 +10,11 @@ import type {
   BattleWardingBondSeparationFactsHole,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import { spellId, type CombatantId } from "../identity.ts";
+import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
+import {
+  type BattleProcedureExecutionRef,
+  type CombatantId,
+} from "../identity.ts";
 import {
   WARDING_BOND_CONNECTION_RANGE_FEET,
   WARDING_BOND_SEPARATION_FACTS_HOLE_ID,
@@ -115,7 +120,7 @@ export function wardingBondSavingThrowFlatBonusProjectionsForTarget(
     : [
         {
           targetId: target.combatantId,
-          sourceSpellId: effect.sourceSpellId,
+          sourceProcedureRef: effect.sourceProcedureRef,
           bonus: WARDING_BOND_SAVING_THROW_BONUS,
         },
       ];
@@ -124,9 +129,8 @@ export function wardingBondSavingThrowFlatBonusProjectionsForTarget(
 export function wardingBondCastFactsAreSatisfied(input: {
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "wardingBond" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "wardingBond" }>
   >;
   readonly facts: readonly BattleTargetSpatialFact[];
 }): boolean {
@@ -136,14 +140,14 @@ export function wardingBondCastFactsAreSatisfied(input: {
         fact.kind === "wardingBondPairedWornPlatinumRings" &&
         fact.casterId === input.casterId &&
         fact.targetId === input.targetId &&
-        fact.spellId === input.invocation.spell.id,
+        fact.sourceProcedureRef === input.invocation.sourceProcedureRef,
     ) &&
     input.facts.some(
       (fact) =>
         fact.kind === "wardingBondCreaturesDistance" &&
         fact.casterId === input.casterId &&
         fact.targetId === input.targetId &&
-        fact.spellId === input.invocation.spell.id &&
+        fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
         Number(fact.distanceFeet) <=
           Number(input.invocation.connectionRangeFeet),
     )
@@ -158,6 +162,7 @@ export function applyWardingBondSpellEffect(
     SupportedSpellInvocation,
     { readonly procedure: "wardingBond" }
   >,
+  procedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   const withoutPriorBonds = battleStateWithoutWardingBondConnectedToCombatants(
     state,
@@ -167,15 +172,25 @@ export function applyWardingBondSpellEffect(
   if (target === undefined) {
     return withoutPriorBonds;
   }
+  const allocation = allocateBattleActiveEffectRef({
+    state: withoutPriorBonds,
+    ownerId: targetId,
+  });
+  const allocatedTarget = allocation.state.combatants.get(targetId);
+  if (allocatedTarget === undefined) {
+    return withoutPriorBonds;
+  }
   return {
-    ...withoutPriorBonds,
-    combatants: new Map(withoutPriorBonds.combatants).set(targetId, {
-      ...target,
+    ...allocation.state,
+    combatants: new Map(allocation.state.combatants).set(targetId, {
+      ...allocatedTarget,
       activeEffects: [
-        ...target.activeEffects,
+        ...allocatedTarget.activeEffects,
         {
           ...invocation.activeEffect,
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: casterId,
+          effectRef: allocation.effectRef,
         },
       ],
     }),
@@ -203,7 +218,7 @@ export function battleStateAfterWardingBondCasterZeroHitPoints(
 
 export function wardingBondSeparationFactsHole(input: {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: WardingBondEffect["sourceSpellId"];
+  readonly sourceProcedureRef: WardingBondEffect["sourceProcedureRef"];
   readonly targetId: CombatantId;
 }): BattleWardingBondSeparationFactsHole {
   return {
@@ -214,7 +229,7 @@ export function wardingBondSeparationFactsHole(input: {
     wardingBondSeparation: {
       sourceCombatantId: input.sourceCombatantId,
       targetId: input.targetId,
-      sourceSpellId: spellId(input.sourceSpellId),
+      sourceProcedureRef: input.sourceProcedureRef,
       rangeFeet: WARDING_BOND_CONNECTION_RANGE_FEET,
     },
     requiresTableSpatialFact: true,
@@ -223,7 +238,7 @@ export function wardingBondSeparationFactsHole(input: {
 
 export function wardingBondSeparationFactsAreSatisfied(input: {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: WardingBondEffect["sourceSpellId"];
+  readonly sourceProcedureRef: WardingBondEffect["sourceProcedureRef"];
   readonly targetId: CombatantId;
   readonly facts: readonly BattleTargetSpatialFact[];
 }): boolean {
@@ -232,7 +247,7 @@ export function wardingBondSeparationFactsAreSatisfied(input: {
       fact.kind === "wardingBondCreaturesDistance" &&
       fact.casterId === input.sourceCombatantId &&
       fact.targetId === input.targetId &&
-      fact.spellId === input.sourceSpellId &&
+      fact.sourceProcedureRef === input.sourceProcedureRef &&
       Number(fact.distanceFeet) > Number(WARDING_BOND_CONNECTION_RANGE_FEET),
   );
 }
@@ -240,13 +255,15 @@ export function wardingBondSeparationFactsAreSatisfied(input: {
 export function battleStateAfterWardingBondSeparation(input: {
   readonly state: BattleState;
   readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: WardingBondEffect["sourceSpellId"];
+  readonly sourceProcedureRef: WardingBondEffect["sourceProcedureRef"];
   readonly targetId: CombatantId;
 }): BattleState {
-  return battleStateWithoutWardingBondEffects(input.state, (hostId, effect) =>
-    hostId === input.targetId &&
-    effect.sourceCombatantId === input.sourceCombatantId &&
-    effect.sourceSpellId === input.sourceSpellId
+  return battleStateWithoutWardingBondEffects(
+    input.state,
+    (hostId, effect) =>
+      hostId === input.targetId &&
+      effect.sourceCombatantId === input.sourceCombatantId &&
+      effect.sourceProcedureRef === input.sourceProcedureRef,
   );
 }
 

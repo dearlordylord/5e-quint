@@ -1,41 +1,41 @@
+import { describe, expect, test } from "vitest";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import {
-  requireElapsedHours,
-  requireResolved,
-  requireBardicInspirationD20TestResolved,
-  findHole,
-  findAct,
-  targetFill,
-  interruptDecisionFill,
-  rolledDiceGroup,
-  cuttingWordsResource,
-  bardicInspirationUnit,
-  bardicInspirationSubject,
-  bardicInspirationBattle,
-  bardicInspirationTargetFill,
-  grantBardicInspirationToGoblin,
-  combatantHasBardicInspirationDie,
-  bardicInspirationStaleTargetHole,
-  characterResourceUses,
-  goblinAttacksReactionModifierCharacter,
-  goblinScimitarHitReactionSetup,
-  reactionModifierChoice,
-  cuttingWordsUnit,
-  cuttingWordsAttackOnlyUnit,
-  unsupportedAbilityModifierActivationUnit,
-  fighterId,
-  goblinId,
   armorClass,
+  bardicInspirationBattle,
+  bardicInspirationStaleTargetHole,
+  bardicInspirationSubject,
+  bardicInspirationTargetFill,
+  bardicInspirationUnit,
   characterBattleResourceSupportedForUnit,
+  characterResourceUses,
+  combatantHasBardicInspirationDie,
+  cuttingWordsAttackOnlyUnit,
+  cuttingWordsResource,
+  cuttingWordsUnit,
   DieRollResult,
   difficultyClass,
   discoverBattleActs,
+  fighterId,
+  findAct,
+  findHole,
+  goblinAttacksReactionModifierCharacter,
+  goblinId,
+  goblinScimitarHitReactionSetup,
+  grantBardicInspirationToGoblin,
+  interruptDecisionFill,
+  reactionModifierChoice,
+  requireBardicInspirationD20TestResolved,
+  requireElapsedHours,
+  requireResolved,
   resolveBardicInspirationFailedD20Test,
   resolveBattleInterrupt,
   resolveBattleSubject,
   resourceCount,
-  sameBattleSubject,
+  rolledDiceGroup,
+  targetFill,
+  unsupportedAbilityModifierActivationUnit,
 } from "./battle-runtime-test-support.ts";
-import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Bardic Inspiration", () => {
   test("Bardic Inspiration grants one one-hour d6 die at Bard level 1 and spends Bonus Action and Charisma-derived use", () => {
@@ -313,8 +313,12 @@ describe("battle runtime: Bardic Inspiration", () => {
     const subject = bardicInspirationSubject(bardicInspiration.id);
 
     expect(
-      discoverBattleActs(state).some((act) =>
-        sameBattleSubject(act.subject, subject),
+      discoverBattleActs(state).some(
+        (act) =>
+          act.subject.tag === "unitFeature" &&
+          subject.tag === "unitFeature" &&
+          "unitId" in subject &&
+          battleActUnitPresentation(act)?.unitId === subject.unitId,
       ),
     ).toBe(false);
   });
@@ -404,7 +408,13 @@ describe("battle runtime: Bardic Inspiration", () => {
           ...granted.currentTurnResources,
           currentHasBonusAction: true,
         },
-      }).some((act) => sameBattleSubject(act.subject, subject)),
+      }).some(
+        (act) =>
+          act.subject.tag === "unitFeature" &&
+          subject.tag === "unitFeature" &&
+          "unitId" in subject &&
+          battleActUnitPresentation(act)?.unitId === subject.unitId,
+      ),
     ).toBe(false);
   });
 

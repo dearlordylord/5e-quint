@@ -1,14 +1,16 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { sameBattleSubject } from "./battle-subjects.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-independent-attack-sequence
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { Hp, movementFeet, proficiencyBonus } from "@dnd/shared/types";
-import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -25,11 +27,13 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   attackRollFill,
   damageRollFillWithGroups,
   fighterId,
   partySide,
+  resolveBattleSubject,
   skeletonCreatureInit,
   skeletonId,
   testUnarmedStrikeDamageAttack,
@@ -40,7 +44,6 @@ import {
   characterId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -48,7 +51,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 // Production path: Eldritch Blast is admitted through the independent spell
@@ -219,21 +222,25 @@ const eldritchBlastStateCheck = stateCheck(
 );
 
 describe("Eldritch Blast MBT parity", () => {
-  it("replays Eldritch Blast beam sequencing", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-eldritch-blast.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createEldritchBlastDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: eldritchBlastStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays Eldritch Blast beam sequencing",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-eldritch-blast.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createEldritchBlastDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: eldritchBlastStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeEldritchBlastQuintState(
@@ -359,7 +366,10 @@ function discoverEldritchBlastHoles(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act === undefined) {
     throw new Error("Expected Eldritch Blast spell act.");
@@ -441,7 +451,9 @@ function spellTargetChoiceFill(
         kind: "spellTarget",
         casterId: fighterId,
         targetId: skeletonId,
-        spellId: eldritchBlastUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(eldritchBlastUnitId),
+        ),
       },
     ],
   };
@@ -489,9 +501,7 @@ function eldritchBlastHoleName(raw: unknown): EldritchBlastMbtHole {
   throw new Error(`Unknown Quint Eldritch Blast hole variant: ${tag}`);
 }
 
-function eldritchBlastMbtLastResult(
-  raw: unknown,
-): EldritchBlastMbtLastResult {
+function eldritchBlastMbtLastResult(raw: unknown): EldritchBlastMbtLastResult {
   if (
     raw === "init" ||
     raw === "needsHoles" ||

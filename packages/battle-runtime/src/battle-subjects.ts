@@ -19,14 +19,17 @@ import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type { DamageType } from "@dnd/surface/surface/types";
+import type { DamageType, UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import {
   BattleAreaId,
+  BattleActiveEffectExecutionRef,
   BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
   BattleProcedureExecutionRef,
   CombatantId,
   BattleStatBlockProcedureExecutionRef,
+  BattleStatBlockExecutionScopeRef,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -140,18 +143,23 @@ export type MonkFocusStepOfTheWindMode =
   (typeof MONK_FOCUS_STEP_OF_THE_WIND_MODES)[number];
 
 export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
+const RejectAuthoredSpellIdentityFields = {
+  sourceProcedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+} as const;
+const RejectAuthoredSpellSourceIdentityFields = {
+  ...RejectAuthoredSpellIdentityFields,
+  sourceCombatantId: Schema.optionalWith(Schema.Never, { exact: true }),
+} as const;
 
 export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union(
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("firstEntryOnTurn"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("turnStartInArea"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
 );
@@ -160,21 +168,18 @@ export type BattleSleetStormAreaMembershipTrigger =
 
 export const BattleInsectPlagueAreaMembershipTriggerSchema = Schema.Union(
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("appearsInArea"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("firstEntryOnTurn"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("turnEndInArea"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
 );
@@ -183,27 +188,23 @@ export type BattleInsectPlagueAreaMembershipTrigger =
 
 export const BattleCloudkillAreaMembershipTriggerSchema = Schema.Union(
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("appearsInArea"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("areaMovesIntoSpace"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("firstEntryOnTurn"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
+    ...RejectAuthoredSpellSourceIdentityFields,
     kind: Schema.Literal("turnEndInArea"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleAreaId,
   }),
 );
@@ -588,9 +589,9 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("escapeSpellRestraint"),
+    ...RejectAuthoredSpellIdentityFields,
     targetId: CombatantId,
-    sourceSpellId: SpellId,
-    sourceCombatantId: CombatantId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -630,49 +631,39 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    sourceUnitId: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
     action: Schema.Literal("dash"),
     speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    sourceUnitId: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
     action: Schema.Literal("disengage", "hide"),
   }),
   Schema.Union(
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
-      procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-        exact: true,
-      }),
-      resourceUnitId: BattleSubjectTextSchema,
+      procedureRef: BattleProcedureExecutionRef,
+      resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
       option: Schema.Literal("flurryOfBlows"),
     }),
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
-      procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-        exact: true,
-      }),
-      resourceUnitId: BattleSubjectTextSchema,
+      procedureRef: BattleProcedureExecutionRef,
+      resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
       option: Schema.Literal("patientDefense"),
       mode: Schema.Literal(...MONK_FOCUS_PATIENT_DEFENSE_MODES),
     }),
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
-      procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-        exact: true,
-      }),
-      resourceUnitId: BattleSubjectTextSchema,
+      procedureRef: BattleProcedureExecutionRef,
+      resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
       option: Schema.Literal("stepOfTheWind"),
       mode: Schema.Literal(...MONK_FOCUS_STEP_OF_THE_WIND_MODES),
       speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
@@ -681,16 +672,14 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("monkFocusFlurryOfBlowsStrike"),
     actorId: CombatantId,
-    resourceUnitId: BattleSubjectTextSchema,
+    focusProcedureRef: BattleProcedureExecutionRef,
     procedureRef: BattleAttackProcedureExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    invocation: SpellInvocationRefSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
     mode: SpellSubjectModeSchema,
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
@@ -702,10 +691,8 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("bonusActionSpell"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    invocation: SpellInvocationRefSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
     }),
@@ -719,10 +706,8 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("bonusActionDashSpell"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    invocation: SpellInvocationRefSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
     }),
@@ -731,37 +716,30 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("unitFeature"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    unitId: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("unitFeatureHeldWeaponActivation"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    unitId: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
     weaponItemId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    unitId: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
     action: Schema.Literal("assumeForm"),
-    formStatBlockId: BattleSubjectTextSchema,
+    formExecutionRef: BattleStatBlockExecutionScopeRef,
+    formStatBlockId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
-    unitId: BattleSubjectTextSchema,
+    procedureRef: BattleProcedureExecutionRef,
+    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
     action: Schema.Literal("dismiss"),
   }),
   Schema.Struct({
@@ -781,12 +759,10 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("findFamiliarTouchSpell"),
     actorId: CombatantId,
-    procedureRef: Schema.optionalWith(BattleProcedureExecutionRef, {
-      exact: true,
-    }),
+    procedureRef: BattleProcedureExecutionRef,
+    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
     companionId: CombatantId,
     spellAction: Schema.Literal("action", "bonusAction"),
-    invocation: SpellInvocationRefSchema,
     mode: SpellCastSubjectModeSchema,
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
@@ -872,8 +848,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("greaseGroundHazardSave"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("entersArea", "endsTurnInArea"),
   }),
@@ -881,8 +856,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("webRestraintSave"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("entersArea", "startsTurnInArea"),
   }),
@@ -908,32 +882,28 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("disperseCloudkill"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("webRestrainedNoLongerInArea"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("webAreaRemoved"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("gustOfWindLineSave"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
     directionId: BattleLineDirectionId,
     trigger: Schema.Literal("endsTurnInLine"),
@@ -942,8 +912,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("gustOfWindLineDirectionChange"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
     directionId: BattleLineDirectionId,
   }),
@@ -951,8 +920,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("movableZoneSave"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal(
       "endsTurnWithinFiveFeetOfSphere",
@@ -966,25 +934,22 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("moonbeamCylinderExit"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("movableZoneReposition"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("movableZoneRam"),
+    ...RejectAuthoredSpellSourceIdentityFields,
     targetId: CombatantId,
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("rammedBySphere"),
   }),
@@ -992,15 +957,15 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("releaseSpellCreatedHeldObject"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("protectionRelevantEffectSave"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
     relevantEffect: Schema.Literal("charmed", "frightened", "possession"),
   }),
   Schema.Struct({
@@ -1020,46 +985,45 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("disperseFogCloud"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
     areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("wardingBondSeparation"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
     targetId: CombatantId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("jumpMovementReplacement"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("dragonsBreathExhale"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("replaceSelfTransformationMode"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
     mode: Schema.Literal(...SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("replaceSelfTransformationMode"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
     mode: Schema.Literal(SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND),
     naturalWeaponDamageType: DamageTypeSchema,
   }),
@@ -1067,36 +1031,36 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandGrovel"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandDrop"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandApproach"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandFlee"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("levitateAltitudeControl"),
-    sourceCombatantId: CombatantId,
-    sourceSpellId: SpellId,
+    ...RejectAuthoredSpellSourceIdentityFields,
+    effectRef: BattleActiveEffectExecutionRef,
     targetId: CombatantId,
   }),
   Schema.Struct({
@@ -1106,7 +1070,20 @@ export const BattleSubjectSchema = Schema.Union(
     fallingCreatureId: CombatantId,
   }),
 );
-export type BattleSubject = typeof BattleSubjectSchema.Type;
+type BattleSubjectWireValue = typeof BattleSubjectSchema.Type;
+type WithoutAuthoredProcedureSelectors<TSubject> = TSubject extends unknown
+  ? Omit<
+      TSubject,
+      | "invocation"
+      | "unitId"
+      | "sourceUnitId"
+      | "resourceUnitId"
+      | "sourceProcedureRef"
+      | "formStatBlockId"
+    >
+  : never;
+export type BattleSubject =
+  WithoutAuthoredProcedureSelectors<BattleSubjectWireValue>;
 
 export type CharacterProcedureBattleSubject = Extract<
   BattleSubject,
@@ -1124,30 +1101,6 @@ export type CharacterProcedureBattleSubject = Extract<
   }
 >;
 
-type WithRequiredProcedureRef<TSubject> = TSubject extends {
-  readonly procedureRef?: BattleProcedureExecutionRef;
-}
-  ? Omit<TSubject, "procedureRef"> & {
-      readonly procedureRef: BattleProcedureExecutionRef;
-    }
-  : never;
-
-export type AdmittedCharacterProcedureBattleSubject =
-  WithRequiredProcedureRef<CharacterProcedureBattleSubject>;
-
-export type AdmittedBattleSubject =
-  | Exclude<BattleSubject, CharacterProcedureBattleSubject>
-  | AdmittedCharacterProcedureBattleSubject;
-
-function isAdmittedBattleSubject(
-  subject: BattleSubject,
-): subject is AdmittedBattleSubject {
-  return (
-    !isCharacterProcedureBattleSubject(subject) ||
-    subject.procedureRef !== undefined
-  );
-}
-
 export function isCharacterProcedureBattleSubject(
   subject: BattleSubject,
 ): subject is CharacterProcedureBattleSubject {
@@ -1164,12 +1117,96 @@ export function isCharacterProcedureBattleSubject(
   );
 }
 
-export const AdmittedBattleSubjectSchema = BattleSubjectSchema.pipe(
-  Schema.filter(isAdmittedBattleSubject, {
-    message: () =>
-      "Character procedure Battle subjects require a bound procedure reference.",
-  }),
-);
+type DistributiveOmit<T, TKey extends PropertyKey> = T extends unknown
+  ? Omit<T, TKey>
+  : never;
+
+type SpellProcedureSelectionSubject = DistributiveOmit<
+  Extract<
+    CharacterProcedureBattleSubject,
+    {
+      readonly tag:
+        | "actionSpell"
+        | "bonusActionSpell"
+        | "bonusActionDashSpell"
+        | "findFamiliarTouchSpell";
+    }
+  >,
+  "procedureRef" | "invocation"
+> & {
+  readonly procedureRef?: BattleProcedureExecutionRef;
+  readonly invocation: SpellInvocationRef;
+};
+
+type UnitFeatureProcedureSelectionSubject = DistributiveOmit<
+  Extract<
+    CharacterProcedureBattleSubject,
+    { readonly tag: "unitFeature" | "unitFeatureHeldWeaponActivation" }
+  >,
+  "procedureRef" | "unitId"
+> & { readonly unitId: UnitRecord["id"] };
+
+type DruidWildShapeProcedureSelectionBase = DistributiveOmit<
+  Extract<CharacterProcedureBattleSubject, { readonly tag: "druidWildShape" }>,
+  "procedureRef" | "unitId" | "formExecutionRef" | "formStatBlockId"
+>;
+type DruidWildShapeProcedureSelectionSubject =
+  | (Extract<
+      DruidWildShapeProcedureSelectionBase,
+      { readonly action: "assumeForm" }
+    > & {
+      readonly unitId: UnitRecord["id"];
+      readonly formStatBlockId: StatBlockId;
+    })
+  | (Extract<
+      DruidWildShapeProcedureSelectionBase,
+      { readonly action: "dismiss" }
+    > & { readonly unitId: UnitRecord["id"] });
+
+type BonusActionStandardActionProcedureSelectionSubject = DistributiveOmit<
+  Extract<
+    CharacterProcedureBattleSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >,
+  "procedureRef" | "sourceUnitId"
+> & { readonly sourceUnitId: UnitRecord["id"] };
+
+type MonkFocusProcedureSelectionSubject = DistributiveOmit<
+  Extract<CharacterProcedureBattleSubject, { readonly tag: "monkFocusOption" }>,
+  "procedureRef" | "resourceUnitId"
+> & { readonly resourceUnitId: UnitRecord["id"] };
+
+export type CharacterProcedureSelectionSubject =
+  | SpellProcedureSelectionSubject
+  | UnitFeatureProcedureSelectionSubject
+  | DruidWildShapeProcedureSelectionSubject
+  | BonusActionStandardActionProcedureSelectionSubject
+  | MonkFocusProcedureSelectionSubject;
+
+export type BattleActDiscoverySubject =
+  | BattleSubject
+  | CharacterProcedureSelectionSubject;
+
+export function isCharacterProcedureSelectionSubject(
+  subject: BattleActDiscoverySubject,
+): subject is CharacterProcedureSelectionSubject {
+  if (
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "findFamiliarTouchSpell"
+  ) {
+    return "invocation" in subject;
+  }
+  return (
+    !("procedureRef" in subject) &&
+    (subject.tag === "unitFeature" ||
+      subject.tag === "unitFeatureHeldWeaponActivation" ||
+      subject.tag === "druidWildShape" ||
+      subject.tag === "bonusActionStandardAction" ||
+      subject.tag === "monkFocusOption")
+  );
+}
 
 export type ActionHideSubject = {
   readonly tag: "action";
@@ -1184,7 +1221,7 @@ export type ActionSearchSubject = {
 export type BonusActionStandardActionSubject = {
   readonly tag: "bonusActionStandardAction";
   readonly actorId: CombatantId;
-  readonly sourceUnitId: string;
+  readonly procedureRef: BattleProcedureExecutionRef;
 } & (
   | {
       readonly action: "dash";
@@ -1203,51 +1240,17 @@ export type MonkFocusFlurryOfBlowsStrikeSubject = Extract<
   { readonly tag: "monkFocusFlurryOfBlowsStrike" }
 >;
 
+export function battleSubjectForReplay(subject: BattleSubject): BattleSubject {
+  return subject;
+}
+
 export function sameBattleSubject(
   left: BattleSubject,
   right: BattleSubject,
 ): boolean {
-  return battleSubjectKey(left, false) === battleSubjectKey(right, false);
-}
-
-export function sameAdmittedBattleSubject(
-  left: AdmittedBattleSubject,
-  right: AdmittedBattleSubject,
-): boolean {
-  return battleSubjectKey(left, true) === battleSubjectKey(right, true);
-}
-
-function spellInvocationRefKey(ref: SpellInvocationRef): readonly unknown[] {
-  return Match.value(ref).pipe(
-    Match.when({ tag: "cantrip" }, (cantrip) => [
-      cantrip.tag,
-      cantrip.spellId,
-      cantrip.procedure,
-    ]),
-    Match.when({ tag: "spellSlot" }, (slot) => [
-      slot.tag,
-      slot.spellId,
-      slot.slotLevel,
-      slot.procedure,
-    ]),
-    Match.when({ tag: "classFeatureFreeCast" }, (freeCast) => [
-      freeCast.tag,
-      freeCast.spellId,
-      freeCast.resourceUnitId,
-      freeCast.procedure,
-    ]),
-    Match.when({ tag: "armorOfShadows" }, (armorOfShadows) => [
-      armorOfShadows.tag,
-      armorOfShadows.spellId,
-      armorOfShadows.procedure,
-    ]),
-    Match.when({ tag: "spellEffect" }, (effect) => [
-      effect.tag,
-      effect.spellId,
-      effect.sourceCombatantId,
-      effect.procedure,
-    ]),
-    Match.exhaustive,
+  return (
+    battleSubjectKey(battleSubjectForReplay(left)) ===
+    battleSubjectKey(battleSubjectForReplay(right))
   );
 }
 
@@ -1273,10 +1276,7 @@ function spellMetamagicSelectionKey(
         .sort(([left], [right]) => String(left).localeCompare(String(right)));
 }
 
-function battleSubjectKey(
-  subject: BattleSubject,
-  includeCharacterProcedureRef: boolean,
-): string {
+function battleSubjectKey(subject: BattleSubject): string {
   if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
     return JSON.stringify([subject.tag, subject.actorId, subject.action]);
   }
@@ -1293,8 +1293,7 @@ function battleSubjectKey(
     return JSON.stringify([
       subject.tag,
       subject.actorId,
-      characterProcedureRefKey(subject, includeCharacterProcedureRef),
-      spellInvocationRefKey(subject.invocation),
+      subject.procedureRef,
       spellSubjectModeKey(subject.mode),
       subject.speedKind,
     ]);
@@ -1315,8 +1314,7 @@ function battleSubjectKey(
     return JSON.stringify([
       subject.tag,
       subject.actorId,
-      characterProcedureRefKey(subject, includeCharacterProcedureRef),
-      subject.resourceUnitId,
+      subject.procedureRef,
       subject.option,
       "mode" in subject ? subject.mode : null,
       "speedKind" in subject ? subject.speedKind : null,
@@ -1326,8 +1324,7 @@ function battleSubjectKey(
     return JSON.stringify([
       subject.tag,
       subject.actorId,
-      characterProcedureRefKey(subject, includeCharacterProcedureRef),
-      subject.resourceUnitId,
+      subject.focusProcedureRef,
       subject.procedureRef,
     ]);
   }
@@ -1335,10 +1332,9 @@ function battleSubjectKey(
     return JSON.stringify([
       subject.tag,
       subject.actorId,
-      characterProcedureRefKey(subject, includeCharacterProcedureRef),
-      subject.unitId,
+      subject.procedureRef,
       subject.action,
-      "formStatBlockId" in subject ? subject.formStatBlockId : null,
+      "formExecutionRef" in subject ? subject.formExecutionRef : null,
     ]);
   }
   if (subject.tag === "companionLifecycle") {
@@ -1351,10 +1347,9 @@ function battleSubjectKey(
     return JSON.stringify([
       subject.tag,
       subject.actorId,
-      characterProcedureRefKey(subject, includeCharacterProcedureRef),
+      subject.procedureRef,
       subject.companionId,
       subject.spellAction,
-      spellInvocationRefKey(subject.invocation),
       spellSubjectModeKey(subject.mode),
       spellMetamagicSelectionKey(subject.metamagic),
       subject.componentWeaponItemId ?? null,
@@ -1364,8 +1359,7 @@ function battleSubjectKey(
     return JSON.stringify([
       subject.tag,
       subject.actorId,
-      characterProcedureRefKey(subject, includeCharacterProcedureRef),
-      subject.unitId,
+      subject.procedureRef,
       subject.weaponItemId,
     ]);
   }
@@ -1444,8 +1438,7 @@ function battleSubjectKey(
         action.actorId,
         action.action,
         action.targetId,
-        action.sourceSpellId,
-        action.sourceCombatantId,
+        action.effectRef,
       ]),
     ),
     Match.when(
@@ -1463,8 +1456,7 @@ function battleSubjectKey(
       JSON.stringify([
         action.tag,
         action.actorId,
-        characterProcedureRefKey(action, includeCharacterProcedureRef),
-        action.sourceUnitId,
+        action.procedureRef,
         action.action,
         "speedKind" in action ? action.speedKind : null,
       ]),
@@ -1473,8 +1465,7 @@ function battleSubjectKey(
       JSON.stringify([
         spell.tag,
         spell.actorId,
-        characterProcedureRefKey(spell, includeCharacterProcedureRef),
-        spellInvocationRefKey(spell.invocation),
+        spell.procedureRef,
         spellSubjectModeKey(spell.mode),
         spellMetamagicSelectionKey(spell.metamagic),
         spell.componentWeaponItemId ?? null,
@@ -1484,20 +1475,14 @@ function battleSubjectKey(
       JSON.stringify([
         spell.tag,
         spell.actorId,
-        characterProcedureRefKey(spell, includeCharacterProcedureRef),
-        spellInvocationRefKey(spell.invocation),
+        spell.procedureRef,
         spellSubjectModeKey(spell.mode),
         spellMetamagicSelectionKey(spell.metamagic),
         spell.componentWeaponItemId ?? null,
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>
-      JSON.stringify([
-        feature.tag,
-        feature.actorId,
-        characterProcedureRefKey(feature, includeCharacterProcedureRef),
-        feature.unitId,
-      ]),
+      JSON.stringify([feature.tag, feature.actorId, feature.procedureRef]),
     ),
     Match.when({ tag: "runtimeCommand" }, (command) =>
       JSON.stringify([
@@ -1516,7 +1501,6 @@ function battleSubjectKey(
           ? (command.attackDamageType ?? null)
           : null,
         "sourceCombatantId" in command ? command.sourceCombatantId : null,
-        "sourceSpellId" in command ? command.sourceSpellId : null,
         "condition" in command ? command.condition : null,
         "mode" in command ? command.mode : null,
         "naturalWeaponDamageType" in command
@@ -1532,11 +1516,4 @@ function battleSubjectKey(
     ),
     Match.exhaustive,
   );
-}
-
-function characterProcedureRefKey(
-  subject: { readonly procedureRef?: BattleProcedureExecutionRef },
-  includeCharacterProcedureRef: boolean,
-): BattleProcedureExecutionRef | null {
-  return includeCharacterProcedureRef ? (subject.procedureRef ?? null) : null;
 }

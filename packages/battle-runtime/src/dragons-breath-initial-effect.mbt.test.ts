@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // RAW trace:
@@ -42,7 +43,6 @@ import {
   breakBattleConcentration,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   spellSaveDcForCaster,
   type BattleActiveEffect,
   type BattleHole,
@@ -80,7 +80,6 @@ const DRAGONS_BREATH_INITIAL_EFFECT_SCENARIO_OUTCOME_BY_TAG: Readonly<
   TargetTurn: "targetTurn",
   ConcentrationBroken: "concentrationBroken",
 } as const;
-
 
 type DragonsBreathInitialEffectState = {
   readonly turnRole: DragonsBreathTurnRole;
@@ -340,7 +339,7 @@ function dragonsBreathInitialEffectProjection(
   const spellSaveDc = spellSaveDcForCaster(state.battle, spellCasterId);
   const targetEffectActive = effect !== undefined;
   const casterConcentrating =
-    caster.concentration?.sourceSpellId === dragonsBreathUnitId &&
+    caster.concentration?.sourceProcedureRef === dragonsBreathUnitId &&
     caster.concentration.effectKind === "spellEffect";
   const projection = {
     turnRole: state.turnRole,
@@ -385,7 +384,7 @@ function dragonsBreathTargetEffect(
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
       effect.kind === "dragonsBreath" &&
-      effect.sourceSpellId === dragonsBreathUnitId &&
+      effect.sourceProcedureRef === dragonsBreathUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }

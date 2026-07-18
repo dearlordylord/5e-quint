@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
@@ -129,7 +130,9 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: shiningSmiteUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(shiningSmiteUnitId),
+            ),
             damage: {
               expr: { dice: 3, dieSize: 6 },
               damageType: "radiant",
@@ -157,14 +160,18 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(
       requireCombatant(afterWeaponDamage.state, spellCasterId).concentration,
     ).toEqual({
-      sourceSpellId: shiningSmiteUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(shiningSmiteUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(
       requireCombatant(afterWeaponDamage.state, spellTargetId).activeEffects,
     ).toContainEqual({
       kind: "shiningSmiteIllumination",
-      sourceSpellId: shiningSmiteUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(shiningSmiteUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       expiresAt: {
         kind: "concentration",
@@ -175,7 +182,9 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(snapshotBattle(afterWeaponDamage.state).lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceSpellId: shiningSmiteUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(shiningSmiteUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: {

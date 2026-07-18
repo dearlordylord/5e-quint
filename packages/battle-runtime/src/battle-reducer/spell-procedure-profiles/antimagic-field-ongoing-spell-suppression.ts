@@ -39,6 +39,7 @@ import {
   type BattleAntimagicFieldAreaChoice,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
@@ -175,13 +176,14 @@ function antimagicFieldOngoingSpellSuppressionSpell(
 function discoverAntimagicFieldOngoingSpellSuppressionCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: AntimagicFieldOngoingSpellSuppressionInvocation,
+  invocation: BattleExecutableSpellInvocation<AntimagicFieldOngoingSpellSuppressionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation:
           antimagicFieldOngoingSpellSuppressionInvocationRef(invocation),
         mode: { tag: "cast" },
@@ -351,7 +353,7 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
   readonly areaId: BattleAreaId;
   readonly auraMembership: BattleAntimagicFieldAreaChoice["auraMembership"];
   readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
-  readonly invocation: AntimagicFieldOngoingSpellSuppressionInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<AntimagicFieldOngoingSpellSuppressionInvocation>;
 }): BattleState {
   const combatants = new Map(input.state.combatants);
   const caster = combatants.get(input.actorId);
@@ -361,7 +363,7 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
   const replacing = caster.activeEffects.filter(
     (effect) =>
       effect.kind === "antimagicFieldOngoingSpellSuppression" &&
-      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
       effect.sourceCombatantId === input.actorId &&
       effect.areaId === input.areaId,
   );
@@ -372,7 +374,7 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
     ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
     {
       kind: "antimagicFieldOngoingSpellSuppression" as const,
-      sourceSpellId: input.invocation.spell.id,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
       auraMembership: input.auraMembership,

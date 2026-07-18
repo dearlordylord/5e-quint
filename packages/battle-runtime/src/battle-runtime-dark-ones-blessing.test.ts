@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.enemy-zero-hit-point-temporary-hit-points
 import { describe, expect, test } from "vitest";
 
@@ -230,7 +231,9 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
         kind: "spellTarget",
         casterId: warlockId,
         targetId: enemyId,
-        spellId: sacredFlameId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(sacredFlameId),
+        ),
       },
     ]);
     const awaitingSave = resolveBattleSubject({
@@ -589,7 +592,7 @@ function darkOnesBlessingRangeFact(
     beneficiaryId,
     damageSourceId,
     targetId,
-    unitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
     rangeFeet: movementFeet(10),
   };
 }

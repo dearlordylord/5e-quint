@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
 // UNIT-IDENTITY-REPLAY: B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field doSuppressOrdinarySpell doSuppressArtifactSpell doBreakAntimagicConcentration
@@ -53,7 +55,6 @@ import {
   battleTablePositionId,
   breakBattleConcentration,
   endTurn,
-  resolveBattleSubject,
   type BattleActiveEffect,
   type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleFill,
@@ -335,7 +336,9 @@ function initialRuntimeState(): AntimagicRuntimeState {
       ...caster,
       activeEffects: [spiritualWeaponActiveEffect()],
       concentration: {
-        sourceSpellId: spiritualWeaponUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spiritualWeaponUnitId),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -424,7 +427,8 @@ function antimagicProjection(
       ongoingSpellRef,
     ),
     antimagicCasterConcentrating:
-      antimagicCaster.concentration?.sourceSpellId === antimagicFieldUnitId &&
+      antimagicCaster.concentration?.sourceProcedureRef ===
+        antimagicFieldUnitId &&
       antimagicCaster.concentration.effectKind === "spellEffect",
     lastResult: state.lastResult,
   };
@@ -485,7 +489,9 @@ function assertSuppressionActiveEffectShape(
       : [];
   expect(antimagicSuppressionEffect(state)).toMatchObject({
     kind: "antimagicFieldOngoingSpellSuppression",
-    sourceSpellId: antimagicFieldUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
     sourceCombatantId: spellTargetId,
     areaId: antimagicFieldAreaId,
     radiusFeet: movementFeet(10),
@@ -514,7 +520,7 @@ function antimagicSuppressionEffect(
       { readonly kind: "antimagicFieldOngoingSpellSuppression" }
     > =>
       effect.kind === "antimagicFieldOngoingSpellSuppression" &&
-      effect.sourceSpellId === antimagicFieldUnitId &&
+      effect.sourceProcedureRef === antimagicFieldUnitId &&
       effect.sourceCombatantId === spellTargetId &&
       effect.areaId === antimagicFieldAreaId,
   );
@@ -531,7 +537,9 @@ function spiritualWeaponActiveEffect(): Extract<
   return {
     kind: "spiritualWeapon",
     sourceEffectId: spiritualWeaponEffectId,
-    sourceSpellId: spiritualWeaponUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spiritualWeaponUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     sourceSpellLevel,
     forcePositionId: battleTablePositionId(

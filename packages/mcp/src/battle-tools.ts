@@ -6,6 +6,7 @@ import {
   sameBattleSubject,
   snapshotBattle,
   type BattleFill,
+  type BattleActPresentation,
   type BattleResolutionResult,
   type BattleState,
 } from "@dnd/battle-runtime";
@@ -91,6 +92,17 @@ export function handleBattleToolCall(
           requestedSubject: subject,
         });
       }
+      const presentation =
+        previous?.presentation ??
+        discoverBattleActs(visibleState).find((act) =>
+          sameBattleSubject(act.subject, subject),
+        )?.presentation;
+      if (presentation === undefined) {
+        return errorContent("Battle act is not currently available.", {
+          code: "BATTLE_ACT_NOT_AVAILABLE",
+          subject,
+        });
+      }
 
       const fills = [...(previous?.fills ?? []), matched.args.fill];
       const isInterruptDecision =
@@ -116,6 +128,7 @@ export function handleBattleToolCall(
         fills,
         replayState,
         isInterruptDecision,
+        presentation,
       });
       if (storeBattleResolution(root, result, pendingTransaction)) {
         publishAdminProjectionBestEffort(root);
@@ -151,6 +164,7 @@ export function handleBattleToolCall(
               fills: [],
               replayState: state.right,
               isInterruptDecision: false,
+              presentation: { kind: "intrinsic" },
             }),
           )
         ) {
@@ -193,6 +207,7 @@ export function handleBattleToolCall(
             fills: [],
             replayState: state.right,
             isInterruptDecision: false,
+            presentation: availableAct.presentation,
           }),
         )
       ) {
@@ -234,6 +249,7 @@ export function handleBattleToolCall(
             fills: [],
             replayState: state.right,
             isInterruptDecision: false,
+            presentation: { kind: "intrinsic" },
           }),
         )
       ) {
@@ -297,6 +313,7 @@ function pendingTransactionForResult({
   fills,
   replayState,
   isInterruptDecision,
+  presentation,
 }: {
   readonly result: BattleResolutionResult;
   readonly filledSubject: BattleFillSession["subject"];
@@ -304,6 +321,7 @@ function pendingTransactionForResult({
   readonly fills: readonly BattleFill[];
   readonly replayState: BattleState;
   readonly isInterruptDecision: boolean;
+  readonly presentation: BattleActPresentation;
 }): PendingBattleFillSession | null {
   if (result.tag !== "needsHoles") return null;
   if (
@@ -314,12 +332,14 @@ function pendingTransactionForResult({
     return {
       baseState: previous.baseState,
       subject: result.subject,
+      presentation: previous.presentation,
       fills: previous.fills,
     };
   }
   return {
     baseState: isInterruptDecision ? result.state : replayState,
     subject: result.subject,
+    presentation,
     fills: isInterruptDecision ? [] : fills,
   };
 }

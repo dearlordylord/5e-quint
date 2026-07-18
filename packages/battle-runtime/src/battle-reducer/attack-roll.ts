@@ -24,7 +24,12 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import type { BattleObjectId, CombatantId } from "../identity.ts";
+import type {
+  BattleObjectId,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
+import { characterUnitProcedureRef } from "../character-execution.ts";
 import {
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
@@ -106,6 +111,7 @@ import {
 } from "./movement-speed.ts";
 import {
   combatantCanSee,
+  combatantsAreEnemies,
   combatantInvisibleBenefitDenied,
   currentActorId,
   grappledBy,
@@ -177,6 +183,7 @@ type WeaponMasteryPropertySupportProfile =
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
   readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
 };
 
 export function attackRollHole(
@@ -900,13 +907,14 @@ export function applyWeaponMasterySapOnHit(
       (effect) =>
         !(
           effect.kind === "nextAttackRollBySelf" &&
-          "sourceUnitId" in effect &&
+          "sourceProcedureRef" in effect &&
+          effect.sourceProcedureRef === selection.procedureRef &&
           effect.sourceCombatantId === attackerId
         ),
     ),
     {
       kind: "nextAttackRollBySelf",
-      sourceUnitId: selection.unitId,
+      sourceProcedureRef: selection.procedureRef,
       sourceCombatantId: attackerId,
       mode: "disadvantage",
       expiresAt: { kind: "startOfTurn", combatantId: attackerId },
@@ -1096,13 +1104,13 @@ export function applyWeaponMasterySlowAfterDamage(input: {
       (effect) =>
         !(
           effect.kind === "unitFeatureSpeedDelta" &&
-          "sourceUnitId" in effect &&
-          effect.sourceUnitId === selection.unitId
+          "sourceProcedureRef" in effect &&
+          effect.sourceProcedureRef === selection.procedureRef
         ),
     ),
     {
       kind: "unitFeatureSpeedDelta",
-      sourceUnitId: selection.unitId,
+      sourceProcedureRef: selection.procedureRef,
       sourceCombatantId: input.attackerId,
       deltaFeet: movementDeltaFeet(-10),
       expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
@@ -1305,7 +1313,9 @@ export function weaponMasteryCleaveTargetHole(
       : {}),
     choices: [...state.combatants.keys()].filter(
       (combatantId) =>
-        combatantId !== attackerId && combatantId !== firstTargetId,
+        combatantId !== attackerId &&
+        combatantId !== firstTargetId &&
+        combatantsAreEnemies(state, attackerId, combatantId),
     ),
   };
 }
@@ -1525,7 +1535,7 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
       (fact) =>
         fact.kind === "hordeBreakerSecondTargetEligible" &&
         fact.attackerId === input.attackerId &&
-        fact.unitId === input.unitId &&
+        fact.sourceProcedureRef === input.unitId &&
         fact.originalTargetId === input.firstTargetId &&
         fact.secondTargetId === input.secondTargetId,
     )
@@ -1784,7 +1794,18 @@ function selectedWeaponMasteryProperty(input: {
       input.supportProfile,
     ),
   );
-  return unitRef === undefined ? null : { attack, unitId: unitRef.unitId };
+  if (unitRef === undefined) return null;
+  const procedureRef = characterUnitProcedureRef(
+    attacker.origin.execution,
+    unitRef.unitId,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([input.supportProfile]),
+    },
+  );
+  return procedureRef === undefined
+    ? null
+    : { attack, unitId: unitRef.unitId, procedureRef };
 }
 
 function weaponMasteryPropertySupportProfiles(

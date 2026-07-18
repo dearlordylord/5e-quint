@@ -33,7 +33,7 @@ import {
 } from "./rule-core-component-route.ts";
 import type {
   BattleFill,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import type { BattleShovePushOutcome } from "./battle-reducer.ts";
 

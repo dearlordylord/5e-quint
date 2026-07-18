@@ -73,13 +73,14 @@ import {
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type BonusActionDashSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
   type SpellMarkedDamageRider,
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import { spellId, type CombatantId } from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import { characterSpellProcedure } from "../character-execution.ts";
 import {
   damageDispositionFillFor,
@@ -303,7 +304,7 @@ type SpellProcedureResolveDispatchInput = {
     | BonusActionSpellBattleResolutionInput
     | BonusActionDashSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly fillSet:
     | Extract<SpellFillSet, { readonly tag: "ok" }>
     | Extract<ChainedSpellFillSet, { readonly tag: "ok" }>;
@@ -402,9 +403,9 @@ function actionSpellUsesSharedSpellAttackDamageBody(
   );
 }
 
-function isSupportedDamageSpellInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is SupportedDamageSpellInvocation {
+function isSupportedDamageSpellInvocation<I extends SupportedSpellInvocation>(
+  invocation: I,
+): invocation is I & SupportedDamageSpellInvocation {
   return (
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
@@ -446,12 +447,12 @@ function potentCantripAppliesToMissedSpellAttack(input: {
 }
 
 function selectedSpellAttackDamageInvocation(
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
   damageTypeChoice:
     | Extract<SpellFillSet, { readonly tag: "ok" }>["damageTypeChoice"]
     | undefined,
 ):
-  | { readonly tag: "ok"; readonly invocation: SupportedSpellInvocation }
+  | { readonly tag: "ok"; readonly invocation: BattleExecutableSpellInvocation }
   | {
       readonly tag: "needsHoles";
       readonly hole: ReturnType<typeof spellDamageTypeChoiceHole>;
@@ -484,7 +485,7 @@ function selectedSpellAttackDamageInvocation(
         damageType: selectedDamageType,
         maxDieAdditionalDiceLimit: invocation.damage.maxDieAdditionalDiceLimit,
       },
-    } satisfies SpellAttackDamageInvocation,
+    } satisfies BattleExecutableSpellInvocation<SpellAttackDamageInvocation>,
   };
 }
 
@@ -592,7 +593,7 @@ function spellAttackRollHoleWithSeekingOption(
   state: BattleState,
   attackerId: CombatantId,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     {
       readonly procedure:
         | "attackBurstSaveDamage"
@@ -680,15 +681,20 @@ function resolveSpellActInternal(
     actor?.origin.kind === "character"
       ? supportedActionSpellInvocationForSubject(actor, subject)
       : undefined;
+  const boundInvocation =
+    actor?.origin.kind === "character"
+      ? characterSpellProcedure(actor.origin.execution, subject.procedureRef)
+      : undefined;
   if (
     actor?.origin.kind === "character" &&
     invocation == null &&
     options.allowBonusActionInvocation === true &&
+    boundInvocation !== undefined &&
     invocationRefHasAntimagicSuppressedRepeatResolverGuard(
-      subject.invocation.procedure,
+      boundInvocation.procedure,
     )
   ) {
-    invocation = supportedActionSpellInvocationForSubject(actor, subject);
+    invocation = boundInvocation;
   }
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
@@ -1137,7 +1143,8 @@ function resolveSpellActInternal(
         fact.kind === "spiritualWeaponTargetWithinForceReach" &&
         fact.casterId === subject.actorId &&
         fact.targetId === target.combatantId &&
-        fact.spellId === invocationForResolution.spell.id &&
+        fact.sourceProcedureRef ===
+          invocationForResolution.sourceProcedureRef &&
         fact.forcePositionId === spiritualWeaponForcePosition.positionId,
     )
   ) {
@@ -1151,6 +1158,7 @@ function resolveSpellActInternal(
   if (isSupportedDamageSpellInvocation(invocationForResolution)) {
     const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
       state: castingState,
+      triggeringProcedureRef: invocationForResolution.sourceProcedureRef,
       triggeringCombatantId: subject.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
@@ -2182,7 +2190,7 @@ function resolveSpellActInternal(
 function stateAfterResolvedHeldLightHurl(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): BattleState {
   return invocation.procedure === "heldLightHurl"
     ? endHeldLightSpellEffect(state, actorId, invocation)
@@ -2202,7 +2210,7 @@ function stateAfterSpellAttackRollMadeForInvocation(
 function stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly errorState: BattleState;
   readonly spiritualWeaponForcePosition?: Extract<
     BattleFill,
@@ -2224,11 +2232,11 @@ function spiritualWeaponProxyEffectMatches(input: {
   readonly actorId: CombatantId;
   readonly invocation:
     | Extract<
-        SupportedSpellInvocation,
+        BattleExecutableSpellInvocation,
         { readonly procedure: "spiritualWeaponAttackProxy" }
       >
     | Extract<
-        SupportedSpellInvocation,
+        BattleExecutableSpellInvocation,
         { readonly procedure: "spiritualWeaponRepeatAttack" }
       >;
   readonly forcePositionId: Extract<
@@ -2241,7 +2249,7 @@ function spiritualWeaponProxyEffectMatches(input: {
     actor?.activeEffects.some(
       (effect) =>
         effect.kind === "spiritualWeapon" &&
-        effect.sourceSpellId === input.invocation.spell.id &&
+        effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
         effect.sourceCombatantId === input.actorId &&
         effect.forcePositionId === input.forcePositionId,
     ) === true
@@ -2252,7 +2260,7 @@ function spiritualWeaponCastCommitAlreadyApplied(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spiritualWeaponAttackProxy" }
   >;
   readonly forcePositionId: Extract<
@@ -2267,7 +2275,8 @@ function spiritualWeaponCastCommitAlreadyApplied(input: {
       (use) => use.kind === "committed" && use.combatantId === input.actorId,
     ) &&
     actor?.concentration?.effectKind === "spellEffect" &&
-    actor.concentration.sourceSpellId === input.invocation.spell.id &&
+    actor.concentration.sourceProcedureRef ===
+      input.invocation.sourceProcedureRef &&
     spiritualWeaponProxyEffectMatches(input)
   );
 }
@@ -2276,7 +2285,7 @@ function spiritualWeaponRepeatCommitAlreadyApplied(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spiritualWeaponRepeatAttack" }
   >;
   readonly forcePositionId: Extract<
@@ -2293,7 +2302,7 @@ function spiritualWeaponRepeatCommitAlreadyApplied(input: {
 function spiritualWeaponResolutionCommitAlreadyApplied(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly fills: readonly BattleFill[];
 }): boolean {
   if (
@@ -2334,7 +2343,7 @@ function spiritualWeaponRepeatIsLaterTurn(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spiritualWeaponRepeatAttack" }
   >;
 }): boolean {
@@ -2346,7 +2355,7 @@ function spiritualWeaponRepeatIsLaterTurn(input: {
 }
 
 function spiritualWeaponRepeatTargetingInvalidReason(
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
   targetId: CombatantId,
 ): string | null {
   if (invocation.procedure !== "spiritualWeaponRepeatAttack") {
@@ -2364,7 +2373,7 @@ function spiritualWeaponRepeatTargetingInvalidReason(
 function spendSpellActResolutionResources(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly errorState: BattleState;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -2544,9 +2553,12 @@ function resolveSpellAttackDamageObjectTarget(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation:
-    | Extract<SupportedSpellInvocation, { readonly procedure: "heldLightHurl" }>
     | Extract<
-        SupportedDamageSpellInvocation,
+        BattleExecutableSpellInvocation,
+        { readonly procedure: "heldLightHurl" }
+      >
+    | Extract<
+        BattleExecutableSpellInvocation<SupportedDamageSpellInvocation>,
         { readonly procedure: "spellAttackDamage" }
       >;
   readonly actionCostOverride?: SpellProcedureActionCostOverride;
@@ -2933,7 +2945,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
             kind: "startsBurning" as const,
             objectId: input.fillSet.objectTarget.objectId,
             sourceCombatantId: input.actorId,
-            sourceSpellId: spellId(input.invocation.spell.id),
+            sourceProcedureRef: input.invocation.sourceProcedureRef,
           },
         ]
       : [];
@@ -3269,7 +3281,7 @@ export function resolveBonusActionSpellAttackProxyAct(
 function supportedActionSpellInvocationForSubject(
   actor: BattleCreatureState,
   subject: ActionSpellBattleResolutionInput["subject"],
-): SupportedSpellInvocation | undefined {
+): BattleExecutableSpellInvocation | undefined {
   if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
     return undefined;
   }
@@ -3288,7 +3300,7 @@ function supportedActionSpellInvocationForSubject(
 function supportedBonusActionSpellInvocationForSubject(
   actor: BattleCreatureState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
-): SupportedSpellInvocation | undefined {
+): BattleExecutableSpellInvocation | undefined {
   if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
     return undefined;
   }
@@ -3307,19 +3319,24 @@ function supportedBonusActionSpellInvocationForSubject(
 function antimagicSuppressedInvocationForStaleSubject(
   actor: BattleCreatureState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
-): SupportedSpellInvocation | undefined {
+): BattleExecutableSpellInvocation | undefined {
+  const invocation = supportedBonusActionSpellInvocationForSubject(
+    actor,
+    subject,
+  );
   if (
+    invocation === undefined ||
     !invocationRefHasAntimagicSuppressedRepeatResolverGuard(
-      subject.invocation.procedure,
+      invocation.procedure,
     )
   ) {
     return undefined;
   }
-  return supportedBonusActionSpellInvocationForSubject(actor, subject);
+  return invocation;
 }
 
 function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
-  procedure: ActionSpellBattleResolutionInput["subject"]["invocation"]["procedure"],
+  procedure: SupportedSpellInvocation["procedure"],
 ): boolean {
   return (
     procedure === "objectContactDamageRepeat" ||

@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode
@@ -36,11 +38,10 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   startBattle,
   type BattleActiveEffect,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
@@ -54,6 +55,7 @@ import {
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission-test-support.ts";
 import {
+  resolveBattleSubject,
   attackRollFill,
   characterSeed,
   damageRollFillWithGroups,
@@ -265,9 +267,7 @@ function dragonbornDamageResistanceBattle(): BattleState {
 function projectDragonbornDamageResistance(
   state: BattleState,
 ): SpeciesPassiveTraitProjection {
-  const target = state.combatants.get(
-    dragonbornDamageResistanceTargetId,
-  );
+  const target = state.combatants.get(dragonbornDamageResistanceTargetId);
   if (target === undefined) {
     throw new Error("Expected Dragonborn target combatant.");
   }
@@ -362,7 +362,9 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
   }
   const poisonedEffect = {
     kind: "spellConditionEndTurnSave",
-    sourceSpellId: "synthetic_poison_condition_save",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("synthetic_poison_condition_save"),
+    ),
     sourceCombatantId: wizardId,
     condition: "poisoned",
     conditionHadNonSpellSource: false,
@@ -653,10 +655,7 @@ function createSpeciesPassiveTraitSubstrateRouteDriver() {
         ];
       },
       doRoutePassiveSavingThrowRollMode: () => {
-        route = [
-          ...route,
-          ...requirePassiveSavingThrowRollModeRoute(),
-        ];
+        route = [...route, ...requirePassiveSavingThrowRollModeRoute()];
       },
       doRoutePassiveAbilityCheckRollMode: () => {
         route = [
@@ -772,7 +771,8 @@ function requirePassiveDamageAdjustmentRoute(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === wizardId &&
-      candidate.subject.invocation.spellId === "ray_of_sickness",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "ray_of_sickness",
   );
   if (act === undefined || act.subject.tag !== "actionSpell") {
     throw new Error("Expected public Ray of Sickness act for damage route.");
@@ -799,10 +799,14 @@ function requirePassiveDamageAdjustmentRoute(
   });
   const damage = requireHole(awaitingDamage, "rolledDice");
   const damageResult = resolveBattleSubject({
-      state,
-      subject: act.subject,
-      fills: [targetChoice, attackRoll, damageRollFillWithGroups(damage, [[3, 5]])],
-    });
+    state,
+    subject: act.subject,
+    fills: [
+      targetChoice,
+      attackRoll,
+      damageRollFillWithGroups(damage, [[3, 5]]),
+    ],
+  });
   if (damageResult.tag !== "resolved") {
     throw new Error(
       `Expected Ray of Sickness damage to resolve, got ${damageResult.tag}: ${
@@ -962,9 +966,9 @@ function routeEventsWithSubject(
   return routeEvents;
 }
 
-function routeStart(route: readonly ReducerRouteEvent[]): readonly [
-  ReducerRouteEvent,
-] {
+function routeStart(
+  route: readonly ReducerRouteEvent[],
+): readonly [ReducerRouteEvent] {
   const [start] = route;
   if (start === undefined || start.kind !== "startBattle") {
     throw new Error("Expected route to start with startBattle.");
@@ -1102,7 +1106,9 @@ function observeCreatureSpaceMovementRoute(
       act.subject.command === "move",
   );
   if (moveAct === undefined) {
-    throw new Error("Expected public Movement act for species substrate route.");
+    throw new Error(
+      "Expected public Movement act for species substrate route.",
+    );
   }
   const hole = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),

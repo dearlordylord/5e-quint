@@ -49,6 +49,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -60,6 +61,7 @@ import {
   spellEffectInvocationRef,
 } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
@@ -237,13 +239,12 @@ function admitSpellCreatedHeldObjectReEvoke(
 
 function spellCreatedHeldObjectEffectsForSpell(
   ctx: SpellAdmissionContext,
-  spell: SpellRecord,
+  _spell: SpellRecord,
 ): readonly SpellCreatedHeldObjectActiveEffect[] {
   return ctx.actor.activeEffects.filter(
     (effect): effect is SpellCreatedHeldObjectActiveEffect =>
       effect.kind === "spellCreatedHeldObject" &&
-      effect.sourceCombatantId === ctx.actor.combatantId &&
-      effect.sourceSpellId === spell.id,
+      effect.sourceCombatantId === ctx.actor.combatantId,
   );
 }
 
@@ -254,7 +255,10 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly proficiencyBonus: ProficiencyBonusType;
 }):
-  | (SpellCreatedHeldObjectActiveEffect & {
+  | (Omit<
+      SpellCreatedHeldObjectActiveEffect,
+      "effectRef" | "sourceProcedureRef"
+    > & {
       readonly objectState: { readonly kind: "held" };
     })
   | null {
@@ -338,7 +342,6 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
   }
   return {
     kind: "spellCreatedHeldObject",
-    sourceSpellId: spell.id,
     sourceCombatantId: input.actorId,
     objectState: { kind: "held" },
     light: {
@@ -407,7 +410,7 @@ function spellCreatedHeldObjectDamageExpr(
 function discoverSpellCreatedHeldObjectCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellCreatedHeldObjectInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
@@ -417,6 +420,7 @@ function discoverSpellCreatedHeldObjectCastAct(
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: spellCreatedHeldObjectInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -430,7 +434,7 @@ function discoverSpellCreatedHeldObjectCastAct(
 function discoverSpellCreatedHeldObjectAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellCreatedHeldObjectAttackInvocation,
+  invocation: BattleExecutableSpellInvocation<SpellCreatedHeldObjectAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -440,6 +444,7 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
           subject: {
             tag: "actionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: spellCreatedHeldObjectAttackInvocationRef(invocation),
             mode: { tag: "cast" },
           },
@@ -453,7 +458,7 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
 function discoverSpellCreatedHeldObjectReEvokeCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellCreatedHeldObjectReEvokeInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectReEvokeInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
@@ -463,6 +468,7 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: spellCreatedHeldObjectReEvokeInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -586,10 +592,18 @@ function resolveSpellCreatedHeldObject(
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applySpellCreatedHeldObjectEffect({
+  const allocation = allocateBattleActiveEffectRef({
     state: resourced.state,
+    ownerId: input.actorId,
+  });
+  const effected = applySpellCreatedHeldObjectEffect({
+    state: allocation.state,
     actorId: input.actorId,
-    activeEffect: input.invocation.activeEffect,
+    activeEffect: {
+      ...input.invocation.activeEffect,
+      sourceProcedureRef: input.input.subject.procedureRef,
+      effectRef: allocation.effectRef,
+    },
   });
   if (effected.tag === "invalid") {
     return invalidResult(input.input.state, "staleSubject", effected.message);

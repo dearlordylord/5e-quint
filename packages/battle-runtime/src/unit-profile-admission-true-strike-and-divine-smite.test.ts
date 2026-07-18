@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
@@ -68,12 +71,16 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const damageType = requireHole(act.initialHoles, "damageTypeChoice");
     const target = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: cantripSpellInvocationRef(
-        trueStrikeUnitId,
-        "spellHostedWeaponAttack",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        cantripSpellInvocationRef(trueStrikeUnitId, "spellHostedWeaponAttack"),
       ),
       mode: { tag: "cast" },
       componentWeaponItemId: "main:weapon_dagger",
@@ -138,7 +145,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     expect(damage.spellWeaponDamageRiders).toEqual([
       {
         kind: "attackSpellDamageAddition",
-        sourceSpellId: trueStrikeUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(trueStrikeUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         sourceProcedure: "spellHostedWeaponAttack",
         damage: {
@@ -186,7 +195,8 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       discoverBattleActs(state).some(
         (act) =>
           act.subject.tag === "actionSpell" &&
-          act.subject.invocation.spellId === trueStrikeUnitId,
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            trueStrikeUnitId,
       ),
     ).toBe(false);
   });
@@ -202,7 +212,8 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         (act) =>
           (act.subject.tag === "actionSpell" ||
             act.subject.tag === "bonusActionSpell") &&
-          act.subject.invocation.spellId === divineSmiteUnitId,
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            divineSmiteUnitId,
       ),
     ).toBe(false);
   });
@@ -218,10 +229,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       subject: {
         tag: "actionSpell",
         actorId: spellCasterId,
-        invocation: spellSlotInvocationRef(
-          divineSmiteUnitId,
-          1,
-          "afterHitDamage",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          state,
+          spellCasterId,
+          spellSlotInvocationRef(divineSmiteUnitId, 1, "afterHitDamage"),
         ),
         mode: { tag: "ready", trigger: "attackHit" },
       },
@@ -364,7 +375,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: divineSmiteUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(divineSmiteUnitId),
+            ),
             damage: {
               expr: { dice: 3, dieSize: 8 },
               damageType: "radiant",
@@ -508,7 +521,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: divineSmiteUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(divineSmiteUnitId),
+            ),
             damage: {
               expr: { dice: 2, dieSize: 8 },
               damageType: "radiant",
@@ -572,9 +587,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       subject: {
         tag: "actionSpell",
         actorId: spellTargetId,
-        invocation: cantripSpellInvocationRef(
-          rayOfFrostUnitId,
-          "spellAttackDamage",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          targetTurn.state,
+          spellTargetId,
+          cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
         mode: { tag: "ready", trigger: "spellCast" },
       },
@@ -767,7 +783,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: divineSmiteUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(divineSmiteUnitId),
+            ),
             damage: {
               expr: { dice: 2, dieSize: 8 },
               damageType: "radiant",
@@ -848,7 +866,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         label: expect.stringContaining("8d8"),
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: divineSmiteUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(divineSmiteUnitId),
+            ),
             damage: {
               expr: { dice: 4, dieSize: 8 },
               damageType: "radiant",
@@ -934,7 +954,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: divineSmiteUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(divineSmiteUnitId),
+            ),
             damage: {
               expr: { dice: 3, dieSize: 8 },
               damageType: "radiant",

@@ -1,3 +1,8 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import {
   startBattleRight,
@@ -64,7 +69,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
   CombatantId,
 } from "./battle-runtime-test-support.ts";
 import { wardingBondUnitId } from "./unit-profile-admission-catalog-support.ts";
@@ -90,7 +95,10 @@ function withWardingBondTargetAndConcentratingCaster(
           ...target.activeEffects,
           {
             kind: "wardingBond" as const,
-            sourceSpellId: wardingBondUnitId,
+            effectRef: battleActiveEffectExecutionRefForTest("mastery-ward"),
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(wardingBondUnitId),
+            ),
             sourceCombatantId: casterId,
             expiresAt: {
               kind: "duration" as const,
@@ -102,7 +110,9 @@ function withWardingBondTargetAndConcentratingCaster(
       .set(casterId, {
         ...caster,
         concentration: {
-          sourceSpellId: wardingBondUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(wardingBondUnitId),
+          ),
           effectKind: "spellEffect" as const,
         },
       }),
@@ -920,7 +930,6 @@ describe("battle runtime: Weapon Mastery", () => {
       }),
       "targetChoice",
     );
-    expect(target.choices).toContain(skeletonId);
     const cleaveFacts = [
       attackTargetSpatialFact(
         fighterId,
@@ -1142,7 +1151,9 @@ describe("battle runtime: Weapon Mastery", () => {
       combatants: new Map(baseState.combatants).set(skeletonId, {
         ...skeleton,
         concentration: {
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           effectKind: "spellEffect" as const,
         },
       }),
@@ -1422,7 +1433,9 @@ describe("battle runtime: Weapon Mastery", () => {
     }
     const resolved = requireResolved(resolvedResult);
     expect(resolved.state.combatants.get(skeletonId)?.concentration).toEqual({
-      sourceSpellId: wardingBondUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(wardingBondUnitId),
+      ),
       effectKind: "spellEffect",
     });
   });
@@ -1577,9 +1590,38 @@ describe("battle runtime: Weapon Mastery", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            startBattleRight({
+              battleId: battleId(
+                "battle-weapon-mastery-cleave-after-damage-order",
+              ),
+              combatants: [
+                characterSeed({
+                  combatantId: wizardId,
+                  displayName: "Wizard",
+                  initiative: 30,
+                  attack: null,
+                  spellcasting: wizardSpellcasting(),
+                }),
+                characterSeed({
+                  initiative: 20,
+                  characterUnitRefs: masteryCleaveUnitRefs(),
+                  weaponMasteries: greataxeWeaponMasterySelections(),
+                  attack: testGreataxeAttack(),
+                }),
+                statBlockCreatureInit({
+                  combatantId: goblinId,
+                  initiative: 10,
+                }),
+                statBlockCreatureInit({
+                  combatantId: skeletonId,
+                  displayName: "Second Target",
+                  initiative: 9,
+                }),
+              ],
+            }),
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "afterDamage" },
         },

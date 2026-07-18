@@ -1,8 +1,16 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   abilityModifier,
@@ -29,7 +37,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   startBattle,
   type BattleCreatureInit,
@@ -38,7 +45,7 @@ import {
   type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -1019,7 +1026,9 @@ function counterspellTriggerFact(input: {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    spellId: counterspellUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(counterspellUnitId),
+    ),
     rangeFeet: movementFeet(60),
   };
 }
@@ -1033,9 +1042,10 @@ function magicMissileSubject(
       act.subject.tag === "actionSpell" &&
       act.subject.actorId === casterId &&
       act.subject.mode.tag === "cast" &&
-      act.subject.invocation.tag === "spellSlot" &&
-      act.subject.invocation.spellId === magicMissileUnitId &&
-      act.subject.invocation.slotLevel === slotLevel,
+      battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(act)?.invocation.spellId ===
+        magicMissileUnitId &&
+      battleActSpellSlotPresentation(act)?.invocation.slotLevel === slotLevel,
   )?.subject;
   if (subject === undefined) {
     throw new Error(`Expected a bound level ${slotLevel} Magic Missile act.`);
@@ -1054,7 +1064,7 @@ function requireCastSpellSubject(
         act.subject.tag === "bonusActionDashSpell") &&
       act.subject.actorId === casterId &&
       act.subject.mode.tag === "cast" &&
-      act.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(act)?.invocation.spellId === spellId,
   )?.subject;
   if (subject === undefined) {
     throw new Error(`Expected a bound ${spellId} cast act.`);
@@ -1082,7 +1092,9 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: input.casterId,
         targetId: input.targetId,
-        spellId: magicMissileUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(magicMissileUnitId),
+        ),
       },
     ],
   };

@@ -35,7 +35,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 

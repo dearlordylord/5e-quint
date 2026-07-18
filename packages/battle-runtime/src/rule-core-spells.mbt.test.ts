@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
@@ -13,14 +14,19 @@
 // UNIT-IDENTITY-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
 // UNIT-IDENTITY-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
 import { isDeepStrictEqual } from "node:util";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
-
 import {
-  MBT_TEST_TIMEOUT_MS,
+  characterAttackSubjectForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
+
+import { Either } from "effect";
+import { describe, expect, it } from "vitest";
+import {
   booleanField,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
@@ -33,8 +39,6 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.ts";
-import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import {
   abilityModifier,
@@ -48,44 +52,43 @@ import {
   proficiencyBonus,
   spellSlotLevel,
 } from "@dnd/shared/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import acidSplashInput from "../../surface/content/acid_splash.json";
 import cureWoundsInput from "../../surface/content/cure_wounds.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import mageArmorInput from "../../surface/content/mage_armor.json";
+import magicMissileInput from "../../surface/content/magic_missile.json";
 import massCureWoundsInput from "../../surface/content/mass_cure_wounds.json";
 import massHealingWordInput from "../../surface/content/mass_healing_word.json";
-import magicMissileInput from "../../surface/content/magic_missile.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
+import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleAreaId,
   battleCombatantSide,
+  type BattleCreatureInit,
+  type BattleFill,
+  type BattleHole,
   battleId,
+  type BattleResolutionResult,
+  type BattleRolledDiceFill,
+  type BattleState,
+  type BattleActDiscoverySubject as BattleSubject,
   cantripSpellInvocationRef,
   characterId,
   combatantId,
+  type CombatantId,
   discoverBattleActs,
   endTurn,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
+  type SpellInvocationRef,
   spellSlotInvocationRef,
   startBattle,
-  type BattleCreatureInit,
-  type BattleFill,
-  type BattleHole,
-  type BattleRolledDiceFill,
-  type BattleResolutionResult,
-  type BattleState,
-  type BattleSubject,
-  type CombatantId,
-  type SpellInvocationRef,
 } from "./index.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 
 const ruleCoreSpellMbtHoles = [
   "TargetChoice",
@@ -1780,10 +1783,16 @@ type DirectHitPointRestorationSpellId =
 
 function actionSpellSubject(
   invocation: SpellInvocationRef,
-  mode: Extract<BattleSubject, { readonly tag: "actionSpell" }>["mode"] = {
+  mode: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >["mode"] = {
     tag: "cast",
   },
-): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell"; readonly invocation: unknown }
+> {
   return {
     tag: "actionSpell",
     actorId: casterId,
@@ -1807,7 +1816,10 @@ function healingSpellSubject(
   slotLevel: 1 | 3 | 5,
 ): Extract<
   BattleSubject,
-  { readonly tag: "actionSpell" | "bonusActionSpell" }
+  {
+    readonly tag: "actionSpell" | "bonusActionSpell";
+    readonly invocation: unknown;
+  }
 > {
   return {
     tag: subjectTag,
@@ -1861,7 +1873,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: caster,
         targetId: target,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
       },
     ],
   };
@@ -1869,7 +1881,7 @@ function spellTargetFill(
 
 function spellTargetListFill(
   hole: BattleHole,
-  spellId: "mass_healing_word" | "mass_cure_wounds",
+  sourceProcedureRef: "mass_healing_word" | "mass_cure_wounds",
 ): BattleFill {
   if (hole.kind !== "spellTargetList") {
     throw new Error("Expected spellTargetList hole.");
@@ -1884,8 +1896,9 @@ function spellTargetListFill(
         {
           kind: "spellTargetsInPointOriginSphere",
           casterId,
-          spellId,
-          areaId: battleAreaId(`mbt:${spellId}:point-origin-sphere`),
+          sourceProcedureRef:
+            battleProcedureExecutionRefForTest(sourceProcedureRef),
+          areaId: battleAreaId(`mbt:${sourceProcedureRef}:point-origin-sphere`),
           radiusFeet: hole.spell.targeting.area.radiusFeet,
           targetIds,
         },
@@ -1900,7 +1913,8 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId,
       targetId: spellTargetId,
-      spellId,
+      sourceProcedureRef:
+        battleProcedureExecutionRefForTest(sourceProcedureRef),
     })),
   };
 }
@@ -1923,7 +1937,9 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId,
       targetId: allocation.targetId,
-      spellId: hole.spell.spell.id,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hole.spell.spell.id),
+      ),
     })),
   };
 }

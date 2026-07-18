@@ -49,6 +49,48 @@ export const BattleSpellEffectOccurrenceId = Schema.NonEmptyTrimmedString.pipe(
 );
 export type BattleSpellEffectOccurrenceId =
   typeof BattleSpellEffectOccurrenceId.Type;
+
+export const BattleActiveEffectExecutionRef = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleActiveEffectExecutionRef"),
+);
+export type BattleActiveEffectExecutionRef =
+  typeof BattleActiveEffectExecutionRef.Type;
+export const battleActiveEffectExecutionRef: (
+  value: string,
+) => BattleActiveEffectExecutionRef = BattleActiveEffectExecutionRef.make;
+
+export const BattleActiveEffectExecutionOrdinal = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("BattleActiveEffectExecutionOrdinal"),
+);
+export type BattleActiveEffectExecutionOrdinal =
+  typeof BattleActiveEffectExecutionOrdinal.Type;
+export const battleActiveEffectExecutionOrdinal: (
+  value: number,
+) => BattleActiveEffectExecutionOrdinal =
+  BattleActiveEffectExecutionOrdinal.make;
+
+export const BattleSpellDamageDieExecutionRef =
+  Schema.NonEmptyTrimmedString.pipe(
+    Schema.brand("BattleSpellDamageDieExecutionRef"),
+  );
+export type BattleSpellDamageDieExecutionRef =
+  typeof BattleSpellDamageDieExecutionRef.Type;
+export function battleSpellDamageDieExecutionRef(
+  holeId: string,
+  groupOrdinal: number,
+  dieOrdinal: number,
+): BattleSpellDamageDieExecutionRef {
+  return BattleSpellDamageDieExecutionRef.make(
+    JSON.stringify({
+      holeId,
+      kind: "spellDamageDie",
+      groupOrdinal,
+      dieOrdinal,
+    }),
+  );
+}
 export const battleSpellEffectOccurrenceId: (
   value: string,
 ) => BattleSpellEffectOccurrenceId = BattleSpellEffectOccurrenceId.make;
@@ -297,7 +339,7 @@ export function battleAttackExecutionScopeRefOrdinalIsBefore(
 }
 
 export function battleResourcePoolExecutionRef(
-  scopeRef: BattleStatBlockExecutionScopeRef,
+  scopeRef: BattleExecutionScopeRef,
   ordinal: NonNegativeInteger,
 ): BattleResourcePoolExecutionRef {
   return BattleResourcePoolExecutionRef.make(
@@ -431,7 +473,7 @@ export function battleProcedureExecutionRefIsAtOrdinal(
 
 export function battleResourcePoolExecutionRefBelongsToScope(
   resourcePoolRef: BattleResourcePoolExecutionRef,
-  scopeRef: BattleStatBlockExecutionScopeRef,
+  scopeRef: BattleExecutionScopeRef,
 ): boolean {
   return executionReferenceBelongsToScope(
     resourcePoolRef,
@@ -613,7 +655,8 @@ function battleResourcePoolExecutionReferenceIsCanonical(
     hasExactKeys(decoded, ["scopeRef", "kind", "ordinal"]) &&
     decoded.kind === "resourcePool" &&
     typeof decoded.scopeRef === "string" &&
-    battleStatBlockExecutionScopeReferenceIsCanonical(decoded.scopeRef) &&
+    (battleStatBlockExecutionScopeReferenceIsCanonical(decoded.scopeRef) ||
+      battleCharacterExecutionScopeReferenceIsCanonical(decoded.scopeRef)) &&
     nestedReferenceEncodingIsCanonical(reference, decoded, "resourcePool")
   );
 }

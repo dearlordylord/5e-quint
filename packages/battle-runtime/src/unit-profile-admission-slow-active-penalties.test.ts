@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME slow
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
@@ -57,7 +59,10 @@ import type {
   BattleState,
   CombatantId,
 } from "./unit-profile-admission-test-support.ts";
-import { monsterMultiattackStatBlock } from "./battle-runtime-test-support.ts";
+import {
+  requireCharacterSpellProcedureRefForTest,
+  monsterMultiattackStatBlock,
+} from "./battle-runtime-test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
@@ -88,10 +93,17 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(slowUnitId, 3, "slowActivePenalties"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(slowUnitId, 3, "slowActivePenalties"),
+      ),
       mode: { tag: "cast" },
     });
 
@@ -138,7 +150,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(target.activeEffects).toEqual([
       expect.objectContaining({
         kind: "slowActivePenalties",
-        sourceSpellId: slowUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(slowUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
@@ -156,14 +170,18 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(savingThrowFlatBonusProjections(cast.state, "dex")).toEqual([
       {
         targetId: spellTargetId,
-        sourceSpellId: slowUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(slowUnitId),
+        ),
         bonus: -2,
       },
     ]);
     expect(savingThrowFlatBonusProjections(cast.state, "wis")).toEqual([]);
     expect(combatantCanTakeReactions(target)).toBe(false);
     expect(requireCombatant(cast.state, spellCasterId).concentration).toEqual({
-      sourceSpellId: slowUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(slowUnitId),
+      ),
       effectKind: "spellEffect",
     });
   });
@@ -222,7 +240,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         dc: { kind: "caster_spell_save_dc" },
         slowActivePenaltiesEndTurnSave: {
           targetId: spellTargetId,
-          sourceSpellId: slowUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(slowUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         },
@@ -508,7 +528,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         failurePercent: SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
         activeEffectSources: [
           {
-            sourceSpellId: slowUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(slowUnitId),
+            ),
             sourceCombatantId: spellCasterId,
           },
         ],
@@ -643,7 +665,9 @@ function targetOwnedFlamingSphereEffect(): Extract<
 > {
   return {
     kind: "flamingSphere",
-    sourceSpellId: flamingSphereUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(flamingSphereUnitId),
+    ),
     sourceCombatantId: spellTargetId,
     areaId: flamingSphereAreaId,
     save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
@@ -722,7 +746,7 @@ function spellActForActor(
         candidate.subject.tag === "bonusActionSpell" ||
         candidate.subject.tag === "bonusActionDashSpell") &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.invocation.spellId === unitId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === unitId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${unitId} spell act for ${actorId}.`);
@@ -805,7 +829,7 @@ defineSelectedIdentityReplayWitness({
               ).activeEffects.some(
                 (effect) =>
                   effect.kind === "slowActivePenalties" &&
-                  effect.sourceSpellId === slowUnitId,
+                  effect.sourceProcedureRef === slowUnitId,
               ),
               somaticFailureRequested: false,
             };
@@ -852,7 +876,7 @@ defineSelectedIdentityReplayWitness({
               ).activeEffects.some(
                 (effect) =>
                   effect.kind === "slowActivePenalties" &&
-                  effect.sourceSpellId === slowUnitId,
+                  effect.sourceProcedureRef === slowUnitId,
               ),
               somaticFailureRequested: true,
             };

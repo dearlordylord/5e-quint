@@ -212,10 +212,7 @@ function normalizeZeroHitPointStabilizationRouteQuintState(
       ZERO_HIT_POINT_STABILIZATION_ROUTE_SURFACE_BY_TAG,
       "zero-Hit-Point stabilization route surface",
     ),
-    targetHp: numberFromQuintInt(
-      quintField(state, "qTargetHp"),
-      "qTargetHp",
-    ),
+    targetHp: numberFromQuintInt(quintField(state, "qTargetHp"), "qTargetHp"),
     targetTemporaryHp: numberFromQuintInt(
       quintField(state, "qTargetTemporaryHp"),
       "qTargetTemporaryHp",

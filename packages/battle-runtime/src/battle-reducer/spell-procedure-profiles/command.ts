@@ -29,6 +29,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -242,7 +243,7 @@ function isCommandPhase(
 function discoverCommandCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: CommandSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<CommandSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -312,7 +313,7 @@ function commandMetamagicCastActs(input: {
 
 function commandCastAct(
   actorId: CombatantId,
-  invocation: CommandSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<CommandSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -321,6 +322,7 @@ function commandCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: commandInvocationRef(invocation),
       mode: { tag: "cast" },
     },

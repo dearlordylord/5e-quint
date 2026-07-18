@@ -37,6 +37,7 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -139,13 +140,14 @@ function admitHeldLight(
 function discoverHeldLightCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: HeldLightInvocation,
+  invocation: BattleExecutableSpellInvocation<HeldLightInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: heldLightInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -173,7 +175,7 @@ function heldLightCastSummary(invocation: HeldLightInvocation): string {
 function applyHeldLightEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HeldLightInvocation,
+  invocation: BattleExecutableSpellInvocation<HeldLightInvocation>,
 ): BattleState {
   const caster = state.combatants.get(actorId);
   if (caster === undefined) {
@@ -188,13 +190,13 @@ function applyHeldLightEffect(
           (effect) =>
             !(
               effect.kind === "heldLight" &&
-              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
               effect.sourceCombatantId === actorId
             ),
         ),
         {
           kind: "heldLight",
-          sourceSpellId: invocation.spell.id,
+          sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: actorId,
           brightRadiusFeet: invocation.light.brightRadiusFeet,
           dimAdditionalFeet: invocation.light.dimAdditionalFeet,

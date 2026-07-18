@@ -29,6 +29,7 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleFill,
   type BattleResolutionResult,
+  type BattleExecutableSpellInvocation,
   type BattleState,
   type BattleTeleportDestination,
   type BattleTeleportDestinationFact,
@@ -124,13 +125,14 @@ function selfTeleportSpellProjection(
 function discoverSelfTeleportCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: SelfTeleportInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SelfTeleportInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "bonusActionSpell" as const,
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: selfTeleportInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
@@ -257,7 +259,7 @@ function resolveSelfTeleport(
           {
             kind: "selfTeleport",
             actorId: input.actorId,
-            sourceSpellId: spellId(input.invocation.spell.id),
+            sourceProcedureRef: input.invocation.sourceProcedureRef,
             destination: selfTeleportOutcomeDestination(destination),
             spendsMovement: false,
             provokesOpportunityAttacks: false,
@@ -278,7 +280,7 @@ function selfTeleportOutcomeDestination(
 }
 
 function validateSelfTeleportDestination(
-  invocation: SelfTeleportInvocation,
+  invocation: BattleExecutableSpellInvocation<SelfTeleportInvocation>,
   actorId: CombatantId,
   fill: Extract<BattleFill, { readonly kind: "teleportDestination" }>,
   destination: BattleTeleportDestinationFact,
@@ -289,7 +291,7 @@ function validateSelfTeleportDestination(
   if (destination.actorId !== actorId) {
     return "Teleport destination table fact must match the caster.";
   }
-  if (destination.spellId !== spellId(invocation.spell.id)) {
+  if (destination.sourceProcedureRef !== invocation.sourceProcedureRef) {
     return "Teleport destination table fact must match the spell.";
   }
   if (destination.distanceFeet <= 0) {

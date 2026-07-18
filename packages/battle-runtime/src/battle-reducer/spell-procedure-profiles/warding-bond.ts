@@ -18,6 +18,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type WardingBondSpellInvocation,
@@ -129,7 +130,6 @@ function wardingBondSpellProjection(
         connectionRangeFeet: WARDING_BOND_CONNECTION_RANGE_FEET,
         activeEffect: {
           kind: "wardingBond",
-          sourceSpellId: spell.id,
           sourceCombatantId: actorId,
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
@@ -263,7 +263,7 @@ function wardingBondDamageShareOperationIsSupported(
 function discoverWardingBondCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: WardingBondSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<WardingBondSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
@@ -274,6 +274,7 @@ function discoverWardingBondCastAct(
             subject: {
               tag: "actionSpell" as const,
               actorId,
+              procedureRef: invocation.sourceProcedureRef,
               invocation: wardingBondInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
@@ -374,6 +375,7 @@ function resolveWardingBond(
     input.actorId,
     target.combatantId,
     input.invocation,
+    input.input.subject.procedureRef,
   );
   const resourced = spendSpellCastResources({
     state: effected,

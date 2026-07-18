@@ -34,6 +34,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SeeInvisibleObserverSightSpellInvocation,
@@ -90,7 +91,6 @@ function seeInvisibleObserverSightShape(
   return {
     activeEffect: {
       kind: "seeInvisibleAndEthereal",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",
@@ -128,13 +128,14 @@ function admitSeeInvisibleObserverSight(
 function discoverSeeInvisibleObserverSightCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: SeeInvisibleObserverSightSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: seeInvisibleObserverSightInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -146,7 +147,7 @@ function discoverSeeInvisibleObserverSightCastAct(
 }
 
 function seeInvisibleObserverSightInvocationRef(
-  invocation: SeeInvisibleObserverSightSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "spellSlot",
@@ -157,7 +158,7 @@ function seeInvisibleObserverSightInvocationRef(
 }
 
 function seeInvisibleObserverSightCastSummary(
-  invocation: SeeInvisibleObserverSightSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
@@ -165,7 +166,7 @@ function seeInvisibleObserverSightCastSummary(
 function applySeeInvisibleObserverSightEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SeeInvisibleObserverSightSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -173,6 +174,7 @@ function applySeeInvisibleObserverSightEffect(
   }
   const nextEffect = {
     ...invocation.activeEffect,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
   };
   const activeEffects = [
@@ -180,7 +182,7 @@ function applySeeInvisibleObserverSightEffect(
       (effect) =>
         !(
           effect.kind === "seeInvisibleAndEthereal" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId
         ),
     ),

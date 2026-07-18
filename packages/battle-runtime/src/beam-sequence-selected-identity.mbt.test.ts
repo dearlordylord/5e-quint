@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ELDRITCH-BLAST eldritch_blast
 // UNIT-IDENTITY-REPLAY: L1H-ELDRITCH-BLAST eldritch_blast doDiscoverLevelFiveBeamTargetHoles doResolveTwoCreatureBeamsSameTarget doResolveTwoCreatureBeamsSplitTargets doResolveCreatureAndObjectBeamTargets
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
@@ -29,7 +32,6 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -38,7 +40,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -76,7 +78,10 @@ type BeamSequenceProjection = {
 };
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type ResolvedBattleResult = Extract<
   BattleResolutionResult,
@@ -277,7 +282,10 @@ function resolveEldritchBlastTwoBeamSequence(input: {
 
 function appendBeamOutcome(input: {
   readonly state: BattleState;
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
   readonly fills: readonly BattleFill[];
   readonly outcome: BeamAttackOutcome;
 }): readonly BattleFill[] {
@@ -436,7 +444,8 @@ function eldritchBlastAct(state: BattleState): ActionSpellAct {
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === casterId &&
-      candidate.subject.invocation.spellId === eldritchBlastUnitId,
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        eldritchBlastUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Eldritch Blast action Spell act.");
@@ -496,7 +505,9 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId: eldritchBlastUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(eldritchBlastUnitId),
+        ),
       },
     ],
   };
@@ -514,7 +525,9 @@ function spellObjectTargetFill(
         kind: "spellObjectTarget",
         casterId,
         objectId,
-        spellId: eldritchBlastUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(eldritchBlastUnitId),
+        ),
         rangeFeet: movementFeet(120),
         armorClass: armorClass(13),
         damageDisposition: {

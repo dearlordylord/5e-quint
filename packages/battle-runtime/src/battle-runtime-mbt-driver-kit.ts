@@ -1,4 +1,9 @@
 import * as path from "node:path";
+import {
+  battleActSpellPresentation,
+  battleActSpellSlotPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 
 import {
   defineDriver,
@@ -18,8 +23,8 @@ import { Either, Match, Schema } from "effect";
 
 import { expect } from "vitest";
 
-import { ABILITIES, SURFACE_SKILLS } from "@dnd/shared/game-facts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import { ABILITIES, SURFACE_SKILLS } from "@dnd/shared/game-facts";
 import {
   DieRollResult,
   Hp,
@@ -30,51 +35,53 @@ import {
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
-import {
-  buildUnitCatalog,
-  srdUnitCollection,
-} from "@dnd/surface/surface/unit-catalog";
-import magicMissileInput from "../../surface/content/magic_missile.json";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   DamageType,
   SpellRecord,
   StatBlockRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
+import magicMissileInput from "../../surface/content/magic_missile.json";
 
 import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./battle-reducer/attack-main.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
-  attackTargetFill as creatureAttackTargetFill,
-  statBlockAttackAct,
-  statBlockCreature,
-  statBlockWithCreatureType,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import {
-  chromaticOrbUnitId,
-  rayOfFrostUnitId,
-  sorcererInnateSorceryUnitId,
-  spellCasterId,
-  spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
+  battleProcedureExecutionRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+  fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  attackExecutionSelectionForSubjectForTest as interruptAttackExecutionSelectionForSubject,
+  attackInitialTargetHole as interruptAttackInitialTargetHole,
+  attackRollHoleAfterTarget as interruptAttackRollHoleAfterTarget,
+  attackTargetFill as interruptAttackTargetFill,
+  interruptDecisionFill as interruptDecisionFillSupport,
+  fighterAttackSubject as interruptFighterAttackSubject,
+  goblinId as interruptGoblinId,
+  reactionChoiceWithSubject as interruptReactionChoiceWithSubject,
+  savingThrowOutcomeFill as interruptSavingThrowOutcomeFill,
+  secondWizardId as interruptSecondWizardId,
+  wizardId as interruptWizardId,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
-  battleObjectId,
-  battleUnitRefWithSupportProfiles,
-  battleId,
   battleCombatantSide,
+  battleId,
+  battleObjectId,
   battleReducerStartRouteEvent,
+  battleUnitRefWithSupportProfiles,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
@@ -82,7 +89,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   sameBattleSubject,
   snapshotBattle,
   spellSaveDcForCaster,
@@ -92,31 +98,30 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
-  type BattleInvalidReasonCode,
   type BattleInterruptProcedureChoice,
+  type BattleInvalidReasonCode,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
-  attackExecutionSelectionForSubjectForTest as interruptAttackExecutionSelectionForSubject,
-  characterSpellInvocationRefForProcedureRefForTest,
-  attackInitialTargetHole as interruptAttackInitialTargetHole,
-  attackRollHoleAfterTarget as interruptAttackRollHoleAfterTarget,
-  attackTargetFill as interruptAttackTargetFill,
-  fighterAttackSubject as interruptFighterAttackSubject,
-  fighterTurnWithReadiedAcidAndSecondReadiedRay,
-  goblinId as interruptGoblinId,
-  interruptDecisionFill as interruptDecisionFillSupport,
-  reactionChoiceWithSubject as interruptReactionChoiceWithSubject,
-  savingThrowOutcomeFill as interruptSavingThrowOutcomeFill,
-  secondWizardId as interruptSecondWizardId,
-  wizardId as interruptWizardId,
-} from "./battle-runtime-test-support.ts";
+  chromaticOrbUnitId,
+  rayOfFrostUnitId,
+  sorcererInnateSorceryUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  attackTargetFill as creatureAttackTargetFill,
+  statBlockAttackAct,
+  statBlockCreature,
+  statBlockWithCreatureType,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 
-export { defineDriver, run, stateCheck };
 export {
   ITFBigInt,
   ITFList,
@@ -124,6 +129,9 @@ export {
   ITFSet,
   ITFTuple,
   ITFVariant,
+  defineDriver,
+  run,
+  stateCheck,
   transformITFValue,
 };
 
@@ -1736,31 +1744,13 @@ type ReducerRoutedIndependentSpellAttackSequenceProjection = {
 type ReducerRoutedInterruptStackResumeProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
-type ActionSpellSubject = Extract<
+type ChainedAttackProcedureSubject = Extract<
   BattleSubject,
   { readonly tag: "actionSpell" }
 >;
-type ChainedAttackProcedureSubject = ActionSpellSubject & {
-  readonly invocation: ActionSpellSubject["invocation"] & {
-    readonly procedure: "chainedSpellAttackDamage";
-  };
-};
-type ChainedAttackProcedureAct = ReturnType<
-  typeof discoverBattleActs
->[number] & {
-  readonly subject: ChainedAttackProcedureSubject;
-};
+type ChainedAttackProcedureAct = AvailableBattleAct;
 type ChainedAttackProcedureSlotLevel = 1 | 2;
-type IndependentSpellAttackSequenceSubject = ActionSpellSubject & {
-  readonly invocation: ActionSpellSubject["invocation"] & {
-    readonly procedure: "spellAttackSequence";
-  };
-};
-type IndependentSpellAttackSequenceAct = ReturnType<
-  typeof discoverBattleActs
->[number] & {
-  readonly subject: IndependentSpellAttackSequenceSubject;
-};
+type IndependentSpellAttackSequenceAct = AvailableBattleAct;
 type ReducerRoutedHitPointRestorationOrderingProjection =
   HitPointRestorationOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
@@ -9032,8 +9022,10 @@ export function createSpellAttackOrderingDriver() {
   return defineDriver(spellAttackOrderingDriverSchema, () => {
     // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
     let state = spellAttackOrderingBattle("fire_bolt");
-    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
-      spellAttackSubject("fire_bolt", "spellAttackDamage");
+    let subject: Extract<
+      BattleSubject,
+      { readonly tag: "actionSpell"; readonly invocation: unknown }
+    > = spellAttackSubject("fire_bolt", "spellAttackDamage");
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: SpellAttackOrderingProjection["stage"] = "actSelection";
@@ -9240,8 +9232,10 @@ export function createSpellAttackOrderingRouteDriver() {
   return defineDriver(spellAttackOrderingDriverSchema, () => {
     // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
     let state = spellAttackOrderingBattle("fire_bolt");
-    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
-      spellAttackSubject("fire_bolt", "spellAttackDamage");
+    let subject: Extract<
+      BattleSubject,
+      { readonly tag: "actionSpell"; readonly invocation: unknown }
+    > = spellAttackSubject("fire_bolt", "spellAttackDamage");
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -9522,6 +9516,9 @@ export function createChainedAttackProcedureRouteDriver() {
       doStartCast: (input: { readonly slotLevel: number }) => {
         slotLevel = chainedAttackProcedureSlotLevel(input.slotLevel);
         const act = chainedAttackProcedureAct(state, slotLevel);
+        if (act.subject.tag !== "actionSpell") {
+          throw new Error("Expected chained Action spell subject.");
+        }
         subject = act.subject;
         fills = [];
         holes = act.initialHoles;
@@ -10355,9 +10352,11 @@ export function createHitPointRestorationOrderingRouteDriver() {
           nextState: healingSpellOrderingBattle(),
           findAct: (act) =>
             act.subject.tag === "bonusActionSpell" &&
-            act.subject.invocation.procedure === "directHitPointRestoration" &&
+            battleActSpellPresentation(act)?.invocation.procedure ===
+              "directHitPointRestoration" &&
             // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-            act.subject.invocation.spellId === "healing_word",
+            battleActSpellPresentation(act)?.invocation.spellId ===
+              "healing_word",
           nextStage: "spellHealingTargetChoice",
         });
         spellTargetHp = 0;
@@ -10394,9 +10393,11 @@ export function createHitPointRestorationOrderingRouteDriver() {
           nextState: healingTargetListSpellOrderingBattle(),
           findAct: (act) =>
             act.subject.tag === "bonusActionSpell" &&
-            act.subject.invocation.procedure === "directHitPointRestoration" &&
+            battleActSpellPresentation(act)?.invocation.procedure ===
+              "directHitPointRestoration" &&
             // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-            act.subject.invocation.spellId === "mass_healing_word",
+            battleActSpellPresentation(act)?.invocation.spellId ===
+              "mass_healing_word",
           nextStage: "spellHealingTargetList",
         });
         spellTargetHp = 0;
@@ -10448,7 +10449,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
           findAct: (act) =>
             act.subject.tag === "unitFeature" &&
             // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-            act.subject.unitId === "cleric_preserve_life",
+            battleActUnitPresentation(act)?.unitId === "cleric_preserve_life",
           nextStage: "featureHealingPoolDistribution",
         });
         featureTargetHp = 0;
@@ -15113,7 +15114,7 @@ function projectConcentrationBreakTeardownState(
     concentrationSaveOffered: state.concentrationSaveOffered,
     casterConcentrating:
       // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-      caster.concentration?.sourceSpellId === "blur" &&
+      caster.concentration?.sourceProcedureRef === "blur" &&
       caster.concentration.effectKind === "spellEffect",
     blurredEffectCount: blurredEffectCount(state.battle),
     spellSlotExpended: casterSpellSlotExpended(state.battle),
@@ -15391,16 +15392,23 @@ function failConcentrationSave(
 function concentrationBreakTeardownCastAct(state: BattleState): ReturnType<
   typeof discoverBattleActs
 >[number] & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 } {
   const act = discoverBattleActs(state).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
-      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "actionSpell"; readonly invocation: unknown }
+      >;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "blurAttackRollDefense",
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "blurAttackRollDefense",
   );
   if (act === undefined) {
     throw new Error("Expected Concentration spell cast act.");
@@ -15443,14 +15451,14 @@ function stateWithPreexistingBlurConcentration(
     combatants: new Map(state.combatants).set(fighterId, {
       ...caster,
       concentration: {
-        sourceSpellId: "blur",
+        sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
         effectKind: "spellEffect",
       },
       activeEffects: [
         ...caster.activeEffects,
         {
           kind: "blurred",
-          sourceSpellId: "blur",
+          sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
           sourceCombatantId: fighterId,
           expiresAt: {
             kind: "concentration",
@@ -15540,7 +15548,7 @@ function recordExtraAttackBoundaryFromState(
     state.currentTurnResources.actionResources.some(
       (resource) =>
         resource.source === "classFeatureExtraAttack" &&
-        resource.sourceUnitId === unitId,
+        resource.sourceOwnerId === fighterId,
     )
   ) {
     recordSelectedUnitRuntimeBoundaryId(unitId);
@@ -15596,8 +15604,8 @@ function projectRogueSteadyAimMbtState(input: {
   const speedZeroActive = actorState.activeEffects.some(
     (effect) =>
       effect.kind === "selfSpeedZero" &&
-      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-      effect.sourceUnitId === "rogue_steady_aim",
+      effect.sourceProcedureRef ===
+        battleProcedureExecutionRefForTest("rogue_steady_aim"),
   );
   return {
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
@@ -15676,7 +15684,10 @@ function discoverLongstriderAct(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act == null) {
     throw new Error("Expected Longstrider spell act.");
@@ -15700,7 +15711,10 @@ function discoverMagicMissileAct(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act == null) {
     throw new Error("Expected Magic Missile spell act.");
@@ -15711,14 +15725,17 @@ function discoverMagicMissileAct(
 
 function discoverSaveGatedSpellHoles(
   state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >,
   spellId: string,
 ): readonly BattleHole[] {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act == null) {
     throw new Error(`Expected ${spellId} save-gated spell act.`);
@@ -15729,7 +15746,10 @@ function discoverSaveGatedSpellHoles(
 
 function discoverSpellAttackHoles(
   state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >,
   spellId: string,
 ): readonly BattleHole[] {
   return discoverSpellAttackAct(state, subject, spellId).initialHoles;
@@ -15737,14 +15757,17 @@ function discoverSpellAttackHoles(
 
 function discoverSpellAttackAct(
   state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >,
   spellId: string,
 ): AvailableBattleAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act == null) {
     throw new Error(`Expected ${spellId} spell attack act.`);
@@ -15948,7 +15971,10 @@ function saveGatedSpellSubject(
   spellId: "lightning_bolt" | "blindness_deafness",
   slotLevel: 2 | 3,
   procedure: "saveGatedDamage" | "saveGatedCondition",
-): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell"; readonly invocation: unknown }
+> {
   return {
     tag: "actionSpell",
     actorId: fighterId,
@@ -15960,7 +15986,10 @@ function saveGatedSpellSubject(
 function spellAttackSubject(
   spellId: "fire_bolt" | "sorcerous_burst",
   procedure: "spellAttackDamage",
-): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell"; readonly invocation: unknown }
+> {
   return {
     tag: "actionSpell",
     actorId: fighterId,
@@ -15989,11 +16018,14 @@ function chainedAttackProcedureAct(
   slotLevel: ChainedAttackProcedureSlotLevel,
 ): ChainedAttackProcedureAct {
   const act = discoverBattleActs(state).find(
-    (candidate): candidate is ChainedAttackProcedureAct =>
+    (candidate) =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "chainedSpellAttackDamage" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      Number(candidate.subject.invocation.slotLevel) === slotLevel,
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "chainedSpellAttackDamage" &&
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      Number(
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
+      ) === slotLevel,
   );
   if (act === undefined) {
     throw new Error(
@@ -16007,13 +16039,14 @@ function independentSpellAttackSequenceAct(
   state: BattleState,
 ): IndependentSpellAttackSequenceAct {
   const act = discoverBattleActs(state).find(
-    (candidate): candidate is IndependentSpellAttackSequenceAct =>
+    (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === spellCasterId &&
       // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-      candidate.subject.invocation.spellId ===
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
         INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID &&
-      candidate.subject.invocation.procedure === "spellAttackSequence",
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spellAttackSequence",
   );
   if (act === undefined) {
     throw new Error("Expected independent spell attack sequence act.");
@@ -16302,7 +16335,9 @@ function independentSpellAttackSequenceTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId: spellTargetId,
-        spellId: INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID,
+        ),
       },
     ],
   };
@@ -16745,16 +16780,22 @@ function commandOrderingCastSubject(): Extract<
 function commandOrderingCastAct(state: BattleState): ReturnType<
   typeof discoverBattleActs
 >[number] & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 } {
   const act = discoverBattleActs(state).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
-      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "actionSpell"; readonly invocation: unknown }
+      >;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "command",
+      battleActSpellPresentation(candidate)?.invocation.procedure === "command",
   );
   if (act === undefined) {
     throw new Error("Expected Command cast act.");
@@ -17902,7 +17943,7 @@ function spellTargetChoiceFill(
         kind: "spellTarget",
         casterId: fighterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
       },
     ],
   };
@@ -17921,7 +17962,8 @@ function chainedAttackProcedureTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId,
-        spellId: chromaticOrbUnitId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForTest(chromaticOrbUnitId),
       },
     ],
   };
@@ -17939,7 +17981,8 @@ function chainedAttackProcedureLeapTargetFill(
         kind: "spellLeapTargetWithinRange",
         previousTargetId: spellTargetId,
         targetId: chainedAttackProcedureSecondTargetId,
-        spellId: chromaticOrbUnitId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForTest(chromaticOrbUnitId),
         rangeFeet: movementFeet(30),
       },
     ],
@@ -17962,7 +18005,7 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId: fighterId,
       targetId,
-      spellId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
     })),
   };
 }
@@ -18151,7 +18194,9 @@ function spellTargetAllocationFill(
         kind: "spellTarget",
         casterId: fighterId,
         targetId,
-        spellId: hole.spell.spell.id,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          hole.spell.spell.id,
+        ),
       },
     ],
   };
@@ -18234,7 +18279,9 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: fighterId,
         targetId: allocation.targetId,
-        unitId: "cleric_preserve_life",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "cleric_preserve_life",
+        ),
         rangeFeet: movementFeet(30),
       })),
   };
@@ -18324,6 +18371,14 @@ function reducerRouteHolesFromRuntimeHole(
   if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (hole.kind === "selfTransformationModeChoice") {
     return ["selfTransformationModeChoice"];
+  }
+  if (
+    hole.kind === "helpAttackAllyDecision" ||
+    hole.kind === "helpAttackEnemyDecision"
+  ) {
+    throw new Error(
+      "Generic battle runtime MBT leaves Help relationship decisions to the focused Help witness.",
+    );
   }
   if (hole.kind === "shoveOutcome") return ["shoveOutcome"];
   if (hole.kind === "skillChoice") return ["skillChoice"];
@@ -18464,14 +18519,6 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "slowSomaticSpellFailureOutcome") {
     return ["SlowSomaticSpellFailureOutcome"];
   }
-  if (
-    hole.kind === "helpAttackAllyDecision" ||
-    hole.kind === "helpAttackEnemyDecision"
-  ) {
-    throw new Error(
-      "Generic battle runtime MBT leaves Help relationship decisions to the focused Help witness.",
-    );
-  }
   if (hole.kind === "targetAbilityChoices") {
     throw new Error(
       "Battle runtime MBT does not model target ability choices holes.",
@@ -18591,6 +18638,16 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         Match.when({ kind: "damageRelationshipDecisions" }, () => {
           throw new Error(
             "Battle runtime MBT does not model damage relationship decision holes.",
+          );
+        }),
+        Match.when({ kind: "helpAttackAllyDecision" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Help ally decisions to the focused Help witness.",
+          );
+        }),
+        Match.when({ kind: "helpAttackEnemyDecision" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Help enemy decisions to the focused Help witness.",
           );
         }),
         Match.when({ kind: "cunningStrikeEndTurnCoverFacts" }, () => {

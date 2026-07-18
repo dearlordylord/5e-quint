@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE ray_of_enfeeblement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -54,7 +56,6 @@ import {
   battleObjectId,
   combatantId,
   discoverBattleActs,
-  resolveBattleSubject,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -98,15 +99,21 @@ function resolveRayOfEnfeeblementCast(input: {
   readonly succeeded: boolean;
 }) {
   const invocation = rayOfEnfeeblementInvocation(input.state, input.spell);
+  const executableInvocation = {
+    ...invocation,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(rayOfEnfeeblementUnitId),
+    ),
+  };
   const targetHole = spellTargetListHole(
     input.state,
     spellCasterId,
-    invocation,
+    executableInvocation,
   );
   const saveHole = spellSavingThrowOutcomeHole(
     input.state,
     spellCasterId,
-    invocation,
+    executableInvocation,
   );
   const targetFill = spellTargetListFill(
     targetHole,
@@ -118,7 +125,12 @@ function resolveRayOfEnfeeblementCast(input: {
     { targetId: spellTargetId, succeeded: input.succeeded },
   ]);
   const fills = [targetFill, saveFill];
-  const fillSet = spellFillSet(fills, invocation, spellCasterId, input.state);
+  const fillSet = spellFillSet(
+    fills,
+    executableInvocation,
+    spellCasterId,
+    input.state,
+  );
   expect(fillSet.tag).toBe("ok");
   if (fillSet.tag !== "ok") {
     throw new Error(fillSet.message);
@@ -134,7 +146,7 @@ function resolveRayOfEnfeeblementCast(input: {
       fills,
     },
     actorId: spellCasterId,
-    invocation,
+    invocation: executableInvocation,
     fillSet,
   });
 }
@@ -157,12 +169,14 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (cast.tag !== "resolved") return;
     const target = requireCombatant(cast.state, spellTargetId);
     expect(requireCombatant(cast.state, spellCasterId).concentration).toEqual(
-      expect.objectContaining({ sourceSpellId: rayOfEnfeeblementUnitId }),
+      expect.objectContaining({ sourceProcedureRef: rayOfEnfeeblementUnitId }),
     );
     expect(target.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "nextAttackRollBySelf",
-        sourceSpellId: rayOfEnfeeblementUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(rayOfEnfeeblementUnitId),
+        ),
         mode: "disadvantage",
       }),
     );
@@ -1172,7 +1186,9 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const penaltyRoll = requireResultHole(penaltyRequest, "rolledDice");
     const stalePenalty = sourceDamageRollPenaltyRollHole({
-      sourceSpellId: rayOfEnfeeblementUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(rayOfEnfeeblementUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       affectedCombatantId: spellTargetId,
       damageRollHoleId: holeId("battle:test:direct-spell-stale-source-penalty"),
@@ -1420,7 +1436,9 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       damageRoll.holeId,
     );
     const stalePenaltyHole = sourceDamageRollPenaltyRollHole({
-      sourceSpellId: rayOfEnfeeblementUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(rayOfEnfeeblementUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       affectedCombatantId: spellTargetId,
       damageRollHoleId: holeId("battle:test:stale-source-penalty-damage-roll"),

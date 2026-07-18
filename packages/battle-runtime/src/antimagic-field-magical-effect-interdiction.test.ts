@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-magical-effect-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -48,7 +51,6 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   startBattle,
   type BattleActiveEffect,
   type BattleAntimagicFieldAuraMembership,
@@ -352,7 +354,9 @@ function antimagicFieldAuraEffect(
 ): BattleActiveEffect {
   return {
     kind: "antimagicFieldOngoingSpellSuppression",
-    sourceSpellId: antimagicFieldUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
     sourceCombatantId: aura.sourceCombatantId,
     areaId: antimagicFieldAreaId,
     auraMembership: aura.membership,
@@ -431,7 +435,7 @@ function preserveLifeAct(state: BattleState) {
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&
-      candidate.subject.unitId === clericPreserveLifeUnitId,
+      battleActUnitPresentation(candidate)?.unitId === clericPreserveLifeUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Preserve Life act.");
@@ -461,7 +465,9 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: spellCasterId,
         targetId: allocation.targetId,
-        unitId: clericPreserveLifeUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(clericPreserveLifeUnitId),
+        ),
         rangeFeet: movementFeet(30),
       })),
   };

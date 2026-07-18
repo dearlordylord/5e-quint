@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV69B hellish_rebuke
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
@@ -15,12 +16,18 @@ import {
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  characterSpellInvocationRefForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 import {
   battleCombatantSide,
   battleId,
@@ -36,17 +43,12 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
-  type BattleInterruptProcedureChoice,
   type BattleInterruptCheckpoint,
+  type BattleInterruptProcedureChoice,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
-import {
-  characterSpellInvocationRefForProcedureRefForTest,
-  resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -364,7 +366,9 @@ describe("Hellish Rebuke Reaction spell", () => {
           kind: "reactionSpellDamagerVisibleWithinRange",
           reactorId: spellCasterId,
           damageSourceId: damagerId,
-          spellId: hellishRebukeUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(hellishRebukeUnitId),
+          ),
           rangeFeet: movementFeet(60),
         },
       ],
@@ -502,10 +506,10 @@ describe("Hellish Rebuke Reaction spell", () => {
       subject: {
         tag: "actionSpell",
         actorId: spellCasterId,
-        invocation: spellSlotInvocationRef(
-          hellishRebukeUnitId,
-          1,
-          "saveGatedDamage",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          state,
+          spellCasterId,
+          spellSlotInvocationRef(hellishRebukeUnitId, 1, "saveGatedDamage"),
         ),
         mode: { tag: "cast" },
       },
@@ -797,7 +801,9 @@ function attackTargetFill(input: {
               kind: "reactionSpellDamagerVisibleWithinRange" as const,
               reactorId: spellCasterId,
               damageSourceId: damagerId,
-              spellId: hellishRebukeUnitId,
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(hellishRebukeUnitId),
+              ),
               rangeFeet: input.hellishRebukeFactRangeFeet ?? movementFeet(60),
             },
           ]
@@ -808,7 +814,9 @@ function attackTargetFill(input: {
               kind: "reactionSpellDamagerVisibleWithinRange" as const,
               reactorId: damagerId,
               damageSourceId: spellCasterId,
-              spellId: hellishRebukeUnitId,
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(hellishRebukeUnitId),
+              ),
               rangeFeet: movementFeet(60),
             },
           ]
@@ -937,13 +945,17 @@ function magicMissileTargetAllocationFill(
         kind: "spellTarget",
         casterId: damagerId,
         targetId: spellCasterId,
-        spellId: magicMissileUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(magicMissileUnitId),
+        ),
       },
       {
         kind: "reactionSpellDamagerVisibleWithinRange",
         reactorId: spellCasterId,
         damageSourceId: damagerId,
-        spellId: hellishRebukeUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(hellishRebukeUnitId),
+        ),
         rangeFeet: movementFeet(60),
       },
     ],

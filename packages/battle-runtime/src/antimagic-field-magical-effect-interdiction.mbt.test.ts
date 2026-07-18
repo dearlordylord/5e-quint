@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-magical-effect-interdiction
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -43,7 +46,6 @@ import {
   battleUnitRefWithSupportProfiles,
   combatantId,
   discoverBattleActs,
-  resolveBattleSubject,
   startBattle,
   type BattleActiveEffect,
   type BattleAntimagicFieldAuraMembership,
@@ -99,90 +101,95 @@ const antimagicMagicalEffectInterdictionDriverSchema = {
 } as const;
 
 describe("Antimagic Field magical-effect interdiction MBT", () => {
-  it("replays magical-effect target and delivery interdiction", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAntimagicMagicalEffectInterdictionDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(3),
-      stateCheck: antimagicMagicalEffectInterdictionStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays magical-effect target and delivery interdiction",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAntimagicMagicalEffectInterdictionDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: antimagicMagicalEffectInterdictionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createAntimagicMagicalEffectInterdictionDriver() {
-  return defineDriver(
-    antimagicMagicalEffectInterdictionDriverSchema,
-    () => {
-      let projection = initProjection();
-      const actionHandlers = {
-        doAllowOutsideAura() {
-          projection = {
-            spellTargetAllowed:
-              !spellTargetInterdicted(outsideAuraSpellTargetState()),
-            spellAreaDeliveryAllowed:
-              !spellAreaDeliveryInterdicted(outsideAuraSpellAreaState()),
-            objectContactDeliveryAllowed:
-              !objectContactDeliveryInterdicted(outsideAuraObjectContactState()),
-            otherMagicalEffectTargetAllowed:
-              !otherMagicalEffectTargetInterdicted(
-                outsideAuraOtherMagicalEffectState(),
-              ),
-            lastResult: "resolved",
-          };
-        },
-        doRejectSpellTargetInsideAura() {
-          projection = {
-            ...initProjection(),
-            spellTargetAllowed:
-              !spellTargetInterdicted(insideAuraSpellTargetState()),
-            lastResult: "invalid",
-          };
-        },
-        doRejectSpellAreaDeliveryInsideAura() {
-          projection = {
-            ...initProjection(),
-            spellAreaDeliveryAllowed:
-              !spellAreaDeliveryInterdicted(insideAuraSpellAreaState()),
-            lastResult: "invalid",
-          };
-        },
-        doRejectObjectContactDeliveryInsideAura() {
-          projection = {
-            ...initProjection(),
-            objectContactDeliveryAllowed:
-              !objectContactDeliveryInterdicted(insideAuraObjectContactState()),
-            lastResult: "invalid",
-          };
-        },
-        doRejectOtherMagicalEffectTargetInsideAura() {
-          projection = {
-            ...initProjection(),
-            otherMagicalEffectTargetAllowed:
-              !otherMagicalEffectTargetInterdicted(
-                insideAuraOtherMagicalEffectState(),
-              ),
-            lastResult: "invalid",
-          };
-        },
-      } as const;
+  return defineDriver(antimagicMagicalEffectInterdictionDriverSchema, () => {
+    let projection = initProjection();
+    const actionHandlers = {
+      doAllowOutsideAura() {
+        projection = {
+          spellTargetAllowed: !spellTargetInterdicted(
+            outsideAuraSpellTargetState(),
+          ),
+          spellAreaDeliveryAllowed: !spellAreaDeliveryInterdicted(
+            outsideAuraSpellAreaState(),
+          ),
+          objectContactDeliveryAllowed: !objectContactDeliveryInterdicted(
+            outsideAuraObjectContactState(),
+          ),
+          otherMagicalEffectTargetAllowed: !otherMagicalEffectTargetInterdicted(
+            outsideAuraOtherMagicalEffectState(),
+          ),
+          lastResult: "resolved",
+        };
+      },
+      doRejectSpellTargetInsideAura() {
+        projection = {
+          ...initProjection(),
+          spellTargetAllowed: !spellTargetInterdicted(
+            insideAuraSpellTargetState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+      doRejectSpellAreaDeliveryInsideAura() {
+        projection = {
+          ...initProjection(),
+          spellAreaDeliveryAllowed: !spellAreaDeliveryInterdicted(
+            insideAuraSpellAreaState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+      doRejectObjectContactDeliveryInsideAura() {
+        projection = {
+          ...initProjection(),
+          objectContactDeliveryAllowed: !objectContactDeliveryInterdicted(
+            insideAuraObjectContactState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+      doRejectOtherMagicalEffectTargetInsideAura() {
+        projection = {
+          ...initProjection(),
+          otherMagicalEffectTargetAllowed: !otherMagicalEffectTargetInterdicted(
+            insideAuraOtherMagicalEffectState(),
+          ),
+          lastResult: "invalid",
+        };
+      },
+    } as const;
 
-      return {
-        init: () => {
-          projection = initProjection();
-        },
-        ...actionHandlers,
-        step: () => {},
-        getState: () => projection,
-      };
-    },
-  );
+    return {
+      init: () => {
+        projection = initProjection();
+      },
+      ...actionHandlers,
+      step: () => {},
+      getState: () => projection,
+    };
+  });
 }
 
 const antimagicMagicalEffectInterdictionStateCheck = stateCheck(
@@ -448,7 +455,9 @@ function antimagicFieldAuraEffect(
 ): BattleActiveEffect {
   return {
     kind: "antimagicFieldOngoingSpellSuppression",
-    sourceSpellId: antimagicFieldUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
     sourceCombatantId: aura.sourceCombatantId,
     areaId: antimagicFieldAreaId,
     auraMembership: aura.membership,
@@ -527,7 +536,7 @@ function preserveLifeAct(state: BattleState) {
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&
-      candidate.subject.unitId === clericPreserveLifeUnitId,
+      battleActUnitPresentation(candidate)?.unitId === clericPreserveLifeUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Preserve Life act.");
@@ -557,7 +566,9 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: spellCasterId,
         targetId: allocation.targetId,
-        unitId: clericPreserveLifeUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(clericPreserveLifeUnitId),
+        ),
         rangeFeet: movementFeet(30),
       })),
   };

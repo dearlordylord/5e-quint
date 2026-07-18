@@ -3,8 +3,7 @@
 // Levitate creature-branch state and caller-witnessed altitude controls.
 
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type {
   BattleCreatureState,
   BattleLevitateAltitudeChangeHole,
@@ -30,15 +29,13 @@ export function activeLevitatedCreatureEffect(
   combatant: BattleCreatureState | undefined,
   source?: {
     readonly sourceCombatantId: CombatantId;
-    readonly sourceSpellId: SpellRecord["id"];
   },
 ): SpellLevitatedCreatureActiveEffect | undefined {
   return combatant?.activeEffects.find(
     (effect): effect is SpellLevitatedCreatureActiveEffect =>
       effect.kind === "spellLevitatedCreature" &&
       (source === undefined ||
-        (effect.sourceCombatantId === source.sourceCombatantId &&
-          effect.sourceSpellId === source.sourceSpellId)),
+        effect.sourceCombatantId === source.sourceCombatantId),
   );
 }
 
@@ -112,7 +109,7 @@ export function updateLevitatedCreatureAltitude(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
   readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly change: {
     readonly direction: BattleLevitateAltitudeDirection;
     readonly distanceFeet: MovementFeet;
@@ -141,7 +138,7 @@ export function updateLevitatedCreatureAltitude(input: {
 export function levitatedTargetWithinSpellRangeFactPresent(input: {
   readonly facts: readonly BattleTargetSpatialFact[];
   readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly targetId: CombatantId;
   readonly rangeFeet: MovementFeet;
 }): boolean {
@@ -149,7 +146,7 @@ export function levitatedTargetWithinSpellRangeFactPresent(input: {
     (fact) =>
       fact.kind === "levitatedTargetWithinSpellRange" &&
       fact.sourceCombatantId === input.sourceCombatantId &&
-      fact.sourceSpellId === input.sourceSpellId &&
+      fact.sourceProcedureRef === input.sourceProcedureRef &&
       fact.targetId === input.targetId &&
       fact.rangeFeet === input.rangeFeet,
   );
@@ -173,7 +170,7 @@ export function validateLevitatedMovementFact(input: {
   }
   if (
     input.fact.sourceCombatantId !== effect.sourceCombatantId ||
-    input.fact.sourceSpellId !== effect.sourceSpellId
+    input.fact.sourceProcedureRef !== effect.sourceProcedureRef
   ) {
     return "Levitated movement witness does not match the active Levitate effect.";
   }

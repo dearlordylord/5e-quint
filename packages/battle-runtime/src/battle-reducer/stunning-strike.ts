@@ -9,6 +9,7 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import type { BattleActiveEffect } from "../active-effect/types.ts";
+import { characterUnitProcedureRef } from "../character-execution.ts";
 import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
@@ -20,7 +21,7 @@ import type {
   BattleUnitFeatureDecisionHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   STUNNING_STRIKE_DECISION_HOLE_ID,
   STUNNING_STRIKE_DECISION_HOLE_INSTANCE,
@@ -60,6 +61,7 @@ type StunningStrikeHit = {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly profile: BattleStunningStrikeSupportProfile;
   readonly focus: MonkFocusResourceFact;
 };
@@ -294,7 +296,7 @@ function applyStunningStrikeFailure(
   if (target === undefined) return state;
   const activeEffect: BattleActiveEffect = {
     kind: "unitFeatureCondition",
-    sourceUnitId: hit.unitId,
+    sourceProcedureRef: hit.procedureRef,
     sourceCombatantId: hit.actorId,
     condition: hit.profile.stunningStrike.onFail.condition,
     conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
@@ -320,7 +322,7 @@ function applyStunningStrikeFailure(
           (candidate) =>
             !(
               candidate.kind === "unitFeatureCondition" &&
-              candidate.sourceUnitId === hit.unitId &&
+              candidate.sourceProcedureRef === hit.procedureRef &&
               candidate.sourceCombatantId === hit.actorId &&
               candidate.condition ===
                 hit.profile.stunningStrike.onFail.condition
@@ -340,13 +342,13 @@ function applyStunningStrikeSuccess(
   if (target === undefined) return state;
   const speedEffect: BattleActiveEffect = {
     kind: "speedHalved",
-    sourceUnitId: hit.unitId,
+    sourceProcedureRef: hit.procedureRef,
     sourceCombatantId: hit.actorId,
     expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
   };
   const attackRollEffect: BattleActiveEffect = {
     kind: "nextAttackRollAgainstSelf",
-    sourceUnitId: hit.unitId,
+    sourceProcedureRef: hit.procedureRef,
     sourceCombatantId: hit.actorId,
     mode: hit.profile.stunningStrike.onSuccess.attackRoll.mode,
     expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
@@ -361,8 +363,8 @@ function applyStunningStrikeSuccess(
             !(
               (candidate.kind === "speedHalved" ||
                 candidate.kind === "nextAttackRollAgainstSelf") &&
-              "sourceUnitId" in candidate &&
-              candidate.sourceUnitId === hit.unitId &&
+              "sourceProcedureRef" in candidate &&
+              candidate.sourceProcedureRef === hit.procedureRef &&
               candidate.sourceCombatantId === hit.actorId
             ),
         ),
@@ -403,8 +405,17 @@ function stunningStrikeHit(input: {
     return null;
   }
   const focus = monkFocusResourceForActor(input.state, input.actorId);
+  const procedureRef = characterUnitProcedureRef(
+    actor.origin.execution,
+    selectedProfile.unitId,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([selectedProfile.profile.kind]),
+    },
+  );
   if (
     focus === null ||
+    procedureRef === undefined ||
     focus.resource.unit.id !==
       selectedProfile.profile.stunningStrike.spends.resourceUnitId ||
     !resourceHasUsesRemaining(focus.resource)
@@ -415,6 +426,7 @@ function stunningStrikeHit(input: {
     actorId: input.actorId,
     targetId: input.targetId,
     unitId: selectedProfile.unitId,
+    procedureRef,
     profile: selectedProfile.profile,
     focus,
   };

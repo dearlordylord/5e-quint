@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-roll-modifier spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 // RAW trace:
@@ -29,6 +32,10 @@ import { difficultyClass } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 
 import {
+  passivePerceptionModifierDelta,
+  requiredAbilityCheckRollMode,
+} from "./battle-reducer/hole-helpers.ts";
+import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
@@ -48,20 +55,20 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
-  passivePerceptionModifierDelta,
-  requiredAbilityCheckRollMode,
-} from "./battle-reducer/hole-helpers.ts";
-import {
-  abilityChoiceFill,
-  maybeSpellAct,
-  savingThrowOutcomeFill,
-  skillChoiceFill,
-  spellTargetFill,
-  spellTargetListFill,
-  targetAbilityChoicesFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+  battleReducerStartRouteEvent,
+  breakBattleConcentration,
+  combatantId,
+  discoverBattleActs,
+  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  type AvailableBattleAct,
+  type BattleActiveEffect,
+  type BattleFill,
+  type BattleHole,
+  type BattleReducerRouteEvent,
+  type BattleResolutionResult,
+  type BattleState,
+  type CombatantId,
+} from "./index.ts";
 import {
   baneUnitId,
   blessUnitId,
@@ -77,22 +84,17 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
-  breakBattleConcentration,
-  battleReducerStartRouteEvent,
-  combatantId,
-  discoverBattleActs,
-  resolveBattleSubject,
-  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
-  type AvailableBattleAct,
-  type BattleActiveEffect,
-  type BattleFill,
-  type BattleHole,
-  type BattleReducerRouteEvent,
-  type BattleResolutionResult,
-  type BattleState,
-  type CombatantId,
-} from "./index.ts";
+  abilityChoiceFill,
+  maybeSpellAct,
+  savingThrowOutcomeFill,
+  skillChoiceFill,
+  spellTargetFill,
+  spellTargetListFill,
+  targetAbilityChoicesFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 
 const thaumaturgyUnitId = "thaumaturgy";
 const secondTargetId = combatantId("roll-modifier-active-effects-target-2");
@@ -946,8 +948,8 @@ function publicSpellActInState(
 ): AvailableBattleAct {
   const act = discoverBattleActs(state).find((candidate) => {
     if (candidate.subject.tag !== "actionSpell") return false;
-    const invocation = candidate.subject.invocation;
-    if (invocation.spellId !== spellId) return false;
+    const invocation = battleActSpellPresentation(candidate)?.invocation;
+    if (invocation?.spellId !== spellId) return false;
     return (
       slotLevel === undefined ||
       (invocation.tag === "spellSlot" && invocation.slotLevel === slotLevel)
@@ -1489,7 +1491,7 @@ function withCharismaDisadvantageAgainstCaster(
   const source = requireCombatant(state, spellTargetId);
   const hexEffect = {
     kind: "spellMarkedDamageRider",
-    sourceSpellId: "hex",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(String("hex")),
     sourceCombatantId: spellTargetId,
     targetCombatantId: spellCasterId,
     transfer: {

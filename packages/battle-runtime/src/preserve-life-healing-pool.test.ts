@@ -1,3 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-healing-pool
 import { describe, expect, test } from "vitest";
 
@@ -47,10 +53,17 @@ describe("Preserve Life Magic Action healing pool", () => {
     const state = preserveLifeBattle();
     const act = preserveLifeAct(state);
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
-      unitId: clericPreserveLifeUnitId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        spellCasterId,
+        clericPreserveLifeUnitId,
+      ),
     });
     expect(
       requireHole(act.initialHoles, "hitPointHealingDistribution"),
@@ -321,7 +334,7 @@ function preserveLifeActOrUndefined(state: BattleState) {
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === spellCasterId &&
-      act.subject.unitId === clericPreserveLifeUnitId,
+      battleActUnitPresentation(act)?.unitId === clericPreserveLifeUnitId,
   );
 }
 
@@ -347,7 +360,9 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: spellCasterId,
         targetId: allocation.targetId,
-        unitId: clericPreserveLifeUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(clericPreserveLifeUnitId),
+        ),
         rangeFeet: movementFeet(30),
       })),
   };

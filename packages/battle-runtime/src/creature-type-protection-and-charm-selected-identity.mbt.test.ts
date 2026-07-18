@@ -1,3 +1,12 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ANIMAL-FRIENDSHIP animal_friendship
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good
 // UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
@@ -36,10 +45,9 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleSubject,
   resolveBattlePossessionAttempt,
   snapshotBattle,
-  spellId,
+  spellActiveEffectExecutionRef,
   startBattle,
   type AvailableBattleAct,
   type BattleActiveEffect,
@@ -50,8 +58,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleProcedureExecutionRef,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
@@ -76,6 +85,7 @@ import {
   run,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import type { ReplayAddressableSpellActiveEffect } from "./active-effect/execution-ref.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -167,7 +177,10 @@ type CreatureTypeProtectionAndCharmCatalogSpellUnitId =
   | typeof charmPersonUnitId;
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type StatBlockAttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -726,7 +739,9 @@ function publicProtectionFromEvilAndGoodPreventionRoute(): readonly ReducerRoute
     spellConditionPresentOnProtectedTarget(
       scopedCharm.state,
       feySourceId,
-      protectionFromEvilAndGoodUnitId,
+      battleProcedureExecutionRefForTest(
+        String(protectionFromEvilAndGoodUnitId),
+      ),
       "charmed",
     )
   ) {
@@ -852,10 +867,7 @@ function resolveProtectionFromEvilAndGoodWalk(): ProtectionFromEvilAndGoodWalk {
 }
 
 function protectionRelevantCharmSaveSubject(
-  repeatCharmEffect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellConditionRepeatSave" }
-  >,
+  effect: ReplayAddressableSpellActiveEffect,
 ): Extract<
   BattleSubject,
   {
@@ -867,8 +879,7 @@ function protectionRelevantCharmSaveSubject(
     tag: "runtimeCommand",
     actorId: protectedTargetId,
     command: "protectionRelevantEffectSave",
-    sourceCombatantId: feySourceId,
-    sourceSpellId: spellId(repeatCharmEffect.sourceSpellId),
+    effectRef: spellActiveEffectExecutionRef(effect),
     relevantEffect: "charmed",
   };
 }
@@ -1178,18 +1189,24 @@ function projectProtectionFromEvilAndGoodCharmBoundary(): {
   const resolved = resolveProtectionFromEvilAndGood();
   const charmInvocation = charmPersonSpellInvocation();
   const charmEffect = selectedFixedConditionEffect(charmInvocation);
+  const executableCharmInvocation = {
+    ...charmInvocation,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(charmPersonUnitId),
+    ),
+  };
   const scopedSourceApplied = applyFailedSaveSpellConditionEffects(
     resolved.state,
     feySourceId,
     [protectedTargetId],
-    charmInvocation,
+    executableCharmInvocation,
     charmEffect,
   );
   const unscopedSourceApplied = applyFailedSaveSpellConditionEffects(
     resolved.state,
     humanoidAttackerId,
     [protectedTargetId],
-    charmInvocation,
+    executableCharmInvocation,
     charmEffect,
   );
   const scopedPossession = resolveBattlePossessionAttempt({
@@ -1209,13 +1226,13 @@ function projectProtectionFromEvilAndGoodCharmBoundary(): {
       scopedCharmPrevented: !spellConditionPresentOnProtectedTarget(
         scopedSourceApplied,
         feySourceId,
-        charmPersonUnitId,
+        executableCharmInvocation.sourceProcedureRef,
         "charmed",
       ),
       unscopedCharmApplied: spellConditionPresentOnProtectedTarget(
         unscopedSourceApplied,
         humanoidAttackerId,
-        charmPersonUnitId,
+        executableCharmInvocation.sourceProcedureRef,
         "charmed",
       ),
       scopedPossessionPrevented:
@@ -1260,8 +1277,7 @@ function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {
     tag: "runtimeCommand" as const,
     actorId: protectedTargetId,
     command: "protectionRelevantEffectSave" as const,
-    sourceCombatantId: feySourceId,
-    sourceSpellId: spellId(repeatCharmEffect.sourceSpellId),
+    effectRef: spellActiveEffectExecutionRef(repeatCharmEffect),
     relevantEffect: "charmed" as const,
   };
   const needsHole = resolveBattleSubject({
@@ -1448,9 +1464,11 @@ function spellAct(state: BattleState, unitId: string): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === unitId &&
-      Number(candidate.subject.invocation.slotLevel) === 1,
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === unitId &&
+      Number(
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
+      ) === 1,
   );
   if (act === undefined) {
     throw new Error(`Expected ${unitId} spell act.`);
@@ -1554,9 +1572,12 @@ function animalFriendshipSpellAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === animalFriendshipUnitId &&
-      Number(candidate.subject.invocation.slotLevel) === 1,
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        animalFriendshipUnitId &&
+      Number(
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
+      ) === 1,
   );
   if (act === undefined) {
     throw new Error("Expected Animal Friendship spell act.");
@@ -1576,7 +1597,9 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId,
       targetId,
-      spellId: animalFriendshipUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(animalFriendshipUnitId),
+      ),
     })),
   };
 }
@@ -1596,7 +1619,7 @@ function spellTargetChoiceFill(
         kind: "spellTarget",
         casterId: actorId,
         targetId,
-        spellId: unitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
       },
     ],
   };
@@ -1617,7 +1640,7 @@ function knownWillingSpellTargetChoiceFill(
         kind: "spellTargetKnownWilling",
         casterId: actorId,
         targetId,
-        spellId: unitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String(unitId)),
       },
     ],
   };
@@ -1727,7 +1750,7 @@ function protectionFromEvilAndGoodEffectPresentOnProtectedTarget(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "creatureTypeProtection" &&
-          effect.sourceSpellId === protectionFromEvilAndGoodUnitId &&
+          effect.sourceProcedureRef === protectionFromEvilAndGoodUnitId &&
           effect.sourceCombatantId === casterId &&
           effect.attackRollMode === "disadvantage" &&
           effect.preventedConditions.includes("charmed") &&
@@ -1740,7 +1763,7 @@ function protectionFromEvilAndGoodEffectPresentOnProtectedTarget(
 function spellConditionPresentOnProtectedTarget(
   state: BattleState,
   sourceCombatantId: CombatantId,
-  sourceSpellId: string,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   condition: Condition,
 ): boolean {
   return (
@@ -1749,7 +1772,7 @@ function spellConditionPresentOnProtectedTarget(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "spellCondition" &&
-          effect.sourceSpellId === sourceSpellId &&
+          effect.sourceProcedureRef === sourceProcedureRef &&
           effect.sourceCombatantId === sourceCombatantId &&
           effect.condition === condition,
       ) ?? false
@@ -1762,8 +1785,10 @@ function protectionRelevantCharmEffect(): Extract<
 > {
   return {
     kind: "spellConditionRepeatSave",
-    sourceSpellId:
+    effectRef: battleActiveEffectExecutionRefForTest("relevant-charm"),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
       "creature-type-protection-and-charm-selected-identity-relevant-charm",
+    ),
     sourceCombatantId: feySourceId,
     condition: "charmed",
     conditionHadNonSpellSource: false,
@@ -1833,7 +1858,7 @@ function animalFriendshipEffectPresentOnBeastTarget(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "spellCondition" &&
-          effect.sourceSpellId === animalFriendshipUnitId &&
+          effect.sourceProcedureRef === animalFriendshipUnitId &&
           effect.sourceCombatantId === casterId &&
           effect.condition === "charmed",
       ) ?? false

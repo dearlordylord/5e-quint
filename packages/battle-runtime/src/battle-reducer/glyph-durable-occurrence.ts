@@ -68,8 +68,10 @@ import type {
   BattleResolutionResult,
 } from "../battle-reducer.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
+import { bindSpellProcedureExecutionFacts } from "../character-execution.ts";
 import type {
   BattleAreaId,
+  BattleProcedureExecutionRef,
   BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
@@ -317,7 +319,7 @@ export type GlyphExplosiveRuneDamageRollHole =
 export type CompletedGlyphInscriptionWitness = {
   readonly kind: "completedGlyphInscription";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceSpellLevel: BattleSpellEffectLevel;
   readonly release: GlyphDurableOccurrenceCompletedInscriptionRelease;
@@ -796,7 +798,7 @@ export function glyphDurableOccurrenceEffectFromCompletedInscription(input: {
     tag: "created",
     effect: {
       kind: "glyphDurableOccurrence",
-      sourceSpellId: input.witness.sourceSpellId,
+      sourceProcedureRef: input.witness.sourceProcedureRef,
       sourceCombatantId: input.witness.sourceCombatantId,
       sourceEffectId: input.witness.sourceEffectId,
       sourceSpellLevel: input.witness.sourceSpellLevel,
@@ -829,7 +831,7 @@ export function glyphExplosiveRuneDamageRollHole(input: {
     label: `Glyph explosive rune damage (${expr.dice}d${expr.dieSize})`,
     glyphExplosiveRune: {
       sourceCombatantId: input.effect.sourceCombatantId,
-      sourceSpellId: input.effect.sourceSpellId,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
       sourceEffectId: input.effect.sourceEffectId,
       damage: { expr },
     },
@@ -858,7 +860,7 @@ export function glyphExplosiveRuneSavingThrowOutcomeHole(input: {
     label: "Glyph explosive rune Dexterity Saving Throw outcomes",
     glyphExplosiveRune: {
       sourceCombatantId: input.effect.sourceCombatantId,
-      sourceSpellId: input.effect.sourceSpellId,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
       sourceEffectId: input.effect.sourceEffectId,
       radiusFeet: GLYPH_EXPLOSIVE_RUNE_RADIUS_FEET,
     },
@@ -1064,6 +1066,7 @@ export function releaseGlyphStoredSpell(input: {
     beforeRelease: input.state,
     afterRelease: resolved.state,
     sourceCombatantId: ref.effect.sourceCombatantId,
+    sourceProcedureRef: glyphStoredSpellProcedureRef(input.state, ref.effect),
     storedInvocation: ref.effect.release.storedInvocation,
   });
   const state = battleStateWithoutGlyphOccurrence(
@@ -1658,6 +1661,7 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
     {
       profile: input.profile,
       invocation: input.effect.release.storedInvocation,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
       sourceCombatantId: input.effect.sourceCombatantId,
       witness: input.witness,
     },
@@ -1703,6 +1707,7 @@ function isGlyphStoredSpellOccurrence(
 function glyphStoredSpellHostilePlacementValidation(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly invocation: GlyphStoredSpellInvocation;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly witness: GlyphStoredSpellReleaseWitness;
 }): GlyphStoredSpellReleaseWitnessValidationFailure | null {
@@ -1759,7 +1764,7 @@ function glyphStoredSpellHostilePlacementValidation(input: {
           fact.kind === "spiritualWeaponTargetWithinForceReach" &&
           fact.casterId === input.sourceCombatantId &&
           fact.targetId === input.witness.triggeringCreatureId &&
-          fact.spellId === invocation.spell.id &&
+          fact.sourceProcedureRef === input.sourceProcedureRef &&
           fact.forcePositionId === hostilePlacement.positionId &&
           fact.reachFeet === invocation.forceReachFeet,
       );
@@ -1793,7 +1798,7 @@ function resolveStoredSpellGlyphRelease(input: {
   readonly witness: GlyphStoredSpellReleaseWitness;
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
-  const invocation = input.effect.release.storedInvocation;
+  const storedInvocation = input.effect.release.storedInvocation;
   const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
   if (procedureRef === undefined) {
     return invalidResult(
@@ -1802,6 +1807,10 @@ function resolveStoredSpellGlyphRelease(input: {
       "The stored spell procedure is no longer bound to its source character.",
     );
   }
+  const invocation = bindSpellProcedureExecutionFacts(
+    storedInvocation,
+    procedureRef,
+  );
   const subject = {
     tag: "actionSpell" as const,
     actorId: input.effect.sourceCombatantId,
@@ -2036,7 +2045,11 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
     spendsCastResources: false,
     startsOrdinaryConcentration: false,
   } as const;
-  return Match.value(input.invocation).pipe(
+  const invocation = bindSpellProcedureExecutionFacts(
+    input.invocation,
+    procedureRef,
+  );
+  return Match.value(invocation).pipe(
     byStoredActiveEffectProcedure("scalarBuff", (invocation) =>
       scalarBuffProfile.resolve({ ...releaseInput, invocation }),
     ),
@@ -2110,6 +2123,10 @@ function glyphStoredSpellReleaseFills(input: {
   if (!isGlyphStoredSpellOccurrence(input.effect)) {
     return input.witness.fills;
   }
+  const executableInvocation = bindSpellProcedureExecutionFacts(
+    input.effect.release.storedInvocation,
+    input.effect.sourceProcedureRef,
+  );
   if (input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature") {
     if (
       isGlyphStoredSelfTransformationModeSpellInvocation(
@@ -2129,7 +2146,7 @@ function glyphStoredSpellReleaseFills(input: {
           holeId: spellTargetHole(
             input.state,
             input.effect.sourceCombatantId,
-            input.effect.release.storedInvocation,
+            executableInvocation,
           ).holeId,
           value: input.witness.targeting.targetId,
           spatialFacts: input.witness.targeting.targetSpatialFacts,
@@ -2141,13 +2158,17 @@ function glyphStoredSpellReleaseFills(input: {
       isTargetListSpellInvocation(input.effect.release.storedInvocation) &&
       input.effect.release.storedInvocation.targeting.kind === "targetList"
     ) {
+      const targetListInvocation = bindSpellProcedureExecutionFacts(
+        input.effect.release.storedInvocation,
+        input.effect.sourceProcedureRef,
+      );
       return [
         {
           kind: "spellTargetList",
           holeId: spellTargetListHole(
             input.state,
             input.effect.sourceCombatantId,
-            input.effect.release.storedInvocation,
+            targetListInvocation,
           ).holeId,
           value: { targetIds: [input.witness.targeting.targetId] },
           spatialFacts: glyphStoredSpellTargetListSpatialFacts({
@@ -2158,13 +2179,17 @@ function glyphStoredSpellReleaseFills(input: {
         ...input.witness.fills,
       ];
     }
+    const targetInvocation = bindSpellProcedureExecutionFacts(
+      input.effect.release.storedInvocation,
+      input.effect.sourceProcedureRef,
+    );
     return [
       {
         kind: "targetChoice",
         holeId: spellTargetHole(
           input.state,
           input.effect.sourceCombatantId,
-          input.effect.release.storedInvocation,
+          targetInvocation,
         ).holeId,
         value: input.witness.targeting.targetId,
         spatialFacts: input.witness.targeting.targetSpatialFacts,
@@ -2193,7 +2218,7 @@ function glyphStoredSpellTargetListSpatialFacts(input: {
       fact.kind === "spellTarget" &&
       fact.casterId === input.effect.sourceCombatantId &&
       fact.targetId === input.targeting.targetId &&
-      fact.spellId === input.effect.release.storedInvocation.spell.id,
+      fact.sourceProcedureRef === input.effect.sourceProcedureRef,
   );
 }
 
@@ -2243,6 +2268,7 @@ function stateWithGlyphStoredConcentrationFullDuration(input: {
   readonly beforeRelease: BattleState;
   readonly afterRelease: BattleState;
   readonly sourceCombatantId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef | undefined;
   readonly storedInvocation: GlyphStoredSpellInvocation;
 }): BattleState {
   const fullDurationTicks = glyphStoredSpellFullDurationTicks(
@@ -2266,6 +2292,7 @@ function stateWithGlyphStoredConcentrationFullDuration(input: {
           beforeReleaseActiveEffects,
           fullDurationTicks,
           sourceCombatantId: input.sourceCombatantId,
+          sourceProcedureRef: input.sourceProcedureRef,
           storedInvocation: input.storedInvocation,
         });
         if (fullDurationEffect !== effect) {
@@ -2290,6 +2317,7 @@ function glyphStoredConcentrationFullDurationEffect(input: {
   readonly beforeReleaseActiveEffects: ReadonlySet<BattleActiveEffect>;
   readonly fullDurationTicks: GlyphStoredSpellFullDurationTicks;
   readonly sourceCombatantId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef | undefined;
   readonly storedInvocation: GlyphStoredSpellInvocation;
 }): BattleActiveEffect {
   if (
@@ -2297,7 +2325,8 @@ function glyphStoredConcentrationFullDurationEffect(input: {
     input.beforeReleaseActiveEffects.has(input.effect) ||
     input.effect.expiresAt.kind !== "concentration" ||
     input.effect.sourceCombatantId !== input.sourceCombatantId ||
-    input.effect.sourceSpellId !== input.storedInvocation.spell.id
+    input.sourceProcedureRef === undefined ||
+    input.effect.sourceProcedureRef !== input.sourceProcedureRef
   ) {
     return input.effect;
   }

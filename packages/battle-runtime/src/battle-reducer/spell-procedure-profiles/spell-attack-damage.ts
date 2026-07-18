@@ -26,6 +26,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -37,7 +38,7 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   readiedSpellAct,
-  spellSubjectTagForInvocation,
+  spellCastSelectionSubject,
 } from "../spells-discovery.ts";
 import {
   supportedSpellAttackDamageProfile,
@@ -109,7 +110,7 @@ function admitSpellAttackDamage(
 function discoverSpellAttackDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellAttackDamageInvocation,
+  invocation: BattleExecutableSpellInvocation<SpellAttackDamageInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "singleCreatureOrObject") {
     const targetHole = spellTargetHole(state, actorId, invocation);
@@ -122,12 +123,11 @@ function discoverSpellAttackDamageCastAct(
     ];
     const castActs = [
       {
-        subject: {
-          tag: spellSubjectTagForInvocation(invocation),
+        subject: spellCastSelectionSubject(
           actorId,
-          invocation: spellAttackDamageInvocationRef(invocation),
-          mode: { tag: "cast" as const },
-        },
+          invocation,
+          spellAttackDamageInvocationRef(invocation),
+        ),
         label: invocation.spell.name,
         summary: spellAttackDamageCastSummary(invocation),
         initialHoles,
@@ -142,12 +142,11 @@ function discoverSpellAttackDamageCastAct(
       ? []
       : [
           {
-            subject: {
-              tag: spellSubjectTagForInvocation(invocation),
+            subject: spellCastSelectionSubject(
               actorId,
-              invocation: spellAttackDamageInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
+              invocation,
+              spellAttackDamageInvocationRef(invocation),
+            ),
             label: invocation.spell.name,
             summary: spellAttackDamageCastSummary(invocation),
             initialHoles: [

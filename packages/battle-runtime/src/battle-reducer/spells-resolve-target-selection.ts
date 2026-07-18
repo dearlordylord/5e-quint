@@ -9,6 +9,7 @@ import {
   type SelectedRollModifierSpellEffect,
   type ActionSpellBattleResolutionInput,
   type BattleHole,
+  type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -74,9 +75,11 @@ export function healingSpellTargetSelection(input: {
     | ActionSpellBattleResolutionInput
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "directHitPointRestoration" }
+    >
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): HealingSpellTargetSelection {
@@ -150,9 +153,8 @@ export function scalarBuffSpellTargetSelection(input: {
     | ActionSpellBattleResolutionInput
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "scalarBuff" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "scalarBuff" }>
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): ScalarBuffSpellTargetSelection {
@@ -241,9 +243,8 @@ export function rollModifierSpellTargetSelection(input: {
     | ActionSpellBattleResolutionInput
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): RollModifierSpellTargetSelection {
@@ -313,9 +314,8 @@ export function rollModifierSpellTargetSelection(input: {
 
 export function rollModifierSpellEffectSelection(input: {
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly targetIds: readonly CombatantId[];
@@ -465,9 +465,8 @@ export function rollModifierSpellAffectedTargets(input: {
     | ActionSpellBattleResolutionInput
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): RollModifierSpellAffectedTargets {

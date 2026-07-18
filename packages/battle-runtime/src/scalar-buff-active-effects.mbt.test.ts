@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.scalar-buff
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // RAW trace:
@@ -42,7 +43,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   battleReducerStartRouteEvent,
-  resolveBattleSubject,
   snapshotBattle,
   type AvailableBattleAct,
   type BattleCreatureSnapshot,
@@ -128,11 +128,9 @@ type ScalarBuffResolvedCast = {
 
 const SCALAR_BUFF_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
-  ArmorClassBonusActiveEffectRouteSurface:
-    "armorClassBonusActiveEffect",
+  ArmorClassBonusActiveEffectRouteSurface: "armorClassBonusActiveEffect",
   SpeedDeltaActiveEffectRouteSurface: "speedDeltaActiveEffect",
-  SpecialSpeedGrantActiveEffectRouteSurface:
-    "specialSpeedGrantActiveEffect",
+  SpecialSpeedGrantActiveEffectRouteSurface: "specialSpeedGrantActiveEffect",
   HitPointMaximumIncreaseActiveEffectRouteSurface:
     "hitPointMaximumIncreaseActiveEffect",
   TemporaryHitPointEffectRouteSurface: "temporaryHitPointEffect",
@@ -532,7 +530,9 @@ function requireScalarBuffActRouteEvents(
   if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
     return act.routeEvents;
   }
-  throw new Error("Expected public scalar buff route events on discovered act.");
+  throw new Error(
+    "Expected public scalar buff route events on discovered act.",
+  );
 }
 
 function requireScalarBuffResolutionRouteEvents(
@@ -555,7 +555,7 @@ function projectScalarBuffState(
   const climbSpeed = affectedSnapshot.movement.speedKinds.find(
     (speed) => speed.kind === "climb",
   );
-  const sourceSpellId = RESULT_SOURCE_SPELL_IDS[lastResult];
+  const sourceProcedureRef = RESULT_SOURCE_SPELL_IDS[lastResult];
   return {
     projection: {
       affectedArmorClass: Number(affectedSnapshot.armorClass),
@@ -567,26 +567,26 @@ function projectScalarBuffState(
       armorClassBonusActive: affected.activeEffects.some(
         (effect) =>
           effect.kind === "spellArmorClassBonus" &&
-          effect.sourceSpellId === sourceSpellId,
+          effect.sourceProcedureRef === sourceProcedureRef,
       ),
       speedDeltaActive: affected.activeEffects.some(
         (effect) =>
           effect.kind === "speedDelta" &&
-          effect.sourceSpellId === sourceSpellId,
+          effect.sourceProcedureRef === sourceProcedureRef,
       ),
       specialSpeedGrantActive: affected.activeEffects.some(
         (effect) =>
           effect.kind === "specialSpeedGrant" &&
-          effect.sourceSpellId === sourceSpellId,
+          effect.sourceProcedureRef === sourceProcedureRef,
       ),
       hitPointMaximumIncreaseActive: affected.activeEffects.some(
         (effect) =>
           effect.kind === "hitPointMaximumIncrease" &&
-          effect.sourceSpellId === sourceSpellId,
+          effect.sourceProcedureRef === sourceProcedureRef,
       ),
       casterConcentrating:
         caster.concentration?.effectKind === "spellEffect" &&
-        caster.concentration.sourceSpellId === sourceSpellId,
+        caster.concentration.sourceProcedureRef === sourceProcedureRef,
       lastResult,
     },
   };
@@ -721,7 +721,6 @@ function isScenarioOutcomeTag(
 ): tag is keyof typeof SCENARIO_OUTCOME_BY_TAG {
   return Object.hasOwn(SCENARIO_OUTCOME_BY_TAG, tag);
 }
-
 
 function scalarBuffActiveEffectsUnexpectedHole(raw: unknown): never {
   throw new Error(

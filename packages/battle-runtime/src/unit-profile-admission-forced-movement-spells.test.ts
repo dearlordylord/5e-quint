@@ -1,8 +1,10 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV51 thunderwave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV52 dissonant_whispers
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-forced-reaction-movement
 import { describe, expect, test } from "vitest";
 import {
+  requireCharacterSpellProcedureRefForTest,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
@@ -58,7 +60,10 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -344,13 +349,16 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        dissonantWhispersUnitId,
-        2,
-        "saveGatedDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(dissonantWhispersUnitId, 2, "saveGatedDamage"),
       ),
       mode: { tag: "cast" },
     });

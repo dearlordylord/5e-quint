@@ -216,6 +216,8 @@ import type {
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { battleTablePositionId, type CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
+import { characterUnitProcedureRef } from "../character-execution.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -366,6 +368,7 @@ function brutalStrikeSelection(
   attack: SupportedAttackActionOption,
 ): {
   readonly unitId: BattleUnitFeatureDecisionHole["unitFeature"]["unitId"];
+  readonly procedureRef: BattleProcedureExecutionRef;
 } | null {
   if (
     currentActorId(state) !== attackerId ||
@@ -384,7 +387,18 @@ function brutalStrikeSelection(
         profile.kind === BRUTAL_STRIKE_SUPPORT_PROFILE,
     ),
   );
-  return unitRef === undefined ? null : { unitId: unitRef.unitId };
+  if (unitRef === undefined) return null;
+  const procedureRef = characterUnitProcedureRef(
+    attacker.origin.execution,
+    unitRef.unitId,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([BRUTAL_STRIKE_SUPPORT_PROFILE]),
+    },
+  );
+  return procedureRef === undefined
+    ? null
+    : { unitId: unitRef.unitId, procedureRef };
 }
 
 function isBrutalStrikeDecisionChoice(
@@ -429,12 +443,12 @@ function applyBrutalStrikeAfterDamage(input: {
   readonly state: BattleState;
   readonly shovePushes: readonly BattleShovePushOutcome[];
 } {
-  const unitId = brutalStrikeSelection(
+  const selection = brutalStrikeSelection(
     input.state,
     input.attackerId,
     input.attack,
-  )?.unitId;
-  if (unitId === undefined || input.choice === null) {
+  );
+  if (selection === null || input.choice === null) {
     return { state: input.state, shovePushes: [] };
   }
   if (input.choice === "forceful_blow") {
@@ -469,12 +483,12 @@ function applyBrutalStrikeAfterDamage(input: {
         (effect) =>
           !(
             effect.kind === "unitFeatureSpeedDelta" &&
-            effect.sourceUnitId === unitId
+            effect.sourceProcedureRef === selection.procedureRef
           ),
       ),
       {
         kind: "unitFeatureSpeedDelta",
-        sourceUnitId: unitId,
+        sourceProcedureRef: selection.procedureRef,
         sourceCombatantId: input.attackerId,
         deltaFeet: movementDeltaFeet(-15),
         expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
@@ -786,6 +800,7 @@ export function resolveSelectedAttackProcedure(
 
   const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
     state: input.state,
+    triggeringProcedureRef: input.subject.procedureRef,
     triggeringCombatantId: attackerId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,

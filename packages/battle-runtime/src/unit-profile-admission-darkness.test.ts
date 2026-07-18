@@ -1,3 +1,8 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME darkness
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magical-darkness-point-origin
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -54,24 +59,27 @@ describe("battle runtime: Darkness", () => {
     const levelOneAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.tag === "spellSlot" &&
-        candidate.subject.invocation.spellId === darknessUnitId &&
-        candidate.subject.invocation.slotLevel === 1,
+        battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          darknessUnitId &&
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1,
     );
     expect(levelOneAct).toBeUndefined();
 
     const levelTwoAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.tag === "spellSlot" &&
-        candidate.subject.invocation.spellId === darknessUnitId &&
-        candidate.subject.invocation.slotLevel === 2 &&
-        candidate.subject.invocation.procedure === "magicalDarknessPointOrigin",
+        battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          darknessUnitId &&
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 2 &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "magicalDarknessPointOrigin",
     );
     if (levelTwoAct?.subject.tag !== "actionSpell") {
       throw new Error("Expected level-2 Darkness action spell act.");
     }
-    expect(levelTwoAct.subject.invocation).toEqual(
+    expect(battleActSpellPresentation(levelTwoAct)?.invocation).toEqual(
       spellSlotInvocationRef(darknessUnitId, 2, "magicalDarknessPointOrigin"),
     );
     expect(levelTwoAct?.initialHoles).toEqual([
@@ -107,7 +115,9 @@ describe("battle runtime: Darkness", () => {
     expect(caster?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "magicalDarknessPointOrigin",
-        sourceSpellId: darknessUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(darknessUnitId),
+        ),
         sourceCombatantId: wizardId,
         areaId: "darkness-1",
         radiusFeet: movementFeet(15),
@@ -119,7 +129,9 @@ describe("battle runtime: Darkness", () => {
       }),
     ]);
     expect(caster?.concentration).toMatchObject({
-      sourceSpellId: darknessUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(darknessUnitId),
+      ),
     });
     expect(resolved.state.currentTurnResources).toMatchObject({
       spellSlotUsesThisTurn: [{ kind: "committed", combatantId: wizardId }],
@@ -134,7 +146,9 @@ describe("battle runtime: Darkness", () => {
     expect(resolved.snapshot.obscurementZones).toEqual([
       {
         kind: "spellMagicalDarknessZone",
-        sourceSpellId: darknessUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(darknessUnitId),
+        ),
         sourceCombatantId: wizardId,
         area: {
           kind: "pointOriginSphere",
@@ -273,7 +287,9 @@ describe("battle runtime: Darkness", () => {
     );
 
     expect(resolved.state.lightEmitters).toEqual([
-      expect.objectContaining({ sourceEffectId: overlappingLevelThreeEffectId }),
+      expect.objectContaining({
+        sourceEffectId: overlappingLevelThreeEffectId,
+      }),
       untrackedLevelTwo,
     ]);
   });
@@ -360,7 +376,9 @@ function trackedObjectSpellLightEmitter(input: {
   }
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: "synthetic_spell_light",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("synthetic_spell_light"),
+    ),
     sourceCombatantId: wizardId,
     sourceEffectId: input.sourceEffectId,
     sourceSpellLevel,

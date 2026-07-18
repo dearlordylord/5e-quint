@@ -1,46 +1,47 @@
+import { describe, expect, test } from "vitest";
+import { isTriggeredReactionSpellInvocation } from "./battle-reducer/spell-interrupt-procedure-kinds.ts";
+import type { BattleState } from "./battle-runtime-test-support.ts";
 import {
-  testBattleCreatureStateWithConditions,
-  fighterTurnWithReadiedRay,
-  fighterTurnWithReadiedAcidAndSecondReadiedRay,
-  wizardTurnWithReadiedRay,
-  fighterAttackSubject,
+  applyCondition,
+  attackDamageHoleAfterHit,
   attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
-  attackRollHoleAfterTarget,
-  attackDamageHoleAfterHit,
-  requireHole,
-  findHole,
-  targetFill,
-  spellTargetAllocationFill,
   attackRollFill,
-  concentrationSavingThrowFill,
-  interruptDecisionFill,
-  savingThrowOutcomeFill,
-  damageRollFill,
-  reactionChoiceWithSubject,
-  wizardVsSkeletonBattle,
-  magicSubject,
-  goblinId,
-  skeletonId,
-  wizardId,
-  secondWizardId,
-  applyCondition,
+  attackRollHoleAfterTarget,
   BATTLE_READIED_SPELL_TRIGGERS,
   BattleFillSchema,
   BattleSnapshotSchema,
   BattleSubjectSchema,
   cantripSpellInvocationRef,
+  concentrationSavingThrowFill,
+  damageRollFill,
   Either,
+  fighterAttackSubject,
+  fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  fighterTurnWithReadiedRay,
+  findHole,
+  goblinId,
+  interruptDecisionFill,
+  magicSubject,
+  reactionChoiceWithSubject,
+  requireCharacterSpellProcedureRefForTest,
+  requireHole,
   resolveBattleInterrupt,
   resolveBattleSubject,
   sameBattleSubject,
+  savingThrowOutcomeFill,
   Schema,
+  secondWizardId,
+  skeletonId,
   snapshotBattle,
   spellSlotInvocationRef,
+  spellTargetAllocationFill,
+  targetFill,
+  testBattleCreatureStateWithConditions,
+  wizardId,
+  wizardTurnWithReadiedRay,
+  wizardVsSkeletonBattle,
 } from "./battle-runtime-test-support.ts";
-import type { BattleState } from "./battle-runtime-test-support.ts";
-import { describe, expect, test } from "vitest";
-import { isTriggeredReactionSpellInvocation } from "./battle-reducer/spell-interrupt-procedure-kinds.ts";
 
 function readiedSpellAttackHitPending() {
   const state = fighterTurnWithReadiedRay("attackHit");
@@ -55,7 +56,10 @@ function readiedSpellAttackHitPending() {
       attackRollFill(roll, { total: 15, naturalD20: 10 }),
     ],
   });
-  if (result.tag !== "needsHoles" || result.snapshot.pendingInterrupt === null) {
+  if (
+    result.tag !== "needsHoles" ||
+    result.snapshot.pendingInterrupt === null
+  ) {
     throw new Error("Expected a pending Readied Spell attack-hit interrupt.");
   }
   return result;
@@ -63,7 +67,8 @@ function readiedSpellAttackHitPending() {
 
 describe("battle runtime: reactions, Ready, and sight facts", () => {
   test("action-time save-damage spells are not triggered-Reaction procedures", () => {
-    const wizard = fighterTurnWithReadiedRay("attackHit").combatants.get(wizardId);
+    const wizard =
+      fighterTurnWithReadiedRay("attackHit").combatants.get(wizardId);
     if (wizard?.origin.kind !== "character") {
       throw new Error("Expected a Wizard character origin.");
     }
@@ -542,9 +547,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger },
         },
@@ -576,31 +582,32 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("structured spell subjects keep cast mode separate from Ready mode", () => {
+    const state = wizardVsSkeletonBattle();
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      state,
+      wizardId,
+      cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+    );
     expect(
       sameBattleSubject(
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
-          ),
+          procedureRef,
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
-          ),
+          procedureRef,
           mode: { tag: "ready", trigger: "spellCast" },
         },
       ),
     ).toBe(false);
   });
 
-  test("structured spell subject equality ignores object insertion order", () => {
+  test("structured spell subject equality uses the admitted procedure reference", () => {
+    const state = wizardVsSkeletonBattle();
     const invocation = spellSlotInvocationRef(
       "magic_missile",
       1,
@@ -609,24 +616,24 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     if (invocation.tag !== "spellSlot") {
       throw new Error("Expected a Spell Slot invocation ref.");
     }
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      state,
+      wizardId,
+      invocation,
+    );
 
     expect(
       sameBattleSubject(
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation,
+          procedureRef,
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: {
-            procedure: invocation.procedure,
-            slotLevel: invocation.slotLevel,
-            spellId: invocation.spellId,
-            tag: invocation.tag,
-          },
+          procedureRef,
           mode: { tag: "cast" },
         },
       ),
@@ -784,12 +791,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     if (wizard?.origin.kind !== "character") {
       throw new Error("Expected the encoded Wizard character origin.");
     }
-    const wrongKindRef = wizard.origin.attackExecution.unarmedStrikeProcedureRef;
-    const differentSpellBinding = wizard.origin.execution.procedureBindings.find(
-      (binding) =>
-        binding.procedure.kind === "spellInvocation" &&
-        binding.procedureRef !== readiedSpellProcedureRef,
-    );
+    const wrongKindRef =
+      wizard.origin.attackExecution.unarmedStrikeProcedureRef;
+    const differentSpellBinding =
+      wizard.origin.execution.procedureBindings.find(
+        (binding) =>
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedureRef !== readiedSpellProcedureRef,
+      );
     if (differentSpellBinding === undefined) {
       throw new Error("Expected another encoded Wizard spell binding.");
     }

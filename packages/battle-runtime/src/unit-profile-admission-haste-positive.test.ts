@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-C17-HASTE-POSITIVE-RUNTIME haste
@@ -17,7 +19,10 @@ import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { openClassFeatureExtraAttackResource } from "./battle-reducer/attack-resolution.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
-import { savingThrowOutcomeFill } from "./battle-runtime-test-support.ts";
+import {
+  requireCharacterSpellProcedureRefForTest,
+  savingThrowOutcomeFill,
+} from "./battle-runtime-test-support.ts";
 import {
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
@@ -71,10 +76,17 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(hasteUnitId, 3, "hastePositive"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(hasteUnitId, 3, "hastePositive"),
+      ),
       mode: { tag: "cast" },
     });
 
@@ -135,7 +147,6 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         kind: "action",
         source: "spellEffect",
         sourceOwnerId: spellCasterId,
-        sourceSpellId: hasteUnitId,
         restriction: {
           kind: "allow_only",
           actions: [
@@ -196,7 +207,6 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         kind: "action",
         source: "spellEffect",
         sourceOwnerId: spellCasterId,
-        sourceSpellId: hasteUnitId,
       }),
     ]);
     expect(canSpendAction(resolved.state.currentTurnResources, "dash")).toBe(
@@ -235,7 +245,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       caster.activeEffects.some(
         (effect) =>
           effect.kind === "spellGrantedActionResource" &&
-          effect.sourceSpellId === hasteUnitId,
+          effect.sourceProcedureRef === hasteUnitId,
       ),
     ).toBe(false);
     expect(ended.currentTurnResources.actionResources).toEqual([]);
@@ -470,7 +480,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(caster.concentration).toEqual(
       expect.objectContaining({
         effectKind: "spellEffect",
-        sourceSpellId: hasteUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(hasteUnitId),
+        ),
       }),
     );
     expect(hasHastePositiveEffects(target)).toBe(true);
@@ -523,8 +535,8 @@ function hasHastePositiveEffects(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       isHastePositiveEffectKind(effect.kind) &&
-      "sourceSpellId" in effect &&
-      effect.sourceSpellId === hasteUnitId &&
+      "sourceProcedureRef" in effect &&
+      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -543,7 +555,7 @@ function hasHasteLethargyCondition(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellCondition" &&
-      effect.sourceSpellId === hasteUnitId &&
+      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.condition === "incapacitated",
   );
@@ -553,7 +565,7 @@ function hasHasteSpeedZero(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellSpeedZero" &&
-      effect.sourceSpellId === hasteUnitId &&
+      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -564,7 +576,9 @@ function stateWithSyntheticTargetConcentration(
   const target = requireCombatant(state, spellTargetId);
   const concentrationEffect: BattleActiveEffect = {
     kind: "spellArmorClassBonus",
-    sourceSpellId: syntheticTargetConcentrationSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(syntheticTargetConcentrationSpellId),
+    ),
     sourceCombatantId: spellTargetId,
     bonus: 1,
     negatedSpellIds: [],
@@ -579,7 +593,9 @@ function stateWithSyntheticTargetConcentration(
       ...target,
       concentration: {
         effectKind: "spellEffect",
-        sourceSpellId: syntheticTargetConcentrationSpellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(syntheticTargetConcentrationSpellId),
+        ),
       },
       activeEffects: [...target.activeEffects, concentrationEffect],
     }),
@@ -591,8 +607,8 @@ function hasSyntheticTargetConcentrationEffect(
 ): boolean {
   return combatant.activeEffects.some(
     (effect) =>
-      "sourceSpellId" in effect &&
-      effect.sourceSpellId === syntheticTargetConcentrationSpellId &&
+      "sourceProcedureRef" in effect &&
+      effect.sourceProcedureRef === syntheticTargetConcentrationSpellId &&
       effect.sourceCombatantId === spellTargetId,
   );
 }
@@ -604,7 +620,9 @@ function stateWithSleepPendingRepeatSave(
   const combatant = requireCombatant(state, combatantId);
   const sleepPendingEffect: BattleActiveEffect = {
     kind: "sleepPendingRepeatSave",
-    sourceSpellId: syntheticSleepRepeatSaveSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(syntheticSleepRepeatSaveSpellId),
+    ),
     sourceCombatantId: spellTargetId,
     conditionHadNonSpellSource: false,
     save: {
@@ -711,8 +729,8 @@ function stateWithTargetAlreadyActedAndCasterLast(
 
 function effectIsOwnedByHaste(effect: BattleActiveEffect): boolean {
   return (
-    "sourceSpellId" in effect &&
-    effect.sourceSpellId === hasteUnitId &&
+    "sourceProcedureRef" in effect &&
+    effect.sourceProcedureRef === hasteUnitId &&
     effect.sourceCombatantId === spellCasterId
   );
 }

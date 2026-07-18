@@ -182,9 +182,7 @@ function discipleOfLifeBattle(input: {
     targetMaxHp: 20,
     extraTargetHp: 1,
     extraTargetMaxHp: 20,
-    ...(input.spellSlots === undefined
-      ? {}
-      : { spellSlots: input.spellSlots }),
+    ...(input.spellSlots === undefined ? {} : { spellSlots: input.spellSlots }),
     ...(input.extraTargetIds === undefined
       ? {}
       : { extraTargetIds: input.extraTargetIds }),
@@ -280,9 +278,8 @@ function requireDiscipleOfLifeSupport(): Exclude<
   ReturnType<typeof battleSpellSlotHealingModifierSupportForUnit>,
   null | "unsupported"
 > {
-  const support = battleSpellSlotHealingModifierSupportForUnit(
-    discipleOfLifeUnit,
-  );
+  const support =
+    battleSpellSlotHealingModifierSupportForUnit(discipleOfLifeUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Disciple of Life support profile is required.");
   }

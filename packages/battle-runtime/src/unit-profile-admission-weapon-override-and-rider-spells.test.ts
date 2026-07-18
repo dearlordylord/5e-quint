@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
@@ -21,8 +24,8 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
-  statBlockAttackAct,
   sameClubMainAndOffHandLoadout,
+  statBlockAttackAct,
   weaponAttackRollHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
@@ -36,19 +39,18 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import type { BattleState } from "./unit-profile-admission-test-support.ts";
 import {
   abilityModifier,
   attackBonus,
   battleWeaponItemHasMagicWeaponEnhancement,
   battleWeaponItemMagicWeaponEnhancementBonus,
-  cantripSpellInvocationRef,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
 
 describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
   test("shillelagh is admitted only for a held Club or Quarterstaff", () => {
@@ -69,10 +71,6 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
           procedureRef: expect.any(String),
           tag: "bonusActionSpell",
           actorId: spellCasterId,
-          invocation: cantripSpellInvocationRef(
-            shillelaghUnitId,
-            "weaponAttackOverride",
-          ),
           mode: { tag: "cast" },
           componentWeaponItemId: "main:weapon_quarterstaff",
         },
@@ -106,7 +104,8 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       discoverBattleActs(longswordState).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
-          candidate.subject.invocation.spellId === shillelaghUnitId,
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            shillelaghUnitId,
       ),
     ).toBe(false);
   });
@@ -133,7 +132,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
-        sourceSpellId: shillelaghUnitId,
+        sourceProcedureRef: expect.any(String),
         weaponItemId: "main:weapon_quarterstaff",
         spellcastingAbilityModifier: abilityModifier(3),
         attackBonus: attackBonus(5),
@@ -209,7 +208,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
-        sourceSpellId: shillelaghUnitId,
+        sourceProcedureRef: expect.any(String),
         weaponItemId: "main:weapon_club",
         damage: { expr: { dice: 1, dieSize: 10 } },
         damageTypeChoices: ["force", "bludgeoning"],
@@ -234,7 +233,8 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     });
     const clubCastSubjects = discoverBattleActs(state).flatMap((candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === shillelaghUnitId
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        shillelaghUnitId
         ? [candidate.subject]
         : [],
     );
@@ -305,7 +305,10 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
           ...initialCaster.activeEffects,
           {
             kind: "spellWeaponAttackOverride",
-            sourceSpellId: shillelaghUnitId,
+            sourceProcedureRef: bonusSpellAct({
+              state,
+              spellId: shillelaghUnitId,
+            }).subject.procedureRef,
             sourceCombatantId: spellCasterId,
             weaponItemId: "main:weapon_quarterstaff",
             spellcastingAbilityModifier: abilityModifier(1),
@@ -382,13 +385,16 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     });
     const act = bonusSpellAct({ state, spellId: divineFavorUnitId });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        divineFavorUnitId,
-        1,
-        "weaponDamageRider",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(divineFavorUnitId, 1, "weaponDamageRider"),
       ),
       mode: { tag: "cast" },
     });
@@ -419,7 +425,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellWeaponDamageRider",
-        sourceSpellId: divineFavorUnitId,
+        sourceProcedureRef: expect.any(String),
         damage: {
           expr: { dice: 1, dieSize: 4 },
           damageType: "radiant",
@@ -480,7 +486,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     expect(weaponDamage).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [
-          expect.objectContaining({ sourceSpellId: divineFavorUnitId }),
+          expect.objectContaining({ sourceProcedureRef: expect.any(String) }),
         ],
       }),
     );
@@ -575,11 +581,17 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     if (caster === undefined) {
       throw new Error("Expected Divine Favor caster.");
     }
+    const divineFavorEffect = caster.activeEffects.find(
+      (effect) => effect.kind === "spellWeaponDamageRider",
+    );
+    if (divineFavorEffect === undefined) {
+      throw new Error("Expected Divine Favor weapon damage rider.");
+    }
     const expiringCaster = {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceSpellId === divineFavorUnitId
+        effect.sourceProcedureRef === divineFavorEffect.sourceProcedureRef
           ? {
               ...effect,
               expiresAt: {
@@ -627,7 +639,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
         ?.activeEffects.some(
           (effect) =>
             effect.kind === "spellWeaponDamageRider" &&
-            effect.sourceSpellId === divineFavorUnitId,
+            effect.sourceProcedureRef === divineFavorEffect.sourceProcedureRef,
         ),
     ).toBe(false);
 
@@ -696,13 +708,16 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        magicWeaponUnitId,
-        2,
-        "magicWeaponEnhancement",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(magicWeaponUnitId, 2, "magicWeaponEnhancement"),
       ),
       mode: { tag: "cast" },
     });
@@ -744,7 +759,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellMagicWeaponEnhancement",
-        sourceSpellId: magicWeaponUnitId,
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
         weaponItemId: "main:weapon_longsword",
@@ -855,7 +870,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
           ...caster.activeEffects,
           {
             kind: "spellMagicWeaponEnhancement",
-            sourceSpellId: magicWeaponUnitId,
+            sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: spellCasterId,
             holderCombatantId: spellCasterId,
             weaponItemId: "other:weapon_longsword",
@@ -958,7 +973,11 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
           ...caster.activeEffects,
           {
             kind: "spellMagicWeaponEnhancement",
-            sourceSpellId: magicWeaponUnitId,
+            sourceProcedureRef: bonusSpellAct({
+              state,
+              spellId: magicWeaponUnitId,
+              slotLevel: 3,
+            }).subject.procedureRef,
             sourceCombatantId: spellCasterId,
             holderCombatantId: spellCasterId,
             weaponItemId: "prior:weapon_longsword",
@@ -1021,7 +1040,9 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
           ...target.activeEffects,
           {
             kind: "spellMagicWeaponEnhancement",
-            sourceSpellId: magicWeaponUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "other-magic-weapon-caster",
+            ),
             sourceCombatantId: spellTargetId,
             holderCombatantId: spellCasterId,
             weaponItemId: "main:weapon_longsword",

@@ -1,4 +1,7 @@
-import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import type {
+  CharacterProcedureBattleSubject,
+  CharacterProcedureSelectionSubject,
+} from "./battle-subjects.ts";
 import type { CharacterBattleCreatureState } from "./battle-reducer.ts";
 import {
   BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
@@ -13,11 +16,8 @@ import {
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-holes-fills.ts";
-export type CharacterProcedureSelectionSubject =
-  CharacterProcedureBattleSubject;
-
 export function characterUnitProcedureQueryForSubject(
-  subject: CharacterProcedureSelectionSubject,
+  subject: CharacterProcedureBattleSubject | CharacterProcedureSelectionSubject,
 ): CharacterUnitProcedureQuery | undefined {
   if (
     subject.tag === "unitFeature" ||

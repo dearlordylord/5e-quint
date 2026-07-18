@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV95 flame_blade
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spell-created-held-object
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
@@ -6,6 +9,12 @@ import { difficultyClass, type HandUse } from "@dnd/shared/types";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { spellId } from "./identity.ts";
+import {
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+  type BattleFill,
+  type CombatantId,
+} from "./index.ts";
 import {
   counterspellUnitId,
   flameBladeUnitId,
@@ -39,14 +48,8 @@ import {
   movementFeet,
   resolveBattleSubject,
   snapshotBattle,
-  spellSlotInvocationRef,
   type BattleState,
 } from "./unit-profile-admission-test-support.ts";
-import {
-  SPELL_CAST_REACTION_FACTS_HOLE_ID,
-  type BattleFill,
-  type CombatantId,
-} from "./index.ts";
 
 describe("SRDINV95 deterministic Flame Blade admission", () => {
   test("flame_blade casts as a Bonus Action slot spell and occupies the canonical free hand", () => {
@@ -60,11 +63,6 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
           procedureRef: expect.any(String),
           tag: "bonusActionSpell",
           actorId: spellCasterId,
-          invocation: spellSlotInvocationRef(
-            flameBladeUnitId,
-            2,
-            "spellCreatedHeldObject",
-          ),
           mode: { tag: "cast" },
         },
         initialHoles: [],
@@ -89,7 +87,9 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
         lightEmitters: [
           {
             kind: "spellLightEmitter",
-            sourceSpellId: flameBladeUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(flameBladeUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             attachment: { kind: "combatant", combatantId: spellCasterId },
             emission: {
@@ -118,13 +118,17 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       }),
     );
     expect(caster.concentration).toEqual({
-      sourceSpellId: flameBladeUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(flameBladeUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellCreatedHeldObject",
-        sourceSpellId: flameBladeUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(flameBladeUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         objectState: { kind: "held" },
         light: { brightRadiusFeet: 10, dimAdditionalFeet: 10 },
@@ -155,15 +159,22 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       spellId: flameBladeUnitId,
     });
 
-    expect(attackAct.subject).toMatchObject({
+    expect({
+      ...attackAct.subject,
+      invocation: battleActSpellPresentation(attackAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: {
-        tag: "spellEffect",
-        spellId: flameBladeUnitId,
-        sourceCombatantId: spellCasterId,
-        procedure: "spellCreatedHeldObjectAttack",
-      },
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        cast.state,
+        spellCasterId,
+        {
+          tag: "spellEffect",
+          spellId: spellId(flameBladeUnitId),
+          sourceCombatantId: spellCasterId,
+          procedure: "spellCreatedHeldObjectAttack",
+        },
+      ),
       mode: { tag: "cast" },
     });
     expect(attackAct.initialHoles).toEqual([
@@ -394,15 +405,22 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       state: nextCasterTurn,
       spellId: flameBladeUnitId,
     });
-    expect(reEvokeAct.subject).toMatchObject({
+    expect({
+      ...reEvokeAct.subject,
+      invocation: battleActSpellPresentation(reEvokeAct)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: {
-        tag: "spellEffect",
-        spellId: flameBladeUnitId,
-        sourceCombatantId: spellCasterId,
-        procedure: "spellCreatedHeldObjectReEvoke",
-      },
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        nextCasterTurn,
+        spellCasterId,
+        {
+          tag: "spellEffect",
+          spellId: spellId(flameBladeUnitId),
+          sourceCombatantId: spellCasterId,
+          procedure: "spellCreatedHeldObjectReEvoke",
+        },
+      ),
       mode: { tag: "cast" },
     });
     const reEvoked = resolveBattleSubject({
@@ -420,7 +438,9 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
         },
         lightEmitters: [
           expect.objectContaining({
-            sourceSpellId: flameBladeUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(flameBladeUnitId),
+            ),
             attachment: { kind: "combatant", combatantId: spellCasterId },
           }),
         ],
@@ -663,8 +683,7 @@ function releaseFlameBladeAct(state: BattleState) {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "releaseSpellCreatedHeldObject" &&
-      candidate.subject.sourceSpellId === flameBladeUnitId,
+      candidate.subject.command === "releaseSpellCreatedHeldObject",
   );
   if (act === undefined) {
     throw new Error("Expected Flame Blade release act.");
@@ -749,7 +768,9 @@ function counterspellTriggerFact(input: {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    spellId: counterspellUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(counterspellUnitId),
+    ),
     rangeFeet: movementFeet(60),
   };
 }

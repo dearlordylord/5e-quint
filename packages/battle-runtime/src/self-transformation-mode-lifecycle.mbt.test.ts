@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 // RAW trace:
@@ -37,7 +39,6 @@ import {
   activeSelfTransformationModeEffect,
   battleCreatureCanBreatheUnderwater,
   discoverBattleActs,
-  resolveBattleSubject,
   SELF_TRANSFORMATION_MODE_KINDS,
   snapshotBattle,
   type BattleResolutionResult,
@@ -319,7 +320,7 @@ function castSelfTransformationMode(
     spellId: alterSelfUnitId,
     slotLevel: 2,
   });
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
     spellId: alterSelfUnitId,
     slotLevel: 2,
@@ -482,7 +483,7 @@ function selfTransformationProjection(
       ),
     casterConcentrating:
       caster.concentration?.effectKind === "spellEffect" &&
-      caster.concentration.sourceSpellId === alterSelfUnitId,
+      caster.concentration.sourceProcedureRef === alterSelfUnitId,
     activeMode: activeEffect?.mode ?? "none",
     waterBreathing: battleCreatureCanBreatheUnderwater(caster),
     walkSpeedFeet: Number(casterSnapshot.movement.speedFeet),

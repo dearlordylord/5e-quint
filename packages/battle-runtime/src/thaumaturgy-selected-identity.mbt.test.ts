@@ -1,15 +1,15 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-IDENTITY-REPLAY: L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy doResolveThaumaturgyBoomingVoice
 import { describe, expect, it } from "vitest";
 
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   mbtSpecPath,
   reducerRouteStartBattle,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   battleId,
   cantripSpellInvocationRef,
@@ -20,17 +20,14 @@ import {
   findHole,
   requiredAbilityCheckRollMode,
   requireResolved,
+  resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import {
-  resolveBattleSubject,
-  type BattleFill,
-  type BattleHole,
-  type BattleState,
-} from "./index.ts";
+import { type BattleFill, type BattleHole, type BattleState } from "./index.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type BattleRollMode = "normal" | "advantage" | "disadvantage";
 
@@ -215,8 +212,9 @@ function projectThaumaturgyState(
     actionAvailable: discoverBattleActs(state).some(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "thaumaturgy" &&
-        act.subject.invocation.procedure === "thaumaturgyBoomingVoice",
+        battleActSpellPresentation(act)?.invocation.spellId === "thaumaturgy" &&
+        battleActSpellPresentation(act)?.invocation.procedure ===
+          "thaumaturgyBoomingVoice",
     ),
     intimidationRollMode:
       requiredAbilityCheckRollMode(state, fighterId, "cha", {

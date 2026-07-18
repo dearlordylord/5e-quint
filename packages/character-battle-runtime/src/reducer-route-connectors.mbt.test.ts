@@ -2,6 +2,7 @@ import * as path from "node:path";
 
 import {
   type AvailableBattleAct,
+  battleActSpellPresentation,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -149,16 +150,14 @@ const FILL_BY_TAG = {
 } as const;
 
 const COMPOSITION_FACT_BY_TAG = {
-  SheetDerivedParticipantCandidateRouteFact:
-    "sheetDerivedParticipantCandidate",
+  SheetDerivedParticipantCandidateRouteFact: "sheetDerivedParticipantCandidate",
   NonSheetParticipantMembershipRouteFact: "nonSheetParticipantMembership",
   EncounterSideRelationshipOwnershipRouteFact:
     "encounterSideRelationshipOwnership",
   SubjectProfileAvailabilityOwnershipRouteFact:
     "subjectProfileAvailabilityOwnership",
   InitiativeCountOwnershipRouteFact: "initiativeCountOwnership",
-  StableInitiativeOrderOwnershipRouteFact:
-    "stableInitiativeOrderOwnership",
+  StableInitiativeOrderOwnershipRouteFact: "stableInitiativeOrderOwnership",
   CurrentActorOwnershipRouteFact: "currentActorOwnership",
 } as const;
 
@@ -303,90 +302,119 @@ const routeStateCheck = stateCheck(
 );
 
 describe("character battle reducer route connector MBT", () => {
-  it("routes Character Sheet to battle init projection through handoff owners", async () => {
-    await runRouteMbt({
-      specFileName: "character-battle-init-projection.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        battleInitRouteDriverSchema,
-        battleInitRouteActions,
-        initialCharacterBattleInitProjectionRoute,
-      ),
-      maxSteps: 6,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Character Sheet to battle init projection through handoff owners",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-battle-init-projection.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          battleInitRouteDriverSchema,
+          battleInitRouteActions,
+          initialCharacterBattleInitProjectionRoute,
+        ),
+        maxSteps: 6,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Origin feat selected-reference handoff without authored dispatch", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-battle-origin-feat-selected-identity.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        originFeatRouteDriverSchema,
-        originFeatRouteActions,
-        () => [],
-      ),
-      maxSteps: 2,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Origin feat selected-reference handoff without authored dispatch",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-battle-origin-feat-selected-identity.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          originFeatRouteDriverSchema,
+          originFeatRouteActions,
+          () => [],
+        ),
+        maxSteps: 2,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes sheet-derived encounter composition before battle entry", async () => {
-    await runRouteMbt({
-      specFileName: "character-battle-encounter-composition.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        encounterCompositionRouteDriverSchema,
-        encounterCompositionRouteActions,
-        initialCharacterBattleEncounterCompositionRoute,
-      ),
-      maxSteps: 5,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes sheet-derived encounter composition before battle entry",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-battle-encounter-composition.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          encounterCompositionRouteDriverSchema,
+          encounterCompositionRouteActions,
+          initialCharacterBattleEncounterCompositionRoute,
+        ),
+        maxSteps: 5,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes sheet-derived battle acts and source-exact slot settlement", async () => {
-    await runRouteMbt({
-      specFileName: "character-session-sheet-derived-battle-acts.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        sheetDerivedBattleActsRouteDriverSchema,
-        sheetDerivedBattleActsRouteActions,
-        initialCharacterSessionSheetDerivedBattleActsRoute,
-      ),
-      maxSteps: 2,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes sheet-derived battle acts and source-exact slot settlement",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-session-sheet-derived-battle-acts.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          sheetDerivedBattleActsRouteDriverSchema,
+          sheetDerivedBattleActsRouteActions,
+          initialCharacterSessionSheetDerivedBattleActsRoute,
+        ),
+        maxSteps: 2,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes battle settlement back to sheet-owned resource state", async () => {
-    await runRouteMbt({
-      specFileName: "character-battle-settlement.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        settlementRouteDriverSchema,
-        settlementRouteActions,
-        initialCharacterBattleSettlementRoute,
-      ),
-      maxSteps: 11,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes battle settlement back to sheet-owned resource state",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-battle-settlement.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          settlementRouteDriverSchema,
+          settlementRouteActions,
+          initialCharacterBattleSettlementRoute,
+        ),
+        maxSteps: 11,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes character layer projection boundaries through existing owners", async () => {
-    await runRouteMbt({
-      specFileName: "character-layer-projection-lifecycle.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        lifecycleRouteDriverSchema,
-        lifecycleRouteActions,
-        initialCharacterLayerRoute,
-      ),
-      maxSteps: 5,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes character layer projection boundaries through existing owners",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-layer-projection-lifecycle.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          lifecycleRouteDriverSchema,
+          lifecycleRouteActions,
+          initialCharacterLayerRoute,
+        ),
+        maxSteps: 5,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes feature-resource handoff through sheet and battle owners", async () => {
-    await runRouteMbt({
-      specFileName: "character-sheet-feature-resources.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        featureResourceRouteDriverSchema,
-        featureResourceRouteActions,
-        initialCharacterBattleFeatureResourceHandoffRoute,
-      ),
-      maxSteps: 14,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes feature-resource handoff through sheet and battle owners",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-sheet-feature-resources.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          featureResourceRouteDriverSchema,
+          featureResourceRouteActions,
+          initialCharacterBattleFeatureResourceHandoffRoute,
+        ),
+        maxSteps: 14,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 const battleInitRouteActions = indexedActionEntries(
@@ -421,16 +449,19 @@ const battleInitRouteActions = indexedActionEntries(
   ],
 );
 
-const originFeatRouteActions = indexedActionEntries(originFeatRouteDriverSchema, [
+const originFeatRouteActions = indexedActionEntries(
+  originFeatRouteDriverSchema,
   [
-    "doFinalizeCriminalAlertOriginFeat",
-    originFeatSelectedReferenceRetentionRoute,
+    [
+      "doFinalizeCriminalAlertOriginFeat",
+      originFeatSelectedReferenceRetentionRoute,
+    ],
+    [
+      "doProjectAlertInitiativeHandoff",
+      originFeatSelectedReferenceInitiativeHandoffRoute,
+    ],
   ],
-  [
-    "doProjectAlertInitiativeHandoff",
-    originFeatSelectedReferenceInitiativeHandoffRoute,
-  ],
-]);
+);
 
 const encounterCompositionRouteActions = indexedActionEntries(
   encounterCompositionRouteDriverSchema,
@@ -472,11 +503,14 @@ const sheetDerivedBattleActsRouteActions = indexedActionEntries(
   ],
 );
 
-const settlementRouteActions = indexedActionEntries(settlementRouteDriverSchema, [
-  ...CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS.map(
-    (action) => [action, settlementRouteStep(action)] as const,
-  ),
-]);
+const settlementRouteActions = indexedActionEntries(
+  settlementRouteDriverSchema,
+  [
+    ...CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS.map(
+      (action) => [action, settlementRouteStep(action)] as const,
+    ),
+  ],
+);
 
 const lifecycleRouteActions = indexedActionEntries(lifecycleRouteDriverSchema, [
   ["doFinalizeDraftToBuild", finalizeDraftToBuildRoute],
@@ -493,10 +527,7 @@ const featureResourceRouteActions = indexedActionEntries(
       "doLayOnHandsRestoresHpAndRemovesPoisoned",
       layOnHandsRestoresHpAndRemovesPoisonedRoute,
     ],
-    [
-      "doRejectLayOnHandsOverspend",
-      rejectLayOnHandsOverspendRoute,
-    ],
+    ["doRejectLayOnHandsOverspend", rejectLayOnHandsOverspendRoute],
     ["doLongRestClearsLayOnHandsPool", longRestClearsLayOnHandsPoolRoute],
     ["doShortRestRecoversUseCountPools", shortRestRecoversUseCountPoolsRoute],
     [
@@ -513,7 +544,10 @@ const featureResourceRouteActions = indexedActionEntries(
       "doRejectFontOfMagicInsufficientPoints",
       rejectFontOfMagicInsufficientPointsRoute,
     ],
-    ["doShortRestPreservesUncannyUseState", shortRestPreservesUncannyUseStateRoute],
+    [
+      "doShortRestPreservesUncannyUseState",
+      shortRestPreservesUncannyUseStateRoute,
+    ],
     ["doLongRestClearsUncannyUseState", longRestClearsUncannyUseStateRoute],
     [
       "doUncannyMetabolismRecoversFocusAndHeals",
@@ -523,7 +557,10 @@ const featureResourceRouteActions = indexedActionEntries(
       "doRejectUncannyMetabolismRepeatUse",
       rejectUncannyMetabolismRepeatUseRoute,
     ],
-    ["doMetamagicBridgeUsesSharedPointPool", metamagicBridgeUsesSharedPointPoolRoute],
+    [
+      "doMetamagicBridgeUsesSharedPointPool",
+      metamagicBridgeUsesSharedPointPoolRoute,
+    ],
   ],
 );
 
@@ -966,11 +1003,9 @@ function metamagicBridgeUsesSharedPointPoolRoute(
     fills: [heightenedTarget],
   });
   const saveHole = requireBattleHole(awaitingSave, "savingThrowOutcome");
-  const failedSave = areaSavingThrowOutcomeFill(
-    saveHole,
-    sorcererCombatantId,
-    [{ targetId: targetCombatantId, succeeded: false }],
-  );
+  const failedSave = areaSavingThrowOutcomeFill(saveHole, sorcererCombatantId, [
+    { targetId: targetCombatantId, succeeded: false },
+  ]);
   const awaitingDamage = resolveBattleSubject({
     state: battle,
     subject: act.subject,
@@ -1037,7 +1072,7 @@ function requireHeightenedBurningHandsAct(
     } =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === actorId &&
-      JSON.stringify(candidate.subject.invocation) ===
+      JSON.stringify(battleActSpellPresentation(candidate)?.invocation) ===
         JSON.stringify(expectedInvocation) &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === "saving_throw_disadvantage",
@@ -1454,7 +1489,8 @@ function encounterCompositionRouteStep(
 function sheetDerivedBattleActsRouteStep(
   action: CharacterSessionSheetDerivedBattleActsRouteAction,
 ): RouteAppender {
-  return (route) => characterSessionSheetDerivedBattleActsRouteStep(route, action);
+  return (route) =>
+    characterSessionSheetDerivedBattleActsRouteStep(route, action);
 }
 
 function settlementRouteStep(
@@ -1916,7 +1952,9 @@ function routeHoles(raw: unknown): readonly CharacterBattleRouteHole[] {
   return uniqueSorted(quintSet(raw, "qRoute[].holes").map(routeHole));
 }
 
-function routeCompositionFact(raw: unknown): CharacterBattleRouteCompositionFact {
+function routeCompositionFact(
+  raw: unknown,
+): CharacterBattleRouteCompositionFact {
   return mappedVariant(
     raw,
     COMPOSITION_FACT_BY_TAG,
@@ -2018,7 +2056,9 @@ function quintVariantValue(
   ) {
     return raw["value"];
   }
-  throw new Error(`Expected Quint ${expectedTag} variant value field ${field}.`);
+  throw new Error(
+    `Expected Quint ${expectedTag} variant value field ${field}.`,
+  );
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

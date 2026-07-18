@@ -1,3 +1,5 @@
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29E ice_knife
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 mage_armor
@@ -46,13 +48,16 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "ice_knife",
-        2,
-        "attackBurstSaveDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
       mode: { tag: "cast" },
     });
@@ -114,13 +119,16 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "chromatic_orb",
-        2,
-        "chainedSpellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef("chromatic_orb", 2, "chainedSpellAttackDamage"),
       ),
       mode: { tag: "cast" },
     });
@@ -163,20 +171,31 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     const acts = discoverBattleActs(state).filter(
       (candidate): candidate is ActionSpellAct =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === chromaticOrbUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          chromaticOrbUnitId,
     );
 
     expect(
-      [...new Set(acts.map((act) => act.subject.invocation.procedure))].sort(),
+      [
+        ...new Set(
+          acts.map(
+            (act) => battleActSpellPresentation(act)?.invocation.procedure,
+          ),
+        ),
+      ].sort(),
     ).toEqual(["chainedSpellAttackDamage"]);
     expect(
       acts.some(
-        (act) => act.subject.invocation.procedure === "spellAttackDamage",
+        (act) =>
+          battleActSpellPresentation(act)?.invocation.procedure ===
+          "spellAttackDamage",
       ),
     ).toBe(false);
     expect(
       acts.some(
-        (act) => act.subject.invocation.procedure === "saveGatedDamage",
+        (act) =>
+          battleActSpellPresentation(act)?.invocation.procedure ===
+          "saveGatedDamage",
       ),
     ).toBe(false);
   });
@@ -187,7 +206,10 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       spellId: rayOfFrostUnitId,
     });
 
-    expect(spellAttackAct.subject).toMatchObject({
+    expect({
+      ...spellAttackAct.subject,
+      invocation: battleActSpellPresentation(spellAttackAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -244,7 +266,10 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       spellId: acidSplashUnitId,
     });
 
-    expect(saveGatedAct.subject).toMatchObject({
+    expect({
+      ...saveGatedAct.subject,
+      invocation: battleActSpellPresentation(saveGatedAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
@@ -282,7 +307,10 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       spellId: mageArmorUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(

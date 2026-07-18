@@ -41,11 +41,15 @@ import { spellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { spellId } from "../../identity.ts";
-import type { CombatantId } from "../../identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../../identity.ts";
 import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -198,10 +202,12 @@ function applyRollModifierEffect(
   state: BattleState,
   targetIds: readonly CombatantId[],
   selectedEffect: SelectedRollModifierSpellEffect,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   return applyRollModifierEffectsByTarget(
     state,
     targetIds.map((targetId) => ({ targetId, effect: selectedEffect })),
+    sourceProcedureRef,
   );
 }
 
@@ -211,6 +217,7 @@ function applyRollModifierEffectsByTarget(
     readonly targetId: CombatantId;
     readonly effect: SelectedRollModifierSpellEffect;
   }[],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   return targetEffects.reduce((nextState, targetEffect) => {
     const { targetId, effect: selectedEffect } = targetEffect;
@@ -223,10 +230,10 @@ function applyRollModifierEffectsByTarget(
         (effect) =>
           !(
             effect.kind === selectedEffect.kind &&
-            effect.sourceSpellId === selectedEffect.sourceSpellId
+            effect.sourceProcedureRef === sourceProcedureRef
           ),
       ),
-      selectedEffect,
+      { ...selectedEffect, sourceProcedureRef },
     ];
     return {
       ...nextState,
@@ -241,7 +248,7 @@ function applyRollModifierEffectsByTarget(
 function discoverRollModifierCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: RollModifierInvocation,
+  invocation: BattleExecutableSpellInvocation<RollModifierInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
@@ -268,6 +275,7 @@ function discoverRollModifierCastAct(
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: rollModifierInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -404,12 +412,14 @@ function resolveRollModifier(
           concentrationBase,
           affectedTargets.targetIds,
           effectSelection.selection.effect,
+          input.invocation.sourceProcedureRef,
         )
       : applyRollModifierEffectsByTarget(
           concentrationBase,
           effectSelection.selection.targetEffects.filter((targetEffect) =>
             affectedTargetIds.has(targetEffect.targetId),
           ),
+          input.invocation.sourceProcedureRef,
         );
   if (input.spendsCastResources === false) {
     return {

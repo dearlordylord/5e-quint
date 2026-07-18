@@ -40,6 +40,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -316,13 +317,14 @@ function uniqueDamageTypeChoices(
 function discoverSelfTransformationModeCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: SelfTransformationModeInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SelfTransformationModeInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell" as const,
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: selfTransformationModeInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
@@ -400,13 +402,18 @@ function resolveSelfTransformationMode(
   const concentrationBase = spellRequiresConcentration(input.invocation)
     ? breakBattleConcentration(input.input.state, input.actorId)
     : input.input.state;
-  const effected = applySelfTransformationModeEffect({
+  const allocation = allocateBattleActiveEffectRef({
     state: concentrationBase,
+    ownerId: input.actorId,
+  });
+  const effected = applySelfTransformationModeEffect({
+    state: allocation.state,
     actorId: input.actorId,
     sourceCombatantId: input.actorId,
-    sourceSpellId: input.invocation.spell.id,
+    sourceProcedureRef: input.input.subject.procedureRef,
     modeEffect: modeEffect.modeEffect,
     expiresAt: input.invocation.expiresAt,
+    effectRef: allocation.effectRef,
   });
   const resourced = spendSpellCastResources({
     state: effected,
@@ -454,16 +461,21 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   if (modeEffect.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", modeEffect.message);
   }
-  const effected = applySelfTransformationModeEffect({
+  const allocation = allocateBattleActiveEffectRef({
     state: input.state,
+    ownerId: input.targetId,
+  });
+  const effected = applySelfTransformationModeEffect({
+    state: allocation.state,
     actorId: input.targetId,
     sourceCombatantId: input.sourceCombatantId,
-    sourceSpellId: input.invocation.spell.id,
+    sourceProcedureRef: input.subject.procedureRef,
     modeEffect: modeEffect.modeEffect,
     expiresAt: {
       kind: "duration",
       durationTicks: input.invocation.expiresAt.durationTicks,
     },
+    effectRef: allocation.effectRef,
   });
   return {
     tag: "resolved",

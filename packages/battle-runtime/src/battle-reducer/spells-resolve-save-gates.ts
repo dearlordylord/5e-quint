@@ -19,7 +19,7 @@ import {
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import type { AdmittedBattleSubject } from "../battle-subjects.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   isTargetListSpellInvocation,
@@ -45,10 +45,10 @@ import {
   type BattleSpellSavingThrowOutcomeValue,
   type BattleThunderwavePushDisposition,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type SaveDamageResult,
-  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import { spellId, type CombatantId } from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -164,7 +164,7 @@ type SaveGatedSpellResolutionInput =
 
 function spellReactionContinuationSubject(
   input: SaveGatedSpellResolutionInput,
-): AdmittedBattleSubject {
+): BattleSubject {
   return "reactionContinuationSubject" in input
     ? (input.reactionContinuationSubject ?? input.subject)
     : input.subject;
@@ -206,7 +206,7 @@ export function saveMetamagicSelectionState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     {
       readonly procedure:
         | "saveGatedDamage"
@@ -357,7 +357,7 @@ export function saveMetamagicSelectionState(input: {
 function saveMetamagicSelectionFills(
   fills: readonly BattleFill[],
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     {
       readonly procedure:
         | "saveGatedDamage"
@@ -432,7 +432,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "greaseGroundHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -538,7 +538,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: spellReactionContinuationSubject(input.input),
@@ -589,7 +589,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "sleepTargetAdmission" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -653,7 +653,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: spellReactionContinuationSubject(input.input),
@@ -698,7 +698,7 @@ export function resolveHideousLaughterSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "hideousLaughter" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -796,7 +796,7 @@ export function resolveHideousLaughterSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: spellReactionContinuationSubject(input.input),
@@ -846,7 +846,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "abilityD20TestRollModeSaveGate" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -921,7 +921,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: spellReactionContinuationSubject(input.input),
@@ -968,7 +968,7 @@ function applyAbilityD20TestRollModeSaveGateEffects(
   failedTargetIds: readonly CombatantId[],
   successfulTargetIds: readonly CombatantId[],
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "abilityD20TestRollModeSaveGate" }
   >,
 ): BattleState {
@@ -985,13 +985,16 @@ function applyAbilityD20TestRollModeSaveGateEffects(
           (effect) =>
             !(
               effect.kind === "nextAttackRollBySelf" &&
-              "sourceSpellId" in effect &&
-              effect.sourceSpellId === invocation.spell.id &&
+              "sourceProcedureRef" in effect &&
+              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
               effect.sourceCombatantId ===
                 invocation.successEffect.sourceCombatantId
             ),
         ),
-        invocation.successEffect,
+        {
+          ...invocation.successEffect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+        },
       ],
     });
   }
@@ -1007,20 +1010,26 @@ function applyAbilityD20TestRollModeSaveGateEffects(
           (effect) =>
             !(
               effect.kind === "abilityD20TestRollModeEndTurnSave" &&
-              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
               effect.sourceCombatantId ===
                 invocation.failedSaveEffect.sourceCombatantId &&
               effect.ability === invocation.failedSaveEffect.ability
             ) &&
             !(
               effect.kind === "sourceDamageRollPenalty" &&
-              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
               effect.sourceCombatantId ===
                 invocation.failedSaveDamagePenaltyEffect.sourceCombatantId
             ),
         ),
-        invocation.failedSaveEffect,
-        invocation.failedSaveDamagePenaltyEffect,
+        {
+          ...invocation.failedSaveEffect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+        },
+        {
+          ...invocation.failedSaveDamagePenaltyEffect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+        },
       ],
     });
   }
@@ -1030,7 +1039,7 @@ export function resolveSaveGateDamageSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -1065,7 +1074,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -1112,6 +1121,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     }
     const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
       state: input.input.state,
+      triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
@@ -1391,7 +1401,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: spellReactionContinuationSubject(input.input),
@@ -2051,7 +2061,7 @@ function applySaveGatedDamageFailedSaveConditionEffects(
   actorId: CombatantId,
   failedTargets: readonly CombatantId[],
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >,
   abilityChoice: Extract<SpellFillSet, { readonly tag: "ok" }>["abilityChoice"],
@@ -2091,7 +2101,7 @@ function potentCantripSaveDamageResultForOutcome(input: {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly savingThrowSucceeded: boolean;
@@ -2126,7 +2136,7 @@ function potentCantripAppliesToSuccessfulSave(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly target: BattleCreatureState | undefined;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): boolean {
@@ -2156,7 +2166,7 @@ type SpellConcentrationDurationEffect = Extract<
 function failedSaveConcentrationDurationEffect(input: {
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): SpellConcentrationDurationEffect | null {
@@ -2171,7 +2181,7 @@ function failedSaveConcentrationDurationEffect(input: {
   }
   return {
     kind: "spellConcentrationDuration",
-    sourceSpellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
     sourceCombatantId: input.actorId,
     expiresAt: {
       kind: "concentration",
@@ -2205,7 +2215,7 @@ function withFailedSaveConcentrationDuration(
           ? actor.activeEffects.filter(
               (candidate) =>
                 candidate.kind !== "spellConcentrationDuration" ||
-                candidate.sourceSpellId !== effect.sourceSpellId ||
+                candidate.sourceProcedureRef !== effect.sourceProcedureRef ||
                 candidate.sourceCombatantId !== effect.sourceCombatantId,
             )
           : actor.activeEffects),
@@ -2237,7 +2247,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     | BonusActionSpellBattleResolutionInput["subject"];
   readonly failedTargets: readonly CombatantId[];
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly movementFill:
@@ -2376,7 +2386,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -2549,7 +2559,7 @@ export function resolveSaveGateConditionSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: spellReactionContinuationSubject(input.input),
@@ -2609,7 +2619,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedConditionImmunity" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -2714,7 +2724,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: spellReactionContinuationSubject(input.input),
@@ -2766,7 +2776,7 @@ function validateSaveGatedConditionImmunityTargets(
   state: BattleState,
   targetIds: readonly CombatantId[],
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedConditionImmunity" }
   >,
 ): string | null {
@@ -2787,7 +2797,7 @@ export function resolveCommandSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "command" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -2905,7 +2915,7 @@ export function resolveCommandSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject:
@@ -2956,7 +2966,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedAttackRollAdvantage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -3045,7 +3055,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject:
@@ -3412,7 +3422,7 @@ function validatePostSaveAreaEffect(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly failedTargetIds: readonly CombatantId[];
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): string | null {
@@ -3445,7 +3455,7 @@ function validatePostSaveAreaEffect(input: {
 function validateFireballAreaEffect(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): string | null {
@@ -3469,7 +3479,7 @@ function postSaveAreaObjectIgnitions(input: {
   readonly actorId: CombatantId;
   readonly area: BattleSpellAreaChoice | undefined;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): readonly BattleObjectIgnitionOutcome[] {
@@ -3486,7 +3496,7 @@ function postSaveAreaObjectIgnitions(input: {
             kind: "startsBurning" as const,
             objectId: fact.objectId,
             sourceCombatantId: input.actorId,
-            sourceSpellId: spellId(input.invocation.spell.id),
+            sourceProcedureRef: input.invocation.sourceProcedureRef,
           },
         ]
       : [],
@@ -3496,7 +3506,7 @@ function postSaveAreaObjectIgnitions(input: {
 function validateShatterAreaEffect(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): string | null {
@@ -3519,7 +3529,7 @@ function validateShatterAreaEffect(input: {
 function postSaveAreaObjectDamageFacts(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): Extract<
@@ -3543,7 +3553,7 @@ function postSaveAreaObjectDamages(input: {
     >["nonmagicalUnattendedObjectDamageFacts"][number]
   >;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly damageByType: ReadonlyMap<DamageType, number>;
@@ -3562,7 +3572,7 @@ function validateThunderwaveAreaEffect(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly failedTargetIds: readonly CombatantId[];
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
 }): string | null {

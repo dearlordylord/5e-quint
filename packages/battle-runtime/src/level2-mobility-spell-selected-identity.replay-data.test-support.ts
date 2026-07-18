@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 
 import {
   alterSelfUnitId,
@@ -41,7 +42,10 @@ function discoverInvocation(input: {
           slotLevel: input.slotLevel,
         });
 
-  expect(act.subject).toMatchObject({
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject({
     tag: input.actionTag,
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(

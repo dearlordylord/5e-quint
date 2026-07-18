@@ -97,6 +97,7 @@ import {
   type BattleSpellAbilityChoiceHole,
   type BattleSpellDamageRollHole,
   type BattleSpellDamageTypeChoiceHole,
+  type BattleExecutableSpellInvocation,
   type BattleSpellConditionChoiceHole,
   type BattleSpellHealingRollHole,
   type BattleSpellSavingThrowOutcomeHole,
@@ -159,7 +160,7 @@ export function spellAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     {
       readonly procedure:
         | "attackBurstSaveDamage"
@@ -221,7 +222,7 @@ function spellAttackSequencePartAttackRollProtocolId(
   >,
   partIndex: number,
 ): string {
-  return `battle:spell:attack-sequence-part-attack-roll:${invocation.spell.id}:${partIndex}`;
+  return `battle:spell:attack-sequence-part-attack-roll:${invocation.procedure}:${partIndex}`;
 }
 
 export function spellObjectAttackRollHole(
@@ -277,8 +278,8 @@ export function spellDamageTypeChoiceHole(
 ): BattleSpellDamageTypeChoiceHole {
   const protocolId =
     invocation.procedure === "spellHostedWeaponAttack"
-      ? `battle:spell:damage-type:${invocation.spell.id}:${invocation.componentWeapon.itemId}`
-      : `battle:spell:damage-type:${invocation.spell.id}`;
+      ? `battle:spell:damage-type:${invocation.procedure}:${invocation.componentWeapon.itemId}`
+      : `battle:spell:damage-type:${invocation.procedure}`;
   const choices =
     invocation.procedure === "selfTransformationMode"
       ? invocation.naturalWeaponFacts.damage.damageTypeChoices
@@ -360,14 +361,14 @@ export function spellConditionChoiceHoleId(
 function spellConditionChoiceHoleProtocolId(
   invocation: SpellConditionChoiceInvocation,
 ): string {
-  return `battle:spell:condition-choice:${invocation.spell.id}`;
+  return `battle:spell:condition-choice:${invocation.procedure}`;
 }
 
 export function chainedSpellTargetHole(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >;
   readonly stepIndex: number;
@@ -387,6 +388,10 @@ export function chainedSpellTargetHole(input: {
         ? `${input.invocation.spell.name} target`
         : `${input.invocation.spell.name} leap target ${input.stepIndex}`,
     requiresTableSpatialFact: true,
+    spellTargetSpatialFactRequest: {
+      casterId: input.actorId,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+    },
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       input.state,
       input.actorId,
@@ -415,9 +420,11 @@ export function chainedSpellTargetHole(input: {
 export function chainedSpellAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chainedSpellAttackDamage" }
+    >
   >,
   stepIndex: number,
   rollMode?: AttackRollMode,
@@ -503,7 +510,7 @@ export function chainedSpellTargetProtocolId(
   >,
   stepIndex: number,
 ): string {
-  return `battle:spell:chained-target:${invocation.spell.id}:${stepIndex}`;
+  return `battle:spell:chained-target:${invocation.procedure}:${stepIndex}`;
 }
 
 export function chainedSpellAttackRollProtocolId(
@@ -513,7 +520,7 @@ export function chainedSpellAttackRollProtocolId(
   >,
   stepIndex: number,
 ): string {
-  return `battle:spell:chained-attack-roll:${invocation.spell.id}:${stepIndex}`;
+  return `battle:spell:chained-attack-roll:${invocation.procedure}:${stepIndex}`;
 }
 
 export function chainedSpellDamageRollProtocolId(
@@ -524,7 +531,7 @@ export function chainedSpellDamageRollProtocolId(
   stepIndex: number,
   critical: boolean,
 ): string {
-  return `battle:spell:chained-damage:${invocation.spell.id}:${stepIndex}:${critical ? "critical" : "normal"}`;
+  return `battle:spell:chained-damage:${invocation.procedure}:${stepIndex}:${critical ? "critical" : "normal"}`;
 }
 
 export function chainedSpellDamageExpression(
@@ -540,9 +547,11 @@ export function chainedSpellDamageExpression(
 }
 
 export function chainedSpellLeapTargetIsLegal(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chainedSpellAttackDamage" }
+    >
   >,
   previousTargetId: CombatantId | undefined,
   targetId: CombatantId,
@@ -556,7 +565,7 @@ export function chainedSpellLeapTargetIsLegal(
         fact.kind === "spellLeapTargetWithinRange" &&
         fact.previousTargetId === previousTargetId &&
         fact.targetId === targetId &&
-        fact.spellId === invocation.spell.id &&
+        fact.sourceProcedureRef === invocation.sourceProcedureRef &&
         fact.rangeFeet === invocation.leapRangeFeet,
     )
   );
@@ -596,9 +605,11 @@ export function spellDamageHole(
   );
   return {
     kind: "rolledDice",
-    holeId: holeId(`battle:spell:damage-result:${invocation.spell.id}:${expr}`),
+    holeId: holeId(
+      `battle:spell:damage-result:${invocation.procedure}:${expr}`,
+    ),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:damage-result:${invocation.spell.id}:${expr}`,
+      `battle:spell:damage-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} damage (${expr})`,
     spell: invocation,
@@ -663,7 +674,7 @@ function spellAttackSequencePartDamageProtocolId(
   partIndex: number,
   critical: boolean,
 ): string {
-  return `battle:spell:attack-sequence-part-damage:${invocation.spell.id}:${partIndex}:${critical ? "critical" : "normal"}`;
+  return `battle:spell:attack-sequence-part-damage:${invocation.procedure}:${partIndex}:${critical ? "critical" : "normal"}`;
 }
 
 export function spellBurstDamageHole(
@@ -676,10 +687,10 @@ export function spellBurstDamageHole(
   return {
     kind: "rolledDice",
     holeId: holeId(
-      `battle:spell:burst-damage-result:${invocation.spell.id}:${expr}`,
+      `battle:spell:burst-damage-result:${invocation.procedure}:${expr}`,
     ),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:burst-damage-result:${invocation.spell.id}:${expr}`,
+      `battle:spell:burst-damage-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} burst damage (${expr})`,
     spell: invocation,
@@ -697,10 +708,10 @@ export function spellHealingRollHole(
   return {
     kind: "rolledDice",
     holeId: holeId(
-      `battle:spell:healing-result:${invocation.spell.id}:${expr}`,
+      `battle:spell:healing-result:${invocation.procedure}:${expr}`,
     ),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:healing-result:${invocation.spell.id}:${expr}`,
+      `battle:spell:healing-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} healing (${expr})`,
     spell: invocation,
@@ -717,10 +728,10 @@ export function spellScalarBuffRollHole(
   return {
     kind: "rolledDice",
     holeId: holeId(
-      `battle:spell:scalar-buff-result:${invocation.spell.id}:${expr}`,
+      `battle:spell:scalar-buff-result:${invocation.procedure}:${expr}`,
     ),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:scalar-buff-result:${invocation.spell.id}:${expr}`,
+      `battle:spell:scalar-buff-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} Temporary Hit Points (${expr})`,
     spell: invocation,
@@ -730,7 +741,7 @@ export function spellScalarBuffRollHole(
 export function spellRollModifierSkillChoiceHoleId(
   invocation: SupportedSpellInvocation,
 ): BattleHoleId {
-  return holeId(`battle:spell:skill-choice:${invocation.spell.id}`);
+  return holeId(`battle:spell:skill-choice:${invocation.procedure}`);
 }
 
 export function spellRollModifierSkillChoiceHole(
@@ -743,7 +754,7 @@ export function spellRollModifierSkillChoiceHole(
     kind: "skillChoice",
     holeId: spellRollModifierSkillChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:skill-choice:${invocation.spell.id}`,
+      `battle:spell:skill-choice:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} skill`,
     spell: invocation,
@@ -757,7 +768,7 @@ export function spellRollModifierAbilityChoiceHoleId(
     { readonly procedure: "rollModifier" }
   >,
 ): BattleHoleId {
-  return holeId(`battle:spell:ability-choice:${invocation.spell.id}`);
+  return holeId(`battle:spell:ability-choice:${invocation.procedure}`);
 }
 
 export function spellRollModifierAbilityChoiceHole(
@@ -770,7 +781,7 @@ export function spellRollModifierAbilityChoiceHole(
     kind: "abilityChoice",
     holeId: spellRollModifierAbilityChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:ability-choice:${invocation.spell.id}`,
+      `battle:spell:ability-choice:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} ability`,
     spell: invocation,
@@ -796,7 +807,7 @@ export function rollModifierUsesTargetAbilityChoices(
 export function spellRollModifierTargetAbilityChoicesHoleId(
   invocation: SupportedSpellInvocation,
 ): BattleHoleId {
-  return holeId(`battle:spell:target-ability-choices:${invocation.spell.id}`);
+  return holeId(`battle:spell:target-ability-choices:${invocation.procedure}`);
 }
 
 export function spellRollModifierTargetAbilityChoicesHole(
@@ -809,7 +820,7 @@ export function spellRollModifierTargetAbilityChoicesHole(
     kind: "targetAbilityChoices",
     holeId: spellRollModifierTargetAbilityChoicesHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:target-ability-choices:${invocation.spell.id}`,
+      `battle:spell:target-ability-choices:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} abilities by target`,
     spell: invocation,
@@ -824,7 +835,7 @@ export function spellAbilityChoiceHoleId(
     | { readonly procedure: "saveGatedDamage" }
   >,
 ): BattleHoleId {
-  return holeId(`battle:spell:ability-choice:${invocation.spell.id}`);
+  return holeId(`battle:spell:ability-choice:${invocation.procedure}`);
 }
 
 export function spellAbilityChoiceHole(
@@ -838,7 +849,7 @@ export function spellAbilityChoiceHole(
     kind: "abilityChoice",
     holeId: spellAbilityChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:ability-choice:${invocation.spell.id}`,
+      `battle:spell:ability-choice:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} ability`,
     spell: invocation,
@@ -871,41 +882,43 @@ export function thaumaturgyActiveOneMinuteEffectCountHole(
 export function spellSavingThrowOutcomeHoleId(
   invocation: SupportedSpellInvocation,
 ): BattleHoleId {
-  return holeId(`battle:spell:saving-throw-outcome:${invocation.spell.id}`);
+  return holeId(`battle:spell:saving-throw-outcome:${invocation.procedure}`);
 }
 
 export function spellSavingThrowOutcomeHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "attackBurstSaveDamage"
-        | "abilityD20TestRollModeSaveGate"
-        | "afterHitSaveGatedCondition"
-        | "rollModifier"
-        | "creatureSizeIncrease"
-        | "creatureSizeDecrease"
-        | "levitatedCreature"
-        | "saveGatedDamage"
-        | "saveGatedCondition"
-        | "saveGatedConditionImmunity"
-        | "saveGatedAttackRollAdvantage"
-        | "counterspell"
-        | "sleepTargetAdmission"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "slowActivePenalties"
-        | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine";
-    }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "attackBurstSaveDamage"
+          | "abilityD20TestRollModeSaveGate"
+          | "afterHitSaveGatedCondition"
+          | "rollModifier"
+          | "creatureSizeIncrease"
+          | "creatureSizeDecrease"
+          | "levitatedCreature"
+          | "saveGatedDamage"
+          | "saveGatedCondition"
+          | "saveGatedConditionImmunity"
+          | "saveGatedAttackRollAdvantage"
+          | "counterspell"
+          | "sleepTargetAdmission"
+          | "hideousLaughter"
+          | "hypnoticPattern"
+          | "slowActivePenalties"
+          | "command"
+          | "greaseGroundHazard"
+          | "gustOfWindLine";
+      }
+    >
   >,
   heightenedSpellTargetId?: CombatantId,
   relationshipFacts: readonly BattleSpellTargetListRelationshipFact[] = [],
 ): BattleSpellSavingThrowOutcomeHole {
-  const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
+  const holeKey = `battle:spell:saving-throw-outcome:${invocation.procedure}`;
   const ability =
     invocation.procedure === "attackBurstSaveDamage"
       ? invocation.burst.ability
@@ -984,7 +997,7 @@ export function carefulSpellProtectedTargetsHoleId(
   invocation: SupportedSpellInvocation,
 ): BattleHoleId {
   return holeId(
-    `battle:spell:careful-spell:protected-targets:${invocation.spell.id}`,
+    `battle:spell:careful-spell:protected-targets:${invocation.procedure}`,
   );
 }
 
@@ -1006,7 +1019,7 @@ export function carefulSpellProtectedTargetsHole(
     kind: "spellTargetList",
     holeId: carefulSpellProtectedTargetsHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:careful-spell:protected-targets:${invocation.spell.id}`,
+      `battle:spell:careful-spell:protected-targets:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} Careful Spell protected targets`,
     spell: invocation,
@@ -1261,9 +1274,11 @@ type SavingThrowRollModeContext =
     }
   | {
       readonly actorId: CombatantId;
-      readonly invocation: Extract<
-        SupportedSpellInvocation,
-        { readonly procedure: "saveGatedCondition" | "saveGatedDamage" }
+      readonly invocation: BattleExecutableSpellInvocation<
+        Extract<
+          SupportedSpellInvocation,
+          { readonly procedure: "saveGatedCondition" | "saveGatedDamage" }
+        >
       >;
       readonly relationshipFacts: readonly BattleSpellTargetListRelationshipFact[];
       readonly condition?: Condition;
@@ -1384,7 +1399,7 @@ function slowActivePenaltiesSavingThrowFlatBonusProjection(
     : [
         {
           targetId: target.combatantId,
-          sourceSpellId: effect.sourceSpellId,
+          sourceProcedureRef: effect.sourceProcedureRef,
           bonus: SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
         },
       ];
@@ -1869,9 +1884,7 @@ export function applySpellDamage(
     damageDisposition,
     damageSourceId,
     spatialFacts,
-    ...(relationshipDecisions === undefined
-      ? {}
-      : { relationshipDecisions }),
+    ...(relationshipDecisions === undefined ? {} : { relationshipDecisions }),
     concentrationSavingThrow,
     ...(wardingBondDamageShareConcentrationSavingThrows === undefined
       ? {}

@@ -867,7 +867,7 @@ describe("manual MCP battle surface coverage", () => {
     });
     const ranger = root.sessionStore.battleState?.combatants.get(fighterId);
     expect(ranger?.concentration).toEqual({
-      sourceSpellId: "hunters_mark",
+      sourceProcedureRef: "hunters_mark",
       effectKind: "spellEffect",
     });
     expect(ranger?.origin.kind).toBe("character");

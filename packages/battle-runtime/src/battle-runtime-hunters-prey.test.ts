@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 import { describe, expect, test } from "vitest";
 import { movementFeet } from "@dnd/shared/types";
@@ -148,7 +149,9 @@ function resolveHordeBreakerUse(
     {
       kind: "hordeBreakerSecondTargetEligible",
       attackerId: fighterId,
-      unitId: "ranger_hunters_prey",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("ranger_hunters_prey"),
+      ),
       originalTargetId: goblinId,
       secondTargetId: skeletonId,
     },
@@ -376,7 +379,9 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        unitId: "ranger_hunters_prey",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("ranger_hunters_prey"),
+        ),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -522,7 +527,9 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        unitId: "ranger_hunters_prey",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("ranger_hunters_prey"),
+        ),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -693,7 +700,9 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        unitId: "ranger_hunters_prey",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("ranger_hunters_prey"),
+        ),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -827,7 +836,9 @@ describe("battle runtime: Hunter's Prey", () => {
             {
               kind: "hordeBreakerSecondTargetEligible",
               attackerId: fighterId,
-              unitId: "ranger_hunters_prey",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("ranger_hunters_prey"),
+              ),
               originalTargetId: goblinId,
               secondTargetId: goblinId,
             },
@@ -867,7 +878,8 @@ describe("battle runtime: Hunter's Prey", () => {
     const markAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hunters_mark",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
     );
     if (markAct === undefined) {
       throw new Error("Expected Hunter's Mark Bonus Action spell act.");
@@ -883,7 +895,9 @@ describe("battle runtime: Hunter's Prey", () => {
               kind: "spellTarget",
               casterId: fighterId,
               targetId: skeletonId,
-              spellId: "hunters_mark",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("hunters_mark"),
+              ),
             },
           ]),
         ],
@@ -932,7 +946,9 @@ describe("battle runtime: Hunter's Prey", () => {
       {
         kind: "hordeBreakerSecondTargetEligible",
         attackerId: fighterId,
-        unitId: "ranger_hunters_prey",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("ranger_hunters_prey"),
+        ),
         originalTargetId: goblinId,
         secondTargetId: skeletonId,
       },
@@ -984,3 +1000,4 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(5);
   });
 });
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

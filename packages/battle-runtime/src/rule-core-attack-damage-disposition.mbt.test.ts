@@ -12,8 +12,9 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { battleId, combatantId, resolveBattleSubject } from "./index.ts";
+import { battleId, combatantId } from "./index.ts";
 import {
+  resolveBattleSubject,
   attackDamageDispositionFill,
   attackDamageDispositionHoleAfterDamage,
   attackDamageHoleAfterHit,

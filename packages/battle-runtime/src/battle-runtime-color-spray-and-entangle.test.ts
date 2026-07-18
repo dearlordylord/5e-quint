@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   requireResolved,
@@ -24,7 +25,9 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
-import type { BattleSubject } from "./battle-runtime-test-support.ts";
+import type { BattleActDiscoverySubject } from "./battle-runtime-test-support.ts";
+import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
+import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Color Spray and Entangle", () => {
@@ -108,7 +111,9 @@ describe("battle runtime: Color Spray and Entangle", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceSpellId: "color_spray",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("color_spray"),
+        ),
         sourceCombatantId: wizardId,
         condition: "blinded",
         expiresAt: { kind: "endOfTurn", combatantId: wizardId, round: 2 },
@@ -251,7 +256,9 @@ describe("battle runtime: Color Spray and Entangle", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceSpellId: "entangle",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("entangle"),
+        ),
         sourceCombatantId: wizardId,
         condition: "restrained",
         expiresAt: { kind: "concentration", combatantId: wizardId },
@@ -378,13 +385,15 @@ describe("battle runtime: Color Spray and Entangle", () => {
       activeEffects: [],
     });
     expect(escaped.state.combatants.get(wizardId)?.concentration).toEqual({
-      sourceSpellId: "entangle",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("entangle"),
+      ),
       effectKind: "spellEffect",
     });
   });
 
   test("Entangle escape actions identify the restraining caster", () => {
-    const secondDruidEntangle: BattleSubject = {
+    const secondDruidEntangle: BattleActDiscoverySubject = {
       tag: "actionSpell",
       actorId: secondWizardId,
       invocation: spellSlotInvocationRef("entangle", 1, "saveGatedCondition"),
@@ -468,17 +477,35 @@ describe("battle runtime: Color Spray and Entangle", () => {
         act.subject.action === "escapeSpellRestraint",
     );
 
+    const skeletonEffects =
+      skeletonTurn.combatants.get(skeletonId)?.activeEffects;
+    const wizardRestraint = skeletonEffects?.find(
+      (effect): effect is SpellActiveEffect =>
+        "sourceProcedureRef" in effect && effect.sourceCombatantId === wizardId,
+    );
+    const secondWizardRestraint = skeletonEffects?.find(
+      (effect): effect is SpellActiveEffect =>
+        "sourceProcedureRef" in effect &&
+        effect.sourceCombatantId === secondWizardId,
+    );
+    if (wizardRestraint === undefined || secondWizardRestraint === undefined) {
+      throw new Error("Expected both Entangle restraint effects.");
+    }
+    const wizardEffectRef = spellActiveEffectExecutionRef(wizardRestraint);
+    const secondWizardEffectRef = spellActiveEffectExecutionRef(
+      secondWizardRestraint,
+    );
     expect(escapeActs.map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ sourceCombatantId: wizardId }),
-        expect.objectContaining({ sourceCombatantId: secondWizardId }),
+        expect.objectContaining({ effectRef: wizardEffectRef }),
+        expect.objectContaining({ effectRef: secondWizardEffectRef }),
       ]),
     );
     const secondDruidEscape = escapeActs.find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint" &&
-        act.subject.sourceCombatantId === secondWizardId,
+        act.subject.effectRef === secondWizardEffectRef,
     );
     if (
       secondDruidEscape?.subject.tag !== "action" ||
@@ -584,7 +611,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
         ?.activeEffects.filter(
           (effect) =>
             effect.kind === "spellCondition" &&
-            effect.sourceSpellId === "entangle" &&
+            effect.sourceProcedureRef === "entangle" &&
             effect.sourceCombatantId === wizardId,
         ),
     ).toHaveLength(1);

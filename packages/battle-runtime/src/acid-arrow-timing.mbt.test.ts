@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 
@@ -44,19 +45,14 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   endTurn,
-  resolveBattleSubject,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
-type AcidArrowScenario =
-  | "hit"
-  | "hitComplete"
-  | "miss"
-  | "missComplete";
+type AcidArrowScenario = "hit" | "hitComplete" | "miss" | "missComplete";
 type AcidArrowTurnRole = "caster" | "target";
 type AcidArrowDelayedDamageTiming = "none" | "targetEndOfNextTurn";
 type AcidArrowHole =
@@ -85,12 +81,18 @@ type PendingInvocation =
   | {
       readonly tag: "attackRoll";
       readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
-      readonly targetFill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
+      readonly targetFill: Extract<
+        BattleFill,
+        { readonly kind: "targetChoice" }
+      >;
     }
   | {
       readonly tag: "initialDamage";
       readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
-      readonly targetFill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
+      readonly targetFill: Extract<
+        BattleFill,
+        { readonly kind: "targetChoice" }
+      >;
       readonly attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }>;
       readonly hit: boolean;
     }
@@ -191,21 +193,25 @@ const acidArrowTimingStateCheck = stateCheck(
 );
 
 describe("Acid Arrow timing MBT parity", () => {
-  it("matches hit delayed damage and miss half-initial timing", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-acid-arrow-timing.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAcidArrowTimingDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(14),
-      stateCheck: acidArrowTimingStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches hit delayed damage and miss half-initial timing",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-acid-arrow-timing.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAcidArrowTimingDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(14),
+        stateCheck: acidArrowTimingStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(
@@ -242,9 +248,7 @@ function discoverAcidArrow(
   };
 }
 
-function fillTargetChoice(
-  state: AcidArrowRuntimeState,
-): AcidArrowRuntimeState {
+function fillTargetChoice(state: AcidArrowRuntimeState): AcidArrowRuntimeState {
   if (state.pending.tag !== "targetChoice") {
     throw new Error("Expected pending Acid Arrow target choice.");
   }
@@ -427,8 +431,7 @@ function acidArrowProjection(
     targetHp: Number(target.hp),
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
     spellAvailable:
-      state.currentTurnRole === "caster" &&
-      spellActAvailable(state.battle),
+      state.currentTurnRole === "caster" && spellActAvailable(state.battle),
     delayedDamageTiming: acidArrowDelayedDamageTimingForTarget(target),
     holes: battleHolesToAcidHoles(state.holes, state.pending),
     lastResult: state.lastResult,
@@ -441,7 +444,7 @@ function acidArrowDelayedDamageTimingForTarget(
   return target.activeEffects.some(
     (effect) =>
       effect.kind === "spellTurnEndDamage" &&
-      effect.sourceSpellId === acidArrowUnitId,
+      effect.sourceProcedureRef === acidArrowUnitId,
   )
     ? "targetEndOfNextTurn"
     : "none";

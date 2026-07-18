@@ -2039,24 +2039,24 @@ export function spellFillSetSavingThrowTargeting(
       : { kind: "singleCombatant" };
 }
 
-function isTargetAbilityChoicesRollModifierInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "rollModifier" }
-> & { readonly abilityChoices: readonly Ability[] } {
+function isTargetAbilityChoicesRollModifierInvocation<
+  I extends SupportedSpellInvocation,
+>(
+  invocation: I,
+): invocation is I &
+  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }> & {
+    readonly abilityChoices: readonly Ability[];
+  } {
   return invocation.procedure === "rollModifier"
     ? invocation.abilityChoices !== null &&
         rollModifierUsesTargetAbilityChoices(invocation)
     : false;
 }
 
-function isRollModifierInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "rollModifier" }
-> {
+function isRollModifierInvocation<I extends SupportedSpellInvocation>(
+  invocation: I,
+): invocation is I &
+  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }> {
   return invocation.procedure === "rollModifier";
 }
 

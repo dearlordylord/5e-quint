@@ -11,8 +11,8 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import * as Either from "effect/Either";
-import { spellId } from "../identity.ts";
 import type { CombatantId } from "../identity.ts";
+import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import { snapshotBattle } from "../battle-reducer.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-reducer.ts";
 import type {
@@ -108,6 +108,7 @@ export function dragonsBreathExhaleActs(
   return activeDragonsBreathEffects(actor).map((effect) => {
     const subject = dragonsBreathExhaleSubject(actorId, effect);
     return {
+      presentation: { kind: "intrinsic" },
       subject,
       label: "Dragon's Breath",
       summary: "Spend a Magic action to exhale a table-supplied 15-foot Cone.",
@@ -510,7 +511,7 @@ export function dragonsBreathSavingThrowOutcomeHole(
     label: "Dragon's Breath 15-foot Cone Saving Throw outcomes",
     dragonsBreath: {
       sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       lengthFeet: DRAGONS_BREATH_CONE_LENGTH_FEET,
     },
     ability: "dex",
@@ -548,7 +549,7 @@ function dragonsBreathDamageRollHole(
     label: `Dragon's Breath damage (${expr.dice}d${expr.dieSize})`,
     dragonsBreath: {
       sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       damageType: effect.damageType,
       expr,
     },
@@ -577,8 +578,7 @@ function activeDragonsBreathEffect(
   return actor?.activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
       effect.kind === "dragonsBreath" &&
-      effect.sourceCombatantId === subject.sourceCombatantId &&
-      effect.sourceSpellId === subject.sourceSpellId,
+      spellActiveEffectExecutionRef(effect) === subject.effectRef,
   );
 }
 
@@ -590,8 +590,7 @@ function dragonsBreathExhaleSubject(
     tag: "runtimeCommand",
     actorId,
     command: "dragonsBreathExhale",
-    sourceCombatantId: effect.sourceCombatantId,
-    sourceSpellId: spellId(effect.sourceSpellId),
+    effectRef: spellActiveEffectExecutionRef(effect),
   };
 }
 
@@ -720,5 +719,5 @@ function dragonsBreathHoleKey(
   effect: DragonsBreathEffect,
   suffix: string,
 ): string {
-  return `battle:dragons-breath:${effect.sourceSpellId}:${effect.sourceCombatantId}:${suffix}`;
+  return `battle:dragons-breath:${effect.sourceProcedureRef}:${effect.sourceCombatantId}:${suffix}`;
 }

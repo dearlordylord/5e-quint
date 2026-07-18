@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
 //   Bonus Action, Concentration, willing target, target-granted Magic Action,
@@ -63,13 +64,12 @@ import {
   battleObjectId,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 type SpellSequencingTurnRole = "caster" | "target";
@@ -562,10 +562,10 @@ function concentrationSpell(
   state: BattleState,
 ): SpellSequencingConcentrationSpell {
   const caster = requireCombatant(state, spellCasterId);
-  if (caster.concentration?.sourceSpellId === dragonsBreathUnitId) {
+  if (caster.concentration?.sourceProcedureRef === dragonsBreathUnitId) {
     return "dragonsBreath";
   }
-  if (caster.concentration?.sourceSpellId === heatMetalUnitId) {
+  if (caster.concentration?.sourceProcedureRef === heatMetalUnitId) {
     return "heatMetal";
   }
   return "none";
@@ -577,7 +577,7 @@ function dragonsBreathTargetEffect(
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
       effect.kind === "dragonsBreath" &&
-      effect.sourceSpellId === dragonsBreathUnitId &&
+      effect.sourceProcedureRef === dragonsBreathUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -586,7 +586,7 @@ function heatMetalEffect(state: BattleState): HeatMetalEffect | undefined {
   return requireCombatant(state, spellCasterId).activeEffects.find(
     (effect): effect is HeatMetalEffect =>
       effect.kind === "spellObjectContactDamage" &&
-      effect.sourceSpellId === heatMetalUnitId &&
+      effect.sourceProcedureRef === heatMetalUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.objectId === spellSequencingObjectId,
   );

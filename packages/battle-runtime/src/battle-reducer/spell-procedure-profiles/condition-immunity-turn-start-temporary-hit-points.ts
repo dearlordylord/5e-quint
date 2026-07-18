@@ -20,6 +20,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -165,14 +166,12 @@ function conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection(
     activeEffects: [
       {
         kind: "conditionImmunity",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         condition: "frightened",
         expiresAt,
       },
       {
         kind: "turnStartTemporaryHitPoints",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         amount: Number(spellcastingAbilityModifier),
         expiresAt,
@@ -196,7 +195,9 @@ function isSpellcastingModifierTemporaryHitPointsAmount(
 function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<
+    ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
+  >,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
@@ -208,6 +209,7 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
           subject: {
             tag: "actionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation:
               conditionImmunityAndTurnStartTemporaryHitPointsInvocationRef(
                 invocation,
@@ -225,7 +227,7 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
 }
 
 function conditionImmunityAndTurnStartTemporaryHitPointsInvocationRef(
-  invocation: ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "spellSlot",
@@ -236,7 +238,7 @@ function conditionImmunityAndTurnStartTemporaryHitPointsInvocationRef(
 }
 
 function conditionImmunityAndTurnStartTemporaryHitPointsCastSummary(
-  invocation: ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
@@ -354,7 +356,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
 function conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): ConditionImmunityAndTurnStartTemporaryHitPointsTargetSelection {
   if (input.invocation.targeting.maxTargets === 1) {
@@ -423,7 +425,7 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
@@ -434,6 +436,7 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
       effect.kind === "conditionImmunity"
         ? {
             ...effect,
+            sourceProcedureRef: invocation.sourceProcedureRef,
             sourceCombatantId: actorId,
             conditionHadNonSpellSource:
               conditionHadNonSpellSourceBeforeSpellEffect(
@@ -441,7 +444,11 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
                 effect.condition,
               ),
           }
-        : { ...effect, sourceCombatantId: actorId },
+        : {
+            ...effect,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            sourceCombatantId: actorId,
+          },
     );
     const activeEffects = [
       ...target.activeEffects.filter(
@@ -449,7 +456,7 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
           !(
             (effect.kind === "conditionImmunity" ||
               effect.kind === "turnStartTemporaryHitPoints") &&
-            effect.sourceSpellId === invocation.spell.id
+            effect.sourceProcedureRef === invocation.sourceProcedureRef
           ),
       ),
       ...nextEffects,

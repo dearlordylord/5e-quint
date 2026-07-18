@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-see-invisible-observer-sight
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
 import {
@@ -26,7 +27,6 @@ import { describe, expect, it } from "vitest";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   combatantCanSee,
-  resolveBattleSubject,
   seeInvisibleRevealsEtherealWitness,
   seeInvisibleRevealsInvisibleObject,
   type BattleActiveEffect,
@@ -469,7 +469,7 @@ function isSeeInvisibilityObserverEffect(
 > {
   return (
     effect.kind === "seeInvisibleAndEthereal" &&
-    effect.sourceSpellId === seeInvisibilityUnitId &&
+    effect.sourceProcedureRef === seeInvisibilityUnitId &&
     effect.sourceCombatantId === spellCasterId
   );
 }

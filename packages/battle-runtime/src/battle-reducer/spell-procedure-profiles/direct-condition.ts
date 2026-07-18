@@ -17,6 +17,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -157,7 +158,6 @@ function directConditionProjection(
         rangeFeet: movementFeet(5),
         activeEffect: {
           kind: "targetActionEndedSpellCondition",
-          sourceSpellId: spell.id,
           sourceCombatantId: actorId,
           condition: "invisible",
           expiresAt: {
@@ -172,7 +172,7 @@ function directConditionProjection(
 function discoverDirectConditionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DirectConditionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<DirectConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -182,6 +182,7 @@ function discoverDirectConditionCastAct(
           subject: {
             tag: "actionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: directConditionInvocationRef(invocation),
             mode: { tag: "cast" },
           },

@@ -6,6 +6,7 @@
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE species_halfling_luck doReplayHalflingLuckRawD20RerollChoice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.d20-test-natural-one-reroll
 
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   DieRollResult,
   difficultyClass,
@@ -69,7 +70,7 @@ import {
   targetFill,
   wizardSpellcasting,
   wizardId,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
   battleD20TestNaturalOneRerollSupportForUnit,
@@ -795,7 +796,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     const objectId = battleObjectId("halfling-luck-dispel-object");
     const emitter = spellLightEmitter({
       objectId,
-      sourceSpellId: "synthetic_blue_flame",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_blue_flame"),
+      ),
       sourceSpellLevel: 4,
     });
     const baseState = spellBattle({
@@ -1239,7 +1242,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       combatants: new Map(base.combatants).set(skeletonId, {
         ...targetCombatant,
         concentration: {
-          sourceSpellId: "test_concentration",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("test_concentration"),
+          ),
           effectKind: "readiedSpell" as const,
         },
       }),
@@ -1378,7 +1383,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       }),
     );
     expect(maintained.state.combatants.get(skeletonId)?.concentration).toEqual({
-      sourceSpellId: "test_concentration",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("test_concentration"),
+      ),
       effectKind: "readiedSpell",
     });
   });
@@ -1489,7 +1496,9 @@ function ongoingSpellTargetWithinRangeFact(
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    spellId: dispelMagicUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(dispelMagicUnitId),
+    ),
     target,
     rangeFeet: movementFeet(120),
   };
@@ -1497,15 +1506,19 @@ function ongoingSpellTargetWithinRangeFact(
 
 function spellLightEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
   readonly sourceSpellLevel: number;
 }): BattleTrackedOngoingSpellLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: input.sourceSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(input.sourceProcedureRef),
+    ),
     sourceCombatantId: spellTargetId,
     sourceEffectId: battleSpellEffectOccurrenceId(
-      `${spellTargetId}:${input.sourceSpellId}:${input.objectId}:halfling-luck-test-effect`,
+      `${spellTargetId}:${input.sourceProcedureRef}:${input.objectId}:halfling-luck-test-effect`,
     ),
     sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     attachment: { kind: "object", objectId: input.objectId },

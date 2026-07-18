@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 // RAW trace:
@@ -37,7 +40,7 @@ import type {
   BattleTargetSpatialFact,
   CombatantId,
 } from "./index.ts";
-import { resolveBattleSubject } from "./index.ts";
+import {} from "./index.ts";
 import {
   attackTargetFill,
   requireCombatant,
@@ -88,7 +91,6 @@ const BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   NoOtherAdvantage: "noOtherAdvantage",
   ConcentrationBroken: "concentrationBroken",
 } as const;
-
 
 type BlurBypassSense = Extract<
   BattleTargetSpatialFact,
@@ -194,13 +196,17 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
 
     expect(requireCombatant(cast.battle, spellCasterId)).toMatchObject({
       concentration: {
-        sourceSpellId: blurUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(blurUnitId),
+        ),
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "blurred",
-          sourceSpellId: blurUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(blurUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",
@@ -317,7 +323,7 @@ function castBlur(
     slotLevel: 2,
   });
   expect(act.initialHoles).toEqual([]);
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
     spellId: blurUnitId,
     slotLevel: 2,
@@ -371,7 +377,7 @@ function blurAttackRollDefenseProjection(
       ),
     blurredEffectActive,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === blurUnitId &&
+      caster.concentration?.sourceProcedureRef === blurUnitId &&
       caster.concentration.effectKind === "spellEffect",
     attackerPerceivesWithBlindsight: state.bypassSense === "blindsight",
     attackerPerceivesWithTruesight: state.bypassSense === "truesight",
@@ -555,8 +561,7 @@ function attackRollMode(raw: unknown): AttackRollMode {
 
 function lastResult(raw: unknown): LastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

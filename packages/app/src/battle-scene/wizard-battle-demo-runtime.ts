@@ -1,5 +1,6 @@
 import {
   type AvailableBattleAct,
+  battleActSpellSlotPresentation,
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
@@ -35,9 +36,8 @@ export function requireActionSpellAct(state: BattleState, selectedSpellId: strin
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === selectedSpellId &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      Number(candidate.subject.invocation.slotLevel) === slotLevel
+      battleActSpellSlotPresentation(candidate)?.invocation.spellId === selectedSpellId &&
+      Number(battleActSpellSlotPresentation(candidate)?.invocation.slotLevel) === slotLevel
   )
   if (act === undefined) {
     throw new Error(`Expected ${selectedSpellId} action spell act.`)

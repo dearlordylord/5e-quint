@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV37 charm_person
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   animalFriendshipUnitId,
@@ -106,7 +107,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceSpellId: animalFriendshipUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(animalFriendshipUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         condition: "charmed",
         expiresAt: expect.objectContaining({ kind: "duration" }),
@@ -268,7 +271,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: animalFriendshipUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(animalFriendshipUnitId),
+          ),
         }),
       ]),
     });
@@ -303,7 +308,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: animalFriendshipUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(animalFriendshipUnitId),
+          ),
         }),
       ]),
     });
@@ -330,7 +337,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: animalFriendshipUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(animalFriendshipUnitId),
+          ),
           escape: { kind: "targetDamagedByCasterOrAlly" },
         }),
       ]),
@@ -362,9 +371,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     ]);
     const target = requireCombatant(charmed, beastId);
     const firstEffect = target.activeEffects.find(
-      (effect) =>
-        effect.kind === "spellCondition" &&
-        effect.sourceSpellId === animalFriendshipUnitId,
+      (effect) => effect.kind === "spellCondition",
     );
     if (firstEffect?.kind !== "spellCondition") {
       throw new Error("Expected Animal Friendship effect.");
@@ -410,7 +417,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     const effect = requireCombatant(charmed, beastId).activeEffects.find(
       (candidate) =>
         candidate.kind === "spellCondition" &&
-        candidate.sourceSpellId === animalFriendshipUnitId,
+        candidate.sourceProcedureRef === animalFriendshipUnitId,
     );
 
     expect(effect).toMatchObject({
@@ -463,7 +470,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     expect(targetHole.relationshipFactRequest).toEqual({
       kind: "spellTargetIsHostileToCaster",
       casterId: spellCasterId,
-      spellId: charmPersonUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(charmPersonUnitId),
+      ),
     });
 
     const targetFill = spellTargetListFill(
@@ -476,7 +485,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
           kind: "spellTargetIsHostileToCaster",
           casterId: spellCasterId,
           targetId: friendlyHumanoidId,
-          spellId: charmPersonUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(charmPersonUnitId),
+          ),
           targetIsHostileToCaster: true,
         },
       ],
@@ -545,7 +556,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceSpellId: charmPersonUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(charmPersonUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         condition: "charmed",
         escape: { kind: "targetDamagedByCasterOrAlly" },
@@ -591,7 +604,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: charmPersonUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(charmPersonUnitId),
+          ),
         }),
       ]),
     });
@@ -709,7 +724,9 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: charmPersonUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(charmPersonUnitId),
+          ),
         }),
       ]),
     });

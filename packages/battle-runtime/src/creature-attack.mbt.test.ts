@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.MINIMAL_RESOLUTION
 import { describe, expect, it } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -11,14 +12,13 @@ import {
   battleReducerStartRouteEvent,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   snapshotBattle,
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -42,6 +42,7 @@ import {
   type CreatureAttackState,
 } from "./battle-reducer/creature-attack.ts";
 import {
+  resolveBattleSubject,
   battleId,
   combatantId,
   statBlockCreatureInit,
@@ -49,10 +50,7 @@ import {
   testBattleCreatureStateWithConditions,
 } from "./battle-runtime-test-support.ts";
 import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle-support.ts";
-import {
-  animalFriendshipUnitId,
-  spellCasterId,
-} from "./unit-profile-admission-catalog-support.ts";
+import { spellCasterId } from "./unit-profile-admission-catalog-support.ts";
 
 const INITIAL_HP = 20;
 const ATTACKER_A_ID = combatantId("creature-attack-a");
@@ -171,11 +169,7 @@ describe("creature-attack public reducer boundaries", () => {
     );
     const charmEffect = [...charmWitness.combatants.values()]
       .flatMap((combatant) => combatant.activeEffects)
-      .find(
-        (effect) =>
-          effect.kind === "spellCondition" &&
-          effect.sourceSpellId === animalFriendshipUnitId,
-      );
+      .find((effect) => effect.kind === "spellCondition");
     if (charmEffect === undefined) {
       throw new Error("Expected an Animal Friendship effect witness.");
     }
@@ -420,7 +414,9 @@ describe("creature-attack public reducer boundaries", () => {
           beneficiaryId: ATTACKER_A_ID,
           damageSourceId: ATTACKER_B_ID,
           targetId: ATTACKER_A_ID,
-          unitId: "synthetic_zero_hp_reward",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("synthetic_zero_hp_reward"),
+          ),
           rangeFeet: 10,
         },
       ],

@@ -1,3 +1,4 @@
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
 // UNIT-IDENTITY-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
@@ -442,7 +443,7 @@ function sacredWeaponAct(state: BattleState): AvailableBattleAct | undefined {
   return discoverBattleActs(state).find(
     (act) =>
       act.subject.tag === "unitFeatureHeldWeaponActivation" &&
-      act.subject.unitId === paladinSacredWeaponUnitId,
+      battleActUnitPresentation(act)?.unitId === paladinSacredWeaponUnitId,
   );
 }
 
@@ -485,7 +486,8 @@ function sacredWeaponDismissAct(state: BattleState):
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
-      candidate.subject.unitId === paladinSacredWeaponUnitId,
+      battleActUnitPresentation(candidate)?.unitId ===
+        paladinSacredWeaponUnitId,
   );
   return act?.subject.tag === "unitFeature"
     ? { ...act, subject: act.subject }

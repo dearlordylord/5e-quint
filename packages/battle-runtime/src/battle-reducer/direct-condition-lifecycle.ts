@@ -13,8 +13,8 @@ import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle
 import type {
   BattleActiveEffect,
   BattleCreatureState,
+  BattleExecutableSpellInvocation,
   BattleState,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -56,7 +56,7 @@ export type DirectConditionLifecycleState = {
 };
 
 type DirectConditionSpellInvocation = Extract<
-  SupportedSpellInvocation,
+  BattleExecutableSpellInvocation,
   { readonly procedure: "directCondition" }
 >;
 
@@ -93,9 +93,7 @@ export function directConditionTargetHasSpellSource(
   return target.tag === "spellOnly" || target.tag === "spellAndNonSpell";
 }
 
-export function directConditionDuration(
-  target: DirectConditionTarget,
-): number {
+export function directConditionDuration(target: DirectConditionTarget): number {
   return Match.value(target).pipe(
     byTag("absent", () => 0),
     byTag("nonSpellSource", () => 0),
@@ -130,10 +128,7 @@ export function resolveDirectConditionCast(
   if (!spellSlotExpenditureAccepted(slotResult)) {
     return state;
   }
-  const nextSlotState = spellSlotExpenditureResultState(
-    slotState,
-    slotResult,
-  );
+  const nextSlotState = spellSlotExpenditureResultState(slotState, slotResult);
   return {
     ...state,
     actionAvailable: false,
@@ -210,6 +205,7 @@ export function applyDirectConditionSpellEffects(
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
       {
         ...invocation.activeEffect,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
           target,
           invocation.activeEffect.condition,
@@ -239,15 +235,9 @@ export function battleStateAfterDirectConditionTargetActionEarlyEndForActor(
       (effect): effect is TargetActionEndedSpellConditionEffect =>
         effect.kind === "targetActionEndedSpellCondition",
     )
-    .reduce<readonly TargetActionEndedSpellConditionEffect[]>(
-      (sources, effect) =>
-        sources.some((source) =>
-          sameTargetActionConditionSource(effect, source),
-        )
-          ? sources
-          : [...sources, effect],
-      [],
-    );
+    .reduce<
+      readonly TargetActionEndedSpellConditionEffect[]
+    >((sources, effect) => (sources.some((source) => sameTargetActionConditionSource(effect, source)) ? sources : [...sources, effect]), []);
   return targetActionConditionSources.reduce(
     battleStateAfterTargetActionConditionSourceEarlyEnd,
     state,
@@ -323,12 +313,12 @@ function directConditionWithDurationTick(
 function sameDirectConditionSpellEffect(
   effect: BattleActiveEffect,
   sourceCombatantId: CombatantId,
-  sourceSpellId: DirectConditionSpellInvocation["spell"]["id"],
+  sourceProcedureRef: DirectConditionSpellInvocation["spell"]["id"],
   condition: DirectConditionSpellInvocation["activeEffect"]["condition"],
 ): boolean {
   return (
     effect.kind === "targetActionEndedSpellCondition" &&
-    effect.sourceSpellId === sourceSpellId &&
+    effect.sourceProcedureRef === sourceProcedureRef &&
     effect.sourceCombatantId === sourceCombatantId &&
     effect.condition === condition
   );
@@ -341,7 +331,7 @@ function sameTargetActionConditionSource(
   return (
     effect.kind === "targetActionEndedSpellCondition" &&
     effect.sourceCombatantId === source.sourceCombatantId &&
-    effect.sourceSpellId === source.sourceSpellId
+    effect.sourceProcedureRef === source.sourceProcedureRef
   );
 }
 
@@ -375,7 +365,7 @@ function battleStateAfterTargetActionConditionSourceEarlyEnd(
       combatants,
       {
         sourceCombatantId: source.sourceCombatantId,
-        sourceSpellId: source.sourceSpellId,
+        sourceProcedureRef: source.sourceProcedureRef,
       },
     ),
   };

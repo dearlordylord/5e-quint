@@ -31,6 +31,7 @@ import { Either } from "effect";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
@@ -232,13 +233,14 @@ function dancingLightsSpell(
 function discoverDancingLightsCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: DancingLightsCastInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<DancingLightsCastInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: dancingLightsCastInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -254,7 +256,7 @@ function discoverDancingLightsCastAct(
 function discoverDancingLightsRepositionAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const activeEffect = activeDancingLightsEffect(state, actorId, invocation);
   return activeEffect === undefined
@@ -264,6 +266,7 @@ function discoverDancingLightsRepositionAct(
           subject: {
             tag: "bonusActionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: dancingLightsRepositionInvocationRef(invocation),
             mode: { tag: "cast" },
           },
@@ -285,7 +288,7 @@ function discoverDancingLightsRepositionAct(
 function activeDancingLightsEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ): Extract<BattleActiveEffect, { readonly kind: "dancingLights" }> | undefined {
   return state.combatants
     .get(actorId)
@@ -297,7 +300,7 @@ function activeDancingLightsEffect(
         { readonly kind: "dancingLights" }
       > =>
         effect.kind === "dancingLights" &&
-        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceProcedureRef === invocation.sourceProcedureRef &&
         effect.sourceCombatantId === actorId,
     );
 }
@@ -313,7 +316,7 @@ function dancingLightsCastInvocationRef(
 }
 
 function dancingLightsRepositionInvocationRef(
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "cantrip",
@@ -327,7 +330,7 @@ function dancingLightsCastSummary(invocation: DancingLightsCastInvocation) {
 }
 
 function dancingLightsRepositionCastSummary(
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ) {
   return `Move ${invocation.spell.name} with a Bonus Action.`;
 }

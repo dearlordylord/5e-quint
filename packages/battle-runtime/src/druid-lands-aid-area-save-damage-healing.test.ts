@@ -1,3 +1,8 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-area-save-damage-healing
 import { describe, expect, test } from "vitest";
@@ -14,6 +19,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import {
+  requireCharacterUnitProcedureRefForTest,
   characterSeed,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -52,14 +58,19 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const state = landsAidBattle();
     const act = landsAidAct(state);
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
-      unitId: druidLandsAidUnitId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        spellCasterId,
+        druidLandsAidUnitId,
+      ),
     });
-    expect(
-      requireHole(act.initialHoles, "savingThrowOutcome"),
-    ).toMatchObject({
+    expect(requireHole(act.initialHoles, "savingThrowOutcome")).toMatchObject({
       unitFeature: {
         unitId: druidLandsAidUnitId,
         label: "Land's Aid",
@@ -70,9 +81,18 @@ describe("Druid Land's Aid area save damage and healing", () => {
     });
     expect(act.initialHoles).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "rolledDice", label: "Land's Aid damage (2d6)" }),
-        expect.objectContaining({ kind: "targetChoice", label: "Land's Aid healing target" }),
-        expect.objectContaining({ kind: "rolledDice", label: "Land's Aid healing (2d6)" }),
+        expect.objectContaining({
+          kind: "rolledDice",
+          label: "Land's Aid damage (2d6)",
+        }),
+        expect.objectContaining({
+          kind: "targetChoice",
+          label: "Land's Aid healing target",
+        }),
+        expect.objectContaining({
+          kind: "rolledDice",
+          label: "Land's Aid healing (2d6)",
+        }),
       ]),
     );
   });
@@ -165,7 +185,9 @@ describe("Druid Land's Aid area save damage and healing", () => {
 
       expect(currentHp(resolved, spellTargetId)).toBe(expectedTargetHp);
       expect(currentHp(resolved, secondTargetId)).toBe(expectedSecondTargetHp);
-      expect(currentHp(resolved, healingTargetId)).toBe(expectedHealingTargetHp);
+      expect(currentHp(resolved, healingTargetId)).toBe(
+        expectedHealingTargetHp,
+      );
       expect(wildShapeUsesRemaining(resolved)).toBe(1);
       expect(resolved.currentTurnResources.actionResources).toHaveLength(0);
     },
@@ -456,7 +478,7 @@ function landsAidActOrUndefined(state: BattleState) {
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === spellCasterId &&
-      act.subject.unitId === druidLandsAidUnitId,
+      battleActUnitPresentation(act)?.unitId === druidLandsAidUnitId,
   );
 }
 
@@ -481,9 +503,7 @@ function landsAidSavingThrowFill(
     holeId: hole.holeId,
     value: { outcomes },
     spatialFacts:
-      areaTargetIds.length === 0
-        ? []
-        : [landsAidAreaFact(areaTargetIds)],
+      areaTargetIds.length === 0 ? [] : [landsAidAreaFact(areaTargetIds)],
   };
 }
 
@@ -493,7 +513,9 @@ function landsAidAreaFact(
   return {
     kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
     actorId: spellCasterId,
-    unitId: druidLandsAidUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(druidLandsAidUnitId),
+    ),
     originWithinRangeFeet: movementFeet(60),
     radiusFeet: movementFeet(10),
     targetIds,

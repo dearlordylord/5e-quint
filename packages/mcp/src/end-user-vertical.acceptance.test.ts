@@ -1056,7 +1056,7 @@ describe("end-user MCP vertical", () => {
     expect(resolved.result.tag).toBe("resolved");
     expect(resolved.snapshot.lightEmitters).toEqual([
       expect.objectContaining({
-        sourceSpellId: selectedSpellId,
+        sourceProcedureRef: selectedSpellId,
         sourceCombatantId: wizardCombatantId,
         attachment: { kind: "object", objectId: lightObjectId },
         emission: {

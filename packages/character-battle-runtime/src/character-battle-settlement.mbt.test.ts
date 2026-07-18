@@ -600,7 +600,7 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
   const activeStateCombatant: CharacterBattleCombatant = {
     ...combatant,
     concentration: {
-      sourceSpellId: "synthetic_active_state_handoff",
+      sourceProcedureRef: "synthetic_active_state_handoff",
       effectKind: "spellEffect",
     },
     activeOngoingFeatureOccurrences: new Map([

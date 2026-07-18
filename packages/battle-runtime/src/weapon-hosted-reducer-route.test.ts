@@ -1,8 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { describe, expect, it } from "vitest";
 
 import {
   battleReducerStartRouteEvent,
-  resolveBattleSubject,
   spellId,
   type BattleActiveEffect,
   type BattleCreatureState,
@@ -763,7 +764,9 @@ describe("weapon-hosted reducer route call segments", () => {
       { readonly kind: "spellMarkedDamageRider" }
     > = {
       kind: "spellMarkedDamageRider",
-      sourceSpellId: spellId("synthetic_route_mark"),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spellId("synthetic_route_mark")),
+      ),
       sourceCombatantId: spellCasterId,
       targetCombatantId: spellTargetId,
       transfer: { kind: "awaitingTargetDrop", retargetTiming: "sameTurn" },

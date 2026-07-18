@@ -1,3 +1,7 @@
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+} from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84G sanctuary
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
 import { Schema } from "effect";
@@ -27,18 +31,20 @@ import {
   discoverBattleActs,
   initiativeScore,
   BattleHoleSchema,
-  resolveBattleSubject,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { attackExecutionSelectionForSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  attackExecutionSelectionForSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -72,7 +78,7 @@ describe("Sanctuary targeting interdiction", () => {
     expect(combatant(cast, wardedId).activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "sanctuaryWard",
-        sourceSpellId: sanctuaryUnitId,
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: casterId,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       }),
@@ -83,7 +89,7 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(battleWithSanctuary()).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.procedure ===
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
           "sanctuaryTargetingInterdiction",
     );
     if (act === undefined || act.subject.tag !== "bonusActionSpell") {
@@ -241,7 +247,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === fireBoltUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          fireBoltUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Fire Bolt action spell.");
@@ -285,7 +292,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === sacredFlameUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          sacredFlameUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Sacred Flame action spell.");
@@ -331,7 +339,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === magicMissileUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          magicMissileUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Magic Missile action spell.");
@@ -383,7 +392,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === eldritchBlastUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          eldritchBlastUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Eldritch Blast action spell.");
@@ -430,7 +440,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === eldritchBlastUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          eldritchBlastUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Eldritch Blast action spell.");
@@ -500,7 +511,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === iceKnifeUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          iceKnifeUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Ice Knife action spell.");
@@ -546,7 +558,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === chromaticOrbUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          chromaticOrbUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Chromatic Orb action spell.");
@@ -605,7 +618,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === chromaticOrbUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          chromaticOrbUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Chromatic Orb action spell.");
@@ -714,7 +728,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === burningHandsUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          burningHandsUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Burning Hands action spell.");
@@ -752,7 +767,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(selfWarded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === fireBoltUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          fireBoltUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Fire Bolt action spell.");
@@ -787,7 +803,8 @@ describe("Sanctuary targeting interdiction", () => {
     const act = discoverBattleActs(selfWarded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === longstriderUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          longstriderUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Longstrider action spell.");
@@ -941,7 +958,7 @@ function castSanctuary(state: BattleState, targetId: CombatantId): BattleState {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.procedure ===
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
         "sanctuaryTargetingInterdiction",
   );
   if (act === undefined || act.subject.tag !== "bonusActionSpell") {
@@ -1020,7 +1037,13 @@ function sanctuaryTargetListFill(
     holeId: hole.holeId,
     value: { targetIds: [targetId] },
     spatialFacts: [
-      { kind: "spellTarget", casterId, targetId, spellId: sanctuaryUnitId },
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+      },
     ],
   };
 }
@@ -1055,7 +1078,7 @@ function attackTargetFill(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: string,
+  _spellId: string,
   casterIdValue: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -1076,7 +1099,13 @@ function spellTargetFill(
         }
       : {}),
     spatialFacts: [
-      { kind: "spellTarget", casterId: casterIdValue, targetId, spellId },
+      {
+        kind: "spellTarget",
+        casterId: casterIdValue,
+        targetId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+      },
     ],
   };
 }
@@ -1107,7 +1136,8 @@ function spellLeapTargetFill(
         kind: "spellLeapTargetWithinRange",
         previousTargetId,
         targetId,
-        spellId: chromaticOrbUnitId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
         rangeFeet: movementFeet(30),
       },
     ],
@@ -1116,7 +1146,7 @@ function spellLeapTargetFill(
 
 function spellTargetAllocationFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
-  spellId: string,
+  _spellId: string,
   targetId: CombatantId,
   count: number,
 ): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
@@ -1124,7 +1154,15 @@ function spellTargetAllocationFill(
     kind: "spellTargetAllocation",
     holeId: hole.holeId,
     value: { allocations: [{ targetId, count }] },
-    spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+      },
+    ],
   };
 }
 

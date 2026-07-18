@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay attack-spell-shape fire_bolt chill_touch guiding_bolt inflict_wounds shocking_grasp
 // UNIT-IDENTITY-REPLAY: attack-spell-shape fire_bolt doFireBoltHit
 // UNIT-IDENTITY-REPLAY: attack-spell-shape chill_touch doChillTouchHitPointRegainPrevention
@@ -30,7 +32,6 @@ import {
   battleReducerStartRouteEvent,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -42,7 +43,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -90,7 +91,10 @@ const ATTACK_SPELL_SHAPE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 } as const;
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 
 const casterId = combatantId("attack-spell-shape-caster");
@@ -841,7 +845,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -862,7 +866,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
       },
     ],
   };
@@ -985,7 +989,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "hitPointRegainPrevented" &&
-        effect.sourceSpellId === "chill_touch",
+        effect.sourceProcedureRef === "chill_touch",
     )
   ) {
     return "hitPointRegainPrevented";
@@ -994,8 +998,8 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "nextAttackRollAgainstSelf" &&
-        "sourceSpellId" in effect &&
-        effect.sourceSpellId === "guiding_bolt",
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === "guiding_bolt",
     )
   ) {
     return "nextAttackRollAgainstSelf";
@@ -1004,8 +1008,8 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "opportunityAttackDenied" &&
-        "sourceSpellId" in effect &&
-        effect.sourceSpellId === "shocking_grasp",
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === "shocking_grasp",
     )
   ) {
     return "opportunityAttackDenied";
@@ -1025,8 +1029,8 @@ function activeEffectCount(
     target?.activeEffects.filter(
       (effect): effect is BattleActiveEffect & { readonly kind: typeof kind } =>
         effect.kind === kind &&
-        "sourceSpellId" in effect &&
-        effect.sourceSpellId === spellIdForEffectKind(kind),
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === spellIdForEffectKind(kind),
     ).length ?? 0
   );
 }
@@ -1052,3 +1056,4 @@ function level1SlotsRemaining(
   );
   return slot === undefined ? 0 : Number(slot.count) - Number(slot.expended);
 }
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

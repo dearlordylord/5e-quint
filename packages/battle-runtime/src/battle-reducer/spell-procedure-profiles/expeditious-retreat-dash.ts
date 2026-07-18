@@ -137,7 +137,6 @@ function expeditiousRetreatDashActiveEffect(
   }
   return {
     kind: "spellDashBonusAction",
-    sourceSpellId: spell.id,
     sourceCombatantId: actorId,
     expiresAt: { kind: "concentration", combatantId: actorId },
   };
@@ -146,7 +145,7 @@ function expeditiousRetreatDashActiveEffect(
 function discoverExpeditiousRetreatDashCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ExpeditiousRetreatDashInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ExpeditiousRetreatDashInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -156,6 +155,7 @@ function discoverExpeditiousRetreatDashCastAct(
     subject: {
       tag: "bonusActionDashSpell" as const,
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: expeditiousRetreatDashInvocationRef(invocation),
       mode: { tag: "cast" as const },
       speedKind,
@@ -305,10 +305,16 @@ function resolveExpeditiousRetreatDash(
   const effectedActor = {
     ...effectHost,
     concentration: {
-      sourceSpellId: input.invocation.spell.id,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       effectKind: "spellEffect" as const,
     },
-    activeEffects: [...effectHost.activeEffects, input.invocation.activeEffect],
+    activeEffects: [
+      ...effectHost.activeEffects,
+      {
+        ...input.invocation.activeEffect,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
+      },
+    ],
   };
   const effected = {
     ...slotted,

@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-levitated-creature
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // RAW trace:
@@ -59,13 +61,12 @@ import {
   breakBattleConcentration,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 const noAltitude = -1;
@@ -330,21 +331,25 @@ describe("Levitate creature lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-levitated-creature-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createLevitatedCreatureLifecycleDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: levitateCreatureStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-levitated-creature-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createLevitatedCreatureLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: levitateCreatureStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): LevitateCreatureRuntimeState {
@@ -569,7 +574,9 @@ function moveTargetWithWitnessUp5Feet(
           levitatedMovement: {
             kind: "levitatedMovement",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: levitateUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(levitateUnitId),
+            ),
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "up",
@@ -632,7 +639,9 @@ function controlAltitudeDown10Feet(
           {
             kind: "levitatedTargetWithinSpellRange",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: levitateUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(levitateUnitId),
+            ),
             targetId: spellTargetId,
             rangeFeet: movementFeet(60),
           },
@@ -912,8 +921,7 @@ function levitateCreatureHole(raw: unknown): LevitateCreatureHole {
 
 function lastResult(raw: unknown): LastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    LEVITATED_CREATURE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = LEVITATED_CREATURE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

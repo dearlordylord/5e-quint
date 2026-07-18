@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
 import { grantSpellEffectActionResource } from "@dnd/shared-algebras/action-economy-algebra";
+import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { Either } from "effect";
 
@@ -33,7 +34,7 @@ export function spellGrantedActionResourceTurnResources(
       const granted = grantSpellEffectActionResource(
         nextResources,
         effect.sourceCombatantId,
-        effect.sourceSpellId,
+        spellActiveEffectExecutionRef(effect),
         effect.restriction,
       );
       return Either.isLeft(granted) ? nextResources : granted.right;
@@ -105,6 +106,6 @@ function spellEffectActionResourceMatchesEffect(
   return (
     resource.source === "spellEffect" &&
     resource.sourceOwnerId === effect.sourceCombatantId &&
-    resource.sourceSpellId === effect.sourceSpellId
+    resource.sourceEffectRef === spellActiveEffectExecutionRef(effect)
   );
 }

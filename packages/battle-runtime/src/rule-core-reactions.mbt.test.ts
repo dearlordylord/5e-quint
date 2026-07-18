@@ -1,8 +1,10 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 import {
+  resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
@@ -48,7 +50,6 @@ import {
   initiativeScore,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -56,7 +57,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -508,7 +509,9 @@ function withReactorConcentration(state: BattleState): BattleState {
     combatants: new Map(state.combatants).set(reactorId, {
       ...reactor,
       concentration: {
-        sourceSpellId: concentrationSpellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(concentrationSpellId),
+        ),
         effectKind: "spellEffect",
       },
     }),

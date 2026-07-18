@@ -19,6 +19,7 @@ import {
   interruptTriggerLabel,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -110,7 +111,7 @@ function isSaveGatedDamageInvocation(
 function discoverSaveGatedDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SaveGatedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const castActs =
@@ -132,7 +133,7 @@ function discoverSingleTargetSaveGatedDamageCastActs(
   state: BattleState,
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
-  invocation: SaveGatedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
@@ -162,7 +163,7 @@ function discoverAreaSaveGatedDamageCastActs(
   state: BattleState,
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
-  invocation: SaveGatedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
@@ -233,7 +234,7 @@ function saveGatedDamageMetamagicCastActs(input: {
 
 function saveGatedDamageCastAct(
   actorId: CombatantId,
-  invocation: SaveGatedDamageSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -242,6 +243,7 @@ function saveGatedDamageCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: saveGatedDamageInvocationRef(invocation),
       mode: { tag: "cast" },
     },
@@ -292,7 +294,7 @@ function saveGatedDamageAbilityChoiceHoles(
 function readiedSaveGatedDamageActs(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SaveGatedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (state.readiedSpells.has(actorId)) {
     return [];
@@ -301,6 +303,7 @@ function readiedSaveGatedDamageActs(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: saveGatedDamageInvocationRef(invocation),
       mode: { tag: "ready", trigger },
     },

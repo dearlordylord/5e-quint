@@ -18,6 +18,7 @@ import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -193,7 +194,7 @@ function isSleepTargetAdmissionPhase(
 function discoverSleepTargetAdmissionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SleepTargetAdmissionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SleepTargetAdmissionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
@@ -230,7 +231,7 @@ function discoverSleepTargetAdmissionCastAct(
 
 function sleepTargetAdmissionCastAct(
   actorId: CombatantId,
-  invocation: SleepTargetAdmissionSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SleepTargetAdmissionSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -239,6 +240,7 @@ function sleepTargetAdmissionCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: sleepTargetAdmissionInvocationRef(invocation),
       mode: { tag: "cast" },
     },

@@ -18,12 +18,11 @@ import {
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
+import { characterUnitFeatureProcedureId } from "../character-execution.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
-import {
-  boundAttackExecutionSelectionMatchesOption,
-} from "../battle-action-options.ts";
+import { boundAttackExecutionSelectionMatchesOption } from "../battle-action-options.ts";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
@@ -762,7 +761,10 @@ function weaponAttackWithActiveSacredWeapon(
     return attack;
   }
   const profile = actor.origin.paladinSacredWeaponProfiles.get(
-    effect.sourceUnitId,
+    characterUnitFeatureProcedureId(
+      actor.origin.execution,
+      effect.sourceProcedureRef,
+    ),
   );
   if (profile === undefined) {
     return attack;
@@ -1029,7 +1031,7 @@ type SpellMagicWeaponEnhancementEffect = Extract<
 
 type MagicWeaponEnhancementExclusion = {
   readonly exceptSourceCombatantId?: CombatantId;
-  readonly exceptSourceSpellId?: string;
+  readonly exceptSourceProcedureRef?: BattleProcedureExecutionRef;
 };
 
 export function battleWeaponItemHasMagicWeaponEnhancement(
@@ -1083,8 +1085,8 @@ function spellMagicWeaponEnhancementEffectExcluded(
   return (
     exclusion.exceptSourceCombatantId !== undefined &&
     effect.sourceCombatantId === exclusion.exceptSourceCombatantId &&
-    (exclusion.exceptSourceSpellId === undefined ||
-      effect.sourceSpellId === exclusion.exceptSourceSpellId)
+    (exclusion.exceptSourceProcedureRef === undefined ||
+      effect.sourceProcedureRef === exclusion.exceptSourceProcedureRef)
   );
 }
 
@@ -1289,8 +1291,8 @@ function unarmedStrikeWithActiveSelfTransformationOverride(
     effect: {
       kind: "damage",
       damage: {
-        kind: "authoredReplacement",
-        sourceUnitId: effect.sourceSpellId,
+        kind: "procedureReplacement",
+        sourceProcedureRef: effect.sourceProcedureRef,
         dice: effect.naturalWeaponFacts.damage.dice,
         dieSize: effect.naturalWeaponFacts.damage.dieSize,
         damageType: effect.naturalWeaponDamageType,

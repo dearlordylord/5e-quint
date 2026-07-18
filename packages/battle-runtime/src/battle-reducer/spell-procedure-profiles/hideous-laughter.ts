@@ -22,6 +22,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -228,7 +229,7 @@ function isHideousLaughterPhase(
 function discoverHideousLaughterCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HideousLaughterSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -295,7 +296,7 @@ function hideousLaughterMetamagicCastActs(input: {
 
 function hideousLaughterCastAct(
   actorId: CombatantId,
-  invocation: HideousLaughterSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -304,6 +305,7 @@ function hideousLaughterCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: hideousLaughterInvocationRef(invocation),
       mode: { tag: "cast" },
     },

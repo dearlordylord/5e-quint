@@ -30,6 +30,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
   type BattleCreatureState,
   type BattleOngoingSpellEffectRef,
@@ -210,13 +211,14 @@ function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
 function discoverOngoingSpellEndCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: OngoingSpellEndInvocation,
+  invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: ongoingSpellEndInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -321,13 +323,13 @@ function ongoingSpellTargetEquals(
 function ongoingSpellTargetMatchesFact(input: {
   readonly fact: BattleOngoingSpellTargetWithinRangeFact;
   readonly casterId: CombatantId;
-  readonly invocation: OngoingSpellEndInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>;
   readonly target: BattleOngoingSpellTarget;
 }): boolean {
   return (
     input.fact.kind === "ongoingSpellTargetWithinRange" &&
     input.fact.casterId === input.casterId &&
-    input.fact.spellId === input.invocation.spell.id &&
+    input.fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
     Number(input.fact.rangeFeet) <= Number(input.invocation.rangeFeet) &&
     ongoingSpellTargetEquals(input.fact.target, input.target)
   );
@@ -336,7 +338,7 @@ function ongoingSpellTargetMatchesFact(input: {
 function resolveOngoingSpellEndSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: OngoingSpellEndInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
   const unrelatedFill = ongoingSpellEndUnrelatedFill(input.fillSet);
@@ -519,7 +521,7 @@ function resolveOngoingSpellEndSpellAct(input: {
         ? [
             {
               sourceCombatantId: occurrence.effect.sourceCombatantId,
-              sourceSpellId: occurrence.effect.sourceSpellId,
+              sourceProcedureRef: occurrence.effect.sourceProcedureRef,
             },
           ]
         : [],
@@ -602,7 +604,7 @@ function activeAntimagicFieldAuraMatchesTarget(
 function resolveOngoingSpellEndDispelException(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: OngoingSpellEndInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>;
   readonly exception: Extract<
     OngoingSpellEndDispelException,
     { readonly kind: "antimagicFieldAuraNoEffect" }
@@ -625,7 +627,7 @@ function resolveOngoingSpellEndDispelException(input: {
 
 function ongoingSpellEndAbilityCheckHole(
   casterId: CombatantId,
-  invocation: OngoingSpellEndInvocation,
+  invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>,
   target: BattleOngoingSpellTarget,
   occurrence: BattleTrackedOngoingSpellOccurrence,
 ): BattleSpellcastingAbilityCheckHole {
@@ -645,7 +647,7 @@ function ongoingSpellEndAbilityCheckHole(
     dc,
     spellcastingAbilityCheck: {
       casterId,
-      sourceSpellId: invocation.spell.id,
+      sourceProcedureRef: invocation.sourceProcedureRef,
       target,
       effect,
       contestedSpellLevel,
@@ -851,18 +853,18 @@ function ongoingSpellOccurrenceSourceSpellLevel(
 function uniqueConcentrationSources(
   sources: readonly {
     readonly sourceCombatantId: CombatantId;
-    readonly sourceSpellId: string;
+    readonly sourceProcedureRef: string;
   }[],
 ): readonly {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: string;
 }[] {
   const unique: (typeof sources)[number][] = [];
   for (const source of sources) {
     const alreadyTracked = unique.some(
       (tracked) =>
         tracked.sourceCombatantId === source.sourceCombatantId &&
-        tracked.sourceSpellId === source.sourceSpellId,
+        tracked.sourceProcedureRef === source.sourceProcedureRef,
     );
     if (!alreadyTracked) {
       unique.push(source);

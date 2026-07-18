@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike
 // UNIT-IDENTITY-REPLAY: L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike doResolveMindSpikeFailedSaveConcentrationDuration doResolveMindSpikeSuccessfulSaveHalfDamage
 import { type SimpleActionMap, type SimpleDriver } from "@firfi/quint-connect";
@@ -222,10 +225,17 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
   const spell = spellRecord(mindSpikeUnitId);
   const state = mindSpikeBattle();
   const act = spellAct({ state, spellId: mindSpikeUnitId, slotLevel: 2 });
-  expect(act.subject).toMatchObject({
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
-    invocation: spellSlotInvocationRef(mindSpikeUnitId, 2, "saveGatedDamage"),
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      state,
+      spellCasterId,
+      spellSlotInvocationRef(mindSpikeUnitId, 2, "saveGatedDamage"),
+    ),
     mode: { tag: "cast" },
   });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
@@ -287,7 +297,9 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
 
   const caster = requireCombatant(resolved.state, spellCasterId);
   expect(caster.concentration).toEqual({
-    sourceSpellId: mindSpikeUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(mindSpikeUnitId),
+    ),
     effectKind: "spellEffect",
   });
   const durationActive = hasMindSpikeDurationEffect(resolved.state);
@@ -298,7 +310,7 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
     level2SlotsRemaining: spellSlotsRemaining(resolved.state, 2),
     targetHp: Number(requireCombatant(resolved.state, spellTargetId).hp),
     casterConcentratingOnMindSpike:
-      caster.concentration?.sourceSpellId === mindSpikeUnitId,
+      caster.concentration?.sourceProcedureRef === mindSpikeUnitId,
     mindSpikeDurationActive: durationActive,
     mindSpikeDurationCleanedUp: mindSpikeDurationCleanedUp(cleanedUp),
     targetActiveEffectCount: requireCombatant(resolved.state, spellTargetId)
@@ -315,7 +327,9 @@ function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityPr
     combatants: new Map(state.combatants).set(spellCasterId, {
       ...caster,
       concentration: {
-        sourceSpellId: spellId("synthetic_prior_concentration"),
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spellId("synthetic_prior_concentration")),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -398,7 +412,7 @@ function tickExpiredMindSpikeDuration(
     ...caster,
     activeEffects: caster.activeEffects.map((effect) =>
       effect.kind === "spellConcentrationDuration" &&
-      effect.sourceSpellId === mindSpikeUnitId &&
+      effect.sourceProcedureRef === mindSpikeUnitId &&
       effect.expiresAt.kind === "concentration"
         ? {
             ...effect,
@@ -422,7 +436,7 @@ function mindSpikeDurationCleanedUp(
     !caster.activeEffects.some(
       (effect) =>
         effect.kind === "spellConcentrationDuration" &&
-        effect.sourceSpellId === mindSpikeUnitId,
+        effect.sourceProcedureRef === mindSpikeUnitId,
     )
   );
 }
@@ -431,7 +445,7 @@ function hasMindSpikeDurationEffect(state: BattleState): boolean {
   return requireCombatant(state, spellCasterId).activeEffects.some(
     (effect) =>
       effect.kind === "spellConcentrationDuration" &&
-      effect.sourceSpellId === mindSpikeUnitId &&
+      effect.sourceProcedureRef === mindSpikeUnitId &&
       effect.expiresAt.kind === "concentration" &&
       effect.expiresAt.durationTicks === mindSpikeDurationTicks,
   );

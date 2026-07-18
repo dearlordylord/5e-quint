@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { combatantId } from "./identity.ts";
 
 import {
   assertWitnessProtocolConsistentWithScenario,
@@ -26,7 +27,6 @@ import type {
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
-  BattleSubject,
 } from "./index.ts";
 
 describe("battle-runtime MBT driver kit", () => {
@@ -363,9 +363,11 @@ function needsHolesResult(
   return {
     tag: "needsHoles",
     state,
-    // The subject is preserved only as part of the result shape in these tests;
-    // recorder folding never inspects BattleSubject fields.
-    subject: {} as BattleSubject,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: combatantId("combatant:mbt-driver-kit-test"),
+      command: "endTurn",
+    },
     holes,
     snapshot: snapshot(),
   };

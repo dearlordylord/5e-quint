@@ -30,6 +30,7 @@ import type { CombatantId } from "../../identity.ts";
 import {
   maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -139,7 +140,7 @@ function admitMakeStable(
 function discoverMakeStableCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: MakeStableInvocation,
+  invocation: BattleExecutableSpellInvocation<MakeStableInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
@@ -150,6 +151,7 @@ function discoverMakeStableCastAct(
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: makeStableInvocationRef(invocation),
         mode: { tag: "cast" },
       },

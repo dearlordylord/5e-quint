@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
@@ -31,7 +32,10 @@
 // UNIT-IDENTITY-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
 // UNIT-IDENTITY-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
 import { isDeepStrictEqual } from "node:util";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -76,6 +80,7 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
+  type BattleActDiscoverySubject,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -93,7 +98,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
   snapshotBattle,
   startBattle,
@@ -103,7 +107,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -1386,7 +1390,7 @@ function createRuleCoreFeatureDriver(
     function resolveDexHalfCantrip(succeeded: boolean): void {
       state = evasionBattle(input.evasionUnitId);
       resetProjection();
-      const subject: BattleSubject = {
+      const subject: BattleActDiscoverySubject = {
         tag: "actionSpell",
         actorId: combatantId("rule-core-feature-wizard"),
         invocation: cantripSpellInvocationRef(
@@ -2361,7 +2365,9 @@ function attackTargetFill(
         kind: "spellTarget",
         casterId: combatantId("rule-core-feature-wizard"),
         targetId: defenderId,
-        spellId: "dex_half_cantrip",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("dex_half_cantrip"),
+        ),
       },
     ],
   };
@@ -2630,9 +2636,7 @@ function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
   if (
     state.currentTurnResources.actionResources.some(
       (resource) =>
-        resource.source === "unit" &&
-        resource.sourceOwnerId === actorId &&
-        resource.sourceUnitId === "fighter_action_surge",
+        resource.source === "unit" && resource.sourceOwnerId === actorId,
     )
   ) {
     return "ActionSurgeActionAvailable";

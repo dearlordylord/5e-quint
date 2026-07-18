@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-creature-size-change
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // RAW trace:
@@ -16,7 +17,10 @@ import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Size } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -66,7 +70,6 @@ import {
   breakBattleConcentration,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type BattleHole,
   type BattleFill,
   type BattleResolutionResult,
@@ -553,9 +556,10 @@ function creatureSizeActInState(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === enlargeReduceUnitId &&
-      candidate.subject.invocation.procedure === procedure,
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        enlargeReduceUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure === procedure,
   );
   expect(act).toBeDefined();
   if (act === undefined) {

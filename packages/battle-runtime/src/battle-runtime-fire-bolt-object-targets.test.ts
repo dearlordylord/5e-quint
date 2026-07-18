@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   requireResolved,
@@ -104,7 +105,9 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectTarget",
           casterId: wizardId,
           objectId,
-          spellId: "fire_bolt",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("fire_bolt"),
+          ),
           rangeFeet: movementFeet(120),
           armorClass: armorClass(13),
           damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
@@ -113,7 +116,9 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectIgnition",
           casterId: wizardId,
           objectId,
-          spellId: "fire_bolt",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("fire_bolt"),
+          ),
           disposition: { kind: "flammableUnattended" },
         },
       ],
@@ -177,7 +182,9 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "startsBurning",
           objectId,
           sourceCombatantId: wizardId,
-          sourceSpellId: "fire_bolt",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("fire_bolt"),
+          ),
         },
       ],
       snapshot: {
@@ -224,7 +231,9 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectTarget",
           casterId: wizardId,
           objectId,
-          spellId: "fire_bolt",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("fire_bolt"),
+          ),
           rangeFeet: movementFeet(120),
           armorClass: armorClass(13),
           damageDisposition: { kind: "tableResolved" },
@@ -233,7 +242,9 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectIgnition",
           casterId: wizardId,
           objectId,
-          spellId: "fire_bolt",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("fire_bolt"),
+          ),
           disposition: { kind: "wornOrCarried" },
         },
       ],

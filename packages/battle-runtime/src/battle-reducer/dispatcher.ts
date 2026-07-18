@@ -33,6 +33,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import {
+  spellActiveEffectForExecutionRef,
+  spellActiveEffectExecutionRef,
+} from "../active-effect/execution-ref.ts";
+import {
   canSpendAction,
   canSpendBonusAction,
   canSpendUnarmedStrikeActionResource,
@@ -84,12 +88,10 @@ import {
 } from "../find-familiar-state.ts";
 
 import {
-  sameAdmittedBattleSubject,
-  type AdmittedBattleSubject,
-  type AdmittedCharacterProcedureBattleSubject,
+  sameBattleSubject,
+  type BattleSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
-  type BattleSubject,
   isCharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
 import {
@@ -115,7 +117,6 @@ import {
   creatureAttackSubjectCombatants,
 } from "./creature-attack.ts";
 import {
-  activeLevitatedCreatureEffect,
   levitatedTargetWithinSpellRangeFactPresent,
   levitateAltitudeChangeHole,
   updateLevitatedCreatureAltitude,
@@ -171,7 +172,7 @@ import {
 import {
   applyProtectionRelevantEffectSaveOutcome,
   conditionApplicationPreventedByCreatureTypeProtection,
-  protectionRelevantEffectFor,
+  protectionRelevantEffectsForTarget,
   protectionRelevantEffectSavingThrowOutcomeHole,
   resolveBattlePossessionAttempt,
   validateProtectionRelevantEffectSavingThrowOutcome,
@@ -212,10 +213,7 @@ import {
   combatantInsideActiveAntimagicFieldAura,
 } from "./antimagic-field-action-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
-import {
-  activeSelfTransformationModeEffect,
-  applySelfTransformationModeEffect,
-} from "./spells-active-effects.ts";
+import { applySelfTransformationModeEffect } from "./spells-active-effects.ts";
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import {
@@ -272,7 +270,6 @@ import {
   spellDamageByTypeForTarget,
   spellDamageHole,
   spellSavingThrowOutcomeHole,
-  supportedSpellInvocationRef,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 
@@ -312,6 +309,7 @@ import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-sup
 
 import type {
   BattleAfterDamageEvent,
+  BattleActiveEffect,
   AdmittedBattleResolutionInput,
   BattleAttackRollResult,
   BattleAttackDamageContinuationCunningStrikeFrame,
@@ -529,36 +527,20 @@ function selectCharacterProcedureForResolution(
     };
   }
   const procedureRef = subject.procedureRef;
-  if (procedureRef === undefined) {
-    return { tag: "invalid" };
-  }
-  const admittedSubject: AdmittedCharacterProcedureBattleSubject = {
-    ...subject,
-    procedureRef,
-  };
-  input = { ...input, subject: admittedSubject };
+  const replaySubject = subject;
   if (
-    admittedSubject.tag === "actionSpell" ||
-    admittedSubject.tag === "bonusActionSpell" ||
-    admittedSubject.tag === "bonusActionDashSpell" ||
-    admittedSubject.tag === "findFamiliarTouchSpell"
+    replaySubject.tag === "actionSpell" ||
+    replaySubject.tag === "bonusActionSpell" ||
+    replaySubject.tag === "bonusActionDashSpell" ||
+    replaySubject.tag === "findFamiliarTouchSpell"
   ) {
     const invocation = characterSpellProcedure(execution, procedureRef);
     return invocation === undefined
       ? { tag: "invalid" }
-      : {
-          tag: "selected",
-          input: {
-            ...input,
-            subject: {
-              ...admittedSubject,
-              invocation: supportedSpellInvocationRef(invocation),
-            },
-          },
-        };
+      : { tag: "selected", input };
   }
   const unitProcedureQuery =
-    characterUnitProcedureQueryForSubject(admittedSubject);
+    characterUnitProcedureQueryForSubject(replaySubject);
   if (unitProcedureQuery === undefined) {
     return { tag: "invalid" };
   }
@@ -568,48 +550,18 @@ function selectCharacterProcedureForResolution(
     unitProcedureQuery,
   );
   if (
-    admittedSubject.tag === "bonusActionStandardAction" &&
+    replaySubject.tag === "bonusActionStandardAction" &&
     unitId === undefined
   ) {
     const invocation = characterSpellProcedure(execution, procedureRef);
     return invocation?.procedure === "expeditiousRetreatDash"
-      ? {
-          tag: "selected",
-          input: {
-            ...input,
-            subject: {
-              ...admittedSubject,
-              sourceUnitId: invocation.spell.id,
-            },
-          },
-        }
+      ? { tag: "selected", input }
       : { tag: "invalid" };
   }
   if (unitId === undefined) {
     return { tag: "invalid" };
   }
-  if (admittedSubject.tag === "bonusActionStandardAction") {
-    return {
-      tag: "selected",
-      input: {
-        ...input,
-        subject: { ...admittedSubject, sourceUnitId: unitId },
-      },
-    };
-  }
-  if (admittedSubject.tag === "monkFocusOption") {
-    return {
-      tag: "selected",
-      input: {
-        ...input,
-        subject: { ...admittedSubject, resourceUnitId: unitId },
-      },
-    };
-  }
-  return {
-    tag: "selected",
-    input: { ...input, subject: { ...admittedSubject, unitId } },
-  };
+  return { tag: "selected", input };
 }
 
 function validateD20TestNaturalOneRerollFills(
@@ -943,7 +895,7 @@ export function resolveBattleSubjectInternal(
     if (activeFrame !== null) {
       if (activeFrame.kind === "attackDamageContinuationConcentration") {
         if (
-          !sameAdmittedBattleSubject(
+          !sameBattleSubject(
             input.subject,
             activeFrame.continuation.participant,
           )
@@ -963,7 +915,7 @@ export function resolveBattleSubjectInternal(
       }
       if (activeFrame.kind === "attackDamageContinuationCunningStrike") {
         if (
-          !sameAdmittedBattleSubject(
+          !sameBattleSubject(
             input.subject,
             activeFrame.continuation.participant,
           )
@@ -983,10 +935,7 @@ export function resolveBattleSubjectInternal(
       }
       if (activeFrame.kind === "replayContinuation") {
         if (
-          !sameAdmittedBattleSubject(
-            input.subject,
-            activeFrame.continuation.subject,
-          )
+          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
         ) {
           return invalidResult(
             input.state,
@@ -1018,7 +967,7 @@ export function resolveBattleSubjectInternal(
       const activeInterrupt = activeFrame.frame.activeInterrupt;
       if (
         activeInterrupt !== undefined &&
-        sameAdmittedBattleSubject(input.subject, activeInterrupt.subject)
+        sameBattleSubject(input.subject, activeInterrupt.subject)
       ) {
         const interruptResult = resolveBattleSubjectInternal(input, {
           replayingInterruptedProcedure: true,
@@ -1128,8 +1077,8 @@ export function resolveBattleSubjectInternal(
           (commandDropSubject !== null && effect.option === "drop") ||
           (commandApproachSubject !== null && effect.option === "approach") ||
           (commandFleeSubject !== null && effect.option === "flee")) &&
-        effect.sourceCombatantId === commandSubject?.sourceCombatantId &&
-        effect.sourceSpellId === commandSubject?.sourceSpellId,
+        commandSubject !== null &&
+        spellActiveEffectExecutionRef(effect) === commandSubject.effectRef,
     )
   ) {
     return invalidResult(
@@ -1845,13 +1794,11 @@ export function resolveBattleSubjectInternal(
       subject.tag === "runtimeCommand" &&
       subject.command === "movableZoneReposition"
     ) {
-      const actor = input.state.combatants.get(subject.sourceCombatantId);
-      const hasFlamingSphere = actor?.activeEffects.some(
-        (e) =>
-          e.kind === "flamingSphere" &&
-          e.sourceSpellId === subject.sourceSpellId &&
-          e.sourceCombatantId === subject.sourceCombatantId &&
-          e.areaId === subject.areaId,
+      const hasFlamingSphere = [...input.state.combatants.values()].some(
+        (combatant) =>
+          combatant.activeEffects.some(
+            (e) => e.kind === "flamingSphere" && e.areaId === subject.areaId,
+          ),
       );
       if (hasFlamingSphere) {
         return resolveFlamingSphereRepositionCommand({ ...input, subject });
@@ -2180,7 +2127,7 @@ function resolveFindFamiliarSharedSensesSubject(
 
 function resolveFindFamiliarTouchSpellSubject(
   input: BattleResolutionInputForSubject<
-    Extract<AdmittedBattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
+    Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
   >,
 ): BattleResolutionResult {
   const connection = findFamiliarConnectionFact({
@@ -2300,10 +2247,7 @@ function findFamiliarConnectionFact(input: {
 }
 
 function findFamiliarTouchSpellSubject(
-  subject: Extract<
-    AdmittedBattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
-  >,
+  subject: Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>,
 ):
   | {
       readonly tag: "resolved";
@@ -2316,7 +2260,6 @@ function findFamiliarTouchSpellSubject(
   const base = {
     actorId: subject.actorId,
     procedureRef: subject.procedureRef,
-    invocation: subject.invocation,
     mode: subject.mode,
     ...(subject.metamagic === undefined
       ? {}
@@ -2360,14 +2303,13 @@ function resolveDisperseFogCloudCommand(
       "Fog Cloud strong-wind dispersal uses no fills.",
     );
   }
-  const source = input.state.combatants.get(input.subject.sourceCombatantId);
-  const fogCloud = source?.activeEffects.find(
-    (effect) =>
-      effect.kind === "fogCloudObscurement" &&
-      effect.sourceSpellId === input.subject.sourceSpellId &&
-      effect.sourceCombatantId === input.subject.sourceCombatantId &&
-      effect.areaId === input.subject.areaId,
-  );
+  const fogCloud = [...input.state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect) =>
+        effect.kind === "fogCloudObscurement" &&
+        effect.areaId === input.subject.areaId,
+    );
   if (fogCloud === undefined) {
     return invalidResult(
       input.state,
@@ -2377,7 +2319,7 @@ function resolveDisperseFogCloudCommand(
   }
   const nextState = breakBattleConcentration(
     input.state,
-    input.subject.sourceCombatantId,
+    fogCloud.sourceCombatantId,
   );
   return {
     tag: "resolved",
@@ -2404,14 +2346,13 @@ function resolveDisperseCloudkillCommand(
       "Cloudkill strong-wind dispersal uses no fills.",
     );
   }
-  const source = input.state.combatants.get(input.subject.sourceCombatantId);
-  const cloudkill = source?.activeEffects.find(
-    (effect) =>
-      effect.kind === "cloudkillAreaHazard" &&
-      effect.sourceSpellId === input.subject.sourceSpellId &&
-      effect.sourceCombatantId === input.subject.sourceCombatantId &&
-      effect.areaId === input.subject.areaId,
-  );
+  const cloudkill = [...input.state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect) =>
+        effect.kind === "cloudkillAreaHazard" &&
+        effect.areaId === input.subject.areaId,
+    );
   if (cloudkill === undefined) {
     return invalidResult(
       input.state,
@@ -2421,7 +2362,7 @@ function resolveDisperseCloudkillCommand(
   }
   const nextState = breakBattleConcentration(
     input.state,
-    input.subject.sourceCombatantId,
+    cloudkill.sourceCombatantId,
   );
   return {
     tag: "resolved",
@@ -2450,12 +2391,19 @@ function resolveWardingBondSeparationCommand(
   }
   const target = input.state.combatants.get(input.subject.targetId);
   const effect = target?.activeEffects.find(
-    (candidate) =>
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "wardingBond" }
+    > =>
       candidate.kind === "wardingBond" &&
-      candidate.sourceCombatantId === input.subject.sourceCombatantId &&
-      candidate.sourceSpellId === input.subject.sourceSpellId,
+      spellActiveEffectExecutionRef(candidate) === input.subject.effectRef,
   );
-  if (effect === undefined) {
+  if (
+    effect === undefined ||
+    effect.sourceCombatantId !== input.subject.actorId
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2463,8 +2411,8 @@ function resolveWardingBondSeparationCommand(
     );
   }
   const hole = wardingBondSeparationFactsHole({
-    sourceCombatantId: input.subject.sourceCombatantId,
-    sourceSpellId: input.subject.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceProcedureRef: effect.sourceProcedureRef,
     targetId: input.subject.targetId,
   });
   const fill = input.fills[0];
@@ -2475,8 +2423,8 @@ function resolveWardingBondSeparationCommand(
     fill.kind !== "targetSpatialFacts" ||
     fill.holeId !== hole.holeId ||
     !wardingBondSeparationFactsAreSatisfied({
-      sourceCombatantId: input.subject.sourceCombatantId,
-      sourceSpellId: input.subject.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       targetId: input.subject.targetId,
       facts: fill.spatialFacts,
     })
@@ -2489,8 +2437,8 @@ function resolveWardingBondSeparationCommand(
   }
   const nextState = battleStateAfterWardingBondSeparation({
     state: input.state,
-    sourceCombatantId: input.subject.sourceCombatantId,
-    sourceSpellId: input.subject.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceProcedureRef: effect.sourceProcedureRef,
     targetId: input.subject.targetId,
   });
   return {
@@ -2541,13 +2489,6 @@ function resolveLevitateAltitudeControlCommand(
     >
   >,
 ): BattleResolutionResult {
-  if (input.subject.actorId !== input.subject.sourceCombatantId) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Levitate altitude control belongs to the spell's caster.",
-    );
-  }
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
     !combatantCanTakeActions(actor) ||
@@ -2560,11 +2501,22 @@ function resolveLevitateAltitudeControlCommand(
     );
   }
   const target = input.state.combatants.get(input.subject.targetId);
-  const effect = activeLevitatedCreatureEffect(target, {
-    sourceCombatantId: input.subject.sourceCombatantId,
-    sourceSpellId: input.subject.sourceSpellId,
-  });
-  if (target === undefined || effect === undefined) {
+  const selectedEffect =
+    target === undefined
+      ? undefined
+      : spellActiveEffectForExecutionRef(
+          target.activeEffects,
+          input.subject.effectRef,
+        );
+  const effect =
+    selectedEffect?.kind === "spellLevitatedCreature"
+      ? selectedEffect
+      : undefined;
+  if (
+    target === undefined ||
+    effect === undefined ||
+    effect.sourceCombatantId !== input.subject.actorId
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2609,8 +2561,8 @@ function resolveLevitateAltitudeControlCommand(
   if (
     !levitatedTargetWithinSpellRangeFactPresent({
       facts: fill.spatialFacts,
-      sourceCombatantId: input.subject.sourceCombatantId,
-      sourceSpellId: input.subject.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       targetId: input.subject.targetId,
       rangeFeet: effect.rangeFeet,
     })
@@ -2630,8 +2582,8 @@ function resolveLevitateAltitudeControlCommand(
   const nextState = updateLevitatedCreatureAltitude({
     state: spentState,
     targetId: input.subject.targetId,
-    sourceCombatantId: input.subject.sourceCombatantId,
-    sourceSpellId: input.subject.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceProcedureRef: effect.sourceProcedureRef,
     change: fill.value,
   });
   return {
@@ -2659,13 +2611,6 @@ function resolveReplaceSelfTransformationModeCommand(
       "Self-transformation mode replacement uses no fills.",
     );
   }
-  if (input.subject.actorId !== input.subject.sourceCombatantId) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Self-transformation mode replacement belongs to its source combatant.",
-    );
-  }
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
     !combatantCanTakeActions(actor) ||
@@ -2677,11 +2622,19 @@ function resolveReplaceSelfTransformationModeCommand(
       "Magic action is no longer available for the current actor.",
     );
   }
-  const activeEffect = activeSelfTransformationModeEffect(actor, {
-    sourceCombatantId: input.subject.sourceCombatantId,
-    sourceSpellId: input.subject.sourceSpellId,
-  });
-  if (activeEffect === undefined) {
+  const selectedEffect =
+    actor === undefined
+      ? undefined
+      : spellActiveEffectForExecutionRef(
+          actor.activeEffects,
+          input.subject.effectRef,
+        );
+  const activeEffect =
+    selectedEffect?.kind === "selfTransformation" ? selectedEffect : undefined;
+  if (
+    activeEffect === undefined ||
+    activeEffect.sourceCombatantId !== input.subject.actorId
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2729,9 +2682,10 @@ function resolveReplaceSelfTransformationModeCommand(
     state: { ...input.state, currentTurnResources: spent.right },
     actorId: input.subject.actorId,
     sourceCombatantId: activeEffect.sourceCombatantId,
-    sourceSpellId: activeEffect.sourceSpellId,
+    sourceProcedureRef: activeEffect.sourceProcedureRef,
     modeEffect,
     expiresAt: activeEffect.expiresAt,
+    effectRef: spellActiveEffectExecutionRef(activeEffect),
   });
   return {
     tag: "resolved",
@@ -2751,12 +2705,12 @@ function resolveProtectionRelevantEffectSaveCommand(
     >
   >,
 ): BattleResolutionResult {
-  const effect = protectionRelevantEffectFor(
+  const effect = protectionRelevantEffectsForTarget(
     input.state,
     input.subject.actorId,
-    input.subject.sourceCombatantId,
-    input.subject.sourceSpellId,
-    input.subject.relevantEffect,
+  ).find(
+    (candidate) =>
+      spellActiveEffectExecutionRef(candidate) === input.subject.effectRef,
   );
   if (effect === undefined) {
     return invalidResult(
@@ -2770,6 +2724,16 @@ function resolveProtectionRelevantEffectSaveCommand(
     input.subject.actorId,
     effect,
   );
+  if (
+    hole.protectionRelevantEffectSave.relevantEffect !==
+    input.subject.relevantEffect
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Protection relevant-effect identity no longer matches the selected active effect.",
+    );
+  }
   const saveFill = input.fills.find(
     (
       fill,
@@ -3898,7 +3862,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       frame?.trigger !== "creatureFalls") ||
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== input.subject.reactorId ||
-    !sameAdmittedBattleSubject(activeInterrupt.subject, input.subject)
+    !sameBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -4614,7 +4578,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     frame.continuation.kind !== "replay" ||
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== input.subject.casterId ||
-    !sameAdmittedBattleSubject(activeInterrupt.subject, input.subject)
+    !sameBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -4773,7 +4737,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
 
 export function maybeOpenPostCastReadySpellCastWindow(input: {
   readonly state: BattleState;
-  readonly subject: AdmittedBattleSubject;
+  readonly subject: BattleSubject;
   readonly casterId: CombatantId;
   readonly spellId: string;
   readonly targetIds: readonly CombatantId[];
@@ -5430,7 +5394,7 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
 
 export function openAfterDamageSequenceInterruptWindow(input: {
   readonly state: BattleState;
-  readonly subject: AdmittedBattleSubject;
+  readonly subject: BattleSubject;
   readonly events: readonly BattleAfterDamageEvent[];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
@@ -5711,7 +5675,7 @@ export function resolveReplayContinuationFromState(
   )?.activeInterrupt;
   if (
     activeInterrupt !== undefined &&
-    sameAdmittedBattleSubject(activeInterrupt.subject, continuation.subject)
+    sameBattleSubject(activeInterrupt.subject, continuation.subject)
   ) {
     const pendingState =
       activeInterruptWithReplayContinuationAttackDamageChanges(
@@ -6523,8 +6487,7 @@ function spellDamageRerollDecisionsEqual(
       const other = b.dice[index];
       return (
         other !== undefined &&
-        die.groupIndex === other.groupIndex &&
-        die.resultIndex === other.resultIndex &&
+        die.dieRef === other.dieRef &&
         die.original === other.original &&
         die.replacement === other.replacement
       );
@@ -6712,7 +6675,7 @@ export function currentInterruptCheckpoint(
 
 export function interruptedProcedureSubject(
   procedure: BattleInterruptedProcedure,
-): AdmittedBattleSubject {
+): BattleSubject {
   return procedure.kind === "attackDamage"
     ? procedure.participant
     : procedure.subject;

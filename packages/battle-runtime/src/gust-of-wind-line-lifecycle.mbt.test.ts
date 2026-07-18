@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-gust-of-wind-line
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -47,13 +49,12 @@ import {
   breakBattleConcentration,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type BattleFill,
   type BattleHole,
   type BattleLineDirectionId,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import type { GustOfWindLineEffect } from "./battle-reducer/turn-end-movement.ts";
 
@@ -250,21 +251,25 @@ describe("Gust of Wind Line lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-gust-of-wind-line-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createGustOfWindLineDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(7),
-      stateCheck: gustStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-gust-of-wind-line-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createGustOfWindLineDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(7),
+        stateCheck: gustStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): GustRuntimeState {
@@ -512,7 +517,7 @@ function gustProjection(state: GustRuntimeState): GustOfWindLineState {
       }) !== undefined,
     lineActive,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === gustOfWindUnitId &&
+      caster.concentration?.sourceProcedureRef === gustOfWindUnitId &&
       caster.concentration.effectKind === "spellEffect",
     lineDirection: effect === undefined ? "none" : lineDirection(effect),
     lineMovementCostFeet:
@@ -529,7 +534,7 @@ function gustLineEffect(state: BattleState): GustOfWindLineEffect | undefined {
   return caster.activeEffects.find(
     (effect): effect is GustOfWindLineEffect =>
       effect.kind === "gustOfWindLine" &&
-      effect.sourceSpellId === gustOfWindUnitId &&
+      effect.sourceProcedureRef === gustOfWindUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === gustOfWindAreaId,
   );
@@ -560,7 +565,9 @@ function gustOfWindLineMovementFact(input: {
   return {
     kind: "gustOfWindLineMovement",
     sourceCombatantId: spellCasterId,
-    sourceSpellId: gustOfWindUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(gustOfWindUnitId),
+    ),
     areaId: gustOfWindAreaId,
     directionId: input.directionId,
     totalDistanceFeet: movementFeet(input.totalDistanceFeet),
@@ -738,8 +745,7 @@ function gustHole(raw: unknown): GustHole {
 
 function gustLastResult(raw: unknown): GustLastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    GUST_OF_WIND_LINE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = GUST_OF_WIND_LINE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

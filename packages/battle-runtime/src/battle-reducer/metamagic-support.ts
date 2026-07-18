@@ -754,7 +754,10 @@ export function extendedSpellDurationModifierForApplications(
 }
 
 export function subtleSpellComponentProjectionIssue(input: {
-  readonly applications: readonly Pick<SpellMetamagicApplicationFact, "effectKind">[];
+  readonly applications: readonly Pick<
+    SpellMetamagicApplicationFact,
+    "effectKind"
+  >[];
   readonly invocation: SupportedSpellInvocation;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
@@ -897,10 +900,12 @@ export function twinnedSpellTargetCountProjectionIssue(input: {
     : null;
 }
 
-export function twinnedSpellTargetCountInvocation(
-  invocation: SupportedSpellInvocation,
+export function twinnedSpellTargetCountInvocation<
+  I extends SupportedSpellInvocation,
+>(
+  invocation: I,
   applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
-): SupportedSpellInvocation {
+): I {
   if (
     applications === undefined ||
     !applications.some(
@@ -926,7 +931,7 @@ export function twinnedSpellTargetCountInvocation(
       ...invocation.targeting,
       maxTargets,
     },
-  } as SupportedSpellInvocation;
+  } as I;
 }
 
 export function transmutedSpellDamageInvocation<

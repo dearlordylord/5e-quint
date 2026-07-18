@@ -1583,7 +1583,8 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         supportProfiles: [
           {
             kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
-            replacementProperties: TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+            replacementProperties:
+              TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
           },
         ],
       }),
@@ -1601,7 +1602,10 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
     );
     expect(
-      battleUnitRefWithSupportProfiles({ unitRef: { unitId: push.id }, unit: push }),
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: push.id },
+        unit: push,
+      }),
     ).toEqual(
       Either.right({
         unitId: "mastery_push",
@@ -1609,7 +1613,10 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       }),
     );
     expect(
-      battleUnitRefWithSupportProfiles({ unitRef: { unitId: slow.id }, unit: slow }),
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: slow.id },
+        unit: slow,
+      }),
     ).toEqual(
       Either.right({
         unitId: "mastery_slow",

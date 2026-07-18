@@ -178,7 +178,6 @@ function featherFallMitigationSpellProjection(
         rangeFeet: movementFeet(spell.mechanics.range.feet),
         activeEffect: {
           kind: "featherFallMitigation",
-          sourceSpellId: spell.id,
           sourceCombatantId: actorId,
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
@@ -271,7 +270,10 @@ function resolveFeatherFallMitigation(
               ...target,
               activeEffects: [
                 ...target.activeEffects,
-                input.invocation.activeEffect,
+                {
+                  ...input.invocation.activeEffect,
+                  sourceProcedureRef: input.invocation.sourceProcedureRef,
+                },
               ],
             }),
           };

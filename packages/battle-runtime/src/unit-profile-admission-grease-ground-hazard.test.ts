@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-heightened-save-disadvantage
@@ -45,7 +47,6 @@ import {
   Hp,
   resolveBattleSubject,
   sameBattleSubject,
-  spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 
@@ -68,7 +69,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(greaseUnitId, 1, "greaseGroundHazard"),
@@ -140,7 +144,9 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     ).toEqual([
       expect.objectContaining({
         kind: "greaseGroundHazard",
-        sourceSpellId: greaseUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(greaseUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
@@ -233,7 +239,9 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       ability: "dex",
       greaseGroundHazard: {
         targetId: spellTargetId,
-        sourceSpellId: greaseUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(greaseUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         trigger: "entersArea",
@@ -409,8 +417,6 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
       command: "greaseGroundHazardSave" as const,
-      sourceCombatantId: spellCasterId,
-      sourceSpellId: spellId(greaseUnitId),
       areaId: greaseAreaId,
     };
 
@@ -424,26 +430,6 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       sameBattleSubject(
         { ...base, trigger: "entersArea" },
         { ...base, areaId: "second-grease-ground-area", trigger: "entersArea" },
-      ),
-    ).toBe(false);
-    expect(
-      sameBattleSubject(
-        { ...base, trigger: "entersArea" },
-        {
-          ...base,
-          sourceCombatantId: spellTargetId,
-          trigger: "entersArea",
-        },
-      ),
-    ).toBe(false);
-    expect(
-      sameBattleSubject(
-        { ...base, trigger: "entersArea" },
-        {
-          ...base,
-          sourceSpellId: spellId("other_spell"),
-          trigger: "entersArea",
-        },
       ),
     ).toBe(false);
   });
@@ -595,7 +581,8 @@ function heightenedGreaseAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "greaseGroundHazard" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "greaseGroundHazard" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,

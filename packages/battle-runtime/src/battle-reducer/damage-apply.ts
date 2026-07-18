@@ -394,9 +394,10 @@ function appliedHitPointMaximumIncreaseAmount(
       continue;
     }
     const amount = hitPointMaximumIncreaseAmount(effect);
-    const activeAmount = highestAmountBySpell.get(effect.sourceSpellId) ?? 0;
+    const activeAmount =
+      highestAmountBySpell.get(effect.sourceProcedureRef) ?? 0;
     if (amount > activeAmount) {
-      highestAmountBySpell.set(effect.sourceSpellId, amount);
+      highestAmountBySpell.set(effect.sourceProcedureRef, amount);
     }
   }
   return [...highestAmountBySpell.values()].reduce(
@@ -1755,8 +1756,8 @@ function concentrationBrokenEffectFrom(
   }
   if (
     concentration?.effectKind === "spellEffect" &&
-    "sourceSpellId" in effect &&
-    effect.sourceSpellId === concentration.sourceSpellId &&
+    "sourceProcedureRef" in effect &&
+    effect.sourceProcedureRef === concentration.sourceProcedureRef &&
     "expiresAt" in effect &&
     effect.expiresAt.kind === "concentration"
   ) {
@@ -1800,7 +1801,7 @@ function nonConcentrationEffectFromBrokenSpellConcentration(
     (effect.kind === "selfAttackRollAndAbilityCheckRollMode" ||
       effect.kind === "nextAttackRollBySelf") &&
     effect.sourceCombatantId === combatantId &&
-    "sourceSpellId" in effect &&
-    effect.sourceSpellId === concentration.sourceSpellId
+    "sourceProcedureRef" in effect &&
+    effect.sourceProcedureRef === concentration.sourceProcedureRef
   );
 }

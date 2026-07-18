@@ -217,7 +217,7 @@ export function mirrorImageDuplicateRollHole(
     label: `Mirror Image duplicate roll (${effect.remainingDuplicates}d${MIRROR_IMAGE_DUPLICATE_DIE_SIZE})`,
     mirrorImageDuplicateRoll: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       remainingDuplicates: effect.remainingDuplicates,
       dieSize: MIRROR_IMAGE_DUPLICATE_DIE_SIZE,

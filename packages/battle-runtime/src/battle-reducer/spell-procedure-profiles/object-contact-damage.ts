@@ -37,6 +37,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
+import { bindSpellProcedureExecutionFacts } from "../../character-execution.ts";
 
 import {
   type ActionSpellBattleResolutionInput,
@@ -168,7 +169,6 @@ function admitObjectContactDamageRepeat(
       if (
         effect.kind !== "spellObjectContactDamage" ||
         effect.sourceCombatantId !== ctx.actor.combatantId ||
-        effect.sourceSpellId !== spell.id ||
         spellAdmissionOngoingSpellEffectSuppressed(
           ctx,
           antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
@@ -410,13 +410,14 @@ function isSupportedObjectContactHoldingOrWearingSave(
 function discoverObjectContactDamageCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: ObjectContactDamageInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ObjectContactDamageInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell" as const,
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: objectContactDamageInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
@@ -430,13 +431,14 @@ function discoverObjectContactDamageCastAct(
 function discoverObjectContactDamageRepeatCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ObjectContactDamageRepeatInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ObjectContactDamageRepeatInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "bonusActionSpell" as const,
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: objectContactDamageRepeatInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
@@ -447,7 +449,10 @@ function discoverObjectContactDamageRepeatCastAct(
           state,
           sourceCombatantId: invocation.activeEffect.sourceCombatantId,
           objectId: invocation.activeEffect.objectId,
-          invocation,
+          invocation: bindSpellProcedureExecutionFacts(
+            invocation,
+            invocation.activeEffect.sourceProcedureRef,
+          ),
           requiresObjectWithinRange: true,
         }),
       ],

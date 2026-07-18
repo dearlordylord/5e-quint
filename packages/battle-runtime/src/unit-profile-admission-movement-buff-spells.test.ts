@@ -1,7 +1,14 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActSpellSlotPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV49 expeditious_retreat
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV53 jump
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-expeditious-retreat-dash spell.invocation-jump-movement-replacement
 import { describe, expect, test } from "vitest";
+import type { BonusActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
 import {
   expeditiousRetreatUnitId,
   jumpUnitId,
@@ -33,7 +40,6 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type { BonusActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
 
 describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
   test("expeditious_retreat casts as a Bonus Action Dash spell", () => {
@@ -50,11 +56,6 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
           procedureRef: expect.any(String),
           tag: "bonusActionDashSpell",
           actorId: spellCasterId,
-          invocation: spellSlotInvocationRef(
-            expeditiousRetreatUnitId,
-            1,
-            "expeditiousRetreatDash",
-          ),
           mode: { tag: "cast" },
           speedKind: "walk",
         },
@@ -105,12 +106,16 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       expect.arrayContaining([expect.objectContaining({ source: "turn" })]),
     );
     expect(caster.concentration).toEqual({
-      sourceSpellId: expeditiousRetreatUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(expeditiousRetreatUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toContainEqual({
       kind: "spellDashBonusAction",
-      sourceSpellId: expeditiousRetreatUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(expeditiousRetreatUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       expiresAt: { kind: "concentration", combatantId: spellCasterId },
     });
@@ -148,7 +153,8 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     const laterDashAct = discoverBattleActs(nextCasterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionStandardAction" &&
-        candidate.subject.sourceUnitId === expeditiousRetreatUnitId &&
+        battleActUnitPresentation(candidate)?.unitId ===
+          expeditiousRetreatUnitId &&
         candidate.subject.action === "dash" &&
         candidate.subject.speedKind === "walk",
     );
@@ -228,10 +234,13 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     const jumpActs = discoverBattleActs(state).filter(
       (candidate): candidate is BonusActionSpellAct =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === jumpUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          jumpUnitId,
     );
 
-    expect(jumpActs.map((act) => act.subject.invocation)).toEqual(
+    expect(
+      jumpActs.map((act) => battleActSpellPresentation(act)?.invocation),
+    ).toEqual(
       expect.arrayContaining([
         spellSlotInvocationRef(jumpUnitId, 1, "jumpMovementReplacement"),
         spellSlotInvocationRef(jumpUnitId, 2, "jumpMovementReplacement"),
@@ -239,8 +248,8 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     );
     const levelTwo = jumpActs.find(
       (act) =>
-        act.subject.invocation.tag === "spellSlot" &&
-        Number(act.subject.invocation.slotLevel) === 2,
+        battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+        Number(battleActSpellSlotPresentation(act)?.invocation.slotLevel) === 2,
     );
     expect(levelTwo).toBeDefined();
     if (levelTwo === undefined) {
@@ -285,7 +294,9 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "jumpMovementReplacement",
-        sourceSpellId: jumpUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(jumpUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         movementCostFeet: movementFeet(10),
         maxJumpDistanceFeet: movementFeet(30),

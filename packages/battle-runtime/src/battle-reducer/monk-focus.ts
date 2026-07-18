@@ -36,7 +36,11 @@ import type {
   MonkFocusOptionBattleResolutionInput,
 } from "../battle-reducer.ts";
 import { SIZES } from "@dnd/shared/types";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  MONK_FOCUS_PROCEDURE_QUERY,
+  characterUnitProcedureRef,
+} from "../character-execution.ts";
 import type { CharacterBattleUseCountResourceState } from "../character-battle-resources.ts";
 import {
   characterBattleResourceIsUseCount,
@@ -212,7 +216,7 @@ function monkFocusFlurryOfBlowsStrikeActs(
       subject: {
         tag: "monkFocusFlurryOfBlowsStrike",
         actorId: actor.combatantId,
-        resourceUnitId: flurryResource.sourceUnitId,
+        focusProcedureRef: flurryResource.sourceProcedureRef,
         procedureRef: unarmedStrike.procedureRef,
       },
       label: "Flurry of Blows Unarmed Strike",
@@ -228,7 +232,11 @@ export function resolveMonkFocusOption(
   const focus = monkFocusResourceForActor(input.state, input.subject.actorId);
   if (
     focus === null ||
-    focus.resource.unit.id !== input.subject.resourceUnitId
+    characterUnitProcedureRef(
+      focus.actor.origin.execution,
+      focus.resource.unit.id,
+      MONK_FOCUS_PROCEDURE_QUERY,
+    ) !== input.subject.procedureRef
   ) {
     return invalidResult(
       input.state,
@@ -385,7 +393,7 @@ function resolveFlurryOfBlowsActivation(
             kind: "action",
             source: "monkFocusFlurryOfBlows",
             sourceOwnerId: input.subject.actorId,
-            sourceUnitId: focus.resource.unit.id,
+            sourceProcedureRef: input.subject.procedureRef,
           }),
         ),
       ],
@@ -653,6 +661,7 @@ function resolveStepOfTheWindFocus(
     withJumpDistanceMultiplier,
     focus,
     carryRequest,
+    input.subject.procedureRef,
   );
   const actor = withCarriedCreature.combatants.get(input.subject.actorId);
   if (!isCharacterBattleCreatureState(actor)) {
@@ -771,6 +780,7 @@ function applyHeightenedStepOfTheWindCarry(
   state: BattleState,
   focus: MonkFocusResourceFact,
   request: HeightenedStepOfTheWindCarryRequest,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   if (request.tag !== "carry") return state;
   return {
@@ -782,7 +792,7 @@ function applyHeightenedStepOfTheWindCarry(
         {
           carrierId: focus.actor.combatantId,
           carriedCreatureId: request.carriedCreatureId,
-          sourceUnitId: focus.resource.unit.id,
+          sourceProcedureRef,
           movementDoesNotProvokeOpportunityAttacks: true,
           expires: "endOfCarrierTurn",
         },
@@ -823,7 +833,7 @@ export function resolveMonkFocusFlurryOfBlowsStrike(
     !stateHasMonkFocusFlurryOfBlowsActionResource(
       input.state,
       input.subject.actorId,
-      input.subject.resourceUnitId,
+      input.subject.focusProcedureRef,
     )
   ) {
     return invalidResult(
@@ -854,7 +864,7 @@ export function resolveMonkFocusFlurryOfBlowsStrike(
         state,
         actorId,
         attack,
-        input.subject.resourceUnitId,
+        input.subject.focusProcedureRef,
       ),
   );
 }
@@ -863,11 +873,15 @@ function spendMonkFocusFlurryOfBlowsActionResource(
   state: BattleState,
   actorId: CombatantId,
   _attack: SupportedAttackActionOption,
-  resourceUnitId: string,
+  focusProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const resourceIndex = state.currentTurnResources.actionResources.findIndex(
     (resource) =>
-      isMonkFocusFlurryOfBlowsActionResource(resource, actorId, resourceUnitId),
+      isMonkFocusFlurryOfBlowsActionResource(
+        resource,
+        actorId,
+        focusProcedureRef,
+      ),
   );
   if (resourceIndex === -1) {
     return invalidResult(
@@ -894,22 +908,27 @@ function spendMonkFocusFlurryOfBlowsActionResource(
 function stateHasMonkFocusFlurryOfBlowsActionResource(
   state: BattleState,
   actorId: CombatantId,
-  resourceUnitId: string,
+  focusProcedureRef: BattleProcedureExecutionRef,
 ): boolean {
   return state.currentTurnResources.actionResources.some((resource) =>
-    isMonkFocusFlurryOfBlowsActionResource(resource, actorId, resourceUnitId),
+    isMonkFocusFlurryOfBlowsActionResource(
+      resource,
+      actorId,
+      focusProcedureRef,
+    ),
   );
 }
 
 export function isMonkFocusFlurryOfBlowsActionResource(
   resource: BattleTurnResources["actionResources"][number],
   actorId: CombatantId,
-  resourceUnitId: string | undefined,
+  focusProcedureRef: BattleProcedureExecutionRef | undefined,
 ): resource is MonkFocusFlurryOfBlowsActionResource {
   return (
     resource.source === "monkFocusFlurryOfBlows" &&
     resource.sourceOwnerId === actorId &&
-    (resourceUnitId === undefined || resource.sourceUnitId === resourceUnitId)
+    (focusProcedureRef === undefined ||
+      resource.sourceProcedureRef === focusProcedureRef)
   );
 }
 

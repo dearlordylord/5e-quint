@@ -18,6 +18,7 @@
 import { Either, Match } from "effect";
 import {
   Hp,
+  NonNegativeInteger,
   movementFeet,
   type Condition,
   type ReadonlyNonEmptyArray,
@@ -51,8 +52,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
+  battleActiveEffectExecutionOrdinal,
   battleAttackExecutionScopeRefForProcedureRef,
   battleExecutionScopeOrdinal,
+  battleResourcePoolExecutionRef,
   type BattleId,
   type BattleExecutionScopeOrdinal,
   type CombatantId,
@@ -227,6 +230,7 @@ export function battleCreatureStateAdmissionFromInit(
     tempHp: creatureInit.tempHp,
     ...initialKnockOutLifecycleFields(creatureInit, initialConditions),
     activeEffects: [],
+    nextActiveEffectOrdinal: battleActiveEffectExecutionOrdinal(0),
     activeOngoingFeatureOccurrences: new Map(),
     attackRollMissToHitReplacementsUsedSinceTurnStart: [],
     concentration: null,
@@ -317,8 +321,15 @@ export function battleCreatureStateAdmissionFromInit(
           ...(attackExecution.execution.offHandAttack === undefined
             ? {}
             : { offHandAttack: attackExecution.execution.offHandAttack }),
-          resources: (creatureInit.resources ?? []).map((resource) =>
-            characterResourceState(resource, classLevels),
+          resources: (creatureInit.resources ?? []).map((resource, ordinal) =>
+            characterResourceState(
+              resource,
+              classLevels,
+              battleResourcePoolExecutionRef(
+                execution.right.scopeRef,
+                NonNegativeInteger(ordinal),
+              ),
+            ),
           ),
           ...(creatureInit.metamagic === undefined
             ? {}
@@ -764,6 +775,7 @@ export function combatantSnapshot(
     hp: combatant.hp,
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
+    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
     armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
     size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
@@ -824,13 +836,13 @@ export function characterResourceSnapshot(
 ): BattleCharacterResourceSnapshot {
   if (characterBattleResourceIsPointPool(resource)) {
     return {
-      unitId: resource.unit.id,
+      resourcePoolRef: resource.resourcePoolRef,
       usage: "pointPool",
       pointsRemaining: resource.pointsRemaining,
     };
   }
   const common = {
-    unitId: resource.unit.id,
+    resourcePoolRef: resource.resourcePoolRef,
     usedThisTurn: resource.usedThisTurn,
   };
   const usage = characterBattleResourceUsage(resource);
@@ -867,7 +879,6 @@ export function activeEffectArmorClass(
             base: armorClass(baseArmorClassEffect.base),
             abilityModifiers: [baseArmorClassEffect.ability] as const,
             source: "spell_base_plus_ability" as const,
-            sourceUnitId: baseArmorClassEffect.sourceSpellId,
           },
         };
   const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>
@@ -876,7 +887,6 @@ export function activeEffectArmorClass(
           {
             kind: "flat" as const,
             bonus: armorClassDelta(effect.bonus),
-            sourceUnitId: effect.sourceSpellId,
           },
         ]
       : effect.kind === "wardingBond"
@@ -884,7 +894,6 @@ export function activeEffectArmorClass(
             {
               kind: "flat" as const,
               bonus: armorClassDelta(WARDING_BOND_ARMOR_CLASS_BONUS),
-              sourceUnitId: effect.sourceSpellId,
             },
           ]
         : [],
@@ -900,7 +909,6 @@ export function activeEffectArmorClass(
           {
             kind: "flat" as const,
             bonus: armorClassDelta(SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA),
-            sourceUnitId: slowActivePenaltyEffect.sourceSpellId,
           },
         ];
   const withBonuses =
@@ -915,7 +923,6 @@ export function activeEffectArmorClass(
       ? [
           {
             floor: effect.floor,
-            sourceUnitId: effect.sourceSpellId,
           },
         ]
       : [],

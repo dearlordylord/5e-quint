@@ -77,7 +77,6 @@ import type {
   BattleState,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
-import type { ClassFeatureExtraAttackActionResource } from "./battle-reducer/battle-runtime-protocol.ts";
 
 const syntheticExtraAttackCounts = [1, 2, 3] as const;
 type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
@@ -130,7 +129,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
           actionResources: [
             expect.objectContaining({
               source: "classFeatureExtraAttack",
-              sourceUnitId: fighterExtraAttackUnitId,
+              sourceOwnerId: spellCasterId,
             }),
           ],
         },
@@ -283,11 +282,6 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       }
 
       expect(classFeatureExtraAttackSlotCount(first.state)).toBe(3);
-      expect(classFeatureExtraAttackSourceUnitIds(first.state)).toEqual([
-        "test_synthetic_attack_count_3",
-        "test_synthetic_attack_count_3",
-        "test_synthetic_attack_count_3",
-      ]);
     },
   );
 
@@ -495,25 +489,6 @@ function classFeatureExtraAttackSlotCount(state: BattleState): number {
       resource.source === "classFeatureExtraAttack" &&
       resource.sourceOwnerId === spellCasterId,
   ).length;
-}
-
-function classFeatureExtraAttackSourceUnitIds(
-  state: BattleState,
-): readonly string[] {
-  return snapshotBattle(state)
-    .turn.actionResources.filter(isSpellCasterClassFeatureExtraAttackResource)
-    .map((resource) => resource.sourceUnitId);
-}
-
-function isSpellCasterClassFeatureExtraAttackResource(
-  resource: ReturnType<
-    typeof snapshotBattle
-  >["turn"]["actionResources"][number],
-): resource is ClassFeatureExtraAttackActionResource {
-  return (
-    resource.source === "classFeatureExtraAttack" &&
-    resource.sourceOwnerId === spellCasterId
-  );
 }
 
 function resolveWeaponAttackMiss(

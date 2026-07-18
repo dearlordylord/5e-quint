@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement
 // UNIT-IDENTITY-REPLAY: movement-forced-movement dissonant_whispers doDissonantWhispersForcedReactionMovement
@@ -35,7 +38,6 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -47,7 +49,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type BattleUnitRef,
   type CombatantId,
 } from "./index.ts";
@@ -118,7 +120,10 @@ type MovementForcedMovementSelectedIdentityProjection = {
 };
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type BonusActionDashSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -400,7 +405,9 @@ describe("Movement and forced movement public reducer route replay", () => {
       movementForcedMovementRouteProjection("doCommandFleeTargetTurn"),
     );
     expect(replayExpeditiousRetreatImmediateDashRoute()).toEqual(
-      movementForcedMovementRouteProjection("doExpeditiousRetreatImmediateDash"),
+      movementForcedMovementRouteProjection(
+        "doExpeditiousRetreatImmediateDash",
+      ),
     );
     expect(replayRangerRovingSpecialSpeedMovementRoute()).toEqual(
       movementForcedMovementRouteProjection("doRangerRovingClimbSwimMovement"),
@@ -555,10 +562,7 @@ function replayExpeditiousRetreatImmediateDashRoute(): readonly BattleReducerRou
   requireResolvedRouteResult(resolved, "Expeditious Retreat Dash");
   return [
     battleReducerStartRouteEvent(),
-    ...routeEventsOfMovementSubstrate(
-      act,
-      "Expeditious Retreat discovery",
-    ),
+    ...routeEventsOfMovementSubstrate(act, "Expeditious Retreat discovery"),
     ...routeEventsOfMovementSubstrate(
       resolved,
       "Expeditious Retreat resolution",
@@ -1756,7 +1760,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -1771,7 +1775,7 @@ function bonusActionDashSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionDashSpellAct =>
       candidate.subject.tag === "bonusActionDashSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Dash spell act.`);
@@ -1810,8 +1814,7 @@ function commandFleeAct(state: BattleState): RuntimeCommandFleeAct {
     (candidate): candidate is RuntimeCommandFleeAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === targetId &&
-      candidate.subject.command === "commandFlee" &&
-      candidate.subject.sourceSpellId === "command",
+      candidate.subject.command === "commandFlee",
   );
   if (act === undefined) {
     throw new Error("Expected Command Flee runtime command.");
@@ -1856,7 +1859,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
       },
     ],
   };
@@ -1864,7 +1867,7 @@ function spellTargetFill(
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  spellId: Extract<MovementForcedMovementSpellId, "command">,
+  sourceProcedureRef: Extract<MovementForcedMovementSpellId, "command">,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -1875,7 +1878,8 @@ function spellTargetListFill(
       kind: "spellTarget" as const,
       casterId,
       targetId,
-      spellId,
+      sourceProcedureRef:
+        battleProcedureExecutionRefForTest(sourceProcedureRef),
     })),
   };
 }
@@ -1991,7 +1995,7 @@ function commandPendingEffectCount(state: BattleState): number {
         readonly kind: "commandPending";
       } =>
         effect.kind === "commandPending" &&
-        effect.sourceSpellId === "command" &&
+        effect.sourceProcedureRef === "command" &&
         effect.sourceCombatantId === casterId,
     ).length ?? 0
   );
@@ -2006,7 +2010,7 @@ function spellDashBonusActionEffectCount(state: BattleState): number {
         readonly kind: "spellDashBonusAction";
       } =>
         effect.kind === "spellDashBonusAction" &&
-        effect.sourceSpellId === "expeditious_retreat" &&
+        effect.sourceProcedureRef === "expeditious_retreat" &&
         effect.sourceCombatantId === casterId,
     ).length ?? 0
   );

@@ -143,7 +143,7 @@ export function enemyZeroHitPointTemporaryHitPointsTriggerApplies(input: {
       fact.beneficiaryId === input.beneficiaryId &&
       fact.damageSourceId === input.damageSourceId &&
       fact.targetId === input.targetId &&
-      fact.unitId === input.profileUnitId &&
+      fact.sourceProcedureRef === input.profileUnitId &&
       fact.rangeFeet === input.otherWithinFeet,
   );
 }

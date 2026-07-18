@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -45,11 +47,10 @@ import {
 import {
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import type { WebRestraintHazardEffect } from "./battle-reducer/turn-end-movement.ts";
 
@@ -419,7 +420,9 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
               {
                 kind: "webAreaHazard",
                 sourceCombatantId: spellCasterId,
-                sourceSpellId: webUnitId,
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String(webUnitId),
+                ),
                 areaId: webAreaId,
               },
             ],
@@ -462,7 +465,7 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
   const hazard = caster.activeEffects.find(
     (effect): effect is WebRestraintHazardEffect =>
       effect.kind === "webRestraintHazard" &&
-      effect.sourceSpellId === webUnitId &&
+      effect.sourceProcedureRef === webUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === webAreaId,
   );
@@ -477,7 +480,7 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
       }) !== undefined,
     hazardActive: hazard !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === webUnitId &&
+      caster.concentration?.sourceProcedureRef === webUnitId &&
       caster.concentration.effectKind === "spellEffect",
     targetRestrained: target.conditions.restrained,
     entrySavedThisTurn:

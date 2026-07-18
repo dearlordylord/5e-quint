@@ -50,6 +50,7 @@ import {
   type BattleActiveEffectExpiration,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
@@ -424,7 +425,7 @@ function durationTiersEqual(
 function discoverMarkedDamageRiderCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: MarkedDamageRiderInvocation,
+  invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles =
@@ -439,6 +440,7 @@ function discoverMarkedDamageRiderCastAct(
           subject: {
             tag: "bonusActionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: markedDamageRiderInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
@@ -450,7 +452,7 @@ function discoverMarkedDamageRiderCastAct(
 }
 
 function markedDamageRiderInvocationRef(
-  invocation: MarkedDamageRiderInvocation,
+  invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
 ): SpellInvocationRef {
   return invocation.action === "transfer"
     ? spellEffectInvocationRef(
@@ -721,7 +723,7 @@ function applyMarkedDamageRiderSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  invocation: MarkedDamageRiderInvocation,
+  invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
   selectedAbility?: Ability,
 ): BattleState {
   const caster = state.combatants.get(actorId);
@@ -744,13 +746,13 @@ function applyMarkedDamageRiderSpellEffect(
       (effect) =>
         !(
           effect.kind === "spellMarkedDamageRider" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId
         ),
     ),
     {
       kind: "spellMarkedDamageRider" as const,
-      sourceSpellId: invocation.spell.id,
+      sourceProcedureRef: invocation.sourceProcedureRef,
       sourceCombatantId: actorId,
       targetCombatantId: targetId,
       transfer,

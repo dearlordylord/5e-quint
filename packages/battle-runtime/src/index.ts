@@ -65,6 +65,18 @@ export {
   type BattleTraceHoleKind,
 } from "./battle-trace-contract.ts";
 export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
+export { BattleActPresentationSchema } from "./battle-reducer/battle-codecs.ts";
+export {
+  spellActiveEffectExecutionRef,
+  spellActiveEffectForExecutionRef,
+} from "./active-effect/execution-ref.ts";
+export {
+  admitCharacterProcedureSelectionSubject,
+  battleActSpellPresentation,
+  battleActDruidWildShapePresentation,
+  battleActSpellSlotPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 export {
   combatantCanSee,
   combatantHasSeeInvisibleAndEtherealEffect,
@@ -197,7 +209,6 @@ export {
   BATTLE_SUBJECT_ACTIONS,
   BATTLE_SUBJECT_BONUS_ACTIONS,
   CANTRIP_SPELL_PROCEDURES,
-  AdmittedBattleSubjectSchema,
   BattleSubjectSchema,
   SPELL_SLOT_PROCEDURES,
   SpellInvocationRefSchema,
@@ -207,13 +218,14 @@ export {
   cantripSpellInvocationRef,
   classFeatureFreeCastSpellInvocationRef,
   isCharacterProcedureBattleSubject,
-  sameAdmittedBattleSubject,
+  isCharacterProcedureSelectionSubject,
   sameBattleSubject,
   spellSlotInvocationRef,
   type BattleRuntimeCommand,
   type BattleMovementSpeedKind,
-  type AdmittedBattleSubject,
   type BattleSubject,
+  type BattleActDiscoverySubject,
+  type CharacterProcedureSelectionSubject,
   type BattleSubjectAction,
   type BattleSubjectBonusAction,
   type CantripSpellProcedure,
@@ -331,6 +343,7 @@ export {
   type AttackDamageAbilityModifierChoiceSelection,
   type AttackDamageAbilityModifierChoiceUnitIds,
   type AvailableBattleAct,
+  type BattleActPresentation,
   type BattleAbilityCheckHole,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
@@ -358,8 +371,6 @@ export {
   type BattleGrappleOutcomeHole,
   type BattleHand,
   type BattleHelpAttack,
-  type BattleHelpAttackAllyDecisionHole,
-  type BattleHelpAttackEnemyDecisionHole,
   type BattleHiddenState,
   type BattleHidePrerequisite,
   type BattleReducerRouteEvent,

@@ -34,14 +34,11 @@ const ROLL_MODIFIER_ROUTE_SURFACE_BY_TAG = {
     "directConcentrationRollModifier",
   SkillChoiceFrontierRouteSurface: "skillChoiceFrontier",
   GuidanceActiveEffectRouteSurface: "guidanceActiveEffect",
-  PassWithoutTraceActiveEffectRouteSurface:
-    "passWithoutTraceActiveEffect",
+  PassWithoutTraceActiveEffectRouteSurface: "passWithoutTraceActiveEffect",
   AbilityChoiceFrontierRouteSurface: "abilityChoiceFrontier",
   EnhanceAbilityActiveEffectRouteSurface: "enhanceAbilityActiveEffect",
-  TargetAbilityChoicesFrontierRouteSurface:
-    "targetAbilityChoicesFrontier",
-  EnhancePerTargetActiveEffectRouteSurface:
-    "enhancePerTargetActiveEffect",
+  TargetAbilityChoicesFrontierRouteSurface: "targetAbilityChoicesFrontier",
+  EnhancePerTargetActiveEffectRouteSurface: "enhancePerTargetActiveEffect",
   EnthrallActiveEffectRouteSurface: "enthrallActiveEffect",
   ActiveOneMinuteEffectCountFrontierRouteSurface:
     "activeOneMinuteEffectCountFrontier",
@@ -54,11 +51,9 @@ type RollModifierRouteSurface =
 
 const SCALAR_BUFF_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
-  ArmorClassBonusActiveEffectRouteSurface:
-    "armorClassBonusActiveEffect",
+  ArmorClassBonusActiveEffectRouteSurface: "armorClassBonusActiveEffect",
   SpeedDeltaActiveEffectRouteSurface: "speedDeltaActiveEffect",
-  SpecialSpeedGrantActiveEffectRouteSurface:
-    "specialSpeedGrantActiveEffect",
+  SpecialSpeedGrantActiveEffectRouteSurface: "specialSpeedGrantActiveEffect",
   HitPointMaximumIncreaseActiveEffectRouteSurface:
     "hitPointMaximumIncreaseActiveEffect",
   TemporaryHitPointEffectRouteSurface: "temporaryHitPointEffect",
@@ -68,8 +63,7 @@ type ScalarBuffRouteSurface =
 
 const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
-  InitialSaveConditionAppliedRouteSurface:
-    "initialSaveConditionApplied",
+  InitialSaveConditionAppliedRouteSurface: "initialSaveConditionApplied",
   ConcentrationBrokenBeforeRepeatRouteSurface:
     "concentrationBrokenBeforeRepeat",
   CasterTurnEndedWithEffectRouteSurface: "casterTurnEndedWithEffect",
@@ -79,8 +73,7 @@ const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
     "targetTurnEndedAfterConcentrationBreak",
   RepeatSaveFrontierRouteSurface: "repeatSaveFrontier",
   RepeatSaveSuccessCleanupRouteSurface: "repeatSaveSuccessCleanup",
-  RepeatSaveFailureUnconsciousRouteSurface:
-    "repeatSaveFailureUnconscious",
+  RepeatSaveFailureUnconsciousRouteSurface: "repeatSaveFailureUnconscious",
 } as const satisfies Readonly<Record<string, string>>;
 type SleepRepeatSaveRouteSurface =
   (typeof SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG)[keyof typeof SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG];
@@ -95,8 +88,7 @@ type TurnBoundaryRouteSurface =
 
 const ZERO_HIT_POINT_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
-  SpellAttackSequenceResolvedRouteSurface:
-    "spellAttackSequenceResolved",
+  SpellAttackSequenceResolvedRouteSurface: "spellAttackSequenceResolved",
 } as const satisfies Readonly<Record<string, string>>;
 type ZeroHitPointRouteSurface =
   (typeof ZERO_HIT_POINT_ROUTE_SURFACE_BY_TAG)[keyof typeof ZERO_HIT_POINT_ROUTE_SURFACE_BY_TAG];
@@ -305,30 +297,24 @@ function createRollModifierRouteDriver() {
             routeHoles(),
             "battleActiveEffect",
           ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
         ]);
       },
       doCastBless: () => {
         state = routeState("directConcentrationRollModifier", [
           startRoute(),
           rollModifierDiscover(routeHoles(), SPELL_INVOCATION_OWNER),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleActiveEffect",
-          ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleActiveEffect"),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
         ]);
       },
       doDiscoverGuidanceSkillChoice: () => {
         state = routeState("skillChoiceFrontier", [
           ...state.route,
-          rollModifierDiscover(routeHoles("skillChoice"), SPELL_INVOCATION_OWNER),
+          rollModifierDiscover(
+            routeHoles("skillChoice"),
+            SPELL_INVOCATION_OWNER,
+          ),
         ]);
       },
       doCastGuidanceStealth: () => {
@@ -344,24 +330,15 @@ function createRollModifierRouteDriver() {
             routeHoles(),
             "battleActiveEffect",
           ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
         ]);
       },
       doCastPassWithoutTrace: () => {
         state = routeState("passWithoutTraceActiveEffect", [
           startRoute(),
           rollModifierDiscover(routeHoles(), SPELL_INVOCATION_OWNER),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleActiveEffect",
-          ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleActiveEffect"),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
         ]);
       },
       doDiscoverEnhanceAbilityChoice: () => {
@@ -386,10 +363,7 @@ function createRollModifierRouteDriver() {
             routeHoles(),
             "battleActiveEffect",
           ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
         ]);
       },
       doDiscoverEnhanceTargetAbilityChoices: () => {
@@ -420,10 +394,7 @@ function createRollModifierRouteDriver() {
             routeHoles(),
             "battleActiveEffect",
           ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
         ]);
       },
       doCastEnthrall: () => {
@@ -438,10 +409,7 @@ function createRollModifierRouteDriver() {
             routeHoles(),
             "battleActiveEffect",
           ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
         ]);
       },
       doDiscoverThaumaturgyCount: () => {
@@ -475,14 +443,8 @@ function createRollModifierRouteDriver() {
       doBreakConcentration: () => {
         state = routeState("concentrationBreakCleanup", [
           ...state.route,
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleConcentration",
-          ),
-          rollModifierResolveWithoutFill(
-            routeHoles(),
-            "battleActiveEffect",
-          ),
+          rollModifierResolveWithoutFill(routeHoles(), "battleConcentration"),
+          rollModifierResolveWithoutFill(routeHoles(), "battleActiveEffect"),
         ]);
       },
       doStutter: () => {},
@@ -732,9 +694,7 @@ function createTurnBoundaryRouteDriver() {
       doResolveTargetStartTurn: () => {
         state = routeState("targetStartTurnResolved", [
           ...state.route,
-          turnBoundaryDiscover(
-            routeHoles("rolledDice", "savingThrowOutcome"),
-          ),
+          turnBoundaryDiscover(routeHoles("rolledDice", "savingThrowOutcome")),
           turnBoundaryResolve(
             "rolledDice",
             routeHoles("savingThrowOutcome"),
@@ -751,11 +711,7 @@ function createTurnBoundaryRouteDriver() {
         state = routeState("sourceNextTurnResolved", [
           ...state.route,
           turnBoundaryDiscover(routeHoles("rolledDice")),
-          turnBoundaryResolve(
-            "rolledDice",
-            routeHoles(),
-            "battleHitPoint",
-          ),
+          turnBoundaryResolve("rolledDice", routeHoles(), "battleHitPoint"),
           turnBoundaryResolveWithoutFill("battleActiveEffect"),
           turnBoundaryResolveWithoutFill("battleTurnBoundary"),
         ]);

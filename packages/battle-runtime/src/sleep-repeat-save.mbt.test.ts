@@ -1,5 +1,9 @@
+import { sameBattleSubject } from "./battle-subjects.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleep-repeat-save-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
+import { Either } from "effect";
+import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -17,8 +21,6 @@ import {
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -34,6 +36,7 @@ import {
   fighterId,
   oppositionSide,
   partySide,
+  resolveBattleSubject,
   skeletonId,
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
@@ -44,7 +47,6 @@ import {
   characterId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
   startBattle,
@@ -53,7 +55,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -109,8 +111,7 @@ type SleepRepeatSaveRouteProjection = {
 
 const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
-  InitialSaveConditionAppliedRouteSurface:
-    "initialSaveConditionApplied",
+  InitialSaveConditionAppliedRouteSurface: "initialSaveConditionApplied",
   ConcentrationBrokenBeforeRepeatRouteSurface:
     "concentrationBrokenBeforeRepeat",
   CasterTurnEndedWithEffectRouteSurface: "casterTurnEndedWithEffect",
@@ -120,8 +121,7 @@ const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
     "targetTurnEndedAfterConcentrationBreak",
   RepeatSaveFrontierRouteSurface: "repeatSaveFrontier",
   RepeatSaveSuccessCleanupRouteSurface: "repeatSaveSuccessCleanup",
-  RepeatSaveFailureUnconsciousRouteSurface:
-    "repeatSaveFailureUnconscious",
+  RepeatSaveFailureUnconsciousRouteSurface: "repeatSaveFailureUnconscious",
 } as const satisfies Readonly<Record<string, SleepRepeatSaveRouteSurface>>;
 const SLEEP_REPEAT_SAVE_ROUTE_SUBJECT =
   "repeatSaveConditionEffect" as const satisfies Extract<
@@ -246,9 +246,7 @@ function createSleepRepeatSavePublicRouteDriver() {
     let subject: BattleSubject = sleepSubject();
     let holes: readonly BattleHole[] = [];
     let surface: SleepRepeatSaveRouteSurface = "fresh";
-    let route: readonly ReducerRouteEvent[] = [
-      battleReducerStartRouteEvent(),
-    ];
+    let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
 
     function reset(): void {
       state = sleepRepeatSaveBattle();
@@ -289,7 +287,10 @@ function createSleepRepeatSavePublicRouteDriver() {
       nextSurface: SleepRepeatSaveRouteSurface,
     ): void {
       const fills = fillsWithSleepRepeatSaveSpatialFacts(holes, nextFills);
-      recordResult(resolveBattleSubject({ state, subject, fills }), nextSurface);
+      recordResult(
+        resolveBattleSubject({ state, subject, fills }),
+        nextSurface,
+      );
     }
 
     function fillRepeatSave(
@@ -477,7 +478,9 @@ describe("Sleep repeat-save MBT parity", () => {
       ),
     ).toBe(false);
     expect(
-      target?.activeEffects.some((effect) => effect.kind === "sleepUnconscious"),
+      target?.activeEffects.some(
+        (effect) => effect.kind === "sleepUnconscious",
+      ),
     ).toBe(true);
 
     const nextEndTurn = requireResolved(
@@ -669,7 +672,10 @@ function discoverSleepHoles(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act == null) {
     throw new Error("Expected Sleep spell act.");
@@ -686,7 +692,10 @@ function discoverSleepAct(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act == null) {
     throw new Error("Expected Sleep spell act.");

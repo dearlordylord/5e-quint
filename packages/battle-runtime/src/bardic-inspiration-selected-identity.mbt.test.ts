@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
 // UNIT-IDENTITY-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
 import * as Either from "effect/Either";
@@ -11,32 +13,31 @@ import {
   movementFeet,
   type DamageDieSize,
 } from "@dnd/shared/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
-  battleId,
   battleCombatantSide,
+  battleId,
   characterId,
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
-  sameBattleSubject,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 type BardicInspirationProjection = {
   readonly bonusActionAvailable: boolean;
@@ -105,9 +106,10 @@ function grantBardicInspirationD12(): BardicInspirationProjection {
   if (subject.tag !== "unitFeature") {
     throw new Error("Bardic Inspiration subject must be a unit feature.");
   }
-  expect(subject.unitId, "Bardic Inspiration subject must bind unit id").toBe(
-    "bard_bardic_inspiration",
-  );
+  expect(
+    battleActUnitPresentation(findAct(state, subject))?.unitId,
+    "Bardic Inspiration presentation must bind unit id",
+  ).toBe("bard_bardic_inspiration");
   const target = findHole(findAct(state, subject).initialHoles, "targetChoice");
   const result = resolveBattleSubject({
     state,
@@ -248,7 +250,9 @@ function bardicInspirationTargetFill(
         kind: "bardicInspirationTargetWithinRange",
         bardId,
         targetId,
-        unitId: "bard_bardic_inspiration",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("bard_bardic_inspiration"),
+        ),
         rangeFeet: movementFeet(60),
       },
     ],
@@ -275,8 +279,12 @@ function resourceUsesRemaining(state: BattleState, unitId: string): number {
 }
 
 function findAct(state: BattleState, subject: BattleSubject) {
-  const act = discoverBattleActs(state).find((candidate) =>
-    sameBattleSubject(candidate.subject, subject),
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "unitFeature" &&
+      subject.tag === "unitFeature" &&
+      "unitId" in subject &&
+      battleActUnitPresentation(candidate)?.unitId === subject.unitId,
   );
   if (act === undefined) {
     throw new Error("Expected Bardic Inspiration selected identity act.");

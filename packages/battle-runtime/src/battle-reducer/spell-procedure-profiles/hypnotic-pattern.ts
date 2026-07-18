@@ -18,9 +18,11 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
+import { bindSpellProcedureExecutionFacts } from "../../character-execution.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,
+  BattleExecutableSpellInvocation,
   BattleHole,
   BattleInterruptedProcedure,
   BattleResolutionResult,
@@ -153,7 +155,10 @@ export function resolveStoredGlyphAreaControlSpellRelease(input: {
   return resolveHypnoticPattern({
     input: input.input,
     actorId: input.actorId,
-    invocation: input.invocation,
+    invocation: bindSpellProcedureExecutionFacts(
+      input.invocation,
+      input.input.subject.procedureRef,
+    ),
     fillSet: input.fillSet,
     releaseResource: {
       kind: "storedGlyphSpellRelease",
@@ -284,7 +289,7 @@ function isHypnoticPatternShakeAwakeEffect(effect: EffectAtom): boolean {
 function discoverHypnoticPatternCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HypnoticPatternSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
@@ -327,7 +332,7 @@ function discoverHypnoticPatternCastAct(
 
 function hypnoticPatternCastAct(
   actorId: CombatantId,
-  invocation: HypnoticPatternSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -336,6 +341,7 @@ function hypnoticPatternCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: hypnoticPatternInvocationRef(invocation),
       mode: { tag: "cast" },
     },
@@ -411,6 +417,7 @@ function hypnoticPatternReleaseResourceState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: HypnoticPatternSpellInvocation;
+  readonly sourceProcedureRef: BattleExecutableSpellInvocation["sourceProcedureRef"];
   readonly errorState: BattleState;
   readonly resource: HypnoticPatternReleaseResource;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
@@ -424,7 +431,10 @@ function hypnoticPatternReleaseResourceState(input: {
   return spendSpellCastResources({
     state: input.state,
     actorId: input.actorId,
-    invocation: input.invocation,
+    invocation: bindSpellProcedureExecutionFacts(
+      input.invocation,
+      input.sourceProcedureRef,
+    ),
     errorState: input.errorState,
     startConcentration: false,
     ...(input.resource.metamagicApplications === undefined
@@ -573,7 +583,7 @@ function resolveHypnoticPattern(
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation,
       },
       input.input.handledInterruptTrigger,
@@ -586,6 +596,7 @@ function resolveHypnoticPattern(
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
+    sourceProcedureRef: input.input.subject.procedureRef,
     errorState: input.input.state,
     resource:
       input.releaseResource ??
@@ -632,7 +643,7 @@ function applyHypnoticPatternControlEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: HypnoticPatternSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
 ): {
   readonly state: BattleState;
   readonly appliedTargetIds: readonly CombatantId[];
@@ -658,14 +669,14 @@ function applyHypnoticPatternControlEffects(
     const replacing = target.activeEffects.filter(
       (effect) =>
         effect.kind === "hypnoticPatternControl" &&
-        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceProcedureRef === invocation.sourceProcedureRef &&
         effect.sourceCombatantId === actorId,
     );
     const activeEffects = [
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
       {
         kind: "hypnoticPatternControl" as const,
-        sourceSpellId: invocation.spell.id,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         conditionHadNonSpellCharmedSource:
           conditionHadNonSpellSourceBeforeSpellEffect(target, "charmed"),

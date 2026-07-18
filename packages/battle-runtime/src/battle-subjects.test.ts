@@ -1,10 +1,12 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { NonNegativeInteger } from "@dnd/shared/types";
 import {
   combatantId,
-  sameAdmittedBattleSubject,
   sameBattleSubject,
+  BattleSubjectSchema,
   type BattleSubject,
 } from "./index.ts";
 import {
@@ -14,6 +16,7 @@ import {
   battleExecutionScopeOrdinal,
   battleId,
   battleProcedureExecutionRef,
+  battleStatBlockExecutionScopeRef,
 } from "./identity.ts";
 
 describe("BattleSubject identity", () => {
@@ -82,7 +85,6 @@ describe("BattleSubject identity", () => {
         scopeRef,
         NonNegativeInteger(0),
       ),
-      resourceUnitId: "synthetic-focus-resource",
       option: "flurryOfBlows",
     } satisfies BattleSubject;
     const otherOccurrence = {
@@ -93,8 +95,90 @@ describe("BattleSubject identity", () => {
       ),
     } satisfies BattleSubject;
 
-    expect(sameBattleSubject(subject, otherOccurrence)).toBe(true);
-    expect(sameAdmittedBattleSubject(subject, otherOccurrence)).toBe(false);
-    expect(sameAdmittedBattleSubject(subject, subject)).toBe(true);
+    expect(sameBattleSubject(subject, otherOccurrence)).toBe(false);
+    expect(sameBattleSubject(subject, otherOccurrence)).toBe(false);
+    expect(sameBattleSubject(subject, subject)).toBe(true);
+  });
+
+  test("rejects authored character-procedure selectors after binding", () => {
+    const actorId = combatantId("procedure-subject-owner");
+    const procedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("procedure-subject-battle"),
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const decode = Schema.decodeUnknownSync(BattleSubjectSchema);
+    const authoredSelectors = [
+      {
+        tag: "unitFeature",
+        actorId,
+        procedureRef,
+        unitId: "synthetic-feature",
+      },
+      {
+        tag: "bonusActionStandardAction",
+        actorId,
+        procedureRef,
+        sourceUnitId: "synthetic-feature",
+        action: "disengage",
+      },
+      {
+        tag: "monkFocusOption",
+        actorId,
+        procedureRef,
+        resourceUnitId: "synthetic-focus-resource",
+        option: "flurryOfBlows",
+      },
+      {
+        tag: "actionSpell",
+        actorId,
+        procedureRef,
+        invocation: {
+          tag: "cantrip",
+          spellId: "synthetic-spell",
+          procedure: "spellAttackDamage",
+        },
+        mode: { tag: "cast" },
+      },
+      {
+        tag: "runtimeCommand",
+        actorId,
+        command: "greaseGroundHazardSave",
+        areaId: "synthetic-area",
+        trigger: "entersArea",
+        sourceCombatantId: actorId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("synthetic-spell"),
+        ),
+      },
+      {
+        tag: "runtimeCommand",
+        actorId,
+        command: "commandGrovel",
+        sourceCombatantId: actorId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("synthetic-spell"),
+        ),
+      },
+      {
+        tag: "druidWildShape",
+        actorId,
+        procedureRef,
+        action: "assumeForm",
+        formExecutionRef: battleStatBlockExecutionScopeRef(
+          battleId("procedure-subject-battle"),
+          actorId,
+          battleExecutionScopeOrdinal(1),
+        ),
+        formStatBlockId: "synthetic-form",
+      },
+    ];
+
+    for (const subject of authoredSelectors) {
+      expect(() => decode(subject)).toThrow();
+    }
   });
 });

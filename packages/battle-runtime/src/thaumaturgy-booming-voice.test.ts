@@ -1,31 +1,22 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import {
-  BattleFillSchema,
-  BattleHoleSchema,
-  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
-  type BattleActiveEffect,
-  type BattleFill,
-  type BattleHole,
-  type BattleState,
-} from "./index.ts";
 import {
   battleId,
   cantripSpellInvocationRef,
   characterSeed,
   difficultyClass,
-  discoverBattleActs,
   elapsedTimeTicks,
   fighterId,
   findAct,
@@ -39,6 +30,16 @@ import {
   statBlockCreatureInit,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  BattleFillSchema,
+  BattleHoleSchema,
+  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  type BattleActiveEffect,
+  type BattleFill,
+  type BattleHole,
+  type BattleState,
+} from "./index.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -70,18 +71,18 @@ describe("Thaumaturgy Booming Voice", () => {
     const fill = thaumaturgyCountFill(countHole, 0);
     const decodedFill = Schema.decodeUnknownEither(BattleFillSchema)(fill);
 
-    expect(discoverBattleActs(state)).toContainEqual(
-      expect.objectContaining({
-        subject: expect.objectContaining(thaumaturgySubject),
-        initialHoles: expect.arrayContaining([
-          expect.objectContaining({
-            kind: "thaumaturgyActiveOneMinuteEffectCount",
-            label: "Thaumaturgy total active 1-minute effects",
-            maximumActiveOneMinuteEffects: 3,
-            requiresTableSpellEffectCount: true,
-          }),
-        ]),
-      }),
+    expect(battleActSpellPresentation(act)?.invocation).toEqual(
+      thaumaturgySubject.invocation,
+    );
+    expect(act.initialHoles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "thaumaturgyActiveOneMinuteEffectCount",
+          label: "Thaumaturgy total active 1-minute effects",
+          maximumActiveOneMinuteEffects: 3,
+          requiresTableSpellEffectCount: true,
+        }),
+      ]),
     );
     expect(Either.isRight(decodedHole)).toBe(true);
     expect(Either.isRight(decodedFill)).toBe(true);
@@ -158,7 +159,9 @@ describe("Thaumaturgy Booming Voice", () => {
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "thaumaturgyBoomingVoice",
-        sourceSpellId: "thaumaturgy",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("thaumaturgy"),
+        ),
         sourceCombatantId: fighterId,
         expiresAt: {
           kind: "duration",
@@ -298,7 +301,7 @@ function withHexCharismaDisadvantage(state: BattleState): BattleState {
   }
   const hexEffect = {
     kind: "spellMarkedDamageRider",
-    sourceSpellId: "hex",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(String("hex")),
     sourceCombatantId: goblinId,
     targetCombatantId: fighterId,
     transfer: {

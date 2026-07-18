@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
 import { describe, expect, test } from "vitest";
@@ -46,10 +49,13 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     const castActs = discoverBattleActs(state).filter(
       (candidate): candidate is ActionSpellAct =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === dancingLightsUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          dancingLightsUnitId,
     );
 
-    expect(castActs.map((act) => act.subject.invocation)).toEqual([
+    expect(
+      castActs.map((act) => battleActSpellPresentation(act)?.invocation),
+    ).toEqual([
       cantripSpellInvocationRef(
         dancingLightsUnitId,
         "dancingLightsSeparateCast",
@@ -106,7 +112,9 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "dancingLights",
-        sourceSpellId: dancingLightsUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(dancingLightsUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         form: "separateLights",
       }),
@@ -116,7 +124,9 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "spellLightEmitter",
-          sourceSpellId: dancingLightsUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(dancingLightsUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           attachment: expect.objectContaining({
             kind: "dancingLight",
@@ -136,7 +146,9 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     );
     expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
       {
-        sourceSpellId: dancingLightsUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(dancingLightsUnitId),
+        ),
         effectKind: "spellEffect",
       },
     );
@@ -171,9 +183,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       subject: {
         tag: "actionSpell",
         actorId: spellTargetId,
-        invocation: cantripSpellInvocationRef(
-          rayOfFrostUnitId,
-          "spellAttackDamage",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          targetTurn.state,
+          spellTargetId,
+          cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
         mode: { tag: "ready", trigger: "spellCast" },
       },
@@ -260,8 +273,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     const combinedAct = discoverBattleActs(state).find(
       (candidate): candidate is ActionSpellAct =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === dancingLightsUnitId &&
-        candidate.subject.invocation.procedure === "dancingLightsCombinedCast",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          dancingLightsUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "dancingLightsCombinedCast",
     );
     expect(combinedAct).toBeDefined();
     if (combinedAct === undefined) {
@@ -352,7 +367,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       state: resolved.state,
       spellId: dancingLightsUnitId,
     });
-    expect(moveAct.subject.invocation).toEqual(
+    expect(battleActSpellPresentation(moveAct)?.invocation).toEqual(
       cantripSpellInvocationRef(dancingLightsUnitId, "dancingLightsReposition"),
     );
     const moved = resolveBattleSubject({

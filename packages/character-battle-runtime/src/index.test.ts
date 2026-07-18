@@ -32,6 +32,8 @@ import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+  battleActDruidWildShapePresentation,
+  battleActUnitPresentation,
   battleCreatureInitFromStatBlock,
   battleCombatantSide,
   battleId,
@@ -1222,7 +1224,7 @@ describe("Character Sheet battle handoff", () => {
       discoverBattleActs(state).flatMap((act) =>
         act.subject.tag === "druidWildShape" &&
         act.subject.action === "assumeForm"
-          ? [act.subject.formStatBlockId]
+          ? [battleActDruidWildShapePresentation(act)?.formStatBlockId]
           : [],
       ),
     ).toEqual([
@@ -2520,7 +2522,7 @@ describe("Character Sheet battle handoff", () => {
       discoverBattleActs(state).some(
         (act) =>
           act.subject.tag === "unitFeature" &&
-          act.subject.unitId === "sorcerer_font_of_magic",
+          battleActUnitPresentation(act)?.unitId === "sorcerer_font_of_magic",
       ),
     ).toBe(false);
   });

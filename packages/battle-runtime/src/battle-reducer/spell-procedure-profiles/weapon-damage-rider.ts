@@ -106,7 +106,6 @@ function weaponDamageRiderActiveEffect(
     ? null
     : {
         kind: "spellWeaponDamageRider",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         damage,
         expiresAt,
@@ -148,13 +147,14 @@ function weaponDamageRiderDamage(
 function discoverWeaponDamageRiderCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: WeaponDamageRiderInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<WeaponDamageRiderInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: weaponDamageRiderInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -226,11 +226,14 @@ function resolveWeaponDamageRider(
       (effect) =>
         !(
           effect.kind === "spellWeaponDamageRider" &&
-          effect.sourceSpellId === input.invocation.spell.id &&
+          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
           effect.sourceCombatantId === input.actorId
         ),
     ),
-    input.invocation.activeEffect,
+    {
+      ...input.invocation.activeEffect,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+    },
   ];
   const effected = {
     ...input.input.state,

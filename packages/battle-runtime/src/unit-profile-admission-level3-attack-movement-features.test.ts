@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A18 fighter_remarkable_athlete monk_open_hand_technique paladin_sacred_weapon ranger_hunters_prey rogue_steady_aim wizard_potent_cantrip
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.remarkable-athlete unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.hunters-prey unit-feature.rogue-steady-aim unit-feature.potent-cantrip
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   classRogueUnitId,
@@ -111,7 +112,7 @@ function remarkableAthleteRuntimeBattleWithFlySpeed() {
   }
   const flySpeedGrant = {
     kind: "specialSpeedGrant",
-    sourceSpellId: flyUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(String(flyUnitId)),
     sourceCombatantId: remarkableAthleteActorId,
     speedKind: "fly",
     speed: { kind: "fixed", speedFeet: movementFeet(40) },

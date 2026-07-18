@@ -1,6 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
+  requireCharacterSpellProcedureRefForTest,
   startBattleRight,
   requireResolved,
   requireHole,
@@ -31,7 +33,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleFill,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -76,7 +78,9 @@ describe("battle runtime: Ice Knife", () => {
           ...wizard.activeEffects,
           {
             kind: "sourceDamageRollPenalty" as const,
-            sourceSpellId: "ray_of_enfeeblement",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("ray_of_enfeeblement"),
+            ),
             sourceCombatantId: primaryTargetId,
             amount: { dice: 1 as const, dieSize: 8 as const },
             expiresAt: {
@@ -90,10 +94,10 @@ describe("battle runtime: Ice Knife", () => {
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "ice_knife",
-        2,
-        "attackBurstSaveDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -132,7 +136,9 @@ describe("battle runtime: Ice Knife", () => {
       attackDamage.holeId,
     );
     const stalePenalty = sourceDamageRollPenaltyRollHole({
-      sourceSpellId: "ray_of_enfeeblement",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("ray_of_enfeeblement"),
+      ),
       sourceCombatantId: primaryTargetId,
       affectedCombatantId: wizardId,
       damageRollHoleId: holeId(
@@ -285,7 +291,9 @@ describe("battle runtime: Ice Knife", () => {
       combatants: new Map(baseState.combatants).set(primaryTargetId, {
         ...primaryTarget,
         concentration: {
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           effectKind: "spellEffect" as const,
         },
       }),
@@ -293,10 +301,10 @@ describe("battle runtime: Ice Knife", () => {
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "ice_knife",
-        2,
-        "attackBurstSaveDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -811,7 +819,9 @@ describe("battle runtime: Ice Knife", () => {
       combatants: new Map(baseState.combatants).set(secondWizardId, {
         ...concentrating,
         concentration: {
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           effectKind: "spellEffect" as const,
         },
       }),

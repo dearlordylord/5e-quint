@@ -26,7 +26,7 @@ import {
   type BattleHoleId,
   type BattleResolutionResult,
   type BonusActionSpellBattleResolutionInput,
-  type SupportedSpellInvocation,
+  type BattleExecutableSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
@@ -112,7 +112,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "attackBurstSaveDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -155,6 +155,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
 
   const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
     state: input.input.state,
+    triggeringProcedureRef: input.invocation.sourceProcedureRef,
     triggeringCombatantId: input.actorId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
@@ -757,7 +758,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject:

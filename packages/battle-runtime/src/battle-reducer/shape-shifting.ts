@@ -1,4 +1,3 @@
-import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import {
@@ -15,7 +14,7 @@ import type {
   BattleCreatureState,
   BattleState,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   activeDruidWildShape,
   revertDruidWildShapeForm,
@@ -36,12 +35,12 @@ export type BattleShapeShiftSource =
   | {
       readonly kind: "classFeature";
       readonly sourceCombatantId: CombatantId;
-      readonly sourceUnitId: UnitRecord["id"];
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
     }
   | {
       readonly kind: "spellEffect";
       readonly sourceCombatantId: CombatantId;
-      readonly sourceSpellId: SpellShapeShiftedFormActiveEffect["sourceSpellId"];
+      readonly sourceProcedureRef: SpellShapeShiftedFormActiveEffect["sourceProcedureRef"];
     };
 
 export type BattleShapeShiftReversionOwner =
@@ -179,7 +178,7 @@ export function battleShapeShiftedRuntimeState(
         source: {
           kind: "classFeature",
           sourceCombatantId: wildShape.effect.sourceCombatantId,
-          sourceUnitId: wildShape.effect.sourceUnitId,
+          sourceProcedureRef: wildShape.effect.sourceProcedureRef,
         },
         replacementForm: {
           kind: "runtimeCreatureForm",
@@ -196,7 +195,7 @@ export function battleShapeShiftedRuntimeState(
         source: {
           kind: "spellEffect",
           sourceCombatantId: spellShapeShift.sourceCombatantId,
-          sourceSpellId: spellShapeShift.sourceSpellId,
+          sourceProcedureRef: spellShapeShift.sourceProcedureRef,
         },
         replacementForm: spellShapeShift.replacementForm,
         reversionOwner: {
@@ -268,7 +267,7 @@ export function spellShapeShiftedRuntimeState(input: {
     source: {
       kind: "spellEffect",
       sourceCombatantId: input.effect.sourceCombatantId,
-      sourceSpellId: input.effect.sourceSpellId,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
     },
     replacementForm: input.effect.replacementForm,
     reversionOwner: {

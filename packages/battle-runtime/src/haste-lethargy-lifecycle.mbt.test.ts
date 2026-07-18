@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-haste-positive
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // RAW trace:
@@ -36,7 +38,6 @@ import {
 import {
   breakBattleConcentration,
   endTurn,
-  resolveBattleSubject,
   type BattleActiveEffect,
   type BattleCreatureState,
   type BattleResolutionResult,
@@ -373,7 +374,7 @@ function hasteLethargyProjection(
     scenario: state.scenario,
     casterConcentrating:
       caster.concentration?.effectKind === "spellEffect" &&
-      caster.concentration.sourceSpellId === hasteUnitId,
+      caster.concentration.sourceProcedureRef === hasteUnitId,
     positiveEffectCount: positiveHasteEffectCount(target),
     lethargyConditionActive: hasHasteLethargyCondition(target),
     lethargySpeedZeroActive: hasHasteSpeedZero(target),
@@ -381,7 +382,7 @@ function hasteLethargyProjection(
     targetWalkSpeedFeet: Number(effectiveWalkSpeed(target)),
     targetConcentrating:
       target.concentration?.effectKind === "spellEffect" &&
-      target.concentration.sourceSpellId ===
+      target.concentration.sourceProcedureRef ===
         syntheticTargetConcentrationSpellId,
     targetConcentrationEffectActive:
       hasSyntheticTargetConcentrationEffect(target),
@@ -418,7 +419,7 @@ function hasHasteLethargyCondition(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellCondition" &&
-      effect.sourceSpellId === hasteUnitId &&
+      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.condition === "incapacitated",
   );
@@ -428,7 +429,7 @@ function hasHasteSpeedZero(combatant: BattleCreatureState): boolean {
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "spellSpeedZero" &&
-      effect.sourceSpellId === hasteUnitId &&
+      effect.sourceProcedureRef === hasteUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -438,16 +439,16 @@ function hasSyntheticTargetConcentrationEffect(
 ): boolean {
   return combatant.activeEffects.some(
     (effect) =>
-      "sourceSpellId" in effect &&
-      effect.sourceSpellId === syntheticTargetConcentrationSpellId &&
+      "sourceProcedureRef" in effect &&
+      effect.sourceProcedureRef === syntheticTargetConcentrationSpellId &&
       effect.sourceCombatantId === spellTargetId,
   );
 }
 
 function effectIsOwnedByHaste(effect: BattleActiveEffect): boolean {
   return (
-    "sourceSpellId" in effect &&
-    effect.sourceSpellId === hasteUnitId &&
+    "sourceProcedureRef" in effect &&
+    effect.sourceProcedureRef === hasteUnitId &&
     effect.sourceCombatantId === spellCasterId
   );
 }
@@ -467,7 +468,6 @@ function hasteCurrentSpellActionResourceCount(state: BattleState): number {
   return state.currentTurnResources.actionResources.filter(
     (resource) =>
       resource.source === "spellEffect" &&
-      resource.sourceSpellId === hasteUnitId &&
       resource.sourceOwnerId === spellCasterId,
   ).length;
 }
@@ -497,7 +497,9 @@ function stateWithSyntheticTargetConcentration(
   const target = requireCombatant(state, spellTargetId);
   const concentrationEffect: BattleActiveEffect = {
     kind: "spellArmorClassBonus",
-    sourceSpellId: syntheticTargetConcentrationSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(syntheticTargetConcentrationSpellId),
+    ),
     sourceCombatantId: spellTargetId,
     bonus: 1,
     negatedSpellIds: [],
@@ -512,7 +514,9 @@ function stateWithSyntheticTargetConcentration(
       ...target,
       concentration: {
         effectKind: "spellEffect",
-        sourceSpellId: syntheticTargetConcentrationSpellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(syntheticTargetConcentrationSpellId),
+        ),
       },
       activeEffects: [...target.activeEffects, concentrationEffect],
     }),

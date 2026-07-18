@@ -257,13 +257,14 @@ function isFlamingSphereSaveEffect(
 function discoverFlamingSphereCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: FlamingSphereSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<FlamingSphereSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: flamingSphereInvocationRef(invocation),
         mode: { tag: "cast" },
       },

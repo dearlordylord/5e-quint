@@ -15,6 +15,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -88,7 +89,7 @@ function isSaveGatedAttackRollAdvantageInvocation(
 function discoverSaveGatedAttackRollAdvantageCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SaveGatedAttackRollAdvantageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const savingThrowHole = spellSavingThrowOutcomeHole(
@@ -161,7 +162,7 @@ function saveGatedAttackRollAdvantageMetamagicCastActs(input: {
 
 function saveGatedAttackRollAdvantageCastAct(
   actorId: CombatantId,
-  invocation: SaveGatedAttackRollAdvantageSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -170,6 +171,7 @@ function saveGatedAttackRollAdvantageCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: saveGatedAttackRollAdvantageInvocationRef(invocation),
       mode: { tag: "cast" },
     },

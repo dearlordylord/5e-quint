@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-03-INSECT-PLAGUE-AREA-HAZARD insect_plague
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-insect-plague-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
@@ -78,7 +80,9 @@ function insectPlagueDifficultTerrainFact(spell: SpellRecord) {
       {
         kind: "insectPlagueHazard" as const,
         sourceCombatantId: spellCasterId,
-        sourceSpellId: spell.id,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spell.id),
+        ),
         areaId: insectPlagueAreaId,
       },
     ],
@@ -136,7 +140,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("insect plague is admitted as a ten-minute point-origin Sphere hazard", () => {
     const { spell, act } = castInsectPlague();
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -175,13 +182,17 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
       concentration: {
-        sourceSpellId: insectPlagueUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(insectPlagueUnitId),
+        ),
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "insectPlagueAreaHazard",
-          sourceSpellId: insectPlagueUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(insectPlagueUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           areaId: insectPlagueAreaId,
           radiusFeet: movementFeet(20),
@@ -199,7 +210,9 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     expect(battleObscurementZones(cast)).toEqual([
       expect.objectContaining({
         kind: "spellObscurementZone",
-        sourceSpellId: spell.id,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spell.id),
+        ),
         sourceCombatantId: spellCasterId,
         obscurement: "lightlyObscured",
         area: {

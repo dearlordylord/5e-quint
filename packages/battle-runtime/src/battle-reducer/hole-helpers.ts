@@ -24,10 +24,11 @@ import {
 } from "@dnd/shared/types";
 import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
-import type {
-  BattleMovementSpeedKind,
-  BattleSubject,
-  BonusActionStandardActionSubject,
+import {
+  battleSubjectForReplay,
+  type BattleMovementSpeedKind,
+  type BattleSubject,
+  type CharacterProcedureSelectionSubject,
 } from "../battle-subjects.ts";
 import {
   attackExecutionSelectionForOption,
@@ -293,7 +294,10 @@ export function bonusActionDashSubjectForSpeedKind(
   actorId: CombatantId,
   sourceUnitId: string,
   speedKind: BattleMovementSpeedKind,
-): BonusActionStandardActionSubject {
+): Extract<
+  CharacterProcedureSelectionSubject,
+  { readonly tag: "bonusActionStandardAction" }
+> {
   return {
     tag: "bonusActionStandardAction",
     actorId,
@@ -359,7 +363,7 @@ export function escapeSpellRestraintAbilityCheckHole(
     holeInstanceKey: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
     kind: "abilityCheck",
-    label: `Escape ${effect.sourceSpellId} Strength (Athletics) check (DC ${dc ?? 1})`,
+    label: `Escape ${effect.sourceProcedureRef} Strength (Athletics) check (DC ${dc ?? 1})`,
     ability: "str",
     skill: "athletics",
     dc: dc ?? difficultyClass(1),
@@ -660,7 +664,7 @@ export function needsHolesResult(
   return {
     tag: "needsHoles",
     state,
-    subject,
+    subject: battleSubjectForReplay(subject),
     holes,
     snapshot: snapshotBattle(state),
   };
@@ -981,7 +985,7 @@ export function alternateActionCostProfilesForActor(
     effect.kind === "spellDashBonusAction"
       ? [
           {
-            unitId: effect.sourceSpellId,
+            unitId: effect.sourceProcedureRef,
             profile: {
               kind: "alternateActionCost" as const,
               from: {
@@ -1041,7 +1045,7 @@ export function alternateActionCostActionAvailable(
 
 export function actorHasAlternateActionCost(
   combatant: BattleCreatureState | undefined,
-  sourceUnitId: string,
+  sourceUnitId: string | undefined,
   action: AlternateActionCostAction,
 ): boolean {
   return alternateActionCostProfilesForActor(combatant).some(

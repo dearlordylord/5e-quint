@@ -17,6 +17,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -156,7 +157,6 @@ function protectionFromEvilAndGoodSpellProjection(
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     activeEffect: {
       kind: "creatureTypeProtection",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       attackRollMode: "disadvantage",
       protectedAgainstCreatureTypes: [
@@ -222,7 +222,6 @@ function dispelEvilAndGoodProtectionSpellProjection(
     targeting: { kind: "self" },
     activeEffect: {
       kind: "creatureTypeProtection",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       attackRollMode: "disadvantage",
       protectedAgainstCreatureTypes: [...DISPEL_EVIL_AND_GOOD_CREATURE_TYPES],
@@ -237,7 +236,7 @@ function dispelEvilAndGoodProtectionSpellProjection(
 function discoverCreatureTypeProtectionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: CreatureTypeProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "self") {
     return [
@@ -245,6 +244,7 @@ function discoverCreatureTypeProtectionCastAct(
         subject: {
           tag: "actionSpell" as const,
           actorId,
+          procedureRef: invocation.sourceProcedureRef,
           invocation: creatureTypeProtectionInvocationRef(invocation),
           mode: { tag: "cast" as const },
         },
@@ -263,6 +263,7 @@ function discoverCreatureTypeProtectionCastAct(
             subject: {
               tag: "actionSpell" as const,
               actorId,
+              procedureRef: invocation.sourceProcedureRef,
               invocation: creatureTypeProtectionInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
@@ -275,7 +276,7 @@ function discoverCreatureTypeProtectionCastAct(
 }
 
 function creatureTypeProtectionInvocationRef(
-  invocation: CreatureTypeProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "spellSlot",
@@ -286,7 +287,7 @@ function creatureTypeProtectionInvocationRef(
 }
 
 function creatureTypeProtectionCastSummary(
-  invocation: CreatureTypeProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
@@ -393,7 +394,7 @@ function resolveCreatureTypeProtection(
 function creatureTypeProtectionSpellTargetSelection(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: CreatureTypeProtectionSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): CreatureTypeProtectionTargetSelection {
   if (input.invocation.targeting.kind === "self") {
@@ -438,7 +439,7 @@ function applyCreatureTypeProtectionEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: CreatureTypeProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
@@ -447,6 +448,7 @@ function applyCreatureTypeProtectionEffect(
     }
     const nextEffect = {
       ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
       sourceCombatantId: actorId,
     };
     const activeEffects = [
@@ -454,7 +456,7 @@ function applyCreatureTypeProtectionEffect(
         (effect) =>
           !(
             effect.kind === "creatureTypeProtection" &&
-            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
             effect.sourceCombatantId === actorId
           ),
       ),

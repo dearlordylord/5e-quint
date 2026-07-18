@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.invocation-magic-weapon-enhancement
 
@@ -57,12 +58,11 @@ import {
   battleWeaponItemMagicWeaponEnhancementBonus,
   battleReducerStartRouteEvent,
   endTurn,
-  resolveBattleSubject,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   attackBonus,
@@ -1021,7 +1021,7 @@ function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceSpellId === divineFavorUnitId
+        effect.sourceProcedureRef === divineFavorUnitId
           ? {
               ...effect,
               expiresAt: {
@@ -1199,7 +1199,7 @@ function fillTrueStrikeHit(
   expect(damage).toEqual(
     expect.objectContaining({
       spellWeaponDamageRiders: [
-        expect.objectContaining({ sourceSpellId: trueStrikeUnitId }),
+        expect.objectContaining({ sourceProcedureRef: trueStrikeUnitId }),
       ],
     }),
   );
@@ -1381,7 +1381,7 @@ function fillWeaponHit(
     expect(damage).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [
-          expect.objectContaining({ sourceSpellId: divineFavorUnitId }),
+          expect.objectContaining({ sourceProcedureRef: divineFavorUnitId }),
         ],
       }),
     );
@@ -1493,7 +1493,7 @@ function cleanDivineFavorDuration(
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceSpellId === divineFavorUnitId
+        effect.sourceProcedureRef === divineFavorUnitId
           ? {
               ...effect,
               expiresAt: {
@@ -1661,14 +1661,14 @@ function activeEffectPresent(
     return caster.activeEffects.some(
       (effect) =>
         effect.kind === "spellWeaponAttackOverride" &&
-        effect.sourceSpellId === shillelaghUnitId,
+        effect.sourceProcedureRef === shillelaghUnitId,
     );
   }
   if (scenario === "divineFavorWeaponDamageRider") {
     return caster.activeEffects.some(
       (effect) =>
         effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceSpellId === divineFavorUnitId,
+        effect.sourceProcedureRef === divineFavorUnitId,
     );
   }
   if (scenario === "magicWeaponEnhancement") {

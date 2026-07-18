@@ -4,6 +4,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
+  BattleExecutableSpellInvocation,
   BattleActiveEffect,
   BattleAttackRollRelationshipFact,
   BattleCreatureState,
@@ -14,7 +15,10 @@ import type {
   BattleState,
   SanctuaryTargetingInterdictionSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
 import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./direct-condition-lifecycle.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
@@ -106,6 +110,7 @@ type NonAttackSanctuaryTargetingInterdictionCheck =
 
 type SanctuaryTargetingInterdictionInput = {
   readonly state: BattleState;
+  readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
   readonly wardedCombatantId: CombatantId;
   readonly triggeringTargetEventId: BattleHoleId;
@@ -143,6 +148,7 @@ export function sanctuaryTargetingInterdictionCheck(
   }
   const hole = sanctuaryTargetingInterdictionOutcomeHole({
     state: input.state,
+    triggeringProcedureRef: input.triggeringProcedureRef,
     triggeringCombatantId: input.triggeringCombatantId,
     wardedCombatantId: input.wardedCombatantId,
     triggeringTargetEventId: input.triggeringTargetEventId,
@@ -232,6 +238,7 @@ export function sanctuaryTargetingInterdictionCheck(
 
 type SanctuaryTargetingInterdictionOutcomeHoleInput = {
   readonly state: BattleState;
+  readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
   readonly wardedCombatantId: CombatantId;
   readonly triggeringTargetEventId: BattleHoleId;
@@ -270,7 +277,7 @@ function sanctuaryTargetingInterdictionOutcomeHole(
   const holeKey = [
     "battle",
     "sanctuary-interdiction",
-    input.effect.sourceSpellId,
+    input.effect.sourceProcedureRef,
     input.effect.sourceCombatantId,
     input.wardedCombatantId,
     input.triggeringCombatantId,
@@ -282,7 +289,8 @@ function sanctuaryTargetingInterdictionOutcomeHole(
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: "Sanctuary Wisdom save and targeting outcome",
-    sourceSpellId: input.effect.sourceSpellId,
+    sourceProcedureRef: input.effect.sourceProcedureRef,
+    triggeringProcedureRef: input.triggeringProcedureRef,
     sourceCombatantId: input.effect.sourceCombatantId,
     wardedCombatantId: input.wardedCombatantId,
     triggeringCombatantId: input.triggeringCombatantId,
@@ -342,15 +350,18 @@ export function battleStateAfterTargetActionEarlyEndForActor(
 
 export function combatantWithSanctuaryWard(
   target: BattleCreatureState,
-  invocation: SanctuaryTargetingInterdictionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SanctuaryTargetingInterdictionSpellInvocation>,
 ): BattleCreatureState {
   const replacing = target.activeEffects.filter(
     (effect) =>
       effect.kind === "sanctuaryWard" &&
-      effect.sourceSpellId === invocation.activeEffect.sourceSpellId,
+      effect.sourceProcedureRef === invocation.sourceProcedureRef,
   );
   return battleCreatureWithSpellActiveEffects(target, [
     ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-    invocation.activeEffect,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+    },
   ]);
 }

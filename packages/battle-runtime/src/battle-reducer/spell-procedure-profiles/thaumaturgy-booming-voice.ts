@@ -32,6 +32,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
@@ -90,13 +91,14 @@ function admitThaumaturgyBoomingVoice(
 function discoverThaumaturgyBoomingVoiceCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: ThaumaturgyBoomingVoiceInvocation,
+  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: thaumaturgyBoomingVoiceInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -108,7 +110,7 @@ function discoverThaumaturgyBoomingVoiceCastAct(
 }
 
 function thaumaturgyBoomingVoiceInvocationRef(
-  invocation: ThaumaturgyBoomingVoiceInvocation,
+  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "cantrip",
@@ -118,7 +120,7 @@ function thaumaturgyBoomingVoiceInvocationRef(
 }
 
 function thaumaturgyBoomingVoiceCastSummary(
-  invocation: ThaumaturgyBoomingVoiceInvocation,
+  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} as a cantrip, using the Booming Voice effect.`;
 }
@@ -126,14 +128,14 @@ function thaumaturgyBoomingVoiceCastSummary(
 function isThaumaturgyBoomingVoiceEffectForInvocation(
   effect: BattleActiveEffect,
   actorId: CombatantId,
-  invocation: ThaumaturgyBoomingVoiceInvocation,
+  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
 ): effect is Extract<
   BattleActiveEffect,
   { readonly kind: "thaumaturgyBoomingVoice" }
 > {
   return (
     effect.kind === "thaumaturgyBoomingVoice" &&
-    effect.sourceSpellId === invocation.spell.id &&
+    effect.sourceProcedureRef === invocation.sourceProcedureRef &&
     effect.sourceCombatantId === actorId
   );
 }
@@ -141,7 +143,7 @@ function isThaumaturgyBoomingVoiceEffectForInvocation(
 function applyThaumaturgyBoomingVoiceEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ThaumaturgyBoomingVoiceInvocation,
+  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -162,6 +164,7 @@ function applyThaumaturgyBoomingVoiceEffect(
         ),
         {
           ...invocation.activeEffect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: actorId,
         },
       ],

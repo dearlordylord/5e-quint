@@ -2,6 +2,9 @@
 
 import { describe, expect, it } from "vitest";
 
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { admitCharacterProcedureSelectionSubject } from "./battle-act-composition.ts";
+import { isCharacterProcedureSelectionSubject } from "./battle-subjects.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanValue,
@@ -25,7 +28,31 @@ import {
   type ReducerRouteOwnerGroup,
   type ReducerRouteSubjectFamily,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import {
+  abilityCheckFill,
+  fighterId,
+  fighterVsGoblinBattle,
+  findAct,
+  goblinId,
+  hidePrerequisites,
+  resolveBattleSubject,
+  targetFill,
+} from "./battle-runtime-test-support.ts";
+import {
+  battleFillKind,
+  battleHoleFamilyKind,
+  discoverBattleActs,
+  endTurn,
+  sameBattleSubject,
+  snapshotBattle,
+  type BattleActiveEffect,
+  type BattleFill,
+  type BattleHole,
+  type BattleResolutionResult,
+  type BattleState,
+  type BattleActDiscoverySubject as BattleSubject,
+  type CombatantId,
+} from "./index.ts";
 import {
   enhanceAbilityUnitId,
   guidanceUnitId,
@@ -45,31 +72,6 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import {
-  abilityCheckFill,
-  fighterId,
-  fighterVsGoblinBattle,
-  findAct,
-  goblinId,
-  hidePrerequisites,
-  targetFill,
-} from "./battle-runtime-test-support.ts";
-import {
-  battleFillKind,
-  battleHoleFamilyKind,
-  discoverBattleActs,
-  endTurn,
-  resolveBattleSubject,
-  sameBattleSubject,
-  snapshotBattle,
-  type BattleActiveEffect,
-  type BattleFill,
-  type BattleHole,
-  type BattleResolutionResult,
-  type BattleState,
-  type BattleSubject,
-  type CombatantId,
-} from "./index.ts";
 
 const abilityCheckChoiceSearchScenarios = [
   "init",
@@ -790,8 +792,12 @@ function rollModifierOpeningRouteFromState(
   subject: BattleSubject,
   targetFill: BattleFill,
 ): readonly ReducerRouteEvent[] {
-  const act = discoverBattleActs(state).find((candidate) =>
-    sameBattleSubject(candidate.subject, subject),
+  const admitted = isCharacterProcedureSelectionSubject(subject)
+    ? admitCharacterProcedureSelectionSubject(state, subject)
+    : subject;
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      admitted !== undefined && sameBattleSubject(candidate.subject, admitted),
   );
   if (act === undefined) {
     throw new Error("Expected roll-modifier spell act from battle discovery.");

@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-FAVOR divine_favor
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-SMITE divine_smite
@@ -23,7 +25,10 @@
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -61,7 +66,6 @@ import {
   endTurn,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -76,7 +80,7 @@ import {
   type BattleRolledDiceFill,
   type BattleSpellHealingRollHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -197,14 +201,12 @@ type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type HeroismSourceSpellId = typeof heroismUnitId | "none";
 type LongstriderSourceSpellId = typeof longstriderUnitId | "none";
 type LongstriderSpeedEffectTarget = "target" | "none";
-type ShillelaghSourceSpellId = typeof shillelaghUnitId | "none";
 const shillelaghQuarterstaffUnitId = "weapon_quarterstaff";
 type ShillelaghQuarterstaffUnitId = typeof shillelaghQuarterstaffUnitId;
 const shillelaghQuarterstaffForceAttackName = "Quarterstaff (force)";
 type ShillelaghForceAttackName =
   | typeof shillelaghQuarterstaffForceAttackName
   | "none";
-type TrueStrikeSourceSpellId = typeof trueStrikeUnitId | "none";
 const trueStrikeDaggerUnitId = "weapon_dagger";
 type TrueStrikeDaggerUnitId = typeof trueStrikeDaggerUnitId;
 const trueStrikeDaggerItemId = `main:${trueStrikeDaggerUnitId}`;
@@ -389,13 +391,17 @@ type HexActiveMarkProjection = Pick<
   | "hexActiveMarkRetargetTiming"
 >;
 type SearingSmiteDamageProjection = {
-  readonly sourceSpellId: typeof searingSmiteUnitId;
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
   readonly damageType: "fire";
   readonly dice: number;
   readonly dieSize: number;
 };
 type SearingSmiteTurnStartSaveProjection = {
-  readonly sourceSpellId: typeof searingSmiteUnitId;
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
   readonly ability: "con";
   readonly successEnds: "spell";
 };
@@ -413,7 +419,9 @@ type ShillelaghWeaponAttackOverrideProjection =
   | { readonly tag: "none" }
   | {
       readonly tag: "quarterstaffForceAttack";
-      readonly sourceSpellId: Exclude<ShillelaghSourceSpellId, "none">;
+      readonly sourceProcedureRef: ReturnType<
+        typeof battleProcedureExecutionRefForTest
+      >;
       readonly weaponUnitId: ShillelaghQuarterstaffUnitId;
       readonly spellcastingAbilityModifier: number;
       readonly effectAttackBonus: number;
@@ -430,7 +438,9 @@ type TrueStrikeSpellHostedWeaponAttackProjection =
   | { readonly tag: "none" }
   | {
       readonly tag: "materialDaggerRadiantAttack";
-      readonly sourceSpellId: Exclude<TrueStrikeSourceSpellId, "none">;
+      readonly sourceProcedureRef: ReturnType<
+        typeof battleProcedureExecutionRefForTest
+      >;
       readonly componentWeaponItemId: TrueStrikeDaggerItemId;
       readonly weaponUnitId: TrueStrikeDaggerUnitId;
       readonly attackName: Exclude<TrueStrikeDaggerAttackName, "none">;
@@ -470,7 +480,10 @@ type BonusActionSpellAct = AvailableBattleAct & {
   >;
 };
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole & {
   readonly spell: Extract<
@@ -748,20 +761,26 @@ const selectedUnitIdentityReplays = [
           searingSmiteLifecycle: {
             tag: "afterHitTimedDamageAndSaveCleanup",
             immediateDamage: {
-              sourceSpellId: "searing_smite",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("searing_smite"),
+              ),
               damageType: "fire",
               dice: 1,
               dieSize: 6,
             },
             activeBeforeSuccessfulSave: true,
             turnStartDamage: {
-              sourceSpellId: "searing_smite",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("searing_smite"),
+              ),
               damageType: "fire",
               dice: 1,
               dieSize: 6,
             },
             turnStartSave: {
-              sourceSpellId: "searing_smite",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("searing_smite"),
+              ),
               ability: "con",
               successEnds: "spell",
             },
@@ -786,7 +805,9 @@ const selectedUnitIdentityReplays = [
           level1SlotsRemaining: 2,
           shillelaghWeaponAttackOverride: {
             tag: "quarterstaffForceAttack",
-            sourceSpellId: shillelaghUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(shillelaghUnitId),
+            ),
             weaponUnitId: shillelaghQuarterstaffUnitId,
             spellcastingAbilityModifier: 3,
             effectAttackBonus: 5,
@@ -818,7 +839,9 @@ const selectedUnitIdentityReplays = [
           level1SlotsRemaining: 2,
           trueStrikeSpellHostedWeaponAttack: {
             tag: "materialDaggerRadiantAttack",
-            sourceSpellId: trueStrikeUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(trueStrikeUnitId),
+            ),
             componentWeaponItemId: trueStrikeDaggerItemId,
             weaponUnitId: trueStrikeDaggerUnitId,
             attackName: trueStrikeDaggerAttackName,
@@ -2667,7 +2690,7 @@ function bonusActionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Spell act.`);
@@ -2682,7 +2705,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Action Spell act.`);
@@ -2878,7 +2901,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
       },
     ],
   };
@@ -2981,7 +3004,7 @@ function spellWeaponDamageRider(
   spellId: SpellWeaponDamageRiderSourceSpellId,
 ): NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number] {
   const rider = hole.spellWeaponDamageRiders?.find(
-    (candidate) => candidate.sourceSpellId === spellId,
+    (candidate) => candidate.sourceProcedureRef === spellId,
   );
   if (rider === undefined) {
     throw new Error(`Expected ${spellId} spell weapon damage rider.`);
@@ -2994,7 +3017,7 @@ function spellMarkedDamageRider(
   spellId: MarkedDamageRiderSourceSpellId,
 ): NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number] {
   const rider = hole.spellMarkedDamageRiders?.find(
-    (candidate) => candidate.sourceSpellId === spellId,
+    (candidate) => candidate.sourceProcedureRef === spellId,
   );
   if (rider === undefined) {
     throw new Error(`Expected ${spellId} spell marked damage rider.`);
@@ -3162,8 +3185,8 @@ function isMarkedDamageTransferAct(
 ): candidate is BonusActionSpellAct {
   return (
     candidate.subject.tag === "bonusActionSpell" &&
-    candidate.subject.invocation.tag === "spellEffect" &&
-    candidate.subject.invocation.spellId === spellId
+    battleActSpellPresentation(candidate)?.invocation.tag === "spellEffect" &&
+    battleActSpellPresentation(candidate)?.invocation.spellId === spellId
   );
 }
 
@@ -3265,7 +3288,7 @@ function ensnaringStrikeRestrainsTarget(state: BattleState): boolean {
     target.activeEffects.some(
       (effect) =>
         effect.kind === "spellCondition" &&
-        effect.sourceSpellId === ensnaringStrikeUnitId &&
+        effect.sourceProcedureRef === ensnaringStrikeUnitId &&
         effect.sourceCombatantId === casterId &&
         effect.condition === "restrained" &&
         effect.turnStartDamage?.damageType === "piercing" &&
@@ -3286,7 +3309,7 @@ function ensnaringStrikeSaveSourceSpellId(
 function ensnaringStrikeTurnStartDamageSourceSpellId(
   hole: BattleSpellTurnStartDamageRollHole,
 ): EnsnaringStrikeSourceSpellId {
-  return hole.spellTurnStartDamage.sourceSpellId === ensnaringStrikeUnitId
+  return hole.spellTurnStartDamage.sourceProcedureRef === ensnaringStrikeUnitId
     ? ensnaringStrikeUnitId
     : "none";
 }
@@ -3301,7 +3324,7 @@ function searingSmiteActiveEffect(
   return target.activeEffects.find(
     (effect): effect is SearingSmiteTurnStartDamageAndSaveEffect =>
       effect.kind === "spellTurnStartDamageAndSave" &&
-      effect.sourceSpellId === searingSmiteUnitId &&
+      effect.sourceProcedureRef === searingSmiteUnitId &&
       effect.sourceCombatantId === casterId,
   );
 }
@@ -3341,7 +3364,9 @@ function searingSmiteDamageProjectionFromRider(
   rider: NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number],
 ): SearingSmiteDamageProjection {
   return searingSmiteDamageProjection({
-    sourceSpellId: rider.sourceSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(rider.sourceProcedureRef),
+    ),
     damageType: rider.damage.damageType,
     dice: rider.damage.expr.dice,
     dieSize: rider.damage.expr.dieSize,
@@ -3352,7 +3377,9 @@ function searingSmiteTurnStartDamageProjection(
   hole: BattleSpellTurnStartDamageRollHole,
 ): SearingSmiteDamageProjection {
   return searingSmiteDamageProjection({
-    sourceSpellId: hole.spellTurnStartDamage.sourceSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(hole.spellTurnStartDamage.sourceProcedureRef),
+    ),
     damageType: hole.spellTurnStartDamage.damage.damageType,
     dice: hole.spellTurnStartDamage.damage.expr.dice,
     dieSize: hole.spellTurnStartDamage.damage.expr.dieSize,
@@ -3360,14 +3387,19 @@ function searingSmiteTurnStartDamageProjection(
 }
 
 function searingSmiteDamageProjection(input: {
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
   readonly damageType: string;
   readonly dice: number;
   readonly dieSize: number;
 }): SearingSmiteDamageProjection {
-  if (input.sourceSpellId !== searingSmiteUnitId) {
+  if (
+    input.sourceProcedureRef !==
+    battleProcedureExecutionRefForTest(String(searingSmiteUnitId))
+  ) {
     throw new Error(
-      `Unexpected Searing Smite source spell id ${input.sourceSpellId}.`,
+      `Unexpected Searing Smite source spell id ${input.sourceProcedureRef}.`,
     );
   }
   if (input.damageType !== "fire") {
@@ -3376,7 +3408,9 @@ function searingSmiteDamageProjection(input: {
     );
   }
   return {
-    sourceSpellId: searingSmiteUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(searingSmiteUnitId),
+    ),
     damageType: "fire",
     dice: input.dice,
     dieSize: input.dieSize,
@@ -3387,9 +3421,12 @@ function searingSmiteTurnStartSaveProjection(
   hole: BattleSpellTurnStartSavingThrowOutcomeHole,
 ): SearingSmiteTurnStartSaveProjection {
   const save = hole.spellTurnStartSave.save;
-  if (hole.spellTurnStartSave.sourceSpellId !== searingSmiteUnitId) {
+  if (
+    hole.spellTurnStartSave.sourceProcedureRef !==
+    battleProcedureExecutionRefForTest(String(searingSmiteUnitId))
+  ) {
     throw new Error(
-      `Unexpected Searing Smite source spell id ${hole.spellTurnStartSave.sourceSpellId}.`,
+      `Unexpected Searing Smite source spell id ${hole.spellTurnStartSave.sourceProcedureRef}.`,
     );
   }
   if (save.ability !== "con") {
@@ -3401,7 +3438,9 @@ function searingSmiteTurnStartSaveProjection(
     );
   }
   return {
-    sourceSpellId: searingSmiteUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(searingSmiteUnitId),
+    ),
     ability: "con",
     successEnds: "spell",
   };
@@ -3418,7 +3457,9 @@ function shillelaghWeaponAttackOverrideProjection(input: {
   }
   return {
     tag: "quarterstaffForceAttack",
-    sourceSpellId: shillelaghRequiredSourceSpellId(effect),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(shillelaghRequiredSourceSpellId(effect)),
+    ),
     weaponUnitId: shillelaghEffectWeaponUnitId(input.state, effect),
     spellcastingAbilityModifier: Number(effect.spellcastingAbilityModifier),
     effectAttackBonus: Number(effect.attackBonus),
@@ -3438,7 +3479,7 @@ function shillelaghWeaponAttackOverrideEffect(
   return caster.activeEffects.find(
     (effect): effect is ShillelaghWeaponAttackOverrideEffect =>
       effect.kind === "spellWeaponAttackOverride" &&
-      effect.sourceSpellId === shillelaghUnitId &&
+      effect.sourceProcedureRef === shillelaghUnitId &&
       effect.sourceCombatantId === casterId,
   );
 }
@@ -3446,11 +3487,11 @@ function shillelaghWeaponAttackOverrideEffect(
 function shillelaghRequiredSourceSpellId(
   effect: ShillelaghWeaponAttackOverrideEffect,
 ): typeof shillelaghUnitId {
-  if (effect.sourceSpellId === shillelaghUnitId) {
+  if (effect.sourceProcedureRef === shillelaghUnitId) {
     return shillelaghUnitId;
   }
   throw new Error(
-    `Unexpected Shillelagh source spell id ${effect.sourceSpellId}.`,
+    `Unexpected Shillelagh source spell id ${effect.sourceProcedureRef}.`,
   );
 }
 
@@ -3527,7 +3568,9 @@ function trueStrikeSpellHostedWeaponAttackProjection(input: {
 }): TrueStrikeSpellHostedWeaponAttackProjection {
   return {
     tag: "materialDaggerRadiantAttack",
-    sourceSpellId: trueStrikeRequiredSourceSpellId(input.act),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(trueStrikeRequiredSourceSpellId(input.act)),
+    ),
     componentWeaponItemId: trueStrikeComponentWeaponItemId(input.act),
     weaponUnitId: trueStrikeWeaponUnitId(input.state, input.act),
     ...trueStrikeRadiantAttackProjection(input.attackRoll, input.damage),
@@ -3538,13 +3581,14 @@ function trueStrikeRequiredSourceSpellId(
   act: ActionSpellAct,
 ): typeof trueStrikeUnitId {
   if (
-    act.subject.invocation.spellId === trueStrikeUnitId &&
-    act.subject.invocation.procedure === "spellHostedWeaponAttack"
+    battleActSpellPresentation(act)?.invocation.spellId === trueStrikeUnitId &&
+    battleActSpellPresentation(act)?.invocation.procedure ===
+      "spellHostedWeaponAttack"
   ) {
     return trueStrikeUnitId;
   }
   throw new Error(
-    `Unexpected True Strike invocation ${act.subject.invocation.spellId}.`,
+    `Unexpected True Strike invocation ${battleActSpellPresentation(act)?.invocation.spellId}.`,
   );
 }
 
@@ -3753,13 +3797,13 @@ function heroismEffectsProjection(
   const frightenedImmunity = caster.activeEffects.find(
     (effect): effect is HeroismFrightenedImmunityEffect =>
       effect.kind === "conditionImmunity" &&
-      effect.sourceSpellId === heroismUnitId &&
+      effect.sourceProcedureRef === heroismUnitId &&
       effect.sourceCombatantId === casterId,
   );
   const turnStartTemporaryHitPoints = caster.activeEffects.find(
     (effect): effect is HeroismTurnStartTemporaryHitPointsEffect =>
       effect.kind === "turnStartTemporaryHitPoints" &&
-      effect.sourceSpellId === heroismUnitId &&
+      effect.sourceProcedureRef === heroismUnitId &&
       effect.sourceCombatantId === casterId,
   );
   return {
@@ -3790,16 +3834,16 @@ function heroismFrightenedImmunityCondition(
 }
 
 function heroismSourceSpellId(
-  effect: { readonly sourceSpellId: string } | undefined,
+  effect: { readonly sourceProcedureRef: string } | undefined,
 ): HeroismSourceSpellId {
   if (effect === undefined) {
     return "none";
   }
-  if (effect.sourceSpellId === heroismUnitId) {
+  if (effect.sourceProcedureRef === heroismUnitId) {
     return heroismUnitId;
   }
   throw new Error(
-    `Unexpected Heroism source spell id ${effect.sourceSpellId}.`,
+    `Unexpected Heroism source spell id ${effect.sourceProcedureRef}.`,
   );
 }
 
@@ -3834,23 +3878,23 @@ function longstriderSpeedEffect(state: BattleState):
   const effect = target.activeEffects.find(
     (candidate): candidate is LongstriderSpeedDeltaEffect =>
       candidate.kind === "speedDelta" &&
-      candidate.sourceSpellId === longstriderUnitId &&
+      candidate.sourceProcedureRef === longstriderUnitId &&
       candidate.sourceCombatantId === casterId,
   );
   return effect === undefined ? undefined : { target: "target", effect };
 }
 
 function longstriderSourceSpellId(
-  effect: { readonly sourceSpellId: string } | undefined,
+  effect: { readonly sourceProcedureRef: string } | undefined,
 ): LongstriderSourceSpellId {
   if (effect === undefined) {
     return "none";
   }
-  if (effect.sourceSpellId === longstriderUnitId) {
+  if (effect.sourceProcedureRef === longstriderUnitId) {
     return longstriderUnitId;
   }
   throw new Error(
-    `Unexpected Longstrider source spell id ${effect.sourceSpellId}.`,
+    `Unexpected Longstrider source spell id ${effect.sourceProcedureRef}.`,
   );
 }
 
@@ -3896,22 +3940,22 @@ function huntersMarkActiveMarkEffect(
   return caster.activeEffects.find(
     (effect): effect is HuntersMarkActiveMarkEffect =>
       effect.kind === "spellMarkedDamageRider" &&
-      effect.sourceSpellId === huntersMarkUnitId &&
+      effect.sourceProcedureRef === huntersMarkUnitId &&
       effect.sourceCombatantId === casterId,
   );
 }
 
 function huntersMarkSourceSpellId(
-  effect: { readonly sourceSpellId: string } | undefined,
+  effect: { readonly sourceProcedureRef: string } | undefined,
 ): HuntersMarkSourceSpellId {
   if (effect === undefined) {
     return "none";
   }
-  if (effect.sourceSpellId === huntersMarkUnitId) {
+  if (effect.sourceProcedureRef === huntersMarkUnitId) {
     return huntersMarkUnitId;
   }
   throw new Error(
-    `Unexpected Hunter's Mark source spell id ${effect.sourceSpellId}.`,
+    `Unexpected Hunter's Mark source spell id ${effect.sourceProcedureRef}.`,
   );
 }
 
@@ -3942,11 +3986,11 @@ function huntersMarkConcentrationSourceSpellId(
   if (caster.concentration === null) {
     return "none";
   }
-  if (caster.concentration.sourceSpellId === huntersMarkUnitId) {
+  if (caster.concentration.sourceProcedureRef === huntersMarkUnitId) {
     return huntersMarkUnitId;
   }
   throw new Error(
-    `Unexpected Hunter's Mark Concentration source spell id ${caster.concentration.sourceSpellId}.`,
+    `Unexpected Hunter's Mark Concentration source spell id ${caster.concentration.sourceProcedureRef}.`,
   );
 }
 
@@ -4061,21 +4105,23 @@ function hexActiveMarkEffect(
   return caster.activeEffects.find(
     (effect): effect is HexActiveMarkEffect =>
       effect.kind === "spellMarkedDamageRider" &&
-      effect.sourceSpellId === hexUnitId &&
+      effect.sourceProcedureRef === hexUnitId &&
       effect.sourceCombatantId === casterId,
   );
 }
 
 function hexSourceSpellId(
-  effect: { readonly sourceSpellId: string } | undefined,
+  effect: { readonly sourceProcedureRef: string } | undefined,
 ): HexSourceSpellId {
   if (effect === undefined) {
     return "none";
   }
-  if (effect.sourceSpellId === hexUnitId) {
+  if (effect.sourceProcedureRef === hexUnitId) {
     return hexUnitId;
   }
-  throw new Error(`Unexpected Hex source spell id ${effect.sourceSpellId}.`);
+  throw new Error(
+    `Unexpected Hex source spell id ${effect.sourceProcedureRef}.`,
+  );
 }
 
 function hexActiveMarkTarget(
@@ -4147,11 +4193,11 @@ function damageRiderSourceSpellId(
   if (damageRider === undefined) {
     return "none";
   }
-  if (isDamageRiderSourceSpellId(damageRider.sourceSpellId)) {
-    return damageRider.sourceSpellId;
+  if (isDamageRiderSourceSpellId(damageRider.sourceProcedureRef)) {
+    return damageRider.sourceProcedureRef;
   }
   throw new Error(
-    `Unexpected damage rider source spell id ${damageRider.sourceSpellId}.`,
+    `Unexpected damage rider source spell id ${damageRider.sourceProcedureRef}.`,
   );
 }
 
@@ -4175,7 +4221,7 @@ function divineFavorActiveRiderCount(state: BattleState): number {
       ?.activeEffects.filter(
         (effect) =>
           effect.kind === "spellWeaponDamageRider" &&
-          effect.sourceSpellId === divineFavorUnitId,
+          effect.sourceProcedureRef === divineFavorUnitId,
       ).length ?? 0
   );
 }
@@ -4627,9 +4673,11 @@ function searingSmiteLifecycleFromQuint(
   return {
     tag: "afterHitTimedDamageAndSaveCleanup",
     immediateDamage: {
-      sourceSpellId: searingSmiteRequiredSourceSpellIdFromQuint(
-        immediateSource,
-        "immediate damage",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        searingSmiteRequiredSourceSpellIdFromQuint(
+          immediateSource,
+          "immediate damage",
+        ),
       ),
       damageType: searingSmiteRequiredDamageTypeFromQuint(
         state["qSearingSmiteImmediateDamageDamageType"],
@@ -4650,9 +4698,11 @@ function searingSmiteLifecycleFromQuint(
       true,
     ),
     turnStartDamage: {
-      sourceSpellId: searingSmiteRequiredSourceSpellIdFromQuint(
-        state["qSearingSmiteTurnStartDamageSourceSpellId"],
-        "turn-start damage",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        searingSmiteRequiredSourceSpellIdFromQuint(
+          state["qSearingSmiteTurnStartDamageSourceSpellId"],
+          "turn-start damage",
+        ),
       ),
       damageType: searingSmiteRequiredDamageTypeFromQuint(
         state["qSearingSmiteTurnStartDamageDamageType"],
@@ -4668,9 +4718,11 @@ function searingSmiteLifecycleFromQuint(
       ),
     },
     turnStartSave: {
-      sourceSpellId: searingSmiteRequiredSourceSpellIdFromQuint(
-        state["qSearingSmiteTurnStartSaveSourceSpellId"],
-        "turn-start save",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        searingSmiteRequiredSourceSpellIdFromQuint(
+          state["qSearingSmiteTurnStartSaveSourceSpellId"],
+          "turn-start save",
+        ),
       ),
       ability: searingSmiteRequiredSaveAbilityFromQuint(
         state["qSearingSmiteTurnStartSaveAbility"],
@@ -4821,7 +4873,9 @@ function shillelaghWeaponAttackOverrideFromQuint(
   }
   return {
     tag: "quarterstaffForceAttack",
-    sourceSpellId: shillelaghRequiredSourceSpellIdFromQuint(source),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(shillelaghRequiredSourceSpellIdFromQuint(source)),
+    ),
     weaponUnitId: shillelaghWeaponUnitIdFromQuint(
       state["qShillelaghOverrideWeaponUnitId"],
     ),
@@ -4938,7 +4992,9 @@ function trueStrikeSpellHostedWeaponAttackFromQuint(
   }
   return {
     tag: "materialDaggerRadiantAttack",
-    sourceSpellId: trueStrikeRequiredSourceSpellIdFromQuint(source),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(trueStrikeRequiredSourceSpellIdFromQuint(source)),
+    ),
     componentWeaponItemId: trueStrikeComponentWeaponItemIdFromQuint(
       state["qTrueStrikeComponentWeaponItemId"],
     ),

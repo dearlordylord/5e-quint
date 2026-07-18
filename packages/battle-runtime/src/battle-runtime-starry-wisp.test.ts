@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   testBattleCreatureStateWithConditions,
@@ -33,7 +34,7 @@ import {
   objectInvisibleBenefitDenied,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
-import type { BattleSubject } from "./battle-runtime-test-support.ts";
+import type { BattleActDiscoverySubject as BattleSubject } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Starry Wisp", () => {
@@ -124,7 +125,9 @@ describe("battle runtime: Starry Wisp", () => {
       snapshot: {
         lightEmitters: [
           {
-            sourceSpellId: "starry_wisp",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("starry_wisp"),
+            ),
             sourceCombatantId: wizardId,
             attachment: { kind: "combatant", combatantId: skeletonId },
             emission: { kind: "dim", radiusFeet: movementFeet(10) },
@@ -254,7 +257,9 @@ describe("battle runtime: Starry Wisp", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "invisibleBenefitDenied",
-          sourceSpellId: "starry_wisp",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("starry_wisp"),
+          ),
           sourceCombatantId: wizardId,
           expiresAt: {
             kind: "endOfTurn",
@@ -584,7 +589,9 @@ describe("battle runtime: Starry Wisp", () => {
         lightEmitters: [
           {
             kind: "objectInvisibleRevealLightEmitter",
-            sourceSpellId: "starry_wisp",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("starry_wisp"),
+            ),
             sourceCombatantId: wizardId,
             objectId,
             emission: { kind: "dim", radiusFeet: movementFeet(10) },
@@ -710,7 +717,9 @@ describe("battle runtime: Starry Wisp", () => {
     expect(hit.state.lightEmitters).toEqual([
       expect.objectContaining({
         kind: "objectInvisibleRevealLightEmitter",
-        sourceSpellId: "starry_wisp",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("starry_wisp"),
+        ),
         objectId,
       }),
     ]);

@@ -1,3 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActSpellSlotPresentation,
+  battleActDruidWildShapePresentation,
+} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.druid-wild-shape-known-form
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape
 // UNIT-IDENTITY-REPLAY: L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape doAssumeRidingHorse doReuseAsCat doDismissForm doIncapacitatedReversion doDeathReversion
@@ -37,32 +43,16 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
-  activeDruidWildShapeEffect,
-  activeDruidWildShapeForm,
-  battleReducerStartRouteEvent,
-  combatantD20AbilityModifier,
-  combatantD20ProficiencyBonus,
-  combatantHasActiveDruidWildShape,
-  discoverBattleActs,
-  resolveBattleSubject,
-  snapshotBattle,
-  type BattleCreatureState,
-  type BattleFill,
-  type BattleHole,
-  type BattleState,
-  type BattleSubject,
-  type CharacterBattleCreatureState,
-} from "./index.ts";
-import {
+  attackRollFill,
   battleId,
   characterSeed,
   combatantId,
-  heavyArmorClassState,
-  attackRollFill,
   damageRollFillWithGroups,
+  heavyArmorClassState,
   oppositionSide,
   requireNeedsHoles,
   requireResolved,
+  resolveBattleSubject,
   savingThrowOutcomeFill,
   spellRecord,
   startBattleRight,
@@ -71,6 +61,22 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import {
+  activeDruidWildShapeEffect,
+  activeDruidWildShapeForm,
+  battleReducerStartRouteEvent,
+  combatantD20AbilityModifier,
+  combatantD20ProficiencyBonus,
+  combatantHasActiveDruidWildShape,
+  discoverBattleActs,
+  snapshotBattle,
+  type BattleCreatureState,
+  type BattleFill,
+  type BattleHole,
+  type BattleState,
+  type BattleActDiscoverySubject as BattleSubject,
+  type CharacterBattleCreatureState,
+} from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 const ACTIVE_FORMS = ["trueForm", "ridingHorse", "cat"] as const;
@@ -794,7 +800,9 @@ function resolveDeathReversionWithRoute(
       kind: "spellTarget",
       casterId: opponentId,
       targetId: druidId,
-      spellId: "fire_bolt",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("fire_bolt"),
+      ),
     },
   ]);
   const needsAttack = requireNeedsHoles(
@@ -893,7 +901,10 @@ function actionSpellAct(
     | {
         readonly tag: "cantrip";
         readonly procedure: Extract<
-          Extract<BattleSubject, { readonly tag: "actionSpell" }>["invocation"],
+          Extract<
+            BattleSubject,
+            { readonly tag: "actionSpell"; readonly invocation: unknown }
+          >["invocation"],
           { readonly tag: "cantrip" }
         >["procedure"];
       }
@@ -901,7 +912,10 @@ function actionSpellAct(
         readonly tag: "spellSlot";
         readonly slotLevel: number;
         readonly procedure: Extract<
-          Extract<BattleSubject, { readonly tag: "actionSpell" }>["invocation"],
+          Extract<
+            BattleSubject,
+            { readonly tag: "actionSpell"; readonly invocation: unknown }
+          >["invocation"],
           { readonly tag: "spellSlot" }
         >["procedure"];
       },
@@ -913,13 +927,18 @@ function actionSpellAct(
       }
       return (
         candidate.subject.actorId === opponentId &&
-        candidate.subject.invocation.tag === invocation.tag &&
-        candidate.subject.invocation.spellId === spellUnitId &&
-        candidate.subject.invocation.procedure === invocation.procedure &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          invocation.tag &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          spellUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          invocation.procedure &&
         (invocation.tag === "cantrip" ||
-          (candidate.subject.invocation.tag === "spellSlot" &&
-            Number(candidate.subject.invocation.slotLevel) ===
-              invocation.slotLevel))
+          (battleActSpellPresentation(candidate)?.invocation.tag ===
+            "spellSlot" &&
+            Number(
+              battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
+            ) === invocation.slotLevel))
       );
     },
   );
@@ -1031,7 +1050,8 @@ function wildShapeAct(
         candidate.subject.action === input.action &&
         (input.action === "dismiss" ||
           (candidate.subject.action === "assumeForm" &&
-            candidate.subject.formStatBlockId === input.formStatBlockId))
+            battleActDruidWildShapePresentation(candidate)?.formStatBlockId ===
+              input.formStatBlockId))
       );
     },
   );

@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-03-CLOUDKILL-AREA-HAZARD cloudkill
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-cloudkill-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
@@ -33,7 +35,6 @@ import {
   Hp,
   movementFeet,
   resolveBattleSubject,
-  spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 
@@ -119,7 +120,10 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   test("cloudkill is admitted as a ten-minute point-origin Sphere hazard", () => {
     const { spell, act } = castCloudkill();
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -158,13 +162,17 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
       concentration: {
-        sourceSpellId: cloudkillUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(cloudkillUnitId),
+        ),
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "cloudkillAreaHazard",
-          sourceSpellId: cloudkillUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(cloudkillUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           areaId: cloudkillAreaId,
           radiusFeet: movementFeet(20),
@@ -182,7 +190,9 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(battleObscurementZones(cast)).toEqual([
       expect.objectContaining({
         kind: "spellObscurementZone",
-        sourceSpellId: spell.id,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spell.id),
+        ),
         sourceCombatantId: spellCasterId,
         obscurement: "heavilyObscured",
         area: {
@@ -278,8 +288,6 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
         tag: "runtimeCommand",
         actorId: spellCasterId,
         command: "disperseCloudkill",
-        sourceCombatantId: spellCasterId,
-        sourceSpellId: spellId(cloudkillUnitId),
         areaId: cloudkillAreaId,
       },
       fills: [],

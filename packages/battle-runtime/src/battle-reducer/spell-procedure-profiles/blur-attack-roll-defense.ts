@@ -33,6 +33,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BlurAttackRollDefenseSpellInvocation,
@@ -100,7 +101,6 @@ function blurAttackRollDefenseShape(
   return {
     activeEffect: {
       kind: "blurred",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       expiresAt,
     },
@@ -135,13 +135,14 @@ function admitBlurAttackRollDefense(
 function discoverBlurAttackRollDefenseCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: BlurAttackRollDefenseSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: blurAttackRollDefenseInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -153,7 +154,7 @@ function discoverBlurAttackRollDefenseCastAct(
 }
 
 function blurAttackRollDefenseInvocationRef(
-  invocation: BlurAttackRollDefenseSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "spellSlot",
@@ -164,7 +165,7 @@ function blurAttackRollDefenseInvocationRef(
 }
 
 function blurAttackRollDefenseCastSummary(
-  invocation: BlurAttackRollDefenseSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
@@ -172,7 +173,7 @@ function blurAttackRollDefenseCastSummary(
 function applyBlurAttackRollDefenseEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BlurAttackRollDefenseSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -180,6 +181,7 @@ function applyBlurAttackRollDefenseEffect(
   }
   const nextEffect = {
     ...invocation.activeEffect,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
   };
   const activeEffects = [
@@ -187,7 +189,7 @@ function applyBlurAttackRollDefenseEffect(
       (effect) =>
         !(
           effect.kind === "blurred" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId
         ),
     ),

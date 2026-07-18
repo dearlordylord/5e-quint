@@ -25,7 +25,7 @@ import {
   testLongswordAttack,
   unitFeatureDecisionFill,
   unitLibrary,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { battleStunningStrikeSupportForUnit } from "./unit-feature-support.ts";
 

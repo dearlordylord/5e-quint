@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { expect, test } from "vitest";
 
@@ -28,7 +29,9 @@ const syntheticDruidWildShapeEffect: Extract<
 > = {
   kind: "druidWildShapeForm",
   sourceCombatantId: combatantId("synthetic-shape-druid"),
-  sourceUnitId: "synthetic_wild_shape_feature",
+  sourceProcedureRef: battleProcedureExecutionRefForTest(
+    "synthetic_wild_shape_feature",
+  ),
   formStatBlockId: "synthetic_beast_form",
   formLimbs: { kind: "cannotHandleObjects" },
   equipmentDisposition: [],
@@ -37,7 +40,9 @@ const syntheticDruidWildShapeEffect: Extract<
 const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: spellShapeCasterId,
-  sourceSpellId: "synthetic_shape_spell",
+  sourceProcedureRef: battleProcedureExecutionRefForTest(
+    String("synthetic_shape_spell"),
+  ),
   sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-spell-effect"),
   replacementForm: {
     kind: "runtimeCreatureForm",
@@ -67,7 +72,9 @@ test("shape-shift runtime state admits true form and class-feature restoration o
       source: {
         kind: "classFeature",
         sourceCombatantId: syntheticDruidWildShapeEffect.sourceCombatantId,
-        sourceUnitId: syntheticDruidWildShapeEffect.sourceUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(syntheticDruidWildShapeEffect.sourceProcedureRef),
+        ),
       },
       replacementForm: {
         kind: "runtimeCreatureForm",

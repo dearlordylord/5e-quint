@@ -1,200 +1,228 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { describe, expect, test } from "vitest";
 import {
-  startBattleRight,
-  requireResolved,
-  fighterTurnWithReadiedRayAndHealer,
-  requireHole,
-  findHole,
-  targetFill,
-  spellTargetAllocationFill,
+  admitCharacterProcedureSelectionSubject,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
+import type {
+  BattleState,
+  BattleActDiscoverySubject as BattleSubject,
+} from "./battle-runtime-test-support.ts";
+import {
   attackRollFill,
-  interruptDecisionFill,
-  savingThrowOutcomeFill,
+  battleId,
+  cantripSpellInvocationRef,
+  characterSeed,
+  combatantId,
   damageRollFill,
   damageRollFillWithGroups,
-  characterSeed,
-  statBlockCreatureInit,
+  discoverBattleActs,
+  endTurn,
+  expendedLevelOneSlots,
+  fighterId,
+  fighterTurnWithReadiedRayAndHealer,
+  findHole,
+  holeId,
+  interruptDecisionFill,
+  magicSubject,
+  movementDeltaFeet,
+  requireCharacterSpellProcedureRefForTest,
+  requireHole,
+  requireResolved,
+  resolveBattleInterrupt,
+  resolveBattleSubject,
+  savingThrowOutcomeFill,
+  secondWizardId,
   skeletonCreatureInit,
-  wizardVsSkeletonBattle,
-  wizardSpellcasting,
+  skeletonId,
   slotAttackDamageSpell,
   slotSaveDamageSpell,
   spellRecord,
-  magicSubject,
-  expendedLevelOneSlots,
-  fighterId,
-  skeletonId,
-  wizardId,
-  secondWizardId,
-  battleId,
-  cantripSpellInvocationRef,
-  combatantId,
-  discoverBattleActs,
-  endTurn,
-  holeId,
-  movementDeltaFeet,
-  resolveBattleInterrupt,
-  resolveBattleSubject,
   spellSlotInvocationRef,
+  spellTargetAllocationFill,
+  startBattleRight,
+  statBlockCreatureInit,
+  targetFill,
+  wizardId,
+  wizardSpellcasting,
+  wizardVsSkeletonBattle,
 } from "./battle-runtime-test-support.ts";
-import type {
-  BattleState,
-  BattleSubject,
-} from "./battle-runtime-test-support.ts";
-import { describe, expect, test } from "vitest";
-
-function withoutExecutionReference(subject: BattleSubject) {
-  if (!("procedureRef" in subject)) return subject;
-  const { procedureRef: _procedureRef, ...selection } = subject;
-  return selection;
-}
 
 describe("battle runtime: spellcasting actions and slots", () => {
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     expect(
-      discoverBattleActs(magicMissileState).map((act) =>
-        withoutExecutionReference(act.subject),
-      ),
+      discoverBattleActs(magicMissileState).map((act) => act.subject),
     ).toEqual(
       expect.arrayContaining([
         { tag: "action", actorId: wizardId, action: "grapple" },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "afterDamage" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "afterDamage" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "acid_splash",
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "acid_splash",
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "acid_splash",
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),
           mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "acid_splash",
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),
           mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "acid_splash",
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            magicMissileState,
+            wizardId,
+            cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),
           mode: { tag: "ready", trigger: "afterDamage" },
         },
@@ -314,16 +342,21 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const healingWordAct = discoverBattleActs(healingWordState).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "healing_word",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "healing_word",
     );
     expect(healingWordAct).toMatchObject({
       subject: {
         tag: "bonusActionSpell",
         actorId: wizardId,
-        invocation: spellSlotInvocationRef(
-          "healing_word",
-          1,
-          "directHitPointRestoration",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          healingWordState,
+          wizardId,
+          spellSlotInvocationRef(
+            "healing_word",
+            1,
+            "directHitPointRestoration",
+          ),
         ),
         mode: { tag: "cast" },
       },
@@ -346,7 +379,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
         ],
@@ -363,7 +398,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
           damageRollFillWithGroups(healingWordRoll, [[4, 3]]),
@@ -378,24 +415,17 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     expect(expendedLevelOneSlots(healingWord, wizardId)).toBe(1);
     expect(
-      resolveBattleSubject({
-        state: healingWordState,
-        subject: {
-          tag: "bonusActionSpell",
-          actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
-          ),
-          mode: { tag: "cast" },
-        },
-        fills: [],
+      admitCharacterProcedureSelectionSubject(healingWordState, {
+        tag: "bonusActionSpell",
+        actorId: wizardId,
+        invocation: spellSlotInvocationRef(
+          "magic_missile",
+          1,
+          "repeatedDamageAllocation",
+        ),
+        mode: { tag: "cast" },
       }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-    });
+    ).toBeUndefined();
 
     const slotTurnState = startBattleRight({
       battleId: battleId("battle-one-slot-spell-per-turn"),
@@ -458,27 +488,27 @@ describe("battle runtime: spellcasting actions and slots", () => {
       levelOnePlusSpellCastsThisTurn: [wizardId],
     });
     expect(
-      discoverBattleActs(afterSlotSpell).map((act) =>
-        withoutExecutionReference(act.subject),
+      discoverBattleActs(afterSlotSpell).some(
+        (act) =>
+          act.subject.tag === "bonusActionSpell" &&
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            "healing_word",
       ),
-    ).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          tag: "bonusActionSpell",
-          spellId: "healing_word",
-        }),
-      ]),
-    );
+    ).toBe(false);
     expect(
       resolveBattleSubject({
         state: afterSlotSpell,
         subject: {
           tag: "bonusActionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "healing_word",
-            1,
-            "directHitPointRestoration",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            afterSlotSpell,
+            wizardId,
+            spellSlotInvocationRef(
+              "healing_word",
+              1,
+              "directHitPointRestoration",
+            ),
           ),
           mode: { tag: "cast" },
         },
@@ -497,7 +527,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "healing_word",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "healing_word",
     );
     if (healingWordReactionAct === undefined) {
       throw new Error("Expected Healing Word Bonus Action spell act.");
@@ -511,7 +542,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
         kind: "spellTarget",
         casterId: fighterId,
         targetId: fighterId,
-        spellId: "healing_word",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("healing_word"),
+        ),
       },
     ]);
     const awaitingSpellCastReaction = resolveBattleSubject({
@@ -574,19 +607,19 @@ describe("battle runtime: spellcasting actions and slots", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(
-      discoverBattleActs(levelTwoState).map((act) =>
-        withoutExecutionReference(act.subject),
-      ),
-    ).toEqual(
+    expect(discoverBattleActs(levelTwoState).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            2,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            levelTwoState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              2,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "cast" },
         },
@@ -595,10 +628,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const levelTwoSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "magic_missile",
-        2,
-        "repeatedDamageAllocation",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        levelTwoState,
+        wizardId,
+        spellSlotInvocationRef("magic_missile", 2, "repeatedDamageAllocation"),
       ),
       mode: { tag: "cast" },
     };
@@ -667,9 +700,22 @@ describe("battle runtime: spellcasting actions and slots", () => {
         subject: {
           tag: "actionSpell",
           actorId: secondWizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            startBattleRight({
+              battleId: battleId("battle-second-wizard-ready-after-damage"),
+              combatants: [
+                characterSeed({
+                  combatantId: secondWizardId,
+                  displayName: "Second Wizard",
+                  initiative: 20,
+                  attack: null,
+                  spellcasting: wizardSpellcasting(),
+                }),
+                skeletonCreatureInit({ initiative: 10 }),
+              ],
+            }),
+            secondWizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "afterDamage" },
         },
@@ -788,7 +834,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
         activeEffects: [
           {
             kind: "speedDelta",
-            sourceSpellId: "ray_of_frost",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("ray_of_frost"),
+            ),
             sourceCombatantId: wizardId,
             deltaFeet: movementDeltaFeet(-10),
             expiresAt: {
@@ -808,7 +856,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
         activeEffects: [
           {
             kind: "speedDelta",
-            sourceSpellId: "ray_of_frost",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("ray_of_frost"),
+            ),
             sourceCombatantId: combatantId("other-wizard"),
             deltaFeet: movementDeltaFeet(-10),
             expiresAt: {
@@ -839,7 +889,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).toMatchObject({
       activeEffects: [
         expect.objectContaining({
-          sourceSpellId: "ray_of_frost",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("ray_of_frost"),
+          ),
           sourceCombatantId: wizardId,
         }),
       ],
@@ -975,29 +1027,29 @@ describe("battle runtime: spellcasting actions and slots", () => {
       ],
     });
 
-    expect(
-      discoverBattleActs(state).map((act) =>
-        withoutExecutionReference(act.subject),
-      ),
-    ).toEqual(
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "slot_attack_damage",
-            1,
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            spellSlotInvocationRef(
+              "slot_attack_damage",
+              1,
+              "spellAttackDamage",
+            ),
           ),
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "slot_save_damage",
-            1,
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            spellSlotInvocationRef("slot_save_damage", 1, "saveGatedDamage"),
           ),
           mode: { tag: "cast" },
         },
@@ -1007,10 +1059,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const attackSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "slot_attack_damage",
-        1,
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("slot_attack_damage", 1, "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -1028,7 +1080,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "slot_attack_damage",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("slot_attack_damage"),
+              ),
             },
           ]),
         ],
@@ -1045,7 +1099,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "slot_attack_damage",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("slot_attack_damage"),
+              ),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -1066,7 +1122,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "slot_attack_damage",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("slot_attack_damage"),
+              ),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -1082,10 +1140,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const saveSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "slot_save_damage",
-        1,
-        "saveGatedDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("slot_save_damage", 1, "saveGatedDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -1149,12 +1207,16 @@ describe("battle runtime: spellcasting actions and slots", () => {
       ],
     });
     const spellAttackSubjects = discoverBattleActs(state)
-      .flatMap((act) =>
-        act.subject.tag === "actionSpell" ||
-        act.subject.tag === "bonusActionSpell"
-          ? [act.subject.invocation]
-          : [],
-      )
+      .flatMap((act) => {
+        if (
+          act.subject.tag !== "actionSpell" &&
+          act.subject.tag !== "bonusActionSpell"
+        ) {
+          return [];
+        }
+        const presentation = battleActSpellPresentation(act);
+        return presentation === undefined ? [] : [presentation.invocation];
+      })
       .filter(
         (invocation) =>
           invocation.procedure === "spellAttackDamage" &&
@@ -1187,9 +1249,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -1207,7 +1270,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "ray_of_frost",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("ray_of_frost"),
+              ),
             },
           ]),
         ],
@@ -1224,7 +1289,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "ray_of_frost",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("ray_of_frost"),
+              ),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -1262,18 +1329,22 @@ describe("battle runtime: spellcasting actions and slots", () => {
       acts.find(
         (act) =>
           act.subject.tag === "actionSpell" &&
-          act.subject.invocation.tag === "spellSlot" &&
-          act.subject.invocation.spellId === "slot_attack_damage" &&
-          act.subject.invocation.procedure === "spellAttackDamage",
+          battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            "slot_attack_damage" &&
+          battleActSpellPresentation(act)?.invocation.procedure ===
+            "spellAttackDamage",
       )?.summary,
     ).toBe("Cast Slot Attack Damage using a level 1 Spell Slot.");
     expect(
       acts.find(
         (act) =>
           act.subject.tag === "actionSpell" &&
-          act.subject.invocation.tag === "spellSlot" &&
-          act.subject.invocation.spellId === "slot_save_damage" &&
-          act.subject.invocation.procedure === "saveGatedDamage",
+          battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            "slot_save_damage" &&
+          battleActSpellPresentation(act)?.invocation.procedure ===
+            "saveGatedDamage",
       )?.summary,
     ).toBe(
       "Cast Slot Save Damage using a level 1 Spell Slot. Table-supplied affected targets make DEX Saving Throws.",

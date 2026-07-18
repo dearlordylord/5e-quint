@@ -1,11 +1,16 @@
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target unit-feature.metamagic-cast-component-suppression unit-feature.metamagic-missed-spell-attack-reroll unit-feature.metamagic-damage-dice-reroll
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 
 import {
   canSpendAction,
-  spendActivationResource,
   spendAction,
+  spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -26,20 +31,6 @@ import {
   SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
 } from "./battle-reducer.ts";
 import {
-  type AvailableBattleAct,
-  type BattleFill,
-  type BattleHole,
-  type BattleState,
-  type BattleSubject,
-  type CharacterBattleMetamagicOptionFact,
-  characterBattleResourceIsPointPool,
-  cantripSpellInvocationRef,
-  discoverBattleActs,
-  spendCharacterPointPoolResource,
-  spellSlotInvocationRef,
-  startBattle,
-} from "./index.ts";
-import {
   admitSpellMetamagicApplications,
   CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
@@ -51,40 +42,56 @@ import {
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
   SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE,
-  subtleSpellComponentProjectionForApplications,
-  SUBTLE_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
+  SUBTLE_METAMAGIC_EFFECT_KIND,
+  subtleSpellComponentProjectionForApplications,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_EFFECT_KIND,
   twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { spellId } from "./identity.ts";
 import {
-  characterSeed,
-  battleId,
-  combatantId,
   attackRollFill,
+  battleId,
+  characterSeed,
+  combatantId,
   damageRollFillWithGroups,
-  fighterVsGoblinBattle,
   fighterId,
+  fighterVsGoblinBattle,
   findHole,
   goblinId,
   partySide,
+  requireCharacterSpellProcedureRefForTest,
   requireResolved,
   resolveBattleSubject,
   savingThrowOutcomeFill,
   skeletonId,
+  spellRecord,
   startBattleRight,
   statBlockCreatureInit,
   targetFill,
   testCharacterD20Statistics,
+  testDaggerAttack,
   unitLibrary,
   wizardId,
   wizardSpellcasting,
-  spellRecord,
-  testDaggerAttack,
 } from "./battle-runtime-test-support.ts";
+import { battleSpellDamageDieExecutionRef, spellId } from "./identity.ts";
+import {
+  type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
+  type BattleState,
+  type SpellInvocationRef,
+  type BattleActDiscoverySubject as BattleSubject,
+  cantripSpellInvocationRef,
+  type CharacterBattleMetamagicOptionFact,
+  characterBattleResourceIsPointPool,
+  discoverBattleActs,
+  spellSlotInvocationRef,
+  spendCharacterPointPoolResource,
+  startBattle,
+} from "./index.ts";
 
 describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
   test("stores Metamagic option facts beside the shared Sorcery Point point pool", () => {
@@ -209,13 +216,16 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const state = metamagicBattle();
     const act = quickenedCureWoundsAct(state);
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "cure_wounds",
-        1,
-        "directHitPointRestoration",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("cure_wounds", 1, "directHitPointRestoration"),
       ),
       mode: { tag: "cast" },
       metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
@@ -244,7 +254,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       discoverBattleActs(resolved.state).some(
         (candidate) =>
           "invocation" in candidate.subject &&
-          candidate.subject.invocation.tag === "spellSlot",
+          battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot",
       ),
     ).toBe(false);
   });
@@ -253,10 +263,17 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const state = metamagicBattle({ preparedSpells: ["false_life"] });
     const act = quickenedFalseLifeAct(state);
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef("false_life", 1, "scalarBuff"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("false_life", 1, "scalarBuff"),
+      ),
       mode: { tag: "cast" },
       metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
     });
@@ -290,7 +307,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const act = quickenedBurningHandsAct(state);
 
-    expect(act.subject).toMatchObject(quickenedBurningHandsSubject());
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject(quickenedBurningHandsSubject());
 
     const awaitingDamage = resolveBattleSubject({
       state,
@@ -332,7 +352,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const act = quickenedRayOfFrostAct(state);
 
-    expect(act.subject).toMatchObject(quickenedRayOfFrostSubject());
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject(quickenedRayOfFrostSubject());
 
     const targetHole = findHole(act.initialHoles, "targetChoice");
     const target = targetFill(targetHole, skeletonId);
@@ -567,7 +590,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       discoverBattleActs(resolved.state).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "burning_hands",
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "burning_hands",
       ),
     ).toBe(false);
     expect(
@@ -632,7 +656,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const act = quickenedRayOfFrostAct(state);
 
     expect(canSpendAction(state.currentTurnResources, "magic")).toBe(false);
-    expect(act.subject).toMatchObject(quickenedRayOfFrostSubject());
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject(quickenedRayOfFrostSubject());
 
     const targetHole = findHole(act.initialHoles, "targetChoice");
     const target = targetFill(targetHole, skeletonId);
@@ -690,7 +717,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const act = quickenedEldritchBlastAct(state);
 
     expect(canSpendAction(state.currentTurnResources, "magic")).toBe(false);
-    expect(act.subject).toMatchObject(quickenedEldritchBlastSubject());
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject(quickenedEldritchBlastSubject());
 
     const resolved = resolveQuickenedEldritchBlast(state);
 
@@ -718,7 +748,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       discoverBattleActs(resolved).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "burning_hands",
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "burning_hands",
       ),
     ).toBe(false);
     expect(
@@ -747,7 +778,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       throw new Error("Expected Sorcerer character combatant.");
     }
 
-    expect(act.subject).toMatchObject(quickenedScorchingRaySubject());
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject(quickenedScorchingRaySubject());
     expect(resolved.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(canSpendAction(resolved.currentTurnResources, "magic")).toBe(true);
     expect(
@@ -1271,12 +1305,6 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         invocation: healingWord,
         subject: {
           tag: "bonusActionSpell",
-          actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "healing_word",
-            1,
-            "directHitPointRestoration",
-          ),
           mode: { tag: "cast" },
           metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
         },
@@ -1297,10 +1325,17 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       "Bless targets",
     );
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef("bless", 1, "rollModifier"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("bless", 1, "rollModifier"),
+      ),
       mode: { tag: "cast" },
       metamagic: [{ effectKind: TWINNED_METAMAGIC_EFFECT_KIND }],
     });
@@ -1352,7 +1387,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "cure_wounds" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "cure_wounds" &&
           candidate.subject.metamagic?.some(
             (selection) =>
               selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
@@ -1416,7 +1452,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "magic_missile" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "magic_missile" &&
           candidate.subject.metamagic?.some(
             (selection) =>
               selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
@@ -1429,10 +1466,14 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "cast" },
           metamagic: [{ effectKind: TWINNED_METAMAGIC_EFFECT_KIND }],
@@ -1617,14 +1658,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const act = transmutedScorchingRayToPoisonAct(state);
     const targetFills = targetChoiceHoles(act.initialHoles).map((hole) =>
-      targetFill(hole, fighterId, [
-        {
-          kind: "spellTarget",
-          casterId: wizardId,
-          targetId: fighterId,
-          spellId: "scorching_ray",
-        },
-      ]),
+      targetFill(hole, fighterId),
     );
     const fills: BattleFill[] = [...targetFills];
 
@@ -1764,7 +1798,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       wizardId,
       {
         kind: "spellMarkedDamageRider",
-        sourceSpellId: spellRecord("hunters_mark").id,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spellRecord("hunters_mark").id),
+        ),
         sourceCombatantId: wizardId,
         targetCombatantId: skeletonId,
         transfer: {
@@ -2547,8 +2583,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
               effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
               dice: [
                 {
-                  groupIndex: 0,
-                  resultIndex: 0,
+                  dieRef: battleSpellDamageDieExecutionRef(damage.holeId, 0, 0),
                   original: DieRollResult(3),
                   replacement: DieRollResult(1),
                 },
@@ -2656,10 +2691,14 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         subject: {
           tag: "bonusActionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "healing_word",
-            1,
-            "directHitPointRestoration",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            spellSlotInvocationRef(
+              "healing_word",
+              1,
+              "directHitPointRestoration",
+            ),
           ),
           mode: { tag: "cast" },
           metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
@@ -2684,7 +2723,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
-          candidate.subject.invocation.spellId === "hellish_rebuke" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "hellish_rebuke" &&
           candidate.subject.metamagic?.some(
             (selection) =>
               selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
@@ -2697,10 +2737,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         subject: {
           tag: "bonusActionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "hellish_rebuke",
-            1,
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            spellSlotInvocationRef("hellish_rebuke", 1, "saveGatedDamage"),
           ),
           mode: { tag: "cast" },
           metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
@@ -3180,7 +3220,8 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "burning_hands" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "burning_hands" &&
           candidate.subject.metamagic?.some(
             (selection) =>
               selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
@@ -3211,7 +3252,8 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "cure_wounds" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "cure_wounds" &&
           candidate.subject.metamagic?.some(
             (selection) =>
               selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
@@ -3244,7 +3286,8 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "sleep" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "sleep" &&
           candidate.subject.metamagic?.some(
             (selection) =>
               selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
@@ -3320,7 +3363,8 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "sleep" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "sleep" &&
           candidate.subject.metamagic?.some(
             (selection) =>
               selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -3385,7 +3429,7 @@ function supportedInvocationFor(
 function admittedSubtleProjection(
   state: BattleState,
   invocation: SupportedSpellInvocation,
-  procedure: SpellSlotInvocationRefProcedure,
+  _procedure: SpellSlotInvocationRefProcedure,
 ) {
   if (invocation.resource.tag !== "spellSlot") {
     throw new Error("Expected Spell Slot invocation.");
@@ -3397,12 +3441,6 @@ function admittedSubtleProjection(
     invocation,
     subject: {
       tag: "actionSpell",
-      actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        invocation.spell.id,
-        Number(invocation.resource.slotLevel),
-        procedure,
-      ),
       mode: { tag: "cast" },
       metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
     },
@@ -3445,7 +3483,9 @@ function withSanctuaryWard(
 ): BattleState {
   return withActiveEffect(state, wardedId, {
     kind: "sanctuaryWard",
-    sourceSpellId: spellRecord("sanctuary").id,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spellRecord("sanctuary").id),
+    ),
     sourceCombatantId: wizardId,
     save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
@@ -3458,7 +3498,9 @@ function withMirrorImageDuplicates(
 ): BattleState {
   return withActiveEffect(state, targetId, {
     kind: "mirrorImageDuplicates",
-    sourceSpellId: spellRecord("mirror_image").id,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spellRecord("mirror_image").id),
+    ),
     sourceCombatantId: targetId,
     remainingDuplicates: 3,
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
@@ -3486,7 +3528,7 @@ function withActiveEffect(
 function sanctuaryRetargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
-  spellId: "eldritch_blast" | "ray_of_frost",
+  _spellId: "eldritch_blast" | "ray_of_frost",
 ): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
   if (hole.kind !== "sanctuaryInterdictionOutcome") {
     throw new Error("Expected Sanctuary interdiction outcome hole.");
@@ -3500,7 +3542,13 @@ function sanctuaryRetargetFill(
         kind: "newTarget",
         targetId,
         spatialFacts: [
-          { kind: "spellTarget", casterId: wizardId, targetId, spellId },
+          {
+            kind: "spellTarget",
+            casterId: wizardId,
+            targetId,
+            sourceProcedureRef:
+              hole.triggeringProcedureRef,
+          },
         ],
         replacementTargetKind: "attackRoll",
         ...("relationshipFactRequest" in hole &&
@@ -4065,7 +4113,8 @@ function transmutedScorchingRayToPoisonAct(
       >;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "spellAttackSequence" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spellAttackSequence" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND &&
@@ -4094,8 +4143,10 @@ function actionRayOfFrostAct(state: BattleState): AvailableBattleAct & {
       >;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "ray_of_frost" &&
-      candidate.subject.invocation.procedure === "spellAttackDamage",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "ray_of_frost" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spellAttackDamage",
   );
   if (act === undefined) {
     throw new Error("Expected Ray of Frost action spell act.");
@@ -4119,8 +4170,10 @@ function actionScorchingRayAct(state: BattleState): AvailableBattleAct & {
       >;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "scorching_ray" &&
-      candidate.subject.invocation.procedure === "spellAttackSequence",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "scorching_ray" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spellAttackSequence",
   );
   if (act === undefined) {
     throw new Error("Expected Scorching Ray action spell act.");
@@ -4154,17 +4207,48 @@ function nextSpellHole(
 function empoweredDamageRollFill(
   hole: BattleHole,
   groups: readonly (readonly number[])[],
-  spellDamageReroll: NonNullable<
-    Extract<BattleFill, { readonly kind: "rolledDice" }>["spellDamageReroll"]
-  >,
+  spellDamageReroll: Omit<
+    NonNullable<
+      Extract<BattleFill, { readonly kind: "rolledDice" }>["spellDamageReroll"]
+    >,
+    "dice"
+  > & {
+    readonly dice: readonly [
+      {
+        readonly groupIndex: number;
+        readonly resultIndex: number;
+        readonly original: ReturnType<typeof DieRollResult>;
+        readonly replacement: ReturnType<typeof DieRollResult>;
+      },
+      ...{
+        readonly groupIndex: number;
+        readonly resultIndex: number;
+        readonly original: ReturnType<typeof DieRollResult>;
+        readonly replacement: ReturnType<typeof DieRollResult>;
+      }[],
+    ];
+  },
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> {
   const damageRoll = damageRollFillWithGroups(hole, groups);
   if (damageRoll.kind !== "rolledDice") {
     throw new Error("Expected rolledDice fill.");
   }
+  const [firstDie, ...remainingDice] = spellDamageReroll.dice;
+  const executionDie = (die: typeof firstDie) => ({
+    dieRef: battleSpellDamageDieExecutionRef(
+      hole.holeId,
+      die.groupIndex,
+      die.resultIndex,
+    ),
+    original: die.original,
+    replacement: die.replacement,
+  });
   return {
     ...damageRoll,
-    spellDamageReroll,
+    spellDamageReroll: {
+      ...spellDamageReroll,
+      dice: [executionDie(firstDie), ...remainingDice.map(executionDie)],
+    },
   };
 }
 
@@ -4272,7 +4356,8 @@ function hasQuickenedEldritchBlastAct(state: BattleState): boolean {
   return discoverBattleActs(state).some(
     (candidate) =>
       isQuickenedSpellAttackSequenceAct(candidate) &&
-      candidate.subject.invocation.spellId === "eldritch_blast",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "eldritch_blast",
   );
 }
 
@@ -4288,7 +4373,8 @@ function isQuickenedCureWoundsAct(
 ): candidate is QuickenedBonusActionSpellAct {
   return (
     candidate.subject.tag === "bonusActionSpell" &&
-    candidate.subject.invocation.spellId === "cure_wounds" &&
+    battleActSpellPresentation(candidate)?.invocation.spellId ===
+      "cure_wounds" &&
     candidate.subject.metamagic?.some(
       (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
     ) === true
@@ -4311,7 +4397,8 @@ function quickenedFalseLifeAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === "false_life" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "false_life" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -4327,7 +4414,8 @@ function isQuickenedBurningHandsAct(
 ): candidate is QuickenedBonusActionSpellAct {
   return (
     candidate.subject.tag === "bonusActionSpell" &&
-    candidate.subject.invocation.spellId === "burning_hands" &&
+    battleActSpellPresentation(candidate)?.invocation.spellId ===
+      "burning_hands" &&
     candidate.subject.metamagic?.some(
       (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
     ) === true
@@ -4349,7 +4437,8 @@ function isQuickenedRayOfFrostAct(
 ): candidate is QuickenedBonusActionSpellAct {
   return (
     candidate.subject.tag === "bonusActionSpell" &&
-    candidate.subject.invocation.spellId === "ray_of_frost" &&
+    battleActSpellPresentation(candidate)?.invocation.spellId ===
+      "ray_of_frost" &&
     candidate.subject.metamagic?.length === 1 &&
     candidate.subject.metamagic?.some(
       (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
@@ -4372,7 +4461,8 @@ function isQuickenedSpellAttackSequenceAct(
 ): candidate is QuickenedBonusActionSpellAct {
   return (
     candidate.subject.tag === "bonusActionSpell" &&
-    candidate.subject.invocation.procedure === "spellAttackSequence" &&
+    battleActSpellPresentation(candidate)?.invocation.procedure ===
+      "spellAttackSequence" &&
     candidate.subject.metamagic?.some(
       (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
     ) === true
@@ -4385,7 +4475,8 @@ function quickenedEldritchBlastAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       isQuickenedSpellAttackSequenceAct(candidate) &&
-      candidate.subject.invocation.spellId === "eldritch_blast",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "eldritch_blast",
   );
   if (act === undefined) {
     throw new Error("Expected Quickened Eldritch Blast act.");
@@ -4399,7 +4490,8 @@ function quickenedScorchingRayAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       isQuickenedSpellAttackSequenceAct(candidate) &&
-      candidate.subject.invocation.spellId === "scorching_ray",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "scorching_ray",
   );
   if (act === undefined) {
     throw new Error("Expected Quickened Scorching Ray act.");
@@ -4465,28 +4557,22 @@ function resolveQuickenedScorchingRay(
 function spellAttackSequenceTargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
-  spellId: "eldritch_blast" | "scorching_ray",
+  _spellId: "eldritch_blast" | "scorching_ray",
 ): BattleFill {
-  return targetFill(hole, targetId, [
-    {
-      kind: "spellTarget",
-      casterId: wizardId,
-      targetId,
-      spellId,
-    },
-  ]);
+  return targetFill(hole, targetId);
 }
 
 function quickenedSpellAct(
   state: BattleState,
   spellId: "bless" | "calm_emotions" | "color_spray" | "invisibility",
-  procedure: QuickenedBonusActionSpellAct["subject"]["invocation"]["procedure"],
+  procedure: SpellInvocationRef["procedure"],
 ): QuickenedBonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === spellId &&
-      candidate.subject.invocation.procedure === procedure &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        procedure &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -4506,12 +4592,12 @@ type ActionSpellAct = AvailableBattleAct & {
 
 function hasHeightenedActionSpellAct(
   state: BattleState,
-  spellId: ActionSpellAct["subject"]["invocation"]["spellId"],
+  spellId: SpellInvocationRef["spellId"],
 ): boolean {
   return discoverBattleActs(state).some(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -4523,7 +4609,8 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "burning_hands" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "burning_hands" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -4539,7 +4626,8 @@ function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "burning_hands" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "burning_hands" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -4554,7 +4642,7 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "command" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === "command" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -4569,8 +4657,9 @@ function twinnedBlessAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "bless" &&
-      candidate.subject.invocation.procedure === "rollModifier" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === "bless" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "rollModifier" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -4585,7 +4674,8 @@ function readyBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "burning_hands" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "burning_hands" &&
       candidate.subject.mode.tag === "ready",
   );
   if (act === undefined) {
@@ -4598,7 +4688,7 @@ function sleepActionAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "sleep" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === "sleep" &&
       candidate.subject.metamagic === undefined,
   );
   if (act === undefined) {
@@ -4619,7 +4709,7 @@ function findSpellTargetListHole(
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  spellId: "bless" | "burning_hands" | "command" | "invisibility",
+  _spellId: "bless" | "burning_hands" | "command" | "invisibility",
   targetIds: readonly ReturnType<typeof combatantId>[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const relationshipFactRequest = hole.relationshipFactRequest;
@@ -4631,14 +4721,14 @@ function spellTargetListFill(
             kind: "spellTargetIsHostileToCaster" as const,
             casterId: relationshipFactRequest.casterId,
             targetId: targetIds[0],
-            spellId: relationshipFactRequest.spellId,
+            sourceProcedureRef: relationshipFactRequest.sourceProcedureRef,
             targetIsHostileToCaster: true,
           },
           ...targetIds.slice(1).map((targetId) => ({
             kind: "spellTargetIsHostileToCaster" as const,
             casterId: relationshipFactRequest.casterId,
             targetId,
-            spellId: relationshipFactRequest.spellId,
+            sourceProcedureRef: relationshipFactRequest.sourceProcedureRef,
             targetIsHostileToCaster: true,
           })),
         ] as const)
@@ -4650,9 +4740,13 @@ function spellTargetListFill(
     ...(relationshipFacts === undefined ? {} : { relationshipFacts }),
     spatialFacts: targetIds.map((targetId) => ({
       kind: "spellTarget" as const,
-      casterId: wizardId,
+      casterId:
+        relationshipFactRequest?.casterId ??
+        wizardId,
       targetId,
-      spellId,
+      sourceProcedureRef:
+        relationshipFactRequest?.sourceProcedureRef ??
+        battleProcedureExecutionRefForSpellHoleForTest(hole),
     })),
   };
 }
@@ -4695,14 +4789,7 @@ function resolveQuickenedCureWounds(
   act: QuickenedBonusActionSpellAct,
 ) {
   const targetHole = findHole(act.initialHoles, "targetChoice");
-  const target = targetFill(targetHole, fighterId, [
-    {
-      kind: "spellTarget",
-      casterId: wizardId,
-      targetId: fighterId,
-      spellId: "cure_wounds",
-    },
-  ]);
+  const target = targetFill(targetHole, fighterId);
   const awaitingHealingRoll = resolveBattleSubject({
     state,
     subject: act.subject,

@@ -3,6 +3,7 @@ import * as path from "node:path";
 
 import {
   battleCreatureInitFromStatBlock,
+  battleActSpellPresentation,
   battleCombatantSide,
   battleId,
   combatantId,
@@ -743,7 +744,7 @@ function findRayOfSicknessAct(state: BattleState):
     } =>
       act.subject.tag === "actionSpell" &&
       act.subject.actorId === characterCombatantId &&
-      JSON.stringify(act.subject.invocation) ===
+      JSON.stringify(battleActSpellPresentation(act)?.invocation) ===
         JSON.stringify(
           spellSlotInvocationRef("ray_of_sickness", 1, "spellAttackDamage"),
         ) &&

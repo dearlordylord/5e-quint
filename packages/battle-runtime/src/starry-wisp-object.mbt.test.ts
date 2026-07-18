@@ -1,3 +1,8 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { sameBattleSubject } from "./battle-subjects.ts";
+import { Match } from "effect";
+import { describe, expect, it } from "vitest";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -18,8 +23,6 @@ import {
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { Match } from "effect";
-import { describe, expect, it } from "vitest";
 
 import {
   armorClass,
@@ -39,6 +42,7 @@ import {
   damageRollFillWithGroups,
   fighterId,
   partySide,
+  resolveBattleSubject,
   skeletonCreatureInit,
   startBattleRight,
   unitLibrary,
@@ -52,7 +56,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   objectInvisibleBenefitDenied,
-  resolveBattleSubject,
   snapshotBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
@@ -62,7 +65,7 @@ import {
   type BattleLightEmitterAttachment,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 // Production path: Starry Wisp is admitted through the spell support profile
@@ -146,7 +149,7 @@ type LightEmitterAttachmentMbtProjection =
 type LightEmitterMbtProjection =
   | {
       readonly kind: "spellLightEmitter";
-      readonly sourceSpellId: string;
+      readonly sourceProcedureRef: string;
       readonly sourceCombatantId: string;
       readonly attachment: LightEmitterAttachmentMbtProjection;
       readonly emission: LightEmissionMbtProjection;
@@ -157,7 +160,7 @@ type LightEmitterMbtProjection =
     }
   | {
       readonly kind: "unitFeatureLightEmitter";
-      readonly sourceUnitId: string;
+      readonly sourceProcedureRef: string;
       readonly sourceCombatantId: string;
       readonly attachment: LightEmitterAttachmentMbtProjection;
       readonly emission: LightEmissionMbtProjection;
@@ -168,7 +171,7 @@ type LightEmitterMbtProjection =
     }
   | {
       readonly kind: "objectInvisibleRevealLightEmitter";
-      readonly sourceSpellId: string;
+      readonly sourceProcedureRef: string;
       readonly sourceCombatantId: string;
       readonly objectId: string;
       readonly emission: Extract<
@@ -791,7 +794,10 @@ function discoverStarryWispAct(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act == null) {
     throw new Error("Expected Starry Wisp spell act.");
@@ -824,7 +830,9 @@ function starryWispObjectTargetFill(
         kind: "spellObjectTarget",
         casterId: fighterId,
         objectId: starryWispObjectId,
-        spellId: "starry_wisp",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("starry_wisp"),
+        ),
         rangeFeet: movementFeet(60),
         armorClass: armorClass(13),
         damageDisposition: {
@@ -902,7 +910,9 @@ function projectLightEmitter(
   return Match.value(emitter).pipe(
     Match.when({ kind: "spellLightEmitter" }, (spellEmitter) => ({
       kind: "spellLightEmitter" as const,
-      sourceSpellId: spellEmitter.sourceSpellId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spellEmitter.sourceProcedureRef),
+      ),
       sourceCombatantId: spellEmitter.sourceCombatantId,
       attachment: projectLightEmitterAttachment(spellEmitter.attachment),
       emission: projectLightEmission(spellEmitter.emission),
@@ -911,7 +921,9 @@ function projectLightEmitter(
     })),
     Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) => ({
       kind: "unitFeatureLightEmitter" as const,
-      sourceUnitId: unitFeatureEmitter.sourceUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(unitFeatureEmitter.sourceProcedureRef),
+      ),
       sourceCombatantId: unitFeatureEmitter.sourceCombatantId,
       attachment: projectLightEmitterAttachment(unitFeatureEmitter.attachment),
       emission: projectLightEmission(unitFeatureEmitter.emission),
@@ -922,7 +934,9 @@ function projectLightEmitter(
       { kind: "objectInvisibleRevealLightEmitter" },
       (objectRevealEmitter) => ({
         kind: "objectInvisibleRevealLightEmitter" as const,
-        sourceSpellId: objectRevealEmitter.sourceSpellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(objectRevealEmitter.sourceProcedureRef),
+        ),
         sourceCombatantId: objectRevealEmitter.sourceCombatantId,
         objectId: objectRevealEmitter.objectId,
         emission: {
@@ -1047,7 +1061,10 @@ function lightEmitterFromQuint(raw: unknown): LightEmitterMbtProjection {
     const fields = quintVariantRecordValue(raw, "SpellLightEmitter");
     return {
       kind: "spellLightEmitter",
-      sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
+      sourceProcedureRef: spellIdFromQuint(
+        fields["sourceSpell"],
+        "sourceSpell",
+      ),
       sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
       attachment: lightEmitterAttachmentFromQuint(fields["attachment"]),
       emission: lightEmissionFromQuint(fields["emission"]),
@@ -1064,7 +1081,10 @@ function lightEmitterFromQuint(raw: unknown): LightEmitterMbtProjection {
     );
     return {
       kind: "objectInvisibleRevealLightEmitter",
-      sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
+      sourceProcedureRef: spellIdFromQuint(
+        fields["sourceSpell"],
+        "sourceSpell",
+      ),
       sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
       objectId: objectIdFromQuint(fields["object"], "object"),
       emission: {

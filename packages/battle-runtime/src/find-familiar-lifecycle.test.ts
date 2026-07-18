@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.find-familiar-lifecycle unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
@@ -1463,7 +1465,9 @@ describe("Find Familiar lifecycle", () => {
         source: {
           kind: "spell",
           sourceCombatantId: casterId,
-          sourceSpellId: "find_familiar",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("find_familiar"),
+          ),
         },
       },
     ]);
@@ -1952,7 +1956,7 @@ describe("Find Familiar lifecycle", () => {
     const cureWoundsAct = discoverBattleActs(cast.state).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "cure_wounds",
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
     expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
     if (cureWoundsAct?.subject.tag !== "actionSpell") return;
@@ -1966,7 +1970,9 @@ describe("Find Familiar lifecycle", () => {
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
-          spellId: "cure_wounds",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("cure_wounds"),
+          ),
         },
       ],
     };
@@ -2022,7 +2028,7 @@ describe("Find Familiar lifecycle", () => {
     const cureWoundsAct = discoverBattleActs(cast.state).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "cure_wounds",
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
     expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
     if (cureWoundsAct?.subject.tag !== "actionSpell") return;
@@ -2037,7 +2043,9 @@ describe("Find Familiar lifecycle", () => {
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
-          spellId: "cure_wounds",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("cure_wounds"),
+          ),
         },
       ],
     } as unknown as Parameters<typeof resolveBattleSubject>[0]["fills"][number];
@@ -2064,7 +2072,7 @@ describe("Find Familiar lifecycle", () => {
     const healingWordAct = discoverBattleActs(cast.state).find(
       (act) =>
         act.subject.tag === "bonusActionSpell" &&
-        act.subject.invocation.spellId === "healing_word",
+        battleActSpellPresentation(act)?.invocation.spellId === "healing_word",
     );
     expect(healingWordAct?.subject.tag).toBe("bonusActionSpell");
     if (healingWordAct?.subject.tag !== "bonusActionSpell") return;
@@ -2090,7 +2098,7 @@ describe("Find Familiar lifecycle", () => {
     const cureWoundsAct = discoverBattleActs(cast.state).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "cure_wounds",
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
     expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
     if (cureWoundsAct?.subject.tag !== "actionSpell") return;
@@ -2259,13 +2267,14 @@ describe("Find Familiar lifecycle", () => {
       acts.some(
         (act) =>
           act.subject.tag === "findFamiliarTouchSpell" &&
-          act.subject.invocation.spellId === "healing_word",
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            "healing_word",
       ),
     ).toBe(false);
     const delivery = acts.find(
       (act) =>
         act.subject.tag === "findFamiliarTouchSpell" &&
-        act.subject.invocation.spellId === "cure_wounds",
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
     expect(delivery?.subject.tag).toBe("findFamiliarTouchSpell");
     if (delivery?.subject.tag !== "findFamiliarTouchSpell") return;
@@ -2297,7 +2306,9 @@ describe("Find Familiar lifecycle", () => {
           kind: "spellTarget",
           casterId,
           targetId: enemyId,
-          spellId: "cure_wounds",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("cure_wounds"),
+          ),
         },
       ],
     };
@@ -2331,7 +2342,9 @@ describe("Find Familiar lifecycle", () => {
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
-          spellId: "cure_wounds",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("cure_wounds"),
+          ),
         },
       ],
     };

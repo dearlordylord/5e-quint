@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity chromatic_orb doResolveChromaticOrbDuplicateDamageLeap
@@ -22,12 +25,18 @@ import {
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
+import {
+  CHROMATIC_ORB_DAMAGE_TYPES,
+  CHROMATIC_ORB_LEAP_RANGE_FEET,
+} from "./battle-reducer/domain-constants.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleCombatantSide,
   battleId,
@@ -37,7 +46,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   objectInvisibleBenefitDenied,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -48,16 +56,11 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type SpellInvocationRef,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import {
-  CHROMATIC_ORB_DAMAGE_TYPES,
-  CHROMATIC_ORB_LEAP_RANGE_FEET,
-} from "./battle-reducer/domain-constants.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
@@ -122,9 +125,7 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
-};
+type ActionSpellAct = AvailableBattleAct;
 type ObjectTargetChoiceFill = Extract<
   BattleFill,
   { readonly kind: "objectTargetChoice" }
@@ -1234,10 +1235,10 @@ function actionSpellAct(
   spellId: Level1DamageSpellUnitId,
 ): ActionSpellAct {
   const act = discoverBattleActs(state).find(
-    (candidate): candidate is ActionSpellAct =>
+    (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       isExpectedLevel1DamageSpellInvocation(
-        candidate.subject.invocation,
+        battleActSpellPresentation(candidate)?.invocation,
         spellId,
       ),
   );
@@ -1248,11 +1249,11 @@ function actionSpellAct(
 }
 
 function isExpectedLevel1DamageSpellInvocation(
-  invocation: ActionSpellAct["subject"]["invocation"],
+  invocation: SpellInvocationRef | undefined,
   spellId: Level1DamageSpellUnitId,
 ): boolean {
   const profile = level1DamageSpellInvocationProfiles[spellId];
-  if (invocation.spellId !== spellId) {
+  if (invocation === undefined || invocation.spellId !== spellId) {
     return false;
   }
   if (
@@ -1284,7 +1285,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
       },
     ],
   };
@@ -1292,7 +1293,7 @@ function spellTargetFill(
 
 function spellLeapTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Level1DamageSpellUnitId,
+  sourceProcedureRef: Level1DamageSpellUnitId,
   previousTargetId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -1305,7 +1306,8 @@ function spellLeapTargetFill(
         kind: "spellLeapTargetWithinRange",
         previousTargetId,
         targetId,
-        spellId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForTest(sourceProcedureRef),
         rangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
       },
     ],
@@ -1326,7 +1328,9 @@ function starryWispObjectTargetFill(
         kind: "spellObjectTarget",
         casterId,
         objectId,
-        spellId: "starry_wisp",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("starry_wisp"),
+        ),
         rangeFeet: movementFeet(starryWispRangeFeet),
         armorClass: starryWispObjectArmorClass,
         damageDisposition,
@@ -2031,7 +2035,7 @@ function assertStarryWispObjectResolution(
     result.state.lightEmitters.length !== 1 ||
     emitter === undefined ||
     emitter.kind !== "objectInvisibleRevealLightEmitter" ||
-    emitter.sourceSpellId !== "starry_wisp" ||
+    emitter.sourceProcedureRef !== "starry_wisp" ||
     emitter.sourceCombatantId !== casterId ||
     emitter.objectId !== starryWispObjectId ||
     emitter.emission.kind !== "dim" ||
@@ -2099,8 +2103,8 @@ function primaryTargetHasViciousMockeryNextAttackRollDisadvantage(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "nextAttackRollBySelf" &&
-          "sourceSpellId" in effect &&
-          effect.sourceSpellId === "vicious_mockery" &&
+          "sourceProcedureRef" in effect &&
+          effect.sourceProcedureRef === "vicious_mockery" &&
           effect.sourceCombatantId === casterId &&
           effect.mode === "disadvantage",
       ) === true

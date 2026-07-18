@@ -213,6 +213,8 @@ export type CreatureId = typeof CreatureId.Type;
 
 export type BattleProcedureExecutionRef = string &
   Brand.Brand<"BattleProcedureExecutionRef">;
+export type BattleActiveEffectExecutionRef = string &
+  Brand.Brand<"BattleActiveEffectExecutionRef">;
 export type BattleStatBlockProcedureExecutionRef = BattleProcedureExecutionRef &
   Brand.Brand<"BattleStatBlockProcedureExecutionRef">;
 

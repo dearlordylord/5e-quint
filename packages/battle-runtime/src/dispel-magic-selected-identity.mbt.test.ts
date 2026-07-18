@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic
 // UNIT-IDENTITY-REPLAY: B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic doEndObjectAttachedSpellLight doEndSelectedMagicalEffectActiveEffect doRejectOutOfRangeObjectTarget
@@ -23,7 +26,6 @@ import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleObjectId,
-  resolveBattleSubject,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
@@ -137,7 +139,9 @@ function endObjectAttachedSpellLight(): DispelMagicRuntimeState {
   const battle = battleWithLightEmitters([
     objectSpellEmitter({
       objectId: selectedObjectId,
-      sourceSpellId: continualFlameUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(continualFlameUnitId),
+      ),
       sourceSpellLevel: 2,
     }),
   ]);
@@ -146,7 +150,7 @@ function endObjectAttachedSpellLight(): DispelMagicRuntimeState {
     spellId: dispelMagicUnitId,
     slotLevel: 3,
   });
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     spellId: dispelMagicUnitId,
     procedure: "ongoingSpellEnd",
   });
@@ -184,7 +188,7 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
     spellId: dispelMagicUnitId,
     slotLevel: 3,
   });
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     spellId: dispelMagicUnitId,
     procedure: "ongoingSpellEnd",
   });
@@ -215,7 +219,9 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
   const battle = battleWithLightEmitters([
     objectSpellEmitter({
       objectId: selectedObjectId,
-      sourceSpellId: continualFlameUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(continualFlameUnitId),
+      ),
       sourceSpellLevel: 2,
     }),
   ]);
@@ -224,7 +230,7 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
     spellId: dispelMagicUnitId,
     slotLevel: 3,
   });
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     spellId: dispelMagicUnitId,
     procedure: "ongoingSpellEnd",
   });
@@ -279,7 +285,9 @@ function battleWithActiveEffects(
   combatants.set(spellCasterId, {
     ...caster,
     concentration: {
-      sourceSpellId: heatMetalUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(heatMetalUnitId),
+      ),
       effectKind: "spellEffect",
     },
     activeEffects: [
@@ -292,7 +300,9 @@ function battleWithActiveEffects(
   combatants.set(spellTargetId, {
     ...target,
     concentration: {
-      sourceSpellId: heatMetalUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(heatMetalUnitId),
+      ),
       effectKind: "spellEffect",
     },
     activeEffects: [
@@ -322,7 +332,9 @@ function battleWithSpellLightAndActiveEffects(): BattleState {
     lightEmitters: [
       objectSpellEmitter({
         objectId: selectedObjectId,
-        sourceSpellId: continualFlameUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(continualFlameUnitId),
+        ),
         sourceSpellLevel: 2,
       }),
     ],
@@ -331,15 +343,19 @@ function battleWithSpellLightAndActiveEffects(): BattleState {
 
 function objectSpellEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
   readonly sourceSpellLevel: number;
 }): BattleTrackedOngoingSpellLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: input.sourceSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(input.sourceProcedureRef),
+    ),
     sourceCombatantId: spellTargetId,
     sourceEffectId: battleSpellEffectOccurrenceId(
-      `${spellTargetId}:${input.sourceSpellId}:${input.objectId}:selected`,
+      `${spellTargetId}:${input.sourceProcedureRef}:${input.objectId}:selected`,
     ),
     sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     attachment: { kind: "object", objectId: input.objectId },
@@ -361,7 +377,9 @@ function heatMetalObjectContactDamageEffect(input: {
   return {
     kind: "spellObjectContactDamage",
     effectId: input.effectId,
-    sourceSpellId: heatMetalUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(heatMetalUnitId),
+    ),
     sourceCombatantId: input.sourceCombatantId,
     sourceSpellLevel: testBattleSpellEffectLevel(2),
     objectId: input.objectId,
@@ -444,7 +462,9 @@ function ongoingSpellTargetWithinRangeFact(input: {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    spellId: dispelMagicUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(dispelMagicUnitId),
+    ),
     target: input.target,
     rangeFeet: input.rangeFeet ?? movementFeet(120),
   };

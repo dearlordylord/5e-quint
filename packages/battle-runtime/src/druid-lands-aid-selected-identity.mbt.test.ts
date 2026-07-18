@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
@@ -374,7 +376,7 @@ function landsAidAct(state: BattleState): AvailableBattleAct {
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&
-      candidate.subject.unitId === druidLandsAidUnitId,
+      battleActUnitPresentation(candidate)?.unitId === druidLandsAidUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Land's Aid act.");
@@ -450,7 +452,9 @@ function landsAidAreaFact(
   return {
     kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
     actorId: spellCasterId,
-    unitId: druidLandsAidUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(druidLandsAidUnitId),
+    ),
     originWithinRangeFeet: movementFeet(60),
     radiusFeet: movementFeet(10),
     targetIds,

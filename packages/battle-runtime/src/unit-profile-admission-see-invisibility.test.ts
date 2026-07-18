@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT see_invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-see-invisible-observer-sight
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
@@ -37,273 +39,268 @@ import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 
 const observerId = combatantId("unit-profile-see-invisibility-observer");
 
-describe(
-  "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invisibility admission",
-  () => {
-    test("see_invisibility admits as a self timed observer-sight spell", () => {
-      const spell = spellRecord(seeInvisibilityUnitId);
-      const state = spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      });
-      const act = spellAct({
+describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invisibility admission", () => {
+  test("see_invisibility admits as a self timed observer-sight spell", () => {
+    const spell = spellRecord(seeInvisibilityUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: seeInvisibilityUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.initialHoles).toEqual([]);
+    expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
+      tag: "spellSlot",
+      spellId: seeInvisibilityUnitId,
+      slotLevel: 2,
+      procedure: "seeInvisibleObserverSight",
+    });
+
+    const cast = requireResolved(
+      resolveBattleSubject({
         state,
-        spellId: seeInvisibilityUnitId,
-        slotLevel: 2,
-      });
+        subject: act.subject,
+        fills: [],
+      }),
+    );
 
-      expect(act.initialHoles).toEqual([]);
-      expect(act.subject.invocation).toMatchObject({
-        tag: "spellSlot",
-        spellId: seeInvisibilityUnitId,
-        slotLevel: 2,
-        procedure: "seeInvisibleObserverSight",
-      });
+    expect(requireCombatant(cast.state, spellCasterId)).toEqual(
+      expect.objectContaining({
+        concentration: null,
+        activeEffects: [
+          expect.objectContaining({
+            kind: "seeInvisibleAndEthereal",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(seeInvisibilityUnitId),
+            ),
+            sourceCombatantId: spellCasterId,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: seeInvisibilityDurationTicks,
+            },
+          }),
+        ],
+      }),
+    );
+    expect(canSpendAction(cast.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+    expect(
+      cast.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(true);
+  });
 
-      const cast = requireResolved(
-        resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [],
-        }),
-      );
+  test("see_invisibility is observer-scoped and does not remove the target's Invisible condition", () => {
+    const state = withInvisibleTarget(
+      spellBattle({
+        preparedSpells: [spellRecord(seeInvisibilityUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+        statBlockTargets: [
+          {
+            combatantId: observerId,
+            statBlock: statBlockWithCreatureType("humanoid"),
+            initiative: 9,
+            side: partySide,
+          },
+        ],
+      }),
+    );
 
-      expect(requireCombatant(cast.state, spellCasterId)).toEqual(
-        expect.objectContaining({
-          concentration: null,
-          activeEffects: [
-            expect.objectContaining({
-              kind: "seeInvisibleAndEthereal",
-              sourceSpellId: seeInvisibilityUnitId,
-              sourceCombatantId: spellCasterId,
-              expiresAt: {
-                kind: "duration",
-                durationTicks: seeInvisibilityDurationTicks,
+    expect(combatantCanSee(state, spellCasterId, spellTargetId)).toBe(false);
+    expect(combatantCanSee(state, observerId, spellTargetId)).toBe(false);
+
+    const cast = castSeeInvisibility(state);
+
+    expect(combatantCanSee(cast.state, spellCasterId, spellTargetId)).toBe(
+      true,
+    );
+    expect(combatantCanSee(cast.state, observerId, spellTargetId)).toBe(false);
+    expect(
+      hasCondition(
+        requireCombatant(cast.state, spellTargetId).conditions,
+        "invisible",
+      ),
+    ).toBe(true);
+    expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual(
+      [],
+    );
+    expect(
+      seeInvisibleRevealsInvisibleObject(cast.state, {
+        observerId: spellCasterId,
+        objectHasInvisibleCondition: true,
+        hasSightLine: true,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(true);
+    expect(
+      seeInvisibleRevealsInvisibleObject(cast.state, {
+        observerId,
+        objectHasInvisibleCondition: true,
+        hasSightLine: true,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(false);
+  });
+
+  test("see_invisibility object witnesses still require Invisible plus a clear sight line", () => {
+    const cast = castSeeInvisibility(
+      spellBattle({
+        preparedSpells: [spellRecord(seeInvisibilityUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+    );
+
+    expect(
+      seeInvisibleRevealsInvisibleObject(cast.state, {
+        observerId: spellCasterId,
+        objectHasInvisibleCondition: false,
+        hasSightLine: true,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(false);
+    expect(
+      seeInvisibleRevealsInvisibleObject(cast.state, {
+        observerId: spellCasterId,
+        objectHasInvisibleCondition: true,
+        hasSightLine: false,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(false);
+    expect(
+      seeInvisibleRevealsInvisibleObject(cast.state, {
+        observerId: spellCasterId,
+        objectHasInvisibleCondition: true,
+        hasSightLine: true,
+        blockedByOpaqueCover: true,
+      }),
+    ).toBe(false);
+  });
+
+  test("see_invisibility does not reveal a hidden target just because the target is Invisible", () => {
+    const cast = castSeeInvisibility(withHiddenInvisibleTarget());
+
+    expect(combatantCanSee(cast.state, spellCasterId, spellTargetId)).toBe(
+      false,
+    );
+    expect(requireCombatant(cast.state, spellTargetId).hidden).toEqual({
+      discoveryDc: difficultyClass(16),
+    });
+    expect(
+      hasCondition(
+        requireCombatant(cast.state, spellTargetId).conditions,
+        "invisible",
+      ),
+    ).toBe(true);
+  });
+
+  test("see_invisibility expires on duration tick and keeps Ethereal visibility observer-scoped", () => {
+    const cast = castSeeInvisibility(
+      spellBattle({
+        preparedSpells: [spellRecord(seeInvisibilityUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+        statBlockTargets: [
+          {
+            combatantId: observerId,
+            statBlock: statBlockWithCreatureType("humanoid"),
+            initiative: 9,
+            side: partySide,
+          },
+        ],
+      }),
+    );
+
+    expect(
+      seeInvisibleRevealsEtherealWitness(cast.state, {
+        observerId: spellCasterId,
+        targetPlane: "ethereal",
+        hasSightLine: true,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(true);
+    expect(
+      seeInvisibleRevealsEtherealWitness(cast.state, {
+        observerId,
+        targetPlane: "ethereal",
+        hasSightLine: true,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(false);
+
+    expect(
+      seeInvisibleRevealsEtherealWitness(cast.state, {
+        observerId: spellCasterId,
+        targetPlane: "material",
+        hasSightLine: true,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(false);
+    expect(
+      seeInvisibleRevealsEtherealWitness(cast.state, {
+        observerId: spellCasterId,
+        targetPlane: "ethereal",
+        hasSightLine: false,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(false);
+    expect(
+      seeInvisibleRevealsEtherealWitness(cast.state, {
+        observerId: spellCasterId,
+        targetPlane: "ethereal",
+        hasSightLine: true,
+        blockedByOpaqueCover: true,
+      }),
+    ).toBe(false);
+
+    const nearlyExpired: BattleState = {
+      ...cast.state,
+      combatants: new Map(
+        Array.from(cast.state.combatants.entries()).map(([id, combatant]) => [
+          id,
+          id !== spellCasterId
+            ? combatant
+            : {
+                ...combatant,
+                activeEffects: combatant.activeEffects.map((effect) =>
+                  effect.kind === "seeInvisibleAndEthereal"
+                    ? {
+                        ...effect,
+                        expiresAt: {
+                          kind: "duration",
+                          durationTicks: elapsedTimeTicks(1),
+                        },
+                      }
+                    : effect,
+                ),
               },
-            }),
-          ],
-        }),
-      );
-      expect(canSpendAction(cast.state.currentTurnResources, "magic")).toBe(
-        false,
-      );
-      expect(
-        cast.state.currentTurnResources.spellSlotUsesThisTurn.some(
-          (use) => use.kind === "committed",
-        ),
-      ).toBe(true);
-    });
-
-    test("see_invisibility is observer-scoped and does not remove the target's Invisible condition", () => {
-      const state = withInvisibleTarget(
-        spellBattle({
-          preparedSpells: [spellRecord(seeInvisibilityUnitId)],
-          spellSlots: [{ spellLevel: 2, count: 1 }],
-          statBlockTargets: [
-            {
-              combatantId: observerId,
-              statBlock: statBlockWithCreatureType("humanoid"),
-              initiative: 9,
-              side: partySide,
-            },
-          ],
-        }),
-      );
-
-      expect(combatantCanSee(state, spellCasterId, spellTargetId)).toBe(false);
-      expect(combatantCanSee(state, observerId, spellTargetId)).toBe(false);
-
-      const cast = castSeeInvisibility(state);
-
-      expect(combatantCanSee(cast.state, spellCasterId, spellTargetId)).toBe(
-        true,
-      );
-      expect(combatantCanSee(cast.state, observerId, spellTargetId)).toBe(
-        false,
-      );
-      expect(
-        hasCondition(
-          requireCombatant(cast.state, spellTargetId).conditions,
-          "invisible",
-        ),
-      ).toBe(true);
-      expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual(
-        [],
-      );
-      expect(
-        seeInvisibleRevealsInvisibleObject(cast.state, {
-          observerId: spellCasterId,
-          objectHasInvisibleCondition: true,
-          hasSightLine: true,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(true);
-      expect(
-        seeInvisibleRevealsInvisibleObject(cast.state, {
-          observerId,
-          objectHasInvisibleCondition: true,
-          hasSightLine: true,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(false);
-    });
-
-    test("see_invisibility object witnesses still require Invisible plus a clear sight line", () => {
-      const cast = castSeeInvisibility(
-        spellBattle({
-          preparedSpells: [spellRecord(seeInvisibilityUnitId)],
-          spellSlots: [{ spellLevel: 2, count: 1 }],
-        }),
-      );
-
-      expect(
-        seeInvisibleRevealsInvisibleObject(cast.state, {
-          observerId: spellCasterId,
-          objectHasInvisibleCondition: false,
-          hasSightLine: true,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(false);
-      expect(
-        seeInvisibleRevealsInvisibleObject(cast.state, {
-          observerId: spellCasterId,
-          objectHasInvisibleCondition: true,
-          hasSightLine: false,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(false);
-      expect(
-        seeInvisibleRevealsInvisibleObject(cast.state, {
-          observerId: spellCasterId,
-          objectHasInvisibleCondition: true,
-          hasSightLine: true,
-          blockedByOpaqueCover: true,
-        }),
-      ).toBe(false);
-    });
-
-    test("see_invisibility does not reveal a hidden target just because the target is Invisible", () => {
-      const cast = castSeeInvisibility(withHiddenInvisibleTarget());
-
-      expect(combatantCanSee(cast.state, spellCasterId, spellTargetId)).toBe(
-        false,
-      );
-      expect(
-        requireCombatant(cast.state, spellTargetId).hidden,
-      ).toEqual({ discoveryDc: difficultyClass(16) });
-      expect(
-        hasCondition(
-          requireCombatant(cast.state, spellTargetId).conditions,
-          "invisible",
-        ),
-      ).toBe(true);
-    });
-
-    test("see_invisibility expires on duration tick and keeps Ethereal visibility observer-scoped", () => {
-      const cast = castSeeInvisibility(
-        spellBattle({
-          preparedSpells: [spellRecord(seeInvisibilityUnitId)],
-          spellSlots: [{ spellLevel: 2, count: 1 }],
-          statBlockTargets: [
-            {
-              combatantId: observerId,
-              statBlock: statBlockWithCreatureType("humanoid"),
-              initiative: 9,
-              side: partySide,
-            },
-          ],
-        }),
-      );
-
-      expect(
-        seeInvisibleRevealsEtherealWitness(cast.state, {
-          observerId: spellCasterId,
-          targetPlane: "ethereal",
-          hasSightLine: true,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(true);
-      expect(
-        seeInvisibleRevealsEtherealWitness(cast.state, {
-          observerId,
-          targetPlane: "ethereal",
-          hasSightLine: true,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(false);
-
-      expect(
-        seeInvisibleRevealsEtherealWitness(cast.state, {
-          observerId: spellCasterId,
-          targetPlane: "material",
-          hasSightLine: true,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(false);
-      expect(
-        seeInvisibleRevealsEtherealWitness(cast.state, {
-          observerId: spellCasterId,
-          targetPlane: "ethereal",
-          hasSightLine: false,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(false);
-      expect(
-        seeInvisibleRevealsEtherealWitness(cast.state, {
-          observerId: spellCasterId,
-          targetPlane: "ethereal",
-          hasSightLine: true,
-          blockedByOpaqueCover: true,
-        }),
-      ).toBe(false);
-
-      const nearlyExpired: BattleState = {
-        ...cast.state,
-        combatants: new Map(
-          Array.from(cast.state.combatants.entries()).map(([id, combatant]) => [
-            id,
-            id !== spellCasterId
-              ? combatant
-              : {
-                  ...combatant,
-                  activeEffects: combatant.activeEffects.map((effect) =>
-                    effect.kind === "seeInvisibleAndEthereal"
-                      ? {
-                          ...effect,
-                          expiresAt: {
-                            kind: "duration",
-                            durationTicks: elapsedTimeTicks(1),
-                          },
-                        }
-                      : effect,
-                  ),
-                },
-          ]),
-        ),
-      };
-      const expired = {
-        ...nearlyExpired,
-        combatants: tickDurationEffects(nearlyExpired.combatants).value,
-      };
-
-      expect(
-        requireCombatant(expired, spellCasterId).activeEffects,
-      ).toEqual(
-        expect.not.arrayContaining([
-          expect.objectContaining({ kind: "seeInvisibleAndEthereal" }),
         ]),
-      );
-      expect(
-        seeInvisibleRevealsEtherealWitness(expired, {
-          observerId: spellCasterId,
-          targetPlane: "ethereal",
-          hasSightLine: true,
-          blockedByOpaqueCover: false,
-        }),
-      ).toBe(false);
-    });
-  },
-);
+      ),
+    };
+    const expired = {
+      ...nearlyExpired,
+      combatants: tickDurationEffects(nearlyExpired.combatants).value,
+    };
+
+    expect(requireCombatant(expired, spellCasterId).activeEffects).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({ kind: "seeInvisibleAndEthereal" }),
+      ]),
+    );
+    expect(
+      seeInvisibleRevealsEtherealWitness(expired, {
+        observerId: spellCasterId,
+        targetPlane: "ethereal",
+        hasSightLine: true,
+        blockedByOpaqueCover: false,
+      }),
+    ).toBe(false);
+  });
+});
 
 function castSeeInvisibility(
   state: BattleState,

@@ -47,7 +47,7 @@ import {
   hidePrerequisiteReferencedCombatantIds,
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
-import { supportedSpellActs } from "./spells-profiles.ts";
+import { admittedSpellActs } from "./spells-profiles.ts";
 
 import { battleStateInitIssue } from "./domain-helpers.ts";
 
@@ -242,7 +242,7 @@ export function startBattle(
             ...combatant.origin,
             execution: characterExecutionWithSpellInvocations(
               combatant.origin.execution,
-              supportedSpellActs(combatant, state),
+              admittedSpellActs(combatant, state),
             ),
           },
         },
@@ -460,7 +460,7 @@ export function addBattleCombatant(input: {
             ...admission.creature.origin,
             execution: characterExecutionWithSpellInvocations(
               admission.creature.origin.execution,
-              supportedSpellActs(admission.creature, stateWithAdmission),
+              admittedSpellActs(admission.creature, stateWithAdmission),
             ),
           },
         }

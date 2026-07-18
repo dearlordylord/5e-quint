@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
@@ -10,6 +12,7 @@ import {
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
+  requireCharacterSpellProcedureRefForTest,
   attackExecutionSelectionForSubjectForTest,
   characterBonusAttackSubjectForTest,
   characterAttackSubjectForTest,
@@ -51,6 +54,7 @@ import {
   wardingBondSpellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import {
   applyBattleHitPointDamage,
   combatantId,
@@ -77,10 +81,17 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const act = spellAct({ state, spellId: wardingBondUnitId, slotLevel: 2 });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(wardingBondUnitId, 2, "wardingBond"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(wardingBondUnitId, 2, "wardingBond"),
+      ),
       mode: { tag: "cast" },
     });
     expect(targetHole.choices).toContain(spellTargetId);
@@ -159,7 +170,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(wardingBondEffects(resolved.state, spellTargetId)).toEqual([
       expect.objectContaining({
         kind: "wardingBond",
-        sourceSpellId: wardingBondUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(wardingBondUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "duration",
@@ -170,7 +183,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(savingThrowFlatBonusProjections(resolved.state, "wis")).toEqual([
       {
         targetId: spellTargetId,
-        sourceSpellId: wardingBondUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(wardingBondUnitId),
+        ),
         bonus: 1,
       },
     ]);
@@ -181,9 +196,11 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const readyActs = discoverBattleActs(state).flatMap((act) => {
       if (
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === wardingBondUnitId &&
-        act.subject.invocation.tag === "spellSlot" &&
-        act.subject.invocation.procedure === "wardingBond" &&
+        battleActSpellPresentation(act)?.invocation.spellId ===
+          wardingBondUnitId &&
+        battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+        battleActSpellPresentation(act)?.invocation.procedure ===
+          "wardingBond" &&
         act.subject.mode.tag === "ready"
       ) {
         return [
@@ -232,7 +249,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         targetFlatBonuses: expect.arrayContaining([
           {
             targetId: spellTargetId,
-            sourceSpellId: wardingBondUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(wardingBondUnitId),
+            ),
             bonus: 1,
           },
         ]),
@@ -356,7 +375,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(
       requireCombatant(resolved.state, spellTargetId).concentration,
     ).toEqual({
-      sourceSpellId: spellId(wardingBondUnitId),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spellId(wardingBondUnitId)),
+      ),
       effectKind: "spellEffect",
     });
     expect(requireCombatant(resolved.state, spellCasterId).hp).toBe(8);
@@ -844,7 +865,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(repeatSave).toMatchObject({
       hideousLaughterRepeatSave: {
         targetId: spellCasterId,
-        sourceSpellId: hideousLaughterUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(hideousLaughterUnitId),
+        ),
         trigger: "damage",
       },
       targetRollModes: [{ targetId: spellCasterId, rollMode: "advantage" }],
@@ -1001,13 +1024,13 @@ function wardingBondSpellTargetFillWithoutWilling(
         kind: "wardingBondPairedWornPlatinumRings",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
       },
       {
         kind: "wardingBondCreaturesDistance",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
         distanceFeet: movementFeet(60),
       },
     ],
@@ -1029,7 +1052,9 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId: spellCasterId,
       targetId: allocation.targetId,
-      spellId: hole.spell.spell.id,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hole.spell.spell.id),
+      ),
     })),
   };
 }
@@ -1066,7 +1091,9 @@ function withCasterConcentration(state: BattleState): BattleState {
     combatants: new Map(state.combatants).set(spellCasterId, {
       ...caster,
       concentration: {
-        sourceSpellId: spellId(wardingBondUnitId),
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spellId(wardingBondUnitId)),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -1080,7 +1107,9 @@ function withTargetConcentration(state: BattleState): BattleState {
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
       concentration: {
-        sourceSpellId: spellId(wardingBondUnitId),
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spellId(wardingBondUnitId)),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -1098,7 +1127,9 @@ function withTurnStartDamageOnTarget(state: BattleState): BattleState {
         {
           kind: "spellTurnStartDamageAndSave" as const,
           source: "afterHitTimedDamageAndSave" as const,
-          sourceSpellId: searingSmiteUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(searingSmiteUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           damage: {
             expr: { dice: 3, dieSize: 6 },
@@ -1129,7 +1160,9 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
         ...caster.activeEffects,
         {
           kind: "hideousLaughter" as const,
-          sourceSpellId: hideousLaughterUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(hideousLaughterUnitId),
+          ),
           sourceCombatantId: spellTargetId,
           conditionHadNonSpellProneSource: false,
           conditionHadNonSpellIncapacitatedSource: false,
@@ -1150,7 +1183,7 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
 }
 
 function separateWardingBond(state: BattleState): BattleState {
-  const subject = wardingBondSeparationSubject(spellTargetId);
+  const subject = wardingBondSeparationSubject(state, spellTargetId);
   const hole = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetSpatialFacts",
@@ -1167,13 +1200,21 @@ function separateWardingBond(state: BattleState): BattleState {
   return resolved.state;
 }
 
-function wardingBondSeparationSubject(targetId: CombatantId): BattleSubject {
+function wardingBondSeparationSubject(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleSubject {
+  const effect = state.combatants
+    .get(targetId)
+    ?.activeEffects.find((candidate) => candidate.kind === "wardingBond");
+  if (effect === undefined) {
+    throw new Error("Expected Warding Bond effect for separation.");
+  }
   return {
     tag: "runtimeCommand",
     actorId: spellCasterId,
     command: "wardingBondSeparation",
-    sourceCombatantId: spellCasterId,
-    sourceSpellId: spellId(wardingBondUnitId),
+    effectRef: spellActiveEffectExecutionRef(effect),
     targetId,
   };
 }
@@ -1190,7 +1231,9 @@ function wardingBondSeparationFactsFill(
         kind: "wardingBondCreaturesDistance",
         casterId: spellCasterId,
         targetId,
-        spellId: wardingBondUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(wardingBondUnitId),
+        ),
         distanceFeet: movementFeet(61),
       },
     ],

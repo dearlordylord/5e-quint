@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV56A feather_fall
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-feather-fall-mitigation
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
@@ -137,7 +138,9 @@ describe("Feather Fall Reaction spell", () => {
       expect(target.activeEffects).toContainEqual(
         expect.objectContaining({
           kind: "featherFallMitigation",
-          sourceSpellId: featherFallUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(featherFallUnitId),
+          ),
           sourceCombatantId: casterId,
           expiresAt: expect.objectContaining({ kind: "duration" }),
         }),
@@ -455,7 +458,9 @@ function openFeatherFallWindow(
             kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
             reactorId: casterId,
             fallingCreatureId,
-            spellId: featherFallUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(featherFallUnitId),
+            ),
             rangeFeet: movementFeet(60),
           },
         ]
@@ -477,7 +482,9 @@ function featherFallTargetListFill(
       kind: "featherFallTargetFallingWithinRange",
       casterId: casterIdValue,
       targetId,
-      spellId: featherFallUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(featherFallUnitId),
+      ),
       rangeFeet: movementFeet(60),
     })),
   };

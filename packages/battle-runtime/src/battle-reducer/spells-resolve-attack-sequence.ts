@@ -28,7 +28,7 @@ import {
   type BattleSpellDamageReductionRollHole,
   type BonusActionSpellBattleResolutionInput,
   type SpellDamageReductionRoll,
-  type SupportedSpellInvocation,
+  type BattleExecutableSpellInvocation,
 } from "../battle-reducer.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
@@ -130,7 +130,7 @@ export function resolveSpellAttackSequenceAct(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -296,7 +296,7 @@ function resolveSpellAttackSequencePart(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -327,7 +327,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -373,6 +373,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   );
   const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
     state: input.state,
+    triggeringProcedureRef: input.invocation.sourceProcedureRef,
     triggeringCombatantId: input.actorId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: originalTargetHole.holeId,
@@ -1028,7 +1029,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -1303,7 +1304,7 @@ function validateSpellAttackSequencePartAttackRoll(
 
 function spellAttackSequencePartDamageReductionRollHole(
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >,
   partIndex: number,
@@ -1314,7 +1315,7 @@ function spellAttackSequencePartDamageReductionRollHole(
     "battle:spell:attack-sequence-part-damage-reduction-roll",
     invocation.spell.id,
     partIndex,
-    reduction.sourceSpellId,
+    reduction.sourceProcedureRef,
     reduction.sourceCombatantId,
     reduction.targetId,
     reduction.damageType,
@@ -1330,7 +1331,7 @@ function spellAttackSequencePartDamageReductionRollHole(
 
 function spellAttackSequencePartConcentrationSavingThrowHole(
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >,
   partIndex: number,
@@ -1353,7 +1354,7 @@ function spellAttackSequencePartConcentrationSavingThrowHole(
 
 function spellAttackSequencePartDamageDispositionHoleKey(
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >,
   partIndex: number,

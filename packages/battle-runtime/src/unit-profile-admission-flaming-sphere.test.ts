@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-FLAMING-SPHERE flaming_sphere
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-flaming-sphere-hazard-ram
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
@@ -29,7 +32,6 @@ import {
   movementFeet,
   resolveBattleSubject,
   sameBattleSubject,
-  spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -61,13 +63,16 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       slotLevel: 3,
     });
 
-    expect(secondLevelAct.subject).toMatchObject({
+    expect({
+      ...secondLevelAct.subject,
+      invocation: battleActSpellPresentation(secondLevelAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        flamingSphereUnitId,
-        2,
-        "flamingSphere",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(flamingSphereUnitId, 2, "flamingSphere"),
       ),
       mode: { tag: "cast" },
     });
@@ -130,7 +135,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toEqual([
       expect.objectContaining({
         kind: "flamingSphere",
-        sourceSpellId: flamingSphereUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(flamingSphereUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         areaId: flamingSphereAreaId,
         save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
@@ -230,7 +237,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       combatants: new Map(targetTurn.state.combatants).set(spellTargetId, {
         ...target,
         concentration: {
-          sourceSpellId: flamingSphereUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(flamingSphereUnitId),
+          ),
           effectKind: "spellEffect" as const,
         },
       }),
@@ -325,7 +334,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         kind: "movableZoneRepositionMovement",
         movableZone: expect.objectContaining({
           sourceCombatantId: spellCasterId,
-          sourceSpellId: flamingSphereUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(flamingSphereUnitId),
+          ),
           areaId: flamingSphereAreaId,
           maxMoveFeet: movementFeet(30),
         }),
@@ -381,7 +392,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         movableZone: expect.objectContaining({
           targetId: spellTargetId,
           sourceCombatantId: spellCasterId,
-          sourceSpellId: flamingSphereUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(flamingSphereUnitId),
+          ),
           areaId: flamingSphereAreaId,
           maxMoveFeet: movementFeet(30),
         }),
@@ -448,12 +461,13 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       spellCasterId,
       spellCasterId,
     );
-    expect(selfRam.subject).toMatchObject(
+    expect({
+      ...selfRam.subject,
+      invocation: battleActSpellPresentation(selfRam)?.invocation,
+    }).toMatchObject(
       expect.objectContaining({
         actorId: spellCasterId,
         targetId: spellCasterId,
-        sourceCombatantId: spellCasterId,
-        sourceSpellId: flamingSphereUnitId,
         areaId: flamingSphereAreaId,
       }),
     );
@@ -626,8 +640,6 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const base = {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
-      sourceCombatantId: spellCasterId,
-      sourceSpellId: spellId(flamingSphereUnitId),
       areaId: flamingSphereAreaId,
     };
 

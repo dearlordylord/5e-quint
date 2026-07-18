@@ -18,6 +18,7 @@ import type {
   BattleActDiscoveryCandidate,
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
+  BattleExecutableSpellInvocation,
   BattleResolutionResult,
   BattleState,
   ReadiedSpellInvocation,
@@ -150,7 +151,7 @@ export type SpellProcedureProfileResolveInput<
 > = {
   readonly input: Input;
   readonly actorId: CombatantId;
-  readonly invocation: I;
+  readonly invocation: BattleExecutableSpellInvocation<I>;
   readonly fillSet: FillSet;
 };
 
@@ -239,15 +240,19 @@ export type SpellProcedureProfile<
   readonly discoverCastAct: (
     state: BattleState,
     actorId: CombatantId,
-    invocation: I,
+    invocation: BattleExecutableSpellInvocation<I>,
   ) => readonly BattleActDiscoveryCandidate[];
 
   // Discovery: short human-readable label for the cast act.
-  readonly castSummary: (invocation: I) => string;
+  readonly castSummary: (
+    invocation: BattleExecutableSpellInvocation<I>,
+  ) => string;
 
   // Reference projection used to address an invocation across snapshots and
   // continuations.
-  readonly invocationRef: (invocation: I) => SpellInvocationRef;
+  readonly invocationRef: (
+    invocation: BattleExecutableSpellInvocation<I>,
+  ) => SpellInvocationRef;
 
   // Runtime codec for the exact invocation shape admitted by this profile.
   readonly invocationSchema: Schema.Schema<I>;

@@ -1,3 +1,7 @@
+import {
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-SRD521-PALADIN-ABJURE-FOES-001
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-06-PALADIN-ABJURE-FOES paladin_abjure_foes
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-save-gated-condition
@@ -9,6 +13,7 @@ import * as Either from "effect/Either";
 
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import {
+  requireCharacterUnitProcedureRefForTest,
   characterSeed,
   savingThrowOutcomeFill,
   testCharacterD20Statistics,
@@ -57,12 +62,24 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
   test("admits the SRD Surface record and resolves failed Wisdom saves into runnable Frightened restrictions", () => {
     const state = abjureFoesBattle();
     const act = abjureFoesAct(state);
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      state,
+      spellCasterId,
+      paladinAbjureFoesUnitId,
+    );
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
-      unitId: paladinAbjureFoesUnitId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        spellCasterId,
+        paladinAbjureFoesUnitId,
+      ),
     });
     expect(save).toMatchObject({
       unitFeature: { unitId: paladinAbjureFoesUnitId, label: "Abjure Foes" },
@@ -94,7 +111,9 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "unitFeatureCondition",
-          sourceUnitId: paladinAbjureFoesUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(procedureRef),
+          ),
           sourceCombatantId: spellCasterId,
           condition: "frightened",
           earlyEnd: { kind: "targetTakesAnyDamage" },
@@ -138,7 +157,7 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
       damagedTarget.activeEffects.some(
         (effect) =>
           effect.kind === "unitFeatureCondition" &&
-          effect.sourceUnitId === paladinAbjureFoesUnitId,
+          effect.sourceProcedureRef === procedureRef,
       ),
     ).toBe(false);
   });
@@ -229,7 +248,7 @@ function abjureFoesAct(state: BattleState) {
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&
-      candidate.subject.unitId === paladinAbjureFoesUnitId,
+      battleActUnitPresentation(candidate)?.unitId === paladinAbjureFoesUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Abjure Foes act.");
@@ -259,7 +278,9 @@ function abjureFoesVisibleWithinRangeFact(
     kind: "unitFeatureVisibleTargetWithinRange",
     actorId: spellCasterId,
     targetId,
-    unitId: paladinAbjureFoesUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(paladinAbjureFoesUnitId),
+    ),
     rangeFeet: movementFeet(60),
   };
 }
@@ -322,3 +343,4 @@ function requireAbjureFoesUnitRef(paladinLevel: ClassLevel) {
   expect(unitRef.right.supportProfiles).toContainEqual(support);
   return unitRef.right;
 }
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

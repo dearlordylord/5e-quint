@@ -14,6 +14,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -155,7 +156,6 @@ function conditionRemovalProtectionSpellProjection(
     protection: {
       conditionSaveRollMode: {
         kind: "conditionSavingThrowRollMode",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         condition: "poisoned",
         mode: "advantage",
@@ -163,7 +163,6 @@ function conditionRemovalProtectionSpellProjection(
       },
       damageResistance: {
         kind: "damageResistance",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         damageType: "poison",
         expiresAt,
@@ -176,7 +175,7 @@ function conditionRemovalProtectionSpellProjection(
 function discoverConditionRemovalProtectionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ConditionRemovalProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
@@ -187,6 +186,7 @@ function discoverConditionRemovalProtectionCastAct(
             subject: {
               tag: "actionSpell" as const,
               actorId,
+              procedureRef: invocation.sourceProcedureRef,
               invocation: conditionRemovalProtectionInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
@@ -199,7 +199,7 @@ function discoverConditionRemovalProtectionCastAct(
 }
 
 function conditionRemovalProtectionInvocationRef(
-  invocation: ConditionRemovalProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "spellSlot",
@@ -210,7 +210,7 @@ function conditionRemovalProtectionInvocationRef(
 }
 
 function conditionRemovalProtectionCastSummary(
-  invocation: ConditionRemovalProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
@@ -313,7 +313,7 @@ function resolveConditionRemovalProtection(
 function conditionRemovalProtectionSpellTargetSelection(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: ConditionRemovalProtectionSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): ConditionRemovalProtectionTargetSelection {
   if (input.fillSet.targetList !== undefined) {
@@ -347,7 +347,7 @@ function applyConditionRemovalProtectionEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: ConditionRemovalProtectionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>,
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
@@ -362,10 +362,12 @@ function applyConditionRemovalProtectionEffect(
     const nextEffects = [
       {
         ...invocation.protection.conditionSaveRollMode,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
       },
       {
         ...invocation.protection.damageResistance,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
       },
     ];
@@ -375,7 +377,7 @@ function applyConditionRemovalProtectionEffect(
           !(
             (effect.kind === "conditionSavingThrowRollMode" ||
               effect.kind === "damageResistance") &&
-            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
             effect.sourceCombatantId === actorId
           ),
       ),

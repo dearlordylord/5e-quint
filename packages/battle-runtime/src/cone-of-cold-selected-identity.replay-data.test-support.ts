@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 
 import {
   coneOfColdUnitId,
@@ -37,7 +38,10 @@ export const coneOfColdSelectedIdentityReplay = {
               spellId: coneOfColdUnitId,
               slotLevel: 5,
             });
-            expect(act.subject).toMatchObject({
+            expect({
+              ...act.subject,
+              invocation: battleActSpellPresentation(act)?.invocation,
+            }).toMatchObject({
               tag: "actionSpell",
               actorId: spellCasterId,
               invocation: spellSlotInvocationRef(
@@ -95,7 +99,10 @@ export const coneOfColdSelectedIdentityReplay = {
               spellId: flameStrikeUnitId,
               slotLevel: 5,
             });
-            expect(act.subject).toMatchObject({
+            expect({
+              ...act.subject,
+              invocation: battleActSpellPresentation(act)?.invocation,
+            }).toMatchObject({
               tag: "actionSpell",
               actorId: spellCasterId,
               invocation: spellSlotInvocationRef(

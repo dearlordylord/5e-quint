@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION antimagic_field
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-ongoing-spell-suppression
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
@@ -8,35 +11,13 @@ import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
-  antimagicFieldUnitId,
-  continualFlameUnitId,
-  heatMetalUnitId,
-  spellCasterId,
-  spellTargetId,
-  spiritualWeaponUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import {
-  requireCombatant,
-  requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import {
-  maybeBonusSpellAct,
-  spellAct,
-  spiritualWeaponForcePositionFill,
-  spiritualWeaponTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import {
   battleAreaId,
   battleObjectId,
   battleTablePositionId,
   breakBattleConcentration,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   snapshotBattle,
-  spellSlotInvocationRef,
   type BattleActiveEffect,
   type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleAntimagicFieldAuraMembership,
@@ -46,6 +27,26 @@ import {
   type BattleStoredLightEmitter,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
+import {
+  antimagicFieldUnitId,
+  continualFlameUnitId,
+  heatMetalUnitId,
+  spellCasterId,
+  spellTargetId,
+  spiritualWeaponUnitId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  requireCombatant,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  maybeBonusSpellAct,
+  spellAct,
+  spiritualWeaponForcePositionFill,
+  spiritualWeaponTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 
 const antimagicFieldAreaId = battleAreaId("unit-profile-antimagic-field-area");
 type SpellBattleSlots = NonNullable<
@@ -68,11 +69,6 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
           procedureRef: expect.any(String),
           tag: "actionSpell",
           actorId: spellCasterId,
-          invocation: spellSlotInvocationRef(
-            antimagicFieldUnitId,
-            8,
-            "antimagicFieldOngoingSpellSuppression",
-          ),
           mode: { tag: "cast" },
         },
         initialHoles: [
@@ -96,13 +92,17 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       "unit-profile-antimagic-artifact-light-effect",
     );
     const ordinaryLight = trackedObjectSpellLightEmitter({
-      sourceSpellId: continualFlameUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(continualFlameUnitId),
+      ),
       sourceEffectId: continualFlameEffectId,
       sourceSpellLevel: 2,
       objectId: "unit-profile-antimagic-continual-flame-object",
     });
     const artifactLight = trackedObjectSpellLightEmitter({
-      sourceSpellId: "synthetic_artifact_light",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_artifact_light"),
+      ),
       sourceEffectId: artifactEffectId,
       sourceSpellLevel: 2,
       objectId: "unit-profile-antimagic-artifact-light-object",
@@ -125,7 +125,9 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual({
       kind: "antimagicFieldOngoingSpellSuppression",
-      sourceSpellId: antimagicFieldUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(antimagicFieldUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       areaId: antimagicFieldAreaId,
       auraMembership: {
@@ -199,7 +201,9 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       "unit-profile-antimagic-duration-light-effect",
     );
     const durationLight = trackedObjectSpellLightEmitter({
-      sourceSpellId: "synthetic_duration_light",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_duration_light"),
+      ),
       sourceEffectId,
       sourceSpellLevel: 1,
       objectId: "unit-profile-antimagic-duration-light-object",
@@ -456,8 +460,10 @@ function maybeSpiritualWeaponRepeatAct(state: BattleState) {
   return discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-      candidate.subject.invocation.procedure === "spiritualWeaponRepeatAttack",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        spiritualWeaponUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spiritualWeaponRepeatAttack",
   );
 }
 
@@ -487,7 +493,9 @@ function antimagicFieldBattle(input?: {
       ...caster,
       activeEffects: input.activeEffects,
       concentration: {
-        sourceSpellId: heatMetalUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(heatMetalUnitId),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -596,14 +604,18 @@ function antimagicFieldSuppressing(
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...antimagicCaster,
       concentration: {
-        sourceSpellId: antimagicFieldUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(antimagicFieldUnitId),
+        ),
         effectKind: "spellEffect",
       },
       activeEffects: [
         ...antimagicCaster.activeEffects,
         {
           kind: "antimagicFieldOngoingSpellSuppression",
-          sourceSpellId: antimagicFieldUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(antimagicFieldUnitId),
+          ),
           sourceCombatantId: spellTargetId,
           areaId: antimagicFieldAreaId,
           auraMembership: {
@@ -627,7 +639,9 @@ function antimagicFieldSuppressing(
 }
 
 function trackedObjectSpellLightEmitter(input: {
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
   readonly sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
   readonly sourceSpellLevel: number;
   readonly objectId: string;
@@ -639,7 +653,9 @@ function trackedObjectSpellLightEmitter(input: {
   }
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: input.sourceSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(input.sourceProcedureRef),
+    ),
     sourceCombatantId: spellCasterId,
     sourceEffectId: input.sourceEffectId,
     sourceSpellLevel,
@@ -669,7 +685,9 @@ function heatMetalObjectContactDamageEffect(input: {
   return {
     kind: "spellObjectContactDamage",
     effectId: input.effectId,
-    sourceSpellId: heatMetalUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(heatMetalUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     sourceSpellLevel,
     objectId: input.objectId,
@@ -701,7 +719,9 @@ function spiritualWeaponActiveEffect(input: {
   return {
     kind: "spiritualWeapon",
     sourceEffectId: input.effectId,
-    sourceSpellId: spiritualWeaponUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spiritualWeaponUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     sourceSpellLevel,
     forcePositionId: battleTablePositionId(

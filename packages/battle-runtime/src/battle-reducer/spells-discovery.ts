@@ -30,12 +30,17 @@ import {
   type BattleHole,
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
   type BattleState,
   type ReadiedSpellInvocation,
   type SupportedSpellInvocation,
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
-import type { BattleSubject } from "../battle-subjects.ts";
+import {
+  isCharacterProcedureSelectionSubject,
+  type CharacterProcedureSelectionSubject,
+  type SpellInvocationRef,
+} from "../battle-subjects.ts";
 import {
   spellInvocationIsSpellcasting,
   spellActTurnResourceAvailable,
@@ -90,7 +95,7 @@ function discoverRegisteredSpellProcedureCastAct(
   profile: SpellProcedureProfileDiscovery,
   state: BattleState,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): readonly BattleActDiscoveryCandidate[] {
   // Registry lookup preserves the procedure/invocation pairing, but the
   // heterogeneous profile methods erase to a union at this call site.
@@ -99,7 +104,7 @@ function discoverRegisteredSpellProcedureCastAct(
 
 function registeredSpellProcedureCastSummary(
   profile: SpellProcedureProfileCastSummary,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): string {
   // Registry lookup preserves the procedure/invocation pairing, but the
   // heterogeneous profile methods erase to a union at this call site.
@@ -206,10 +211,14 @@ function spellActWithQuickenedRewrite(input: {
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
-  readonly invocations: readonly SupportedSpellInvocation[];
+  readonly invocations: readonly BattleExecutableSpellInvocation[];
 }): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
-  if (subject.tag !== "actionSpell") {
+  if (
+    !isCharacterProcedureSelectionSubject(subject) ||
+    subject.tag !== "actionSpell" ||
+    subject.procedureRef === undefined
+  ) {
     return [input.act];
   }
   const invocation = input.invocations.find((candidate) =>
@@ -242,6 +251,7 @@ function spellActWithQuickenedRewrite(input: {
             subject: {
               tag: "bonusActionSpell" as const,
               actorId: input.actorId,
+              procedureRef: subject.procedureRef,
               invocation: subject.invocation,
               mode: subject.mode,
               metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
@@ -257,10 +267,11 @@ function spellActWithQuickenedRewrite(input: {
 function spellActWithTransmutedDamageType(input: {
   readonly act: BattleActDiscoveryCandidate;
   readonly actor: BattleCreatureState;
-  readonly invocations: readonly SupportedSpellInvocation[];
+  readonly invocations: readonly BattleExecutableSpellInvocation[];
 }): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
   if (
+    !isCharacterProcedureSelectionSubject(subject) ||
     subject.tag !== "actionSpell" ||
     subject.mode.tag !== "cast" ||
     subject.metamagic !== undefined
@@ -296,10 +307,11 @@ function spellActWithTwinnedTargetCount(input: {
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
-  readonly invocations: readonly SupportedSpellInvocation[];
+  readonly invocations: readonly BattleExecutableSpellInvocation[];
 }): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
   if (
+    !isCharacterProcedureSelectionSubject(subject) ||
     (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
     subject.mode.tag !== "cast" ||
     subject.metamagic !== undefined
@@ -353,12 +365,13 @@ function spellCastReactionFactsAct(
   state: BattleState,
   actor: BattleCreatureState,
   actorId: CombatantId,
-  invocations: readonly SupportedSpellInvocation[],
+  invocations: readonly BattleExecutableSpellInvocation[],
   counterspellReactors: readonly CounterspellCapableReactor[],
   act: BattleActDiscoveryCandidate,
 ): BattleActDiscoveryCandidate {
   const subject = act.subject;
   if (
+    !isCharacterProcedureSelectionSubject(subject) ||
     (subject.tag !== "actionSpell" &&
       subject.tag !== "bonusActionSpell" &&
       subject.tag !== "bonusActionDashSpell") ||
@@ -389,13 +402,13 @@ function spellCastInitialHoles(
   state: BattleState,
   actor: BattleCreatureState,
   subject: Extract<
-    BattleSubject,
+    CharacterProcedureSelectionSubject,
     {
       readonly tag: "actionSpell" | "bonusActionSpell" | "bonusActionDashSpell";
     }
   >,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
   counterspellReactors: readonly CounterspellCapableReactor[],
   holes: readonly BattleHole[],
 ): readonly BattleHole[] {
@@ -435,7 +448,7 @@ function admittedSpellMetamagicApplications(input: {
   readonly actorId: CombatantId;
   readonly invocation: SupportedSpellInvocation;
   readonly subject: Extract<
-    BattleSubject,
+    CharacterProcedureSelectionSubject,
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >;
 }) {
@@ -444,7 +457,7 @@ function admittedSpellMetamagicApplications(input: {
 }
 
 export function spellInvocationCastSummary(
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): string {
   const profile = spellProcedureProfileFor(invocation.procedure);
   return registeredSpellProcedureCastSummary(profile, invocation);
@@ -518,25 +531,50 @@ export function spellSubjectTagForInvocation(
   return "actionSpell";
 }
 
+export function spellCastSelectionSubject(
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+  invocationRef: SpellInvocationRef,
+): Extract<
+  CharacterProcedureSelectionSubject,
+  { readonly tag: "actionSpell" | "bonusActionSpell" }
+> {
+  return spellSubjectTagForInvocation(invocation) === "actionSpell"
+    ? {
+        tag: "actionSpell",
+        actorId,
+        procedureRef: invocation.sourceProcedureRef,
+        invocation: invocationRef,
+        mode: { tag: "cast" },
+      }
+    : {
+        tag: "bonusActionSpell",
+        actorId,
+        procedureRef: invocation.sourceProcedureRef,
+        invocation: invocationRef,
+        mode: { tag: "cast" },
+      };
+}
+
 export { spellInvocationIsSpellcasting };
 
 export function spellInvocationCasterPrerequisiteIsMet(
   actor: BattleCreatureState,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): boolean {
   return (
     (invocation.procedure !== "heldLightHurl" ||
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "heldLight" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
     (invocation.procedure !== "spellCreatedHeldObjectAttack" ||
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "spellCreatedHeldObject" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actor.combatantId &&
           effect.objectState.kind === "held",
       )) &&
@@ -544,7 +582,7 @@ export function spellInvocationCasterPrerequisiteIsMet(
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "spellCreatedHeldObject" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actor.combatantId &&
           effect.objectState.kind === "notHeld",
       )) &&
@@ -553,21 +591,21 @@ export function spellInvocationCasterPrerequisiteIsMet(
         (effect) =>
           effect.kind === "spellObjectContactDamage" &&
           effect.effectId === invocation.activeEffect.effectId &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
     (invocation.procedure !== "spiritualWeaponRepeatAttack" ||
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "spiritualWeapon" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
     (invocation.procedure !== "dancingLightsReposition" ||
       actor.activeEffects.some(
         (effect) =>
           effect.kind === "dancingLights" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actor.combatantId,
       ))
   );
@@ -577,9 +615,9 @@ export function spellRequiresVerbal(spell: SpellRecord): boolean {
   return "components" in spell.mechanics && spell.mechanics.components.v;
 }
 
-export function isReadiedSpellInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is ReadiedSpellInvocation {
+export function isReadiedSpellInvocation<I extends SupportedSpellInvocation>(
+  invocation: I,
+): invocation is I & ReadiedSpellInvocation {
   const profile = registeredSpellProcedureProfile(invocation.procedure);
   return (
     profile?.isReadiedSpellCompatible === true &&
@@ -601,7 +639,7 @@ function readiedSpellInvocationHasReleaseReadyShape(
 export function readiedSpellAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): readonly BattleActDiscoveryCandidate[] {
   if (
     !isReadiedSpellInvocation(invocation) ||
@@ -613,6 +651,7 @@ export function readiedSpellAct(
     subject: {
       tag: "actionSpell" as const,
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: supportedSpellInvocationRef(invocation),
       mode: { tag: "ready" as const, trigger },
     },

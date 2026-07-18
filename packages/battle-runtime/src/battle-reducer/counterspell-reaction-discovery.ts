@@ -1,5 +1,6 @@
 import {
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
@@ -9,13 +10,11 @@ import {
   combatantHasSpellSlotUseThisTurn,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import {
-  supportedSpellActs,
-} from "./spells-profiles.ts";
+import { supportedSpellActs } from "./spells-profiles.ts";
 import { spellComponents } from "./spell-cast-interrupt-frame.ts";
 
 type CounterspellInvocation = Extract<
-  SupportedSpellInvocation,
+  BattleExecutableSpellInvocation,
   { readonly procedure: "counterspell" }
 >;
 

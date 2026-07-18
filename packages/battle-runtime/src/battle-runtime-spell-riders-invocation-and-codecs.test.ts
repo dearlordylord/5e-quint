@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   requireResolved,
@@ -38,8 +39,9 @@ import {
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
 import type {
+  BattleActDiscoverySubject,
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
   CombatantId,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -408,10 +410,12 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           kind: "spellTarget" as const,
           casterId: actorId,
           targetId: skeletonId,
-          spellId: "ray_of_sickness",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("ray_of_sickness"),
+          ),
         },
       ];
-      const subject: BattleSubject = {
+      const subject: BattleActDiscoverySubject = {
         tag: "actionSpell",
         actorId,
         invocation: spellSlotInvocationRef(
@@ -892,7 +896,9 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
             "battle:test:invalid-sanctuary-save",
           ),
           label: "Invalid Sanctuary save",
-          sourceSpellId: "sanctuary",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("sanctuary"),
+          ),
           sourceCombatantId: wizardId,
           wardedCombatantId: wizardId,
           triggeringCombatantId: goblinId,

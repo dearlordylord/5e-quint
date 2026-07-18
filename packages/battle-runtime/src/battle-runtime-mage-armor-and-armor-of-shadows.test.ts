@@ -1,39 +1,40 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { describe, expect, test } from "vitest";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  startBattleRight,
-  requireElapsedHours,
-  requireResolved,
-  requireHole,
-  findHole,
-  findAct,
-  targetFill,
-  characterSeed,
-  combatantId,
-  elapsedTimeTicks,
-  skeletonCreatureInit,
-  wizardSpellcasting,
-  spellRecord,
-  magicSubject,
-  expendedLevelOneSlots,
-  fighterId,
-  skeletonId,
-  wizardId,
   abilityModifier,
   armorOfShadowsSpellInvocationRef,
   battleId,
-  battleSubjectSelection,
+  characterSeed,
+  combatantId,
   defaultArmorClassState,
+  difficultyClass,
   discoverBattleActs,
   Either,
+  elapsedTimeTicks,
+  expendedLevelOneSlots,
+  fighterId,
+  findAct,
+  findHole,
+  magicSubject,
+  requireCharacterSpellProcedureRefForTest,
+  requireElapsedHours,
+  requireHole,
+  requireResolved,
   resolveBattleSubject,
-  sameBattleSubject,
+  skeletonCreatureInit,
+  skeletonId,
+  spellRecord,
   spellSlotInvocationRef,
   startBattle,
+  startBattleRight,
   statBlockCatalog,
+  targetFill,
   unitLibrary,
-  difficultyClass,
+  wizardId,
+  wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Mage Armor and Armor of Shadows", () => {
   test("Mage Armor creates a persistent base AC spell effect with typed early end", () => {
@@ -64,17 +65,13 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       ],
     });
 
-    expect(
-      discoverBattleActs(state).map((act) =>
-        battleSubjectSelection(act.subject),
-      ),
-    ).toContainEqual({
+    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "mage_armor",
-        1,
-        "persistentArmorEffect",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("mage_armor", 1, "persistentArmorEffect"),
       ),
       mode: { tag: "cast" },
     });
@@ -116,7 +113,9 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       activeEffects: [
         {
           kind: "spellBaseArmorClass",
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           sourceCombatantId: wizardId,
           base: 13,
           ability: "dex",
@@ -324,7 +323,8 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           ...druid.activeEffects,
           {
             kind: "druidWildShapeForm" as const,
-            sourceUnitId: "druid_wild_shape",
+            sourceProcedureRef:
+              battleProcedureExecutionRefForTest("druid_wild_shape"),
             sourceCombatantId: druidId,
             formStatBlockId: "stat_block_cat",
             formLimbs: { kind: "cannotHandleObjects" },
@@ -354,13 +354,17 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         kind: "spellTarget",
         casterId: wizardId,
         targetId: druidId,
-        spellId: "mage_armor",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("mage_armor"),
+        ),
       },
       {
         kind: "spellTargetKnownWilling",
         casterId: wizardId,
         targetId: druidId,
-        spellId: "mage_armor",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("mage_armor"),
+        ),
       },
     ]);
     const result = requireResolved(
@@ -427,7 +431,8 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           ...druid.activeEffects,
           {
             kind: "druidWildShapeForm" as const,
-            sourceUnitId: "druid_wild_shape",
+            sourceProcedureRef:
+              battleProcedureExecutionRefForTest("druid_wild_shape"),
             sourceCombatantId: druidId,
             formStatBlockId: "missing_wild_shape_form",
             formLimbs: { kind: "cannotHandleObjects" },
@@ -555,7 +560,9 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(warlock.activeEffects).toEqual([
       expect.objectContaining({
         kind: "spellBaseArmorClass",
-        sourceSpellId: "mage_armor",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("mage_armor"),
+        ),
         sourceCombatantId: wizardId,
         earlyEnds: [{ kind: "targetDonsArmor" }],
       }),
@@ -579,7 +586,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         ?.activeEffects.filter(
           (effect) =>
             effect.kind === "spellBaseArmorClass" &&
-            effect.sourceSpellId === "mage_armor",
+            effect.sourceProcedureRef === "mage_armor",
         ),
     ).toHaveLength(1);
   });
@@ -658,8 +665,11 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       mode: { tag: "cast" as const },
     };
     expect(
-      discoverBattleActs(state).some((candidate) =>
-        sameBattleSubject(candidate.subject, subject),
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            subject.invocation.spellId,
       ),
     ).toBe(false);
     const target = requireHole(

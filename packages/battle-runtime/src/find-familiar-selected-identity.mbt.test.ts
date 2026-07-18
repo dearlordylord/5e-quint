@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar
 // UNIT-IDENTITY-REPLAY: B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar doCastFindFamiliar doRecastFindFamiliarReplacement doDismissAndReappearFindFamiliar doDeliverTouchSpellThroughFindFamiliar
@@ -43,13 +46,12 @@ import {
   type BattleState,
   type BattleCompanionState,
   battleReducerStartRouteEvent,
-  resolveBattleSubject,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 type FindFamiliarSelectedIdentityProjection = {
@@ -202,7 +204,9 @@ function observeDismissAndReappearFindFamiliarRoute(): readonly BattleReducerRou
 }
 
 function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
-  const state = requireResolved(castCatFamiliar(startSpellcasterFixtureBattle()));
+  const state = requireResolved(
+    castCatFamiliar(startSpellcasterFixtureBattle()),
+  );
   const act = touchDeliveryAct(state);
   const targetFill = selectedTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
@@ -351,7 +355,7 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
   const cureWoundsAct = discoverBattleActs(cast.state).find(
     (act) =>
       act.subject.tag === "actionSpell" &&
-      act.subject.invocation.spellId === cureWoundsUnitId,
+      battleActSpellPresentation(act)?.invocation.spellId === cureWoundsUnitId,
   );
   if (cureWoundsAct?.subject.tag !== "actionSpell") {
     throw new Error("Expected Cure Wounds action spell act.");
@@ -366,7 +370,9 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
         ownerId: casterId,
         familiarId,
         targetId,
-        spellId: cureWoundsUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(cureWoundsUnitId),
+        ),
       },
     ],
   };
@@ -498,7 +504,8 @@ function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
       >;
     } =>
       candidate.subject.tag === "findFamiliarTouchSpell" &&
-      candidate.subject.invocation.spellId === cureWoundsUnitId,
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        cureWoundsUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Find Familiar touch delivery act.");
@@ -519,7 +526,9 @@ function selectedTouchSpellTargetFill(
         ownerId: casterId,
         familiarId,
         targetId,
-        spellId: cureWoundsUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(cureWoundsUnitId),
+        ),
       },
     ],
   };
@@ -557,7 +566,9 @@ function routeEventsOf(
 
 function requireResolved(result: BattleResolutionResult): BattleState {
   if (result.tag !== "resolved") {
-    throw new Error(`Expected Find Familiar result to resolve, got ${result.tag}.`);
+    throw new Error(
+      `Expected Find Familiar result to resolve, got ${result.tag}.`,
+    );
   }
   return result.state;
 }

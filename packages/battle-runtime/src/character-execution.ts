@@ -27,7 +27,10 @@ import {
   type SupportedUnitFeatureProfile,
   battleUnitSupportProfilesForUnit,
 } from "./unit-feature-support.ts";
-import type { SupportedSpellInvocation } from "./battle-reducer.ts";
+import type {
+  BattleExecutableSpellInvocation,
+  SupportedSpellInvocation,
+} from "./battle-reducer.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { SpellInvocationRef } from "./battle-subjects.ts";
 import {
@@ -534,14 +537,44 @@ export function characterSpellProcedureRefForInvocationRef(
   )?.procedureRef;
 }
 
+export function characterStoredSpellProcedureRefForInvocationRef(
+  execution: CharacterExecutionState,
+  invocationRef: SpellInvocationRef,
+): BattleProcedureExecutionRef | undefined {
+  return execution.procedureBindings.find((binding) =>
+    binding.procedure.kind === "spellInvocation"
+      ? sameSpellInvocationRef(
+          supportedSpellInvocationRef(binding.procedure.invocation),
+          invocationRef,
+        )
+      : binding.procedure.kind === "unavailableSpellInvocation" &&
+        sameSpellInvocationRef(
+          binding.procedure.occurrence.invocationRef,
+          invocationRef,
+        ),
+  )?.procedureRef;
+}
+
 export function characterSpellProcedure(
   execution: CharacterExecutionState,
   procedureRef: BattleProcedureExecutionRef,
-): SupportedSpellInvocation | undefined {
+): BattleExecutableSpellInvocation | undefined {
   const binding = execution.procedureBindings.find(
     (candidate) => candidate.procedureRef === procedureRef,
   );
   return binding?.procedure.kind === "spellInvocation"
-    ? binding.procedure.invocation
+    ? bindSpellProcedureExecutionFacts(
+        binding.procedure.invocation,
+        procedureRef,
+      )
     : undefined;
+}
+
+export function bindSpellProcedureExecutionFacts<
+  I extends SupportedSpellInvocation,
+>(
+  invocation: I,
+  procedureRef: BattleProcedureExecutionRef,
+): BattleExecutableSpellInvocation<I> {
+  return { ...invocation, sourceProcedureRef: procedureRef };
 }

@@ -29,7 +29,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
   battleLightExtraAttackDamageAbilityModifierSupportForUnit,

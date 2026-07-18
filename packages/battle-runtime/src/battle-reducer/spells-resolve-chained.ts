@@ -30,7 +30,7 @@ import {
   type BattleSpellCastReactionFact,
   type BattleTargetSpatialFact,
   type BonusActionSpellBattleResolutionInput,
-  type SupportedSpellInvocation,
+  type BattleExecutableSpellInvocation,
   snapshotBattle,
   validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
@@ -180,7 +180,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >;
   readonly fillSet?: ChainedSpellFillSet;
@@ -279,6 +279,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     const targetEventId = chainedSpellTargetHoleId(input.invocation, stepIndex);
     const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
       state: replayState,
+      triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: targetEventId,
@@ -886,7 +887,7 @@ export function resolveCompletedChainedSpell(input: {
       | BonusActionSpellBattleResolutionInput;
     readonly actorId: CombatantId;
     readonly invocation: Extract<
-      SupportedSpellInvocation,
+      BattleExecutableSpellInvocation,
       { readonly procedure: "chainedSpellAttackDamage" }
     >;
     readonly spendsCastResources?: boolean;
@@ -946,7 +947,7 @@ export function emptyChainedSpellStepFills(): ChainedSpellStepFills {
 export function chainedSpellFillSet(
   fills: readonly BattleFill[],
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >,
   actorId: CombatantId,
@@ -1242,7 +1243,7 @@ export function chainedSpellStepIndexForFill(
     { readonly kind: "targetChoice" | "attackRoll" | "rolledDice" }
   >,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >,
 ): number | null {
@@ -1381,7 +1382,7 @@ export function damageRollHasDuplicateD8Face(
 export function validateChainedSpellDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >,
   damageType: DamageType,
@@ -1404,7 +1405,7 @@ export function validateChainedSpellDamageFill(
 export function chainedSpellDamageAmountForTarget(
   target: BattleCreatureState,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >,
   damageType: DamageType,
@@ -1428,7 +1429,7 @@ export function chainedSpellDamageAmountForTarget(
 
 function chainedSpellDamageByType(
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >,
   damageType: DamageType,

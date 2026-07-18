@@ -1,3 +1,8 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MISTY-STEP misty_step
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-teleport
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
@@ -48,10 +53,13 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
     const acts = discoverBattleActs(state).filter(
       (candidate): candidate is BonusActionSpellAct =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === mistyStepUnitId,
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          mistyStepUnitId,
     );
 
-    expect(acts.map((act) => act.subject.invocation)).toEqual(
+    expect(
+      acts.map((act) => battleActSpellPresentation(act)?.invocation),
+    ).toEqual(
       expect.arrayContaining([
         spellSlotInvocationRef(mistyStepUnitId, 2, "selfTeleport"),
         spellSlotInvocationRef(mistyStepUnitId, 3, "selfTeleport"),
@@ -59,8 +67,8 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
     );
     const levelTwo = acts.find(
       (act) =>
-        act.subject.invocation.tag === "spellSlot" &&
-        Number(act.subject.invocation.slotLevel) === 2,
+        battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+        Number(battleActSpellSlotPresentation(act)?.invocation.slotLevel) === 2,
     );
     expect(levelTwo).toBeDefined();
     if (levelTwo === undefined) {
@@ -131,7 +139,9 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       {
         kind: "selfTeleport",
         actorId: spellCasterId,
-        sourceSpellId: spellId(mistyStepUnitId),
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spellId(mistyStepUnitId)),
+        ),
         destination: {
           kind: "unoccupiedVisibleDestination",
           destinationId: battleTablePositionId(
@@ -231,7 +241,9 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       spellTargetId,
       {
         kind: "hideousLaughter",
-        sourceSpellId: hideousLaughterUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(hideousLaughterUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         conditionHadNonSpellProneSource: false,
         conditionHadNonSpellIncapacitatedSource: false,

@@ -47,6 +47,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -77,7 +78,7 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "../spell-effects.ts";
 import {
   readiedSpellAct,
-  spellSubjectTagForInvocation,
+  spellCastSelectionSubject,
   targetListSpellUsesTargetListHole,
 } from "../spells-discovery.ts";
 import { isScalarBuffTargetListInvocation } from "../spells-invocation-guards.ts";
@@ -227,18 +228,17 @@ function scalarBuffSpellProjection(spell: SpellRecord): {
 function discoverScalarBuffCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ScalarBuffInvocation,
+  invocation: BattleExecutableSpellInvocation<ScalarBuffInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "self") {
     const initialHoles = scalarBuffInitialHoles(invocation);
     const castActs = [
       {
-        subject: {
-          tag: spellSubjectTagForInvocation(invocation),
+        subject: spellCastSelectionSubject(
           actorId,
-          invocation: scalarBuffInvocationRef(invocation),
-          mode: { tag: "cast" as const },
-        },
+          invocation,
+          scalarBuffInvocationRef(invocation),
+        ),
         label: invocation.spell.name,
         summary: scalarBuffCastSummary(invocation),
         initialHoles,
@@ -263,12 +263,11 @@ function discoverScalarBuffCastAct(
       ? []
       : [
           {
-            subject: {
-              tag: spellSubjectTagForInvocation(invocation),
+            subject: spellCastSelectionSubject(
               actorId,
-              invocation: scalarBuffInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
+              invocation,
+              scalarBuffInvocationRef(invocation),
+            ),
             label: invocation.spell.name,
             summary: scalarBuffCastSummary(invocation),
             initialHoles: [targetHole],
@@ -286,15 +285,14 @@ function discoverScalarBuffCastAct(
 function scalarBuffSubtleMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: ScalarBuffInvocation;
+  readonly invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ScalarBuffInvocation>;
   readonly initialHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
-  const subject = {
-    tag: spellSubjectTagForInvocation(input.invocation),
-    actorId: input.actorId,
-    invocation: scalarBuffInvocationRef(input.invocation),
-    mode: { tag: "cast" as const },
-  };
+  const subject = spellCastSelectionSubject(
+    input.actorId,
+    input.invocation,
+    scalarBuffInvocationRef(input.invocation),
+  );
   return discoverSubtleSpellMetamagicSelections({
     actor: input.state.combatants.get(input.actorId),
     invocation: input.invocation,
@@ -340,7 +338,7 @@ function applyScalarBuffEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: ScalarBuffInvocation,
+  invocation: BattleExecutableSpellInvocation<ScalarBuffInvocation>,
   temporaryHitPointsRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined,
@@ -370,6 +368,7 @@ function applyScalarBuffEffect(
     if (scalarEffect.kind === "hitPointMaximumIncrease") {
       const nextTarget = applyHitPointMaximumIncrease(target, {
         ...scalarEffect.activeEffect,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
       });
       return {
@@ -380,12 +379,13 @@ function applyScalarBuffEffect(
     const replacing = target.activeEffects.filter(
       (effect) =>
         effect.kind === scalarEffect.activeEffect.kind &&
-        effect.sourceSpellId === invocation.spell.id,
+        effect.sourceProcedureRef === invocation.sourceProcedureRef,
     );
     const nextTarget = battleCreatureWithSpellActiveEffects(target, [
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
       {
         ...scalarEffect.activeEffect,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
       },
     ]);

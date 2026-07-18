@@ -21,6 +21,7 @@ import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import {
   BattleAttackProcedureExecutionRef,
+  BattleProcedureExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -266,6 +267,13 @@ export const SupportedAttackActionOptionSchema = Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("authoredReplacement"),
           sourceUnitId: Schema.String,
+          dice: Schema.Literal(1),
+          dieSize: DamageDieSizeSchema,
+          damageType: DamageTypeSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("procedureReplacement"),
+          sourceProcedureRef: BattleProcedureExecutionRef,
           dice: Schema.Literal(1),
           dieSize: DamageDieSizeSchema,
           damageType: DamageTypeSchema,

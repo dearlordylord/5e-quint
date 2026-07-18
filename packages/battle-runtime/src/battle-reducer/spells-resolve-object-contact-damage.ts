@@ -25,6 +25,7 @@ import {
   type BattleObjectDropResolutionHole,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type ObjectContactPenaltyActiveEffect,
   type SupportedSpellInvocation,
@@ -33,9 +34,9 @@ import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleObjectId,
+  type BattleProcedureExecutionRef,
   type BattleSpellEffectOccurrenceId,
   type CombatantId,
-  spellId,
 } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -126,7 +127,7 @@ type DamagedHoldingOrWearingTarget = {
 export function resolveObjectContactDamageSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: ObjectContactDamageInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageInvocation>;
   readonly fillSet: OkSpellFillSet;
 }): BattleResolutionResult {
   const unrelatedFills = objectContactDamageUnrelatedFillsMessage(
@@ -289,7 +290,7 @@ export function resolveObjectContactDamageSpellAct(input: {
 export function resolveObjectContactDamageRepeatSpellAct(input: {
   readonly input: BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: ObjectContactDamageRepeatInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageRepeatInvocation>;
   readonly fillSet: OkSpellFillSet;
 }): BattleResolutionResult {
   const unrelatedFills = objectContactDamageUnrelatedFillsMessage(
@@ -376,7 +377,7 @@ function validateObjectContactTargets(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly objectId: BattleObjectId;
-  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
   readonly fillSet: OkSpellFillSet;
   readonly requiresObjectWithinRange: boolean;
 }):
@@ -400,7 +401,7 @@ function validateObjectContactTargets(input: {
   if (
     fill.holeId !==
     spellObjectContactTargetsHoleId({
-      spellId: input.invocation.spell.id,
+      procedure: input.invocation.procedure,
       objectId: input.objectId,
     })
   ) {
@@ -442,7 +443,7 @@ function validateObjectContactTargets(input: {
   const matchingRangeFacts = rangeFacts.filter(
     (fact) =>
       fact.sourceCombatantId === input.actorId &&
-      fact.sourceSpellId === input.invocation.spell.id &&
+      fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
       fact.objectId === input.objectId &&
       fact.rangeFeet === input.invocation.rangeFeet,
   );
@@ -479,7 +480,7 @@ function validateObjectContactTargets(input: {
   const matchingContactFacts = contactFacts.filter(
     (fact) =>
       fact.sourceCombatantId === input.actorId &&
-      fact.sourceSpellId === input.invocation.spell.id &&
+      fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
       fact.objectId === input.objectId &&
       selectedTargetIds.has(fact.targetId),
   );
@@ -512,7 +513,7 @@ function validateObjectContactTargets(input: {
   const matchingHoldingOrWearingFacts = holdingOrWearingFacts.filter(
     (fact) =>
       fact.sourceCombatantId === input.actorId &&
-      fact.sourceSpellId === input.invocation.spell.id &&
+      fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
       fact.objectId === input.objectId &&
       selectedTargetIds.has(fact.targetId),
   );
@@ -556,7 +557,7 @@ function resolveObjectContactDamage(input: {
     | BonusActionSpellBattleResolutionInput["subject"];
   readonly fillSet: OkSpellFillSet;
   readonly actorId: CombatantId;
-  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
   readonly objectId: BattleObjectId;
   readonly targetIds: readonly CombatantId[];
   readonly contactFacts: readonly BattleObjectContactTargetSpatialFact[];
@@ -942,7 +943,7 @@ function resolveObjectContactDamage(input: {
                 source: {
                   kind: "spell",
                   sourceCombatantId: input.actorId,
-                  sourceSpellId: spellId(input.invocation.spell.id),
+                  sourceProcedureRef: input.invocation.sourceProcedureRef,
                 },
               },
             ]
@@ -1083,7 +1084,7 @@ function resolveObjectContactDamage(input: {
 function objectContactDamagedHoldingOrWearingTargets(input: {
   readonly state: BattleState;
   readonly fillSet: OkSpellFillSet;
-  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
   readonly targetIds: readonly CombatantId[];
   readonly damageAmountByTargetId: ReadonlyMap<CombatantId, number>;
   readonly holdingOrWearingByTarget: ReadonlyMap<
@@ -1109,7 +1110,7 @@ function objectContactDamagedHoldingOrWearingTargets(input: {
 function objectContactSavingThrowOutcomeHole(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
   readonly objectId: BattleObjectId;
   readonly targets: readonly DamagedHoldingOrWearingTarget[];
 }): BattleObjectContactSavingThrowOutcomeHole | null {
@@ -1118,7 +1119,7 @@ function objectContactSavingThrowOutcomeHole(input: {
   }
   const key = objectContactSavingThrowOutcomeHoleKey({
     actorId: input.actorId,
-    spellId: input.invocation.spell.id,
+    procedureRef: input.invocation.sourceProcedureRef,
     objectId: input.objectId,
   });
   return {
@@ -1128,7 +1129,7 @@ function objectContactSavingThrowOutcomeHole(input: {
     label: `${input.invocation.spell.name} holding or wearing Constitution save`,
     objectContactSave: {
       sourceCombatantId: input.actorId,
-      sourceSpellId: spellId(input.invocation.spell.id),
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       objectId: input.objectId,
       targetIds: input.targets.map((target) => target.targetId),
     },
@@ -1144,10 +1145,10 @@ function objectContactSavingThrowOutcomeHole(input: {
 
 function objectContactSavingThrowOutcomeHoleKey(input: {
   readonly actorId: CombatantId;
-  readonly spellId: string;
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly objectId: BattleObjectId;
 }): string {
-  return `battle:spell:object-contact-damage:holding-wearing-save:${input.actorId}:${input.spellId}:${input.objectId}`;
+  return `battle:spell:object-contact-damage:holding-wearing-save:${input.actorId}:${input.procedureRef}:${input.objectId}`;
 }
 
 function objectContactSavingThrowFillValidation(input: {
@@ -1170,13 +1171,13 @@ function objectContactSavingThrowFillValidation(input: {
 
 function objectDropResolutionHole(input: {
   readonly actorId: CombatantId;
-  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
   readonly objectId: BattleObjectId;
   readonly targetIds: readonly CombatantId[];
 }): BattleObjectDropResolutionHole {
   const key = objectDropResolutionHoleKey({
     actorId: input.actorId,
-    spellId: input.invocation.spell.id,
+    procedureRef: input.invocation.sourceProcedureRef,
     objectId: input.objectId,
   });
   return {
@@ -1186,7 +1187,7 @@ function objectDropResolutionHole(input: {
     label: `${input.invocation.spell.name} object drop resolution`,
     objectDrop: {
       sourceCombatantId: input.actorId,
-      sourceSpellId: spellId(input.invocation.spell.id),
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       objectId: input.objectId,
       targetIds: input.targetIds,
     },
@@ -1195,10 +1196,10 @@ function objectDropResolutionHole(input: {
 
 function objectDropResolutionHoleKey(input: {
   readonly actorId: CombatantId;
-  readonly spellId: string;
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly objectId: BattleObjectId;
 }): string {
-  return `battle:spell:object-contact-damage:drop-resolution:${input.actorId}:${input.spellId}:${input.objectId}`;
+  return `battle:spell:object-contact-damage:drop-resolution:${input.actorId}:${input.procedureRef}:${input.objectId}`;
 }
 
 function objectDropResolutionFillValidation(input: {
@@ -1238,7 +1239,7 @@ function exactOutcomeTargetsValidation(input: {
 function applyObjectContactPenalties(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
   readonly objectId: BattleObjectId;
   readonly targetIds: readonly CombatantId[];
 }): BattleState {
@@ -1268,7 +1269,7 @@ function applyObjectContactPenalties(input: {
     const effect: ObjectContactPenaltyActiveEffect = {
       kind: "selfAttackRollAndAbilityCheckRollMode",
       sourceEffectId,
-      sourceSpellId: input.invocation.spell.id,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       mode: "disadvantage",
       expiresAt: {
@@ -1312,7 +1313,7 @@ function applyObjectContactDamageActiveEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly objectId: BattleObjectId;
-  readonly invocation: ObjectContactDamageInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageInvocation>;
 }): BattleState {
   const actor = input.state.combatants.get(input.actorId);
   if (actor === undefined) {
@@ -1325,7 +1326,7 @@ function applyObjectContactDamageActiveEffect(input: {
       spellId: input.invocation.spell.id,
       objectId: input.objectId,
     }),
-    sourceSpellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
     sourceCombatantId: input.actorId,
     sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
     objectId: input.objectId,

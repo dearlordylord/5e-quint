@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding haste protection_from_energy sleet_storm slow
 // UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding doDiscoverGlyphDurableOccurrence doDiscoverGlyphExplosiveRuneRelease doDiscoverGlyphStoredSpellRelease
 // UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES haste doDiscoverHastePositiveEffects
@@ -195,10 +198,17 @@ function discoverLevel3ActionSpell(input: {
     spellId: input.spellId,
     slotLevel: 3,
   });
-  expect(act.subject).toMatchObject({
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
-    invocation: spellSlotInvocationRef(input.spellId, 3, input.procedure),
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      state,
+      spellCasterId,
+      spellSlotInvocationRef(input.spellId, 3, input.procedure),
+    ),
     mode: { tag: "cast" },
   });
   input.verify({ state, act, spell });
@@ -282,7 +292,9 @@ function verifyProtectionFromEnergyResistance(input: {
   ).toContainEqual(
     expect.objectContaining({
       kind: "damageResistance",
-      sourceSpellId: protectionFromEnergyUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(protectionFromEnergyUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       damageType: "fire",
     }),
@@ -319,7 +331,9 @@ function verifySleetStormAreaHazard(input: {
   ).toContainEqual(
     expect.objectContaining({
       kind: "sleetStormAreaHazard",
-      sourceSpellId: sleetStormUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(sleetStormUnitId),
+      ),
       sourceCombatantId: spellCasterId,
     }),
   );

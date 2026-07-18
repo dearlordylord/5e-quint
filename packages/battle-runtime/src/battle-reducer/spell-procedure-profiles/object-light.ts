@@ -40,6 +40,7 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
@@ -321,12 +322,13 @@ function admitObjectLight(
 function discoverObjectLightCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ObjectLightInvocation,
+  invocation: BattleExecutableSpellInvocation<ObjectLightInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const baseCastAct = {
     subject: {
       tag: "actionSpell" as const,
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: objectLightInvocationRef(invocation),
       mode: { tag: "cast" as const },
     },
@@ -343,6 +345,7 @@ function discoverObjectLightCastAct(
       subject: {
         tag: "actionSpell" as const,
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: objectLightInvocationRef(invocation),
         mode: { tag: "cast" as const },
         metamagic,
@@ -383,7 +386,7 @@ function applyObjectLightEffect(
   state: BattleState,
   actorId: CombatantId,
   objectId: BattleObjectId,
-  invocation: ObjectLightInvocation,
+  invocation: BattleExecutableSpellInvocation<ObjectLightInvocation>,
 ): BattleState {
   const retainedEmitters =
     invocation.targeting.object.kind === "lightCantripObject"
@@ -391,7 +394,7 @@ function applyObjectLightEffect(
           (emitter) =>
             !(
               emitter.kind === "spellLightEmitter" &&
-              emitter.sourceSpellId === invocation.spell.id &&
+              emitter.sourceProcedureRef === invocation.sourceProcedureRef &&
               emitter.sourceCombatantId === actorId
             ),
         )
@@ -402,7 +405,7 @@ function applyObjectLightEffect(
       ...retainedEmitters,
       {
         kind: "spellLightEmitter",
-        sourceSpellId: invocation.spell.id,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         sourceEffectId: objectLightSpellEffectOccurrenceId(
           state,

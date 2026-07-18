@@ -23,6 +23,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -202,7 +203,7 @@ function isGreaseGroundHazardPhase(
 function discoverGreaseGroundHazardCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: GreaseGroundHazardSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const savingThrowHole = spellSavingThrowOutcomeHole(
@@ -274,7 +275,7 @@ function greaseGroundHazardMetamagicCastActs(input: {
 
 function greaseGroundHazardCastAct(
   actorId: CombatantId,
-  invocation: GreaseGroundHazardSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -283,6 +284,7 @@ function greaseGroundHazardCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: greaseGroundHazardInvocationRef(invocation),
       mode: { tag: "cast" },
     },

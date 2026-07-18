@@ -31,6 +31,7 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
@@ -226,7 +227,7 @@ function creatureSizeChangeSpellProjection(
 
 function creatureSizeChangeActiveEffect(
   actorId: CombatantId,
-  spell: SpellRecord,
+  _spell: SpellRecord,
   effects: readonly OngoingEffect[],
   durationTicks: ElapsedTimeTicks,
 ): CreatureSizeChangeInvocation["activeEffect"] | null {
@@ -302,7 +303,6 @@ function creatureSizeChangeActiveEffect(
   }
   return {
     kind: "spellCreatureSizeChange",
-    sourceSpellId: spell.id,
     sourceCombatantId: actorId,
     direction: size.direction,
     expiresAt: {
@@ -316,7 +316,7 @@ function creatureSizeChangeActiveEffect(
 function discoverCreatureSizeChangeCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: CreatureSizeChangeInvocation,
+  invocation: BattleExecutableSpellInvocation<CreatureSizeChangeInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
@@ -326,6 +326,7 @@ function discoverCreatureSizeChangeCastAct(
     subject: {
       tag: "actionSpell" as const,
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: creatureSizeChangeInvocationRef(invocation),
       mode: { tag: "cast" as const },
     },
@@ -342,6 +343,7 @@ function discoverCreatureSizeChangeCastAct(
       subject: {
         tag: "actionSpell" as const,
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: creatureSizeChangeInvocationRef(invocation),
         mode: { tag: "cast" as const },
         metamagic,
@@ -586,7 +588,7 @@ function applyCreatureSizeChangeEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: CreatureSizeChangeInvocation,
+  invocation: BattleExecutableSpellInvocation<CreatureSizeChangeInvocation>,
   metamagicApplications:
     | readonly SpellMetamagicApplicationFact[]
     | undefined = undefined,
@@ -602,6 +604,7 @@ function applyCreatureSizeChangeEffect(
     }
     const nextEffect = {
       ...activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
       sourceCombatantId: actorId,
     };
     const replacement = activeEffectsWithCreatureSizeChangeReplaced(
@@ -623,7 +626,7 @@ function applyCreatureSizeChangeEffect(
           nextCombatants,
           {
             sourceCombatantId: effect.sourceCombatantId,
-            sourceSpellId: effect.sourceSpellId,
+            sourceProcedureRef: effect.sourceProcedureRef,
           },
         ),
       withReplacement.combatants,

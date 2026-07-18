@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARBARIAN-DANGER-SENSE barbarian_danger_sense
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
@@ -142,15 +143,14 @@ describe("L12G deterministic Danger Sense admission", () => {
       spellTargetId,
       "entersArea",
     );
-    const entrySave = requireHole(
-      entryAct.initialHoles,
-      "savingThrowOutcome",
-    );
+    const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
     expect(entrySave).toMatchObject({
       ability: "dex",
       greaseGroundHazard: {
         targetId: spellTargetId,
-        sourceSpellId: greaseUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(greaseUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         trigger: "entersArea",
@@ -167,7 +167,9 @@ describe("L12G deterministic Danger Sense admission", () => {
       ability: "dex",
       greaseGroundHazard: {
         targetId: spellTargetId,
-        sourceSpellId: greaseUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(greaseUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         trigger: "endsTurnInArea",
@@ -187,8 +189,7 @@ describe("L12G deterministic Danger Sense admission", () => {
       "entersArea",
     );
     expect(
-      requireHole(entryAct.initialHoles, "savingThrowOutcome")
-        .targetRollModes,
+      requireHole(entryAct.initialHoles, "savingThrowOutcome").targetRollModes,
     ).toEqual([]);
 
     const endTurnAct = greaseGroundHazardEndTurnAct(state, spellTargetId);
@@ -255,7 +256,9 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
     { readonly kind: "greaseGroundHazard" }
   > = {
     kind: "greaseGroundHazard",
-    sourceSpellId: greaseUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(greaseUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     areaId: greaseAreaId,
     heightenedSpellTargetDisadvantage: null,
