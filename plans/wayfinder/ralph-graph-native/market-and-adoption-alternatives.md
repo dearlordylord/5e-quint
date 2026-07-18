@@ -10,7 +10,7 @@ Research ticket: [Evaluate Gas Town, Beads, and Agent Orchestrator as Ralph adop
 
 The checked-in shell harness was a one-off experiment, not an incumbent system
 or compatibility baseline. It may supply candidate requirements and failure
-evidence, but the new Ralph orchestrator does not invoke its stages, migrate its
+evidence, but the Ralph orchestrator does not invoke its stages, migrate its
 plan index or runs, preserve behavioral parity with it, or retain it as a
 fallback. The compatibility-executor and shell-cutover hypothesis formerly
 recorded in this research is withdrawn.
@@ -30,7 +30,11 @@ Parallel coding agents in isolated worktrees are no longer a niche. Dependency-a
 
 No surveyed tool ships that whole contract. Wholesale adoption would replace or duplicate the tracker, weaken Ralph's acceptance semantics, or require enough new control-plane code that the adopted product would be a substrate rather than the orchestrator.
 
-The evidence therefore supports a **compose or build** hypothesis, not a whole-tool adoption. It also shifts the implementation hypothesis toward a typed control plane that imports Ralph's proven contracts rather than adding parallel lifecycle state to the current shell harness. That is evidence for the architecture decision ticket, not the architecture decision itself.
+The evidence therefore supports a **compose or build** hypothesis, not a
+whole-tool adoption. It also shifts the implementation hypothesis toward a
+typed control plane that directly implements independently accepted
+requirements. That is evidence for the tooling architecture decision ticket,
+not the tooling architecture decision itself.
 
 ## Comparison rubric
 
@@ -123,7 +127,9 @@ The answer depends on the boundary:
 - **Partly:** graph scheduling and autonomous review exist, but usually in different products and under product-owned task state.
 - **Yes, at the complete protocol boundary:** external tracker DAG authority combined with independent converging review, distinct bounded retry scopes, serialized accepted-head integration, and dependency-preserving quarantine remains a niche composition.
 
-This distinction explains why many tools look like an 80% match in a feature list yet would require replacement of their scheduler, task model, or acceptance lifecycle to preserve Ralph's semantics.
+This distinction explains why many tools look like an 80% match in a feature
+list yet would require replacement of their scheduler, task model, or
+acceptance lifecycle to implement the accepted Ralph requirements.
 
 ## Historical-harness evidence or a clean control plane?
 
@@ -156,13 +162,13 @@ Risks:
   is traced to an owning decision or specification;
 - optional Sandcastle adoption must prove that its worktree and process lifecycle can carry Base SHA, evidence preservation, cancellation, and quarantine requirements without an adapter-owned shadow state.
 
-### Evidence-weighted direction for the architecture ticket
+### Evidence-weighted direction for the tooling architecture ticket
 
 Do not extend the monolithic historical harness, and do not adopt a surveyed
 product wholesale. Build and test a clean typed control plane. Use the harness
 only as fallible evidence when evaluating candidate requirements.
 
-The safe implementation shape is incremental within the new system:
+The safe implementation shape is incremental within the Ralph orchestrator:
 
 1. trace each candidate requirement to an explicit owning decision;
 2. put tracker snapshots, claims, frontier derivation, task workflow, and integration serialization under one new control-plane owner;
@@ -170,7 +176,7 @@ The safe implementation shape is incremental within the new system:
    those accepted requirements;
 4. qualify optional substrates such as Sandcastle against the new port
    contracts; and
-5. release the new orchestrator only when its own restart, quarantine, cleanup,
+5. release the Ralph orchestrator only when its own restart, quarantine, cleanup,
    and integration-conflict scenarios pass end to end.
 
 Before selecting this direction, prototype the three seams most likely to falsify it:

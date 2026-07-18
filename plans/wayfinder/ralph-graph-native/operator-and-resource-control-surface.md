@@ -6,7 +6,7 @@ surface](https://github.com/dearlordylord/5e-quint/issues/186), under
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
 Every run, attempt, claim, session, resource, and disposition in this decision
-belongs to the new orchestrator. The control surface does not adopt or dispose
+belongs to the Ralph orchestrator. The control surface does not adopt or dispose
 historical shell-harness runs.
 
 ## Answer
@@ -360,9 +360,13 @@ the verifier failure itself does not increment the review ordinal.
 
 This decision models Ralph orchestration only. It changes no D&D rule, authored
 content, runtime battle behavior, Quint slice, SRD assumption, or D&D ubiquitous
-language. Its terms remain in this Wayfinder asset until the accepted
-graph-native Ralph implementation specification promotes them to the owning
-package documentation identified through `CONTEXT-MAP.md`.
+language, and it does not change main-application architecture. Canonical
+tooling language belongs to the
+[Ralph tooling context](../../../docs/tooling/ralph/CONTEXT.md); stable tooling
+structure belongs to the
+[Ralph tooling architecture](../../../docs/tooling/ralph/ARCHITECTURE.md).
+Executable detail remains with the accepted implementation specification and
+eventual owning tooling package documentation.
 
 The design localizes strong connascence as follows:
 
@@ -462,8 +466,7 @@ Implementation must prove all of the following:
 ## Decision review record
 
 Round one checked the draft against the durable-journal, accepted-head
-integration, tracker-port, bounded-leaf, accepted execution requirements mined
-from the historical harness, repository
+integration, tracker-port, bounded-leaf, current Ralph execution, repository
 resource-lock, and deterministic-verification contracts. It narrowed drain
 quiescence to locks held by Ralph-owned fragments and made semantic-round
 consumption explicit so technical or verification failures cannot increment the

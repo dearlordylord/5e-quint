@@ -10,12 +10,12 @@ describes the historical one-off shell harness at that commit.
 
 ## Scope boundary
 
-This asset is an evidence inventory, not the architecture or a compatibility
-contract for the new Ralph orchestrator. The historical harness can reveal a
-useful requirement, failure mode, or design lesson. None of its scheduler
+This asset is an evidence inventory, not the tooling architecture or a
+compatibility contract for the Ralph orchestrator. The historical harness can
+reveal a useful requirement, failure mode, or design lesson. None of its scheduler
 stages, plan-index state, claim representation, run-directory layout, prompts,
-shell functions, or retained runs transfers into the new system merely because
-it existed or worked once.
+shell functions, or retained runs transfers into the Ralph orchestrator merely
+because it existed or worked once.
 
 A **candidate requirement** is an observation mined from the historical
 harness. An **accepted requirement** is a requirement explicitly selected by
@@ -35,7 +35,7 @@ integration branch, and re-reads the task graph before dispatching again.
 Git-ref claims exclude competing runners; completion separately proves Base,
 output, and acceptance ancestry before closing an issue and deleting its claim.
 
-Three previously accepted requirements were stronger than the inspected
+Three then-selected delivery expectations were stronger than the inspected
 implementation:
 
 1. non-convergence promises quarantine of the claim, branch, worktree, and
@@ -55,10 +55,10 @@ silently promoted into product requirements.
 
 | Source | Role in this inventory | Authority limit |
 | --- | --- | --- |
-| [`scripts/ralph-run.sh`](../../../scripts/ralph-run.sh) and [`scripts/ralph-issue-context.ts`](../../../scripts/ralph-issue-context.ts) | Historical executable behavior | Evidence of what the one-off harness did; no authority over the new orchestrator |
-| [`scripts/ralph-run.test.ts`](../../../scripts/ralph-run.test.ts) and the `ralph-issue-context` test files | Historical executable invariants and edge cases | Evidence for candidate requirements, not conformance tests for the new orchestrator |
+| [`scripts/ralph-run.sh`](../../../scripts/ralph-run.sh) and [`scripts/ralph-issue-context.ts`](../../../scripts/ralph-issue-context.ts) | Historical executable behavior | Evidence of what the one-off harness did; no authority over the Ralph orchestrator |
+| [`scripts/ralph-run.test.ts`](../../../scripts/ralph-run.test.ts) and the `ralph-issue-context` test files | Historical executable invariants and edge cases | Evidence for candidate requirements, not conformance tests for the Ralph orchestrator |
 | [`scripts/ralph-run.md`](../../../scripts/ralph-run.md) | Historical operator promise | Evidence of intended behavior and contradictions in the one-off harness |
-| [Bounded Ralph Leaf and Non-Convergence Contract](../cleanroom-ralph-redesign/bounded-ralph-leaf-contract.md) | Accepted durable delivery decision | Owns leaf, handback, cap, quarantine, and redesign semantics; its historical numeric default is superseded |
+| [Bounded Ralph Leaf and Non-Convergence Contract](../cleanroom-ralph-redesign/bounded-ralph-leaf-contract.md) | Historical delivery decision | Evidence for coherent-leaf and non-convergence candidates; later graph, journal, tracker, and policy decisions own accepted semantics |
 | [Cleanroom Ralph Delivery Post-mortem](../../../docs/cleanroom/postmortems/2026-07-16-cleanroom-ralph-delivery.md) | Retained observed evidence | Establishes failures and operator recovery; does not make accidental mechanics durable |
 | `AGENTS.md` and [code-review rules](../../../.claude/review-rules.md) | Repository quality and resource contract | Applies to workers and reviewers; not all of it is machine-enforced by Ralph |
 
@@ -118,11 +118,18 @@ Key executable anchors at the inspected baseline:
 - **Quarantine**: preservation without acceptance or integration, followed by a
   component-level reuse decision and delivery redesign.
 
-These terms belong to Ralph execution planning, not D&D language, Cleanroom
-product language, architecture, or modeling assumptions. No shared context or
-glossary owner should duplicate them.
+These historical terms belong to the inspected Ralph execution plan, not D&D
+language, Cleanroom product language, main-application architecture, or
+modeling assumptions. They do not override the current
+[Ralph tooling context](../../../docs/tooling/ralph/CONTEXT.md).
 
-## Durable observable contract
+## Observed historical mechanics and candidate evidence
+
+The sections below describe the inspected shell harness and its then-current
+delivery expectations. Present-tense constraints report what that historical
+system required; they are not imperatives for the Ralph orchestrator. The
+[downstream disposition table](#candidate-requirements-and-downstream-dispositions)
+is the authority map for anything accepted later.
 
 ### 1. Graph and launch admission
 
@@ -195,11 +202,13 @@ There are two semantic retry scopes and one technical recovery budget:
 | Semantic handback | Same task attempt, attempt Base, worktree, and WIP lineage | 6 rounds | Non-`accept` at the cap stops before decider/integration and requires quarantine/redesign |
 | Whole-task rerun | Same indexed task and claim, new attempt directory and normally a new attempt Base | 3 decider arrivals per run | The final attempt may not remain runnable; invalid final disposition is fatal |
 
-An implementer nonzero exit is still reviewed because it may have left useful
-partial work. One semantic review returns `accept`, `accept-with-fixes`, or
-`reject`. Only `accept` reaches the decider. The other verdicts hand back every
-actionable finding while the work remains the same coherent outcome. Review
-must not waive repeated findings.
+The historical harness reviewed an implementer nonzero exit because it might
+have left useful partial work. Its semantic review returned `accept`,
+`accept-with-fixes`, or `reject`; only `accept` reached the decider. This
+nonzero-exit transition was not accepted for the Ralph orchestrator. Current
+recovery preserves the exact worktree and resumable implementation session as
+one attempt lineage, then continues that implementation; incomplete WIP does
+not advance to semantic review.
 
 The current technical review retry isolates runner exits and unparsable review
 reports from semantic round accounting. This repairs the post-mortem behavior
@@ -227,9 +236,10 @@ The current runner only partially makes this executable:
   `.claude/review-rules.md` was consulted, require finding-to-acceptance-item
   mapping, or parse dispositions of prior findings.
 
-Therefore `accept` is the current executable gate, while four-perspective
-reviewer-loop convergence remains a product requirement for a replacement
-orchestrator.
+Therefore `accept` was the historical executable gate. The later
+[verification decision](https://github.com/dearlordylord/5e-quint/issues/187)
+owns the accepted reviewer-loop evidence and convergence requirements for the
+Ralph orchestrator.
 
 ### 6. Plan mutation and task dispositions
 
@@ -297,7 +307,7 @@ unrelated baseline failure must not expand the task.
 
 The resource bounds are candidate requirements backed by repository policy.
 The shell's exact three-lock sequence and process-name filters are historical
-mechanics, not new-orchestrator requirements.
+mechanics, not Ralph orchestrator requirements.
 
 ### 9. Evidence, observation, and cleanup
 
@@ -343,7 +353,7 @@ reconciliation. Current default cleanup does not satisfy that requirement.
 | Dirty launcher, Base mismatch, invalid args, invalid graph, old resource guard | Fail before claim/worktree | Correct fail-closed preflight |
 | Issue hydration or claim conflict | Fatal task/run failure before worktree | Preserve any foreign claim; no product mutation |
 | Task install failure after claim/worktree creation | EXIT cleanup normally deletes task branch/worktree; own claim remains | Gap: preserve recoverable WIP or prove none exists before cleanup |
-| Implementer exits nonzero | Review current diff | Correct: partial WIP can still be judged |
+| Implementer exits nonzero | Review current diff | Rejected downstream: preserve the exact worktree and resumable session together, continue implementation after recovery, and do not review incomplete WIP |
 | Reviewer runner exit or invalid report | Retry up to technical budget without semantic round | On exhaustion, fatal before decider; preserve evidence and claim |
 | Semantic reject below round cap | Same-worktree handback | Continue only while every finding belongs to same leaf outcome |
 | Semantic non-accept at round cap | Exit nonzero before decider; safety-cap artifact and claim retained | Quarantine all named evidence and route to redesign |
@@ -456,42 +466,33 @@ The 2026-07-16 delivery provides useful counterexamples:
   evidence that current task execution and graph/status reconciliation are not
   one atomic state transition.
 
-## Requirements to carry into the build/adopt decision
+## Candidate requirements and downstream dispositions
 
-1. Preserve the Ralph leaf as one coherent vertical outcome; reject or redesign
-   a leaf that exposes independently acceptable outcomes.
-2. Give the tracker port one authoritative DAG snapshot and native dependency
-   projection, with atomic claim semantics and reconciliation of stale external
-   state.
-3. Represent Claim Base, attempt Base, reviewed WIP head, accepted result, and
-   acceptance head as distinct typed identities with explicit ancestry checks.
-4. Preserve both semantic retry scopes. Treat technical model/runner recovery
-   as a separate budget that cannot consume semantic convergence rounds.
-5. Make the four reviewer perspectives and prior-finding disposition
-   observable enough to prove convergence, without requiring four particular
-   model invocations when one structured review can supply equivalent evidence.
-6. Make cap exhaustion an explicit non-convergent/quarantined state, not a
-   generic fatal exit. Apply the same terminal model to whole-task attempt
-   exhaustion.
-7. Disable normal destructive cleanup for claimed, non-convergent, or otherwise
-   unreconciled WIP. Cleanup should be state-typed: accepted disposable,
-   explicitly abandoned disposable, or quarantined preserved.
-8. Bind issue completion to the exact accepted result for that leaf, not merely
-   the latest shared output-branch tip.
-9. Keep requirements, graph state, claims, execution evidence, and derived run
-   projections distinct. Do not create a second status ledger.
-10. Make plan mutation and completion crash-resumable, with idempotent
-    transitions and clear operator actions for every partial failure.
-11. Preserve bounded, serialized verification and the exit-137 emergency
-    protocol independently of the implementation substrate.
-12. Define an evidence manifest whose “filtered” and “full” artifacts have
-    executable, tested meanings and whose preservation policy follows the
-    terminal state.
+This inventory surfaced candidates; downstream decisions accepted, replaced,
+or rejected them as follows:
+
+| Candidate observation | Downstream disposition |
+| --- | --- |
+| One coherent vertical leaf; redesign independently acceptable outcomes | Accepted as an outcome constraint by [Choose Ralph's graph-native orchestration architecture](https://github.com/dearlordylord/5e-quint/issues/179); shell task-index mechanics are not retained. |
+| Complete tracker DAG, native dependencies, atomic claims, stale-state reconciliation | Replaced by the typed tracker authority in [Define Ralph's tracker port and graph reconciliation contract](https://github.com/dearlordylord/5e-quint/issues/185). |
+| Distinct Base, attempt, reviewed-result, accepted-result, and accepted-head identities | Accepted and reshaped by the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [accepted-head integration](https://github.com/dearlordylord/5e-quint/issues/184) decisions. |
+| Distinct technical retries and semantic handbacks | Accepted through the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [operator/resource](https://github.com/dearlordylord/5e-quint/issues/186) operation algebras. |
+| Observable reviewer perspectives and prior-finding disposition | Accepted as verification evidence by [Design deterministic verification for Ralph's orchestrator](https://github.com/dearlordylord/5e-quint/issues/187), without retaining shell stages or prompts. |
+| Explicit non-convergence and quarantine | Accepted and reshaped by the [integration](https://github.com/dearlordylord/5e-quint/issues/184) and [operator/resource](https://github.com/dearlordylord/5e-quint/issues/186) decisions. |
+| Disposition-typed cleanup | Accepted through the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [operator/resource](https://github.com/dearlordylord/5e-quint/issues/186) operation algebras. |
+| Exact accepted-result completion | Accepted and reshaped by the [integration](https://github.com/dearlordylord/5e-quint/issues/184) and [tracker](https://github.com/dearlordylord/5e-quint/issues/185) decisions. |
+| Separate tracker, Git, journal, executor, evidence, and projection authorities | Accepted by the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [tracker](https://github.com/dearlordylord/5e-quint/issues/185) decisions. |
+| Crash-resumable plan mutation | Rejected. The Ralph orchestrator refreshes tracker authority and journals only its own typed workflow operations; it does not mutate or recover a shell plan index. |
+| Bounded serialized repository verification and exit-137 handling | Accepted as repository resource policy by the [operator/resource](https://github.com/dearlordylord/5e-quint/issues/186) and [verification](https://github.com/dearlordylord/5e-quint/issues/187) decisions. |
+| Evidence manifests whose retention follows disposition | Accepted and reshaped by the [journal/recovery](https://github.com/dearlordylord/5e-quint/issues/183) and [verification](https://github.com/dearlordylord/5e-quint/issues/187) decisions; shell filtered/full file layouts are not retained. |
 
 ## Documentation ownership
 
 This asset records the answer to one Wayfinder investigation and remains
 historical evidence after downstream decisions promote accepted facts to their
-owners. It changes no D&D rule, Cleanroom product requirement, architecture, or
-modeling assumption, so `UBIQUITOUS_LANGUAGE.md`, `docs/cleanroom/CONTEXT.md`,
-`ARCHITECTURE.md`, and `ASSUMPTIONS.md` require no parallel edits.
+owners. It changes no D&D rule, Cleanroom product requirement,
+main-application architecture, or modeling assumption. The
+[Ralph tooling architecture](../../../docs/tooling/ralph/ARCHITECTURE.md)
+owns the clean-system correction and the
+[Ralph tooling context](../../../docs/tooling/ralph/CONTEXT.md) owns current
+orchestration terminology.

@@ -1,11 +1,7 @@
 # Historical Ralph Loop Harness
 
-> **Status:** `scripts/ralph-run.sh` is a one-off historical execution harness,
-> not the architecture, compatibility baseline, migration source, or runtime
-> substrate for the new Ralph orchestrator. This document remains available to
-> explain retained runs and to mine candidate requirements and failure evidence.
-> A candidate becomes a new-orchestrator requirement only through an explicit
-> owning decision or specification.
+> **Historical execution runbook:** see the canonical
+> [Ralph tooling boundary](../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
 
 `scripts/ralph-run.sh` ran a per-task fresh-context implementation harness for a plan file:
 
@@ -274,7 +270,7 @@ consistency, and commit the corrected closeout manually.
 ## Historical usage
 
 The commands below document how retained shell-harness runs were launched. Do
-not use them to launch new Ralph work or treat their flags as new-orchestrator
+not use them to launch Ralph orchestrator work or treat their flags as Ralph
 CLI requirements.
 
 ```bash

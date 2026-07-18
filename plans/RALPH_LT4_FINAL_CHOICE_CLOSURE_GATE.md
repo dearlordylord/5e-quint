@@ -1,8 +1,6 @@
 # Ralph LT4 Final: Choice Closure Gate Activation
 
-> **Historical execution format:** the `ralph-task-index` below belongs to the
-> one-off shell harness. It is retained as evidence, not as an input or
-> compatibility contract for the new Ralph orchestrator.
+> **Historical execution projection:** see [plan status](README.md#historical-ralph-task-indexes).
 
 <!-- ralph-task-index
 {

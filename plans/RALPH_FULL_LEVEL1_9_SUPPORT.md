@@ -1,8 +1,6 @@
 # Ralph Full Level 1-9 Implementation Convergence Queue
 
-> **Historical execution artifact:** the `ralph-run.sh` command and task index
-> below document the one-off shell harness. They are not input formats or
-> compatibility requirements for the new Ralph orchestrator.
+> **Historical execution projection:** see [plan status](README.md#historical-ralph-task-indexes).
 
 <!-- ralph-task-index
 {

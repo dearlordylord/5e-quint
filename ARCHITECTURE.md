@@ -5,6 +5,10 @@ authored content, character creation, battle, and MCP tool composition. Every
 modeled rule traces to local SRD text; when formalization requires a choice the
 SRD does not prescribe, that choice belongs in `ASSUMPTIONS.md`.
 
+This document owns the main application's architecture only. Repository
+delivery tooling, including Ralph, is outside its scope and is routed through
+[`CONTEXT-MAP.md`](CONTEXT-MAP.md).
+
 ## Content Scope And Licensing
 
 **Content boundary: SRD 5.2.1 only.** The shipped public content path is SRD

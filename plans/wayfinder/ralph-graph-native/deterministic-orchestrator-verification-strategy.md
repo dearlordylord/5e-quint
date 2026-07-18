@@ -5,7 +5,7 @@ orchestrator](https://github.com/dearlordylord/5e-quint/issues/187), under
 [Wayfinder: Ralph graph-native
 orchestration](https://github.com/dearlordylord/5e-quint/issues/175).
 
-This strategy verifies the new orchestrator against its independently accepted
+This strategy verifies the Ralph orchestrator against its independently accepted
 contract. Historical-harness traces and artifacts may motivate scenarios, but
 behavioral parity, replay, migration, and compatibility with
 `scripts/ralph-run.sh` are not verification goals.
@@ -273,6 +273,11 @@ Use `TestClock` and distinct typed retry variants to prove:
 - starting the exact next attempt supersedes one deferral;
 - technical reviewer retries do not consume semantic handback rounds;
 - coordinator interruption consumes neither technical nor semantic budget;
+- a non-zero implementation-agent exit, including simulated OOM, preserves the
+  exact worktree and session together and resumes that session in the same
+  attempt after the resource cause is addressed;
+- incomplete implementation WIP is not advanced to semantic review merely
+  because its process exited;
 - review rejection returns to the same implementer session and attempt;
 - fresh reviewers see the full unresolved finding history;
 - acceptance occurs only when no reasonable finding remains; and
@@ -535,7 +540,7 @@ Use these lanes deliberately:
 4. **Tracker qualification:** serialized credentialed GitHub fixture lane when
    tracker-adapter code changes and on a scheduled cadence.
 5. **Release readiness:** all preceding lanes against the exact candidate
-   commit, followed by acceptance of the new orchestrator on its own contract.
+   commit, followed by acceptance of the Ralph orchestrator on its own contract.
 
 Run public root verification scripts directly under their existing shared
 resource guard. Focused package checks stay focused. Never run broad workspace,
@@ -572,8 +577,9 @@ The implementation is verified only when:
 
 ## Documentation, RAW, and reviewer convergence
 
-This decision changes Ralph verification architecture only. It models no D&D
-rule, authored content, battle-runtime behavior, or Quint parity obligation.
+This decision changes Ralph tooling verification architecture only. It changes
+no main-application architecture and models no D&D rule, authored content,
+battle-runtime behavior, or Quint parity obligation.
 Before implementation acceptance, inspect `.references/srd-5.2.1/` ownership
 and `UBIQUITOUS_LANGUAGE.md` and record that no modeled rule or D&D term changed;
 there is no rule passage to cite beyond that non-applicability check.
@@ -591,7 +597,7 @@ at least two complete rounds even if the first appears clean.
 
 The accepted implementation specification will own executable requirements.
 This Wayfinder asset remains historical decision evidence and must not become a
-parallel architecture, glossary, acceptance ledger, or test inventory.
+parallel tooling architecture, glossary, acceptance ledger, or test inventory.
 
 ## Connascence check
 
@@ -622,8 +628,7 @@ parallel architecture, glossary, acceptance ledger, or test inventory.
 ## Decision review record
 
 Round one reconciled the durable-journal, concurrent-integration, tracker-port,
-immutable-DAG, control-plane-prototype, accepted requirements mined from the
-historical harness, Effect V4 testing, and
+immutable-DAG, control-plane-prototype, current Ralph, Effect V4 testing, and
 property-testing contracts. It separated semantic workflow traces from
 interpreter capability audits, kept dry-run mutation absence both layer-typed
 and observable, and assigned real resources only to adapter qualification and

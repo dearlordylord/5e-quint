@@ -41,10 +41,12 @@ published as `@ai-hero/sandcastle@0.12.0` on 2026-06-29. The assessment used
 library contracts, implementation, tests, ADRs, and generated templates rather
 than README claims alone.
 
-The Ralph comparison uses [the current operator contract](../../../scripts/ralph-run.md),
-[the bounded Ralph leaf decision](../cleanroom-ralph-redesign/bounded-ralph-leaf-contract.md),
-[the worktree installer](../../../scripts/ralph-install-worktree.sh), and
-[repository review gates](../../../.claude/review-rules.md).
+The comparison uses the independently accepted Ralph orchestrator decisions,
+[historical shell-harness evidence](../../../scripts/ralph-run.md), the
+[bounded-leaf evidence](../cleanroom-ralph-redesign/bounded-ralph-leaf-contract.md),
+the historical [worktree installer](../../../scripts/ralph-install-worktree.sh),
+and [repository review gates](../../../.claude/review-rules.md). Historical
+behavior is a candidate source, not a required compatibility target.
 
 ## Fit matrix
 
@@ -54,7 +56,7 @@ The Ralph comparison uses [the current operator contract](../../../scripts/ralph
 | Shared resource locks              | [Bind-mount sandboxes](https://github.com/mattpocock/sandcastle/blob/e99f832f26dc9d245c019a9ddd19fa5dee792427/src/SandboxFactory.ts) mount the worktree's `.git` file and parent Git common directory at the same absolute paths. The focused test confirmed two task worktrees resolve the same absolute Git common directory.                                                                                            | Compatible. Existing public pnpm/MBT/proof scripts continue to own the shared lock. Sandcastle must not add a second broad lock or bypass those scripts.                                                                                                                                                                                                              |
 | Stable per-task Base SHA           | [Named-branch creation](https://github.com/mattpocock/sandcastle/blob/e99f832f26dc9d245c019a9ddd19fa5dee792427/src/WorktreeManager.ts) accepts `baseBranch`, including a commit SHA, but only when the branch is new. On reuse, `baseBranch` is ignored; a clean branch may also be fast-forwarded from `origin`.                                                                                                          | Unsafe by default. Ralph must use a unique attempt branch, persist the declared `BaseSha`, and fail before agent launch unless the exact branch/worktree lineage satisfies the declared base contract. Substrate support should make this an atomic create-or-resume result, not a caller convention.                                                                 |
 | Bounded implement/review handbacks | A long-lived `Sandbox` can run multiple agents, and successful Codex/Claude runs expose one-iteration `resume`/`fork` operations.                                                                                                                                                                                                                                                                                          | Useful primitive, incomplete protocol. Ralph must retain fresh reviewer sessions, verdict parsing, same-leaf handback checks, and the finite convergence cap.                                                                                                                                                                                                         |
-| Non-zero implementer handback      | [`invokeAgent`](https://github.com/mattpocock/sandcastle/blob/e99f832f26dc9d245c019a9ddd19fa5dee792427/src/Orchestrator.ts) converts a non-zero agent exit into `AgentError` before session capture and before returning stdout, commits, session id, or exit code. Ralph intentionally reviews useful partial work after non-zero exits and may resume the same implementer lineage.                                      | Blocking gap. The substrate needs a typed `AgentProcessOutcome` that retains exit code, bounded output, commits, and any observed/captured session even when the process fails. Do not hide the exit with a shell wrapper.                                                                                                                                            |
+| Non-zero implementation-agent outcome | [`invokeAgent`](https://github.com/mattpocock/sandcastle/blob/e99f832f26dc9d245c019a9ddd19fa5dee792427/src/Orchestrator.ts) converts a non-zero agent exit into `AgentError` before session capture and before returning stdout, commits, session id, or exit code. | Blocking gap. The substrate must return a typed `AgentProcessOutcome`, preserving exit code, bounded output, commits, partial evidence, and any observed session. Ralph then keeps that session and its worktree together in the same attempt lineage and resumes the exact implementation session when resumable. Incomplete WIP does not advance to semantic review. |
 | Failure-preserved worktree         | [`createSandbox()`](https://github.com/mattpocock/sandcastle/blob/e99f832f26dc9d245c019a9ddd19fa5dee792427/src/createSandbox.ts) returns a long-lived handle, and abort leaves that handle usable. However top-level `run()` removes failed worktrees when they are clean, and the parallel template calls `sandbox.close()` in `finally`. `close()` preserves only uncommitted changes.                                   | Ralph can preserve a handle deliberately, but published defaults do not meet quarantine semantics. Cleanup must be an explicit control-plane decision; failure and non-convergence preserve worktree, branch, session, and evidence regardless of dirty status.                                                                                                       |
 | Deterministic cleanup              | [`close()`](https://github.com/mattpocock/sandcastle/blob/e99f832f26dc9d245c019a9ddd19fa5dee792427/src/createWorktree.ts) marks the handle closed before cleanup, suppresses worktree-removal errors, and returns `preservedWorktreePath?: string`; named branches survive worktree removal.                                                                                                                               | Blocking gap. Cleanup needs an explicit typed result that distinguishes removed, preserved-by-policy, and cleanup-failed, and remains retryable/idempotent. Branch deletion remains a separate Ralph-authorized transition after accepted integration or reconciled quarantine.                                                                                       |
 | Concurrent task branches           | Unique named branches can be created concurrently. The implementation disables global Git auto-upstream writes that otherwise contend on `.git/config.lock`.                                                                                                                                                                                                                                                               | Compatible for distinct attempt identities.                                                                                                                                                                                                                                                                                                                           |
@@ -107,6 +109,9 @@ ordering.
 3. **Total agent-process outcome.** Return exit code, bounded stdout/stderr,
    observed completion, commits, session id/path, and interruption cause as a
    typed outcome. Infrastructure failure remains a separate closed error union.
+   A resumable non-zero implementation outcome retains the exact session and
+   worktree as one attempt lineage for continuation after the cause is
+   addressed; it is not semantic-review input.
 4. **Policy-driven lifecycle.** Separate `preserve`, `remove-worktree`, and
    `delete-branch` operations. Make cleanup results explicit, idempotent, and
    retryable; never silently consume failure.
@@ -123,11 +128,11 @@ surface is insufficient where it would merely reinterpret private errors,
 paper over branch reuse, or reconstruct session evidence after Sandcastle has
 already discarded it.
 
-## Consequence for the architecture decision
+## Consequence for the tooling architecture decision
 
 Carry Sandcastle forward as the strongest surveyed candidate for the
 **task-execution substrate**, not as the graph-native orchestrator. The
-architecture choice should compare the cost of qualifying this modified
+tooling architecture choice should compare the cost of qualifying this modified
 substrate with building a Ralph-owned implementation behind the same typed
 execution port. The historical shell harness is evidence for candidate
 requirements, not an executor implementation to retain.
@@ -140,6 +145,6 @@ the combined Ralph contract inventory and control-plane evaluation.
 ## Documentation ownership
 
 This artifact records a Wayfinder adoption decision. It does not redefine D&D
-language, Cleanroom product behavior, repository architecture, or modeling
-assumptions, so no glossary, ADR, `ARCHITECTURE.md`, or `ASSUMPTIONS.md` update
-is warranted yet.
+language, Cleanroom product behavior, or modeling assumptions. The repository
+tooling architecture owns the separate
+[Ralph historical-harness boundary](../../../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).

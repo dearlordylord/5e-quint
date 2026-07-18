@@ -60,7 +60,8 @@ two graphs into one authority.
 Use **Effect V4 core** for v1: schema-backed boundary events, tagged internal
 directives, services and layers, scoped concurrent workflows, schedules,
 streams, and deterministic concurrency tests. This is the already-selected
-application architecture and does not introduce another authority.
+Ralph tooling application architecture and does not introduce another
+authority.
 
 Do **not** make `effect/unstable/workflow` Ralph's v1 durability or recovery
 authority. It provides real deterministic workflow identities, replayable
@@ -129,8 +130,8 @@ Required reachability witnesses include concurrent task execution with serial
 integration, recovery after promotion but before outcome acknowledgement, and
 unrelated queue progress after one non-convergent integration.
 
-Quint graduates into the architecture only when operation tags and authority
-facts are stable, the model remains small, a named safety claim depends on
+Quint graduates into the Ralph tooling architecture only when operation tags
+and authority facts are stable, the model remains small, a named safety claim depends on
 interleavings, existing tests are inadequate for that claim, and CI exercises
 an explicit mapping between TypeScript operations/canonical traces and Quint
 actions/states. Until then, deterministic Effect scenarios plus bounded
