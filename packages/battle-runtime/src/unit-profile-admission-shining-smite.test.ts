@@ -1,5 +1,4 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 import { describe, expect, test } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
@@ -128,9 +127,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(shiningSmiteUnitId),
-            ),
+            sourceProcedureRef: choice.subject.procedureRef,
             damage: {
               expr: { dice: 3, dieSize: 6 },
               damageType: "radiant",
@@ -158,18 +155,14 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(
       requireCombatant(afterWeaponDamage.state, spellCasterId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(shiningSmiteUnitId),
-      ),
+      sourceProcedureRef: choice.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(
       requireCombatant(afterWeaponDamage.state, spellTargetId).activeEffects,
     ).toContainEqual({
       kind: "shiningSmiteIllumination",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(shiningSmiteUnitId),
-      ),
+      sourceProcedureRef: choice.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       expiresAt: {
         kind: "concentration",
@@ -180,9 +173,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(snapshotBattle(afterWeaponDamage.state).lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(shiningSmiteUnitId),
-        ),
+        sourceProcedureRef: choice.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: {

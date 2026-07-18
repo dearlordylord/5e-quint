@@ -38,6 +38,7 @@ import {
 } from "./unit-profile-admission-spell-record-support.ts";
 
 export function spellBattle(input: {
+  readonly casterId?: CombatantId;
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
   readonly attack?: Extract<
@@ -115,6 +116,7 @@ export function spellBattle(input: {
     readonly initiative: number;
   }[];
 }): BattleState {
+  const casterId = input.casterId ?? spellCasterId;
   const casterClassLevels = input.casterClassLevels ?? [
     { className: "wizard", level: 1 },
   ];
@@ -122,7 +124,7 @@ export function spellBattle(input: {
     battleId: battleId("unit-profile-spell-admission"),
     combatants: [
       characterCreature({
-        combatantId: spellCasterId,
+        combatantId: casterId,
         displayName: "Spellcaster",
         initiative: 20,
         spellcasting: {
@@ -248,9 +250,11 @@ export function resolvedAnimalFriendshipState(
   additionalStatBlockTargets: NonNullable<
     Parameters<typeof spellBattle>[0]["statBlockTargets"]
   >,
+  sourceCasterId: CombatantId = spellCasterId,
 ): BattleState {
   const spell = spellRecord(animalFriendshipUnitId);
   const state = spellBattle({
+    casterId: sourceCasterId,
     preparedSpells: [spell],
     statBlockTargets: [
       {
@@ -265,7 +269,7 @@ export function resolvedAnimalFriendshipState(
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
   const targetFill = spellTargetListFill(
     targetHole,
-    spellCasterId,
+    sourceCasterId,
     animalFriendshipUnitId,
     [beastId],
   );
