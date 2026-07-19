@@ -676,6 +676,231 @@ function assertBattleReplayPatternSelfTests() {
   );
 }
 
+function propertyNameText(name) {
+  return ts.isIdentifier(name) || ts.isStringLiteral(name)
+    ? name.text
+    : undefined;
+}
+
+function propertyAccessPath(node) {
+  if (ts.isIdentifier(node)) return [node.text];
+  if (ts.isPropertyAccessExpression(node)) {
+    const owner = propertyAccessPath(node.expression);
+    return owner === null ? null : [...owner, node.name.text];
+  }
+  if (
+    ts.isElementAccessExpression(node) &&
+    node.argumentExpression !== undefined &&
+    (ts.isStringLiteral(node.argumentExpression) ||
+      ts.isNoSubstitutionTemplateLiteral(node.argumentExpression))
+  ) {
+    const owner = propertyAccessPath(node.expression);
+    return owner === null ? null : [...owner, node.argumentExpression.text];
+  }
+  return null;
+}
+
+function nodeHasAncestor(node, predicate) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isFunctionLike(current)) {
+    if (predicate(current)) return true;
+    current = current.parent;
+  }
+  return false;
+}
+
+function objectLiteralHasProperty(object, propertyName) {
+  return object.properties.some(
+    (property) =>
+      (ts.isPropertyAssignment(property) ||
+        ts.isShorthandPropertyAssignment(property)) &&
+      propertyNameText(property.name) === propertyName,
+  );
+}
+
+function objectLiteralIsSpellTargetListSchema(object) {
+  return object.properties.some((property) => {
+    if (
+      !ts.isPropertyAssignment(property) ||
+      propertyNameText(property.name) !== "kind" ||
+      !ts.isCallExpression(property.initializer)
+    ) {
+      return false;
+    }
+    const call = property.initializer;
+    return (
+      call.expression.getText() === "Schema.Literal" &&
+      call.arguments.some(
+        (argument) =>
+          ts.isStringLiteral(argument) && argument.text === "spellTargetList",
+      )
+    );
+  });
+}
+
+function battleReplayAstViolations(sourceText, relativePath) {
+  const source = ts.createSourceFile(
+    relativePath,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+  const violations = [];
+  const positionalIdentityNames = new Set([
+    "BattleSpellDamageDieExecutionRef",
+    "battleSpellDamageDieExecutionRef",
+    "groupOrdinal",
+    "dieOrdinal",
+    "selectedDieOrdinal",
+  ]);
+
+  function add(node, message) {
+    const position = source.getLineAndCharacterOfPosition(
+      node.getStart(source),
+    );
+    violations.push(`${relativePath}:${position.line + 1}: ${message}`);
+  }
+
+  function visit(node) {
+    const pathSegments = propertyAccessPath(node);
+    if (
+      pathSegments !== null &&
+      pathSegments.length >= 2 &&
+      pathSegments.at(-2) === "subject" &&
+      pathSegments.at(-1) === "attackName"
+    ) {
+      add(node, "execution subject owns attack presentation");
+    }
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isObjectBindingPattern(node.name) &&
+      node.initializer !== undefined &&
+      propertyAccessPath(node.initializer)?.at(-1) === "subject" &&
+      node.name.elements.some(
+        (element) =>
+          propertyNameText(element.propertyName ?? element.name) ===
+          "attackName",
+      )
+    ) {
+      add(node, "execution subject destructures attack presentation");
+    }
+    if (
+      pathSegments !== null &&
+      pathSegments.slice(-3).join(".") === "invocation.spell.id"
+    ) {
+      const constructsRuntimeKey = nodeHasAncestor(
+        node,
+        (ancestor) =>
+          ts.isTemplateExpression(ancestor) ||
+          ts.isNoSubstitutionTemplateLiteral(ancestor) ||
+          (ts.isVariableDeclaration(ancestor) &&
+            ts.isIdentifier(ancestor.name) &&
+            /(?:id|key|prefix)$/i.test(ancestor.name.text)) ||
+          (ts.isCallExpression(ancestor) &&
+            /(?:holeId|holeInstanceKey|battle[A-Za-z]+(?:Id|Ref))$/.test(
+              ancestor.expression.getText(),
+            )),
+      );
+      if (constructsRuntimeKey) {
+        add(node, "authored spell id constructs a runtime key");
+      }
+    }
+    if (
+      ts.isTypeAliasDeclaration(node) &&
+      node.name.text === "BattleSpellTargetListHole" &&
+      ts.isTypeLiteralNode(node.type) &&
+      node.type.members.some(
+        (member) =>
+          ts.isPropertySignature(member) &&
+          member.name !== undefined &&
+          propertyNameText(member.name) === "procedure",
+      )
+    ) {
+      add(node, "spellTargetList type retains redundant procedure");
+    }
+    if (
+      ts.isObjectLiteralExpression(node) &&
+      objectLiteralIsSpellTargetListSchema(node) &&
+      objectLiteralHasProperty(node, "procedure")
+    ) {
+      add(node, "spellTargetList codec retains redundant procedure");
+    }
+    if (
+      ts.isIdentifier(node) &&
+      positionalIdentityNames.has(node.text) &&
+      (relativePath.endsWith("/identity.ts") ||
+        relativePath.endsWith("/battle-reducer.ts") ||
+        relativePath.endsWith("/battle-reducer/metamagic.ts"))
+    ) {
+      add(node, "damage-die replay identity is positional");
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return violations;
+}
+
+function assertBattleReplayAstBoundary() {
+  const roots = [
+    "packages/battle-runtime/src/identity.ts",
+    "packages/battle-runtime/src/battle-reducer.ts",
+    "packages/battle-runtime/src/battle-reducer",
+    "packages/mcp/src/admin-mirror-presentation-timeline.ts",
+  ];
+  const files = roots.flatMap((relativePath) => {
+    const absolutePath = path.join(REPO_ROOT, relativePath);
+    return fs.statSync(absolutePath).isDirectory()
+      ? listFiles(absolutePath)
+      : [absolutePath];
+  });
+  const violations = files.flatMap((absolutePath) => {
+    const relativePath = path
+      .relative(REPO_ROOT, absolutePath)
+      .replaceAll(path.sep, "/");
+    return battleReplayAstViolations(
+      fs.readFileSync(absolutePath, "utf8"),
+      relativePath,
+    );
+  });
+  if (violations.length > 0) {
+    throw new Error(
+      `Battle replay AST boundary violations:\n${violations.join("\n")}`,
+    );
+  }
+}
+
+function assertBattleReplayAstSelfTests() {
+  const fixture = `
+    type BattleSpellTargetListHole = { procedure: "saveGatedDamage" }
+    const codec = Schema.Struct({
+      kind: Schema.Literal("spellTargetList"),
+      sourceProcedureRef: Ref,
+      padding: "${"x".repeat(240)}",
+      procedure: Procedure,
+    })
+    const key = \`${'${invocation["spell"].id}'}:effect\`
+    const { attackName } = pending.subject
+    type Die = { groupOrdinal: number }
+  `;
+  const violations = battleReplayAstViolations(
+    fixture,
+    "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+  );
+  for (const expected of [
+    "authored spell id constructs a runtime key",
+    "execution subject destructures attack presentation",
+    "spellTargetList type retains redundant procedure",
+    "spellTargetList codec retains redundant procedure",
+    "damage-die replay identity is positional",
+  ]) {
+    assert.ok(
+      violations.some((violation) => violation.endsWith(expected)),
+      `Battle replay AST self-test missed ${expected}.`,
+    );
+  }
+}
+
 function countChar(text, char) {
   let count = 0;
   for (let i = 0; i < text.length; i += 1) {
@@ -2020,6 +2245,8 @@ function main() {
   assertBattleReplayExecutionBoundary();
   assertActPresentationGateSelfTests();
   assertBattleReplayPatternSelfTests();
+  assertBattleReplayAstSelfTests();
+  assertBattleReplayAstBoundary();
   assertNoReducerOwnedActPresentation();
   runSelfTest();
 

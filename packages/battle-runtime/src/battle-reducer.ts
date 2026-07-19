@@ -7466,6 +7466,7 @@ export type BattleCreatureSnapshot = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal;
+  readonly activeEffectRefs: readonly BattleActiveEffectExecutionRef[];
   readonly armorClass: ArmorClass;
   readonly size: Size;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;

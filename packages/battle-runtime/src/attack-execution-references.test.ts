@@ -295,20 +295,20 @@ describe("character attack execution references", () => {
     ).toBe(true);
   });
 
-  test("rejects snapshot Acts whose holes contain an unbound execution reference", () => {
+  test("rejects snapshot Acts whose attack holes use another combatant's bound procedure", () => {
+    const state = identicalDaggerBattle();
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(
-      snapshotBattle(identicalDaggerBattle()),
+      snapshotBattle(state),
     );
-    const other = startBattleRight({
-      battleId: battleId("battle-other-hole-execution-reference"),
-      combatants: [
-        characterSeed({ initiative: 20 }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    });
-    const foreignProcedureRef = fighterOrigin(other).attack?.procedureRef;
-    if (foreignProcedureRef === undefined) {
-      throw new Error("Expected a foreign attack procedure reference.");
+    const goblin = state.combatants.get(goblinId);
+    const wrongOwnerProcedureRef =
+      goblin?.origin.kind === "statBlock"
+        ? goblin.origin.execution.procedureBindings.find(
+            (binding) => binding.procedure.kind === "attack",
+          )?.procedureRef
+        : undefined;
+    if (wrongOwnerProcedureRef === undefined) {
+      throw new Error("Expected the other combatant's attack procedure ref.");
     }
     const actWithHole = encoded.acts.find((act) =>
       act.initialHoles.some(
@@ -334,7 +334,7 @@ describe("character attack execution references", () => {
                         ...hole.attack,
                         selection: {
                           ...hole.attack.selection,
-                          procedureRef: foreignProcedureRef,
+                          procedureRef: wrongOwnerProcedureRef,
                         },
                       },
                     },

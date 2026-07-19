@@ -675,7 +675,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     );
     const damageEventKey = [
       "battle:spell:chained-damage-event",
-      input.invocation.spell.id,
+      input.invocation.sourceProcedureRef,
       stepIndex,
       target.combatantId,
     ].join(":");

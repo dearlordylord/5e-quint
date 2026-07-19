@@ -4,6 +4,7 @@
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Round } from "@dnd/shared/types";
@@ -12,6 +13,7 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { allocateBattleActiveEffectRefForCreature } from "./active-effect/execution-ref.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import type {
   BattleActiveEffect,
@@ -47,6 +49,7 @@ import {
   movementFeet,
   resolveBattleSubject,
   snapshotBattle,
+  spellSlotInvocationRef,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -753,18 +756,51 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
   });
 
   test("magical-effect targeting ends a tracked Spiritual Weapon occurrence and clears concentration", () => {
-    const effect = spiritualWeaponEffect({
-      sourceSpellLevel: 2,
-      sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:tracked-force`,
+    const baseState = spellBattle({
+      preparedSpells: [
+        spellRecord(dispelMagicUnitId),
+        spellRecord(spiritualWeaponUnitId),
+      ],
+      spellSlots: [
+        { spellLevel: 2, count: 1 },
+        { spellLevel: 3, count: 1 },
+      ],
     });
-    const state = stateWithActiveEffects([effect], {
-      concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spiritualWeaponUnitId),
-        ),
-        effectKind: "spellEffect",
-      },
+    const boundProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseState,
+      spellCasterId,
+      spellSlotInvocationRef(
+        spiritualWeaponUnitId,
+        2,
+        "spiritualWeaponAttackProxy",
+      ),
+    );
+    const caster = baseState.combatants.get(spellCasterId);
+    if (caster === undefined) {
+      throw new Error("Expected spell caster combatant.");
+    }
+    const effectAllocation = allocateBattleActiveEffectRefForCreature({
+      owner: caster,
     });
+    const effect = {
+      ...spiritualWeaponEffect({
+        sourceSpellLevel: 2,
+        sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:tracked-force`,
+      }),
+      effectRef: effectAllocation.effectRef,
+      sourceProcedureRef: boundProcedureRef,
+    };
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellCasterId, {
+        ...effectAllocation.owner,
+        concentration: {
+          sourceProcedureRef: boundProcedureRef,
+          effectKind: "spellEffect" as const,
+        },
+        activeEffects: [...caster.activeEffects, effect],
+      }),
+    };
     const act = spellAct({
       state,
       spellId: dispelMagicUnitId,
@@ -782,6 +818,20 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     expect(
       requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
     ).toContainEqual(target);
+    const snapshot = snapshotBattle(state);
+    const focusedSnapshot = {
+      ...snapshot,
+      acts: snapshot.acts.filter(
+        (candidate) =>
+          "procedureRef" in candidate.subject &&
+          candidate.subject.procedureRef === act.subject.procedureRef,
+      ),
+    };
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(focusedSnapshot),
+      ),
+    ).toBe(true);
 
     const resolved = resolveBattleSubject({
       state,
@@ -798,10 +848,10 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Dispel Magic to resolve.");
     }
-    const caster = resolved.state.combatants.get(spellCasterId);
-    expect(caster?.concentration).toBeNull();
+    const resolvedCaster = resolved.state.combatants.get(spellCasterId);
+    expect(resolvedCaster?.concentration).toBeNull();
     expect(
-      caster?.activeEffects.some((candidate) => candidate === effect),
+      resolvedCaster?.activeEffects.some((candidate) => candidate === effect),
     ).toBe(false);
   });
 

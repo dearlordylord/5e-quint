@@ -842,6 +842,32 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           : act,
       ),
     });
+    const releaseTargetHole = releaseChoice.initialHoles.find(
+      (hole) => hole.kind === "targetChoice" && hole.procedureRef !== undefined,
+    );
+    if (releaseTargetHole?.kind !== "targetChoice") {
+      throw new Error(
+        "Expected a reference-bearing Readied Spell target hole.",
+      );
+    }
+    const releaseChoiceWithUnboundHole = {
+      ...encoded,
+      pendingInterrupt: {
+        ...pendingInterrupt,
+        choices: pendingInterrupt.choices.map((choice) =>
+          choice !== releaseChoice
+            ? choice
+            : {
+                ...choice,
+                initialHoles: choice.initialHoles.map((hole) =>
+                  hole !== releaseTargetHole
+                    ? hole
+                    : { ...hole, procedureRef: unboundRef },
+                ),
+              },
+        ),
+      },
+    };
 
     expect(
       Either.isLeft(
@@ -903,6 +929,13 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       Either.isLeft(
         Schema.decodeUnknownEither(BattleSnapshotSchema)(
           replaceReleaseAct(differentSpellBinding.procedureRef),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          releaseChoiceWithUnboundHole,
         ),
       ),
     ).toBe(true);

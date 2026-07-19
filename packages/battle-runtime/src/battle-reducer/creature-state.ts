@@ -776,6 +776,9 @@ export function combatantSnapshot(
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
     nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
+    activeEffectRefs: combatant.activeEffects.flatMap((effect) =>
+      "effectRef" in effect ? [effect.effectRef] : [],
+    ),
     armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
     size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),

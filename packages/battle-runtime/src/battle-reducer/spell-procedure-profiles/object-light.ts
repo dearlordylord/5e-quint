@@ -352,7 +352,7 @@ function discoverObjectLightCastAct(
 }
 
 function objectLightInvocationRef(
-  invocation: ObjectLightInvocation,
+  invocation: BattleExecutableSpellInvocation<ObjectLightInvocation>,
 ): SpellInvocationRef {
   if (invocation.resource.tag === "spellSlot") {
     return {
@@ -420,9 +420,9 @@ function objectLightSpellEffectOccurrenceId(
   state: BattleState,
   actorId: CombatantId,
   objectId: BattleObjectId,
-  invocation: ObjectLightInvocation,
+  invocation: BattleExecutableSpellInvocation<ObjectLightInvocation>,
 ) {
-  const prefix = `${actorId}:${invocation.spell.id}:${objectId}:object-light:`;
+  const prefix = `${actorId}:${invocation.sourceProcedureRef}:${objectId}:object-light:`;
   const nextOrdinal =
     Math.max(
       0,

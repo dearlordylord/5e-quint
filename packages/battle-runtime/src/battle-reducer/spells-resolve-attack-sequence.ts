@@ -1314,7 +1314,7 @@ function spellAttackSequencePartDamageReductionRollHole(
   const base = spellDamageReductionRollHole(reduction);
   const protocolId = [
     "battle:spell:attack-sequence-part-damage-reduction-roll",
-    invocation.spell.id,
+    invocation.sourceProcedureRef,
     partIndex,
     reduction.sourceProcedureRef,
     reduction.sourceCombatantId,
@@ -1340,7 +1340,7 @@ function spellAttackSequencePartConcentrationSavingThrowHole(
 ): BattleConcentrationSavingThrowHole {
   const protocolId = [
     "battle:spell:attack-sequence-part-concentration-save",
-    invocation.spell.id,
+    invocation.sourceProcedureRef,
     partIndex,
     base.combatantId,
   ].join(":");
@@ -1363,7 +1363,7 @@ function spellAttackSequencePartDamageDispositionHoleKey(
 ) {
   const protocolId = [
     "battle:spell:attack-sequence-part-damage-disposition",
-    invocation.spell.id,
+    invocation.sourceProcedureRef,
     partIndex,
     targetId,
   ].join(":");

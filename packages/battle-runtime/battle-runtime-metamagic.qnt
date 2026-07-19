@@ -348,21 +348,53 @@ module battleRuntimeMetamagic {
   ): int =
     selectedRerolls.keys().fold(0, (total, reroll) => total + reroll.replacement * selectedRerolls.get(reroll))
 
+  pure def empoweredSpellOriginalDamageTotal(
+    originalDamageDice: int -> int,
+  ): int =
+    originalDamageDice.keys().fold(0, (total, result) => total + result * originalDamageDice.get(result))
+
+  pure def empoweredSpellSelectedOriginalCount(
+    selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
+    original: int,
+  ): int =
+    selectedRerolls.keys().fold(0, (total, reroll) =>
+      if (reroll.original == original)
+        total + selectedRerolls.get(reroll)
+      else
+        total
+    )
+
+  pure def empoweredSpellOriginalDamageDieCount(
+    originalDamageDice: int -> int,
+    original: int,
+  ): int =
+    if (originalDamageDice.keys().contains(original)) originalDamageDice.get(original) else 0
+
   pure def empoweredSpellSelectedDamageRerollsValid(
+    originalDamageDice: int -> int,
     selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
     damageDieSize: int,
   ): bool =
+    originalDamageDice.keys().size() > 0 and
+    originalDamageDice.keys().forall(result =>
+      result >= 1 and
+      result <= damageDieSize and
+      originalDamageDice.get(result) > 0
+    ) and
     selectedRerolls.keys().size() > 0 and
     selectedRerolls.keys().forall(reroll =>
       selectedRerolls.get(reroll) > 0 and
       reroll.original >= 1 and
       reroll.original <= damageDieSize and
       reroll.replacement >= 1 and
-      reroll.replacement <= damageDieSize
+      reroll.replacement <= damageDieSize and
+      empoweredSpellSelectedOriginalCount(selectedRerolls, reroll.original) <=
+        empoweredSpellOriginalDamageDieCount(originalDamageDice, reroll.original)
     )
 
   pure def empoweredSpellCanRerollDamageDice(
     procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
+    originalDamageDice: int -> int,
     selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
     damageDieSize: int,
     charismaModifier: int,
@@ -373,7 +405,7 @@ module battleRuntimeMetamagic {
     val selectedDice = empoweredSpellSelectedDamageDiceCount(selectedRerolls)
     knownOptions.contains(empoweredSpellMetamagicFact) and
     not(castOptions.contains(empoweredSpellMetamagicFact)) and
-    empoweredSpellSelectedDamageRerollsValid(selectedRerolls, damageDieSize) and
+    empoweredSpellSelectedDamageRerollsValid(originalDamageDice, selectedRerolls, damageDieSize) and
     selectedDice <= empoweredSpellMaximumSelectedDice(charismaModifier) and
     selectedMetamagicOptionsCanStack(empoweredSpellSelectedMetamagicOptions(castOptions)) and
     selectedMetamagicOptionsAffordable(empoweredSpellSelectedMetamagicOptions(castOptions), sorceryPointsRemaining) and
@@ -382,7 +414,7 @@ module battleRuntimeMetamagic {
 
   pure def resolveEmpoweredSpellDamageReroll(
     procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
-    originalDamageTotal: int,
+    originalDamageDice: int -> int,
     damageDieSize: int,
     selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
     charismaModifier: int,
@@ -391,8 +423,10 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   ): BattleRuntimeEmpoweredSpellDamageRerollResult = {
     val selectedDice = empoweredSpellSelectedDamageDiceCount(selectedRerolls)
+    val originalDamageTotal = empoweredSpellOriginalDamageTotal(originalDamageDice)
     val admitted = empoweredSpellCanRerollDamageDice(
       procedure,
+      originalDamageDice,
       selectedRerolls,
       damageDieSize,
       charismaModifier,
