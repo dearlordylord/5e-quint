@@ -140,7 +140,7 @@ function resolveChainedSpellAttackDamage(
   });
 }
 
-const ChainedSpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
+export const ChainedSpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
   Extract<
     SupportedSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }

@@ -394,7 +394,7 @@ function applyChosenDamageResistanceEffect(input: {
   };
 }
 
-const ChosenDamageResistanceInvocationSchema = spellProcedureInvocationSchema<
+export const ChosenDamageResistanceInvocationSchema = spellProcedureInvocationSchema<
   Extract<
     SupportedSpellInvocation,
     { readonly procedure: "chosenDamageResistance" }

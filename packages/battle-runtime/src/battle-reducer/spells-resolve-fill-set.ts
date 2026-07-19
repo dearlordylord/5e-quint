@@ -1500,7 +1500,10 @@ export function spellFillSet(
           message: "Spell damage type choice does not match this spell act.",
         };
       }
-      if (fill.holeId !== spellDamageTypeChoiceHole(invocation).holeId) {
+      if (
+        fill.holeId !==
+        spellDamageTypeChoiceHole({ ...invocation, sourceProcedureRef }).holeId
+      ) {
         return {
           tag: "invalid",
           message:

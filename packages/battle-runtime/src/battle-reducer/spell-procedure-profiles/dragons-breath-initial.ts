@@ -359,7 +359,7 @@ function resolveDragonsBreathInitial(
   });
 }
 
-const DragonsBreathInitialInvocationSchema = spellProcedureInvocationSchema<
+export const DragonsBreathInitialInvocationSchema = spellProcedureInvocationSchema<
   Extract<
     SupportedSpellInvocation,
     { readonly procedure: "dragonsBreathInitial" }

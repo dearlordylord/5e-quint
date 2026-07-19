@@ -92,9 +92,12 @@ describe("Stat Block execution references", () => {
   test("rejects noncanonical replay occurrence references", () => {
     const activeEffectRef = battleActiveEffectExecutionRef(
       JSON.stringify({
-        battleId: "battle-reference-codec",
         kind: "activeEffectOccurrence",
-        ownerId: "character-a",
+        ownerScopeRef: battleCharacterExecutionScopeRef(
+          battleId("battle-reference-codec"),
+          combatantId("character-a"),
+          battleExecutionScopeOrdinal(0),
+        ),
         ordinal: 0,
       }),
     );

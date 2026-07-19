@@ -445,8 +445,9 @@ function applyLevitatedCreatureSpellEffect(
     }
     const allocation = allocateBattleActiveEffectRef({
       state: nextState,
-      owner: target,
+      ownerId: targetId,
     });
+    if (allocation.tag === "ownerNotFound") return nextState;
     const allocatedTarget = allocation.owner;
     const nextEffect = {
       ...invocation.activeEffect,

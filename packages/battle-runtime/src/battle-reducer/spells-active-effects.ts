@@ -50,10 +50,7 @@ import type {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
-import {
-  allocateBattleActiveEffectRef,
-  allocateBattleActiveEffectRefForCreature,
-} from "../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { characterUnitFeatureProcedureId } from "../character-execution.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
@@ -294,13 +291,15 @@ export function applySpellActiveEffects(
           ),
         );
         const applied = spellPostDamageRiderActiveEffect({
-          state,
+          state: application.state,
           actorId,
           target: application.target,
           sourceProcedureRef: invocation.sourceProcedureRef,
           rider,
         });
+        if (applied.tag === "ownerNotFound") return application;
         return {
+          state: applied.state,
           target: applied.target,
           effects: [
             ...effects.filter((effect) => !replacedEffects.includes(effect)),
@@ -309,6 +308,7 @@ export function applySpellActiveEffects(
         };
       },
       {
+        state,
         target,
         effects: [
           ...target.activeEffects,
@@ -318,8 +318,8 @@ export function applySpellActiveEffects(
     );
 
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(
+    ...riderApplication.state,
+    combatants: new Map(riderApplication.state.combatants).set(
       targetId,
       battleCreatureWithSpellActiveEffects(
         riderApplication.target,
@@ -1125,13 +1125,14 @@ export function applyDancingLightsSpellEffect(
   if (dancingLights === null) {
     return state;
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: state.battleId,
-    owner: caster,
+  const allocation = allocateBattleActiveEffectRef({
+    state,
+    ownerId: actorId,
   });
+  if (allocation.tag === "ownerNotFound") return state;
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
+    ...allocation.state,
+    combatants: new Map(allocation.state.combatants).set(actorId, {
       ...allocation.owner,
       activeEffects: [
         ...caster.activeEffects.filter(
@@ -1541,9 +1542,9 @@ export function applyFailedSaveSpellConditionEffects(
   savingThrowDisadvantageAbilityChoice?: Ability | undefined,
   heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
-  const combatants = new Map(state.combatants);
+  let nextState = state;
   for (const targetId of targetIds) {
-    const target = combatants.get(targetId);
+    const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       continue;
     }
@@ -1572,14 +1573,17 @@ export function applyFailedSaveSpellConditionEffects(
       target.combatantId,
       appliedEffect.expiresAt,
     );
-    const selectedEffect =
+    const allocation =
       appliedEffect.repeatSave === null
-        ? (() => {
-            const allocation = allocateBattleActiveEffectRefForCreature({
-              battleId: state.battleId,
-              owner: target,
-            });
-            return {
+        ? allocateBattleActiveEffectRef({ state: nextState, ownerId: targetId })
+        : null;
+    if (allocation?.tag === "ownerNotFound") continue;
+    const selectedEffect = (() => {
+      if (appliedEffect.repeatSave === null) {
+        if (allocation === null) {
+          return null;
+        }
+        return {
               owner: allocation.owner,
               effect: {
                 kind: "spellCondition" as const,
@@ -1597,8 +1601,8 @@ export function applyFailedSaveSpellConditionEffects(
                 expiresAt,
               } satisfies BattleActiveEffect,
             };
-          })()
-        : isCountedSpellConditionRepeatSave(appliedEffect.repeatSave)
+      }
+      return isCountedSpellConditionRepeatSave(appliedEffect.repeatSave)
           ? {
               owner: target,
               effect: {
@@ -1644,22 +1648,30 @@ export function applyFailedSaveSpellConditionEffects(
                 expiresAt,
               } satisfies BattleActiveEffect,
             };
+    })();
+    if (selectedEffect === null) continue;
     const activeEffects = [
       ...selectedEffect.owner.activeEffects.filter(
         (effect) => !replacing.includes(effect),
       ),
       selectedEffect.effect,
     ];
-    combatants.set(
-      targetId,
-      battleCreatureWithSpellActiveEffects(selectedEffect.owner, activeEffects),
-    );
+    const allocationState = allocation?.state ?? nextState;
+    nextState = {
+      ...allocationState,
+      combatants: new Map(allocationState.combatants).set(
+        targetId,
+        battleCreatureWithSpellActiveEffects(
+          selectedEffect.owner,
+          activeEffects,
+        ),
+      ),
+    };
   }
-  const effected: BattleState = { ...state, combatants };
   const targetConcentrationReconciled = targetIds.reduce(
     (nextState, targetId) =>
       breakConcentrationIfCombatantIsIncapacitated(nextState, targetId),
-    effected,
+    nextState,
   );
   return clearSourceConcentrationIfRepeatSaveConditionSpellHasNoEffects(
     targetConcentrationReconciled,
@@ -2074,10 +2086,11 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   if (caster === undefined) {
     return input.state;
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: input.state.battleId,
-    owner: caster,
+  const allocation = allocateBattleActiveEffectRef({
+    state: input.state,
+    ownerId: input.actorId,
   });
+  if (allocation.tag === "ownerNotFound") return input.state;
   const activeEffects = [
     ...caster.activeEffects.filter(
       (effect) =>
@@ -2112,7 +2125,7 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
     },
   ];
   combatants.set(input.actorId, { ...allocation.owner, activeEffects });
-  return { ...input.state, combatants };
+  return { ...allocation.state, combatants };
 }
 
 export function repositionSpiritualWeaponAttackProxyEffect(input: {
@@ -2857,10 +2870,11 @@ export function applyWebRestrainedCondition(
       candidate.sourceCombatantId === effect.sourceCombatantId &&
       candidate.condition === "restrained",
   );
-  const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: state.battleId,
-    owner: target,
+  const allocation = allocateBattleActiveEffectRef({
+    state,
+    ownerId: targetId,
   });
+  if (allocation.tag === "ownerNotFound") return state;
   const activeEffects = [
     ...allocation.owner.activeEffects.filter(
       (candidate) => !replacing.includes(candidate),
@@ -2887,8 +2901,8 @@ export function applyWebRestrainedCondition(
     },
   ];
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(
+    ...allocation.state,
+    combatants: new Map(allocation.state.combatants).set(
       targetId,
       battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
     ),
@@ -2956,17 +2970,20 @@ export function applyCommandPendingEffects(
   >,
   option: BattleCommandOption,
 ): BattleState {
-  const combatants = new Map(state.combatants);
+  let nextState = state;
   for (const targetId of targetIds) {
-    const target = combatants.get(targetId);
+    const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       continue;
     }
-    const allocation = allocateBattleActiveEffectRefForCreature({
-      battleId: state.battleId,
-      owner: target,
+    const allocation = allocateBattleActiveEffectRef({
+      state: nextState,
+      ownerId: targetId,
     });
-    combatants.set(targetId, {
+    if (allocation.tag === "ownerNotFound") continue;
+    nextState = {
+      ...allocation.state,
+      combatants: new Map(allocation.state.combatants).set(targetId, {
       ...allocation.owner,
       activeEffects: [
         ...allocation.owner.activeEffects.filter(
@@ -2990,9 +3007,10 @@ export function applyCommandPendingEffects(
           ),
         },
       ],
-    });
+      }),
+    };
   }
-  return { ...state, combatants };
+  return nextState;
 }
 
 export function applyCommandGrovelProneToTarget(
@@ -3209,10 +3227,14 @@ export function spellPostDamageRiderActiveEffect(input: {
   readonly target: BattleCreatureState;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly rider: SpellActiveEffectPostDamageRider;
-}): {
-  readonly target: BattleCreatureState;
-  readonly effect: BattleActiveEffect;
-} {
+}):
+  | {
+      readonly tag: "applied";
+      readonly state: BattleState;
+      readonly target: BattleCreatureState;
+      readonly effect: BattleActiveEffect;
+    }
+  | { readonly tag: "ownerNotFound" } {
   const expiresAt = activeEffectExpirationForPostDamageRider(
     input.state,
     input.actorId,
@@ -3221,6 +3243,8 @@ export function spellPostDamageRiderActiveEffect(input: {
   );
   return Match.value(input.rider).pipe(
     Match.when({ kind: "speedDelta" }, (rider) => ({
+      tag: "applied" as const,
+      state: input.state,
       target: input.target,
       effect: {
         kind: "speedDelta" as const,
@@ -3231,11 +3255,14 @@ export function spellPostDamageRiderActiveEffect(input: {
       },
     })),
     Match.when({ kind: "condition" }, (rider) => {
-      const allocation = allocateBattleActiveEffectRefForCreature({
-        battleId: input.state.battleId,
-        owner: input.target,
+      const allocation = allocateBattleActiveEffectRef({
+        state: input.state,
+        ownerId: input.target.combatantId,
       });
+      if (allocation.tag === "ownerNotFound") return allocation;
       return {
+        tag: "applied" as const,
+        state: allocation.state,
         target: allocation.owner,
         effect: {
           kind: "spellCondition" as const,
@@ -3255,6 +3282,8 @@ export function spellPostDamageRiderActiveEffect(input: {
       };
     }),
     Match.when({ kind: "opportunityAttackDenied" }, () => ({
+      tag: "applied" as const,
+      state: input.state,
       target: input.target,
       effect: {
         kind: "opportunityAttackDenied" as const,
@@ -3264,6 +3293,8 @@ export function spellPostDamageRiderActiveEffect(input: {
       },
     })),
     Match.when({ kind: "nextAttackRollAgainstTarget" }, (rider) => ({
+      tag: "applied" as const,
+      state: input.state,
       target: input.target,
       effect: {
         kind: "nextAttackRollAgainstSelf" as const,
@@ -3274,6 +3305,8 @@ export function spellPostDamageRiderActiveEffect(input: {
       },
     })),
     Match.when({ kind: "hitPointRegainPrevented" }, () => ({
+      tag: "applied" as const,
+      state: input.state,
       target: input.target,
       effect: {
         kind: "hitPointRegainPrevented" as const,
@@ -3283,6 +3316,8 @@ export function spellPostDamageRiderActiveEffect(input: {
       },
     })),
     Match.when({ kind: "invisibleBenefitDenied" }, () => ({
+      tag: "applied" as const,
+      state: input.state,
       target: input.target,
       effect: {
         kind: "invisibleBenefitDenied" as const,
@@ -3383,8 +3418,9 @@ export function applyDragonsBreathInitialSpellEffect(
   }
   const allocation = allocateBattleActiveEffectRef({
     state,
-    owner: target,
+    ownerId: targetId,
   });
+  if (allocation.tag === "ownerNotFound") return state;
   const allocatedTarget = allocation.owner;
   const nextEffect: BattleActiveEffect = {
     ...invocation.activeEffect,

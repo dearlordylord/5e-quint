@@ -432,7 +432,7 @@ function magicWeaponEnhancementFillSetHasDisallowedFills(
   );
 }
 
-const MagicWeaponEnhancementInvocationSchema = spellProcedureInvocationSchema<
+export const MagicWeaponEnhancementInvocationSchema = spellProcedureInvocationSchema<
   Extract<
     SupportedSpellInvocation,
     { readonly procedure: "magicWeaponEnhancement" }

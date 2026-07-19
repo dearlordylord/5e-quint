@@ -404,7 +404,7 @@ export function spellObjectTargetHoleId(
 }
 
 export function magicWeaponTargetItemHole(
-  invocation: MagicWeaponEnhancementSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<MagicWeaponEnhancementSpellInvocation>,
 ): BattleMagicWeaponTargetItemHole {
   const holeKey = `battle:spell:magic-weapon-target-item:${invocation.procedure}`;
   return {

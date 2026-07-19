@@ -306,6 +306,22 @@ function assertBattleReplayExecutionBoundary() {
       ],
     },
     {
+      relativePath: "packages/mcp/src/session-store.ts",
+      patterns: [
+        /export type BattleFillSession[\s\S]{0,300}readonly label:/,
+        /export type BattleFillSession[\s\S]{0,300}readonly summary:/,
+        /export type McpSessionSnapshot[\s\S]{0,500}readonly label:/,
+        /export type McpSessionSnapshot[\s\S]{0,500}readonly summary:/,
+      ],
+    },
+    {
+      relativePath: "packages/mcp/src/session-snapshot-output.ts",
+      patterns: [
+        /transientBattleFills:[\s\S]{0,300}label:/,
+        /transientBattleFills:[\s\S]{0,300}summary:/,
+      ],
+    },
+    {
       relativePath: "packages/battle-runtime/src/identity.ts",
       patterns: [
         /BattleActiveEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,

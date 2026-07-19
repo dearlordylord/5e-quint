@@ -405,7 +405,7 @@ function spellHostedWeaponAttackBonusDamageAdditions(
       ];
 }
 
-const SpellHostedWeaponAttackInvocationSchema = spellProcedureInvocationSchema<
+export const SpellHostedWeaponAttackInvocationSchema = spellProcedureInvocationSchema<
   Extract<
     SupportedSpellInvocation,
     { readonly procedure: "spellHostedWeaponAttack" }

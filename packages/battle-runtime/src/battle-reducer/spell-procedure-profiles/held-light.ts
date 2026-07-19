@@ -28,7 +28,7 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 
 import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
@@ -182,13 +182,14 @@ function applyHeldLightEffect(
   if (caster === undefined) {
     return state;
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: state.battleId,
-    owner: caster,
+  const allocation = allocateBattleActiveEffectRef({
+    state,
+    ownerId: actorId,
   });
+  if (allocation.tag === "ownerNotFound") return state;
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
+    ...allocation.state,
+    combatants: new Map(allocation.state.combatants).set(actorId, {
       ...allocation.owner,
       activeEffects: [
         ...caster.activeEffects.filter(

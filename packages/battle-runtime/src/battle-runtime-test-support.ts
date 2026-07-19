@@ -289,9 +289,12 @@ export function battleActiveEffectExecutionRefForTest(
   }
   return battleActiveEffectExecutionRef(
     JSON.stringify({
-      battleId: "test-battle",
       kind: "activeEffectOccurrence",
-      ownerId: "test-active-effect-owner",
+      ownerScopeRef: battleCharacterExecutionScopeRef(
+        battleId("test-battle"),
+        combatantId("test-active-effect-owner"),
+        battleExecutionScopeOrdinal(0),
+      ),
       ordinal,
     }),
   );

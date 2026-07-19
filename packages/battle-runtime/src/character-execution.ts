@@ -13,10 +13,12 @@ import type {
   BattleId,
   CombatantId,
   BattleExecutionScopeOrdinal,
+  BattleProcedureExecutionCursor,
 } from "./identity.ts";
 import {
   BattleActiveEffectExecutionRef as BattleActiveEffectExecutionRefSchema,
   battleCharacterExecutionScopeRef,
+  battleProcedureExecutionCursor,
   battleProcedureExecutionRef,
 } from "./identity.ts";
 import {
@@ -114,6 +116,13 @@ export type CharacterProcedureBinding =
       };
     };
 
+type CharacterProcedureWithoutRef =
+  CharacterProcedureBinding extends infer TBinding
+    ? TBinding extends CharacterProcedureBinding
+      ? Omit<TBinding, "procedureRef">
+      : never
+    : never;
+
 export function characterProcedureBinding(
   execution: CharacterExecutionState,
   procedureRef: BattleProcedureExecutionRef,
@@ -169,6 +178,7 @@ export type CharacterProcedureBindingSnapshot =
 
 type CharacterExecutionStateData = {
   readonly scopeRef: BattleCharacterExecutionScopeRef;
+  readonly nextProcedureOrdinal: BattleProcedureExecutionCursor;
   readonly procedureBindings: readonly CharacterProcedureBinding[];
 };
 export type CharacterExecutionState = CharacterExecutionStateData &
@@ -197,11 +207,7 @@ export function characterExecutionFromUnits(input: {
       input.unitFeatureProfiles.map((profile) => [profile.unit.id, profile]),
     ).values(),
   ];
-  const unitBindings = unitProcedures.map((profile, ordinal) => ({
-    procedureRef: battleProcedureExecutionRef(
-      scopeRef,
-      NonNegativeInteger(ordinal),
-    ),
+  const unitProcedureBindings = unitProcedures.map((profile) => ({
     procedure: {
       kind: "unitFeature" as const,
       unitId: profile.unit.id,
@@ -245,12 +251,8 @@ export function characterExecutionFromUnits(input: {
       (procedure) => !explicitlyProjectedUnitIds.has(procedure.unitId),
     ),
   ];
-  const unitRefBindings = unitSupportProcedures.map(
-    (procedure, offset): CharacterProcedureBinding => ({
-      procedureRef: battleProcedureExecutionRef(
-        scopeRef,
-        NonNegativeInteger(unitBindings.length + offset),
-      ),
+  const unitSupportBindings = unitSupportProcedures.map(
+    (procedure): CharacterProcedureWithoutRef => ({
       procedure: {
         kind: "unitSupportProfile",
         unitId: procedure.unitId,
@@ -258,11 +260,16 @@ export function characterExecutionFromUnits(input: {
       },
     }),
   );
-  const procedureBindings = [...unitBindings, ...unitRefBindings];
+  const allocated = allocateCharacterProcedureBindings(
+    scopeRef,
+    battleProcedureExecutionCursor(0),
+    [...unitProcedureBindings, ...unitSupportBindings],
+  );
   return Either.right(
     CharacterExecutionState({
       scopeRef,
-      procedureBindings,
+      nextProcedureOrdinal: allocated.nextProcedureOrdinal,
+      procedureBindings: allocated.procedureBindings,
     }),
   );
 }
@@ -290,12 +297,7 @@ export function characterExecutionWithSpellInvocations(
         },
       };
     }
-    if (
-      binding.procedure.kind === "spellInvocation" &&
-      currentInvocation === binding.procedure.invocation
-    ) {
-      return binding;
-    }
+    if (currentInvocation === binding.procedure.invocation) return binding;
     refreshed = true;
     return {
       ...binding,
@@ -316,18 +318,49 @@ export function characterExecutionWithSpellInvocations(
           ),
       ),
   );
-  const spellBindings = newInvocations.map((invocation, offset) => ({
-    procedureRef: battleProcedureExecutionRef(
-      execution.scopeRef,
-      NonNegativeInteger(refreshedBindings.length + offset),
-    ),
-    procedure: { kind: "spellInvocation" as const, invocation },
-  }));
+  const allocated = allocateCharacterProcedureBindings(
+    execution.scopeRef,
+    execution.nextProcedureOrdinal,
+    newInvocations.map((invocation) => ({
+      procedure: {
+        kind: "spellInvocation" as const,
+        invocation,
+      },
+    })),
+  );
+  const spellBindings = allocated.procedureBindings;
   if (spellBindings.length === 0 && !refreshed) return execution;
   return CharacterExecutionState({
     scopeRef: execution.scopeRef,
+    nextProcedureOrdinal: allocated.nextProcedureOrdinal,
     procedureBindings: [...refreshedBindings, ...spellBindings],
   });
+}
+
+function allocateCharacterProcedureBindings(
+  scopeRef: BattleCharacterExecutionScopeRef,
+  nextProcedureOrdinal: BattleProcedureExecutionCursor,
+  procedures: readonly CharacterProcedureWithoutRef[],
+): {
+  readonly nextProcedureOrdinal: BattleProcedureExecutionCursor;
+  readonly procedureBindings: readonly CharacterProcedureBinding[];
+} {
+  const procedureBindings: CharacterProcedureBinding[] = [];
+  let cursor = Number(nextProcedureOrdinal);
+  for (const procedure of procedures) {
+    procedureBindings.push({
+      ...procedure,
+      procedureRef: battleProcedureExecutionRef(
+        scopeRef,
+        NonNegativeInteger(cursor),
+      ),
+    });
+    cursor += 1;
+  }
+  return {
+    nextProcedureOrdinal: battleProcedureExecutionCursor(cursor),
+    procedureBindings,
+  };
 }
 
 export function characterProcedureBindingSnapshots(

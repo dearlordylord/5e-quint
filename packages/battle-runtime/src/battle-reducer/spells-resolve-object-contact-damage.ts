@@ -11,7 +11,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
 import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
@@ -1342,10 +1342,11 @@ function applyObjectContactDamageActiveEffect(input: {
   if (actor === undefined) {
     return input.state;
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: input.state.battleId,
-    owner: actor,
+  const allocation = allocateBattleActiveEffectRef({
+    state: input.state,
+    ownerId: input.actorId,
   });
+  if (allocation.tag === "ownerNotFound") return input.state;
   const effect = {
     kind: "spellObjectContactDamage" as const,
     effectRef: allocation.effectRef,
@@ -1366,7 +1367,7 @@ function applyObjectContactDamageActiveEffect(input: {
     },
   };
   return {
-    ...input.state,
+    ...allocation.state,
     combatants: new Map(input.state.combatants).set(input.actorId, {
       ...allocation.owner,
       activeEffects: [

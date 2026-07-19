@@ -16,6 +16,7 @@ import {
   DamageTypeSchema,
   DcSourceSchema,
   SizeSchema,
+  WeaponRecordSchema,
 } from "@dnd/surface/surface/schema";
 import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
@@ -165,7 +166,7 @@ const AttackDamageAbilityModifierChoiceSchema = Schema.Struct({
 
 export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
-  weapon: BattleRuntimeObjectSchema,
+  weapon: WeaponRecordSchema,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalWith(AttackBonus, {
@@ -181,10 +182,19 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   damageBonus: Schema.optionalWith(Schema.Number, { exact: true }),
   damageTypeChoices: Schema.optionalWith(
     Schema.NonEmptyArray(DamageTypeSchema).pipe(
-      Schema.filter((choices) => choices.length >= 2, {
-        message: () =>
-          "Weapon attack damage type choices must contain at least two choices.",
-      }),
+      Schema.filter(
+        (
+          choices,
+        ): choices is readonly [
+          typeof DamageTypeSchema.Type,
+          typeof DamageTypeSchema.Type,
+          ...(typeof DamageTypeSchema.Type)[],
+        ] => choices.length >= 2,
+        {
+          message: () =>
+            "Weapon attack damage type choices must contain at least two choices.",
+        },
+      ),
     ),
     {
       exact: true,

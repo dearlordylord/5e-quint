@@ -340,7 +340,7 @@ function resolveDamageReduction(
       };
 }
 
-const DamageReductionInvocationSchema = spellProcedureInvocationSchema<
+export const DamageReductionInvocationSchema = spellProcedureInvocationSchema<
   Extract<SupportedSpellInvocation, { readonly procedure: "damageReduction" }>
 >(
   Schema.Struct({

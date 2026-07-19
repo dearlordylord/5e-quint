@@ -194,6 +194,7 @@ import type {
 import type {
   BattleAreaId,
   BattleCharacterExecutionScopeRef,
+  BattleProcedureExecutionCursor,
   BattleAttackProcedureExecutionRef,
   BattleDancingLightId,
   BattleActiveEffectExecutionRef,
@@ -5195,7 +5196,7 @@ export type BattleMagicWeaponTargetItemHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "magicWeaponTargetItem";
   readonly label: string;
-  readonly spell: MagicWeaponEnhancementSpellInvocation;
+  readonly spell: BattleExecutableSpellInvocation<MagicWeaponEnhancementSpellInvocation>;
   readonly requiresTableItemFact: true;
 };
 export type BattleSpellTargetAllocation = {
@@ -5277,18 +5278,20 @@ export type BattleSpellDamageTypeChoiceHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "damageTypeChoice";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "chainedSpellAttackDamage"
-        | "chosenDamageResistance"
-        | "damageReduction"
-        | "dragonsBreathInitial"
-        | "selfTransformationMode"
-        | "spellAttackDamage"
-        | "spellHostedWeaponAttack";
-    }
+  readonly spell: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "chainedSpellAttackDamage"
+          | "chosenDamageResistance"
+          | "damageReduction"
+          | "dragonsBreathInitial"
+          | "selfTransformationMode"
+          | "spellAttackDamage"
+          | "spellHostedWeaponAttack";
+      }
+    >
   >;
   readonly choices: readonly DamageType[];
 };
@@ -7725,6 +7728,7 @@ export type BattleCreatureOriginSnapshot =
       readonly characterId: CharacterId;
       readonly execution: {
         readonly scopeRef: BattleCharacterExecutionScopeRef;
+        readonly nextProcedureOrdinal: BattleProcedureExecutionCursor;
         readonly procedureBindings: readonly CharacterProcedureBindingSnapshot[];
       };
       readonly attackExecution: {

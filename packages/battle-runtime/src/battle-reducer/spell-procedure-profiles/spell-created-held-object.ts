@@ -609,8 +609,15 @@ function resolveSpellCreatedHeldObject(
   }
   const allocation = allocateBattleActiveEffectRef({
     state: resourced.state,
-    owner: effectOwner,
+    ownerId: input.actorId,
   });
+  if (allocation.tag === "ownerNotFound") {
+    return invalidResult(
+      resourced.state,
+      "staleSubject",
+      "Held-object effect owner is no longer in the battle.",
+    );
+  }
   const effected = applySpellCreatedHeldObjectEffect({
     state: allocation.state,
     actorId: input.actorId,

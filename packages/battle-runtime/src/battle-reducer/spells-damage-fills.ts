@@ -262,18 +262,20 @@ function spellAttackRollHoleBase(
 }
 
 export function spellDamageTypeChoiceHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "chainedSpellAttackDamage"
-        | "chosenDamageResistance"
-        | "damageReduction"
-        | "dragonsBreathInitial"
-        | "selfTransformationMode"
-        | "spellAttackDamage"
-        | "spellHostedWeaponAttack";
-    }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "chainedSpellAttackDamage"
+          | "chosenDamageResistance"
+          | "damageReduction"
+          | "dragonsBreathInitial"
+          | "selfTransformationMode"
+          | "spellAttackDamage"
+          | "spellHostedWeaponAttack";
+      }
+    >
   >,
 ): BattleSpellDamageTypeChoiceHole {
   const protocolId =

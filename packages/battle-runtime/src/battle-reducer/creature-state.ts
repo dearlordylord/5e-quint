@@ -798,6 +798,7 @@ export function combatantOriginSnapshot(
       characterId: origin.characterId,
       execution: {
         scopeRef: origin.execution.scopeRef,
+        nextProcedureOrdinal: origin.execution.nextProcedureOrdinal,
         procedureBindings: characterProcedureBindingSnapshots(origin.execution),
       },
       attackExecution: {

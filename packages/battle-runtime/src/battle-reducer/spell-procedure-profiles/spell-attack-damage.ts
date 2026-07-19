@@ -191,7 +191,7 @@ function resolveSpellAttackDamage(
   return resolveSpellAttackDamageAct(input);
 }
 
-const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
+export const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
   Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
 >(
   Schema.Union(

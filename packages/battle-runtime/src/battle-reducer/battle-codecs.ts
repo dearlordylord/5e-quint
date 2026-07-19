@@ -57,12 +57,14 @@ import {
 } from "../battle-interrupt-triggers.ts";
 import type {
   ActiveOngoingFeatureOccurrenceSnapshotEncoded,
+  BattleExecutableSpellInvocation,
   BattleDroppedObjectOutcome,
   BattleFill,
   BattleHole,
   BattleObjectIgnitionOutcome,
   BattleShovePushOutcome,
   BattleSpellAreaChoice,
+  BattleSpellTargetListHole,
   BattleTargetSpatialFact,
   SupportedSpellInvocation,
   WildShapeEquipmentDispositionChoice,
@@ -96,9 +98,10 @@ import {
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
   BattleProcedureExecutionRef,
+  BattleProcedureExecutionCursor,
   BattleExecutionScopeCursor,
   battleProcedureExecutionRefBelongsToScope,
-  battleProcedureExecutionRefIsAtOrdinal,
+  battleProcedureExecutionRefOrdinalIsBefore,
   battleCharacterExecutionScopeRefBelongsToBattle,
   battleCharacterExecutionScopeRefBelongsToCombatant,
   battleCharacterExecutionScopeRefOrdinalIsBefore,
@@ -165,6 +168,14 @@ import {
   SupportedAttackActionOptionSchema,
 } from "./codec-building-blocks.ts";
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
+import { MagicWeaponEnhancementInvocationSchema } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
+import { ChainedSpellAttackDamageInvocationSchema } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
+import { ChosenDamageResistanceInvocationSchema } from "./spell-procedure-profiles/chosen-damage-resistance.ts";
+import { DamageReductionInvocationSchema } from "./spell-procedure-profiles/damage-reduction.ts";
+import { DragonsBreathInitialInvocationSchema } from "./spell-procedure-profiles/dragons-breath-initial.ts";
+import { SelfTransformationModeInvocationSchema } from "./spell-procedure-profiles/self-transformation-mode.ts";
+import { SpellAttackDamageInvocationSchema } from "./spell-procedure-profiles/spell-attack-damage.ts";
+import { SpellHostedWeaponAttackInvocationSchema } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { BattleSpellEffectLevel } from "./spells-effective-level.ts";
 import {
   sameSpellInvocationRef,
@@ -344,11 +355,14 @@ export const ActiveOngoingFeatureOccurrenceSnapshotSchema: Schema.Schema<
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("HoleId"),
 );
+const BattleHoleInstanceKeySchema = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("HoleInstanceKey"),
+);
 
 const BattleHoleBaseSchema = {
-  holeInstanceKey: Schema.NonEmptyTrimmedString,
+  holeInstanceKey: BattleHoleInstanceKeySchema,
   holeId: BattleHoleIdSchema,
-  label: Schema.optionalWith(Schema.String, { exact: true }),
+  label: Schema.String,
 } as const;
 
 const D20TestNaturalOneRerollHoleOptionsSchema = {
@@ -1244,6 +1258,57 @@ const BattleExecutableSpellInvocationSchema = Schema.extend(
   Schema.Struct({ sourceProcedureRef: BattleProcedureExecutionRef }),
 ).annotations({ identifier: "BattleExecutableSpellInvocation" });
 
+const SPELL_TARGET_LIST_PROCEDURES = [
+  "directHitPointRestoration",
+  "rollModifier",
+  "saveGatedDamage",
+  "abilityD20TestRollModeSaveGate",
+  "saveGatedCondition",
+  "saveGatedConditionImmunity",
+  "saveGatedAttackRollAdvantage",
+  "hideousLaughter",
+  "hypnoticPattern",
+  "slowActivePenalties",
+  "creatureTypeProtection",
+  "creatureSizeIncrease",
+  "creatureSizeDecrease",
+  "levitatedCreature",
+  "conditionRemovalProtection",
+  "chosenDamageResistance",
+  "damageReduction",
+  "scalarBuff",
+  "conditionImmunityAndTurnStartTemporaryHitPoints",
+  "jumpMovementReplacement",
+  "dragonsBreathInitial",
+  "hastePositive",
+  "featherFallMitigation",
+  "sanctuaryTargetingInterdiction",
+  "directCondition",
+  "directConditionRemoval",
+  "command",
+  "greaseGroundHazard",
+  "gustOfWindLine",
+] as const satisfies ReadonlyArray<
+  BattleSpellTargetListHole["spell"]["procedure"]
+>;
+const SPELL_TARGET_LIST_PROCEDURE_SET = new Set<string>(
+  SPELL_TARGET_LIST_PROCEDURES,
+);
+const BattleSpellTargetListInvocationSchema =
+  BattleExecutableSpellInvocationSchema.pipe(
+    Schema.filter(
+      (
+        invocation,
+      ): invocation is BattleExecutableSpellInvocation<
+        BattleSpellTargetListHole["spell"]
+      > => SPELL_TARGET_LIST_PROCEDURE_SET.has(invocation.procedure),
+      {
+        message: () =>
+          "Spell Target List hole requires a target-list procedure.",
+      },
+    ),
+  );
+
 const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({
   targetId: CombatantId,
   rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
@@ -1485,8 +1550,8 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
       targetIds: Schema.Array(CombatantId),
     }),
     ability: Schema.Literal("con"),
-    dc: DcSourceSchema,
-    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    dc: Schema.Struct({ kind: Schema.Literal("caster_spell_save_dc") }),
+    areaChoices: Schema.Tuple(),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
@@ -1540,13 +1605,33 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("magicWeaponTargetItem"),
-    spell: BattleExecutableSpellInvocationSchema,
+    spell: Schema.extend(
+      MagicWeaponEnhancementInvocationSchema,
+      Schema.Struct({ sourceProcedureRef: BattleProcedureExecutionRef }),
+    ),
     requiresTableItemFact: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("damageTypeChoice"),
-    spell: BattleExecutableSpellInvocationSchema,
+    spell: Schema.Union(
+      ...[
+        ChainedSpellAttackDamageInvocationSchema,
+        ChosenDamageResistanceInvocationSchema,
+        DamageReductionInvocationSchema,
+        DragonsBreathInitialInvocationSchema,
+        SelfTransformationModeInvocationSchema,
+        SpellAttackDamageInvocationSchema,
+        SpellHostedWeaponAttackInvocationSchema,
+      ].map((invocationSchema) =>
+        Schema.extend(
+          invocationSchema,
+          Schema.Struct({
+            sourceProcedureRef: BattleProcedureExecutionRef,
+          }),
+        ),
+      ),
+    ),
     choices: Schema.Array(DamageTypeSchema),
   }),
   Schema.Struct({
@@ -1560,7 +1645,7 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("spellTargetList"),
-    spell: BattleExecutableSpellInvocationSchema,
+    spell: BattleSpellTargetListInvocationSchema,
     minTargets: Schema.Literal(1),
     maxTargets: Schema.Number,
     choices: Schema.Array(CombatantId),
@@ -1675,14 +1760,14 @@ export const BattleHoleSchema: Schema.Schema<BattleHole> = Schema.Union(
     attackDamageRiders: Schema.optionalWith(
       Schema.Array(
         Schema.Struct({
-          attackerId: Schema.String,
+          attackerId: CombatantId,
           unitId: Schema.String,
           label: Schema.String,
           optional: Schema.Boolean,
           damage: Schema.Struct({
             dice: Schema.Number,
             dieSize: Schema.Number,
-            damageType: Schema.String,
+            damageType: DamageTypeSchema,
           }),
         }),
       ),
@@ -5406,6 +5491,7 @@ const BattleCreatureOriginSnapshotSchema = Schema.Union(
     characterId: Schema.String,
     execution: Schema.Struct({
       scopeRef: BattleCharacterExecutionScopeRef,
+      nextProcedureOrdinal: BattleProcedureExecutionCursor,
       procedureBindings: Schema.Array(
         Schema.Struct({
           procedureRef: BattleProcedureExecutionRef,
@@ -5544,13 +5630,15 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
           characterOrigin.execution.scopeRef,
           snapshot.combatantId,
         ) &&
-        characterOrigin.execution.procedureBindings.every((binding, ordinal) =>
-          battleProcedureExecutionRefIsAtOrdinal(
+        characterOrigin.execution.procedureBindings.every((binding) =>
+          battleProcedureExecutionRefOrdinalIsBefore(
             binding.procedureRef,
             characterOrigin.execution.scopeRef,
-            ordinal,
+            characterOrigin.execution.nextProcedureOrdinal,
           ),
         ) &&
+        characterOrigin.execution.procedureBindings.length ===
+          characterOrigin.execution.nextProcedureOrdinal &&
         new Set(
           characterOrigin.execution.procedureBindings.map(
             (binding) => binding.procedureRef,
@@ -6482,9 +6570,11 @@ export const BattleSnapshotSchema = Schema.Struct({
             cursor.nextScopeOrdinal,
           ]),
         );
+        const liveCombatantIds = new Set(
+          snapshot.combatants.map((combatant) => combatant.combatantId),
+        );
         return (
-          new Set(snapshot.combatants.map((combatant) => combatant.combatantId))
-            .size === snapshot.combatants.length &&
+          liveCombatantIds.size === snapshot.combatants.length &&
           new Set(executionScopeRefs).size === executionScopeRefs.length &&
           cursorByCombatant.size === snapshot.executionScopeCursors.length &&
           snapshot.acts.every((act) =>

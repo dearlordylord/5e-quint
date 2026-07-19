@@ -37,7 +37,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 
 import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 import {
@@ -749,11 +749,17 @@ function applyMarkedDamageRiderSpellEffect(
       : invocation.expiresAt;
   const occurrence =
     invocation.action === "transfer"
-      ? { effectRef: invocation.activeEffect.effectRef, owner: caster }
-      : allocateBattleActiveEffectRefForCreature({
-          battleId: state.battleId,
+      ? {
+          tag: "allocated" as const,
+          state,
+          effectRef: invocation.activeEffect.effectRef,
           owner: caster,
+        }
+      : allocateBattleActiveEffectRef({
+          state,
+          ownerId: actorId,
         });
+  if (occurrence.tag === "ownerNotFound") return state;
   const transfer: MarkedDamageRiderTransferState = {
     kind: "awaitingTargetDrop",
     retargetTiming:
@@ -794,8 +800,8 @@ function applyMarkedDamageRiderSpellEffect(
     },
   ];
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
+    ...occurrence.state,
+    combatants: new Map(occurrence.state.combatants).set(actorId, {
       ...occurrence.owner,
       activeEffects,
     }),

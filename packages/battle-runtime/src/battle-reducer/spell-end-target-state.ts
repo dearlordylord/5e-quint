@@ -101,7 +101,6 @@ function battleCreatureWithSpellEndTargetStatePromotion(
     timing,
   );
   const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: state.battleId,
     owner: combatant,
   });
   const promotedEffects: readonly BattleActiveEffect[] = [
