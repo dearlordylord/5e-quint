@@ -63,9 +63,15 @@ describe("trace projections", () => {
 
   it("rejects invalid trace ordering before projection", () => {
     const valid = makeTrackerDagRun("resume-bound-session");
+    const secondItem = valid.items[1];
+    if (secondItem === undefined) {
+      throw new Error(
+        "Expected the established fixture to contain a second item",
+      );
+    }
     const invalid: TraceRun = {
       ...valid,
-      items: [valid.items[0], { ...valid.items[1], cursor: 0 }],
+      items: [valid.items[0], { ...secondItem, cursor: 0 }],
     };
 
     const result = validateTraceRun(invalid);
