@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
-import type { BattleActPresentation } from "@dnd/battle-runtime";
+import { combatantId, type BattleActPresentation } from "@dnd/battle-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -442,18 +442,26 @@ describe("end-user MCP vertical", () => {
       expect.objectContaining({ combatantId: "goblin", hp: 10 }),
     ]);
 
-    const actionSurgeResourcesBefore = combatant(root, "fighter").origin
-      .resources;
+    const actionSurgeResourcePoolRef = resourcePoolRefForUnit(
+      root,
+      "fighter",
+      "fighter_action_surge",
+    );
     const surged = resolveUnitFeatureAct(
       root,
       "fighter",
       "fighter_action_surge",
     );
     expect(surged.result.tag).toBe("resolved");
-    expectLimitedResourceSpend(
-      actionSurgeResourcesBefore,
-      surged.snapshot.combatants[0].origin.resources,
-      { previousUsesRemaining: 1, nextUsesRemaining: 0, usedThisTurn: true },
+    expect(surged.snapshot.combatants[0].origin.resources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          resourcePoolRef: actionSurgeResourcePoolRef,
+          usage: "limited",
+          usesRemaining: 0,
+          usedThisTurn: true,
+        }),
+      ]),
     );
     expect(actionLabels(surged)).toEqual([
       "Attack",
@@ -818,13 +826,20 @@ describe("end-user MCP vertical", () => {
     });
     endTurn(root, "goblin-a");
 
-    const bardResourcesBeforeInspiration = combatant(root, "bard").origin
-      .resources;
+    const bardicInspirationResourcePoolRef = resourcePoolRefForUnit(
+      root,
+      "bard",
+      "bard_bardic_inspiration",
+    );
     grantBardicInspiration(root);
-    expectLimitedResourceSpend(
-      bardResourcesBeforeInspiration,
-      combatant(root, "bard").origin.resources,
-      { previousUsesRemaining: 2, nextUsesRemaining: 1 },
+    expect(combatant(root, "bard").origin.resources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          resourcePoolRef: bardicInspirationResourcePoolRef,
+          usage: "limited",
+          usesRemaining: 1,
+        }),
+      ]),
     );
     endTurn(root, "bard");
 
@@ -2081,37 +2096,27 @@ function resolveUnitFeatureAct(
   return callTool(root, "resolve_battle_act", { subject: act.subject });
 }
 
-function expectLimitedResourceSpend(
-  previous: readonly LimitedResourceView[],
-  next: readonly LimitedResourceView[],
-  expected: {
-    readonly previousUsesRemaining: number;
-    readonly nextUsesRemaining: number;
-    readonly usedThisTurn?: boolean;
-  },
-): void {
-  const spent = next.filter((resource) => {
-    const previousResource = previous.find(
-      (candidate) => candidate.resourcePoolRef === resource.resourcePoolRef,
+function resourcePoolRefForUnit(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  combatantIdText: string,
+  unitId: string,
+): string {
+  const actor = root.sessionStore.battleState?.combatants.get(
+    combatantId(combatantIdText),
+  );
+  if (actor?.origin.kind !== "character") {
+    throw new Error(
+      `Expected character combatant resource owner: ${combatantIdText}`,
     );
-    return (
-      resource.usage === "limited" &&
-      previousResource?.usage === "limited" &&
-      previousResource.usesRemaining === expected.previousUsesRemaining &&
-      resource.usesRemaining === expected.nextUsesRemaining &&
-      (expected.usedThisTurn === undefined ||
-        resource.usedThisTurn === expected.usedThisTurn)
-    );
-  });
-  expect(spent).toHaveLength(1);
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.unit.id === unitId,
+  );
+  if (resource === undefined) {
+    throw new Error(`Expected ${unitId} resource for ${combatantIdText}`);
+  }
+  return resource.resourcePoolRef;
 }
-
-type LimitedResourceView = {
-  readonly resourcePoolRef: string;
-  readonly usage: string;
-  readonly usesRemaining?: number;
-  readonly usedThisTurn?: boolean;
-};
 
 function grantBardicInspiration(
   root: ReturnType<typeof createMcpCompositionRoot>,
@@ -2366,35 +2371,34 @@ function fillBattleSubject(
     readonly value: unknown;
   },
 ) {
-  const spellId =
-    "invocation" in subject && "spellId" in subject.invocation
-      ? subject.invocation.spellId
-      : null;
+  const procedureRef = "procedureRef" in subject ? subject.procedureRef : null;
   const battleFill =
     fill.kind === "targetChoice" && fill.spatialFacts === undefined
       ? {
           ...fill,
           spatialFacts:
-            spellId !== null
+            subject.tag === "actionSpell" && procedureRef !== null
               ? [
                   {
                     kind: "spellTarget",
                     casterId: subject.actorId,
                     targetId: String(fill.value),
-                    spellId,
+                    sourceProcedureRef: procedureRef,
                   },
                 ]
-              : "procedureRef" in subject
+              : subject.tag === "action" && procedureRef !== null
                 ? [
                     {
                       kind: "attackTargetInMeleeReach",
                       actorId: subject.actorId,
                       targetId: String(fill.value),
-                      procedureRef: subject.procedureRef,
-                      ...(subject.attackAbility === undefined
+                      procedureRef,
+                      ...(!("attackAbility" in subject) ||
+                      subject.attackAbility === undefined
                         ? {}
                         : { attackAbility: subject.attackAbility }),
-                      ...(subject.attackDamageType === undefined
+                      ...(!("attackDamageType" in subject) ||
+                      subject.attackDamageType === undefined
                         ? {}
                         : { attackDamageType: subject.attackDamageType }),
                     },
@@ -2403,7 +2407,7 @@ function fillBattleSubject(
         }
       : fill.kind === "spellTargetAllocation" &&
           fill.spatialFacts === undefined &&
-          spellId !== null &&
+          procedureRef !== null &&
           typeof fill.value === "object" &&
           fill.value !== null &&
           "allocations" in fill.value &&
@@ -2414,7 +2418,7 @@ function fillBattleSubject(
               kind: "spellTarget",
               casterId: subject.actorId,
               targetId: String(allocation.targetId),
-              spellId,
+              sourceProcedureRef: procedureRef,
             })),
           }
         : fill;
