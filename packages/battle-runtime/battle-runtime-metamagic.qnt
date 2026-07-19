@@ -83,7 +83,6 @@ module battleRuntimeMetamagic {
   }
 
   type BattleRuntimeEmpoweredSpellDamageDieReroll = {
-    selectedDieOrdinal: int,
     original: int,
     replacement: int,
   }
@@ -335,41 +334,36 @@ module battleRuntimeMetamagic {
     if (charismaModifier < 1) 1 else charismaModifier
 
   pure def empoweredSpellSelectedDamageDiceCount(
-    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
   ): int =
-    selectedRerolls.size()
+    selectedRerolls.keys().fold(0, (total, reroll) => total + selectedRerolls.get(reroll))
 
   pure def empoweredSpellSelectedOriginalTotal(
-    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
   ): int =
-    selectedRerolls.map(reroll => reroll.original).fold(0, (total, original) => total + original)
+    selectedRerolls.keys().fold(0, (total, reroll) => total + reroll.original * selectedRerolls.get(reroll))
 
   pure def empoweredSpellReplacementTotal(
-    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
   ): int =
-    selectedRerolls.map(reroll => reroll.replacement).fold(0, (total, replacement) => total + replacement)
+    selectedRerolls.keys().fold(0, (total, reroll) => total + reroll.replacement * selectedRerolls.get(reroll))
 
   pure def empoweredSpellSelectedDamageRerollsValid(
-    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
     damageDieSize: int,
   ): bool =
-    selectedRerolls.size() > 0 and
-    selectedRerolls.forall(reroll =>
-      reroll.selectedDieOrdinal >= 0 and
+    selectedRerolls.keys().size() > 0 and
+    selectedRerolls.keys().forall(reroll =>
+      selectedRerolls.get(reroll) > 0 and
       reroll.original >= 1 and
       reroll.original <= damageDieSize and
       reroll.replacement >= 1 and
       reroll.replacement <= damageDieSize
-    ) and
-    selectedRerolls.forall(left =>
-      selectedRerolls.forall(right =>
-        left.selectedDieOrdinal != right.selectedDieOrdinal or left == right
-      )
     )
 
   pure def empoweredSpellCanRerollDamageDice(
     procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
-    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
     damageDieSize: int,
     charismaModifier: int,
     knownOptions: Set[BattleRuntimeMetamagicOptionFact],
@@ -390,7 +384,7 @@ module battleRuntimeMetamagic {
     procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
     originalDamageTotal: int,
     damageDieSize: int,
-    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    selectedRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int,
     charismaModifier: int,
     knownOptions: Set[BattleRuntimeMetamagicOptionFact],
     castOptions: Set[BattleRuntimeMetamagicOptionFact],

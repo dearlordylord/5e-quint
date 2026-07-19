@@ -33,10 +33,7 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "../character-battle-resources.ts";
-import {
-  battleSpellDamageDieExecutionRef,
-  type CombatantId,
-} from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import { combatantHasLevelOnePlusSpellCastThisTurn } from "./spell-turn-resources.ts";
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
 import {
@@ -342,72 +339,68 @@ export function effectiveEmpoweredSpellDamageRoll(
   if (damageRoll.spellDamageReroll === undefined) {
     return damageRoll;
   }
-  const replacements = damageRoll.spellDamageReroll.dice;
-  const [firstGroup, ...remainingGroups] = damageRoll.value;
-  const value: BattleRolledDiceFill["value"] = [
-    effectiveEmpoweredSpellDiceGroup(
-      damageRoll.holeId,
-      firstGroup,
-      0,
-      replacements,
-    ),
-    ...remainingGroups.map((group, index) =>
-      effectiveEmpoweredSpellDiceGroup(
-        damageRoll.holeId,
+  const applied = damageRoll.value.reduce<{
+    readonly groups: readonly BattleRolledDiceFill["value"][number][];
+    readonly remaining: readonly BattleSpellDamageDieReroll[];
+  }>(
+    (state, group) => {
+      const appliedGroup = effectiveEmpoweredSpellDiceGroup(
         group,
-        index + 1,
-        replacements,
-      ),
-    ),
-  ];
+        state.remaining,
+      );
+      return {
+        groups: [...state.groups, appliedGroup.group],
+        remaining: appliedGroup.remaining,
+      };
+    },
+    { groups: [], remaining: damageRoll.spellDamageReroll.dice },
+  );
+  const [firstGroup, ...remainingGroups] = applied.groups;
+  if (firstGroup === undefined) return damageRoll;
   return {
     ...damageRoll,
-    value,
+    value: [firstGroup, ...remainingGroups],
   };
 }
 
 function effectiveEmpoweredSpellDiceGroup(
-  holeId: BattleRolledDiceFill["holeId"],
   group: BattleRolledDiceFill["value"][number],
-  groupIndex: number,
   replacements: readonly BattleSpellDamageDieReroll[],
-): BattleRolledDiceFill["value"][number] {
-  const [firstResult, ...remainingResults] = group.results;
-  return {
-    results: [
-      effectiveEmpoweredSpellDieResult(
-        firstResult,
-        holeId,
-        groupIndex,
-        0,
-        replacements,
-      ),
-      ...remainingResults.map((result, index) =>
-        effectiveEmpoweredSpellDieResult(
-          result,
-          holeId,
-          groupIndex,
-          index + 1,
-          replacements,
-        ),
-      ),
-    ],
-  };
-}
-
-function effectiveEmpoweredSpellDieResult(
-  result: BattleRolledDiceFill["value"][number]["results"][number],
-  holeId: BattleRolledDiceFill["holeId"],
-  groupIndex: number,
-  resultIndex: number,
-  replacements: readonly BattleSpellDamageDieReroll[],
-): BattleRolledDiceFill["value"][number]["results"][number] {
-  const replacement = replacements.find(
-    (candidate) =>
-      candidate.dieRef ===
-      battleSpellDamageDieExecutionRef(holeId, groupIndex, resultIndex),
+): {
+  readonly group: BattleRolledDiceFill["value"][number];
+  readonly remaining: readonly BattleSpellDamageDieReroll[];
+} {
+  const applied = group.results.reduce<{
+    readonly results: readonly (typeof group.results)[number][];
+    readonly remaining: readonly BattleSpellDamageDieReroll[];
+  }>(
+    (state, result) => {
+      const replacementIndex = state.remaining.findIndex(
+        (candidate) => candidate.original === result,
+      );
+      const replacement = state.remaining[replacementIndex];
+      return replacement === undefined
+        ? { results: [...state.results, result], remaining: state.remaining }
+        : {
+            results: [...state.results, replacement.replacement],
+            remaining: [
+              ...state.remaining.slice(0, replacementIndex),
+              ...state.remaining.slice(replacementIndex + 1),
+            ],
+          };
+    },
+    { results: [], remaining: replacements },
   );
-  return replacement?.replacement ?? result;
+  const [firstResult, ...remainingResults] = applied.results;
+  return {
+    group: {
+      results:
+        firstResult === undefined
+          ? group.results
+          : [firstResult, ...remainingResults],
+    },
+    remaining: applied.remaining,
+  };
 }
 
 export function empoweredSpellRerollApplicationForDamageRoll(input: {
@@ -458,27 +451,27 @@ export function empoweredSpellDamageRerollValidationIssue(input: {
   if (selectedDice.length > empoweredSpellMaximumSelectedDice(input.actor)) {
     return "Empowered Spell selected damage dice exceed the caster's Charisma modifier minimum-one limit.";
   }
-  const seenDice = new Set<string>();
+  const unmatchedOriginalDice = selectedDice.reduce<
+    readonly (typeof input.damageRoll.value)[number]["results"][number][] | null
+  >(
+    (remaining, selectedDie) => {
+      if (remaining === null) return null;
+      const matchIndex = remaining.findIndex(
+        (result) => result === selectedDie.original,
+      );
+      return matchIndex < 0
+        ? null
+        : [
+            ...remaining.slice(0, matchIndex),
+            ...remaining.slice(matchIndex + 1),
+          ];
+    },
+    input.damageRoll.value.flatMap((group) => group.results),
+  );
+  if (unmatchedOriginalDice === null) {
+    return "Empowered Spell selected original dice must match the pending spell damage roll.";
+  }
   for (const selectedDie of selectedDice) {
-    if (seenDice.has(selectedDie.dieRef)) {
-      return "Empowered Spell cannot select the same damage die more than once.";
-    }
-    seenDice.add(selectedDie.dieRef);
-    const originalDie = input.damageRoll.value
-      .flatMap((group, groupIndex) =>
-        group.results.map((result, resultIndex) => ({
-          dieRef: battleSpellDamageDieExecutionRef(
-            input.damageRoll.holeId,
-            groupIndex,
-            resultIndex,
-          ),
-          result,
-        })),
-      )
-      .find((candidate) => candidate.dieRef === selectedDie.dieRef)?.result;
-    if (originalDie === undefined || originalDie !== selectedDie.original) {
-      return "Empowered Spell selected original dice must match the pending spell damage roll.";
-    }
     if (
       !Number.isInteger(Number(selectedDie.replacement)) ||
       Number(selectedDie.replacement) < 1 ||

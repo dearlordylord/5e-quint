@@ -604,7 +604,7 @@ verification for this delivery record.
     {
       "number": 65,
       "id": "GH-170",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Purge authored-name Battle replay keys and publish presentation joins",
       "dependencies": [
         "GH-172",
@@ -656,7 +656,7 @@ verification for this delivery record.
 
 ## Operator policy
 
-The task index contains only canonical runnable leaves plus the five integrated
+The task index contains only canonical runnable leaves plus the six integrated
 leaves retained as `done`. Non-runnable specifications, aggregate outcomes, and
 retained failed/oversized outcome parents are intentionally absent.
 

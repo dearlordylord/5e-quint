@@ -74,29 +74,6 @@ export const battleActiveEffectExecutionOrdinal: (
 ) => BattleActiveEffectExecutionOrdinal =
   BattleActiveEffectExecutionOrdinal.make;
 
-export const BattleSpellDamageDieExecutionRef =
-  Schema.NonEmptyTrimmedString.pipe(
-    Schema.filter(battleSpellDamageDieExecutionReferenceIsCanonical, {
-      message: () => "Invalid canonical Battle spell damage-die execution ref.",
-    }),
-    Schema.brand("BattleSpellDamageDieExecutionRef"),
-  );
-export type BattleSpellDamageDieExecutionRef =
-  typeof BattleSpellDamageDieExecutionRef.Type;
-export function battleSpellDamageDieExecutionRef(
-  holeId: string,
-  groupOrdinal: number,
-  dieOrdinal: number,
-): BattleSpellDamageDieExecutionRef {
-  return BattleSpellDamageDieExecutionRef.make(
-    JSON.stringify({
-      holeId,
-      kind: "spellDamageDie",
-      groupOrdinal,
-      dieOrdinal,
-    }),
-  );
-}
 export const battleSpellEffectOccurrenceId: (
   value: string,
 ) => BattleSpellEffectOccurrenceId = BattleSpellEffectOccurrenceId.make;
@@ -633,39 +610,6 @@ function battleActiveEffectExecutionReferenceIsCanonical(
         ownerScopeRef: decoded.ownerScopeRef,
         ordinal: decoded.ordinal,
       })
-  );
-}
-
-function battleSpellDamageDieExecutionReferenceIsCanonical(
-  reference: string,
-): boolean {
-  const decoded = parseExecutionReference(reference);
-  return (
-    decoded !== null &&
-    hasExactKeys(decoded, ["holeId", "kind", "groupOrdinal", "dieOrdinal"]) &&
-    decoded.kind === "spellDamageDie" &&
-    nonEmptyCanonicalStringProperty(decoded, "holeId") &&
-    nonNegativeIntegerProperty(decoded, "groupOrdinal") &&
-    nonNegativeIntegerProperty(decoded, "dieOrdinal") &&
-    reference ===
-      JSON.stringify({
-        holeId: decoded.holeId,
-        kind: "spellDamageDie",
-        groupOrdinal: decoded.groupOrdinal,
-        dieOrdinal: decoded.dieOrdinal,
-      })
-  );
-}
-
-function nonEmptyCanonicalStringProperty(
-  value: Readonly<Record<string, unknown>>,
-  key: string,
-): boolean {
-  const property = value[key];
-  return (
-    typeof property === "string" &&
-    property.length > 0 &&
-    property.trim() === property
   );
 }
 

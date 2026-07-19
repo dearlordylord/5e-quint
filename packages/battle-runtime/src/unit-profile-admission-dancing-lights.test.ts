@@ -308,6 +308,15 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         emission: { kind: "dim", radiusFeet: movementFeet(10) },
       }),
     ]);
+    expect(
+      resolved.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
+        resolved.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+        ? String(resolved.snapshot.lightEmitters[0].attachment.lightId)
+        : "",
+    ).toContain(String(combinedAct.subject.procedureRef));
+    expect(JSON.stringify(resolved.snapshot.lightEmitters)).not.toContain(
+      dancingLightsUnitId,
+    );
 
     const beforeMovePosition =
       resolved.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&

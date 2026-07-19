@@ -239,7 +239,6 @@ import type {
   BattleObjectId,
   BattleProcedureExecutionCursor,
   BattleResourcePoolExecutionRef,
-  BattleSpellDamageDieExecutionRef,
   BattleSpellEffectOccurrenceId,
   BattleStatBlockExecutionScopeRef,
   BattleTablePositionId,
@@ -4837,6 +4836,7 @@ type BattleActExecution<TSubject extends BattleActDiscoverySubject> = {
 
 export type BattleActPresentation =
   | { readonly kind: "intrinsic" }
+  | { readonly kind: "attack"; readonly name: string }
   | {
       readonly kind: "spell";
       readonly procedureRef: BattleProcedureExecutionRef;
@@ -5262,7 +5262,6 @@ export type BattleSpellTargetListHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "spellTargetList";
-  readonly procedure: import("./battle-reducer/spell-target-list-procedures.ts").BattleSpellTargetListProcedure;
   readonly label: string;
   readonly minTargets: 1;
   readonly maxTargets: number;
@@ -5391,7 +5390,6 @@ export type BattleSpellDamageRerollOption = {
   readonly maximumSelectedDice: number;
 };
 export type BattleSpellDamageDieReroll = {
-  readonly dieRef: BattleSpellDamageDieExecutionRef;
   readonly original: DieRollResult;
   readonly replacement: DieRollResult;
 };
@@ -7679,9 +7677,7 @@ export type {
   AttackDamageAbilityModifierChoiceUnitIds,
 } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 
-export type {
-  BattleAttackExecutionSelection,
-} from "./battle-subjects.ts";
+export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";
 
 export type {
   GlyphDurableOccurrenceActiveEffect,

@@ -104,7 +104,6 @@ import {
   battleStatBlockExecutionScopeRefIsWellFormed,
   battleStatBlockExecutionScopeRefOrdinalIsBefore,
   BattleSpellEffectOccurrenceId,
-  BattleSpellDamageDieExecutionRef,
   BattleTablePositionId,
   CombatantId,
   type InitiativeScore,
@@ -173,7 +172,6 @@ import type {
   WildShapeEquipmentDispositionChoice,
   WildShapeLoadoutObjectRef,
 } from "../battle-reducer.ts";
-import { BattleSpellTargetListProcedureSchema } from "./spell-target-list-procedures.ts";
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("normalNamedForm"),
@@ -1578,7 +1576,6 @@ const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
       ...BattleHoleBaseSchema,
       kind: Schema.Literal("spellTargetList"),
       sourceProcedureRef: BattleProcedureExecutionRef,
-      procedure: BattleSpellTargetListProcedureSchema,
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Number,
       spatialTargeting: Schema.Union(
@@ -4835,7 +4832,6 @@ export const BattleFillSchema: Schema.Schema<
           effectKind: Schema.Literal("damage_dice_reroll"),
           dice: Schema.NonEmptyArray(
             Schema.Struct({
-              dieRef: BattleSpellDamageDieExecutionRef,
               original: BattleDieRollResultSchema,
               replacement: BattleDieRollResultSchema,
             }),
@@ -5829,6 +5825,7 @@ export const BattleUnitSupportSourceSchema = Schema.Union(
 
 export const BattleActPresentationSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("intrinsic") }),
+  Schema.Struct({ kind: Schema.Literal("attack"), name: Schema.String }),
   Schema.Struct({
     kind: Schema.Literal("spell"),
     procedureRef: BattleProcedureExecutionRef,
@@ -6250,6 +6247,27 @@ type EncodedBattleReadiedSpellSnapshot =
 type EncodedBattleActExecutionCandidate =
   typeof BattleActExecutionCandidateSchema.Type;
 
+function isBattleExecutionReference(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    (Schema.is(BattleProcedureExecutionRef)(value) ||
+      Schema.is(BattleResourcePoolExecutionRef)(value) ||
+      Schema.is(BattleActiveEffectExecutionRef)(value) ||
+      Schema.is(BattleAttackExecutionScopeRef)(value) ||
+      Schema.is(BattleCharacterExecutionScopeRef)(value) ||
+      Schema.is(BattleStatBlockExecutionScopeRef)(value))
+  );
+}
+
+function battleExecutionReferencesIn(value: unknown): readonly string[] {
+  if (isBattleExecutionReference(value)) return [value];
+  if (Array.isArray(value)) {
+    return value.flatMap(battleExecutionReferencesIn);
+  }
+  if (value === null || typeof value !== "object") return [];
+  return Object.values(value).flatMap(battleExecutionReferencesIn);
+}
+
 function characterProcedureBindingKind(
   combatants: readonly EncodedBattleCreatureSnapshot[],
   combatantId: CombatantId,
@@ -6667,16 +6685,26 @@ export const BattleSnapshotSchema = Schema.Struct({
         const liveCombatantIds = new Set(
           snapshot.combatants.map((combatant) => combatant.combatantId),
         );
+        const boundExecutionRefs = new Set(
+          battleExecutionReferencesIn([
+            snapshot.combatants,
+            snapshot.readiedResponses,
+          ]),
+        );
         return (
           liveCombatantIds.size === snapshot.combatants.length &&
           new Set(executionScopeRefs).size === executionScopeRefs.length &&
           cursorByCombatant.size === snapshot.executionScopeCursors.length &&
-          snapshot.acts.every((act) =>
-            serializedBattleActOwnsBoundProcedure(
-              act,
-              snapshot.combatants,
-              snapshot.readiedResponses.spells,
-            ),
+          snapshot.acts.every(
+            (act) =>
+              serializedBattleActOwnsBoundProcedure(
+                act,
+                snapshot.combatants,
+                snapshot.readiedResponses.spells,
+              ) &&
+              battleExecutionReferencesIn(act.initialHoles).every((ref) =>
+                boundExecutionRefs.has(ref),
+              ),
           ) &&
           snapshot.readiedResponses.spells.every((readied) =>
             serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),

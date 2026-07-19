@@ -42,7 +42,11 @@ import type {
   DamageType,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import type { BattleObjectId, CombatantId } from "../identity.ts";
+import type {
+  BattleObjectId,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import type {
   PassiveSavingThrowRollModeProfile,
   SupportedUnitFeatureProfile,
@@ -1093,7 +1097,6 @@ export function carefulSpellProtectedTargetsHole(
       : 1;
   return {
     kind: "spellTargetList",
-    procedure: invocation.procedure,
     holeId: carefulSpellProtectedTargetsHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
       `battle:spell:careful-spell:protected-targets:${invocation.procedure}`,
@@ -1114,10 +1117,10 @@ const HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX =
   "battle:spell:heightened-spell:target:";
 
 export function heightenedSpellTargetChoiceHoleId(
-  invocation: SupportedSpellInvocation,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleHoleId {
   return holeId(
-    `${HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX}${invocation.spell.id}`,
+    `${HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX}${sourceProcedureRef}`,
   );
 }
 
@@ -1134,9 +1137,9 @@ export function heightenedSpellTargetChoiceHole(
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
-    holeId: heightenedSpellTargetChoiceHoleId(invocation),
+    holeId: heightenedSpellTargetChoiceHoleId(invocation.sourceProcedureRef),
     holeInstanceKey: holeInstanceKey(
-      `${HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX}${invocation.spell.id}`,
+      `${HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX}${invocation.sourceProcedureRef}`,
     ),
     label: `${invocation.spell.name} Heightened Spell target`,
     procedureRef: invocation.sourceProcedureRef,

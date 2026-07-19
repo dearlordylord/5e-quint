@@ -8,6 +8,7 @@ export function battleActTimelineLabel(
 ): string | null {
   return Match.value(presentation).pipe(
     Match.when({ kind: "intrinsic" }, () => null),
+    Match.when({ kind: "attack" }, ({ name }) => name),
     Match.when({ kind: "spell" }, ({ invocation }) =>
       selectedContent?.kind === "spell" &&
       selectedContent.id === invocation.spellId

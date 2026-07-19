@@ -269,11 +269,36 @@ function composeIntrinsicAct(
   act: BattleActDiscoveryCandidate,
   subject: IntrinsicBattleSubject,
 ): AvailableBattleAct {
-  const text = intrinsicActPresentationText(state, subject);
   return {
     ...act,
-    ...text,
+    ...intrinsicActPresentation(state, subject),
     subject,
+  };
+}
+
+function intrinsicActPresentation(
+  state: BattleState,
+  subject: IntrinsicBattleSubject,
+): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> {
+  if (subject.tag === "action" && subject.action === "attack") {
+    const attack = attackActionOptionsForActor(state, subject.actorId).find(
+      (candidate) => candidate.procedureRef === subject.procedureRef,
+    );
+    if (attack !== undefined) {
+      const name = attackActionOptionPresentationName(
+        state,
+        subject.actorId,
+        attack,
+      );
+      return {
+        label: "Attack",
+        summary: `Take the Attack action with ${name}.`,
+        presentation: { kind: "attack", name },
+      };
+    }
+  }
+  return {
+    ...intrinsicActPresentationText(state, subject),
     presentation: { kind: "intrinsic" },
   };
 }
@@ -282,22 +307,6 @@ function intrinsicActPresentationText(
   state: BattleState,
   subject: IntrinsicBattleSubject,
 ): { readonly label: string; readonly summary: string } {
-  if (subject.tag === "action" && subject.action === "attack") {
-    const attack = attackActionOptionsForActor(state, subject.actorId).find(
-      (candidate) => candidate.procedureRef === subject.procedureRef,
-    );
-    if (attack !== undefined) {
-      const attackName = attackActionOptionPresentationName(
-        state,
-        subject.actorId,
-        attack,
-      );
-      return {
-        label: "Attack",
-        summary: `Take the Attack action with ${attackName}.`,
-      };
-    }
-  }
   if (subject.tag === "action" && subject.action === "escapeSpellRestraint") {
     const effect = [...state.combatants.values()].flatMap((combatant) => {
       const candidate = spellActiveEffectForExecutionRef(

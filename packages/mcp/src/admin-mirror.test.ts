@@ -1,4 +1,6 @@
 import {
+  battleAttackExecutionScopeRef,
+  battleAttackProcedureExecutionRef,
   battleCharacterExecutionScopeRef,
   battleExecutionScopeOrdinal,
   battleId,
@@ -149,6 +151,59 @@ describe("Admin Mirror publisher", () => {
     expect(resolvedEntry.actionSummary).toBe(
       "presentation-actor casts Hunter's Mark",
     );
+  });
+
+  test("joins attack timeline text from outer presentation without authored execution selectors", () => {
+    const actorId = combatantId("presentation-attacker");
+    const procedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battleId("presentation-attack-battle"),
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const pendingProjection = projectionWithTransientBattleFills({
+      fills: [],
+      presentation: { kind: "attack", name: "Synthetic Arc" },
+      subject: {
+        tag: "action",
+        action: "attack",
+        actorId,
+        procedureRef,
+        attackAbility: "dex",
+        attackDamageType: "force",
+      },
+    });
+
+    expect(
+      pendingProjection.session.transientBattleFills?.subject,
+    ).not.toHaveProperty("attackName");
+    const pendingEntry = createAdminMirrorPresentationTimelineEntry(
+      envelope({ sequence: 5, projection: pendingProjection }),
+      102,
+      envelope({
+        sequence: 4,
+        projection: projectionWithTransientBattleFills(null),
+      }),
+    );
+    const resolvedEntry = createAdminMirrorPresentationTimelineEntry(
+      envelope({
+        sequence: 6,
+        projection: projectionWithTransientBattleFills(null),
+      }),
+      103,
+      envelope({ sequence: 5, projection: pendingProjection }),
+    );
+
+    expect(pendingEntry.actionSummary).toBe(
+      "presentation-attacker attacks with Synthetic Arc",
+    );
+    expect(resolvedEntry.actionSummary).toBe(
+      "presentation-attacker resolves Synthetic Arc",
+    );
+    expect(pendingEntry.actionSummary).not.toContain("undefined");
+    expect(resolvedEntry.actionSummary).not.toContain("undefined");
   });
 });
 

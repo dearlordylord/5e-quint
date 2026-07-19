@@ -605,7 +605,6 @@ export function spellTargetListHole(
   );
   return {
     kind: "spellTargetList",
-    procedure: invocation.procedure,
     holeId: spellTargetListHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} targets`,

@@ -136,7 +136,11 @@ function selectedContentMatchesPresentation(
 ): boolean {
   const presentation =
     envelope.projection.session.transientBattleFills?.presentation;
-  if (presentation === undefined || presentation.kind === "intrinsic") {
+  if (
+    presentation === undefined ||
+    presentation.kind === "intrinsic" ||
+    presentation.kind === "attack"
+  ) {
     return envelope.selectedContent === null;
   }
   const selectedContent = envelope.selectedContent;

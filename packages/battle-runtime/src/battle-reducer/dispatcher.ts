@@ -6453,7 +6453,6 @@ function spellDamageRerollDecisionsEqual(
       const other = b.dice[index];
       return (
         other !== undefined &&
-        die.dieRef === other.dieRef &&
         die.original === other.original &&
         die.replacement === other.replacement
       );

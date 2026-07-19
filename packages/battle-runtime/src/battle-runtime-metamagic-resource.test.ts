@@ -76,7 +76,7 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { battleSpellDamageDieExecutionRef, spellId } from "./identity.ts";
+import { spellId } from "./identity.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,
@@ -1773,8 +1773,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
             effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
             dice: [
               {
-                groupIndex: 0,
-                resultIndex: 0,
+                original: DieRollResult(8),
+                replacement: DieRollResult(1),
+              },
+              {
                 original: DieRollResult(8),
                 replacement: DieRollResult(1),
               },
@@ -1785,7 +1787,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     ).state;
 
     expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
-    expect(resolved.combatants.get(skeletonId)?.hp).toBe(1);
+    expect(resolved.combatants.get(skeletonId)?.hp).toBe(8);
   });
 
   test("Empowered Spell stays closed for spell attack damage carrying marked riders", () => {
@@ -1879,14 +1881,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
             effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
             dice: [
               {
-                groupIndex: 0,
-                resultIndex: 0,
                 original: DieRollResult(4),
                 replacement: DieRollResult(8),
               },
               {
-                groupIndex: 0,
-                resultIndex: 1,
                 original: DieRollResult(3),
                 replacement: DieRollResult(8),
               },
@@ -1932,8 +1930,6 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
             effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
             dice: [
               {
-                groupIndex: 0,
-                resultIndex: 1,
                 original: DieRollResult(8),
                 replacement: DieRollResult(1),
               },
@@ -1956,8 +1952,6 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         roll: [[4, 3]],
         rerolledDice: [
           {
-            groupIndex: 0,
-            resultIndex: 0,
             original: DieRollResult(4),
             replacement: DieRollResult(8),
           },
@@ -1975,8 +1969,6 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         roll: [[4, 3]],
         rerolledDice: [
           {
-            groupIndex: 0,
-            resultIndex: 0,
             original: DieRollResult(4),
             replacement: DieRollResult(8),
           },
@@ -1993,9 +1985,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         roll: [[4, 3]],
         rerolledDice: [
           {
-            groupIndex: 0,
-            resultIndex: 0,
-            original: DieRollResult(3),
+            original: DieRollResult(7),
             replacement: DieRollResult(8),
           },
         ],
@@ -2011,26 +2001,18 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         roll: [[1, 2, 3, 4]],
         rerolledDice: [
           {
-            groupIndex: 0,
-            resultIndex: 0,
             original: DieRollResult(1),
             replacement: DieRollResult(8),
           },
           {
-            groupIndex: 0,
-            resultIndex: 1,
             original: DieRollResult(2),
             replacement: DieRollResult(8),
           },
           {
-            groupIndex: 0,
-            resultIndex: 2,
             original: DieRollResult(3),
             replacement: DieRollResult(8),
           },
           {
-            groupIndex: 0,
-            resultIndex: 3,
             original: DieRollResult(4),
             replacement: DieRollResult(8),
           },
@@ -2117,8 +2099,6 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
             effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
             dice: [
               {
-                groupIndex: 0,
-                resultIndex: 0,
                 original: DieRollResult(4),
                 replacement: DieRollResult(8),
               },
@@ -2582,8 +2562,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
               effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
               dice: [
                 {
-                  dieRef: battleSpellDamageDieExecutionRef(damage.holeId, 0, 0),
-                  original: DieRollResult(3),
+                  original: DieRollResult(7),
                   replacement: DieRollResult(1),
                 },
               ],
@@ -2811,6 +2790,10 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       label: "Burning Hands Heightened Spell target",
       choices: expect.arrayContaining([fighterId, skeletonId]),
     });
+    expect(String(heightenedHole.holeId)).toContain(
+      String(act.subject.procedureRef),
+    );
+    expect(String(heightenedHole.holeId)).not.toContain("burning_hands");
     const heightenedTarget = targetFill(heightenedHole, skeletonId);
     const awaitingSave = resolveBattleSubject({
       state,
@@ -4201,14 +4184,10 @@ function empoweredDamageRollFill(
   > & {
     readonly dice: readonly [
       {
-        readonly groupIndex: number;
-        readonly resultIndex: number;
         readonly original: ReturnType<typeof DieRollResult>;
         readonly replacement: ReturnType<typeof DieRollResult>;
       },
       ...{
-        readonly groupIndex: number;
-        readonly resultIndex: number;
         readonly original: ReturnType<typeof DieRollResult>;
         readonly replacement: ReturnType<typeof DieRollResult>;
       }[],
@@ -4220,12 +4199,7 @@ function empoweredDamageRollFill(
     throw new Error("Expected rolledDice fill.");
   }
   const [firstDie, ...remainingDice] = spellDamageReroll.dice;
-  const executionDie = (die: typeof firstDie) => ({
-    dieRef: battleSpellDamageDieExecutionRef(
-      hole.holeId,
-      die.groupIndex,
-      die.resultIndex,
-    ),
+  const rerolledDie = (die: typeof firstDie) => ({
     original: die.original,
     replacement: die.replacement,
   });
@@ -4233,7 +4207,7 @@ function empoweredDamageRollFill(
     ...damageRoll,
     spellDamageReroll: {
       ...spellDamageReroll,
-      dice: [executionDie(firstDie), ...remainingDice.map(executionDie)],
+      dice: [rerolledDie(firstDie), ...remainingDice.map(rerolledDie)],
     },
   };
 }

@@ -1,4 +1,5 @@
 export {
+  BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
   BattleDancingLightId,
@@ -12,6 +13,8 @@ export {
   BattleTablePositionId,
   CombatantId,
   SpellId,
+  battleAttackExecutionScopeRef,
+  battleAttackProcedureExecutionRef,
   battleAreaId,
   battleCharacterExecutionScopeRef,
   battleExecutionScopeOrdinal,

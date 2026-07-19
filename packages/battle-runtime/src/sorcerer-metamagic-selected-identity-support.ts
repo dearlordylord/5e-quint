@@ -1,6 +1,5 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { DieRollResult, resourceCount } from "@dnd/shared/types";
-import { battleSpellDamageDieExecutionRef } from "./identity.ts";
 
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
@@ -371,11 +370,6 @@ function resolveEmpoweredRayOfFrostSubject(state: BattleState) {
             effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
             dice: [
               {
-                dieRef: battleSpellDamageDieExecutionRef(
-                  damageHole.holeId,
-                  0,
-                  0,
-                ),
                 original: DieRollResult(8),
                 replacement: DieRollResult(1),
               },

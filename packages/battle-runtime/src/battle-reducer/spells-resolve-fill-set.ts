@@ -591,7 +591,7 @@ export function spellFillSet(
       continue;
     }
 
-    if (fill.holeId === heightenedSpellTargetChoiceHoleId(invocation)) {
+    if (fill.holeId === heightenedSpellTargetChoiceHoleId(sourceProcedureRef)) {
       if (fill.kind !== "targetChoice") {
         return {
           tag: "invalid",

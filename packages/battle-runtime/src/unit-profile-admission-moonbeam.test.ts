@@ -1,5 +1,4 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleSpellDamageDieExecutionRef } from "./identity.ts";
 import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
@@ -155,18 +154,18 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (Either.isLeft(decodedHole)) {
       throw new Error(String(decodedHole.left));
     }
-    if (!("spell" in decodedHole.right)) {
-      throw new Error("Expected decoded Moonbeam area hole to carry a spell.");
-    }
-    expect(decodedHole.right.spell).toMatchObject({
-      procedure: "moonbeam",
-      targeting: {
-        kind: "pointOriginCylinder",
-        radiusFeet: movementFeet(5),
-        heightFeet: movementFeet(40),
-      },
-      damage: { expr: { dice: 2, dieSize: 10 }, damageType: "radiant" },
-    });
+    expect(decodedHole.right).toEqual(
+      expect.objectContaining({
+        kind: "spellAreaChoice",
+        sourceProcedureRef: act.subject.procedureRef,
+        area: {
+          kind: "pointOriginCylinder",
+          radiusFeet: movementFeet(5),
+          heightFeet: movementFeet(40),
+        },
+      }),
+    );
+    expect(decodedHole.right).not.toHaveProperty("spell");
 
     const resolved = resolveBattleSubject({
       state,
@@ -331,7 +330,6 @@ describe("L12G deterministic Moonbeam admission", () => {
               effectKind: "damage_dice_reroll",
               dice: [
                 {
-                  dieRef: battleSpellDamageDieExecutionRef(damage.holeId, 0, 0),
                   original: DieRollResult(5),
                   replacement: DieRollResult(1),
                 },

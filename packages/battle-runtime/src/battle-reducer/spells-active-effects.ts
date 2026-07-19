@@ -1218,7 +1218,7 @@ function dancingLightsForCastPlacement(
       form: "combinedMediumForm",
       light: {
         lightId: battleDancingLightId(
-          `${actorId}:${invocation.spell.id}:combinedMediumForm:1`,
+          `${actorId}:${invocation.sourceProcedureRef}:combinedMediumForm:1`,
         ),
         positionId: placement.light.positionId,
       },
@@ -1231,7 +1231,7 @@ function dancingLightsForCastPlacement(
     const lights = dancingLightListFromArray(
       placement.lights.map((light, index) => ({
         lightId: battleDancingLightId(
-          `${actorId}:${invocation.spell.id}:separateLights:${index + 1}`,
+          `${actorId}:${invocation.sourceProcedureRef}:separateLights:${index + 1}`,
         ),
         positionId: light.positionId,
       })),
@@ -1584,70 +1584,70 @@ export function applyFailedSaveSpellConditionEffects(
           return null;
         }
         return {
-              owner: allocation.owner,
-              effect: {
-                kind: "spellCondition" as const,
-                effectRef: allocation.effectRef,
-                sourceProcedureRef: invocation.sourceProcedureRef,
-                sourceCombatantId: actorId,
-                condition: appliedEffect.condition,
-                conditionHadNonSpellSource:
-                  conditionHadNonSpellSourceBeforeSpellEffect(
-                    target,
-                    appliedEffect.condition,
-                  ),
-                escape: appliedEffect.escape,
-                turnStartDamage: appliedEffect.turnStartDamage,
-                expiresAt,
-              } satisfies BattleActiveEffect,
-            };
+          owner: allocation.owner,
+          effect: {
+            kind: "spellCondition" as const,
+            effectRef: allocation.effectRef,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            sourceCombatantId: actorId,
+            condition: appliedEffect.condition,
+            conditionHadNonSpellSource:
+              conditionHadNonSpellSourceBeforeSpellEffect(
+                target,
+                appliedEffect.condition,
+              ),
+            escape: appliedEffect.escape,
+            turnStartDamage: appliedEffect.turnStartDamage,
+            expiresAt,
+          } satisfies BattleActiveEffect,
+        };
       }
       return isCountedSpellConditionRepeatSave(appliedEffect.repeatSave)
-          ? {
-              owner: target,
-              effect: {
-                kind: "spellConditionCountedEndTurnSave" as const,
-                sourceProcedureRef: invocation.sourceProcedureRef,
-                sourceCombatantId: actorId,
-                condition: appliedEffect.condition,
-                conditionHadNonSpellSource:
-                  conditionHadNonSpellSourceBeforeSpellEffect(
-                    target,
-                    appliedEffect.condition,
-                  ),
-                save: appliedEffect.repeatSave.save,
-                successes: 0,
-                failures: 0,
-                successThreshold: appliedEffect.repeatSave.successThreshold,
-                failureThreshold: appliedEffect.repeatSave.failureThreshold,
-                savingThrowDisadvantageAbility:
-                  savingThrowDisadvantageAbilityChoice ??
-                  appliedEffect.repeatSave.savingThrowDisadvantageAbilities[0],
-                lockedIn: false,
-                expiresAt,
-              } satisfies BattleActiveEffect,
-            }
-          : {
-              owner: target,
-              effect: {
-                kind: "spellConditionEndTurnSave" as const,
-                sourceProcedureRef: invocation.sourceProcedureRef,
-                sourceCombatantId: actorId,
-                condition: appliedEffect.condition,
-                conditionHadNonSpellSource:
-                  conditionHadNonSpellSourceBeforeSpellEffect(
-                    target,
-                    appliedEffect.condition,
-                  ),
-                heightenedSpellTargetDisadvantage:
-                  spellConditionEndTurnSaveHeightenedRollMode(
-                    targetId,
-                    heightenedSpellTargetId,
-                  ),
-                save: appliedEffect.repeatSave,
-                expiresAt,
-              } satisfies BattleActiveEffect,
-            };
+        ? {
+            owner: target,
+            effect: {
+              kind: "spellConditionCountedEndTurnSave" as const,
+              sourceProcedureRef: invocation.sourceProcedureRef,
+              sourceCombatantId: actorId,
+              condition: appliedEffect.condition,
+              conditionHadNonSpellSource:
+                conditionHadNonSpellSourceBeforeSpellEffect(
+                  target,
+                  appliedEffect.condition,
+                ),
+              save: appliedEffect.repeatSave.save,
+              successes: 0,
+              failures: 0,
+              successThreshold: appliedEffect.repeatSave.successThreshold,
+              failureThreshold: appliedEffect.repeatSave.failureThreshold,
+              savingThrowDisadvantageAbility:
+                savingThrowDisadvantageAbilityChoice ??
+                appliedEffect.repeatSave.savingThrowDisadvantageAbilities[0],
+              lockedIn: false,
+              expiresAt,
+            } satisfies BattleActiveEffect,
+          }
+        : {
+            owner: target,
+            effect: {
+              kind: "spellConditionEndTurnSave" as const,
+              sourceProcedureRef: invocation.sourceProcedureRef,
+              sourceCombatantId: actorId,
+              condition: appliedEffect.condition,
+              conditionHadNonSpellSource:
+                conditionHadNonSpellSourceBeforeSpellEffect(
+                  target,
+                  appliedEffect.condition,
+                ),
+              heightenedSpellTargetDisadvantage:
+                spellConditionEndTurnSaveHeightenedRollMode(
+                  targetId,
+                  heightenedSpellTargetId,
+                ),
+              save: appliedEffect.repeatSave,
+              expiresAt,
+            } satisfies BattleActiveEffect,
+          };
     })();
     if (selectedEffect === null) continue;
     const activeEffects = [
@@ -2984,29 +2984,29 @@ export function applyCommandPendingEffects(
     nextState = {
       ...allocation.state,
       combatants: new Map(allocation.state.combatants).set(targetId, {
-      ...allocation.owner,
-      activeEffects: [
-        ...allocation.owner.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "commandPending" &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-              effect.sourceCombatantId === actorId
-            ),
-        ),
-        {
-          kind: "commandPending",
-          effectRef: allocation.effectRef,
-          option,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-          expiresAt: endOfNextTurnExpiration(
-            state,
-            targetId,
-            END_OF_NEXT_TURN_DURING_TURN,
+        ...allocation.owner,
+        activeEffects: [
+          ...allocation.owner.activeEffects.filter(
+            (effect) =>
+              !(
+                effect.kind === "commandPending" &&
+                effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+                effect.sourceCombatantId === actorId
+              ),
           ),
-        },
-      ],
+          {
+            kind: "commandPending",
+            effectRef: allocation.effectRef,
+            option,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            sourceCombatantId: actorId,
+            expiresAt: endOfNextTurnExpiration(
+              state,
+              targetId,
+              END_OF_NEXT_TURN_DURING_TURN,
+            ),
+          },
+        ],
       }),
     };
   }

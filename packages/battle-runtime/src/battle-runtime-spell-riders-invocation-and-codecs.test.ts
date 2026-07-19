@@ -811,14 +811,16 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     });
   });
 
-  test("spell target-list codec preserves the willing-target evidence request", () => {
+  test("spell target-list codec preserves willing-target evidence without a second procedure identity", () => {
     const decoded = Schema.decodeUnknownEither(BattleHoleSchema)({
       kind: "spellTargetList",
       holeId: holeId("battle:test:willing-target-list"),
       holeInstanceKey: holeInstanceKey("battle:test:willing-target-list"),
       label: "Synthetic willing targets",
-      sourceProcedureRef: battleProcedureExecutionRefForTest("willing-target-list"),
-      procedure: "jumpMovementReplacement",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "willing-target-list",
+      ),
+      procedure: "saveGatedDamage",
       minTargets: 1,
       maxTargets: 1,
       spatialTargeting: { kind: "individualTargets" },
@@ -832,6 +834,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       kind: "spellTargetList",
       requiresKnownWillingTargets: true,
     });
+    expect(decoded.right).not.toHaveProperty("procedure");
   });
 
   test("spell saving throw outcome codec rejects incomplete Grease area facts", () => {

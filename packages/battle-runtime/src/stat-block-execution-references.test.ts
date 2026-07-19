@@ -36,7 +36,6 @@ import {
   BattleStatBlockExecutionScopeRef,
   battleCharacterExecutionScopeRef,
   battleActiveEffectExecutionRef,
-  battleSpellDamageDieExecutionRef,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
@@ -127,10 +126,6 @@ describe("Stat Block execution references", () => {
           authoredId: "synthetic-effect",
         }),
       ),
-    ).toThrow();
-
-    expect(() =>
-      battleSpellDamageDieExecutionRef("damage-hole", -1, 0),
     ).toThrow();
   });
 

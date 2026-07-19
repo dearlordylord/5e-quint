@@ -295,6 +295,59 @@ describe("character attack execution references", () => {
     ).toBe(true);
   });
 
+  test("rejects snapshot Acts whose holes contain an unbound execution reference", () => {
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(identicalDaggerBattle()),
+    );
+    const other = startBattleRight({
+      battleId: battleId("battle-other-hole-execution-reference"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const foreignProcedureRef = fighterOrigin(other).attack?.procedureRef;
+    if (foreignProcedureRef === undefined) {
+      throw new Error("Expected a foreign attack procedure reference.");
+    }
+    const actWithHole = encoded.acts.find((act) =>
+      act.initialHoles.some(
+        (hole) => hole.kind === "targetChoice" && hole.attack !== undefined,
+      ),
+    );
+    if (actWithHole === undefined) {
+      throw new Error("Expected an Act with an initial hole.");
+    }
+    const forged = {
+      ...encoded,
+      acts: encoded.acts.map((act) =>
+        act !== actWithHole
+          ? act
+          : {
+              ...act,
+              initialHoles: act.initialHoles.map((hole) =>
+                hole.kind !== "targetChoice" || hole.attack === undefined
+                  ? hole
+                  : {
+                      ...hole,
+                      attack: {
+                        ...hole.attack,
+                        selection: {
+                          ...hole.attack.selection,
+                          procedureRef: foreignProcedureRef,
+                        },
+                      },
+                    },
+              ),
+            },
+      ),
+    };
+
+    expect(
+      Either.isLeft(Schema.decodeUnknownEither(BattleSnapshotSchema)(forged)),
+    ).toBe(true);
+  });
+
   test("codecs preserve complete ranged and Opportunity Attack selections", () => {
     const state = identicalDaggerBattle();
     const attack = fighterOrigin(state).attack;

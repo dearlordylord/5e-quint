@@ -400,7 +400,10 @@ function saveMetamagicSelectionFills(
       carefulSpellProtectedTargetIds = fill.value.targetIds;
       continue;
     }
-    if (fill.holeId === heightenedSpellTargetChoiceHoleId(invocation)) {
+    if (
+      fill.holeId ===
+      heightenedSpellTargetChoiceHoleId(invocation.sourceProcedureRef)
+    ) {
       if (fill.kind !== "targetChoice") {
         return {
           tag: "invalid",

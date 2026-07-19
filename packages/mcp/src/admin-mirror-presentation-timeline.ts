@@ -215,7 +215,11 @@ function pendingAction(
     targetId === null ? null : displayNameForCombatant(projection, targetId);
 
   if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = subject.attackName;
+    const attackName = battleActTimelineLabel(
+      pending.presentation,
+      selectedContent,
+    );
+    if (attackName === null) return null;
     if (hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -299,7 +303,11 @@ function resolvedAction(
     targetId === null ? null : displayNameForCombatant(projection, targetId);
 
   if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = subject.attackName;
+    const attackName = battleActTimelineLabel(
+      pending.presentation,
+      selectedContent,
+    );
+    if (attackName === null) return null;
     if (changes.length === 0 && hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:

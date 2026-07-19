@@ -97,7 +97,6 @@ describe("Sanctuary targeting interdiction", () => {
     }
     expect(decoded.right).toMatchObject({
       kind: "spellTargetList",
-      procedure: "sanctuaryTargetingInterdiction",
     });
   });
 

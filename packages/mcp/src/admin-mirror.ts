@@ -175,6 +175,7 @@ function selectedContentForProjection(
   if (presentation === null) return Either.right(null);
   return Match.value(presentation).pipe(
     Match.when({ kind: "intrinsic" }, () => Either.right(null)),
+    Match.when({ kind: "attack" }, () => Either.right(null)),
     Match.when({ kind: "spell" }, ({ invocation }) =>
       Option.match(root.unitLibrary.getUnit(invocation.spellId), {
         onNone: () =>

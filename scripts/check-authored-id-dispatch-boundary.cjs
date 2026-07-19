@@ -80,6 +80,16 @@ const INLINE_ALLOWLIST_PATH_RULES = [
 
 const INLINE_ALLOWLIST_COMMENT = /\bauthored-id-dispatch-allow:\s*([a-z0-9-]+)/;
 const IDENTIFIER_EXPRESSION_PATTERN = String.raw`[A-Za-z_$][\w$]*(?:(?:\.|\?\.)[A-Za-z_$][\w$]*)*`;
+const AUTHORED_SPELL_RUNTIME_KEY_PATTERN = /invocation\.spell\.id/;
+const POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN =
+  /BattleSpellDamageDieExecutionRef|groupOrdinal|dieOrdinal|selectedDieOrdinal/;
+const EXECUTION_SUBJECT_ATTACK_PRESENTATION_PATTERN = /subject\.attackName/;
+const REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN =
+  /kind:\s*Schema\.Literal\("spellTargetList"\)[\s\S]{0,160}procedure:/;
+const REDUNDANT_SPELL_TARGET_LIST_TYPE_PROCEDURE_PATTERN =
+  /type BattleSpellTargetListHole[\s\S]{0,500}\bprocedure:/;
+const POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN =
+  /type BattleSpellDamageDieReroll[\s\S]{0,300}\b(?:dieRef|groupOrdinal|dieOrdinal):/;
 
 function escapeForRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -346,6 +356,38 @@ function assertBattleReplayExecutionBoundary() {
     },
     {
       relativePath:
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+      patterns: [AUTHORED_SPELL_RUNTIME_KEY_PATTERN],
+      sliceStart: "function dancingLightsForCastPlacement",
+      sliceEnd: "function dancingLightsForReposition",
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+      patterns: [AUTHORED_SPELL_RUNTIME_KEY_PATTERN],
+      sliceStart: "const HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX",
+      sliceEnd: "export function spellSavingThrowAbility",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+      patterns: [POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN],
+      sliceStart: "export function effectiveEmpoweredSpellDamageRoll",
+      sliceEnd: "export function seekingSpellRerollApplicationForAttackRoll",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      patterns: [REDUNDANT_SPELL_TARGET_LIST_TYPE_PROCEDURE_PATTERN],
+      sliceStart: "export type BattleSpellTargetListHole",
+      sliceEnd: "export type BattleAttackRollHole",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      patterns: [POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN],
+      sliceStart: "export type BattleSpellDamageDieReroll",
+      sliceEnd: "export type BattleSpellDamageRerollDecision",
+    },
+    {
+      relativePath:
         "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
       patterns: [/objectContactDamageEffectId/],
     },
@@ -377,7 +419,19 @@ function assertBattleReplayExecutionBoundary() {
       patterns: [
         /BattleActiveEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
         /BattleSpellDamageDieExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
+        POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN,
       ],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+      patterns: [REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN],
+      sliceStart: "const BattleHolePayloadSchema",
+      sliceEnd: "export const BattleHoleSchema",
+    },
+    {
+      relativePath: "packages/mcp/src/admin-mirror-presentation-timeline.ts",
+      patterns: [EXECUTION_SUBJECT_ATTACK_PRESENTATION_PATTERN],
     },
   ];
   const failures = [];
@@ -593,6 +647,33 @@ function assertActPresentationGateSelfTests() {
       "synthetic-presentation-bypass.ts:5",
     ],
   });
+}
+
+function assertBattleReplayPatternSelfTests() {
+  assert.match(
+    "battleDancingLightId(`${invocation.spell.id}:1`)",
+    AUTHORED_SPELL_RUNTIME_KEY_PATTERN,
+  );
+  assert.match(
+    "type DieRef = { groupOrdinal: number; dieOrdinal: number }",
+    POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN,
+  );
+  assert.match(
+    "const name = subject.attackName",
+    EXECUTION_SUBJECT_ATTACK_PRESENTATION_PATTERN,
+  );
+  assert.match(
+    'kind: Schema.Literal("spellTargetList"), sourceProcedureRef: Ref, procedure: Procedure',
+    REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN,
+  );
+  assert.match(
+    "type BattleSpellTargetListHole = { procedure: Procedure }",
+    REDUNDANT_SPELL_TARGET_LIST_TYPE_PROCEDURE_PATTERN,
+  );
+  assert.match(
+    "type BattleSpellDamageDieReroll = { dieRef: Ref }",
+    POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN,
+  );
 }
 
 function countChar(text, char) {
@@ -1938,6 +2019,7 @@ function runSelfTest() {
 function main() {
   assertBattleReplayExecutionBoundary();
   assertActPresentationGateSelfTests();
+  assertBattleReplayPatternSelfTests();
   assertNoReducerOwnedActPresentation();
   runSelfTest();
 

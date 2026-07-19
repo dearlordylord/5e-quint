@@ -1023,60 +1023,60 @@ module battleRuntimeMetamagicTests {
 
   pure val empoweredDamageDieSize = 8
 
-  pure val empoweredSingleDamageReroll: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] =
-    Set({
-      selectedDieOrdinal: 0,
+  pure val empoweredSingleDamageReroll: BattleRuntimeEmpoweredSpellDamageDieReroll -> int =
+    Map({
       original: 8,
       replacement: 1,
-    })
+    } -> 1)
 
-  pure val empoweredOverLimitDamageRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] =
-    Set(
+  pure val empoweredDuplicateDamageRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int =
+    Map({
+      original: 8,
+      replacement: 1,
+    } -> 2)
+
+  pure val empoweredOverLimitDamageRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int =
+    Map(
       {
-        selectedDieOrdinal: 0,
         original: 4,
         replacement: 1,
-      },
+      } -> 1,
       {
-        selectedDieOrdinal: 1,
         original: 3,
         replacement: 1,
-      },
+      } -> 1,
       {
-        selectedDieOrdinal: 2,
         original: 2,
         replacement: 1,
-      },
+      } -> 1,
       {
-        selectedDieOrdinal: 3,
         original: 1,
         replacement: 1,
-      },
+      } -> 1,
     )
 
-  pure val empoweredInvalidReplacementDamageReroll: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] =
-    Set({
-      selectedDieOrdinal: 0,
+  pure val empoweredInvalidReplacementDamageReroll: BattleRuntimeEmpoweredSpellDamageDieReroll -> int =
+    Map({
       original: 8,
       replacement: -1,
-    })
+    } -> 1)
 
-  pure val empoweredEmptyDamageRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] = Set()
+  pure val empoweredEmptyDamageRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int = Map()
 
   run test_empowered_spell_rerolls_damage_dice_and_spends_one_point = {
     val result = resolveEmpoweredSpellDamageReroll(
       EmpoweredSpellAttackDamageProcedure,
       16,
       empoweredDamageDieSize,
-      empoweredSingleDamageReroll,
+      empoweredDuplicateDamageRerolls,
       3,
       Set(empoweredSpellMetamagicFact),
       Set(),
       4,
     )
     all {
-      assert(result.finalDamageTotal == 9),
-      assert(result.selectedDice == 1),
+      assert(result.finalDamageTotal == 2),
+      assert(result.selectedDice == 2),
       assert(result.sorceryPointsRemaining == 3),
     }
   }
