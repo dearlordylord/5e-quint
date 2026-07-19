@@ -683,6 +683,15 @@ function propertyNameText(name) {
 }
 
 function propertyAccessPath(node) {
+  if (
+    ts.isAsExpression(node) ||
+    ts.isSatisfiesExpression(node) ||
+    ts.isParenthesizedExpression(node) ||
+    ts.isNonNullExpression(node) ||
+    ts.isTypeAssertionExpression(node)
+  ) {
+    return propertyAccessPath(node.expression);
+  }
   if (ts.isIdentifier(node)) return [node.text];
   if (ts.isPropertyAccessExpression(node)) {
     const owner = propertyAccessPath(node.expression);
@@ -747,7 +756,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
     ts.ScriptKind.TS,
   );
   const violations = [];
-  const aliases = new Map();
+  const aliasScopes = [new Map()];
   const positionalIdentityNames = new Set([
     "BattleSpellDamageDieExecutionRef",
     "battleSpellDamageDieExecutionRef",
@@ -768,36 +777,105 @@ function battleReplayAstViolations(sourceText, relativePath) {
     if (path === null) return null;
     const resolved = [...path];
     const visited = new Set();
-    while (resolved.length > 0 && aliases.has(resolved[0])) {
+    while (resolved.length > 0) {
       const alias = resolved[0];
       if (visited.has(alias)) break;
+      let aliasPath;
+      let found = false;
+      for (let index = aliasScopes.length - 1; index >= 0; index -= 1) {
+        if (aliasScopes[index].has(alias)) {
+          aliasPath = aliasScopes[index].get(alias);
+          found = true;
+          break;
+        }
+      }
+      if (!found || aliasPath === null) break;
       visited.add(alias);
-      resolved.splice(0, 1, ...aliases.get(alias));
+      resolved.splice(0, 1, ...aliasPath);
     }
     return resolved;
   }
 
-  function recordAliases(node) {
-    if (!ts.isVariableDeclaration(node) || node.initializer === undefined)
-      return;
-    const initializerPath = resolvedPropertyAccessPath(node.initializer);
-    if (initializerPath === null) return;
-    if (ts.isIdentifier(node.name)) {
-      aliases.set(node.name.text, initializerPath);
+  function setAlias(name, path) {
+    aliasScopes.at(-1).set(name, path);
+  }
+
+  function invalidateBindingName(name) {
+    if (ts.isIdentifier(name)) {
+      setAlias(name.text, null);
       return;
     }
-    if (!ts.isObjectBindingPattern(node.name)) return;
-    for (const element of node.name.elements) {
-      if (!ts.isIdentifier(element.name)) continue;
-      const property = propertyNameText(element.propertyName ?? element.name);
-      if (property !== null) {
-        aliases.set(element.name.text, [...initializerPath, property]);
+    if (ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name)) {
+      for (const element of name.elements) {
+        if (ts.isBindingElement(element)) invalidateBindingName(element.name);
       }
     }
   }
 
+  function recordAliases(node) {
+    if (!ts.isVariableDeclaration(node)) return;
+    if (node.initializer === undefined) {
+      invalidateBindingName(node.name);
+      return;
+    }
+    const initializerPath = resolvedPropertyAccessPath(node.initializer);
+    if (initializerPath === null) {
+      invalidateBindingName(node.name);
+      return;
+    }
+    if (ts.isIdentifier(node.name)) {
+      setAlias(node.name.text, initializerPath);
+      return;
+    }
+    if (!ts.isObjectBindingPattern(node.name)) {
+      invalidateBindingName(node.name);
+      return;
+    }
+    for (const element of node.name.elements) {
+      if (!ts.isIdentifier(element.name)) {
+        invalidateBindingName(element.name);
+        continue;
+      }
+      const property = propertyNameText(element.propertyName ?? element.name);
+      if (property !== undefined) {
+        setAlias(element.name.text, [...initializerPath, property]);
+      }
+    }
+  }
+
+  function recordAssignment(node) {
+    if (
+      !ts.isBinaryExpression(node) ||
+      node.operatorToken.kind !== ts.SyntaxKind.EqualsToken ||
+      !ts.isIdentifier(node.left)
+    ) {
+      return;
+    }
+    const path = resolvedPropertyAccessPath(node.right);
+    for (let index = aliasScopes.length - 1; index >= 0; index -= 1) {
+      if (aliasScopes[index].has(node.left.text)) {
+        aliasScopes[index].set(node.left.text, path);
+        return;
+      }
+    }
+    setAlias(node.left.text, path);
+  }
+
   function visit(node) {
+    const createsScope =
+      node !== source &&
+      (ts.isFunctionLike(node) || ts.isBlock(node) || ts.isCatchClause(node));
+    if (createsScope) aliasScopes.push(new Map());
+    if (ts.isFunctionLike(node)) {
+      for (const parameter of node.parameters) {
+        invalidateBindingName(parameter.name);
+      }
+    }
+    if (ts.isCatchClause(node) && node.variableDeclaration !== undefined) {
+      invalidateBindingName(node.variableDeclaration.name);
+    }
     recordAliases(node);
+    recordAssignment(node);
     const pathSegments = resolvedPropertyAccessPath(node);
     if (
       pathSegments !== null &&
@@ -865,6 +943,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
       add(node, "damage-die replay identity is positional");
     }
     ts.forEachChild(node, visit);
+    if (createsScope) aliasScopes.pop();
   }
   visit(source);
   return violations;
@@ -953,6 +1032,40 @@ function assertBattleReplayAstSelfTests() {
       violation.endsWith("damage-die replay identity is positional"),
     ),
     "Battle replay AST self-test missed positional identity outside metamagic.ts.",
+  );
+  const scopedAliasFixture = `
+    function runtimeKey(invocation: Invocation) {
+      const spell = invocation.spell as Spell
+      return \`${"${spell.id}"}:effect\`
+    }
+    function presentation(spell: SelectedSpell, s: Selection) {
+      return [spell.id, s.attackName]
+    }
+  `;
+  assert.equal(
+    battleReplayAstViolations(
+      scopedAliasFixture,
+      "packages/battle-runtime/src/battle-reducer/alias-scope.ts",
+    ).filter((violation) =>
+      violation.endsWith("authored spell id constructs a runtime key"),
+    ).length,
+    1,
+    "Battle replay AST aliases must respect function parameter shadowing and type wrappers.",
+  );
+  const reassignedAliasFixture = `
+    let spell = invocation.spell
+    spell = selectedSpell
+    const key = \`${"${spell.id}"}:effect\`
+  `;
+  assert.equal(
+    battleReplayAstViolations(
+      reassignedAliasFixture,
+      "packages/battle-runtime/src/battle-reducer/alias-assignment.ts",
+    ).filter((violation) =>
+      violation.endsWith("authored spell id constructs a runtime key"),
+    ).length,
+    0,
+    "Battle replay AST aliases must invalidate on reassignment.",
   );
 }
 

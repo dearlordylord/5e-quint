@@ -6560,7 +6560,9 @@ function serializedSourceProcedureRefsAreOwned(input: {
     ) {
       return false;
     }
-    const ownerId = serializedProcedureSourceOwnerId(record);
+    const ownerId = Schema.is(CombatantId)(record.sourceCombatantId)
+      ? record.sourceCombatantId
+      : undefined;
     if (
       ownerId !== undefined &&
       !serializedProcedureRefIsBoundForCombatant(
@@ -6581,24 +6583,6 @@ function serializedSourceProcedureRefsAreOwned(input: {
   );
 }
 
-function serializedProcedureSourceOwnerId(
-  record: Readonly<Record<string, unknown>>,
-): CombatantId | undefined {
-  for (const fieldName of [
-    "sourceCombatantId",
-    "reactorId",
-    "bardId",
-    "ownerId",
-    "actorId",
-    "casterId",
-    "beneficiaryId",
-  ] as const) {
-    const value = record[fieldName];
-    if (Schema.is(CombatantId)(value)) return value;
-  }
-  return undefined;
-}
-
 function serializedProcedureRefsIn(
   value: unknown,
 ): ReadonlySet<BattleProcedureExecutionRef> {
@@ -6607,6 +6591,14 @@ function serializedProcedureRefsIn(
       Schema.is(BattleProcedureExecutionRef)(ref),
     ),
   );
+}
+
+function serializedInterruptChoiceProcedureRefs(
+  choice: EncodedBattleInterruptChoice,
+): ReadonlySet<BattleProcedureExecutionRef> {
+  if ("subject" in choice) return serializedProcedureRefsIn(choice.subject);
+  if ("choice" in choice) return serializedProcedureRefsIn(choice.choice);
+  return new Set();
 }
 
 function serializedBattleHolesOwnBoundExecutionReferences(input: {
@@ -6955,7 +6947,8 @@ export const BattleSnapshotSchema = Schema.Struct({
                     holes: choice.initialHoles,
                     combatants: snapshot.combatants,
                     boundExecutionRefs,
-                    expectedProcedureRefs: serializedProcedureRefsIn(choice),
+                    expectedProcedureRefs:
+                      serializedInterruptChoiceProcedureRefs(choice),
                   }),
               ))) &&
           executionScopes.every((executionScope) => {

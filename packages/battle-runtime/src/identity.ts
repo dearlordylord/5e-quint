@@ -496,19 +496,6 @@ export function battleResourcePoolExecutionRefBelongsToScope(
   );
 }
 
-export function battleActiveEffectExecutionRefBelongsToScope(
-  effectRef: BattleActiveEffectExecutionRef,
-  scopeRef: BattleExecutionScopeRef,
-): boolean {
-  const decoded = parseExecutionReference(effectRef);
-  return (
-    decoded !== null &&
-    decoded.ownerScopeRef === scopeRef &&
-    decoded.kind === "activeEffectOccurrence" &&
-    battleActiveEffectExecutionReferenceIsCanonical(effectRef)
-  );
-}
-
 export function battleActiveEffectExecutionRefOrdinalIsBefore(
   effectRef: BattleActiveEffectExecutionRef,
   scopeRef: BattleExecutionScopeRef,
@@ -516,8 +503,9 @@ export function battleActiveEffectExecutionRefOrdinalIsBefore(
 ): boolean {
   const decoded = parseExecutionReference(effectRef);
   return (
-    battleActiveEffectExecutionRefBelongsToScope(effectRef, scopeRef) &&
     decoded !== null &&
+    decoded.ownerScopeRef === scopeRef &&
+    decoded.kind === "activeEffectOccurrence" &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     Number(decoded.ordinal) < nextEffectOrdinal &&
     battleActiveEffectExecutionReferenceIsCanonical(effectRef)

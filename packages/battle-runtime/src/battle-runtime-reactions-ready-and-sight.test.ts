@@ -868,6 +868,37 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         ),
       },
     };
+    const releaseChoiceWithMismatchedSourceHole = {
+      ...encoded,
+      pendingInterrupt: {
+        ...pendingInterrupt,
+        choices: pendingInterrupt.choices.map((choice) =>
+          choice !== releaseChoice
+            ? choice
+            : {
+                ...choice,
+                initialHoles: choice.initialHoles.map((hole) =>
+                  hole !== releaseTargetHole
+                    ? hole
+                    : {
+                        kind: "spellTargetList" as const,
+                        holeId: hole.holeId,
+                        holeInstanceKey: hole.holeInstanceKey,
+                        label: "Synthetic pending choice source witness",
+                        sourceProcedureRef: differentSpellBinding.procedureRef,
+                        minTargets: 1 as const,
+                        maxTargets: 1,
+                        spatialTargeting: {
+                          kind: "individualTargets" as const,
+                        },
+                        choices: [goblinId],
+                        requiresTableSpatialFact: true as const,
+                      },
+                ),
+              },
+        ),
+      },
+    };
 
     expect(
       Either.isLeft(
@@ -936,6 +967,13 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       Either.isLeft(
         Schema.decodeUnknownEither(BattleSnapshotSchema)(
           releaseChoiceWithUnboundHole,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          releaseChoiceWithMismatchedSourceHole,
         ),
       ),
     ).toBe(true);
