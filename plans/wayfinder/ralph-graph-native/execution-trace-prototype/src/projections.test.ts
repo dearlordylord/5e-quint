@@ -31,7 +31,7 @@ describe("trace projections", () => {
   const rewriteOccurrence = (
     run: ValidatedTraceRun,
     occurrenceId: string,
-    rewrite: (occurrence: OperationOccurrence) => OperationOccurrence,
+    rewrite: (occurrence: OperationOccurrence) => unknown,
   ): TraceRun => {
     const [first, ...remaining] = run.items;
     return {
@@ -41,7 +41,12 @@ describe("trace projections", () => {
         ...remaining.map((item) =>
           item.tag === "OperationOccurred" &&
           item.occurrence.id === occurrenceId
-            ? { ...item, occurrence: rewrite(item.occurrence) }
+            ? {
+                ...item,
+                // Invalid-wire tests deliberately violate narrowed occurrence
+                // invariants before exercising the runtime trace validator.
+                occurrence: rewrite(item.occurrence) as OperationOccurrence,
+              }
             : item,
         ),
       ],

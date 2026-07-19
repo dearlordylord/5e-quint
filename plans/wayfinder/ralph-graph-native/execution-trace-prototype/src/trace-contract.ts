@@ -197,7 +197,13 @@ export type WorkflowOperation =
       readonly tag: "IntegrationReviewVerdictReturned";
       readonly node: IntegrationNode;
       readonly actorInvocationId: ActorInvocationId;
-      readonly verdict: "findings" | "accept";
+      readonly verdict: "findings";
+    }
+  | {
+      readonly tag: "IntegrationReviewVerdictReturned";
+      readonly node: IntegrationNode;
+      readonly actorInvocationId: ActorInvocationId;
+      readonly verdict: "accept";
     }
   | {
       readonly tag: "AcceptedResultQueued";
