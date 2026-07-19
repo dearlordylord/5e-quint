@@ -10,15 +10,11 @@ single authority instead of copying it between documents.
   independent Target SDK work.
 - [Mushroom Playbook](docs/mushroom-playbook/CONTEXT.md) — terms for the public
   Mushroom corpus and its private authoring relationships.
-- [Ralph tooling](docs/tooling/ralph/CONTEXT.md) — terms for repository delivery
-  orchestration, separate from the main application.
 
 ## Related authorities
 
 - [Main-application architecture](ARCHITECTURE.md) and accepted ADRs own stable
   product-system structure and ownership.
-- [Ralph tooling architecture](docs/tooling/ralph/ARCHITECTURE.md) owns stable
-  delivery-orchestration structure and ownership.
 - [Modeling assumptions](ASSUMPTIONS.md) own choices where RAW is silent or
   ambiguous.
 - [Mushroom Playbook authoring policy](docs/mushroom-playbook/AUTHORING.md) owns
@@ -38,9 +34,10 @@ single authority instead of copying it between documents.
   without becoming a second glossary or RAW-assumption owner.
 - Mechanical Correspondence is private Mushroom authoring evidence; it is not
   D&D/SRD language, public provenance, or a Cleanroom runtime relationship.
-- Ralph tooling may inspect and change the repository while delivering work,
-  but it does not define D&D rules, product runtime semantics, authored content,
-  or main-application architecture.
+- External delivery tooling may inspect and change this repository, but it does
+  not define D&D rules, product runtime semantics, authored content, or
+  main-application architecture. Dalph terminology and architecture live in
+  the [Dalph repository](https://github.com/dearlordylord/dalph).
 
 Context documents are glossaries, not architecture documents, task ledgers,
 specifications, or acceptance checklists. Wayfinder decision artifacts remain

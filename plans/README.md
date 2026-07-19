@@ -10,4 +10,4 @@ Every checked-in `ralph-task-index` belongs to the one-off shell harness. The
 indexes and adjacent launch commands are retained as delivery evidence, not as
 input formats or compatibility requirements for the Ralph orchestrator.
 See the
-[Ralph tooling architecture boundary](../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
+[Dalph relocation and historical-harness boundary](../docs/tooling/ralph/README.md#historical-harness-boundary).

@@ -3,13 +3,13 @@
 > **Historical decision record:** the body below is retained in its original
 > shell-delivery terms. It is evidence, not a Ralph orchestrator contract. The
 > coherent-leaf and non-convergence outcomes were subsequently accepted by the
-> [tooling architecture decision](https://github.com/dearlordylord/5e-quint/issues/179).
+> [tooling architecture decision](https://github.com/dearlordylord/dalph/issues/19).
 > Its plan index, labels, claim representation, run directory, launcher
 > mechanics, and ten-round default did not transfer; current tracker, recovery,
-> and policy semantics belong to [issues 185](https://github.com/dearlordylord/5e-quint/issues/185),
-> [183](https://github.com/dearlordylord/5e-quint/issues/183), and
-> [186](https://github.com/dearlordylord/5e-quint/issues/186), under the
-> [Ralph tooling boundary](../../../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
+> and policy semantics belong to [Dalph issues #13](https://github.com/dearlordylord/dalph/issues/13),
+> [#15](https://github.com/dearlordylord/dalph/issues/15), and
+> [#12](https://github.com/dearlordylord/dalph/issues/12), under the
+> [historical-harness boundary](../../../docs/tooling/ralph/README.md#historical-harness-boundary).
 
 ## Decision scope
 
@@ -178,5 +178,5 @@ own those decisions.
 
 No D&D rule, Cleanroom product behavior, main-application architecture, or
 modeling assumption is decided here. The tooling terms in this historical body
-are not D&D or Cleanroom language; canonical Ralph boundary terminology belongs
-to the [Ralph tooling context](../../../docs/tooling/ralph/CONTEXT.md).
+are not D&D or Cleanroom language; canonical terminology now belongs to the
+[Dalph tooling context](https://github.com/dearlordylord/dalph/blob/master/docs/CONTEXT.md).

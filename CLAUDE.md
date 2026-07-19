@@ -159,7 +159,7 @@ Do not write to the memory system unless explicitly asked.
 ## Ralph tooling architecture boundary (CRITICAL)
 
 Follow the
-[Ralph tooling architecture boundary](docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
+[Dalph relocation and historical-harness boundary](docs/tooling/ralph/README.md#historical-harness-boundary).
 Do not promote a historical-harness observation into a Ralph orchestrator
 requirement without an explicit owning decision or specification.
 

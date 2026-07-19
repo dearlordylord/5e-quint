@@ -1,7 +1,7 @@
 # Historical Ralph Loop Harness
 
 > **Historical execution runbook:** see the canonical
-> [Ralph tooling boundary](../docs/tooling/ralph/ARCHITECTURE.md#historical-harness-boundary).
+> [Dalph relocation and historical-harness boundary](../docs/tooling/ralph/README.md#historical-harness-boundary).
 
 `scripts/ralph-run.sh` ran a per-task fresh-context implementation harness for a plan file:
 
