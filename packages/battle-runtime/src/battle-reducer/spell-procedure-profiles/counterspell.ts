@@ -51,6 +51,7 @@ import {
   markSpellSlotExpendedThisTurn,
   releasePendingSpellSlotUseThisTurn,
 } from "../spell-turn-resources.ts";
+import { spendSpellCastMetamagicResources } from "../spells-resolve-resources.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { Schema } from "effect";
 import {
@@ -344,11 +345,21 @@ function stateAfterCounteredSpellCast(
       message: wastedResources.left,
     };
   }
+  const metamagicSpend = spendSpellCastMetamagicResources({
+    state: { ...state, currentTurnResources: wastedResources.right },
+    actorId: frame.casterId,
+    applications:
+      frame.metamagicCommitment.kind === "none"
+        ? []
+        : frame.metamagicCommitment.applications,
+  });
+  if (Either.isLeft(metamagicSpend)) {
+    return { tag: "invalid", message: metamagicSpend.left };
+  }
   return {
     tag: "ok",
     state: {
-      ...state,
-      currentTurnResources: wastedResources.right,
+      ...metamagicSpend.right,
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
         counterspellReactionInterruptFrame({

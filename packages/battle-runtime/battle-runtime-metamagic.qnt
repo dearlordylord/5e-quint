@@ -1124,6 +1124,18 @@ module battleRuntimeMetamagic {
       }
     }
 
+  pure def interruptedQuickenedActionSpellResult(
+    before: BattleState,
+    selectedCost: int,
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult = {
+    state: commitActorQuickenedLevelOnePlusSpellCast({
+      ...before,
+      bonusActionAvailable: false,
+    }, Fighter),
+    sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+  }
+
   pure def resolveQuickenedColorSpray(
     state: BattleState,
     fighterSavingThrowSucceeded: bool,

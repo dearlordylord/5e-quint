@@ -22,6 +22,7 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { resourceCount } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
@@ -1201,7 +1202,7 @@ function quickenedTargetListActiveEffectPublicRoute(): readonly BattleReducerRou
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
-  readonly preparedSpellIds?: readonly string[];
+  readonly preparedSpellIds?: readonly SpellRecord["id"][];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:quickened-spell-governor-mbt"),

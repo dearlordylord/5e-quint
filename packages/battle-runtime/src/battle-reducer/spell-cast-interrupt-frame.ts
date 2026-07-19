@@ -8,6 +8,7 @@ import type {
   SpellComponent,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../identity.ts";
 import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -37,14 +38,43 @@ export function spellCastReactionFactsHole(input: {
   };
 }
 
-export function spellCastInterruptFrame(input: {
+type SpellCastInterruptFrameInput = {
   readonly casterId: CombatantId;
   readonly invocation: SupportedSpellInvocation;
   readonly targetIds: readonly CombatantId[];
   readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
   readonly castingResource: BattleSpellCastingTimeResource;
   readonly continuation: BattleInterruptedProcedure;
-}): Extract<BattleInterruptCheckpointInput, { readonly trigger: "spellCast" }> {
+} & (
+  | { readonly metamagicApplications?: never }
+  | {
+      readonly metamagicApplications: readonly [
+        CharacterBattleMetamagicOptionFact,
+        ...CharacterBattleMetamagicOptionFact[],
+      ];
+    }
+);
+
+export function spellCastMetamagicApplicationsInput(
+  applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
+):
+  | { readonly metamagicApplications?: never }
+  | {
+      readonly metamagicApplications: readonly [
+        CharacterBattleMetamagicOptionFact,
+        ...CharacterBattleMetamagicOptionFact[],
+      ];
+    } {
+  return applications === undefined || applications.length === 0
+    ? {}
+    : {
+        metamagicApplications: [applications[0], ...applications.slice(1)],
+      };
+}
+
+export function spellCastInterruptFrame(
+  input: SpellCastInterruptFrameInput,
+): Extract<BattleInterruptCheckpointInput, { readonly trigger: "spellCast" }> {
   const resource = input.invocation.resource;
   return {
     trigger: "spellCast",
@@ -60,6 +90,13 @@ export function spellCastInterruptFrame(input: {
       resource.tag === "spellSlot"
         ? { kind: "pendingCasterSpellSlot" }
         : { kind: "none" },
+    metamagicCommitment:
+      input.metamagicApplications === undefined
+        ? { kind: "none" }
+        : {
+            kind: "applications",
+            applications: input.metamagicApplications,
+          },
     targetIds: input.targetIds,
     reactionSpellTargetFacts: input.reactionSpellTargetFacts,
     continuation: input.continuation,

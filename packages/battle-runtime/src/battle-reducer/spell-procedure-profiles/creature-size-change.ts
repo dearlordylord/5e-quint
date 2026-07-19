@@ -51,7 +51,10 @@ import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "../spell-cast-interrupt-frame.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
@@ -463,6 +466,7 @@ function resolveCreatureSizeChange(
             ? {}
             : { actionCostOverride: input.actionCostOverride }),
         }),
+        ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -730,7 +734,8 @@ const CreatureSizeIncreaseInvocationSchema = spellProcedureInvocationSchema<
 );
 export const creatureSizeChangeProfile: SpellProcedureProfile<
   "creatureSizeIncrease",
-  CreatureSizeChangeInvocation
+  CreatureSizeChangeInvocation,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   procedure: "creatureSizeIncrease",
   invocationSchema: CreatureSizeIncreaseInvocationSchema,
@@ -747,7 +752,8 @@ export const creatureSizeChangeProfile: SpellProcedureProfile<
 
 export const creatureSizeDecreaseProfile: SpellProcedureProfile<
   "creatureSizeDecrease",
-  CreatureSizeChangeInvocation
+  CreatureSizeChangeInvocation,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   ...creatureSizeChangeProfile,
   procedure: "creatureSizeDecrease",

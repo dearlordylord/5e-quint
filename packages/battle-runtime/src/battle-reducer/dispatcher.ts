@@ -4716,6 +4716,7 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
           components: [],
           castingResource: { kind: "alreadySpent" },
           spellSlotCommitment: { kind: "none" },
+          metamagicCommitment: { kind: "none" },
           targetIds: input.targetIds,
           reactionSpellTargetFacts: [],
           continuation: {

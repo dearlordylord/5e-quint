@@ -46,6 +46,18 @@ module battleRuntimeMetamagicTests {
     }
   }
 
+  run test_interrupted_quickened_action_spell_commits_metamagic_without_spell_slot = {
+    val result = interruptedQuickenedActionSpellResult(initialState, 2, 4)
+    all {
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(not(battleActorHasCommittedSpellSlotUse(result.state, Fighter))),
+      assert(not(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter))),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
   run test_quickened_direct_restoration_rejects_prior_level_1_plus_spell = {
     val priorSpell = commitActorSpellSlotUse(initialState, Fighter)
     val result = resolveQuickenedDirectHitPointRestoration(
