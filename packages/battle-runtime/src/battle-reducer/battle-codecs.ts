@@ -6495,12 +6495,24 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
   readonly boundExecutionRefs: ReadonlySet<string>;
+  readonly expectedProcedureRefs:
+    | ReadonlySet<BattleProcedureExecutionRef>
+    | undefined;
 }): boolean {
-  const { hole, combatants, boundExecutionRefs } = input;
+  const { hole, combatants, boundExecutionRefs, expectedProcedureRefs } = input;
   if (
     !battleExecutionReferencesIn(hole).every((ref) =>
       boundExecutionRefs.has(ref),
     )
+  ) {
+    return false;
+  }
+  if (
+    !serializedSourceProcedureRefsAreOwned({
+      value: hole,
+      combatants,
+      expectedProcedureRefs,
+    })
   ) {
     return false;
   }
@@ -6518,30 +6530,99 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
       hole.procedureRef,
     );
   }
-  if (
-    "sourceProcedureRef" in hole &&
-    "sourceCombatantId" in hole &&
-    typeof hole.sourceCombatantId === "string"
-  ) {
-    return serializedProcedureRefIsBoundForCombatant(
-      combatants,
-      hole.sourceCombatantId,
-      hole.sourceProcedureRef,
+  return true;
+}
+
+function serializedSourceProcedureRefsAreOwned(input: {
+  readonly value: unknown;
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly expectedProcedureRefs:
+    | ReadonlySet<BattleProcedureExecutionRef>
+    | undefined;
+}): boolean {
+  const { value, combatants, expectedProcedureRefs } = input;
+  if (Array.isArray(value)) {
+    return value.every((entry) =>
+      serializedSourceProcedureRefsAreOwned({
+        value: entry,
+        combatants,
+        expectedProcedureRefs,
+      }),
     );
   }
-  return true;
+  if (value === null || typeof value !== "object") return true;
+  const record = value as Readonly<Record<string, unknown>>;
+  if (Schema.is(BattleProcedureExecutionRef)(record.sourceProcedureRef)) {
+    if (
+      expectedProcedureRefs !== undefined &&
+      expectedProcedureRefs.size > 0 &&
+      !expectedProcedureRefs.has(record.sourceProcedureRef)
+    ) {
+      return false;
+    }
+    const ownerId = serializedProcedureSourceOwnerId(record);
+    if (
+      ownerId !== undefined &&
+      !serializedProcedureRefIsBoundForCombatant(
+        combatants,
+        ownerId,
+        record.sourceProcedureRef,
+      )
+    ) {
+      return false;
+    }
+  }
+  return Object.values(record).every((entry) =>
+    serializedSourceProcedureRefsAreOwned({
+      value: entry,
+      combatants,
+      expectedProcedureRefs,
+    }),
+  );
+}
+
+function serializedProcedureSourceOwnerId(
+  record: Readonly<Record<string, unknown>>,
+): CombatantId | undefined {
+  for (const fieldName of [
+    "sourceCombatantId",
+    "reactorId",
+    "bardId",
+    "ownerId",
+    "actorId",
+    "casterId",
+    "beneficiaryId",
+  ] as const) {
+    const value = record[fieldName];
+    if (Schema.is(CombatantId)(value)) return value;
+  }
+  return undefined;
+}
+
+function serializedProcedureRefsIn(
+  value: unknown,
+): ReadonlySet<BattleProcedureExecutionRef> {
+  return new Set(
+    battleExecutionReferencesIn(value).filter((ref) =>
+      Schema.is(BattleProcedureExecutionRef)(ref),
+    ),
+  );
 }
 
 function serializedBattleHolesOwnBoundExecutionReferences(input: {
   readonly holes: readonly EncodedBattleHole[];
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
   readonly boundExecutionRefs: ReadonlySet<string>;
+  readonly expectedProcedureRefs:
+    | ReadonlySet<BattleProcedureExecutionRef>
+    | undefined;
 }): boolean {
   return input.holes.every((hole) =>
     serializedBattleHoleOwnsBoundExecutionReferences({
       hole,
       combatants: input.combatants,
       boundExecutionRefs: input.boundExecutionRefs,
+      expectedProcedureRefs: input.expectedProcedureRefs,
     }),
   );
 }
@@ -6850,6 +6931,7 @@ export const BattleSnapshotSchema = Schema.Struct({
                 holes: act.initialHoles,
                 combatants: snapshot.combatants,
                 boundExecutionRefs,
+                expectedProcedureRefs: serializedProcedureRefsIn(act.subject),
               }),
           ) &&
           snapshot.readiedResponses.spells.every((readied) =>
@@ -6860,6 +6942,7 @@ export const BattleSnapshotSchema = Schema.Struct({
               hole: snapshot.pendingInterrupt.decisionHole,
               combatants: snapshot.combatants,
               boundExecutionRefs,
+              expectedProcedureRefs: undefined,
             }) &&
               snapshot.pendingInterrupt.choices.every(
                 (choice) =>
@@ -6872,6 +6955,7 @@ export const BattleSnapshotSchema = Schema.Struct({
                     holes: choice.initialHoles,
                     combatants: snapshot.combatants,
                     boundExecutionRefs,
+                    expectedProcedureRefs: serializedProcedureRefsIn(choice),
                   }),
               ))) &&
           executionScopes.every((executionScope) => {

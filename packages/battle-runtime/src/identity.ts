@@ -516,9 +516,8 @@ export function battleActiveEffectExecutionRefOrdinalIsBefore(
 ): boolean {
   const decoded = parseExecutionReference(effectRef);
   return (
+    battleActiveEffectExecutionRefBelongsToScope(effectRef, scopeRef) &&
     decoded !== null &&
-    decoded.ownerScopeRef === scopeRef &&
-    decoded.kind === "activeEffectOccurrence" &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     Number(decoded.ordinal) < nextEffectOrdinal &&
     battleActiveEffectExecutionReferenceIsCanonical(effectRef)

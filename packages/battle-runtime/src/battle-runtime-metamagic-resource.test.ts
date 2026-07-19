@@ -1724,7 +1724,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
-  test("Empowered Spell opens on Ray of Frost spell damage and spends only when replacement dice are used", () => {
+  test("Empowered Spell must use worse replacement dice and spends only when replacements are used", () => {
     const state = saveMetamagicBattle({
       knownOptions: [empoweredMetamagicOption()],
     });

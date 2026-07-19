@@ -1080,7 +1080,7 @@ module battleRuntimeMetamagicTests {
 
   pure val empoweredEmptyDamageRerolls: BattleRuntimeEmpoweredSpellDamageDieReroll -> int = Map()
 
-  run test_empowered_spell_rerolls_damage_dice_and_spends_one_point = {
+  run test_empowered_spell_must_use_worse_replacement_dice_and_spends_one_point = {
     val result = resolveEmpoweredSpellDamageReroll(
       EmpoweredSpellAttackDamageProcedure,
       empoweredOriginalDamageDice,

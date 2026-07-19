@@ -26,6 +26,8 @@ import {
   discoverBattleActs,
   initiativeScore,
   BattleHoleSchema,
+  BattleSnapshotSchema,
+  snapshotBattle,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
@@ -79,7 +81,8 @@ describe("Sanctuary targeting interdiction", () => {
   });
 
   test("public codec decodes the Sanctuary target-list hole", () => {
-    const act = discoverBattleActs(battleWithSanctuary()).find(
+    const state = battleWithSanctuary();
+    const act = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -88,6 +91,7 @@ describe("Sanctuary targeting interdiction", () => {
     if (act === undefined || act.subject.tag !== "bonusActionSpell") {
       throw new Error("Expected Sanctuary Bonus Action spell act.");
     }
+    const sanctuaryProcedureRef = act.subject.procedureRef;
     const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(
       requireHole(act.initialHoles, "spellTargetList"),
     );
@@ -98,6 +102,81 @@ describe("Sanctuary targeting interdiction", () => {
     expect(decoded.right).toMatchObject({
       kind: "spellTargetList",
     });
+
+    const snapshot = snapshotBattle(state);
+    const wrongOwner = snapshot.combatants.find(
+      (combatant) => combatant.combatantId === wardedId,
+    );
+    const wrongOwnerProcedureRef =
+      wrongOwner?.origin.kind === "character"
+        ? wrongOwner.origin.attackExecution.unarmedStrikeProcedureRef
+        : undefined;
+    if (wrongOwnerProcedureRef === undefined) {
+      throw new Error("Expected another combatant's bound procedure ref.");
+    }
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
+    const sanctuaryAct = encoded.acts.find(
+      (candidate) =>
+        "procedureRef" in candidate.subject &&
+        candidate.subject.procedureRef === sanctuaryProcedureRef,
+    );
+    if (sanctuaryAct === undefined) {
+      throw new Error("Expected encoded Sanctuary act.");
+    }
+    const wrongTargetListOwner = {
+      ...encoded,
+      acts: encoded.acts.map((candidate) =>
+        candidate !== sanctuaryAct
+          ? candidate
+          : {
+              ...candidate,
+              initialHoles: candidate.initialHoles.map((hole) =>
+                hole.kind === "spellTargetList"
+                  ? { ...hole, sourceProcedureRef: wrongOwnerProcedureRef }
+                  : hole,
+              ),
+            },
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(wrongTargetListOwner),
+      ),
+    ).toBe(true);
+
+    const nestedWrongOwner = {
+      ...encoded,
+      acts: encoded.acts.map((candidate) =>
+        candidate !== sanctuaryAct
+          ? candidate
+          : {
+              ...candidate,
+              initialHoles: candidate.initialHoles.map((hole) =>
+                hole.kind === "spellTargetList"
+                  ? {
+                      kind: "objectContactTargets" as const,
+                      holeId: hole.holeId,
+                      label: "Synthetic nested execution-ref witness",
+                      objectContact: {
+                        sourceCombatantId: casterId,
+                        sourceProcedureRef: wrongOwnerProcedureRef,
+                        objectId: "synthetic-object",
+                        rangeFeet: 30,
+                        requiresObjectWithinRange: true,
+                      },
+                      choices: [],
+                      requiresTableSpatialFact: true as const,
+                    }
+                  : hole,
+              ),
+            },
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(nestedWrongOwner),
+      ),
+    ).toBe(true);
   });
 
   test("failed save can lose a direct attack against the warded creature", () => {

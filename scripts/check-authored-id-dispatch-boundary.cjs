@@ -747,6 +747,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
     ts.ScriptKind.TS,
   );
   const violations = [];
+  const aliases = new Map();
   const positionalIdentityNames = new Set([
     "BattleSpellDamageDieExecutionRef",
     "battleSpellDamageDieExecutionRef",
@@ -762,8 +763,42 @@ function battleReplayAstViolations(sourceText, relativePath) {
     violations.push(`${relativePath}:${position.line + 1}: ${message}`);
   }
 
+  function resolvedPropertyAccessPath(node) {
+    const path = propertyAccessPath(node);
+    if (path === null) return null;
+    const resolved = [...path];
+    const visited = new Set();
+    while (resolved.length > 0 && aliases.has(resolved[0])) {
+      const alias = resolved[0];
+      if (visited.has(alias)) break;
+      visited.add(alias);
+      resolved.splice(0, 1, ...aliases.get(alias));
+    }
+    return resolved;
+  }
+
+  function recordAliases(node) {
+    if (!ts.isVariableDeclaration(node) || node.initializer === undefined)
+      return;
+    const initializerPath = resolvedPropertyAccessPath(node.initializer);
+    if (initializerPath === null) return;
+    if (ts.isIdentifier(node.name)) {
+      aliases.set(node.name.text, initializerPath);
+      return;
+    }
+    if (!ts.isObjectBindingPattern(node.name)) return;
+    for (const element of node.name.elements) {
+      if (!ts.isIdentifier(element.name)) continue;
+      const property = propertyNameText(element.propertyName ?? element.name);
+      if (property !== null) {
+        aliases.set(element.name.text, [...initializerPath, property]);
+      }
+    }
+  }
+
   function visit(node) {
-    const pathSegments = propertyAccessPath(node);
+    recordAliases(node);
+    const pathSegments = resolvedPropertyAccessPath(node);
     if (
       pathSegments !== null &&
       pathSegments.length >= 2 &&
@@ -776,7 +811,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
       ts.isVariableDeclaration(node) &&
       ts.isObjectBindingPattern(node.name) &&
       node.initializer !== undefined &&
-      propertyAccessPath(node.initializer)?.at(-1) === "subject" &&
+      resolvedPropertyAccessPath(node.initializer)?.at(-1) === "subject" &&
       node.name.elements.some(
         (element) =>
           propertyNameText(element.propertyName ?? element.name) ===
@@ -826,13 +861,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
     ) {
       add(node, "spellTargetList codec retains redundant procedure");
     }
-    if (
-      ts.isIdentifier(node) &&
-      positionalIdentityNames.has(node.text) &&
-      (relativePath.endsWith("/identity.ts") ||
-        relativePath.endsWith("/battle-reducer.ts") ||
-        relativePath.endsWith("/battle-reducer/metamagic.ts"))
-    ) {
+    if (ts.isIdentifier(node) && positionalIdentityNames.has(node.text)) {
       add(node, "damage-die replay identity is positional");
     }
     ts.forEachChild(node, visit);
@@ -882,6 +911,10 @@ function assertBattleReplayAstSelfTests() {
     const key = \`${'${invocation["spell"].id}'}:effect\`
     const { attackName } = pending.subject
     type Die = { groupOrdinal: number }
+    const s = pending.subject
+    const aliasedAttackName = s.attackName
+    const spell = invocation.spell
+    const aliasedKey = \`${"${spell.id}"}:effect\`
   `;
   const violations = battleReplayAstViolations(
     fixture,
@@ -899,6 +932,28 @@ function assertBattleReplayAstSelfTests() {
       `Battle replay AST self-test missed ${expected}.`,
     );
   }
+  assert.ok(
+    violations.filter((violation) =>
+      violation.endsWith("execution subject owns attack presentation"),
+    ).length >= 1,
+    "Battle replay AST self-test missed aliased subject presentation.",
+  );
+  assert.ok(
+    violations.filter((violation) =>
+      violation.endsWith("authored spell id constructs a runtime key"),
+    ).length >= 2,
+    "Battle replay AST self-test missed aliased authored spell identity.",
+  );
+  const positionalFixture = `type Die = { dieOrdinal: number }`;
+  assert.ok(
+    battleReplayAstViolations(
+      positionalFixture,
+      "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+    ).some((violation) =>
+      violation.endsWith("damage-die replay identity is positional"),
+    ),
+    "Battle replay AST self-test missed positional identity outside metamagic.ts.",
+  );
 }
 
 function countChar(text, char) {
