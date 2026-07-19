@@ -498,6 +498,7 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
   };
   const actors = new Map<ActorInvocationId, ActorRecord>();
   const seenSessionIds = new Set<AgentSessionId>();
+  const latestActorBySession = new Map<AgentSessionId, ActorRecord>();
   let authoritativeTaskIds = new Set<TaskId>();
   let previousCursor = -1;
   let previousJournalPosition = 0;
@@ -633,10 +634,21 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           actorInvocationId: completedActor.actor.invocationId,
         });
       } else if (completionMatchesOperation && completedActor !== undefined) {
-        actors.set(completedActor.actor.invocationId, {
+        const completedRecord: ActorRecord = {
           ...completedActor,
           completed: true,
-        });
+        };
+        actors.set(completedActor.actor.invocationId, completedRecord);
+        if (
+          latestActorBySession.get(
+            completedActor.actor.sessionBinding.sessionId,
+          )?.actor.invocationId === completedActor.actor.invocationId
+        ) {
+          latestActorBySession.set(
+            completedActor.actor.sessionBinding.sessionId,
+            completedRecord,
+          );
+        }
       }
       if (occurrence.operation.tag === "ActorInvocationStarted") {
         const startedActor = occurrence.operation.actor;
@@ -651,13 +663,7 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           binding.tag === "ResumedSession"
             ? actors.get(binding.previousInvocationId)
             : binding.tag === "ReplacementSession"
-              ? [...actors.values()]
-                  .reverse()
-                  .find(
-                    (candidate) =>
-                      candidate.actor.sessionBinding.sessionId ===
-                      binding.supersededSessionId,
-                  )
+              ? latestActorBySession.get(binding.supersededSessionId)
               : undefined;
         const sessionIsFresh = !seenSessionIds.has(binding.sessionId);
         const lineageMatches =
@@ -665,6 +671,9 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           (prior !== undefined &&
             prior.completed &&
             prior.actor.role === startedActor.role &&
+            (binding.tag !== "ResumedSession" ||
+              latestActorBySession.get(binding.sessionId)?.actor
+                .invocationId === binding.previousInvocationId) &&
             (startedActor.role === "integration-agent" ||
             startedActor.role === "integration-reviewer"
               ? prior.node.tag === "IntegrationLifecycle" &&
@@ -686,6 +695,11 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           completed: false,
         });
         seenSessionIds.add(binding.sessionId);
+        latestActorBySession.set(binding.sessionId, {
+          actor: startedActor,
+          node: occurrence.operation.node,
+          completed: false,
+        });
       } else if (
         (occurrence.operation.tag === "TaskReviewVerdictReturned" ||
           occurrence.operation.tag === "IntegrationReviewVerdictReturned") &&

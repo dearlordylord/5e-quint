@@ -316,6 +316,35 @@ describe("trace projections", () => {
     });
   });
 
+  it("rejects resuming a stale invocation in a session lineage", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-99-integration",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                actor: {
+                  ...occurrence.operation.actor,
+                  sessionBinding: {
+                    tag: "ResumedSession",
+                    sessionId: "session:integration-main",
+                    previousInvocationId: "actor:gh-46-integrator",
+                  },
+                },
+              },
+            }
+          : occurrence,
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-99-integrator",
+    });
+  });
+
   it("retains canonical operation, authority, target, and causal identity", () => {
     const projection = projectAt(makeTrackerDagRun("resume-bound-session"), 10);
     const integration = projection.occurrences.find(
