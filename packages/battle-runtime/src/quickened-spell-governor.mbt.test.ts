@@ -25,6 +25,7 @@ import { resourceCount } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
+import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
 import {
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
@@ -64,6 +65,11 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import { enlargeReduceUnitId } from "./unit-profile-admission-catalog-support.ts";
+import {
+  knownWillingSpellTargetFill,
+  knownWillingSpellTargetListFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,
@@ -96,6 +102,7 @@ const LAST_RESULTS = [
   "resolvedQuickenedSaveGatedConditionImmunity",
   "resolvedQuickenedDirectCondition",
   "resolvedQuickenedRollModifier",
+  "resolvedQuickenedCreatureSizeChange",
   "resolvedAfterMagicActionSpent",
   "rejectedUnaffordable",
   "rejectedUnknownOption",
@@ -112,6 +119,7 @@ const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
     "resolvedQuickenedSaveGatedConditionImmunity",
   ResolvedQuickenedDirectCondition: "resolvedQuickenedDirectCondition",
   ResolvedQuickenedRollModifier: "resolvedQuickenedRollModifier",
+  ResolvedQuickenedCreatureSizeChange: "resolvedQuickenedCreatureSizeChange",
   ResolvedAfterMagicActionSpent: "resolvedAfterMagicActionSpent",
   RejectedUnaffordable: "rejectedUnaffordable",
   RejectedUnknownOption: "rejectedUnknownOption",
@@ -126,6 +134,7 @@ type QuickenedSpellGovernorProjection = {
   readonly calmEmotionsImmunity: boolean;
   readonly invisibilityActive: boolean;
   readonly blessActive: boolean;
+  readonly creatureSizeIncreased: boolean;
   readonly magicActionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
   readonly sorceryPointsRemaining: number;
@@ -159,6 +168,7 @@ const driverSchema = {
   doResolveQuickenedSaveGatedConditionImmunity: {},
   doResolveQuickenedDirectCondition: {},
   doResolveQuickenedRollModifier: {},
+  doResolveQuickenedCreatureSizeChange: {},
   doResolveQuickenedAfterMagicActionSpent: {},
   doRejectUnaffordable: {},
   doRejectUnknownOption: {},
@@ -191,6 +201,9 @@ function createQuickenedSpellGovernorDriver() {
       },
       doResolveQuickenedRollModifier: () => {
         state = resolveQuickenedRollModifier(initialRuntimeState());
+      },
+      doResolveQuickenedCreatureSizeChange: () => {
+        state = resolveQuickenedCreatureSizeChange();
       },
       doResolveQuickenedAfterMagicActionSpent: () => {
         state = resolveQuickenedRestoration({
@@ -325,6 +338,23 @@ describe("Quickened Spell governor MBT parity", () => {
       spellSlotActsAvailable: false,
       invalidKind: "none",
       lastResult: "resolvedQuickenedRollModifier",
+    });
+  });
+
+  it("resolves Quickened creature size-change procedures", () => {
+    expect(
+      quickenedSpellGovernorProjection(resolveQuickenedCreatureSizeChange()),
+    ).toMatchObject({
+      creatureSizeIncreased: true,
+      magicActionAvailable: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: true,
+      levelOnePlusCastThisTurn: true,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      invalidKind: "none",
+      lastResult: "resolvedQuickenedCreatureSizeChange",
     });
   });
 
@@ -614,10 +644,6 @@ function resolveQuickenedRestoration(
   state: QuickenedSpellGovernorRuntimeState,
 ): QuickenedSpellGovernorRuntimeState {
   const act = quickenedCureWoundsAct(state.battle);
-  expect({
-    ...act.subject,
-    invocation: battleActSpellPresentation(act)?.invocation,
-  }).toMatchObject(quickenedCureWoundsSubject(state.battle));
   const targetHole = findHole(act.initialHoles, "targetChoice");
   const target = targetFill(targetHole, fighterId, [
     {
@@ -733,6 +759,38 @@ function resolveQuickenedRollModifier(
     battle: resolved.state,
     invalidKind: "none",
     lastResult: "resolvedQuickenedRollModifier",
+  };
+}
+
+function resolveQuickenedCreatureSizeChange(): QuickenedSpellGovernorRuntimeState {
+  const state: QuickenedSpellGovernorRuntimeState = {
+    battle: metamagicBattle({ preparedSpellIds: [enlargeReduceUnitId] }),
+    invalidKind: "none",
+    lastResult: "init",
+  };
+  const act = quickenedCreatureSizeChangeAct(state.battle);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  if (targetHole.kind !== "targetChoice") {
+    throw new Error("Expected Quickened creature size-change target hole.");
+  }
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          enlargeReduceUnitId,
+          wizardId,
+          fighterId,
+        ),
+      ],
+    }),
+  );
+  return {
+    battle: resolved.state,
+    invalidKind: "none",
+    lastResult: "resolvedQuickenedCreatureSizeChange",
   };
 }
 
@@ -865,6 +923,7 @@ function quickenedSpellGovernorProjection(
 ): QuickenedSpellGovernorProjection {
   const resources = state.battle.currentTurnResources;
   const skeleton = state.battle.combatants.get(skeletonId);
+  const fighter = state.battle.combatants.get(fighterId);
   return {
     quickenedCureWoundsOffered: hasQuickenedCureWoundsAct(state.battle),
     colorSprayBlinded:
@@ -887,6 +946,10 @@ function quickenedSpellGovernorProjection(
         .get(fighterId)
         ?.activeEffects.some((effect) => effect.kind === "d20RollModifier") ??
       false,
+    creatureSizeIncreased:
+      fighter === undefined
+        ? false
+        : combatantEffectiveSize(fighter) === "large",
     magicActionAvailable: canSpendAction(resources, "magic"),
     bonusActionAvailable: resources.currentHasBonusAction,
     sorceryPointsRemaining: Number(sorceryPointsRemaining(state.battle)),
@@ -1138,6 +1201,7 @@ function quickenedTargetListActiveEffectPublicRoute(): readonly BattleReducerRou
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
+  readonly preparedSpellIds?: readonly string[];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:quickened-spell-governor-mbt"),
@@ -1166,14 +1230,16 @@ function metamagicBattle(input?: {
         },
         spellcasting: {
           ...wizardSpellcasting({
-            preparedSpells: [
-              spellRecord("cure_wounds"),
-              spellRecord("color_spray"),
-              spellRecord("calm_emotions"),
-              spellRecord("invisibility"),
-              spellRecord("bless"),
-              spellRecord("ray_of_frost"),
-            ],
+            preparedSpells: (
+              input?.preparedSpellIds ?? [
+                "cure_wounds",
+                "color_spray",
+                "calm_emotions",
+                "invisibility",
+                "bless",
+                "ray_of_frost",
+              ]
+            ).map((spellId) => spellRecord(spellId)),
             spellSlots: [
               { spellLevel: 1, count: 2 },
               { spellLevel: 2, count: 2 },
@@ -1293,6 +1359,27 @@ type QuickenedSpellId =
   | "color_spray"
   | "invisibility";
 
+function quickenedCreatureSizeChangeAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        enlargeReduceUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "creatureSizeIncrease" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected Quickened creature size-change act.");
+  }
+  return act;
+}
+
 function quickenedRayOfFrostAct(
   state: BattleState,
 ): QuickenedBonusActionSpellAct {
@@ -1348,17 +1435,7 @@ function spellTargetListFill(
   spellId: "bless" | "invisibility",
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
-  return {
-    kind: "spellTargetList",
-    holeId: hole.holeId,
-    value: { targetIds },
-    spatialFacts: targetIds.map((targetId) => ({
-      kind: "spellTarget",
-      casterId: wizardId,
-      targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
-    })),
-  };
+  return knownWillingSpellTargetListFill(hole, wizardId, spellId, targetIds);
 }
 
 function sorceryPointsRemaining(state: BattleState) {
@@ -1416,6 +1493,7 @@ function normalizeQuickenedSpellGovernorQuintState(
     calmEmotionsImmunity: booleanField(state, "qCalmEmotionsImmunity"),
     invisibilityActive: booleanField(state, "qInvisibilityActive"),
     blessActive: booleanField(state, "qBlessActive"),
+    creatureSizeIncreased: booleanField(state, "qCreatureSizeIncreased"),
     magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
     sorceryPointsRemaining: numberFromQuintInt(

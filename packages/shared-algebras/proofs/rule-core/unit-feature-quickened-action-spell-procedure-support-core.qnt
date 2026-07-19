@@ -16,9 +16,10 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
   // Direct Hit Point restoration, scalar buffs, save-gated damage,
   // save-gated condition/immunity, direct condition, roll modifier, and the
   // direct spell-attack damage and independent spell-attack sequence
-  // procedures admit the rewrite where the runtime profile threads the shared
-  // spell-cast resource boundary; control, ongoing-effect, and other action
-  // procedures stay closed for their dedicated follow-up tasks.
+  // procedures, plus creature size-change procedures, admit the rewrite where
+  // the runtime profile threads the shared spell-cast resource boundary;
+  // control, ongoing-effect, and other action procedures stay closed for their
+  // dedicated follow-up tasks.
 
   type BattleRuntimeQuickenedActionSpellProcedure =
     | QuickenedDirectRestorationProcedure
@@ -30,6 +31,7 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
     | QuickenedRollModifierProcedure
     | QuickenedSpellAttackProcedure
     | QuickenedSpellAttackSequenceProcedure
+    | QuickenedCreatureSizeChangeProcedure
     | QuickenedDamageProcedure
     | QuickenedControlProcedure
     | QuickenedOngoingEffectProcedure
@@ -48,6 +50,7 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
       | QuickenedRollModifierProcedure => true
       | QuickenedSpellAttackProcedure => true
       | QuickenedSpellAttackSequenceProcedure => true
+      | QuickenedCreatureSizeChangeProcedure => true
       | QuickenedDamageProcedure => false
       | QuickenedControlProcedure => false
       | QuickenedOngoingEffectProcedure => false

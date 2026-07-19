@@ -10,9 +10,12 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
+import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { proficiencyBonus, resourceCount } from "@dnd/shared/types";
 import type { Size } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
@@ -20,7 +23,10 @@ import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol
 import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { EXTENDED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import {
+  EXTENDED_METAMAGIC_EFFECT_KIND,
+  QUICKENED_METAMAGIC_EFFECT_KIND,
+} from "./battle-reducer/metamagic.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
   characterBattleResourceIsPointPool,
@@ -34,6 +40,7 @@ import {
   spellTargetId,
   unitLibrary,
   type ActionSpellAct,
+  type BonusActionSpellAct,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   attackRollFill,
@@ -138,7 +145,86 @@ function extendedCreatureSizeAct(
   return { state, act };
 }
 
+function quickenedCreatureSizeAct(): {
+  readonly state: ReturnType<typeof spellBattle>;
+  readonly act: BonusActionSpellAct;
+} {
+  const spell = spellRecord(enlargeReduceUnitId);
+  const state = spellBattle({
+    preparedSpells: [spell],
+    spellSlots: [{ spellLevel: 2, count: 1 }],
+    casterClassLevels: [{ className: "sorcerer", level: 2 }],
+    casterResources: [
+      {
+        unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+        pointsRemaining: resourceCount(2),
+      },
+    ],
+    casterMetamagic: {
+      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [quickenedMetamagicOption()],
+    },
+  });
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is BonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        enlargeReduceUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "creatureSizeIncrease" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected Quickened Enlarge spell act.");
+  }
+  return { state, act };
+}
+
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
+  test("Quickened Enlarge spends the Bonus Action, Spell Slot, and shared Sorcery Points without spending the Magic Action", () => {
+    const { state, act } = quickenedCreatureSizeAct();
+    const target = requireHole(act.initialHoles, "targetChoice");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Quickened Enlarge cast to resolve.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual({ kind: "committed", combatantId: spellCasterId });
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(spellCasterId);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(0);
+    expect(
+      combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
+    ).toBe("large");
+  });
+
   test("admits only creature size increase and decrease spell-slot acts from the creature-or-object Surface target", () => {
     const { state } = creatureSizeAct("creatureSizeIncrease");
     const procedures = discoverBattleActs(state).flatMap((act) => {
@@ -1037,6 +1123,14 @@ function extendedMetamagicOption(): CharacterBattleMetamagicOptionFact {
     effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(1),
+  };
+}
+
+function quickenedMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: QUICKENED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(2),
   };
 }
 

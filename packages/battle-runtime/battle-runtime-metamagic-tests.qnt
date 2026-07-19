@@ -321,6 +321,10 @@ module battleRuntimeMetamagicTests {
         QuickenedRollModifierProcedure,
         Set(quickenedSpellMetamagicFact),
       )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedCreatureSizeChangeProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
       assert(quickenedSpellCanModifySpellAttackDamage(
         initialState,
         RayOfFrostSpellAttack,

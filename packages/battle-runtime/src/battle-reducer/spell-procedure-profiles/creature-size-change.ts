@@ -1,8 +1,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 //
 // The creatureSizeIncrease / creatureSizeDecrease Spell Procedure Profile:
 // a prepared Magic Action spell that enlarges or reduces one creature,
@@ -34,6 +36,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
+  type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
@@ -53,6 +56,7 @@ import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spe
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
+  spellCastingTimeResourceForSpellCast,
   spellRequiresConcentration,
   spendSpellCastResources,
 } from "../spells-resolve-resources.ts";
@@ -377,8 +381,9 @@ function creatureSizeChangeCastSummary(
 function resolveCreatureSizeChange(
   input: SpellProcedureProfileResolveInput<
     CreatureSizeChangeInvocation,
-    ActionSpellBattleResolutionInput
+    ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
   > & {
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
     readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   } & SpellProcedureStoredGlyphReleaseOptions,
 ): BattleResolutionResult {
@@ -452,7 +457,12 @@ function resolveCreatureSizeChange(
         invocation: input.invocation,
         targetIds: [target.combatantId],
         reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "magicAction" },
+        castingResource: spellCastingTimeResourceForSpellCast({
+          invocation: input.invocation,
+          ...(input.actionCostOverride === undefined
+            ? {}
+            : { actionCostOverride: input.actionCostOverride }),
+        }),
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -516,6 +526,9 @@ function resolveCreatureSizeChange(
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: false,
+        ...(input.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: input.actionCostOverride }),
         ...(input.metamagicApplications === undefined
           ? {}
           : { metamagicApplications: input.metamagicApplications }),
@@ -558,6 +571,9 @@ function resolveCreatureSizeChange(
     ...(input.startsOrdinaryConcentration === false
       ? { startConcentration: false }
       : {}),
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
@@ -718,7 +734,7 @@ export const creatureSizeChangeProfile: SpellProcedureProfile<
 > = {
   procedure: "creatureSizeIncrease",
   invocationSchema: CreatureSizeIncreaseInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],

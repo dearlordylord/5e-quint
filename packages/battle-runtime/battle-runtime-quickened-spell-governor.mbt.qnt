@@ -18,7 +18,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   //   Sorcery Points as a Pool, and Spend.
   type WitnessHole = | WitnessProtocolHole
 
-  type QuickenedSpellGovernorScenarioOutcome = | Init | ResolvedQuickenedRestoration | ResolvedQuickenedSaveGatedCondition | ResolvedQuickenedSaveGatedConditionImmunity | ResolvedQuickenedDirectCondition | ResolvedQuickenedRollModifier | ResolvedAfterMagicActionSpent | RejectedUnaffordable | RejectedUnknownOption | RejectedUnsupportedSecondOption | RejectedOnePerSpell | RejectedPriorLevelOnePlusSpell
+  type QuickenedSpellGovernorScenarioOutcome = | Init | ResolvedQuickenedRestoration | ResolvedQuickenedSaveGatedCondition | ResolvedQuickenedSaveGatedConditionImmunity | ResolvedQuickenedDirectCondition | ResolvedQuickenedRollModifier | ResolvedQuickenedCreatureSizeChange | ResolvedAfterMagicActionSpent | RejectedUnaffordable | RejectedUnknownOption | RejectedUnsupportedSecondOption | RejectedOnePerSpell | RejectedPriorLevelOnePlusSpell
 
 
   type QuickenedSpellGovernorWitnessState = {
@@ -27,6 +27,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     qCalmEmotionsImmunity: bool,
     qInvisibilityActive: bool,
     qBlessActive: bool,
+    qCreatureSizeIncreased: bool,
     qMagicActionAvailable: bool,
     qBonusActionAvailable: bool,
     qSorceryPointsRemaining: int,
@@ -47,6 +48,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   pure def qCalmEmotionsImmunity: bool = qState.qCalmEmotionsImmunity
   pure def qInvisibilityActive: bool = qState.qInvisibilityActive
   pure def qBlessActive: bool = qState.qBlessActive
+  pure def qCreatureSizeIncreased: bool = qState.qCreatureSizeIncreased
   pure def qMagicActionAvailable: bool = qState.qMagicActionAvailable
   pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
   pure def qSorceryPointsRemaining: int = qState.qSorceryPointsRemaining
@@ -95,6 +97,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
       qCalmEmotionsImmunity: calmEmotionsImmunity,
       qInvisibilityActive: invisibilityActive,
       qBlessActive: blessActive,
+      qCreatureSizeIncreased: lastResult == ResolvedQuickenedCreatureSizeChange,
       qMagicActionAvailable: magicActionAvailable,
       qBonusActionAvailable: bonusActionAvailable,
       qSorceryPointsRemaining: sorceryPointsRemaining,
@@ -217,6 +220,24 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     ResolvedQuickenedRollModifier,
   )
 
+  action doResolveQuickenedCreatureSizeChange = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    ResolvedQuickenedCreatureSizeChange,
+  )
+
   action doResolveQuickenedAfterMagicActionSpent = recordQuickenedGovernorState(
     false,
     false,
@@ -331,6 +352,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     doResolveQuickenedSaveGatedConditionImmunity,
     doResolveQuickenedDirectCondition,
     doResolveQuickenedRollModifier,
+    doResolveQuickenedCreatureSizeChange,
     doResolveQuickenedAfterMagicActionSpent,
     doRejectUnaffordable,
     doRejectUnknownOption,
