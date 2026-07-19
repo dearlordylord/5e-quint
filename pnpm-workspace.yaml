@@ -8,6 +8,8 @@ packages:
   - "packages/shared"
   - "packages/shared-algebras"
   - "packages/surface"
+catalog:
+  "@firfi/quint-connect": "^2.1.0"
 allowBuilds:
   '@parcel/watcher': true
   esbuild: true
