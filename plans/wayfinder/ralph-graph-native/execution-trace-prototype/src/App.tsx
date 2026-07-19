@@ -12,6 +12,7 @@ import {
   focusTaskDagOnTasks,
   presentOccurrences,
   projectRun,
+  traceCursorAt,
   traceEndCursor,
   type ActorSpan,
 } from "./projections.ts";
@@ -34,7 +35,10 @@ const traceItemTitle = (item: SemanticTraceItem): string => {
     if (operation.tag === "ActorInvocationStarted") {
       return `${operation.stage} invocation started`;
     }
-    if (operation.tag === "TaskReviewVerdictReturned") {
+    if (
+      operation.tag === "TaskReviewVerdictReturned" ||
+      operation.tag === "IntegrationReviewVerdictReturned"
+    ) {
       return `review verdict: ${operation.verdict}`;
     }
     return operation.tag;
@@ -79,7 +83,9 @@ const traceItemDetail = (
         "actor",
         actor !== null
           ? `${actor.role} · ${actor.invocationId}`
-          : item.occurrence.operation.tag === "TaskReviewVerdictReturned"
+          : item.occurrence.operation.tag === "TaskReviewVerdictReturned" ||
+              item.occurrence.operation.tag ===
+                "IntegrationReviewVerdictReturned"
             ? `task-reviewer · ${item.occurrence.operation.actorInvocationId}`
             : "coordinator",
       ],
@@ -288,7 +294,10 @@ export const App = () => {
   const [selectedActors, setSelectedActors] = useState<ReadonlyArray<string>>(
     [],
   );
-  const projection = useMemo(() => projectRun(run, cursor), [cursor, run]);
+  const projection = useMemo(
+    () => projectRun(run, traceCursorAt(run, cursor)),
+    [cursor, run],
+  );
   const visibleTaskDag = useMemo(
     () =>
       treeScope === "focus"

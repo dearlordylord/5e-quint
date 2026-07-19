@@ -10,6 +10,7 @@ import type {
   SemanticTraceItem,
   TaskDagRevision,
   TaskId,
+  TraceCursor,
   ValidatedTraceRun,
   TrackerRevision,
 } from "./trace-contract.ts";
@@ -77,7 +78,7 @@ export type TaskExecutionProjection = { readonly taskId: TaskId } & (
 );
 
 export interface RunProjection {
-  readonly cursor: number;
+  readonly cursor: TraceCursor;
   readonly taskDag: TaskDagRevision;
   readonly rewrite: TaskDagRewrite | null;
   readonly occurrences: ReadonlyArray<OperationOccurrence>;
@@ -99,7 +100,11 @@ const operationTaskId = (occurrence: OperationOccurrence): TaskId =>
 
 const phaseAfter = (occurrence: OperationOccurrence): ActorPhase => {
   const operation = occurrence.operation;
-  if (operation.tag === "TaskReviewVerdictReturned") return "completed";
+  if (
+    operation.tag === "TaskReviewVerdictReturned" ||
+    operation.tag === "IntegrationReviewVerdictReturned"
+  )
+    return "completed";
   if (operation.tag !== "ActorInvocationStarted") return "completed";
   if (operation.stage === "implementation") return "implementing";
   if (operation.stage === "integration") return "integrating";
@@ -281,6 +286,11 @@ const taskExecutionAfter = (
       ? { taskId, tag: "findings-returned" }
       : { taskId, tag: "accepted-awaiting-queue" };
   }
+  if (operation.tag === "IntegrationReviewVerdictReturned") {
+    return operation.verdict === "findings"
+      ? { taskId, tag: "integrating" }
+      : { taskId, tag: "reviewing-integration" };
+  }
   if (operation.tag === "AcceptedResultQueued") {
     return { taskId, tag: "queued-for-integration" };
   }
@@ -312,9 +322,8 @@ const taskExecutionsAt = (
 
 export const projectRun = (
   run: ValidatedTraceRun,
-  requestedCursor: number,
+  cursor: TraceCursor,
 ): RunProjection => {
-  const cursor = Math.max(0, Math.min(requestedCursor, traceEndCursor(run)));
   const items: TracePrefix = [
     run.items[0],
     ...run.items.slice(1).filter((item) => item.cursor <= cursor),
@@ -335,8 +344,18 @@ export const projectRun = (
   };
 };
 
-export const traceEndCursor = (run: ValidatedTraceRun): number =>
-  Math.max(...run.items.map((item) => item.cursor));
+export const traceEndCursor = (run: ValidatedTraceRun): TraceCursor =>
+  // Validated runs contain a nonempty, increasing sequence of branded cursors.
+  Math.max(...run.items.map((item) => item.cursor)) as TraceCursor;
+
+export const traceCursorAt = (
+  run: ValidatedTraceRun,
+  requestedCursor: number,
+): TraceCursor => {
+  const requested = Number.isSafeInteger(requestedCursor) ? requestedCursor : 0;
+  // Clamping against a validated run proves this is a valid trace cursor.
+  return Math.max(0, Math.min(requested, traceEndCursor(run))) as TraceCursor;
+};
 
 export interface OccurrencePresentation {
   readonly id: OccurrenceId;
@@ -363,7 +382,10 @@ const occurrenceLabel = (occurrence: OperationOccurrence): string => {
   if (operation.tag === "ActorInvocationStarted") {
     return `${operation.stage} · ${sessionBindingLabel(operation.actor)}`;
   }
-  if (operation.tag === "TaskReviewVerdictReturned") {
+  if (
+    operation.tag === "TaskReviewVerdictReturned" ||
+    operation.tag === "IntegrationReviewVerdictReturned"
+  ) {
     return `review verdict · ${operation.verdict}`;
   }
   return operation.tag;
@@ -388,7 +410,11 @@ const isFreshReviewStart = (occurrence: OperationOccurrence): boolean =>
 
 const isConvergenceMember = (occurrence: OperationOccurrence): boolean => {
   const operation = occurrence.operation;
-  if (operation.tag === "TaskReviewVerdictReturned") return true;
+  if (
+    operation.tag === "TaskReviewVerdictReturned" ||
+    operation.tag === "IntegrationReviewVerdictReturned"
+  )
+    return true;
   if (operation.tag !== "ActorInvocationStarted") return false;
   return (
     operation.stage === "implementation" ||
@@ -433,7 +459,8 @@ const collapseConvergenceLoops = (
       group.push(successor);
       member = successor;
       if (
-        successor.operation.tag === "TaskReviewVerdictReturned" &&
+        (successor.operation.tag === "TaskReviewVerdictReturned" ||
+          successor.operation.tag === "IntegrationReviewVerdictReturned") &&
         successor.operation.verdict === "accept"
       ) {
         break;

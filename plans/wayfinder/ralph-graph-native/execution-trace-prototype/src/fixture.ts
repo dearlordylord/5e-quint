@@ -82,12 +82,12 @@ const authorityObservationAt = (
         observationId: observation("stress-tracker-88"),
         trackerRevision: "tracker-revision:88",
       }
-    : cursor >= 22
+    : cursor >= 26
       ? {
           observationId: observation("simulation-after-gh-170"),
           trackerRevision: "tracker-revision:simulation-after-gh-170",
         }
-      : cursor >= 19
+      : cursor >= 21
         ? {
             observationId: observation("simulation-after-gh-46"),
             trackerRevision: "tracker-revision:simulation-after-gh-46",
@@ -294,21 +294,39 @@ const acceptedResultOccurred = (
     decisionReason: "accepted-result-queued",
   });
 
+const integrationReviewVerdictOccurred = (
+  cursor: number,
+  journalPosition: number,
+  observedAt: string,
+  name: string,
+  node: IntegrationNode,
+  reviewer: ActorIdentity<"integration-reviewer">,
+  predecessor: OccurrenceId,
+): SemanticTraceItem =>
+  occurred(cursor, journalPosition, observedAt, {
+    ...occurrenceFacts(cursor, name, reviewer.invocationId),
+    operation: {
+      tag: "IntegrationReviewVerdictReturned",
+      node,
+      actorInvocationId: reviewer.invocationId,
+      verdict: "accept",
+    },
+    predecessors: [
+      { occurrenceId: predecessor, relation: "workflow-progression" },
+    ],
+    decisionReason: "accepted-result-queued",
+  });
+
 const completionOccurred = (
   cursor: number,
   journalPosition: number,
   observedAt: string,
   issueNumber: number,
   node: IntegrationNode,
-  integrator: ActorIdentity<"integration-agent">,
   predecessor: OccurrenceId,
 ): SemanticTraceItem =>
   occurred(cursor, journalPosition, observedAt, {
-    ...occurrenceFacts(
-      cursor,
-      `gh-${issueNumber}-completion-acknowledged`,
-      integrator.invocationId,
-    ),
+    ...occurrenceFacts(cursor, `gh-${issueNumber}-completion-acknowledged`),
     operation: { tag: "TrackerCompletionAcknowledged", node },
     predecessors: [
       { occurrenceId: predecessor, relation: "authority-acknowledgement" },
@@ -431,6 +449,33 @@ export const makeTrackerDagRun = (
       tag: "ResumedSession",
       sessionId: session("integration-main"),
       previousInvocationId: gh170Integrator.invocationId,
+    },
+  );
+  const gh46IntegrationReviewer = actor(
+    "gh-46-integration-reviewer",
+    "integration-reviewer",
+    "streaming",
+    {
+      tag: "InitialSession",
+      sessionId: session("gh-46-integration-reviewer"),
+    },
+  );
+  const gh170IntegrationReviewer = actor(
+    "gh-170-integration-reviewer",
+    "integration-reviewer",
+    "streaming",
+    {
+      tag: "InitialSession",
+      sessionId: session("gh-170-integration-reviewer"),
+    },
+  );
+  const gh99IntegrationReviewer = actor(
+    "gh-99-integration-reviewer",
+    "integration-reviewer",
+    "streaming",
+    {
+      tag: "InitialSession",
+      sessionId: session("gh-99-integration-reviewer"),
     },
   );
 
@@ -676,24 +721,49 @@ export const makeTrackerDagRun = (
         gh170,
         occurrenceId("gh-170-accept-round-2"),
       ),
+      invocationOccurred({
+        cursor: 17,
+        journalPosition: 17,
+        observedAt: "21:24:30",
+        name: "gh-46-integration-review",
+        node: gh46Integration,
+        stage: "fresh-integration-review",
+        actor: gh46IntegrationReviewer,
+        completesActorInvocationId: gh46Integrator.invocationId,
+        predecessors: [
+          {
+            occurrenceId: occurrenceId("gh-46-integration"),
+            relation: "workflow-handback",
+          },
+        ],
+        decisionReason: "fresh-review-required",
+      }),
+      integrationReviewVerdictOccurred(
+        18,
+        18,
+        "21:24:45",
+        "gh-46-integration-accept",
+        gh46Integration,
+        gh46IntegrationReviewer,
+        occurrenceId("gh-46-integration-review"),
+      ),
       completionOccurred(
-        17,
-        17,
+        19,
+        19,
         "21:25:00",
         46,
         gh46Integration,
-        gh46Integrator,
-        occurrenceId("gh-46-integration"),
+        occurrenceId("gh-46-integration-accept"),
       ),
       trackerRevisionObserved(
-        18,
+        20,
         "21:25:01",
         "simulation-after-gh-46",
         afterGh46,
       ),
       invocationOccurred({
-        cursor: 19,
-        journalPosition: 18,
+        cursor: 21,
+        journalPosition: 20,
         observedAt: "21:25:02",
         name: "gh-170-integration",
         node: gh170Integration,
@@ -711,24 +781,49 @@ export const makeTrackerDagRun = (
         ],
         decisionReason: "integration-target-lease-acquired",
       }),
+      invocationOccurred({
+        cursor: 22,
+        journalPosition: 21,
+        observedAt: "21:28:30",
+        name: "gh-170-integration-review",
+        node: gh170Integration,
+        stage: "fresh-integration-review",
+        actor: gh170IntegrationReviewer,
+        completesActorInvocationId: gh170Integrator.invocationId,
+        predecessors: [
+          {
+            occurrenceId: occurrenceId("gh-170-integration"),
+            relation: "workflow-handback",
+          },
+        ],
+        decisionReason: "fresh-review-required",
+      }),
+      integrationReviewVerdictOccurred(
+        23,
+        22,
+        "21:28:45",
+        "gh-170-integration-accept",
+        gh170Integration,
+        gh170IntegrationReviewer,
+        occurrenceId("gh-170-integration-review"),
+      ),
       completionOccurred(
-        20,
-        19,
+        24,
+        23,
         "21:29:00",
         170,
         gh170Integration,
-        gh170Integrator,
-        occurrenceId("gh-170-integration"),
+        occurrenceId("gh-170-integration-accept"),
       ),
       trackerRevisionObserved(
-        21,
+        25,
         "21:29:01",
         "simulation-after-gh-170",
         afterGh170,
       ),
       invocationOccurred({
-        cursor: 22,
-        journalPosition: 20,
+        cursor: 26,
+        journalPosition: 24,
         observedAt: "21:29:02",
         name: "gh-99-integration",
         node: gh99Integration,
@@ -746,17 +841,42 @@ export const makeTrackerDagRun = (
         ],
         decisionReason: "integration-target-lease-acquired",
       }),
+      invocationOccurred({
+        cursor: 27,
+        journalPosition: 25,
+        observedAt: "21:32:30",
+        name: "gh-99-integration-review",
+        node: gh99Integration,
+        stage: "fresh-integration-review",
+        actor: gh99IntegrationReviewer,
+        completesActorInvocationId: gh99Integrator.invocationId,
+        predecessors: [
+          {
+            occurrenceId: occurrenceId("gh-99-integration"),
+            relation: "workflow-handback",
+          },
+        ],
+        decisionReason: "fresh-review-required",
+      }),
+      integrationReviewVerdictOccurred(
+        28,
+        26,
+        "21:32:45",
+        "gh-99-integration-accept",
+        gh99Integration,
+        gh99IntegrationReviewer,
+        occurrenceId("gh-99-integration-review"),
+      ),
       completionOccurred(
-        23,
-        21,
+        29,
+        27,
         "21:33:00",
         99,
         gh99Integration,
-        gh99Integrator,
-        occurrenceId("gh-99-integration"),
+        occurrenceId("gh-99-integration-accept"),
       ),
       trackerRevisionObserved(
-        24,
+        30,
         "21:33:01",
         "simulation-after-gh-99",
         afterGh99,

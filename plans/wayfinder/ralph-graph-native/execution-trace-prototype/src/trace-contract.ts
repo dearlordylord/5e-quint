@@ -98,6 +98,17 @@ export interface IntegrationNode {
 
 export type WorkflowNode = TaskAttemptNode | IntegrationNode;
 
+const sameWorkflowNode = (left: WorkflowNode, right: WorkflowNode): boolean =>
+  left.tag === "TaskAttempt" && right.tag === "TaskAttempt"
+    ? left.taskId === right.taskId &&
+      left.attemptId === right.attemptId &&
+      left.worktreeId === right.worktreeId
+    : left.tag === "IntegrationLifecycle" &&
+      right.tag === "IntegrationLifecycle" &&
+      left.taskId === right.taskId &&
+      left.integrationId === right.integrationId &&
+      left.targetId === right.targetId;
+
 export const ACTOR_STAGES = [
   "implementation",
   "fresh-task-review",
@@ -180,6 +191,12 @@ export type WorkflowOperation =
       readonly node: TaskAttemptNode;
       readonly actorInvocationId: ActorInvocationId;
       readonly verdict: "accept";
+    }
+  | {
+      readonly tag: "IntegrationReviewVerdictReturned";
+      readonly node: IntegrationNode;
+      readonly actorInvocationId: ActorInvocationId;
+      readonly verdict: "findings" | "accept";
     }
   | {
       readonly tag: "AcceptedResultQueued";
@@ -475,7 +492,7 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
       issues.push({ tag: "NonIncreasingCursor", cursor: item.cursor });
     }
     previousCursor = item.cursor;
-    if (!/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(item.observedAt)) {
+    if (item.observedAt.trim().length === 0) {
       issues.push({ tag: "InvalidObservedAt", observedAt: item.observedAt });
     }
     if (item.tag === "TrackerRevisionObserved") {
@@ -564,8 +581,8 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
       const expectedCompletionRole =
         operation.tag === "TaskReviewVerdictReturned"
           ? "task-reviewer"
-          : operation.tag === "TrackerCompletionAcknowledged"
-            ? "integration-agent"
+          : operation.tag === "IntegrationReviewVerdictReturned"
+            ? "integration-reviewer"
             : operation.tag === "ActorInvocationStarted" &&
                 operation.stage === "fresh-task-review"
               ? "implementer"
@@ -578,8 +595,9 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           ? occurrence.actorCompletion.tag === "NoActorCompleted"
           : completedActor !== undefined &&
             completedActor.actor.role === expectedCompletionRole &&
-            completedActor.node.taskId === operation.node.taskId &&
-            (operation.tag !== "TaskReviewVerdictReturned" ||
+            sameWorkflowNode(completedActor.node, operation.node) &&
+            ((operation.tag !== "TaskReviewVerdictReturned" &&
+              operation.tag !== "IntegrationReviewVerdictReturned") ||
               operation.actorInvocationId ===
                 occurrence.actorCompletion.actorInvocationId);
       if (!completionMatchesOperation) {
@@ -590,12 +608,13 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
               ? occurrence.actorCompletion.actorInvocationId
               : null,
         });
-      } else if (completedActor?.completed === true) {
+      }
+      if (completedActor?.completed === true) {
         issues.push({
           tag: "ActorAlreadyCompleted",
           actorInvocationId: completedActor.actor.invocationId,
         });
-      } else if (completedActor !== undefined) {
+      } else if (completionMatchesOperation && completedActor !== undefined) {
         actors.set(completedActor.actor.invocationId, {
           ...completedActor,
           completed: true,
@@ -622,9 +641,15 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
                       binding.supersededSessionId,
                   )
               : undefined;
+        const sessionAlreadyBound = [...actors.values()].some(
+          (candidate) =>
+            candidate.actor.sessionBinding.sessionId === binding.sessionId &&
+            !candidate.completed,
+        );
         const lineageMatches =
-          binding.tag === "InitialSession" ||
+          (binding.tag === "InitialSession" && !sessionAlreadyBound) ||
           (prior !== undefined &&
+            prior.completed &&
             prior.actor.role === startedActor.role &&
             (startedActor.role === "integration-agent" ||
             startedActor.role === "integration-reviewer"
@@ -646,7 +671,8 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           completed: false,
         });
       } else if (
-        occurrence.operation.tag === "TaskReviewVerdictReturned" &&
+        (occurrence.operation.tag === "TaskReviewVerdictReturned" ||
+          occurrence.operation.tag === "IntegrationReviewVerdictReturned") &&
         !actors.has(occurrence.operation.actorInvocationId)
       ) {
         issues.push({

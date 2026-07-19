@@ -10,15 +10,52 @@ import {
   focusTaskDag,
   presentOccurrences,
   projectRun,
+  traceCursorAt,
   traceEndCursor,
 } from "./projections.ts";
 import {
   validateTraceRun,
+  type OperationOccurrence,
   type TaskId,
   type TraceRun,
+  type TraceValidationIssue,
+  type ValidatedTraceRun,
 } from "./trace-contract.ts";
 
 describe("trace projections", () => {
+  const projectAt = (
+    run: ReturnType<typeof makeTrackerDagRun>,
+    cursor: number,
+  ) => projectRun(run, traceCursorAt(run, cursor));
+
+  const rewriteOccurrence = (
+    run: ValidatedTraceRun,
+    occurrenceId: string,
+    rewrite: (occurrence: OperationOccurrence) => OperationOccurrence,
+  ): TraceRun => {
+    const [first, ...remaining] = run.items;
+    return {
+      ...run,
+      items: [
+        first,
+        ...remaining.map((item) =>
+          item.tag === "OperationOccurred" &&
+          item.occurrence.id === occurrenceId
+            ? { ...item, occurrence: rewrite(item.occurrence) }
+            : item,
+        ),
+      ],
+    };
+  };
+
+  const validationIssues = (
+    trace: TraceRun,
+  ): ReadonlyArray<TraceValidationIssue> => {
+    const result = validateTraceRun(trace);
+    expect(result.tag).toBe("InvalidTrace");
+    return result.tag === "InvalidTrace" ? result.issues : [];
+  };
+
   it("rejects invalid trace ordering before projection", () => {
     const valid = makeTrackerDagRun("resume-bound-session");
     const invalid: TraceRun = {
@@ -78,11 +115,126 @@ describe("trace projections", () => {
     expect(validateTraceRun(trace).tag).toBe("ValidTrace");
   });
 
-  it("retains canonical operation, authority, target, and causal identity", () => {
-    const projection = projectRun(
+  it("rejects cross-attempt actor completion", () => {
+    const invalid = rewriteOccurrence(
       makeTrackerDagRun("resume-bound-session"),
-      10,
+      "occurrence:gh-46-review",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                node: {
+                  ...occurrence.operation.node,
+                  attemptId: "attempt:wrong",
+                  worktreeId: "worktree:wrong",
+                },
+              },
+            }
+          : occurrence,
     );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidActorCompletion",
+      actorInvocationId: "actor:gh-46-implementer",
+    });
+  });
+
+  it("rejects duplicate actor completion", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-46-accepted-result-queued",
+      (occurrence) => ({
+        ...occurrence,
+        actorCompletion: {
+          tag: "ActorCompleted",
+          actorInvocationId: "actor:gh-46-reviewer",
+        },
+      }),
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "ActorAlreadyCompleted",
+      actorInvocationId: "actor:gh-46-reviewer",
+    });
+  });
+
+  it("rejects continuation from an active predecessor", () => {
+    const withoutCompletion = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-170-review-round-1",
+      (occurrence) => ({
+        ...occurrence,
+        actorCompletion: { tag: "NoActorCompleted" },
+      }),
+    );
+
+    expect(validationIssues(withoutCompletion)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-170-implementer-round-2",
+    });
+  });
+
+  it("rejects unknown continuation lineage", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-170-implementation-round-2",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                actor: {
+                  ...occurrence.operation.actor,
+                  sessionBinding: {
+                    tag: "ResumedSession",
+                    sessionId: "session:gh-170-implementer",
+                    previousInvocationId: "actor:unknown",
+                  },
+                },
+              },
+            }
+          : occurrence,
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-170-implementer-round-2",
+    });
+  });
+
+  it("rejects simultaneous reuse of an active session", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-46-implementation",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                actor: {
+                  ...occurrence.operation.actor,
+                  sessionBinding: {
+                    tag: "InitialSession",
+                    sessionId: "session:gh-170-implementer",
+                  },
+                },
+              },
+            }
+          : occurrence,
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-46-implementer",
+    });
+  });
+
+  it("retains canonical operation, authority, target, and causal identity", () => {
+    const projection = projectAt(makeTrackerDagRun("resume-bound-session"), 10);
     const integration = projection.occurrences.find(
       (occurrence) =>
         occurrence.operation.tag === "ActorInvocationStarted" &&
@@ -108,7 +260,7 @@ describe("trace projections", () => {
   });
   it("mirrors the captured GH-12 tracker hierarchy and native blocker DAG", () => {
     const run = makeTrackerDagRun("resume-bound-session");
-    const projection = projectRun(run, 0);
+    const projection = projectAt(run, 0);
     const gh170 = projection.taskDag.tasks.find(
       (task) => task.id === "github-issue:170",
     );
@@ -142,10 +294,12 @@ describe("trace projections", () => {
     const projection = projectRun(run, traceEndCursor(run));
     const labels = presentOccurrences(projection.occurrences, false)
       .filter((occurrence) => occurrence.taskId === "github-issue:170")
-      .filter(
-        (occurrence) =>
-          !occurrence.label.startsWith("integration") &&
-          occurrence.label !== "TrackerCompletionAcknowledged",
+      .filter((occurrence) =>
+        projection.occurrences.some(
+          (candidate) =>
+            candidate.id === occurrence.id &&
+            candidate.operation.node.tag === "TaskAttempt",
+        ),
       )
       .map((occurrence) => occurrence.label);
 
@@ -161,14 +315,14 @@ describe("trace projections", () => {
   });
 
   it("makes resumed and replacement implementer sessions distinct", () => {
-    const resumed = projectRun(
+    const resumed = projectAt(
       makeTrackerDagRun("resume-bound-session"),
       9,
     ).actors.find(
       (actor) =>
         actor.actor.invocationId === "actor:gh-170-implementer-round-2",
     );
-    const replaced = projectRun(
+    const replaced = projectAt(
       makeTrackerDagRun("start-fresh-session"),
       9,
     ).actors.find(
@@ -211,7 +365,8 @@ describe("trace projections", () => {
   it("does not collapse an interleaved workflow node into another task's loop", () => {
     const run = makeTrackerDagRun("resume-bound-session");
     const projection = projectRun(run, traceEndCursor(run));
-    const unrelated = projectRun(largeRun, 1).occurrences[0]!;
+    const unrelated = projectRun(largeRun, traceCursorAt(largeRun, 1))
+      .occurrences[0]!;
     const interleaved = [
       ...projection.occurrences.slice(0, 3),
       unrelated,
@@ -234,7 +389,7 @@ describe("trace projections", () => {
   });
 
   it("derives two simultaneously active issue workflows from causal events", () => {
-    const projection = projectRun(makeTrackerDagRun("resume-bound-session"), 2);
+    const projection = projectAt(makeTrackerDagRun("resume-bound-session"), 2);
     const activeTaskIds = projection.actorSpans
       .filter((span) => span.tag === "ActiveActorSpan")
       .map((span) => span.taskId);
@@ -256,16 +411,13 @@ describe("trace projections", () => {
       ]),
     ).toEqual([
       ["github-issue:46", 10, 17],
-      ["github-issue:170", 19, 20],
-      ["github-issue:99", 22, 23],
+      ["github-issue:170", 21, 22],
+      ["github-issue:99", 26, 27],
     ]);
   });
 
   it("projects issue execution state onto the tracker DAG", () => {
-    const projection = projectRun(
-      makeTrackerDagRun("resume-bound-session"),
-      14,
-    );
+    const projection = projectAt(makeTrackerDagRun("resume-bound-session"), 14);
     const graph = taskGraph(
       projection.taskDag,
       projection.taskExecutions,
@@ -282,10 +434,7 @@ describe("trace projections", () => {
   });
 
   it("projects a structural tracker rewrite after the first completion", () => {
-    const projection = projectRun(
-      makeTrackerDagRun("resume-bound-session"),
-      18,
-    );
+    const projection = projectAt(makeTrackerDagRun("resume-bound-session"), 20);
 
     expect(projection.rewrite?.addedTaskIds).toEqual([
       TRACKER_STRUCTURAL_FOLLOW_UP_TASK_ID,
@@ -295,7 +444,7 @@ describe("trace projections", () => {
 
   it("focuses the live DAG on GH-170 ancestry, blockers, and dependants", () => {
     const run = makeTrackerDagRun("resume-bound-session");
-    const taskDag = projectRun(run, 0).taskDag;
+    const taskDag = projectAt(run, 0).taskDag;
     const focused = focusTaskDag(taskDag, "github-issue:170");
     const ids = new Set(focused.tasks.map((task) => task.id));
 
