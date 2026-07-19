@@ -12,6 +12,7 @@ import {
   focusTaskDagOnTasks,
   presentOccurrences,
   projectRun,
+  traceCursorAt,
   traceEndCursor,
   type ActorSpan,
 } from "./projections.ts";
@@ -20,7 +21,7 @@ import type {
   SemanticTraceItem,
   SessionContinuationChoice,
   TaskId,
-  TraceRun,
+  ValidatedTraceRun,
 } from "./trace-contract.ts";
 
 const NO_GRAPH_FOCUS_TASKS: ReadonlySet<TaskId> = new Set();
@@ -34,7 +35,10 @@ const traceItemTitle = (item: SemanticTraceItem): string => {
     if (operation.tag === "ActorInvocationStarted") {
       return `${operation.stage} invocation started`;
     }
-    if (operation.tag === "TaskReviewVerdictReturned") {
+    if (
+      operation.tag === "TaskReviewVerdictReturned" ||
+      operation.tag === "IntegrationReviewVerdictReturned"
+    ) {
       return `review verdict: ${operation.verdict}`;
     }
     return operation.tag;
@@ -74,13 +78,17 @@ const traceItemDetail = (
     const node = item.occurrence.operation.node;
     return [
       ["occurrence", item.occurrence.id],
+      ["operation", item.occurrence.operationId],
       [
         "actor",
         actor !== null
           ? `${actor.role} · ${actor.invocationId}`
           : item.occurrence.operation.tag === "TaskReviewVerdictReturned"
             ? `task-reviewer · ${item.occurrence.operation.actorInvocationId}`
-            : "coordinator",
+            : item.occurrence.operation.tag ===
+                "IntegrationReviewVerdictReturned"
+              ? `integration-reviewer · ${item.occurrence.operation.actorInvocationId}`
+              : "coordinator",
       ],
       ...(actor === null ? [] : [["session", sessionDetail(actor)] as const]),
       ["workflow node", node.tag],
@@ -91,6 +99,18 @@ const traceItemDetail = (
             ["worktree", node.worktreeId] as const,
           ]
         : [["integration", node.integrationId] as const]),
+      ...(node.tag === "IntegrationLifecycle"
+        ? [["integration target", node.targetId] as const]
+        : []),
+      [
+        "authority observations",
+        item.occurrence.authorityObservations
+          .map(
+            (reference) =>
+              `${reference.observationId} @ ${reference.trackerRevision}`,
+          )
+          .join(" · "),
+      ],
       ["why", item.occurrence.decisionReason],
       ["evidence", item.occurrence.evidenceIds.join(", ")],
       [
@@ -118,7 +138,7 @@ const traceItemDetail = (
   ];
 };
 
-const runLabel = (run: TraceRun): string =>
+const runLabel = (run: ValidatedTraceRun): string =>
   run.mode === "observed" ? run.runId : run.scenarioId;
 
 const GraphPanel = ({
@@ -275,7 +295,10 @@ export const App = () => {
   const [selectedActors, setSelectedActors] = useState<ReadonlyArray<string>>(
     [],
   );
-  const projection = useMemo(() => projectRun(run, cursor), [cursor, run]);
+  const projection = useMemo(
+    () => projectRun(run, traceCursorAt(run, cursor)),
+    [cursor, run],
+  );
   const visibleTaskDag = useMemo(
     () =>
       treeScope === "focus"
@@ -404,7 +427,7 @@ export const App = () => {
               }
             >
               <option value="resume-bound-session">
-                Resume bound implementer session (Codex .ralph path)
+                Resume exact bound implementer session
               </option>
               <option value="start-fresh-session">
                 Start replacement implementer session

@@ -18,8 +18,9 @@ The discarded Stately Inspector and hypothetical-policy experiments are not
 part of this prototype. They did not contribute to the accepted core direction
 and their controls implied functionality the demo did not provide.
 
-The fixture is an executable projection of the trace contract in
-`operator-and-resource-control-surface.md`. It contains tracker revisions,
+The fixture is executable decision evidence derived from the provisional trace
+shape in `operator-and-resource-control-surface.md`. It is not the accepted
+implementation specification or a runtime authority. It contains tracker revisions,
 workflow occurrences, typed causal parents, decision reasons, evidence
 references, and adapter capabilities. The trace contract and UI support actor
 output and explicit observation gaps, but this accepted prototype deliberately
@@ -83,8 +84,9 @@ convergence segment, including the implementer handback.
 Every implementation round is a distinct top-level actor invocation. The
 policy control chooses how that invocation binds an agent session:
 
-- **Resume bound session** mirrors the current Codex `.ralph` path: retain the
-  task attempt and worktree, then resume the exact durable implementer session.
+- **Resume bound session** demonstrates the accepted exact-session continuation
+  requirement: retain the task attempt and worktree, then resume the exact
+  durable implementer session when the adapter proves that capability.
 - **Start replacement session** retains the same attempt, worktree, findings,
   and evidence, but binds a new durable implementer session.
 
@@ -94,7 +96,9 @@ not encode the choice as an implementer-name special case.
 
 ## Run
 
-This is an isolated pnpm project, like the earlier control-plane prototype.
+This is an isolated pnpm project because it is extraction-bound Dalph tooling,
+not a package in the D&D main-application workspace. The isolated lockfile
+becomes the repository lockfile when the prototype moves to Dalph.
 
 ```bash
 cd <execution-trace-prototype-directory>

@@ -10,7 +10,8 @@ import type {
   SemanticTraceItem,
   TaskDagRevision,
   TaskId,
-  TraceRun,
+  TraceCursor,
+  ValidatedTraceRun,
   TrackerRevision,
 } from "./trace-contract.ts";
 
@@ -25,7 +26,7 @@ export interface TaskDagRewrite {
 
 export interface ActorStreamEntry {
   readonly tag: "output" | "gap";
-  readonly cursor: number;
+  readonly cursor: TraceCursor;
   readonly summary: string;
   readonly evidenceIds: ReadonlyArray<EvidenceId>;
 }
@@ -50,18 +51,18 @@ interface ActorSpanBase {
   readonly taskId: TaskId;
   readonly actor: ActorIdentity;
   readonly stage: ActorStage;
-  readonly startCursor: number;
+  readonly startCursor: TraceCursor;
 }
 
 export type ActorSpan = ActorSpanBase &
   (
     | {
         readonly tag: "ActiveActorSpan";
-        readonly throughCursor: number;
+        readonly throughCursor: TraceCursor;
       }
     | {
         readonly tag: "CompletedActorSpan";
-        readonly endCursor: number;
+        readonly endCursor: TraceCursor;
       }
   );
 
@@ -73,11 +74,12 @@ export type TaskExecutionProjection = { readonly taskId: TaskId } & (
   | { readonly tag: "queued-for-integration" }
   | { readonly tag: "integrating" }
   | { readonly tag: "reviewing-integration" }
+  | { readonly tag: "integration-accepted-awaiting-completion" }
   | { readonly tag: "completion-acknowledged" }
 );
 
 export interface RunProjection {
-  readonly cursor: number;
+  readonly cursor: TraceCursor;
   readonly taskDag: TaskDagRevision;
   readonly rewrite: TaskDagRewrite | null;
   readonly occurrences: ReadonlyArray<OperationOccurrence>;
@@ -99,7 +101,11 @@ const operationTaskId = (occurrence: OperationOccurrence): TaskId =>
 
 const phaseAfter = (occurrence: OperationOccurrence): ActorPhase => {
   const operation = occurrence.operation;
-  if (operation.tag === "TaskReviewVerdictReturned") return "completed";
+  if (
+    operation.tag === "TaskReviewVerdictReturned" ||
+    operation.tag === "IntegrationReviewVerdictReturned"
+  )
+    return "completed";
   if (operation.tag !== "ActorInvocationStarted") return "completed";
   if (operation.stage === "implementation") return "implementing";
   if (operation.stage === "integration") return "integrating";
@@ -110,9 +116,11 @@ const unique = <Value>(values: ReadonlyArray<Value>): ReadonlyArray<Value> => [
   ...new Set(values),
 ];
 
+type ValidatedTraceItem = ValidatedTraceRun["items"][number];
+
 type TracePrefix = readonly [
-  SemanticTraceItem & { readonly tag: "TrackerRevisionObserved" },
-  ...ReadonlyArray<SemanticTraceItem>,
+  ValidatedTraceItem & { readonly tag: "TrackerRevisionObserved" },
+  ...ReadonlyArray<ValidatedTraceItem>,
 ];
 
 const taskDagAt = (items: TracePrefix): TaskDagRevision => {
@@ -178,28 +186,24 @@ const rewriteAt = (items: TracePrefix): TaskDagRewrite | null => {
 };
 
 const actorsAt = (
-  items: ReadonlyArray<SemanticTraceItem>,
+  items: ReadonlyArray<ValidatedTraceItem>,
   occurrences: ReadonlyArray<OperationOccurrence>,
 ): ReadonlyArray<ActorProjection> => {
   const identities = new Map<ActorInvocationId, ActorIdentity>();
+  const completedActors = new Set<ActorInvocationId>();
   for (const occurrence of occurrences) {
     const actor = operationActor(occurrence);
     if (actor !== null) identities.set(actor.invocationId, actor);
+    if (occurrence.actorCompletion.tag === "ActorCompleted") {
+      completedActors.add(occurrence.actorCompletion.actorInvocationId);
+    }
   }
   return [...identities.values()].map((actor) => {
     const actorOccurrences = occurrences.filter(
       (occurrence) =>
         operationActor(occurrence)?.invocationId === actor.invocationId,
     );
-    const actorOccurrenceIds = new Set(
-      actorOccurrences.map((occurrence) => occurrence.id),
-    );
-    const handedOff = occurrences.some((occurrence) =>
-      occurrence.predecessors.some((predecessor) =>
-        actorOccurrenceIds.has(predecessor.occurrenceId),
-      ),
-    );
-    const phase = handedOff
+    const phase = completedActors.has(actor.invocationId)
       ? "completed"
       : actorOccurrences.length === 0
         ? "observed"
@@ -239,23 +243,25 @@ const actorsAt = (
 };
 
 const actorSpansAt = (
-  items: ReadonlyArray<SemanticTraceItem>,
-  cursor: number,
+  items: ReadonlyArray<ValidatedTraceItem>,
+  cursor: TraceCursor,
 ): ReadonlyArray<ActorSpan> => {
   const operationItems = items.filter(
-    (item): item is SemanticTraceItem & { readonly tag: "OperationOccurred" } =>
+    (
+      item,
+    ): item is ValidatedTraceItem & { readonly tag: "OperationOccurred" } =>
       item.tag === "OperationOccurred",
   );
 
   return operationItems.flatMap((startItem): ReadonlyArray<ActorSpan> => {
     const operation = startItem.occurrence.operation;
     if (operation.tag !== "ActorInvocationStarted") return [];
-    const successor = operationItems.find(
+    const completion = operationItems.find(
       (candidate) =>
         candidate.cursor > startItem.cursor &&
-        candidate.occurrence.predecessors.some(
-          (predecessor) => predecessor.occurrenceId === startItem.occurrence.id,
-        ),
+        candidate.occurrence.actorCompletion.tag === "ActorCompleted" &&
+        candidate.occurrence.actorCompletion.actorInvocationId ===
+          operation.actor.invocationId,
     );
     const base: ActorSpanBase = {
       taskId: operation.node.taskId,
@@ -263,13 +269,13 @@ const actorSpansAt = (
       stage: operation.stage,
       startCursor: startItem.cursor,
     };
-    return successor === undefined
+    return completion === undefined
       ? [{ ...base, tag: "ActiveActorSpan", throughCursor: cursor }]
       : [
           {
             ...base,
             tag: "CompletedActorSpan",
-            endCursor: successor.cursor,
+            endCursor: completion.cursor,
           },
         ];
   });
@@ -284,6 +290,11 @@ const taskExecutionAfter = (
     return operation.verdict === "findings"
       ? { taskId, tag: "findings-returned" }
       : { taskId, tag: "accepted-awaiting-queue" };
+  }
+  if (operation.tag === "IntegrationReviewVerdictReturned") {
+    return operation.verdict === "findings"
+      ? { taskId, tag: "integrating" }
+      : { taskId, tag: "integration-accepted-awaiting-completion" };
   }
   if (operation.tag === "AcceptedResultQueued") {
     return { taskId, tag: "queued-for-integration" };
@@ -315,10 +326,9 @@ const taskExecutionsAt = (
 };
 
 export const projectRun = (
-  run: TraceRun,
-  requestedCursor: number,
+  run: ValidatedTraceRun,
+  cursor: TraceCursor,
 ): RunProjection => {
-  const cursor = Math.max(0, Math.min(requestedCursor, traceEndCursor(run)));
   const items: TracePrefix = [
     run.items[0],
     ...run.items.slice(1).filter((item) => item.cursor <= cursor),
@@ -339,8 +349,18 @@ export const projectRun = (
   };
 };
 
-export const traceEndCursor = (run: TraceRun): number =>
-  Math.max(...run.items.map((item) => item.cursor));
+export const traceEndCursor = (run: ValidatedTraceRun): TraceCursor =>
+  // Validated runs contain a nonempty, increasing sequence of branded cursors.
+  Math.max(...run.items.map((item) => item.cursor)) as TraceCursor;
+
+export const traceCursorAt = (
+  run: ValidatedTraceRun,
+  requestedCursor: number,
+): TraceCursor => {
+  const requested = Number.isSafeInteger(requestedCursor) ? requestedCursor : 0;
+  // Clamping against a validated run proves this is a valid trace cursor.
+  return Math.max(0, Math.min(requested, traceEndCursor(run))) as TraceCursor;
+};
 
 export interface OccurrencePresentation {
   readonly id: OccurrenceId;
@@ -367,7 +387,10 @@ const occurrenceLabel = (occurrence: OperationOccurrence): string => {
   if (operation.tag === "ActorInvocationStarted") {
     return `${operation.stage} · ${sessionBindingLabel(operation.actor)}`;
   }
-  if (operation.tag === "TaskReviewVerdictReturned") {
+  if (
+    operation.tag === "TaskReviewVerdictReturned" ||
+    operation.tag === "IntegrationReviewVerdictReturned"
+  ) {
     return `review verdict · ${operation.verdict}`;
   }
   return operation.tag;
@@ -392,7 +415,11 @@ const isFreshReviewStart = (occurrence: OperationOccurrence): boolean =>
 
 const isConvergenceMember = (occurrence: OperationOccurrence): boolean => {
   const operation = occurrence.operation;
-  if (operation.tag === "TaskReviewVerdictReturned") return true;
+  if (
+    operation.tag === "TaskReviewVerdictReturned" ||
+    operation.tag === "IntegrationReviewVerdictReturned"
+  )
+    return true;
   if (operation.tag !== "ActorInvocationStarted") return false;
   return (
     operation.stage === "implementation" ||
@@ -401,6 +428,9 @@ const isConvergenceMember = (occurrence: OperationOccurrence): boolean => {
     operation.stage === "fresh-integration-review"
   );
 };
+
+const isConvergenceRelation = (relation: CausalRelation): boolean =>
+  relation === "workflow-progression" || relation === "workflow-handback";
 
 const collapseConvergenceLoops = (
   occurrences: ReadonlyArray<OperationOccurrence>,
@@ -425,7 +455,7 @@ const collapseConvergenceLoops = (
           isConvergenceMember(candidate) &&
           candidate.predecessors.some(
             (predecessor) =>
-              predecessor.relation === "workflow-handback" &&
+              isConvergenceRelation(predecessor.relation) &&
               predecessor.occurrenceId === member.id,
           ),
       );
@@ -434,7 +464,8 @@ const collapseConvergenceLoops = (
       group.push(successor);
       member = successor;
       if (
-        successor.operation.tag === "TaskReviewVerdictReturned" &&
+        (successor.operation.tag === "TaskReviewVerdictReturned" ||
+          successor.operation.tag === "IntegrationReviewVerdictReturned") &&
         successor.operation.verdict === "accept"
       ) {
         break;

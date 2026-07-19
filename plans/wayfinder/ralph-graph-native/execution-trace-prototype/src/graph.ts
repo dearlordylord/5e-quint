@@ -66,6 +66,8 @@ const taskExecutionLabel = (execution: TaskExecutionProjection): string => {
     return "QUEUED FOR INTEGRATION";
   if (execution.tag === "integrating") return "INTEGRATING";
   if (execution.tag === "reviewing-integration") return "INTEGRATION REVIEW";
+  if (execution.tag === "integration-accepted-awaiting-completion")
+    return "INTEGRATION ACCEPTED";
   return "COMPLETION ACKNOWLEDGED";
 };
 
