@@ -832,6 +832,26 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         Schema.decodeUnknownEither(BattleSnapshotSchema)(focusedSnapshot),
       ),
     ).toBe(true);
+    const wrongOwnerSnapshot = {
+      ...focusedSnapshot,
+      combatants: focusedSnapshot.combatants.map((combatant) =>
+        combatant.combatantId === spellCasterId
+          ? {
+              ...combatant,
+              activeEffectRefs: [
+                battleActiveEffectExecutionRefForTest(
+                  "wrong-owner-spiritual-weapon",
+                ),
+              ],
+            }
+          : combatant,
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(wrongOwnerSnapshot),
+      ),
+    ).toBe(true);
 
     const resolved = resolveBattleSubject({
       state,

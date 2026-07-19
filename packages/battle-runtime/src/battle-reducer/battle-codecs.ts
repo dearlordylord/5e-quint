@@ -5817,7 +5817,7 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
     },
     {
       message: () =>
-        "Execution scopes, procedure refs, and resource refs must be unique and owned by their combatant.",
+        "Execution scopes, procedure refs, resource refs, and active-effect refs must be unique and owned by their combatant.",
     },
   ),
 );
