@@ -15,36 +15,7 @@
 
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../../battle-interrupt-triggers.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import {
-  interruptTriggerLabel,
-  type ActionSpellBattleResolutionInput,
-  type BattleActDiscoveryCandidate,
-  type BattleExecutableSpellInvocation,
-  type BattleCreatureState,
-  type BattleHole,
-  type BattleResolutionResult,
-  type BattleState,
-  type BonusActionSpellBattleResolutionInput,
-  type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-  spellTargetHole,
-  spellAbilityChoiceHole,
-} from "../spells-holes-fills.ts";
 import {
   supportedCantripSaveGateDamageProfile,
   supportedPreparedSaveGateDamageProfile,
@@ -55,9 +26,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
   AbilitySchema,
@@ -71,6 +40,36 @@ import {
   SpellSavingThrowRollModeRuleSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  type ActionSpellBattleResolutionInput,
+  type BattleActDiscoveryCandidate,
+  type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
+  type BattleHole,
+  type BattleResolutionResult,
+  type BattleState,
+  type BonusActionSpellBattleResolutionInput,
+  type SupportedSpellInvocation,
+} from "../../battle-reducer.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellAbilityChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowTargeting,
+  spellTargetHole,
+} from "../spells-holes-fills.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type SaveGatedDamageSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -139,13 +138,10 @@ function discoverSingleTargetSaveGatedDamageCastActs(
   if (targetHole.choices.length === 0) {
     return [];
   }
-  const baseCastAct = saveGatedDamageCastAct(
-    actorId,
-    invocation,
-    [targetHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
-    invocation.spell.name,
-    saveGatedDamageCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = saveGatedDamageCastAct(actorId, invocation, [
+    targetHole,
+    ...saveGatedDamageAbilityChoiceHoles(invocation),
+  ]);
   return [
     baseCastAct,
     ...saveGatedDamageMetamagicCastActs({
@@ -170,13 +166,10 @@ function discoverAreaSaveGatedDamageCastActs(
     actorId,
     invocation,
   );
-  const baseCastAct = saveGatedDamageCastAct(
-    actorId,
-    invocation,
-    [savingThrowHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
-    invocation.spell.name,
-    saveGatedDamageCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = saveGatedDamageCastAct(actorId, invocation, [
+    savingThrowHole,
+    ...saveGatedDamageAbilityChoiceHoles(invocation),
+  ]);
   return [
     baseCastAct,
     ...saveGatedDamageMetamagicCastActs({
@@ -194,7 +187,7 @@ function saveGatedDamageMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: SaveGatedDamageSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>;
   readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
@@ -213,7 +206,6 @@ function saveGatedDamageMetamagicCastActs(input: {
       input.invocation,
       applications,
     );
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...input.baseCastAct,
       subject: {
@@ -224,10 +216,6 @@ function saveGatedDamageMetamagicCastActs(input: {
         metamagicInitialHoles.length === 0
           ? input.baseHoles
           : metamagicInitialHoles,
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${saveGatedDamageCastSummaryWithSavingThrow(
-        input.invocation,
-      )} Cast with ${label}.`,
     };
   });
 }
@@ -236,8 +224,6 @@ function saveGatedDamageCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -247,8 +233,6 @@ function saveGatedDamageCastAct(
       invocation: saveGatedDamageInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -256,7 +240,7 @@ function saveGatedDamageCastAct(
 function saveGatedDamageMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SaveGatedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
@@ -284,7 +268,7 @@ function saveGatedDamageMetamagicInitialHoles(
 }
 
 function saveGatedDamageAbilityChoiceHoles(
-  invocation: SaveGatedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
 ): readonly BattleHole[] {
   return invocation.failedSaveAbilityChoices === null
     ? []
@@ -307,8 +291,6 @@ function readiedSaveGatedDamageActs(
       invocation: saveGatedDamageInvocationRef(invocation),
       mode: { tag: "ready", trigger },
     },
-    label: `Ready ${invocation.spell.name}`,
-    summary: `Ready ${invocation.spell.name} for ${interruptTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
     initialHoles: [],
   }));
 }
@@ -336,16 +318,6 @@ function saveGatedDamageCastSummary(
   return invocation.resource.tag === "spellSlot"
     ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
     : `Cast ${invocation.spell.name} as a cantrip.`;
-}
-
-function saveGatedDamageCastSummaryWithSavingThrow(
-  invocation: SaveGatedDamageSpellInvocation,
-): string {
-  return `${saveGatedDamageCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveSaveGatedDamage(

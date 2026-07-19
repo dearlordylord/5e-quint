@@ -27,7 +27,6 @@ import {
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -40,21 +39,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
 import { resolveGustOfWindLineSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -70,6 +54,19 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowTargeting,
+} from "../spells-holes-fills.ts";
 
 type GustOfWindLineSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -263,13 +260,7 @@ function discoverGustOfWindLineCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
-  const baseCastAct = gustOfWindLineCastAct(
-    actorId,
-    invocation,
-    [initialHole],
-    invocation.spell.name,
-    gustOfWindLineCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = gustOfWindLineCastAct(actorId, invocation, [initialHole]);
   return [
     baseCastAct,
     ...gustOfWindLineMetamagicCastActs({
@@ -287,7 +278,7 @@ function gustOfWindLineMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: GustOfWindLineSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>;
   readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
@@ -306,7 +297,6 @@ function gustOfWindLineMetamagicCastActs(input: {
       input.invocation,
       applications,
     );
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...input.baseCastAct,
       subject: {
@@ -317,10 +307,6 @@ function gustOfWindLineMetamagicCastActs(input: {
         metamagicInitialHoles.length === 0
           ? input.baseHoles
           : metamagicInitialHoles,
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${gustOfWindLineCastSummaryWithSavingThrow(
-        input.invocation,
-      )} Cast with ${label}.`,
     };
   });
 }
@@ -329,8 +315,6 @@ function gustOfWindLineCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -340,8 +324,6 @@ function gustOfWindLineCastAct(
       invocation: gustOfWindLineInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -349,7 +331,7 @@ function gustOfWindLineCastAct(
 function gustOfWindLineMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: GustOfWindLineSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
@@ -389,16 +371,6 @@ function gustOfWindLineCastSummary(
   invocation: GustOfWindLineSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function gustOfWindLineCastSummaryWithSavingThrow(
-  invocation: GustOfWindLineSpellInvocation,
-): string {
-  return `${gustOfWindLineCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveGustOfWindLine(

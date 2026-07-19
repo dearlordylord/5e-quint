@@ -158,8 +158,6 @@ function discoverWeaponDamageRiderCastAct(
         invocation: weaponDamageRiderInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: weaponDamageRiderCastSummary(invocation),
       initialHoles: [],
     },
   ];

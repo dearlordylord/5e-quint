@@ -510,18 +510,13 @@ export function reactionModifierRollHole(
     SupportedUnitFeatureProfile,
     { readonly kind: "reactionRollOrDamageReduction" }
   >,
-  modifierKind: BattleReactionModifierChoice["kind"],
+  _modifierKind: BattleReactionModifierChoice["kind"],
 ): BattleHole {
   return {
     kind: "rolledDice",
     holeId: REACTION_MODIFIER_ROLL_HOLE_ID,
     holeInstanceKey: REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
     label: `${profile.unit.name} reduction roll`,
-    unitFeature: {
-      unitId: profile.unit.id,
-      label: profile.unit.name,
-      modifierKind,
-    },
   };
 }
 

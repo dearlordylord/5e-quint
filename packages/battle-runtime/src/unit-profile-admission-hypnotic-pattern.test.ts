@@ -1,8 +1,6 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME hypnotic_pattern
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hypnotic-pattern-control
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -42,6 +40,10 @@ import type {
 } from "./unit-profile-admission-test-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("Hypnotic Pattern admits level-3+ area save casting and applies Charmed, Incapacitated, and Speed 0", () => {
@@ -84,16 +86,8 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(savingThrow.spell).toEqual(
-      expect.objectContaining({
-        procedure: "hypnoticPattern",
-        spell,
-        resource: { tag: "spellSlot", slotLevel: 3 },
-        targeting: { kind: "pointOriginCube", sideFeet: 30 },
-        rangeFeet: 120,
-        durationTicks: hypnoticPatternDurationTicks,
-      }),
-    );
+    expect(savingThrow).toMatchObject({ outcomeTargeting: "area" });
+    expect("spell" in savingThrow).toBe(false);
 
     const cast = resolveBattleSubject({
       state,
@@ -116,9 +110,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(target.activeEffects).toEqual([
       expect.objectContaining({
         kind: "hypnoticPatternControl",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hypnoticPatternUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         conditionHadNonSpellCharmedSource: false,
         conditionHadNonSpellIncapacitatedSource: false,
@@ -130,9 +122,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       }),
     ]);
     expect(requireCombatant(cast.state, spellCasterId).concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(hypnoticPatternUnitId),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
   });
@@ -565,8 +555,8 @@ function requireSpellSavingThrowOutcomeHole(
   holes: readonly BattleHole[],
 ): BattleSpellSavingThrowOutcomeHole {
   const hole = requireHole(holes, "savingThrowOutcome");
-  if (!("spell" in hole)) {
-    throw new Error("Expected spell Saving Throw outcome hole.");
+  if (!("sourceProcedureRef" in hole)) {
+    throw new Error("Expected a spell Saving Throw outcome projection.");
   }
   return hole;
 }

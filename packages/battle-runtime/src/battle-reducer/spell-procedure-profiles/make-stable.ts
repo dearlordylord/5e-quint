@@ -24,7 +24,6 @@
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
@@ -47,14 +46,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type MakeStableInvocation = Extract<
   SupportedSpellInvocation,
@@ -155,8 +156,6 @@ function discoverMakeStableCastAct(
         invocation: makeStableInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: makeStableCastSummary(invocation),
       initialHoles: [targetHole],
     },
   ];

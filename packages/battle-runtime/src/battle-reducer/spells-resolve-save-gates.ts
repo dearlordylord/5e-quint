@@ -20,34 +20,6 @@ import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import {
-  ATTACK_TARGET_HOLE_ID,
-  isTargetListSpellInvocation,
-  openAfterDamageSequenceInterruptWindow,
-  spendReaction,
-  maybeOpenInterruptWindow,
-  snapshotBattle,
-  type ActionSpellBattleResolutionInput,
-  type BonusActionSpellBattleResolutionInput,
-  type BattleActiveEffect,
-  type BattleHoleId,
-  type BattleHole,
-  type BattleAfterDamageEvent,
-  type BattleFill,
-  type BattleSavingThrowOutcome,
-  type BattleObjectDamageOutcome,
-  type BattleObjectIgnitionOutcome,
-  type BattleResolutionResult,
-  type BattleGustOfWindLinePushDisposition,
-  type BattleCreatureState,
-  type BattleSpellAreaChoice,
-  type BattleSpellSavingThrowOutcomeHole,
-  type BattleSpellSavingThrowOutcomeValue,
-  type BattleThunderwavePushDisposition,
-  type BattleState,
-  type BattleExecutableSpellInvocation,
-  type SaveDamageResult,
-} from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -123,7 +95,6 @@ import {
   transmutedSpellDamageInvocation,
   type SpellMetamagicApplicationFact,
 } from "./metamagic-support.ts";
-
 import {
   spendSpellCastResources,
   spellRequiresConcentration,
@@ -132,16 +103,41 @@ import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
 } from "./antimagic-field-magical-effect-interdiction.ts";
-
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
-
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   parseBattleMovement,
   readiedMovementHole,
   readiedMovementBudgetForActor,
 } from "./turn-end-movement.ts";
+import {
+  ATTACK_TARGET_HOLE_ID,
+  isTargetListSpellInvocation,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+  snapshotBattle,
+  spendReaction,
+  type ActionSpellBattleResolutionInput,
+  type BattleActiveEffect,
+  type BattleAfterDamageEvent,
+  type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
+  type BattleFill,
+  type BattleGustOfWindLinePushDisposition,
+  type BattleHole,
+  type BattleHoleId,
+  type BattleObjectDamageOutcome,
+  type BattleObjectIgnitionOutcome,
+  type BattleResolutionResult,
+  type BattleSavingThrowOutcome,
+  type BattleSpellAreaChoice,
+  type BattleSpellSavingThrowOutcomeValue,
+  type BattleState,
+  type BattleThunderwavePushDisposition,
+  type BonusActionSpellBattleResolutionInput,
+  type SaveDamageResult,
+} from "../battle-reducer.ts";
 
 type SaveMetamagicSelectionState =
   | {
@@ -498,7 +494,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,
@@ -628,7 +624,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
   }
   const savingThrowValidation = validateSavingThrowOutcomes(
     input.fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,
@@ -772,7 +768,7 @@ export function resolveHideousLaughterSpellAct(input: {
   }
   const savingThrowValidation = validateSavingThrowOutcomes(
     input.fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,
@@ -896,7 +892,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
   }
   const savingThrowValidation = validateSavingThrowOutcomes(
     input.fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,
@@ -1298,7 +1294,7 @@ export function resolveSaveGateDamageSpellAct(input: {
 
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     input.fillSet.targetId,
@@ -2532,7 +2528,7 @@ export function resolveSaveGateConditionSpellAct(input: {
   const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     input.fillSet.targetId,
@@ -2685,7 +2681,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
   const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,
@@ -2888,7 +2884,7 @@ export function resolveCommandSpellAct(input: {
   const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,
@@ -3028,7 +3024,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
   const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,
@@ -3105,7 +3101,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
 
 export function validateSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
-  hole: BattleSpellSavingThrowOutcomeHole,
+  invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2],
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId | undefined,
@@ -3115,7 +3111,7 @@ export function validateSavingThrowOutcomes(
   options: { readonly selfOriginAreaAnchorId?: CombatantId } = {},
 ): string | null {
   const outcomes = value.outcomes;
-  if (hole.spell.procedure === "rollModifier") {
+  if (invocation.procedure === "rollModifier") {
     if (outcomes.length === 0) {
       return "Save-gated roll modifier spell must include at least one target Saving Throw outcome.";
     }
@@ -3132,23 +3128,23 @@ export function validateSavingThrowOutcomes(
       }
       seenTargets.add(outcome.targetId);
     }
-    if (hole.spell.targeting.kind === "selfAndChosenLegalTargets") {
+    if (invocation.targeting.kind === "selfAndChosenLegalTargets") {
       return null;
     }
-    return hole.spell.targeting.maxTargets === "allLegalTargets" ||
-      outcomes.length <= hole.spell.targeting.maxTargets
+    return invocation.targeting.maxTargets === "allLegalTargets" ||
+      outcomes.length <= invocation.targeting.maxTargets
       ? null
       : "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
   }
-  const targeting = spellSavingThrowTargeting(hole.spell);
-  if (hole.spell.procedure === "sleepTargetAdmission") {
+  const targeting = spellSavingThrowTargeting(invocation);
+  if (invocation.procedure === "sleepTargetAdmission") {
     return validateSleepTargetAdmissionSavingThrowOutcomes({
       value,
       area: "area" in value ? value.area : undefined,
       state,
     });
   }
-  if (hole.spell.procedure === "greaseGroundHazard") {
+  if (invocation.procedure === "greaseGroundHazard") {
     return validateGreaseGroundHazardSavingThrowOutcomes({
       value,
       area: "area" in value ? value.area : undefined,
@@ -3229,12 +3225,12 @@ export function validateSavingThrowOutcomes(
     return "Grease ground-area facts are only valid for Grease.";
   }
   if ("kind" in value.area && value.area.kind === "gustOfWindLineArea") {
-    if (hole.spell.procedure !== "gustOfWindLine") {
+    if (invocation.procedure !== "gustOfWindLine") {
       return "Gust of Wind Line area facts are only valid for Gust of Wind.";
     }
   }
   if ("kind" in value.area && value.area.kind === "slowArea") {
-    if (hole.spell.procedure !== "slowActivePenalties") {
+    if (invocation.procedure !== "slowActivePenalties") {
       return "Slow area facts are only valid for Slow.";
     }
   }
@@ -3242,10 +3238,10 @@ export function validateSavingThrowOutcomes(
     return "Sleep non-sleeper facts are only valid for Sleep target admission.";
   }
   if ("kind" in value.area && value.area.kind === "faerieFireArea") {
-    if (hole.spell.procedure !== "saveGatedAttackRollAdvantage") {
+    if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
       return "Faerie Fire object area facts are only valid for Faerie Fire.";
     }
-    if (!saveGatedAttackRollAdvantageInvocationIsFaerieFire(hole.spell)) {
+    if (!saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)) {
       return "Faerie Fire object area facts are only valid for Faerie Fire.";
     }
     const affectedObjects = new Set(value.area.affectedObjectIds);
@@ -3294,24 +3290,24 @@ export function validateSavingThrowOutcomes(
   if (
     "kind" in value.area &&
     value.area.kind === "thunderwaveArea" &&
-    (!("postSaveAreaEffect" in hole.spell) ||
-      hole.spell.postSaveAreaEffect?.kind !== "thunderwave")
+    (!("postSaveAreaEffect" in invocation) ||
+      invocation.postSaveAreaEffect?.kind !== "thunderwave")
   ) {
     return "Thunderwave push facts are only valid for Thunderwave.";
   }
   if (
     "kind" in value.area &&
     value.area.kind === "fireballArea" &&
-    (!("postSaveAreaEffect" in hole.spell) ||
-      hole.spell.postSaveAreaEffect?.kind !== "fireballObjectIgnition")
+    (!("postSaveAreaEffect" in invocation) ||
+      invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition")
   ) {
     return "Fireball object ignition facts are only valid for Fireball.";
   }
   if (
     "kind" in value.area &&
     value.area.kind === "shatterArea" &&
-    (!("postSaveAreaEffect" in hole.spell) ||
-      hole.spell.postSaveAreaEffect?.kind !== "shatterObjectDamage")
+    (!("postSaveAreaEffect" in invocation) ||
+      invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage")
   ) {
     return "Shatter object damage facts are only valid for Shatter.";
   }

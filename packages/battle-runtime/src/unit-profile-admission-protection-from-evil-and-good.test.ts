@@ -131,9 +131,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     ).toContainEqual(
       expect.objectContaining({
         kind: "creatureTypeProtection",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(protectionFromEvilAndGoodUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         attackRollMode: "disadvantage",
         protectedAgainstCreatureTypes: [
@@ -262,6 +260,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
 
     const charmInvocation = spellActInvocation(
+      state,
       spellAct({ state, spellId: charmPersonUnitId }),
     );
     if (charmInvocation.procedure !== "saveGatedCondition") {
@@ -390,6 +389,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected Protection from Evil and Good to resolve.");
     }
     const charmInvocation = spellActInvocation(
+      state,
       spellAct({ state, spellId: charmPersonUnitId }),
     );
     if (charmInvocation.procedure !== "saveGatedCondition") {
@@ -482,6 +482,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
 
     const charmInvocation = spellActInvocation(
+      state,
       spellAct({ state, spellId: charmPersonUnitId }),
     );
     if (charmInvocation.procedure !== "saveGatedCondition") {

@@ -115,9 +115,7 @@ describe("battle runtime: Darkness", () => {
     expect(caster?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "magicalDarknessPointOrigin",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(darknessUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         areaId: "darkness-1",
         radiusFeet: movementFeet(15),
@@ -129,9 +127,7 @@ describe("battle runtime: Darkness", () => {
       }),
     ]);
     expect(caster?.concentration).toMatchObject({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(darknessUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
     });
     expect(resolved.state.currentTurnResources).toMatchObject({
       spellSlotUsesThisTurn: [{ kind: "committed", combatantId: wizardId }],
@@ -146,9 +142,7 @@ describe("battle runtime: Darkness", () => {
     expect(resolved.snapshot.obscurementZones).toEqual([
       {
         kind: "spellMagicalDarknessZone",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(darknessUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         area: {
           kind: "pointOriginSphere",

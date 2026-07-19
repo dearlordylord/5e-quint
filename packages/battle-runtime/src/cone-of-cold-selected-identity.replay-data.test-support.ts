@@ -62,7 +62,7 @@ export const coneOfColdSelectedIdentityReplay = {
                 dc: { kind: "caster_spell_save_dc" },
               }),
             );
-            expect(spellHoleInvocation([savingThrow])).toEqual(
+            expect(spellHoleInvocation(state, [savingThrow])).toEqual(
               expect.objectContaining({
                 procedure: "saveGatedDamage",
                 spell,
@@ -124,7 +124,7 @@ export const coneOfColdSelectedIdentityReplay = {
                 dc: { kind: "caster_spell_save_dc" },
               }),
             );
-            expect(spellHoleInvocation([savingThrow])).toEqual(
+            expect(spellHoleInvocation(state, [savingThrow])).toEqual(
               expect.objectContaining({
                 procedure: "saveGatedDamage",
                 spell,

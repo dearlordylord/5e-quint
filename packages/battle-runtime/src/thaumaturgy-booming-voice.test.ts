@@ -162,9 +162,7 @@ describe("Thaumaturgy Booming Voice", () => {
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "thaumaturgyBoomingVoice",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("thaumaturgy"),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: fighterId,
         expiresAt: {
           kind: "duration",

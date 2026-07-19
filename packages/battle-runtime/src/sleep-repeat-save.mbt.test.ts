@@ -819,7 +819,7 @@ function sleepSavingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value:
-      "spell" in hole && hole.spell.targeting.kind !== "singleCombatant"
+      "outcomeTargeting" in hole && hole.outcomeTargeting === "area"
         ? {
             area: {
               originAnchorId: fighterId,

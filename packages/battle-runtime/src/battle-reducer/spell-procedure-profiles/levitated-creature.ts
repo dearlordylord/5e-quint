@@ -197,8 +197,6 @@ function discoverLevitatedCreatureCastAct(
               invocation: levitatedCreatureInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
-            label: invocation.spell.name,
-            summary: levitatedCreatureCastSummary(invocation),
             initialHoles: [targetHole],
           },
         ];
@@ -339,7 +337,7 @@ function resolveLevitatedCreature(
   if (input.fillSet.savingThrowOutcomes !== undefined) {
     const validation = validateSavingThrowOutcomes(
       input.fillSet.savingThrowOutcomes,
-      savingThrowHole,
+      input.invocation,
       input.input.state,
       input.actorId,
       undefined,
@@ -445,8 +443,9 @@ function applyLevitatedCreatureSpellEffect(
     }
     const allocation = allocateBattleActiveEffectRef({
       state: nextState,
-      owner: target,
+      ownerId: targetId,
     });
+    if (allocation.tag === "ownerNotFound") return nextState;
     const allocatedTarget = allocation.owner;
     const nextEffect = {
       ...invocation.activeEffect,

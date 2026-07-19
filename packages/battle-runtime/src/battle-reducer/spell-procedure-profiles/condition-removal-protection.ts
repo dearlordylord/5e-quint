@@ -190,8 +190,6 @@ function discoverConditionRemovalProtectionCastAct(
               invocation: conditionRemovalProtectionInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
-            label: invocation.spell.name,
-            summary: conditionRemovalProtectionCastSummary(invocation),
             initialHoles: [targetHole],
           },
         ];

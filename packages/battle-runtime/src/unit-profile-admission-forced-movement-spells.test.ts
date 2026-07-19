@@ -51,11 +51,12 @@ import type { BattleState } from "./unit-profile-admission-test-support.ts";
 describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
   test("thunderwave is admitted as self-origin Cube save damage with push and boom facts", () => {
     const spell = spellRecord(thunderwaveUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      }),
+      state,
       spellId: thunderwaveUnitId,
       slotLevel: 2,
     });
@@ -81,7 +82,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -385,7 +386,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,

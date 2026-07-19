@@ -26,14 +26,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  discoverSpellMetamagicSelections,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-} from "../spells-holes-fills.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { resolveSleepTargetAdmissionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -49,6 +41,8 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import { discoverSpellMetamagicSelections } from "../metamagic-support.ts";
+import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type SleepTargetAdmissionSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -198,19 +192,14 @@ function discoverSleepTargetAdmissionCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
-  const baseCastAct = sleepTargetAdmissionCastAct(
-    actorId,
-    invocation,
-    [initialHole],
-    invocation.spell.name,
-    sleepTargetAdmissionCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = sleepTargetAdmissionCastAct(actorId, invocation, [
+    initialHole,
+  ]);
   const metamagicCastActs =
     actor === undefined
       ? []
       : discoverSpellMetamagicSelections({ actor, invocation }).map(
           (metamagic) => {
-            const label = spellMetamagicLabel(metamagic);
             return {
               ...baseCastAct,
               subject: {
@@ -220,8 +209,6 @@ function discoverSleepTargetAdmissionCastAct(
               initialHoles: [
                 spellSavingThrowOutcomeHole(state, actorId, invocation),
               ],
-              label: `${invocation.spell.name} (${label})`,
-              summary: `${baseCastAct.summary} Cast with ${label}.`,
             };
           },
         );
@@ -233,8 +220,6 @@ function sleepTargetAdmissionCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SleepTargetAdmissionSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -244,8 +229,6 @@ function sleepTargetAdmissionCastAct(
       invocation: sleepTargetAdmissionInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -265,16 +248,6 @@ function sleepTargetAdmissionCastSummary(
   invocation: SleepTargetAdmissionSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function sleepTargetAdmissionCastSummaryWithSavingThrow(
-  invocation: SleepTargetAdmissionSpellInvocation,
-): string {
-  return `${sleepTargetAdmissionCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveSleepTargetAdmission(

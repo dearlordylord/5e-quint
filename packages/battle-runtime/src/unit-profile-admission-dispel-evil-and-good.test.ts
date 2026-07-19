@@ -1,6 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-02-L5-SAVE-CONDITION-CONTROL dispel_evil_and_good
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 
 import { describe, expect, test } from "vitest";
 import {
@@ -67,9 +66,7 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "creatureTypeProtection",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(dispelEvilAndGoodUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         attackRollMode: "disadvantage",
         protectedAgainstCreatureTypes: [

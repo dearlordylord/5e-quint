@@ -174,8 +174,9 @@ export function applyWardingBondSpellEffect(
   }
   const allocation = allocateBattleActiveEffectRef({
     state: withoutPriorBonds,
-    owner: target,
+    ownerId: targetId,
   });
+  if (allocation.tag === "ownerNotFound") return withoutPriorBonds;
   const allocatedTarget = allocation.owner;
   return {
     ...allocation.state,

@@ -1,5 +1,8 @@
 import type { BattleActiveEffect } from "./types.ts";
-import type { BattleActiveEffectExecutionRef, BattleId } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import {
   battleActiveEffectExecutionRef,
   battleActiveEffectExecutionOrdinal,
@@ -48,21 +51,28 @@ export function spellActiveEffectForExecutionRef(
 
 export function allocateBattleActiveEffectRef(input: {
   readonly state: BattleState;
-  readonly owner: BattleCreatureState;
-}): {
-  readonly state: BattleState;
-  readonly owner: BattleCreatureState;
-  readonly effectRef: BattleActiveEffectExecutionRef;
-} {
+  readonly ownerId: CombatantId;
+}):
+  | {
+      readonly tag: "allocated";
+      readonly state: BattleState;
+      readonly owner: BattleCreatureState;
+      readonly effectRef: BattleActiveEffectExecutionRef;
+    }
+  | { readonly tag: "ownerNotFound"; readonly ownerId: CombatantId } {
+  const owner = input.state.combatants.get(input.ownerId);
+  if (owner === undefined) {
+    return { tag: "ownerNotFound", ownerId: input.ownerId };
+  }
   const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: input.state.battleId,
-    owner: input.owner,
+    owner,
   });
   const combatants = new Map(input.state.combatants).set(
-    input.owner.combatantId,
+    input.ownerId,
     allocation.owner,
   );
   return {
+    tag: "allocated",
     state: { ...input.state, combatants },
     owner: allocation.owner,
     effectRef: allocation.effectRef,
@@ -70,7 +80,6 @@ export function allocateBattleActiveEffectRef(input: {
 }
 
 export function allocateBattleActiveEffectRefForCreature(input: {
-  readonly battleId: BattleId;
   readonly owner: BattleCreatureState;
 }): {
   readonly owner: BattleCreatureState;
@@ -84,9 +93,8 @@ export function allocateBattleActiveEffectRefForCreature(input: {
     },
     effectRef: battleActiveEffectExecutionRef(
       JSON.stringify({
-        battleId: input.battleId,
         kind: "activeEffectOccurrence",
-        ownerId: input.owner.combatantId,
+        ownerScopeRef: input.owner.origin.execution.scopeRef,
         ordinal,
       }),
     ),

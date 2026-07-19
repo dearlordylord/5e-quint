@@ -209,8 +209,6 @@ function discoverMagicWeaponEnhancementCastAct(
         invocation: magicWeaponEnhancementInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: magicWeaponEnhancementCastSummary(invocation),
       initialHoles: [magicWeaponTargetItemHole(invocation)],
     },
   ];
@@ -432,22 +430,23 @@ function magicWeaponEnhancementFillSetHasDisallowedFills(
   );
 }
 
-const MagicWeaponEnhancementInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "magicWeaponEnhancement" }
-  >
->(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("magicWeaponEnhancement"),
-    spell: BattleRuntimeObjectSchema,
-    actionCost: Schema.Literal("bonusAction"),
-    bonus: Schema.Literal(1, 2, 3),
-    durationTicks: Schema.Number,
-  }),
-);
+export const MagicWeaponEnhancementInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "magicWeaponEnhancement" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("magicWeaponEnhancement"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      bonus: Schema.Literal(1, 2, 3),
+      durationTicks: Schema.Number,
+    }),
+  );
 export const magicWeaponEnhancementProfile: SpellProcedureProfile<
   "magicWeaponEnhancement",
   MagicWeaponEnhancementInvocation,

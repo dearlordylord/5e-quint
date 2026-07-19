@@ -1,5 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
 import {
   startBattleRight,
   requireResolved,
@@ -25,10 +23,20 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
-import type { BattleActDiscoverySubject } from "./battle-runtime-test-support.ts";
 import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
 import { describe, expect, test } from "vitest";
+import type {
+  BattleActDiscoverySubject,
+  BattleHole,
+} from "./battle-runtime-test-support.ts";
+
+function holeProcedureRef(hole: BattleHole) {
+  if (!("sourceProcedureRef" in hole)) {
+    throw new Error("Expected an execution-bound spell hole.");
+  }
+  return hole.sourceProcedureRef;
+}
 
 describe("battle runtime: Color Spray and Entangle", () => {
   test("Color Spray applies spell-owned Blinded to failed self-origin Cone saves", () => {
@@ -63,15 +71,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     expect(savingThrows).toMatchObject({
       label: "Color Spray self-origin Cone Saving Throw outcomes",
       ability: "con",
-      spell: {
-        targeting: { kind: "selfOriginCone", lengthFeet: 15 },
-        effect: expect.objectContaining({
-          kind: "fixed",
-          condition: "blinded",
-          expiresAt: "endOfCasterNextTurn",
-        }),
-        rangeFeet: 0,
-      },
+      outcomeTargeting: "area",
     });
 
     const result = requireResolved(
@@ -111,9 +111,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("color_spray"),
-        ),
+        sourceProcedureRef: holeProcedureRef(savingThrows),
         sourceCombatantId: wizardId,
         condition: "blinded",
         expiresAt: { kind: "endOfTurn", combatantId: wizardId, round: 2 },
@@ -210,15 +208,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     expect(savingThrows).toMatchObject({
       label: "Entangle point-origin Cube Saving Throw outcomes",
       ability: "str",
-      spell: {
-        targeting: { kind: "pointOriginCubeExcludingCaster", sideFeet: 20 },
-        effect: expect.objectContaining({
-          kind: "fixed",
-          condition: "restrained",
-          expiresAt: "concentration",
-        }),
-        rangeFeet: 90,
-      },
+      outcomeTargeting: "area",
     });
 
     const result = requireResolved(
@@ -255,9 +245,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("entangle"),
-        ),
+        sourceProcedureRef: holeProcedureRef(savingThrows),
         sourceCombatantId: wizardId,
         condition: "restrained",
         expiresAt: { kind: "concentration", combatantId: wizardId },
@@ -344,7 +332,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
         act.subject.action === "escapeSpellRestraint",
     );
     expect(escapeAct).toMatchObject({
-      label: "Escape entangle",
+      label: "Escape Entangle",
       initialHoles: [
         expect.objectContaining({
           kind: "abilityCheck",
@@ -383,12 +371,9 @@ describe("battle runtime: Color Spray and Entangle", () => {
       conditions: expect.not.objectContaining({ restrained: true }),
       activeEffects: [],
     });
-    expect(escaped.state.combatants.get(wizardId)?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("entangle"),
-      ),
-      effectKind: "spellEffect",
-    });
+    expect(escaped.state.combatants.get(wizardId)?.concentration).toEqual(
+      skeletonTurn.combatants.get(wizardId)?.concentration,
+    );
   });
 
   test("Entangle escape actions identify the restraining caster", () => {

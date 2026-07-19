@@ -279,8 +279,6 @@ function discoverRollModifierCastAct(
         invocation: rollModifierInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: rollModifierCastSummary(invocation),
       initialHoles,
     },
   ];

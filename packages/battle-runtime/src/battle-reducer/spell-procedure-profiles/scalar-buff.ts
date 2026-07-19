@@ -40,7 +40,6 @@ import type {
   OngoingEffect,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
@@ -57,10 +56,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import {
-  discoverSubtleSpellMetamagicSelections,
-  spellMetamagicLabel,
-} from "../metamagic.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
@@ -112,6 +107,7 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import { discoverSubtleSpellMetamagicSelections } from "../metamagic.ts";
 
 type ScalarBuffInvocation = Extract<
   SupportedSpellInvocation,
@@ -239,8 +235,6 @@ function discoverScalarBuffCastAct(
           invocation,
           scalarBuffInvocationRef(invocation),
         ),
-        label: invocation.spell.name,
-        summary: scalarBuffCastSummary(invocation),
         initialHoles,
       },
       ...scalarBuffSubtleMetamagicCastActs({
@@ -268,8 +262,6 @@ function discoverScalarBuffCastAct(
               invocation,
               scalarBuffInvocationRef(invocation),
             ),
-            label: invocation.spell.name,
-            summary: scalarBuffCastSummary(invocation),
             initialHoles: [targetHole],
           },
           ...scalarBuffSubtleMetamagicCastActs({
@@ -285,7 +277,9 @@ function discoverScalarBuffCastAct(
 function scalarBuffSubtleMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ScalarBuffInvocation>;
+  readonly invocation: BattleExecutableSpellInvocation<
+    import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ScalarBuffInvocation>
+  >;
   readonly initialHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
   const subject = spellCastSelectionSubject(
@@ -298,21 +292,18 @@ function scalarBuffSubtleMetamagicCastActs(input: {
     invocation: input.invocation,
     subject,
   }).map((metamagic) => {
-    const label = spellMetamagicLabel(metamagic);
     return {
       subject: {
         ...subject,
         metamagic,
       },
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${scalarBuffCastSummary(input.invocation)} ${label}.`,
       initialHoles: input.initialHoles,
     };
   });
 }
 
 function scalarBuffInitialHoles(
-  invocation: ScalarBuffInvocation,
+  invocation: BattleExecutableSpellInvocation<ScalarBuffInvocation>,
 ): readonly ReturnType<typeof spellScalarBuffRollHole>[] {
   return invocation.effect.kind === "temporaryHitPoints"
     ? [spellScalarBuffRollHole(invocation)]

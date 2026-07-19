@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
@@ -77,7 +78,6 @@ import type {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { BattleDamageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 import {
   type AttackRollMode,
   type AttackRollResult,
@@ -117,7 +117,6 @@ import type {
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import { Brand } from "effect";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
@@ -127,20 +126,9 @@ import type {
   AttackDamageDieFloorChoiceFill,
   AttackDamageDieFloorChoiceUnitIds,
 } from "./battle-reducer/attack-damage-die-floor-choice.ts";
-export type {
-  AttackDamageDieFloorChoiceFill,
-  AttackDamageDieFloorChoiceSelection,
-  AttackDamageDieFloorChoiceUnitIds,
-} from "./battle-reducer/attack-damage-die-floor-choice.ts";
 import type {
   AttackDamageAbilityModifierChoice,
   AttackDamageAbilityModifierChoiceFill,
-} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
-export type {
-  AttackDamageAbilityModifierChoice,
-  AttackDamageAbilityModifierChoiceFill,
-  AttackDamageAbilityModifierChoiceSelection,
-  AttackDamageAbilityModifierChoiceUnitIds,
 } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 import type {
   BattleDruidWildShapeKnownForm,
@@ -156,10 +144,6 @@ import type {
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution.ts";
-import type {
-  BattleAttackExecutionScopeRef,
-  BattleProcedureExecutionRef,
-} from "./identity.ts";
 import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
@@ -175,7 +159,6 @@ import {
   type BattleActDiscoverySubject,
   type MonkFocusFlurryOfBlowsStrikeSubject,
 } from "./battle-subjects.ts";
-export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";
 import {
   type CharacterBattleMetamagicState,
   type CharacterBattleResourceState,
@@ -191,44 +174,8 @@ import type {
   BattleCompanionSnapshot,
   BattleCompanions,
 } from "./companion-state.ts";
-import type {
-  BattleAreaId,
-  BattleCharacterExecutionScopeRef,
-  BattleAttackProcedureExecutionRef,
-  BattleDancingLightId,
-  BattleActiveEffectExecutionRef,
-  BattleActiveEffectExecutionOrdinal,
-  BattleLineDirectionId,
-  BattleObjectId,
-  BattleResourcePoolExecutionRef,
-  BattleStatBlockExecutionScopeRef,
-  BattleExecutionScopeCursor,
-  BattleSpellEffectOccurrenceId,
-  BattleSpellDamageDieExecutionRef,
-  SpellId,
-  BattleTablePositionId,
-  CharacterId,
-  InitiativeScore,
-} from "./identity.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
-import { BattleId, BattleReplayStackDepth, CombatantId } from "./identity.ts";
-import {
-  type BattlePassiveSpeedBonusSupportProfile,
-  type BattlePassiveSpeedKindGrantsSupportProfile,
-  type BattleMonkFocusBattleOptionsSupportProfile,
-  type BattleCunningStrikeSupportProfile,
-  type CunningStrikeEndTurnCoverDegree,
-  type CunningStrikeOption,
-  type CunningStrikeOptionSelectionId,
-  type ReactionReductionResourceDie,
-  type ReactionReductionResourceSpend,
-  type ReactionRollOrDamageReductionProfile,
-  type SupportedUnitFeatureProfile,
-  TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
-  type TacticalMasterReplacementDecision,
-} from "./unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
-
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -250,12 +197,6 @@ import type {
   GlyphStoredSpellReleaseProfile,
   GlyphStoredSpellReleaseWitness,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
-export type {
-  GlyphDurableOccurrenceActiveEffect,
-  GlyphDurableOccurrenceAnchor,
-  GlyphStoredSpellInvocation,
-  GlyphStoredSpellInvocationCandidate,
-} from "./active-effect/types.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import type {
@@ -284,41 +225,48 @@ import {
   BRUTAL_STRIKE_DECISION_CHOICES,
   type BrutalStrikeDecisionChoice,
 } from "./unit-feature-support.ts";
-export type {
-  ActiveWildShapeEquipmentDisposition,
-  WildShapeEquipmentDisposition,
-  WildShapeEquipmentDispositionChoice,
-  WildShapeEquipmentDispositionFillValue,
-  WildShapeLoadoutObjectRef,
-  WildShapeWearPracticalityWitness,
-} from "./battle-reducer/wild-shape-equipment.ts";
-export {
-  WILD_SHAPE_EQUIPMENT_DISPOSITIONS,
-  validateWildShapeEquipmentDispositionFill,
-  wildShapeLoadoutObjectRefs,
-} from "./battle-reducer/wild-shape-equipment.ts";
-export {
-  battleReducerStartRouteEvent,
-  activeFeatureSpellSaveDcRouteEvents,
-  passiveSavingThrowRollModeRouteEvents,
-  type BattleReducerRouteEvent,
-  type BattleReducerRouteEvents,
-  type BattleReducerRouteFill,
-  type BattleReducerRouteHole,
-  type BattleReducerRouteOwnerGroup,
-  type BattleReducerRouteSubjectFamily,
-} from "./battle-reducer/reducer-route.ts";
-export {
-  addBattleCombatant,
-  applyInitiativeSwap,
-  finishInitialInitiativeSetup,
-  removeBattleCombatants,
-  requiredInitiativeRollModeForCombatant,
-  startBattle,
-  startBattleWithInitialInitiativeSetup,
-  type InitiativeSwapCandidateWitness,
-  type InitialInitiativeSetup,
-} from "./battle-reducer/api-lifecycle.ts";
+import { Brand, Schema } from "effect";
+import type {
+  BattleActiveEffectExecutionOrdinal,
+  BattleActiveEffectExecutionRef,
+  BattleAreaId,
+  BattleAttackExecutionScopeRef,
+  BattleAttackProcedureExecutionRef,
+  BattleCharacterExecutionScopeRef,
+  BattleDancingLightId,
+  BattleExecutionScopeCursor,
+  BattleLineDirectionId,
+  BattleObjectId,
+  BattleProcedureExecutionCursor,
+  BattleResourcePoolExecutionRef,
+  BattleSpellDamageDieExecutionRef,
+  BattleSpellEffectOccurrenceId,
+  BattleStatBlockExecutionScopeRef,
+  BattleTablePositionId,
+  CharacterId,
+  InitiativeScore,
+  SpellId,
+} from "./identity.ts";
+import {
+  BattleId,
+  BattleProcedureExecutionRef,
+  BattleReplayStackDepth,
+  CombatantId,
+} from "./identity.ts";
+import {
+  type BattleCunningStrikeSupportProfile,
+  type BattlePassiveSpeedBonusSupportProfile,
+  type BattlePassiveSpeedKindGrantsSupportProfile,
+  type CunningStrikeEndTurnCoverDegree,
+  type CunningStrikeOption,
+  type CunningStrikeOptionSelectionId,
+  type ReactionReductionResourceDie,
+  type ReactionReductionResourceSpend,
+  type ReactionRollOrDamageReductionProfile,
+  type SupportedUnitFeatureProfile,
+  TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
+  type TacticalMasterReplacementDecision,
+} from "./unit-feature-support.ts";
 
 export {
   actorHasClassFeatureExtraAttackActionResource,
@@ -353,6 +301,7 @@ export {
 
 export {
   discoverLegendaryActionActs,
+  druidWildShapeActsForResource,
   hasReactionRollOrDamageReductionRangeFact,
   ongoingFeatureIsAvailable,
   resolveBardicInspirationFailedD20Test,
@@ -371,7 +320,6 @@ export {
   selfBonusActionHealingRollHoleInstanceKey,
   selfBonusActionHealingRollProtocolId,
   selfBonusActionHealingStaleMessage,
-  druidWildShapeActsForResource,
   supportedUnitFeatureActs,
   supportedUnitFeatureProfileForResource,
 } from "./battle-reducer/unit-features.ts";
@@ -379,16 +327,19 @@ export {
 export {
   applyBattleMovement,
   applyStartOfTurnActiveEffects,
+  cloudkillAreaHazardSavingThrowOutcomeHole,
+  commandPendingEffectsForActor,
   expireActiveEffects,
   expireEndOfTurnEffects,
   expireEndOfTurnOngoingFeatures,
   expireOngoingFeatures,
   expireStartOfTurnEffects,
   expireStartOfTurnOngoingFeatures,
-  movementHole,
-  commandPendingEffectsForActor,
   greaseGroundHazardSavingThrowOutcomeHole,
-  webRestraintSavingThrowOutcomeHole,
+  gustOfWindLineDirectionChoiceHole,
+  gustOfWindLineSavingThrowOutcomeHole,
+  insectPlagueAreaHazardSavingThrowOutcomeHole,
+  movementHole,
   movementHoleWithBudget,
   parseBattleMovement,
   readiedMovementBudgetForActor,
@@ -399,44 +350,41 @@ export {
   resetPerTurnCharacterResources,
   resetSpellDamageReductionsForNewTurn,
   resetStartOfTurnCombatant,
-  cloudkillAreaHazardSavingThrowOutcomeHole,
-  sleetStormAreaHazardSavingThrowOutcomeHole,
-  insectPlagueAreaHazardSavingThrowOutcomeHole,
-  gustOfWindLineDirectionChoiceHole,
-  gustOfWindLineSavingThrowOutcomeHole,
-  resolveCommandFleeAfterMovement,
-  resolveCommandFleeCommand,
-  resolveEndTurn,
-  resolveFlamingSphereRepositionCommand,
-  resolveFlamingSphereRamCommand,
-  resolveFlamingSphereSaveCommand,
-  resolveMoonbeamCylinderExitCommand,
-  resolveMoonbeamRepositionCommand,
-  resolveMoonbeamSaveCommand,
+  resolveCloudkillAreaHazardSaveCommand,
   resolveCommandApproachAfterMovement,
   resolveCommandApproachCommand,
   resolveCommandDropCommand,
+  resolveCommandFleeAfterMovement,
+  resolveCommandFleeCommand,
   resolveCommandGrovelCommand,
+  resolveEndTurn,
   resolveEndTurnCommand,
+  resolveFlamingSphereRamCommand,
+  resolveFlamingSphereRepositionCommand,
+  resolveFlamingSphereSaveCommand,
   resolveGreaseGroundHazardSaveCommand,
-  resolveCloudkillAreaHazardSaveCommand,
-  resolveSleetStormAreaHazardSaveCommand,
-  resolveInsectPlagueAreaHazardSaveCommand,
-  resolveWebAreaRemovedCommand,
-  resolveWebRestrainedNoLongerInAreaCommand,
-  resolveWebRestraintSaveCommand,
   resolveGustOfWindLineDirectionChangeCommand,
   resolveGustOfWindLineSaveCommand,
+  resolveInsectPlagueAreaHazardSaveCommand,
   resolveJumpMovementReplacementCommand,
+  resolveMoonbeamCylinderExitCommand,
+  resolveMoonbeamRepositionCommand,
+  resolveMoonbeamSaveCommand,
   resolveMoveAfterMovement,
   resolveMoveCommand,
   resolveOpportunityAttackCommand,
   resolveReleaseReadiedMovementCommand,
   resolveReleaseReadiedSpellCommand,
+  resolveSleetStormAreaHazardSaveCommand,
   resolveStandFromProneCommand,
+  resolveWebAreaRemovedCommand,
+  resolveWebRestrainedNoLongerInAreaCommand,
+  resolveWebRestraintSaveCommand,
+  sleetStormAreaHazardSavingThrowOutcomeHole,
   standFromProneCostFeet,
   statBlockRechargeRollFillMatchesHole,
   tickDurationEffects,
+  webRestraintSavingThrowOutcomeHole,
 } from "./battle-reducer/turn-end-movement.ts";
 
 export {
@@ -474,14 +422,14 @@ export {
   resolveReady,
   resolveReleaseGrappleCommand,
   resolveSearch,
-  resolveShove,
   resolveShakeAwakeFromHypnoticPattern,
   resolveShakeAwakeFromSleep,
+  resolveShove,
   resolveStatBlockBonusActionDisengage,
   resolveStatBlockBonusActionHide,
   resolveStatBlockBonusActionOption,
-  spellSaveDcForCaster,
   shoveFillSet,
+  spellSaveDcForCaster,
   spendAttackAction,
   spendAttackActionResource,
   validateAttackDamageFill,
@@ -522,7 +470,6 @@ export {
   attackDamageEventEntries,
   attackDamageEventWithEntries,
   attackDamageInterruptionFrame,
-  parseAttackDamageInterruptionFrame,
   attackDamageReductionRedirectResource,
   attackDamageReductionRedirectResourceAvailable,
   attackDamageReductionZeroDamageRedirectHoles,
@@ -535,27 +482,29 @@ export {
   completeActiveInterruptProcedure,
   completeResolvedActiveInterruptIfPending,
   consumeOrCloseLegendaryActionWindow,
-  currentInterruptFrame,
   currentInterruptCheckpoint,
+  currentInterruptFrame,
   damageAmountByTypeEntriesAfterScalarReduction,
   endTurn,
   hasAttackDamageReductionRedirectTargetSpatialFact,
+  interruptCheckpointAfterModifier,
+  interruptCheckpointFrame,
+  interruptChoices,
+  interruptDecisionHole,
+  interruptTriggerLabel,
+  interruptedProcedureSubject,
   isReleaseGrappleSubject,
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
   openBattleInterruptWindow,
   openCreatureFallsInterruptWindow,
   opportunityAttackReactionChoices,
+  parseAttackDamageInterruptionFrame,
   pendingInterruptSnapshot,
-  interruptChoices,
-  interruptDecisionHole,
-  interruptCheckpointAfterModifier,
-  interruptedProcedureSubject,
-  interruptCheckpointFrame,
   reactionModifiedAttackRollFills,
-  interruptTriggerLabel,
   readiedMovementReactionChoices,
   readiedSpellReactionChoices,
+  recordHandledInterruptTriggerForActiveInterrupt,
   replayContinuationFrame,
   resolveAttackDamageContinuationConcentration,
   resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
@@ -576,7 +525,6 @@ export {
   spendAttackDamageReductionRedirectResource,
   spendReaction,
   standardActionKindForSubject,
-  recordHandledInterruptTriggerForActiveInterrupt,
   unofferedEligibleResponders,
   type FlyEndCanStopFallReason,
   type FlySpeedGrantEndFallWitness,
@@ -605,6 +553,10 @@ export {
   resolveBattleConcentrationDamage,
 } from "./battle-reducer/damage-apply.ts";
 export {
+  SELF_TRANSFORMATION_MODE_KINDS,
+  type SelfTransformationModeKind,
+} from "./battle-reducer/domain-constants.ts";
+export {
   concentrationSavingThrowDc,
   scoreModifier,
 } from "./battle-reducer/domain-helpers.ts";
@@ -632,6 +584,21 @@ export {
   triggeredReactionSpellTurnResourceAvailable,
 } from "./battle-reducer/reaction-triggered-spells.ts";
 export {
+  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+  activeFeatherFallDescentRateCapFeetPerRound,
+  activeSelfTransformationModeEffect,
+  battleCreatureCanBreatheUnderwater,
+  battleIlluminationFromLightEmitters,
+  battleLightEmitterProjection,
+  battleLightEmitters,
+  battleMagicalDarknessNonmagicalLightIllumination,
+  battleMagicalDarknessSightObscurement,
+  battleObscurementZones,
+  battlePerceptionRollModeForObscurement,
+  battlePerceptionRollModeForSight,
+  battleSightObscurement,
+} from "./battle-reducer/spells-active-effects.ts";
+export {
   activeOngoingFeaturesPreventSpellInvocation,
   damageSpellSource,
   isPreparedDamageSpellSource,
@@ -639,25 +606,6 @@ export {
   isTargetListSpellInvocation,
   spellDefinitionHasPricedOrConsumedMaterialComponent,
 } from "./battle-reducer/spells-invocation-guards.ts";
-export {
-  activeFeatherFallDescentRateCapFeetPerRound,
-  activeSelfTransformationModeEffect,
-  battleIlluminationFromLightEmitters,
-  battleMagicalDarknessNonmagicalLightIllumination,
-  battleMagicalDarknessSightObscurement,
-  battleCreatureCanBreatheUnderwater,
-  battleLightEmitterProjection,
-  battleLightEmitters,
-  battleObscurementZones,
-  battlePerceptionRollModeForObscurement,
-  battlePerceptionRollModeForSight,
-  battleSightObscurement,
-  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
-} from "./battle-reducer/spells-active-effects.ts";
-export {
-  SELF_TRANSFORMATION_MODE_KINDS,
-  type SelfTransformationModeKind,
-} from "./battle-reducer/domain-constants.ts";
 export const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",
@@ -710,18 +658,18 @@ export type {
   ProtectionFromEvilAndGoodPreventedCondition,
   SelfTransformationModeEffectPayload,
   SelfTransformationNaturalWeaponFacts,
-  SpellLevitatedCreatureActiveEffect,
-  SpellShapeShiftedFormActiveEffect,
   SpellConditionAbilityCheckActor,
   SpellConditionAbilityCheckSuccessEnd,
   SpellConditionEscape,
   SpellCreatedHeldObjectActiveEffect,
   SpellCreatedHeldObjectState,
+  SpellLevitatedCreatureActiveEffect,
   SpellObjectContactDamageActiveEffect,
-  SpiritualWeaponRepeatTargeting,
+  SpellShapeShiftedFormActiveEffect,
   SpellTurnEndDamage,
   SpellTurnStartDamage,
   SpellTurnStartDamageSave,
+  SpiritualWeaponRepeatTargeting,
 } from "./active-effect/types.ts";
 
 export type BattleConcentration = {
@@ -971,7 +919,6 @@ export type BattleSeeInvisibleEtherealWitness = {
 // spell's resources immediately, holds the energy with Concentration, and
 // releases it later with a Reaction.
 export type BattleReadiedSpell = {
-  readonly invocation: ReadiedSpellInvocation;
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly trigger: BattleReadiedSpellTrigger;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
@@ -4216,6 +4163,15 @@ export type BattleExecutableSpellInvocation<I = SupportedSpellInvocation> =
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
   };
 
+export function isBattleExecutableSpellInvocation<
+  I extends SupportedSpellInvocation,
+>(invocation: I): invocation is BattleExecutableSpellInvocation<I> {
+  return (
+    "sourceProcedureRef" in invocation &&
+    Schema.is(BattleProcedureExecutionRef)(invocation.sourceProcedureRef)
+  );
+}
+
 export type HealingSpellTargeting =
   | {
       readonly kind: "targetList";
@@ -4873,10 +4829,8 @@ export const SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET = movementFeet(20);
 export const COLOR_SPRAY_FAILED_SAVE_CONDITION = "blinded" satisfies Condition;
 export const ENTANGLE_FAILED_SAVE_CONDITION = "restrained" satisfies Condition;
 
-type BattleAct<TSubject extends BattleActDiscoverySubject> = {
+type BattleActExecution<TSubject extends BattleActDiscoverySubject> = {
   readonly subject: TSubject;
-  readonly label: string;
-  readonly summary: string;
   readonly initialHoles: readonly BattleHole[];
   readonly routeEvents?: BattleReducerRouteEvents;
 };
@@ -4900,18 +4854,26 @@ export type BattleActPresentation =
       readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
     };
 
-export type BattleActDiscoveryCandidate = BattleAct<BattleActDiscoverySubject>;
+export type BattleActDiscoveryCandidate =
+  BattleActExecution<BattleActDiscoverySubject>;
 
-export type BattleActExecutionCandidate = BattleAct<BattleSubject>;
+export type BattleActExecutionCandidate = BattleActExecution<BattleSubject>;
 
 export type AvailableBattleAct = BattleActExecutionCandidate & {
+  readonly label: string;
+  readonly summary: string;
   readonly presentation: BattleActPresentation;
 };
+
+export type BattleSnapshotAct = Pick<
+  BattleActExecutionCandidate,
+  "subject" | "initialHoles"
+>;
 
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
 export type BattleTargetChoiceHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "targetChoice" }
 > & {
   readonly choices: readonly CombatantId[];
@@ -4947,7 +4909,7 @@ export type BattleHelpAttackEnemyDecisionHole = {
   readonly choices: readonly CombatantId[];
 };
 export type BattleCreatureAttackRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "attackRoll" }
 > & {
   readonly attackBonus?: never;
@@ -4958,7 +4920,7 @@ export type BattleCreatureAttackRollHole = Extract<
   };
 };
 export type BattleCreatureAttackDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly creatureAttack: {
@@ -5003,6 +4965,7 @@ export type BattleObjectContactSavingThrowOutcomeHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
+  readonly outcomeTargeting: "targetList";
   readonly objectContactSave: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -5086,26 +5049,11 @@ export type BattleWardingBondSeparationFactsHole = {
   readonly requiresTableSpatialFact: true;
 };
 export type BattleSpellAreaChoiceHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "spellAreaChoice";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "fogCloudObscurement"
-        | "magicalDarknessPointOrigin"
-        | "antimagicFieldOngoingSpellSuppression"
-        | "flamingSphere"
-        | "spikeGrowthMovementHazard"
-        | "moonbeam"
-        | "sleetStormAreaHazard"
-        | "insectPlagueAreaHazard"
-        | "cloudkillAreaHazard"
-        | "webRestraintHazard";
-    }
-  >;
   readonly area: Extract<
     SpellTargeting,
     {
@@ -5119,29 +5067,21 @@ export type BattleSpellAreaChoiceHole = {
   >;
 };
 export type BattleTeleportDestinationHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "teleportDestination";
   readonly label: string;
-  readonly spell: SelfTeleportSpellInvocation;
   readonly actorId: CombatantId;
   readonly maxDistanceFeet: MovementFeet;
   readonly requiresTableSpatialFact: true;
 };
 export type BattleSpiritualWeaponForcePositionHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "spiritualWeaponForcePosition";
   readonly label: string;
-  readonly spell:
-    | Extract<
-        SupportedSpellInvocation,
-        { readonly procedure: "spiritualWeaponAttackProxy" }
-      >
-    | Extract<
-        SupportedSpellInvocation,
-        { readonly procedure: "spiritualWeaponRepeatAttack" }
-      >;
   readonly mode: BattleSpiritualWeaponForcePosition["mode"];
   readonly maxDistanceFeet: MovementFeet;
   readonly requiresTableSpatialFact: true;
@@ -5191,11 +5131,11 @@ export type BattleMagicWeaponTargetItemFact = {
   readonly itemId: string;
 };
 export type BattleMagicWeaponTargetItemHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "magicWeaponTargetItem";
   readonly label: string;
-  readonly spell: MagicWeaponEnhancementSpellInvocation;
   readonly requiresTableItemFact: true;
 };
 export type BattleSpellTargetAllocation = {
@@ -5273,23 +5213,11 @@ export type BattleDroppedObjectOutcome = {
   readonly source: BattleDroppedObjectSource;
 };
 export type BattleSpellDamageTypeChoiceHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "damageTypeChoice";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "chainedSpellAttackDamage"
-        | "chosenDamageResistance"
-        | "damageReduction"
-        | "dragonsBreathInitial"
-        | "selfTransformationMode"
-        | "spellAttackDamage"
-        | "spellHostedWeaponAttack";
-    }
-  >;
   readonly choices: readonly DamageType[];
 };
 type BattleSpellTargetSpatialFact = Extract<
@@ -5320,66 +5248,40 @@ export type BattleSpellTargetListSpatialFact =
   | BattleKnownWillingSpellTargetSpatialFact
   | BattleFeatherFallTargetSpatialFact;
 export type BattleSpellTargetAllocationHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "spellTargetAllocation";
   readonly label: string;
-  readonly spell: SupportedSpellInvocation;
   readonly allocationCount: number;
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
 };
 export type BattleSpellTargetListHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "spellTargetList";
+  readonly procedure: import("./battle-reducer/spell-target-list-procedures.ts").BattleSpellTargetListProcedure;
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "directHitPointRestoration"
-        | "rollModifier"
-        | "saveGatedDamage"
-        | "abilityD20TestRollModeSaveGate"
-        | "saveGatedCondition"
-        | "saveGatedConditionImmunity"
-        | "saveGatedAttackRollAdvantage"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "slowActivePenalties"
-        | "creatureTypeProtection"
-        | "creatureSizeIncrease"
-        | "creatureSizeDecrease"
-        | "levitatedCreature"
-        | "conditionRemovalProtection"
-        | "chosenDamageResistance"
-        | "damageReduction"
-        | "scalarBuff"
-        | "conditionImmunityAndTurnStartTemporaryHitPoints"
-        | "jumpMovementReplacement"
-        | "dragonsBreathInitial"
-        | "hastePositive"
-        | "featherFallMitigation"
-        | "sanctuaryTargetingInterdiction"
-        | "directCondition"
-        | "directConditionRemoval"
-        | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine";
-    }
-  >;
   readonly minTargets: 1;
   readonly maxTargets: number;
+  readonly spatialTargeting:
+    | { readonly kind: "individualTargets" }
+    | {
+        readonly kind: "pointOriginSphere";
+        readonly radiusFeet: MovementFeet;
+      };
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
   readonly requiresKnownWillingTargets?: true;
   readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;
 };
 export type BattleAttackRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "attackRoll" }
 > & {
+  readonly label: string;
   readonly attack: SupportedAttackActionOption;
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
@@ -5502,10 +5404,10 @@ export type BattleSpellDamageRerollDecision = {
   ];
 };
 export type BattleSpellAttackRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "attackRoll" }
 > & {
-  readonly spell: SupportedSpellInvocation;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
   readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
@@ -5525,7 +5427,7 @@ export type BattleCunningStrikeOption = BattleCunningStrikeOptionSelection & {
   };
 };
 export type BattleDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly attack: SupportedAttackActionOption;
@@ -5539,33 +5441,16 @@ export type BattleDamageRollHole = Extract<
   readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
 };
 export type BattleSpellDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "attackBurstSaveDamage"
-        | "chainedSpellAttackDamage"
-        | "heldLightHurl"
-        | "objectContactDamage"
-        | "objectContactDamageRepeat"
-        | "repeatedDamageAllocation"
-        | "saveGatedDamage"
-        | "spellCreatedHeldObjectAttack"
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack"
-        | "spellAttackSequence"
-        | "spellAttackDamage";
-    }
-  >;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly critical: boolean;
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
   readonly spellDamageRerolls?: readonly BattleSpellDamageRerollOption[];
 };
 export type BattleDragonsBreathDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly dragonsBreath: {
@@ -5576,7 +5461,7 @@ export type BattleDragonsBreathDamageRollHole = Extract<
   };
 };
 export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly glyphExplosiveRune: {
@@ -5589,19 +5474,19 @@ export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
   };
 };
 export type BattleSpellDamageReductionRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly spellDamageReduction: SpellDamageReductionRoll;
 };
 export type BattleSourceDamageRollPenaltyRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly sourceDamageRollPenalty: SourceDamageRollPenaltyRoll;
 };
 export type BattleMirrorImageDuplicateRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly mirrorImageDuplicateRoll: {
@@ -5614,7 +5499,7 @@ export type BattleMirrorImageDuplicateRollHole = Extract<
   };
 };
 export type BattleSpellTurnStartDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly spellTurnStartDamage: {
@@ -5632,7 +5517,7 @@ export type BattleSpellTurnStartDamageRollHole = Extract<
   };
 };
 export type BattleSpellTurnEndDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly spellTurnEndDamage: {
@@ -5848,7 +5733,7 @@ export type BattleCloudkillAreaHazardSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
 export type BattleInsectPlagueAreaHazardDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly insectPlagueAreaHazard: {
@@ -5865,7 +5750,7 @@ export type BattleInsectPlagueAreaHazardDamageRollHole = Extract<
   readonly critical: false;
 };
 export type BattleCloudkillAreaHazardDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly cloudkillAreaHazard: {
@@ -6044,7 +5929,7 @@ export type BattleFlamingSphereSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
 export type BattleFlamingSphereDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly movableZone: {
@@ -6085,7 +5970,7 @@ export type BattleMoonbeamSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
 export type BattleMoonbeamDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly movableZone: {
@@ -6099,7 +5984,7 @@ export type BattleMoonbeamDamageRollHole = Extract<
   readonly critical: false;
 };
 export type BattleSpikeGrowthMovementDamageRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
 > & {
   readonly spikeGrowthMovement: {
@@ -6134,98 +6019,65 @@ export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
 export type BattleSpellHealingRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
-> & {
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" | "scalarBuff" }
-  >;
-};
+> & { readonly sourceProcedureRef: BattleProcedureExecutionRef };
 export type BattleSpellSkillChoiceHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "skillChoice";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >;
   readonly choices: readonly Skill[];
 };
 export type BattleSpellAbilityChoiceHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "abilityChoice";
   readonly label: string;
-  readonly spell:
-    | Extract<
-        SupportedSpellInvocation,
-        { readonly procedure: "markedDamageRider"; readonly action: "cast" }
-      >
-    | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
-    | Extract<
-        SupportedSpellInvocation,
-        { readonly procedure: "saveGatedDamage" }
-      >;
   readonly choices: readonly Ability[];
 };
 export type BattleSpellTargetAbilityChoicesHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "targetAbilityChoices";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >;
   readonly choices: readonly Ability[];
 };
 export type BattleSpellConditionChoiceHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "conditionChoice";
   readonly label: string;
-  readonly spell:
-    | (Extract<
-        SupportedSpellInvocation,
-        { readonly procedure: "saveGatedCondition" }
-      > & {
-        readonly effect: SpellFailedSaveConditionChoiceEffect;
-      })
-    | Extract<
-        SupportedSpellInvocation,
-        { readonly procedure: "directConditionRemoval" }
-      >;
   readonly choices: readonly [Condition, ...Condition[]];
 };
 export type BattleThaumaturgyActiveOneMinuteEffectCountHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "thaumaturgyActiveOneMinuteEffectCount";
   readonly label: string;
-  readonly spell: ThaumaturgyBoomingVoiceSpellInvocation;
   readonly maximumActiveOneMinuteEffects: typeof THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS;
   readonly requiresTableSpellEffectCount: true;
 };
 export type BattleCommandOption = (typeof COMMAND_OPTIONS)[number];
 export type BattleCommandOptionChoiceHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "commandOptionChoice";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "command" }
-  >;
   readonly choices: readonly BattleCommandOption[];
 };
 export type BattleSelfTransformationModeChoiceHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "selfTransformationModeChoice";
   readonly label: string;
-  readonly spell: SelfTransformationModeSpellInvocation;
   readonly choices: readonly [
     SelfTransformationModeKind,
     ...SelfTransformationModeKind[],
@@ -6277,11 +6129,11 @@ export type BattleDancingLightsPlacementValue =
       readonly light: BattleDancingLightRepositionPlacement;
     };
 export type BattleDancingLightsPlacementHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "dancingLightsPlacement";
   readonly label: string;
-  readonly spell: DancingLightsSpellInvocation;
   readonly mode: BattleDancingLightsPlacementValue["mode"];
   readonly form: BattleDancingLightsForm;
   readonly activeLightIds: readonly BattleDancingLightId[];
@@ -6412,35 +6264,12 @@ export type BattleSavingThrowFlatBonusProjection = {
   readonly bonus: number;
 };
 export type BattleSpellSavingThrowOutcomeHole = {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "attackBurstSaveDamage"
-        | "abilityD20TestRollModeSaveGate"
-        | "rollModifier"
-        | "creatureSizeIncrease"
-        | "creatureSizeDecrease"
-        | "levitatedCreature"
-        | "saveGatedDamage"
-        | "saveGatedCondition"
-        | "saveGatedConditionImmunity"
-        | "afterHitSaveGatedCondition"
-        | "saveGatedAttackRollAdvantage"
-        | "counterspell"
-        | "sleepTargetAdmission"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "slowActivePenalties"
-        | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine";
-    }
-  >;
+  readonly outcomeTargeting: "singleTarget" | "targetList" | "area";
   readonly ability: Ability;
   readonly dc: DcSource;
   readonly areaChoices: readonly BattleSpellAreaChoice[];
@@ -6490,10 +6319,6 @@ export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
-  readonly unitFeature: {
-    readonly unitId: UnitRecord["id"];
-    readonly label: string;
-  };
   readonly ability: Ability;
   readonly dc: DcSource;
   readonly targetIds: readonly CombatantId[];
@@ -6503,38 +6328,14 @@ export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly relationshipFactRequest?: BattleSavingThrowRelationshipFactRequest;
 };
 export type BattleUnitFeatureRollHole = Extract<
-  RuntimeHole,
+  RuntimeHole & { readonly label: string },
   { readonly kind: "rolledDice" }
-> & {
-  readonly unitFeature:
-    | BattleMonkFocusBattleOptionsSupportProfile
-    | Extract<
-        SupportedUnitFeatureProfile,
-        { readonly kind: "selfBonusActionHealing" }
-      >
-    | Extract<
-        SupportedUnitFeatureProfile,
-        { readonly kind: "magicActionAreaSaveDamageHealing" }
-      >
-    | Extract<
-        SupportedUnitFeatureProfile,
-        { readonly kind: "attackActionAreaSaveDamageReplacement" }
-      >
-    | {
-        readonly unitId: UnitRecord["id"];
-        readonly label: string;
-        readonly modifierKind: BattleReactionModifierChoice["kind"];
-      };
-};
+>;
 export type BattleUnitFeatureDecisionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "unitFeatureDecision";
   readonly label: string;
-  readonly unitFeature: {
-    readonly unitId: UnitRecord["id"];
-    readonly label: string;
-  };
   readonly choices:
     | readonly ["use", "decline"]
     | readonly ["attempt", "decline"]
@@ -7643,7 +7444,7 @@ export type BattleSnapshot = {
   readonly companions: readonly BattleCompanionSnapshot[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly obscurementZones: readonly BattleObscurementZone[];
-  readonly acts: readonly AvailableBattleAct[];
+  readonly acts: readonly BattleSnapshotAct[];
   readonly turn: BattleTurnSnapshot;
   readonly readiedResponses: {
     readonly spells: readonly BattleReadiedSpellSnapshot[];
@@ -7725,6 +7526,7 @@ export type BattleCreatureOriginSnapshot =
       readonly characterId: CharacterId;
       readonly execution: {
         readonly scopeRef: BattleCharacterExecutionScopeRef;
+        readonly nextProcedureOrdinal: BattleProcedureExecutionCursor;
         readonly procedureBindings: readonly CharacterProcedureBindingSnapshot[];
       };
       readonly attackExecution: {
@@ -7816,14 +7618,16 @@ export {
   HIDE_ABILITY_CHECK_HOLE_ID,
   HIDE_ABILITY_CHECK_HOLE_INSTANCE,
   HIDE_DC,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   INITIAL_ROUND,
   INITIAL_TURN_RESOURCES,
+  INTERRUPT_DECISION_HOLE_ID,
+  INTERRUPT_DECISION_HOLE_INSTANCE,
   LEVITATE_ALTITUDE_CHANGE_HOLE_ID,
   LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,
   MOVEMENT_HOLE_ID,
   MOVEMENT_HOLE_INSTANCE,
-  INTERRUPT_DECISION_HOLE_ID,
-  INTERRUPT_DECISION_HOLE_INSTANCE,
   REACTION_MODIFIER_ROLL_HOLE_ID,
   REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
   SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -7834,8 +7638,6 @@ export {
   SHOVE_OUTCOME_HOLE_INSTANCE,
   SHOVE_TARGET_HOLE_ID,
   SHOVE_TARGET_HOLE_INSTANCE,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -7863,3 +7665,66 @@ export {
   BattleSnapshotSchema,
   StatBlockExecutionSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";
+
+export type {
+  AttackDamageDieFloorChoiceFill,
+  AttackDamageDieFloorChoiceSelection,
+  AttackDamageDieFloorChoiceUnitIds,
+} from "./battle-reducer/attack-damage-die-floor-choice.ts";
+
+export type {
+  AttackDamageAbilityModifierChoice,
+  AttackDamageAbilityModifierChoiceFill,
+  AttackDamageAbilityModifierChoiceSelection,
+  AttackDamageAbilityModifierChoiceUnitIds,
+} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+
+export type {
+  BattleAttackExecutionSelection,
+} from "./battle-subjects.ts";
+
+export type {
+  GlyphDurableOccurrenceActiveEffect,
+  GlyphDurableOccurrenceAnchor,
+  GlyphStoredSpellInvocation,
+  GlyphStoredSpellInvocationCandidate,
+} from "./active-effect/types.ts";
+
+export type {
+  ActiveWildShapeEquipmentDisposition,
+  WildShapeEquipmentDisposition,
+  WildShapeEquipmentDispositionChoice,
+  WildShapeEquipmentDispositionFillValue,
+  WildShapeLoadoutObjectRef,
+  WildShapeWearPracticalityWitness,
+} from "./battle-reducer/wild-shape-equipment.ts";
+
+export {
+  WILD_SHAPE_EQUIPMENT_DISPOSITIONS,
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeLoadoutObjectRefs,
+} from "./battle-reducer/wild-shape-equipment.ts";
+
+export {
+  battleReducerStartRouteEvent,
+  activeFeatureSpellSaveDcRouteEvents,
+  passiveSavingThrowRollModeRouteEvents,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteEvents,
+  type BattleReducerRouteFill,
+  type BattleReducerRouteHole,
+  type BattleReducerRouteOwnerGroup,
+  type BattleReducerRouteSubjectFamily,
+} from "./battle-reducer/reducer-route.ts";
+
+export {
+  addBattleCombatant,
+  applyInitiativeSwap,
+  finishInitialInitiativeSetup,
+  removeBattleCombatants,
+  requiredInitiativeRollModeForCombatant,
+  startBattle,
+  startBattleWithInitialInitiativeSetup,
+  type InitiativeSwapCandidateWitness,
+  type InitialInitiativeSetup,
+} from "./battle-reducer/api-lifecycle.ts";

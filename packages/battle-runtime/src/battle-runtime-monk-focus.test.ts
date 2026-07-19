@@ -2,16 +2,14 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE monk_heightened_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-04-MONK-STEP-OF-WIND-CARRY monk_heightened_focus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   actionSurgeResource,
   applyCondition,
   attackRollFill,
+  battleActiveEffectExecutionRefForTest,
   battleId,
+  battleProcedureExecutionRefForTest,
   characterSeed,
   damageRollFillWithGroups,
   discoverBattleActs,
@@ -308,7 +306,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
       {
         carrierId: fighterId,
         carriedCreatureId: goblinId,
-        sourceUnitId: "monk_monks_focus",
+        sourceProcedureRef: expect.any(String),
         movementDoesNotProvokeOpportunityAttacks: true,
         expires: "endOfCarrierTurn",
       },

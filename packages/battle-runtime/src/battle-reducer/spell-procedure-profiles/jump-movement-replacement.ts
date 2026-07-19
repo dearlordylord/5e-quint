@@ -209,8 +209,6 @@ function discoverJumpMovementReplacementCastAct(
             invocation: jumpMovementReplacementInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: jumpMovementReplacementCastSummary(invocation),
           initialHoles: [targetHole],
         },
       ];
@@ -322,8 +320,9 @@ function applyJumpMovementReplacementSpellEffect(
     }
     const allocation = allocateBattleActiveEffectRef({
       state: nextState,
-      owner: target,
+      ownerId: targetId,
     });
+    if (allocation.tag === "ownerNotFound") return nextState;
     const allocatedTarget = allocation.owner;
     const nextEffect = {
       ...invocation.activeEffect,

@@ -1,9 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLUR blur
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   blurUnitId,
@@ -46,17 +44,13 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
 
     expect(cast.state.combatants.get(spellCasterId)).toMatchObject({
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(blurUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "blurred",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(blurUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",

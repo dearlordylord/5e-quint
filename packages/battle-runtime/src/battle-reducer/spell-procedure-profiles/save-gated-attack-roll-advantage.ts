@@ -23,21 +23,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
 import { supportedPreparedSaveGateAttackRollAdvantageProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateAttackRollAdvantageSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -55,6 +40,19 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowTargeting,
+} from "../spells-holes-fills.ts";
 
 type SaveGatedAttackRollAdvantageSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -97,13 +95,9 @@ function discoverSaveGatedAttackRollAdvantageCastAct(
     actorId,
     invocation,
   );
-  const baseCastAct = saveGatedAttackRollAdvantageCastAct(
-    actorId,
-    invocation,
-    [savingThrowHole],
-    invocation.spell.name,
-    saveGatedAttackRollAdvantageCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = saveGatedAttackRollAdvantageCastAct(actorId, invocation, [
+    savingThrowHole,
+  ]);
   return [
     baseCastAct,
     ...saveGatedAttackRollAdvantageMetamagicCastActs({
@@ -121,7 +115,7 @@ function saveGatedAttackRollAdvantageMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: SaveGatedAttackRollAdvantageSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>;
   readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
@@ -141,7 +135,6 @@ function saveGatedAttackRollAdvantageMetamagicCastActs(input: {
         input.invocation,
         applications,
       );
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...input.baseCastAct,
       subject: {
@@ -152,10 +145,6 @@ function saveGatedAttackRollAdvantageMetamagicCastActs(input: {
         metamagicInitialHoles.length === 0
           ? input.baseHoles
           : metamagicInitialHoles,
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${saveGatedAttackRollAdvantageCastSummaryWithSavingThrow(
-        input.invocation,
-      )} Cast with ${label}.`,
     };
   });
 }
@@ -164,8 +153,6 @@ function saveGatedAttackRollAdvantageCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -175,8 +162,6 @@ function saveGatedAttackRollAdvantageCastAct(
       invocation: saveGatedAttackRollAdvantageInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -184,7 +169,7 @@ function saveGatedAttackRollAdvantageCastAct(
 function saveGatedAttackRollAdvantageMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SaveGatedAttackRollAdvantageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
@@ -224,16 +209,6 @@ function saveGatedAttackRollAdvantageCastSummary(
   invocation: SaveGatedAttackRollAdvantageSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function saveGatedAttackRollAdvantageCastSummaryWithSavingThrow(
-  invocation: SaveGatedAttackRollAdvantageSpellInvocation,
-): string {
-  return `${saveGatedAttackRollAdvantageCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveSaveGatedAttackRollAdvantage(

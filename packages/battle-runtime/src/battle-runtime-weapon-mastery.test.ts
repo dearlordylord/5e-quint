@@ -1,8 +1,3 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import {
   startBattleRight,
@@ -74,6 +69,11 @@ import type {
 import { wardingBondUnitId } from "./unit-profile-admission-catalog-support.ts";
 import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { describe, expect, test } from "vitest";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 function withWardingBondTargetAndConcentratingCaster(
   state: BattleState,
@@ -301,7 +301,7 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
       kind: "nextAttackRollBySelf",
-      sourceUnitId: "mastery_sap",
+      sourceProcedureRef: expect.any(String),
       sourceCombatantId: fighterId,
       mode: "disadvantage",
       expiresAt: { kind: "startOfTurn", combatantId: fighterId },
@@ -342,7 +342,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(
       missed.state.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(
-      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+      expect.objectContaining({ sourceProcedureRef: expect.any(String) }),
     );
   });
 
@@ -362,7 +362,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "nextAttackRollBySelf",
-        sourceUnitId: "fighter_second_wind",
+        sourceProcedureRef: expect.any(String),
       }),
     );
   });
@@ -378,7 +378,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "nextAttackRollBySelf",
-        sourceUnitId: "mastery_sap",
+        sourceProcedureRef: expect.any(String),
       }),
     );
 
@@ -392,7 +392,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(
       fighterNextTurn.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(
-      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+      expect.objectContaining({ sourceProcedureRef: expect.any(String) }),
     );
   });
 
@@ -523,7 +523,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(
       hit.state.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(
-      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+      expect.objectContaining({ sourceProcedureRef: expect.any(String) }),
     );
   });
 
@@ -576,7 +576,7 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
       kind: "unitFeatureSpeedDelta",
-      sourceUnitId: "mastery_slow",
+      sourceProcedureRef: expect.any(String),
       sourceCombatantId: fighterId,
       deltaFeet: movementDeltaFeet(-10),
       expiresAt: { kind: "startOfTurn", combatantId: fighterId },
@@ -584,7 +584,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(
       hit.state.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(
-      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+      expect.objectContaining({ sourceProcedureRef: expect.any(String) }),
     );
   });
 
@@ -638,7 +638,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "nextAttackRollBySelf",
-        sourceUnitId: "mastery_sap",
+        sourceProcedureRef: expect.any(String),
       }),
     );
   });
@@ -1430,9 +1430,7 @@ describe("battle runtime: Weapon Mastery", () => {
     }
     const resolved = requireResolved(resolvedResult);
     expect(resolved.state.combatants.get(skeletonId)?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(wardingBondUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
   });

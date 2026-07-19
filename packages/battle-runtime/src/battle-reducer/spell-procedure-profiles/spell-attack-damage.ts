@@ -22,7 +22,6 @@
 // one damage lifecycle. The profile owns dispatch into that shared lifecycle.
 
 import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -51,9 +50,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   AttackBonus,
   BattleRuntimeObjectSchema,
@@ -67,6 +64,10 @@ import {
   SpellPostDamageRiderSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type SpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackDamageInvocation,
@@ -128,8 +129,6 @@ function discoverSpellAttackDamageCastAct(
           invocation,
           spellAttackDamageInvocationRef(invocation),
         ),
-        label: invocation.spell.name,
-        summary: spellAttackDamageCastSummary(invocation),
         initialHoles,
       },
     ];
@@ -147,8 +146,6 @@ function discoverSpellAttackDamageCastAct(
               invocation,
               spellAttackDamageInvocationRef(invocation),
             ),
-            label: invocation.spell.name,
-            summary: spellAttackDamageCastSummary(invocation),
             initialHoles: [
               ...(invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
                 ? [spellDamageTypeChoiceHole(invocation)]
@@ -191,7 +188,7 @@ function resolveSpellAttackDamage(
   return resolveSpellAttackDamageAct(input);
 }
 
-const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
+export const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
   Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
 >(
   Schema.Union(

@@ -155,8 +155,6 @@ function discoverRepeatedDamageAllocationCastAct(
               invocation,
               repeatedDamageAllocationInvocationRef(invocation),
             ),
-            label: invocation.spell.name,
-            summary: repeatedDamageAllocationCastSummary(invocation),
             initialHoles: [targetAllocationHole],
           },
         ];

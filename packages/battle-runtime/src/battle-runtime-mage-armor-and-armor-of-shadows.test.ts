@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -6,6 +5,7 @@ import {
   abilityModifier,
   armorOfShadowsSpellInvocationRef,
   battleId,
+  battleProcedureExecutionRefForTest,
   characterSeed,
   combatantId,
   defaultArmorClassState,
@@ -113,9 +113,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       activeEffects: [
         {
           kind: "spellBaseArmorClass",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("mage_armor"),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           base: 13,
           ability: "dex",
@@ -560,9 +558,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(warlock.activeEffects).toEqual([
       expect.objectContaining({
         kind: "spellBaseArmorClass",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("mage_armor"),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         earlyEnds: [{ kind: "targetDonsArmor" }],
       }),

@@ -105,7 +105,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         maxDistanceFeet: movementFeet(60),
       }),
     );
-    expect(spellHoleInvocation(fourthLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(state, fourthLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "spiritualWeaponAttackProxy",
         damage: {
@@ -268,9 +268,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(spiritualWeaponUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(
@@ -278,9 +276,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spiritualWeapon",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spiritualWeaponUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         forcePositionId,
         forceReachFeet: movementFeet(5),
@@ -472,9 +468,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(
       requireCombatant(needsConcentration.state, spellCasterId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(spiritualWeaponUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(

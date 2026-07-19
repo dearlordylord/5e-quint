@@ -271,13 +271,9 @@ export function battleProcedureExecutionRefForSpellHoleForTest(
   ) {
     return hole.spellTargetSpatialFactRequest.sourceProcedureRef;
   }
-  if (!("spell" in hole) || !("sourceProcedureRef" in hole.spell)) {
-    throw new Error("Expected an execution-bound spell hole.");
-  }
-  if (typeof hole.spell.sourceProcedureRef !== "string") {
-    throw new Error("Expected a string spell procedure execution ref.");
-  }
-  return BattleProcedureExecutionRef.make(hole.spell.sourceProcedureRef);
+  throw new Error(
+    "The enclosing Battle subject must supply the spell procedure execution ref.",
+  );
 }
 
 export function battleActiveEffectExecutionRefForTest(
@@ -289,9 +285,12 @@ export function battleActiveEffectExecutionRefForTest(
   }
   return battleActiveEffectExecutionRef(
     JSON.stringify({
-      battleId: "test-battle",
       kind: "activeEffectOccurrence",
-      ownerId: "test-active-effect-owner",
+      ownerScopeRef: battleCharacterExecutionScopeRef(
+        battleId("test-battle"),
+        combatantId("test-active-effect-owner"),
+        battleExecutionScopeOrdinal(0),
+      ),
       ordinal,
     }),
   );
@@ -1734,7 +1733,56 @@ function resolveBattleSubject(
       `Expected character procedure selection to be admitted: ${JSON.stringify(input.subject)}.`,
     );
   }
-  return resolveBattleSubjectRuntime({ ...input, subject });
+  const fills =
+    "procedureRef" in subject &&
+    (subject.tag === "actionSpell" ||
+      subject.tag === "bonusActionSpell" ||
+      subject.tag === "bonusActionDashSpell" ||
+      subject.tag === "findFamiliarTouchSpell")
+      ? bindSelectedSpellSpatialFactsForTest(input.fills, subject.procedureRef)
+      : input.fills;
+  return resolveBattleSubjectRuntime({ ...input, subject, fills });
+}
+
+function bindSelectedSpellSpatialFactsForTest(
+  fills: readonly BattleFill[],
+  procedureRef: BattleProcedureExecutionRef,
+): readonly BattleFill[] {
+  return fills.map((fill) => {
+    if (fill.kind === "targetChoice") {
+      if (fill.spatialFacts === undefined) return fill;
+      return {
+        ...fill,
+        spatialFacts: fill.spatialFacts.map((fact) =>
+          fact.kind === "spellTarget" ||
+          fact.kind === "spellLeapTargetWithinRange"
+            ? { ...fact, sourceProcedureRef: procedureRef }
+            : fact,
+        ),
+      };
+    }
+    if (fill.kind === "objectTargetChoice") {
+      return {
+        ...fill,
+        spatialFacts: fill.spatialFacts.map((fact) =>
+          fact.kind === "spellObjectTarget"
+            ? { ...fact, sourceProcedureRef: procedureRef }
+            : fact,
+        ),
+      };
+    }
+    if (fill.kind === "spellTargetAllocation") {
+      return {
+        ...fill,
+        spatialFacts: fill.spatialFacts.map((fact) =>
+          fact.kind === "spellTarget"
+            ? { ...fact, sourceProcedureRef: procedureRef }
+            : fact,
+        ),
+      };
+    }
+    return fill;
+  });
 }
 
 export function battleSubjectSelection(subject: BattleSubject) {
@@ -1943,13 +1991,24 @@ export function targetFill(
       : [];
   const selectedRelationshipFacts =
     relationshipFacts ?? defaultRelationshipFacts;
+  const selectedSpatialFacts = spatialFacts ?? defaultSpatialFacts;
+  const executionBoundSpatialFacts = selectedSpatialFacts.map((fact) =>
+    fact.kind === "spellTarget" &&
+    hole.spellTargetSpatialFactRequest !== undefined
+      ? {
+          ...fact,
+          sourceProcedureRef:
+            hole.spellTargetSpatialFactRequest.sourceProcedureRef,
+        }
+      : fact,
+  );
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
-    ...((spatialFacts ?? defaultSpatialFacts).length === 0
+    ...(executionBoundSpatialFacts.length === 0
       ? {}
-      : { spatialFacts: spatialFacts ?? defaultSpatialFacts }),
+      : { spatialFacts: executionBoundSpatialFacts }),
     ...(selectedRelationshipFacts === undefined
       ? {}
       : { relationshipFacts: selectedRelationshipFacts }),
@@ -2614,7 +2673,7 @@ export function savingThrowOutcomeFill(
       ? {}
       : { relationshipFacts: selectedRelationshipFacts }),
     value:
-      "spell" in hole && hole.spell.targeting.kind !== "singleCombatant"
+      "outcomeTargeting" in hole && hole.outcomeTargeting === "area"
         ? {
             area: {
               originAnchorId: wizardId,
@@ -3898,7 +3957,14 @@ export function goblinAttacksReactionModifierCharacter(input: {
           ? {}
           : { resources: input.resources }),
         unitFeatures: [{ unit: input.unit }],
-        characterUnitRefs: [reactionModifierUnitRef(input.unitId)],
+        characterUnitRefs: [
+          {
+            unit: input.unit,
+            supportProfiles: [
+              REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+            ],
+          },
+        ],
       }),
     ],
   });

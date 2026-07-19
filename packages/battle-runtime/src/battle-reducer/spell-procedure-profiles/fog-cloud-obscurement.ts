@@ -177,10 +177,6 @@ function discoverFogCloudObscurementCastAct(
         invocation: fogCloudObscurementInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${fogCloudObscurementCastSummary(
-        invocation,
-      )} The table supplies the fog area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

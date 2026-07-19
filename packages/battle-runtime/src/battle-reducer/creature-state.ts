@@ -88,6 +88,8 @@ import {
   characterExecutionFromUnits,
   characterProcedureBindingSnapshots,
 } from "../character-execution.ts";
+import { spellExecutionFacts } from "./spell-execution-facts.ts";
+import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -798,7 +800,18 @@ export function combatantOriginSnapshot(
       characterId: origin.characterId,
       execution: {
         scopeRef: origin.execution.scopeRef,
-        procedureBindings: characterProcedureBindingSnapshots(origin.execution),
+        nextProcedureOrdinal: origin.execution.nextProcedureOrdinal,
+        procedureBindings: characterProcedureBindingSnapshots(
+          origin.execution,
+          (invocation) =>
+            spellExecutionFacts(
+              invocation,
+              registeredSpellProcedureProfile(invocation.procedure)
+                ?.isReadiedSpellCompatible === true &&
+                (invocation.procedure !== "spellAttackDamage" ||
+                  invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"),
+            ),
+        ),
       },
       attackExecution: {
         scopeRef: battleAttackExecutionScopeRefForProcedureRef(

@@ -117,7 +117,7 @@ function resolveCloudkillSave(input: {
 
 describe("L19E deterministic Cloudkill area-hazard admission", () => {
   test("cloudkill is admitted as a ten-minute point-origin Sphere hazard", () => {
-    const { spell, act } = castCloudkill();
+    const { spell, state, act } = castCloudkill();
 
     expect({
       ...act.subject,
@@ -139,7 +139,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
         area: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
       }),
     );
-    expect(spellHoleInvocation([area])).toEqual(
+    expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "cloudkillAreaHazard",
         spell,

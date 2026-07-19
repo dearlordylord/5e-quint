@@ -1063,7 +1063,7 @@ export function resolveGustOfWindLineSpellAct(input: {
   const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,

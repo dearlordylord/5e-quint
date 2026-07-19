@@ -278,8 +278,6 @@ function discoverWardingBondCastAct(
               invocation: wardingBondInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
-            label: invocation.spell.name,
-            summary: wardingBondCastSummary(invocation),
             initialHoles: [targetHole],
           },
         ];

@@ -30,7 +30,7 @@ import {
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { applyDashToActor } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { revealHidden } from "../hole-helpers.ts";
@@ -161,8 +161,6 @@ function discoverExpeditiousRetreatDashCastAct(
       mode: { tag: "cast" as const },
       speedKind,
     },
-    label: invocation.spell.name,
-    summary: expeditiousRetreatDashCastSummary(invocation),
     initialHoles: [],
   }));
 }
@@ -303,10 +301,17 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
-    battleId: slotted.battleId,
-    owner: effectHost,
+  const allocation = allocateBattleActiveEffectRef({
+    state: slotted,
+    ownerId: subject.actorId,
   });
+  if (allocation.tag === "ownerNotFound") {
+    return invalidResult(
+      input.input.state,
+      "missingCombatant",
+      "Expeditious Retreat caster is not in this battle.",
+    );
+  }
   const effectedActor = {
     ...allocation.owner,
     concentration: {
@@ -323,9 +328,12 @@ function resolveExpeditiousRetreatDash(
     ],
   };
   const effected = {
-    ...slotted,
+    ...allocation.state,
     currentTurnResources: slotTurnResources.right,
-    combatants: new Map(slotted.combatants).set(subject.actorId, effectedActor),
+    combatants: new Map(allocation.state.combatants).set(
+      subject.actorId,
+      effectedActor,
+    ),
   };
   const dashed = applyDashToActor(
     effected,

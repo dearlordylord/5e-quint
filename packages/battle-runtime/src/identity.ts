@@ -139,6 +139,17 @@ export const BattleProcedureExecutionRef = Schema.NonEmptyTrimmedString.pipe(
 export type BattleProcedureExecutionRef =
   typeof BattleProcedureExecutionRef.Type;
 
+export const BattleProcedureExecutionCursor = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("BattleProcedureExecutionCursor"),
+);
+export type BattleProcedureExecutionCursor =
+  typeof BattleProcedureExecutionCursor.Type;
+export const battleProcedureExecutionCursor: (
+  value: number,
+) => BattleProcedureExecutionCursor = BattleProcedureExecutionCursor.make;
+
 export const BattleAttackProcedureExecutionRef =
   BattleProcedureExecutionRef.pipe(
     Schema.filter(attackProcedureExecutionReferenceIsCanonical, {
@@ -168,6 +179,10 @@ export const BattleResourcePoolExecutionRef = Schema.NonEmptyTrimmedString.pipe(
 );
 export type BattleResourcePoolExecutionRef =
   typeof BattleResourcePoolExecutionRef.Type;
+
+export type BattleResourceOwningExecutionScopeRef =
+  | BattleStatBlockExecutionScopeRef
+  | BattleCharacterExecutionScopeRef;
 
 export const BattleStatBlockExecutionScopeRef =
   Schema.NonEmptyTrimmedString.pipe(
@@ -345,7 +360,7 @@ export function battleAttackExecutionScopeRefOrdinalIsBefore(
 }
 
 export function battleResourcePoolExecutionRef(
-  scopeRef: BattleExecutionScopeRef,
+  scopeRef: BattleResourceOwningExecutionScopeRef,
   ordinal: NonNegativeInteger,
 ): BattleResourcePoolExecutionRef {
   return BattleResourcePoolExecutionRef.make(
@@ -477,9 +492,25 @@ export function battleProcedureExecutionRefIsAtOrdinal(
   );
 }
 
+export function battleProcedureExecutionRefOrdinalIsBefore(
+  procedureRef: BattleProcedureExecutionRef,
+  scopeRef: BattleExecutionScopeRef,
+  nextProcedureOrdinal: BattleProcedureExecutionCursor,
+): boolean {
+  const decoded = parseExecutionReference(procedureRef);
+  return (
+    decoded !== null &&
+    decoded.scopeRef === scopeRef &&
+    decoded.kind === "procedure" &&
+    nonNegativeIntegerProperty(decoded, "ordinal") &&
+    Number(decoded.ordinal) < nextProcedureOrdinal &&
+    nestedReferenceEncodingIsCanonical(procedureRef, decoded, "procedure")
+  );
+}
+
 export function battleResourcePoolExecutionRefBelongsToScope(
   resourcePoolRef: BattleResourcePoolExecutionRef,
-  scopeRef: BattleExecutionScopeRef,
+  scopeRef: BattleResourceOwningExecutionScopeRef,
 ): boolean {
   return executionReferenceBelongsToScope(
     resourcePoolRef,
@@ -590,16 +621,16 @@ function battleActiveEffectExecutionReferenceIsCanonical(
   const decoded = parseExecutionReference(reference);
   return (
     decoded !== null &&
-    hasExactKeys(decoded, ["battleId", "kind", "ownerId", "ordinal"]) &&
+    hasExactKeys(decoded, ["kind", "ownerScopeRef", "ordinal"]) &&
     decoded.kind === "activeEffectOccurrence" &&
-    nonEmptyCanonicalStringProperty(decoded, "battleId") &&
-    nonEmptyCanonicalStringProperty(decoded, "ownerId") &&
+    typeof decoded.ownerScopeRef === "string" &&
+    (Schema.is(BattleStatBlockExecutionScopeRef)(decoded.ownerScopeRef) ||
+      Schema.is(BattleCharacterExecutionScopeRef)(decoded.ownerScopeRef)) &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     reference ===
       JSON.stringify({
-        battleId: decoded.battleId,
         kind: "activeEffectOccurrence",
-        ownerId: decoded.ownerId,
+        ownerScopeRef: decoded.ownerScopeRef,
         ordinal: decoded.ordinal,
       })
   );

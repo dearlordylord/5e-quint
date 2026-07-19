@@ -7,7 +7,6 @@ import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import { difficultyClass } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
-
 import type { BattleActiveEffect } from "../active-effect/types.ts";
 import { characterUnitProcedureRef } from "../character-execution.ts";
 import type {
@@ -32,8 +31,6 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
 } from "../character-battle-resources.ts";
-import type { BattleStunningStrikeSupportProfile } from "../unit-feature-support.ts";
-import type { BattleUnitSupportProfile } from "../unit-feature-support.ts";
 import { STUNNING_STRIKE_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import {
@@ -53,6 +50,10 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
+import type {
+  BattleStunningStrikeSupportProfile,
+  BattleUnitSupportProfile,
+} from "../unit-feature-support.ts";
 
 const STUNNING_STRIKE_CHOICES = ["attempt", "decline"] as const;
 type StunningStrikeChoice = (typeof STUNNING_STRIKE_CHOICES)[number];
@@ -195,17 +196,13 @@ function resolveStunningStrikeAttempt(
 }
 
 function stunningStrikeDecisionHole(
-  hit: StunningStrikeHit,
+  _hit: StunningStrikeHit,
 ): BattleUnitFeatureDecisionHole {
   return {
     kind: "unitFeatureDecision",
     holeId: STUNNING_STRIKE_DECISION_HOLE_ID,
     holeInstanceKey: STUNNING_STRIKE_DECISION_HOLE_INSTANCE,
     label: "Stunning Strike",
-    unitFeature: {
-      unitId: hit.unitId,
-      label: "Stunning Strike",
-    },
     choices: STUNNING_STRIKE_CHOICES,
   };
 }
@@ -243,10 +240,6 @@ function stunningStrikeSavingThrowHole(
           },
         }
       : {}),
-    unitFeature: {
-      unitId: hit.unitId,
-      label: "Stunning Strike",
-    },
     ability,
     dc: {
       kind: "fixed",

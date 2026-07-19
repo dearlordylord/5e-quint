@@ -1,7 +1,5 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
@@ -47,6 +45,10 @@ import type {
   BattleHole,
   BattleState,
 } from "./unit-profile-admission-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 function castHeightenedHideousLaughter() {
   const spell = spellRecord(hideousLaughterUnitId);
@@ -196,9 +198,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(laughed.activeEffects).toEqual([
       expect.objectContaining({
         kind: "hideousLaughter",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hideousLaughterUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "concentration",

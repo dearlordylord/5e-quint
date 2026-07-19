@@ -153,8 +153,6 @@ function discoverDirectConditionRemovalCastAct(
             invocation: directConditionRemovalInvocationRef(invocation),
             mode: { tag: "cast" },
           },
-          label: invocation.spell.name,
-          summary: directConditionRemovalCastSummary(invocation),
           initialHoles: [targetHole, spellConditionChoiceHole(invocation)],
         },
       ];

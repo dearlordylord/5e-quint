@@ -11,7 +11,6 @@ import {
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   combatantId,
   characterProcedureBinding,
-  characterProcedureBindingSnapshots,
   discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
@@ -226,7 +225,6 @@ const paladinExtraAttackUnitId = "paladin_extra_attack";
 const rangerExtraAttackUnitId = "ranger_extra_attack";
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
-const monkStunningStrikeUnitId = "monk_stunning_strike";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueCunningStrikeUnitId = "rogue_cunning_strike";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
@@ -569,14 +567,19 @@ describe("level 5 SDK tracer bullets", () => {
     );
     const monk = requireCharacterCombatant(resolved.state, monkId);
     const targetAfterStrike = requireCombatant(resolved.state, monsterId);
-    const stunningStrikeProcedureRef = characterProcedureBindingSnapshots(
-      monk.origin.execution,
-    ).find(
-      (binding) =>
-        binding.procedure.kind === "unitSupportProfile" &&
-        binding.procedure.unitId === monkStunningStrikeUnitId &&
-        binding.procedure.supportKind === "stunningStrike",
-    )?.procedureRef;
+    const stunningStrikeEffect = targetAfterStrike.activeEffects.find(
+      (effect) => effect.kind === "unitFeatureCondition",
+    );
+    if (stunningStrikeEffect?.kind !== "unitFeatureCondition") {
+      throw new Error("Expected Stunning Strike active effect.");
+    }
+    const stunningStrikeProcedureRef =
+      monk.origin.execution.procedureBindings.find(
+        (binding) =>
+          binding.procedureRef === stunningStrikeEffect.sourceProcedureRef &&
+          binding.procedure.kind === "unitSupportProfile" &&
+          binding.procedure.supportKind === "stunningStrike",
+      )?.procedureRef;
 
     expect(stunningStrikeProcedureRef).toBeDefined();
 
@@ -3250,17 +3253,17 @@ function startCounterspellableMagicMissile(input: {
     dartCount: allocation.allocationCount,
   });
   const reactor = requireCharacterCombatant(input.state, input.reactorId);
-  const counterspellProcedureRef = characterProcedureBindingSnapshots(
-    reactor.origin.execution,
-  ).find(
-    (binding) =>
-      binding.procedure.kind === "spellInvocation" &&
-      binding.procedure.invocation.procedure === "counterspell" &&
-      binding.procedure.invocation.spell.id === counterspellSpellId &&
-      binding.procedure.invocation.resource.tag === "spellSlot" &&
-      Number(binding.procedure.invocation.resource.slotLevel) ===
-        counterspellCastLevel,
-  )?.procedureRef;
+  const counterspellProcedureRef =
+    reactor.origin.execution.procedureBindings.flatMap((binding) => {
+      return binding?.procedure.kind === "spellInvocation" &&
+        binding.procedure.invocation.procedure === "counterspell" &&
+        binding.procedure.invocation.spell.id === counterspellSpellId &&
+        binding.procedure.invocation.resource.tag === "spellSlot" &&
+        Number(binding.procedure.invocation.resource.slotLevel) ===
+          counterspellCastLevel
+        ? [binding.procedureRef]
+        : [];
+    })[0];
   if (counterspellProcedureRef === undefined) {
     throw new Error("Expected admitted Counterspell execution binding.");
   }

@@ -113,17 +113,6 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     );
     expect(damage).toMatchObject({
       label: "Heat Metal damage (3d8-fire)",
-      spell: {
-        procedure: "objectContactDamage",
-        actionCost: "magicAction",
-        targeting: { kind: "singleManufacturedMetalObject" },
-        rangeFeet: movementFeet(60),
-        damage: {
-          expr: { dice: 3, dieSize: 8 },
-          damageType: "fire",
-        },
-        durationTicks: heatMetalDurationTicks,
-      },
     });
   });
 
@@ -703,16 +692,6 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     );
     expect(repeatDamage).toMatchObject({
       label: "Heat Metal damage (3d8-fire)",
-      spell: {
-        procedure: "objectContactDamageRepeat",
-        actionCost: "bonusAction",
-        resource: { tag: "none" },
-        activeEffect: expect.objectContaining({ objectId }),
-        damage: {
-          expr: { dice: 3, dieSize: 8 },
-          damageType: "fire",
-        },
-      },
     });
 
     const repeated = resolveBattleSubject({

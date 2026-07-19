@@ -1,9 +1,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.stunning-strike
 import { describe, expect, test } from "vitest";
-
 import type { BattleFill, BattleHole, BattleState } from "./battle-reducer.ts";
 import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
+import { battleStunningStrikeSupportForUnit } from "./unit-feature-support.ts";
 import {
   attackRollFill,
   battleId,
@@ -14,6 +14,7 @@ import {
   goblinId,
   hasCondition,
   monksFocusResource,
+  requireCharacterUnitProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -27,7 +28,6 @@ import {
   unitLibrary,
   type BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
-import { battleStunningStrikeSupportForUnit } from "./unit-feature-support.ts";
 
 describe("battle runtime: Stunning Strike", () => {
   test("failed save spends Focus and Stuns until the start of the Monk's next turn", () => {
@@ -65,7 +65,11 @@ describe("battle runtime: Stunning Strike", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "unitFeatureCondition",
-          sourceUnitId: "monk_stunning_strike",
+          sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+            window.state,
+            fighterId,
+            "monk_stunning_strike",
+          ),
           sourceCombatantId: fighterId,
           condition: "stunned",
           expiresAt: { kind: "startOfTurn", combatantId: fighterId },

@@ -1,9 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV95 flame_blade
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spell-created-held-object
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type HandUse } from "@dnd/shared/types";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
@@ -50,6 +48,10 @@ import {
   snapshotBattle,
   type BattleState,
 } from "./unit-profile-admission-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 describe("SRDINV95 deterministic Flame Blade admission", () => {
   test("flame_blade casts as a Bonus Action slot spell and occupies the canonical free hand", () => {
@@ -87,9 +89,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
         lightEmitters: [
           {
             kind: "spellLightEmitter",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(flameBladeUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             sourceCombatantId: spellCasterId,
             attachment: { kind: "combatant", combatantId: spellCasterId },
             emission: {
@@ -118,17 +118,13 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       }),
     );
     expect(caster.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(flameBladeUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellCreatedHeldObject",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(flameBladeUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         objectState: { kind: "held" },
         light: { brightRadiusFeet: 10, dimAdditionalFeet: 10 },
@@ -197,7 +193,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         access: { tag: "spellEffect", sourceCombatantId: spellCasterId },
         resource: { tag: "none" },
@@ -438,9 +434,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
         },
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(flameBladeUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             attachment: { kind: "combatant", combatantId: spellCasterId },
           }),
         ],

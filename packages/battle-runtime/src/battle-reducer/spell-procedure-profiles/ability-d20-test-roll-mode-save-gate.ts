@@ -26,15 +26,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  discoverSpellMetamagicSelections,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
-import {
-  spellSavingThrowAbility,
-  spellTargetListHole,
-} from "../spells-holes-fills.ts";
 import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./_save-gate-helpers.ts";
 import { resolveAbilityD20TestRollModeSaveGateSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -51,6 +43,8 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import { discoverSpellMetamagicSelections } from "../metamagic-support.ts";
+import { spellTargetListHole } from "../spells-holes-fills.ts";
 
 type AbilityD20TestRollModeSaveGateSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -99,14 +93,11 @@ function discoverAbilityD20TestRollModeSaveGateCastAct(
     actorId,
     invocation,
     [targetHole],
-    invocation.spell.name,
-    abilityD20TestRollModeSaveGateCastSummaryWithSavingThrow(invocation),
   );
   const metamagicCastActs = discoverSpellMetamagicSelections({
     actor,
     invocation,
   }).map((metamagic) => {
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...baseCastAct,
       subject: {
@@ -114,8 +105,6 @@ function discoverAbilityD20TestRollModeSaveGateCastAct(
         metamagic,
       },
       initialHoles: [targetHole],
-      label: `${invocation.spell.name} (${label})`,
-      summary: `${baseCastAct.summary} Cast with ${label}.`,
     };
   });
   const castActs = [baseCastAct, ...metamagicCastActs];
@@ -126,8 +115,6 @@ function abilityD20TestRollModeSaveGateCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<AbilityD20TestRollModeSaveGateSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -137,8 +124,6 @@ function abilityD20TestRollModeSaveGateCastAct(
       invocation: abilityD20TestRollModeSaveGateInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -158,16 +143,6 @@ function abilityD20TestRollModeSaveGateCastSummary(
   invocation: AbilityD20TestRollModeSaveGateSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function abilityD20TestRollModeSaveGateCastSummaryWithSavingThrow(
-  invocation: AbilityD20TestRollModeSaveGateSpellInvocation,
-): string {
-  return `${abilityD20TestRollModeSaveGateCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveAbilityD20TestRollModeSaveGate(

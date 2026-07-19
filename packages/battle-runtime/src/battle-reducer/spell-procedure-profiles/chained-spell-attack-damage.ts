@@ -98,8 +98,6 @@ function discoverChainedSpellAttackDamageCastAct(
         invocation,
         chainedSpellAttackDamageInvocationRef(invocation),
       ),
-      label: invocation.spell.name,
-      summary: chainedSpellAttackDamageCastSummary(invocation),
       initialHoles: [spellDamageTypeChoiceHole(invocation)],
     },
   ];
@@ -140,30 +138,31 @@ function resolveChainedSpellAttackDamage(
   });
 }
 
-const ChainedSpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
-  >
->(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("chainedSpellAttackDamage"),
-    spell: BattleRuntimeObjectSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("singleCombatant"),
+export const ChainedSpellAttackDamageInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chainedSpellAttackDamage" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("chainedSpellAttackDamage"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+      }),
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      rangeFeet: MovementFeet,
+      leapRangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackBonus: AttackBonus,
     }),
-    damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
-    }),
-    damageTypeChoices: Schema.Array(DamageTypeSchema),
-    rangeFeet: MovementFeet,
-    leapRangeFeet: MovementFeet,
-    attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
-    attackBonus: AttackBonus,
-  }),
-);
+  );
 export const chainedSpellAttackDamageProfile: SpellProcedureProfile<
   "chainedSpellAttackDamage",
   ChainedSpellAttackDamageInvocation,

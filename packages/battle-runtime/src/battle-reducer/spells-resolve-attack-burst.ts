@@ -94,18 +94,13 @@ import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
-
 import {
   spellCastingTimeResourceForSpellCast,
   spendSpellCastResources,
 } from "./spells-resolve-resources.ts";
-
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
-
-import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
-import { spellFillSet } from "./spells-resolve-fill-set.ts";
-
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 export function resolveAttackBurstSaveDamageSpellAct(input: {
   readonly input:
     | ActionSpellBattleResolutionInput
@@ -737,7 +732,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   const savingThrowValidation = validateSavingThrowOutcomes(
     input.fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     damagedByAttack,
     input.actorId,
     target.combatantId,

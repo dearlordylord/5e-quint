@@ -117,8 +117,6 @@ function monkFocusOptionActs(
         resourceUnitId: focus.resource.unit.id,
         option: "flurryOfBlows",
       },
-      label: focus.profile.flurryOfBlows.displayName,
-      summary: `Spend 1 Focus Point and a Bonus Action to make ${monkFocusFlurryOfBlowsStrikeCount(focus)} Unarmed Strikes.`,
       initialHoles: [],
     });
   }
@@ -131,8 +129,6 @@ function monkFocusOptionActs(
       option: "patientDefense",
       mode: "freeDisengage",
     },
-    label: `${focus.profile.patientDefense.displayName}: Disengage`,
-    summary: "Take the Disengage action as a Bonus Action.",
     initialHoles: [],
   });
   if (hasFocusPoint) {
@@ -144,9 +140,6 @@ function monkFocusOptionActs(
         option: "patientDefense",
         mode: "focusDisengageDodge",
       },
-      label: `${focus.profile.patientDefense.displayName}: Disengage and Dodge`,
-      summary:
-        "Spend 1 Focus Point and a Bonus Action to take the Disengage and Dodge actions.",
       initialHoles: monkHasHeightenedFocus(actor)
         ? [heightenedPatientDefenseTemporaryHitPointsRollHole(focus)]
         : [],
@@ -163,8 +156,6 @@ function monkFocusOptionActs(
         mode: "freeDash",
         speedKind,
       },
-      label: `${focus.profile.stepOfTheWind.displayName}: Dash`,
-      summary: "Take the Dash action as a Bonus Action.",
       initialHoles: [],
     });
     if (hasFocusPoint) {
@@ -177,9 +168,6 @@ function monkFocusOptionActs(
           mode: "focusDisengageDash",
           speedKind,
         },
-        label: `${focus.profile.stepOfTheWind.displayName}: Disengage and Dash`,
-        summary:
-          "Spend 1 Focus Point and a Bonus Action to take the Disengage and Dash actions.",
         initialHoles: monkHasHeightenedFocus(actor)
           ? [heightenedStepOfTheWindCarryHole(state, focus)]
           : [],
@@ -219,8 +207,6 @@ function monkFocusFlurryOfBlowsStrikeActs(
         focusProcedureRef: flurryResource.sourceProcedureRef,
         procedureRef: unarmedStrike.procedureRef,
       },
-      label: "Flurry of Blows Unarmed Strike",
-      summary: "Make one Unarmed Strike granted by Flurry of Blows.",
       initialHoles: [attackTargetHole(state, actor.combatantId, unarmedStrike)],
     },
   ];
@@ -552,7 +538,6 @@ function heightenedPatientDefenseTemporaryHitPointsRollHole(
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${focus.profile.patientDefense.displayName} Temporary Hit Points (${diceExprLabel(expr)})`,
-    unitFeature: focus.profile,
   };
 }
 

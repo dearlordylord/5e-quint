@@ -1,17 +1,12 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import {
-  resolveBattleSubject,
-  characterSpellInvocationRefForProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
-
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -28,7 +23,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
   battleId,
   characterId,
@@ -48,6 +42,13 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { spellSlotInvocationRef } from "./battle-subjects.ts";
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -966,7 +967,16 @@ function startMagicMissile(input: {
     subject,
     fills: [
       targetAllocationFill,
-      spellCastReactionFactsFill(input.counterspellFacts),
+      spellCastReactionFactsFill(
+        input.counterspellFacts.map((fact) => ({
+          ...fact,
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            input.state,
+            fact.reactorId,
+            spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+          ),
+        })),
+      ),
     ],
   });
   expect(result).toMatchObject({
@@ -1084,8 +1094,8 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: input.casterId,
         targetId: input.targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(magicMissileUnitId),
+        sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+          input.hole,
         ),
       },
     ],

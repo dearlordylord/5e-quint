@@ -94,7 +94,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       ),
       mode: { tag: "cast" },
     });
-    expect(spellActInvocation(act)).toEqual(
+    expect(spellActInvocation(state, act)).toEqual(
       expect.objectContaining({
         procedure: "directCondition",
         spell,

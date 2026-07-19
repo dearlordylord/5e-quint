@@ -154,8 +154,6 @@ function discoverMirrorImageHitInterceptionCastAct(
         invocation: mirrorImageHitInterceptionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: mirrorImageHitInterceptionCastSummary(invocation),
       initialHoles: [],
     },
   ];

@@ -8277,14 +8277,15 @@ function sleepRepeatSaveRouteHoles(
 function sleepTargetAdmissionRouteHoles(
   holes: readonly BattleHole[],
 ): readonly BattleReducerRouteHole[] {
-  return battleReducerRouteHoles(
-    holes.filter(
-      (hole) =>
-        hole.kind === "savingThrowOutcome" &&
-        "spell" in hole &&
-        hole.spell.procedure === "sleepTargetAdmission",
-    ),
+  const savingThrowHoles = holes.filter(
+    (hole) => hole.kind === "savingThrowOutcome",
   );
+  if (savingThrowHoles.length !== 1) {
+    throw new Error(
+      "Admitted Sleep target selection must own exactly one Saving Throw outcome hole.",
+    );
+  }
+  return battleReducerRouteHoles(savingThrowHoles);
 }
 
 function hasPendingSleepRepeatSaveEffect(state: BattleState): boolean {
@@ -9130,9 +9131,16 @@ function isSaveGatedSpellResolution(input: BattleResolutionInput): boolean {
     const readied = input.state.readiedSpells.get(
       input.subject.readiedSpellCasterId,
     );
+    const caster = input.state.combatants.get(
+      input.subject.readiedSpellCasterId,
+    );
+    const invocation =
+      readied !== undefined && caster?.origin.kind === "character"
+        ? characterSpellProcedure(caster.origin.execution, readied.procedureRef)
+        : undefined;
     return (
-      readied !== undefined &&
-      isSaveGatedSpellProcedure(readied.invocation.procedure)
+      invocation !== undefined &&
+      isSaveGatedSpellProcedure(invocation.procedure)
     );
   }
   return false;

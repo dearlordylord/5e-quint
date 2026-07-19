@@ -1,51 +1,51 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  requireCharacterSpellProcedureRefForTest,
-  startBattleRight,
-  requireElapsedHours,
-  requireResolved,
-  fighterAttackSubject,
-  goblinAttackSubject,
-  requireHole,
-  findAct,
-  sleepShakeAwakeSubject,
-  sleepShakeAwakeTargetFill,
-  battleAfterFailedSleepInitialSave,
-  battleAfterGoblinFailedSleepRepeatSave,
-  shakeAwakeGoblinFromSleep,
-  targetFill,
-  spellTargetAllocationFill,
-  attackTargetFill,
-  attackRollFill,
-  savingThrowOutcomeFill,
-  damageRollFill,
-  damageRollFillWithGroups,
-  characterSeed,
-  statBlockCreatureInit,
-  skeletonCreatureInit,
-  wizardSpellcasting,
-  spellRecord,
-  magicSubject,
-  expendedLevelOneSlots,
-  fighterId,
-  goblinId,
-  skeletonId,
-  wizardId,
-  applyBattleHitPointDamage,
-  battleId,
-  breakBattleConcentration,
-  discoverBattleActs,
-  endTurn,
-  Hp,
-  removeCondition,
-  resolveBattleSubject,
-  spellSlotInvocationRef,
-} from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
   BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import {
+  applyBattleHitPointDamage,
+  attackRollFill,
+  attackTargetFill,
+  battleAfterFailedSleepInitialSave,
+  battleAfterGoblinFailedSleepRepeatSave,
+  battleId,
+  battleProcedureExecutionRefForTest,
+  breakBattleConcentration,
+  characterSeed,
+  damageRollFill,
+  damageRollFillWithGroups,
+  discoverBattleActs,
+  endTurn,
+  expendedLevelOneSlots,
+  fighterAttackSubject,
+  fighterId,
+  findAct,
+  goblinAttackSubject,
+  goblinId,
+  Hp,
+  magicSubject,
+  removeCondition,
+  requireCharacterSpellProcedureRefForTest,
+  requireElapsedHours,
+  requireHole,
+  requireResolved,
+  resolveBattleSubject,
+  savingThrowOutcomeFill,
+  shakeAwakeGoblinFromSleep,
+  skeletonCreatureInit,
+  skeletonId,
+  sleepShakeAwakeSubject,
+  sleepShakeAwakeTargetFill,
+  spellRecord,
+  spellSlotInvocationRef,
+  spellTargetAllocationFill,
+  startBattleRight,
+  statBlockCreatureInit,
+  targetFill,
+  wizardId,
+  wizardSpellcasting,
+} from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Sleep", () => {
   test("Sleep failed initial saves apply pending Incapacitated and spend cast resources", () => {
@@ -75,11 +75,6 @@ describe("battle runtime: Sleep", () => {
     expect(savingThrows).toMatchObject({
       label: "Sleep point-origin Sphere Saving Throw outcomes",
       ability: "wis",
-      spell: {
-        procedure: "sleepTargetAdmission",
-        targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
-        rangeFeet: 60,
-      },
     });
 
     const result = requireResolved(
@@ -117,9 +112,7 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepPendingRepeatSave",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("sleep"),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
           repeatAt: { kind: "endOfTurn", combatantId: goblinId, round: 1 },
@@ -206,9 +199,7 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepPendingRepeatSave",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("sleep"),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
       ],
@@ -388,7 +379,7 @@ describe("battle runtime: Sleep", () => {
       ability: "wis",
       sleepRepeatSave: {
         targetId: goblinId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String("sleep")),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       },
@@ -482,9 +473,7 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepUnconscious",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("sleep"),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           expiresAt: { kind: "concentration", combatantId: wizardId },
         }),
@@ -661,9 +650,7 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepUnconscious",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("sleep"),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
       ],

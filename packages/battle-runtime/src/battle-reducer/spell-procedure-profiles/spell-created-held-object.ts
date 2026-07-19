@@ -44,7 +44,6 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
-
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -66,8 +65,6 @@ import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
-import { applySpellCreatedHeldObjectEffect } from "../spells-active-effects.ts";
-import { setSpellCreatedHeldObjectState } from "../spells-active-effects.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -88,6 +85,10 @@ import {
   SpellEffectSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  applySpellCreatedHeldObjectEffect,
+  setSpellCreatedHeldObjectState,
+} from "../spells-active-effects.ts";
 
 const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
 
@@ -431,8 +432,6 @@ function discoverSpellCreatedHeldObjectCastAct(
         invocation: spellCreatedHeldObjectInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: spellCreatedHeldObjectCastSummary(invocation),
       initialHoles: [],
     },
   ];
@@ -455,8 +454,6 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
             invocation: spellCreatedHeldObjectAttackInvocationRef(invocation),
             mode: { tag: "cast" },
           },
-          label: `${invocation.spell.name} attack`,
-          summary: spellCreatedHeldObjectAttackCastSummary(invocation),
           initialHoles: [targetHole],
         },
       ];
@@ -479,8 +476,6 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
         invocation: spellCreatedHeldObjectReEvokeInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: `${invocation.spell.name} re-evoke`,
-      summary: spellCreatedHeldObjectReEvokeCastSummary(invocation),
       initialHoles: [],
     },
   ];
@@ -609,8 +604,15 @@ function resolveSpellCreatedHeldObject(
   }
   const allocation = allocateBattleActiveEffectRef({
     state: resourced.state,
-    owner: effectOwner,
+    ownerId: input.actorId,
   });
+  if (allocation.tag === "ownerNotFound") {
+    return invalidResult(
+      resourced.state,
+      "staleSubject",
+      "Held-object effect owner is no longer in the battle.",
+    );
+  }
   const effected = applySpellCreatedHeldObjectEffect({
     state: allocation.state,
     actorId: input.actorId,

@@ -1,4 +1,7 @@
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
@@ -368,7 +371,7 @@ function resolveBlindnessDeafnessFailedSavingThrow(
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
-  const targetFill = spellTargetListFill(target, "blindness_deafness", [
+  const targetFill = spellTargetListFill(target, [
     targetId,
   ]);
   const conditionChoiceFill = spellConditionChoiceFill(
@@ -412,7 +415,7 @@ function resolveHoldSpellFailedSavingThrow(
   const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
   const act = spellAct({ state, spellId, slotLevel });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, spellId, [targetId]);
+  const targetFill = spellTargetListFill(target, [targetId]);
   const initialSave = requireResultHole(
     resolveBattleSubject({
       state,
@@ -484,7 +487,7 @@ function resolveHideousLaughterRepeatSavingThrowSuccess(): BattleResolutionResul
     slotLevel: 1,
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, "hideous_laughter", [
+  const targetFill = spellTargetListFill(target, [
     targetId,
   ]);
   const initialSave = requireResultHole(
@@ -602,7 +605,7 @@ function resolveBlindnessDeafnessFailedSavingThrowRoute(
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
-  const targetFill = spellTargetListFill(target, "blindness_deafness", [
+  const targetFill = spellTargetListFill(target, [
     targetId,
   ]);
   const conditionChoiceFill = spellConditionChoiceFill(
@@ -662,7 +665,7 @@ function resolveHoldSpellFailedSavingThrowRoute(
   const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
   const act = spellAct({ state, spellId, slotLevel });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, spellId, [targetId]);
+  const targetFill = spellTargetListFill(target, [targetId]);
   const awaitingSave = requireNeedsHolesResult(
     resolveBattleSubject({
       state,
@@ -748,7 +751,7 @@ function resolveHideousLaughterRepeatSavingThrowSuccessRoute(): readonly BattleR
     slotLevel: 1,
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, "hideous_laughter", [
+  const targetFill = spellTargetListFill(target, [
     targetId,
   ]);
   const awaitingSave = requireNeedsHolesResult(
@@ -1276,7 +1279,6 @@ function spellAct(input: {
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  spellId: ConditionSavingThrowSpellUnitId,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -1287,7 +1289,7 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId,
       targetId: selectedTargetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+      sourceProcedureRef: hole.sourceProcedureRef,
     })),
   };
 }
@@ -1303,7 +1305,9 @@ function savingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value:
-      "spell" in hole && hole.spell.procedure === "hypnoticPattern"
+      "sourceProcedureRef" in hole &&
+      hole.sourceProcedureRef ===
+        battleProcedureExecutionRefForTest("hypnotic_pattern")
         ? {
             area: {
               kind: "hypnoticPatternArea",
@@ -1318,10 +1322,7 @@ function savingThrowOutcomeFill(
             },
             outcomes,
           }
-        : "spell" in hole &&
-            hole.spell.procedure !== "rollModifier" &&
-            hole.spell.targeting.kind !== "singleCombatant" &&
-            hole.spell.targeting.kind !== "targetList"
+        : "outcomeTargeting" in hole && hole.outcomeTargeting === "area"
           ? {
               area: {
                 originAnchorId: casterId,
@@ -1474,4 +1475,3 @@ function expendedSlotsForSpellLevel(
     )?.expended ?? 0
   );
 }
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

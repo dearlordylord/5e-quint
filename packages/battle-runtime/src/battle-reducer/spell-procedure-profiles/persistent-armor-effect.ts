@@ -195,8 +195,6 @@ function discoverPersistentArmorEffectCastAct(
         invocation: persistentArmorEffectInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: persistentArmorEffectCastSummary(invocation),
       initialHoles: [targetHole],
     },
   ];

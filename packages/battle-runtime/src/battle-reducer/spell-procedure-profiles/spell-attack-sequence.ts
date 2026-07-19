@@ -13,7 +13,6 @@
 //     Damage Type, and Spell Invocation.
 
 import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -43,9 +42,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   AttackBonus,
   BattleRuntimeObjectSchema,
@@ -58,6 +55,10 @@ import {
   PreparedSpellAttackSequenceTargetingSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type SpellAttackSequenceResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackSequenceInvocation,
@@ -107,8 +108,6 @@ function discoverSpellAttackSequenceCastAct(
         invocation,
         spellAttackSequenceInvocationRef(invocation),
       ),
-      label: invocation.spell.name,
-      summary: spellAttackSequenceCastSummary(invocation),
       initialHoles,
     },
   ];

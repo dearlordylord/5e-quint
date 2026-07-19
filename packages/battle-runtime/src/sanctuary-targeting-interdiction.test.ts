@@ -1,13 +1,10 @@
-import {
-  battleProcedureExecutionRefForSpellHoleForTest,
-} from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84G sanctuary
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
+import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   abilityModifier,
@@ -22,7 +19,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
   battleId,
   characterId,
@@ -101,7 +97,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     expect(decoded.right).toMatchObject({
       kind: "spellTargetList",
-      spell: { procedure: "sanctuaryTargetingInterdiction" },
+      procedure: "sanctuaryTargetingInterdiction",
     });
   });
 

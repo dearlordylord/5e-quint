@@ -188,10 +188,6 @@ function discoverAntimagicFieldOngoingSpellSuppressionCastAct(
           antimagicFieldOngoingSpellSuppressionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${antimagicFieldOngoingSpellSuppressionCastSummary(
-        invocation,
-      )} The table supplies the antimagic Emanation area identity and affected ongoing spell effects.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

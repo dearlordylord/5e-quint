@@ -13,20 +13,6 @@ import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import * as Either from "effect/Either";
 import type { CombatantId } from "../identity.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
-import { snapshotBattle } from "../battle-reducer.ts";
-import { validateRolledDiceFillForDiceExpr } from "../battle-reducer.ts";
-import type {
-  AvailableBattleAct,
-  BattleCreatureState,
-  BattleDragonsBreathDamageRollHole,
-  BattleDragonsBreathSavingThrowOutcomeHole,
-  BattleFill,
-  BattleHoleId,
-  BattleResolutionInputForSubject,
-  BattleResolutionResult,
-  BattleSpellAreaChoice,
-  BattleState,
-} from "../battle-reducer.ts";
 import {
   applyBattleHitPointDamage,
   concentrationSavingThrowHole,
@@ -59,6 +45,22 @@ import {
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import type {
+  BattleActDiscoveryCandidate,
+  BattleCreatureState,
+  BattleDragonsBreathDamageRollHole,
+  BattleDragonsBreathSavingThrowOutcomeHole,
+  BattleFill,
+  BattleHoleId,
+  BattleResolutionInputForSubject,
+  BattleResolutionResult,
+  BattleSpellAreaChoice,
+  BattleState,
+} from "../battle-reducer.ts";
+import {
+  snapshotBattle,
+  validateRolledDiceFillForDiceExpr,
+} from "../battle-reducer.ts";
 
 type DragonsBreathEffect = Extract<
   BattleCreatureState["activeEffects"][number],
@@ -96,7 +98,7 @@ const DRAGONS_BREATH_CONE_LENGTH_FEET = 15;
 export function dragonsBreathExhaleActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     actor === undefined ||
@@ -108,10 +110,7 @@ export function dragonsBreathExhaleActs(
   return activeDragonsBreathEffects(actor).map((effect) => {
     const subject = dragonsBreathExhaleSubject(actorId, effect);
     return {
-      presentation: { kind: "intrinsic" },
       subject,
-      label: "Dragon's Breath",
-      summary: "Spend a Magic action to exhale a table-supplied 15-foot Cone.",
       initialHoles: [
         dragonsBreathSavingThrowOutcomeHole(state, actorId, effect),
       ],

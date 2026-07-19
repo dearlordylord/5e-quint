@@ -926,15 +926,13 @@ export function bonusActionStandardActionActs(
             ? representedMovementSpeedKinds(actor)
             : ["walk" as const];
         return speedKinds.map((speedKind): BattleActDiscoveryCandidate => {
-          const presentation = {
-            label: alternateActionCostActionLabel(action),
-            summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
+          const execution = {
             initialHoles:
               action === "hide" ? [hideAbilityCheckHole(state, actorId)] : [],
           };
           if (entry.source.kind === "spellEffect") {
             return {
-              ...presentation,
+              ...execution,
               subject: {
                 tag: "bonusActionStandardAction",
                 actorId,
@@ -947,7 +945,7 @@ export function bonusActionStandardActionActs(
           }
           if (action === "dash") {
             return {
-              ...presentation,
+              ...execution,
               subject: {
                 tag: "bonusActionStandardAction",
                 actorId,
@@ -958,7 +956,7 @@ export function bonusActionStandardActionActs(
             };
           }
           return {
-            ...presentation,
+            ...execution,
             subject: {
               tag: "bonusActionStandardAction",
               actorId,
@@ -981,9 +979,6 @@ export function bonusActionStandardActionActs(
             entry.unitId,
             speedKind,
           ),
-          label: entry.resource.unit.name,
-          summary:
-            "Spend a Bonus Action and one use to Dash and gain Temporary Hit Points.",
           initialHoles: [],
         }));
       },

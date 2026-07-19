@@ -1,18 +1,13 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  requireCharacterUnitProcedureRefForTest,
-  requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
-import {
-  admitCharacterProcedureSelectionSubject,
-  battleActUnitPresentation,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-02-BRUTAL-STRIKE-FORCEFUL-BLOW barbarian_brutal_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-03-BRUTAL-STRIKE-HAMSTRING barbarian_brutal_strike
+import {
+  admitCharacterProcedureSelectionSubject,
+  battleActUnitPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 import {
   startBattleRight,
   testBattleCreatureStateWithConditions,
@@ -76,6 +71,11 @@ import type {
   BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+  requireCharacterUnitProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: class action features", () => {
   test("Action Surge grants one additional non-Magic action and cannot be used twice in one turn", () => {
@@ -569,6 +569,11 @@ describe("battle runtime: class action features", () => {
     if (act === undefined) {
       throw new Error("Expected Steady Aim act.");
     }
+    const steadyAimProcedureRef = requireCharacterUnitProcedureRefForTest(
+      state,
+      fighterId,
+      "rogue_steady_aim",
+    );
 
     const aimed = requireResolved(
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
@@ -583,12 +588,12 @@ describe("battle runtime: class action features", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "nextAttackRollBySelf",
-          sourceUnitId: "rogue_steady_aim",
+          sourceProcedureRef: steadyAimProcedureRef,
           mode: "advantage",
         }),
         expect.objectContaining({
           kind: "selfSpeedZero",
-          sourceUnitId: "rogue_steady_aim",
+          sourceProcedureRef: steadyAimProcedureRef,
         }),
       ]),
     );
@@ -2753,7 +2758,11 @@ describe("battle runtime: class action features", () => {
       resolved.state.combatants.get(goblinId)?.activeEffects,
     ).toContainEqual({
       kind: "unitFeatureSpeedDelta",
-      sourceUnitId: "barbarian_brutal_strike",
+      sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "barbarian_brutal_strike",
+      ),
       sourceCombatantId: fighterId,
       deltaFeet: movementDeltaFeet(-15),
       expiresAt: { kind: "startOfTurn", combatantId: fighterId },

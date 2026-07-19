@@ -1,35 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  requireCharacterSpellProcedureRefForTest,
-  startBattleRight,
-  requireResolved,
-  requireHole,
-  targetFill,
-  attackRollFill,
-  concentrationSavingThrowFill,
-  damageRollFillWithGroups,
-  attackDamageDispositionFill,
-  rolledDiceGroups,
-  characterSeed,
-  statBlockCreatureInit,
-  skeletonCreatureInit,
-  wizardSpellcasting,
-  spellRecord,
-  magicSubject,
-  skeletonId,
-  wizardId,
-  secondWizardId,
-  secondSkeletonId,
-  unitLibrary,
-  statBlockCatalog,
-  battleId,
-  combatantId,
-  resolveBattleSubject,
-  spellSlotInvocationRef,
-  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
-} from "./battle-runtime-test-support.ts";
 import type {
   BattleFill,
   BattleActDiscoverySubject as BattleSubject,
@@ -37,6 +7,36 @@ import type {
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
+import {
+  attackDamageDispositionFill,
+  attackRollFill,
+  battleId,
+  battleProcedureExecutionRefForTest,
+  characterSeed,
+  combatantId,
+  concentrationSavingThrowFill,
+  damageRollFillWithGroups,
+  magicSubject,
+  requireCharacterSpellProcedureRefForTest,
+  requireHole,
+  requireResolved,
+  resolveBattleSubject,
+  rolledDiceGroups,
+  secondSkeletonId,
+  secondWizardId,
+  skeletonCreatureInit,
+  skeletonId,
+  spellRecord,
+  spellSlotInvocationRef,
+  startBattleRight,
+  statBlockCatalog,
+  statBlockCreatureInit,
+  targetFill,
+  unitLibrary,
+  wizardId,
+  wizardSpellcasting,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+} from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Ice Knife", () => {
   test("Ray of Enfeeblement source penalty is requested before Ice Knife attack-burst save damage", () => {
@@ -338,12 +338,6 @@ describe("battle runtime: Ice Knife", () => {
     expect(savingThrows).toMatchObject({
       label: "Ice Knife primary-target-origin Emanation Saving Throw outcomes",
       ability: "dex",
-      spell: {
-        burst: {
-          targeting: { kind: "primaryTargetOriginEmanation", radiusFeet: 5 },
-          damage: { expr: { dice: 3, dieSize: 6 }, damageType: "cold" },
-        },
-      },
     });
     const saveFill: Extract<
       BattleFill,

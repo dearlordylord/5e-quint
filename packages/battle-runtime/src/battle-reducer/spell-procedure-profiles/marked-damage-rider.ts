@@ -37,8 +37,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
-
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 import {
   classFeatureFreeCastSpellInvocationRef,
@@ -75,9 +74,7 @@ import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targe
 import { expendSpellSlot } from "../spell-effects.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellAbilityChoiceHole } from "../spells-damage-fills.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
   spendClassFeatureFreeCastResource,
@@ -92,9 +89,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionBattleTurn } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   AbilitySchema,
   BattleRuntimeObjectSchema,
@@ -103,6 +98,14 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  sameStringSet,
+  supportedDamageAmountExpr,
+} from "../spells-profile-shared.ts";
+import {
+  spellAdmissionBattleTurn,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type MarkedDamageRiderInvocation = Extract<
   SupportedSpellInvocation,
@@ -457,8 +460,6 @@ function discoverMarkedDamageRiderCastAct(
             invocation: markedDamageRiderInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: markedDamageRiderCastSummary(invocation),
           initialHoles,
         },
       ];
@@ -749,11 +750,17 @@ function applyMarkedDamageRiderSpellEffect(
       : invocation.expiresAt;
   const occurrence =
     invocation.action === "transfer"
-      ? { effectRef: invocation.activeEffect.effectRef, owner: caster }
-      : allocateBattleActiveEffectRefForCreature({
-          battleId: state.battleId,
+      ? {
+          tag: "allocated" as const,
+          state,
+          effectRef: invocation.activeEffect.effectRef,
           owner: caster,
+        }
+      : allocateBattleActiveEffectRef({
+          state,
+          ownerId: actorId,
         });
+  if (occurrence.tag === "ownerNotFound") return state;
   const transfer: MarkedDamageRiderTransferState = {
     kind: "awaitingTargetDrop",
     retargetTiming:
@@ -794,8 +801,8 @@ function applyMarkedDamageRiderSpellEffect(
     },
   ];
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
+    ...occurrence.state,
+    combatants: new Map(occurrence.state.combatants).set(actorId, {
       ...occurrence.owner,
       activeEffects,
     }),

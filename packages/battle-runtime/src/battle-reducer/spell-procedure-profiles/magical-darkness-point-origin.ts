@@ -187,10 +187,6 @@ function discoverMagicalDarknessPointOriginCastAct(
         invocation: magicalDarknessPointOriginInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${magicalDarknessPointOriginCastSummary(
-        invocation,
-      )} The table supplies the magical Darkness area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

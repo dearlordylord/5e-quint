@@ -1500,7 +1500,10 @@ export function spellFillSet(
           message: "Spell damage type choice does not match this spell act.",
         };
       }
-      if (fill.holeId !== spellDamageTypeChoiceHole(invocation).holeId) {
+      if (
+        fill.holeId !==
+        spellDamageTypeChoiceHole({ ...invocation, sourceProcedureRef }).holeId
+      ) {
         return {
           tag: "invalid",
           message:
@@ -1528,7 +1531,13 @@ export function spellFillSet(
             "Spiritual Weapon force position does not match this spell act.",
         };
       }
-      if (fill.holeId !== spiritualWeaponForcePositionHole(invocation).holeId) {
+      if (
+        fill.holeId !==
+        spiritualWeaponForcePositionHole({
+          ...invocation,
+          sourceProcedureRef,
+        }).holeId
+      ) {
         return {
           tag: "invalid",
           message:
@@ -1679,9 +1688,13 @@ export function spellFillSet(
         continue;
       }
       if (invocation.procedure === "attackBurstSaveDamage") {
-        const attackDamageHole = spellDamageHole(invocation, false);
-        const criticalAttackDamageHole = spellDamageHole(invocation, true);
-        const burstDamageHole = spellBurstDamageHole(invocation);
+        const executionInvocation = { ...invocation, sourceProcedureRef };
+        const attackDamageHole = spellDamageHole(executionInvocation, false);
+        const criticalAttackDamageHole = spellDamageHole(
+          executionInvocation,
+          true,
+        );
+        const burstDamageHole = spellBurstDamageHole(executionInvocation);
         if (
           fill.holeId === attackDamageHole.holeId ||
           fill.holeId === criticalAttackDamageHole.holeId

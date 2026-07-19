@@ -1,5 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE glyph_of_warding
@@ -32,6 +30,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION glyph_of_warding doReplayGlyphStoredSelfTransformationConcentration
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import type { RolledDiceGroup } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -172,6 +171,10 @@ import {
   battleSpellEffectOccurrenceId,
   type BattleProcedureExecutionRef,
 } from "./identity.ts";
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 type GlyphDurableOccurrenceEffect = Extract<
   BattleActiveEffect,
@@ -769,7 +772,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(Number(added.state.combatants.get(spellTargetId)?.hp)).toBe(50);
   });
 
-  test("keeps a stale spell procedure ref tombstoned when an equivalent invocation reappears", () => {
+  test("restores an unavailable spell procedure with its original ref", () => {
     const invocation = storedSpellInvocation(guidingBoltUnitId, 1);
     const state = glyphBattle({
       preparedSpells: [spellRecord(guidingBoltUnitId)],
@@ -796,13 +799,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const reappeared = characterExecutionWithSpellInvocations(unavailable, [
       invocation,
     ]);
-    const replacementRef = characterSpellProcedureRef(reappeared, invocation);
-    if (replacementRef === undefined) {
-      throw new Error("Expected replacement spell procedure binding.");
-    }
-    expect(replacementRef).not.toBe(originalRef);
-    expect(characterSpellProcedure(reappeared, originalRef)).toBeUndefined();
-    expect(characterSpellProcedure(reappeared, replacementRef)).toMatchObject(
+    const restoredRef = characterSpellProcedureRef(reappeared, invocation);
+    expect(restoredRef).toBe(originalRef);
+    expect(characterSpellProcedure(reappeared, originalRef)).toMatchObject(
       invocation,
     );
     expect(characterStoredSpellProcedureRef(reappeared, invocation)).toBe(
@@ -954,12 +953,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsAttackRoll.tag).toBe("needsHoles");
     if (needsAttackRoll.tag !== "needsHoles") return;
     const attackRoll = requireReleaseHole(needsAttackRoll.holes, "attackRoll");
-    expect(attackRoll).toMatchObject({
-      spell: expect.objectContaining({
-        procedure: "spellAttackDamage",
-        spell: expect.objectContaining({ id: guidingBoltUnitId }),
-      }),
-    });
+    expect("spell" in attackRoll).toBe(false);
+    expect(
+      battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
+    ).toBeDefined();
     const needsDamageRoll = releaseGlyphStoredSpell({
       state,
       profile: requireGlyphStoredSpellProfile(),
@@ -1978,12 +1975,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       needsAreaSave.holes,
       "savingThrowOutcome",
     );
-    expect(savingThrow).toMatchObject({
-      spell: expect.objectContaining({
-        procedure: "hypnoticPattern",
-        spell: expect.objectContaining({ id: hypnoticPatternUnitId }),
-      }),
-    });
+    expect("spell" in savingThrow).toBe(false);
+    expect(
+      battleProcedureExecutionRefForSpellHoleForTest(savingThrow),
+    ).toBeDefined();
 
     expect(
       releaseGlyphStoredSpell({
@@ -2310,12 +2305,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       needsAreaSave.holes,
       "savingThrowOutcome",
     );
-    expect(savingThrow).toMatchObject({
-      spell: expect.objectContaining({
-        procedure: "saveGatedDamage",
-        spell: expect.objectContaining({ id: fireballUnitId }),
-      }),
-    });
+    expect("spell" in savingThrow).toBe(false);
+    expect(
+      battleProcedureExecutionRefForSpellHoleForTest(savingThrow),
+    ).toBeDefined();
     const saveFill = fireballGlyphSavingThrowOutcomeFill(
       savingThrow,
       [{ targetId: spellTargetId, succeeded: false }],
@@ -2389,12 +2382,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       needsAreaSave.holes,
       "savingThrowOutcome",
     );
+    expect("spell" in savingThrow).toBe(false);
     expect(savingThrow).toMatchObject({
-      spell: expect.objectContaining({
-        procedure: "saveGatedDamage",
-        spell: expect.objectContaining({ id: thunderwaveUnitId }),
-        targeting: expect.objectContaining({ kind: "selfOriginCube" }),
-      }),
+      sourceProcedureRef: expect.any(String),
+      outcomeTargeting: "area",
     });
     const saveFill = thunderwaveGlyphSavingThrowOutcomeFill(savingThrow, [
       { targetId: spellTargetId, succeeded: false },
@@ -2484,12 +2475,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       needsSavingThrow.holes,
       "savingThrowOutcome",
     );
-    expect(savingThrow).toMatchObject({
-      spell: expect.objectContaining({
-        procedure: "greaseGroundHazard",
-        spell: expect.objectContaining({ id: greaseUnitId }),
-      }),
-    });
+    expect("spell" in savingThrow).toBe(false);
+    expect(
+      battleProcedureExecutionRefForSpellHoleForTest(savingThrow),
+    ).toBeDefined();
     const saveFill = greaseGlyphSavingThrowOutcomeFill(savingThrow, [
       { targetId: spellTargetId, succeeded: false },
     ]);
@@ -2699,12 +2688,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsAttackRoll.tag).toBe("needsHoles");
     if (needsAttackRoll.tag !== "needsHoles") return;
     const attackRoll = requireReleaseHole(needsAttackRoll.holes, "attackRoll");
-    expect(attackRoll).toMatchObject({
-      spell: expect.objectContaining({
-        procedure: "spiritualWeaponAttackProxy",
-        spell: expect.objectContaining({ id: spiritualWeaponUnitId }),
-      }),
-    });
+    expect("spell" in attackRoll).toBe(false);
+    expect(
+      battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
+    ).toBeDefined();
     const needsDamageRoll = releaseGlyphStoredSpell({
       state,
       profile: requireGlyphStoredSpellProfile(),
@@ -2874,14 +2861,14 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsAreaSave.tag).toBe("needsHoles");
     if (needsAreaSave.tag !== "needsHoles") return;
+    const savingThrow = requireReleaseHole(
+      needsAreaSave.holes,
+      "savingThrowOutcome",
+    );
+    expect("spell" in savingThrow).toBe(false);
     expect(
-      requireReleaseHole(needsAreaSave.holes, "savingThrowOutcome"),
-    ).toMatchObject({
-      spell: expect.objectContaining({
-        procedure: "saveGatedDamage",
-        spell: expect.objectContaining({ id: fireballUnitId }),
-      }),
-    });
+      battleProcedureExecutionRefForSpellHoleForTest(savingThrow),
+    ).toBeDefined();
   });
 
   test("explosive-rune release uses area witnesses, chosen damage type, slot scaling, save half damage, and cleanup", () => {
@@ -3936,7 +3923,6 @@ function stateWithUnrelatedReadiedSpell(
     }),
     readiedSpells: new Map(state.readiedSpells).set(spellCasterId, {
       procedureRef,
-      invocation: readiedInvocation,
       trigger,
       expiresAt: {
         kind: "endOfTurn",

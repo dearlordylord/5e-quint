@@ -102,8 +102,6 @@ function discoverThaumaturgyBoomingVoiceCastAct(
         invocation: thaumaturgyBoomingVoiceInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: thaumaturgyBoomingVoiceCastSummary(invocation),
       initialHoles: [thaumaturgyActiveOneMinuteEffectCountHole(invocation)],
     },
   ];

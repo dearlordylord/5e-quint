@@ -68,6 +68,8 @@ import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime-test-support.ts";
+import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
 function spellInvocationForAvailableAct(
   _state: BattleState,
   act: AvailableBattleAct,
@@ -820,7 +822,7 @@ export function spellTargetListFill(
           })),
         ]
       : undefined);
-  if (hole.spell.targeting.kind === "pointOriginSphereTargetList") {
+  if (hole.spatialTargeting.kind === "pointOriginSphere") {
     return {
       kind: "spellTargetList",
       holeId: hole.holeId,
@@ -834,7 +836,7 @@ export function spellTargetListFill(
           casterId,
           sourceProcedureRef,
           areaId: battleAreaId(`test:${spellId}:point-origin-sphere`),
-          radiusFeet: hole.spell.targeting.area.radiusFeet,
+          radiusFeet: hole.spatialTargeting.radiusFeet,
           targetIds,
         },
         ...knownWillingFacts,
@@ -939,10 +941,7 @@ export function savingThrowOutcomeFill(
     holeId: hole.holeId,
     ...(relationshipFacts === undefined ? {} : { relationshipFacts }),
     value:
-      "spell" in hole &&
-      hole.spell.procedure !== "rollModifier" &&
-      hole.spell.targeting.kind !== "singleCombatant" &&
-      hole.spell.targeting.kind !== "targetList"
+      "outcomeTargeting" in hole && hole.outcomeTargeting === "area"
         ? {
             area: {
               originAnchorId: spellCasterId,
@@ -1984,18 +1983,49 @@ export function isSelectedSorcerousBurstDamageInvocation(
 }
 
 export function spellActInvocation(
+  state: BattleState,
   act: ActionSpellAct,
 ): SupportedSpellInvocation {
-  const hole = act.initialHoles[0];
-  return spellHoleInvocation(hole === undefined ? [] : [hole]);
+  return requireSpellProcedureForTest(state, act.subject.procedureRef);
 }
 
 export function spellHoleInvocation(
+  state: BattleState,
   holes: readonly BattleHole[],
 ): SupportedSpellInvocation {
-  const hole = holes[0];
-  if (hole === undefined || !("spell" in hole)) {
-    throw new Error("Expected spell hole to carry invocation.");
+  return requireSpellProcedureForTest(
+    state,
+    battleProcedureExecutionRefForSpellHoleForTest(
+      holes[0] ??
+        (() => {
+          throw new Error("Expected a Spell hole.");
+        })(),
+    ),
+  );
+}
+
+function requireSpellProcedureForTest(
+  state: BattleState,
+  procedureRef: Parameters<typeof characterSpellProcedure>[1],
+): SupportedSpellInvocation {
+  const availableRefs: string[] = [];
+  for (const combatant of state.combatants.values()) {
+    if (combatant.origin.kind !== "character") continue;
+    const invocation = characterSpellProcedure(
+      combatant.origin.execution,
+      procedureRef,
+    );
+    if (invocation !== undefined) return invocation;
+    const currentInvocations = supportedSpellActs(combatant, state);
+    availableRefs.push(
+      ...currentInvocations.map((candidate) => candidate.sourceProcedureRef),
+    );
+    const currentInvocation = currentInvocations.find(
+      (candidate) => candidate.sourceProcedureRef === procedureRef,
+    );
+    if (currentInvocation !== undefined) return currentInvocation;
   }
-  return hole.spell;
+  throw new Error(
+    `Expected bound Spell procedure ${procedureRef}; available refs: ${availableRefs.join(", ")}.`,
+  );
 }

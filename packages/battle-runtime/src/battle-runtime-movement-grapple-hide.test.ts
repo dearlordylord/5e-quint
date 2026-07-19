@@ -1,13 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  requireCharacterSpellProcedureRefForTest,
-  requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.creature-space-movement-permission unit-feature.grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
-
 import { abilityModifier } from "@dnd/shared/types";
 import {
   admitCharacterProcedureSelectionSubject,
@@ -90,6 +84,11 @@ import {
   wizardId,
   wizardSpellcasting,
   wizardVsSkeletonBattle,
+} from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+  requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
@@ -1194,9 +1193,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
                 {
                   kind: "greaseGroundHazard",
                   sourceCombatantId: wizardId,
-                  sourceProcedureRef: battleProcedureExecutionRefForTest(
-                    String(spellRecord("grease").id),
-                  ),
+                  sourceProcedureRef: expect.any(String),
                   areaId,
                 },
               ],

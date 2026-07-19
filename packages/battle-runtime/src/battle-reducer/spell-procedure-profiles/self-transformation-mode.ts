@@ -328,8 +328,6 @@ function discoverSelfTransformationModeCastAct(
         invocation: selfTransformationModeInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
-      label: invocation.spell.name,
-      summary: selfTransformationModeCastSummary(invocation),
       initialHoles: [selfTransformationModeChoiceHole(invocation)],
     },
   ];
@@ -412,8 +410,15 @@ function resolveSelfTransformationMode(
   }
   const allocation = allocateBattleActiveEffectRef({
     state: concentrationBase,
-    owner: effectOwner,
+    ownerId: input.actorId,
   });
+  if (allocation.tag === "ownerNotFound") {
+    return invalidResult(
+      concentrationBase,
+      "staleSubject",
+      "Self-transformation effect owner is no longer in the battle.",
+    );
+  }
   const effected = applySelfTransformationModeEffect({
     state: allocation.state,
     actorId: input.actorId,
@@ -458,12 +463,18 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   );
   if (modeEffect.tag === "needsModeChoice") {
     return needsHolesResult(input.state, input.subject, [
-      selfTransformationModeChoiceHole(input.invocation),
+      selfTransformationModeChoiceHole({
+        ...input.invocation,
+        sourceProcedureRef: input.subject.procedureRef,
+      }),
     ]);
   }
   if (modeEffect.tag === "needsDamageType") {
     return needsHolesResult(input.state, input.subject, [
-      spellDamageTypeChoiceHole(input.invocation),
+      spellDamageTypeChoiceHole({
+        ...input.invocation,
+        sourceProcedureRef: input.subject.procedureRef,
+      }),
     ]);
   }
   if (modeEffect.tag === "invalid") {
@@ -479,8 +490,15 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   }
   const allocation = allocateBattleActiveEffectRef({
     state: input.state,
-    owner: effectOwner,
+    ownerId: input.targetId,
   });
+  if (allocation.tag === "ownerNotFound") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Self-transformation effect owner is no longer in the battle.",
+    );
+  }
   const effected = applySelfTransformationModeEffect({
     state: allocation.state,
     actorId: input.targetId,
@@ -605,33 +623,34 @@ function selfTransformationModeEffectPayload(
   };
 }
 
-const SelfTransformationModeInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "selfTransformationMode" }
-  >
->(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("selfTransformationMode"),
-    spell: BattleRuntimeObjectSchema,
-    actionCost: Schema.Literal("magicAction"),
-    modeChoices: Schema.NonEmptyArray(
-      Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
-    ),
-    naturalWeaponFacts: Schema.Struct({
-      damage: Schema.Struct({
-        dice: Schema.Literal(1),
-        dieSize: DamageDieSizeSchema,
-        damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
+export const SelfTransformationModeInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "selfTransformationMode" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("selfTransformationMode"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      modeChoices: Schema.NonEmptyArray(
+        Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
+      ),
+      naturalWeaponFacts: Schema.Struct({
+        damage: Schema.Struct({
+          dice: Schema.Literal(1),
+          dieSize: DamageDieSizeSchema,
+          damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
+        }),
+        spellcastingAbilityModifier: AbilityModifier,
+        attackBonus: AttackBonus,
       }),
-      spellcastingAbilityModifier: AbilityModifier,
-      attackBonus: AttackBonus,
+      expiresAt: BattleRuntimeObjectSchema,
     }),
-    expiresAt: BattleRuntimeObjectSchema,
-  }),
-);
+  );
 export const selfTransformationModeProfile = {
   procedure: "selfTransformationMode",
   invocationSchema: SelfTransformationModeInvocationSchema,

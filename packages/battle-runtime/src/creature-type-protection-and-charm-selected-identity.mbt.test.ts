@@ -1,20 +1,14 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellSlotPresentation,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ANIMAL-FRIENDSHIP animal_friendship
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good
 // UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
-
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
@@ -35,7 +29,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
-
 import {
   battleId,
   battleReducerStartRouteEvent,
@@ -85,6 +78,12 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import type { ReplayAddressableSpellActiveEffect } from "./active-effect/execution-ref.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -1439,8 +1438,10 @@ function charmPersonSpellInvocation(): Extract<
   SupportedSpellInvocation,
   { readonly procedure: "saveGatedCondition" }
 > {
+  const state = protectionFromEvilAndGoodBattle();
   const invocation = spellActInvocation(
-    spellAct(protectionFromEvilAndGoodBattle(), charmPersonUnitId),
+    state,
+    spellAct(state, charmPersonUnitId),
   );
   if (invocation.procedure !== "saveGatedCondition") {
     throw new Error("Expected Charm Person to be a save-gated condition.");
@@ -1464,12 +1465,22 @@ function spellAct(state: BattleState, unitId: string): ActionSpellAct {
   return act;
 }
 
-function spellActInvocation(act: ActionSpellAct): SupportedSpellInvocation {
-  const hole = act.initialHoles[0];
-  if (hole === undefined || !("spell" in hole)) {
-    throw new Error("Expected spell hole to carry invocation.");
+function spellActInvocation(
+  state: BattleState,
+  act: ActionSpellAct,
+): SupportedSpellInvocation {
+  const actor = state.combatants.get(act.subject.actorId);
+  const invocation =
+    actor?.origin.kind === "character"
+      ? characterSpellProcedure(
+          actor.origin.execution,
+          act.subject.procedureRef,
+        )
+      : undefined;
+  if (invocation === undefined) {
+    throw new Error("Expected spell act to own an executable procedure.");
   }
-  return hole.spell;
+  return invocation;
 }
 
 function attackRollModeFor(

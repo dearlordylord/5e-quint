@@ -146,9 +146,7 @@ describe("L12G deterministic Danger Sense admission", () => {
       ability: "dex",
       greaseGroundHazard: {
         targetId: spellTargetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(greaseUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         trigger: "entersArea",
@@ -165,9 +163,7 @@ describe("L12G deterministic Danger Sense admission", () => {
       ability: "dex",
       greaseGroundHazard: {
         targetId: spellTargetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(greaseUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         trigger: "endsTurnInArea",

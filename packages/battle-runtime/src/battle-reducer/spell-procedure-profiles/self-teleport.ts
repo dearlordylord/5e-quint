@@ -136,8 +136,6 @@ function discoverSelfTeleportCastAct(
         invocation: selfTeleportInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
-      label: invocation.spell.name,
-      summary: selfTeleportCastSummary(invocation),
       initialHoles: [spellTeleportDestinationHole(invocation, actorId)],
     },
   ];

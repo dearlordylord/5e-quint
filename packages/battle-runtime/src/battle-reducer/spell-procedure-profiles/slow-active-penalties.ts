@@ -26,7 +26,6 @@ import {
 import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
-
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
@@ -49,21 +48,6 @@ import {
   SLOW_ACTIVE_PENALTIES_SPEED_RATIO,
 } from "../domain-constants.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
 import {
   saveMetamagicSelectionState,
   validateSavingThrowOutcomes,
@@ -89,6 +73,19 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowTargeting,
+} from "../spells-holes-fills.ts";
 
 type SlowActivePenaltiesSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -325,13 +322,9 @@ function discoverSlowActivePenaltiesCastAct(
     actorId,
     invocation,
   );
-  const baseCastAct = slowActivePenaltiesCastAct(
-    actorId,
-    invocation,
-    [savingThrowHole],
-    invocation.spell.name,
-    slowActivePenaltiesCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = slowActivePenaltiesCastAct(actorId, invocation, [
+    savingThrowHole,
+  ]);
   if (actor === undefined) {
     return [baseCastAct];
   }
@@ -346,14 +339,11 @@ function discoverSlowActivePenaltiesCastAct(
           invocation,
           applications,
         );
-        const label = spellMetamagicLabel(metamagic);
         return {
           ...baseCastAct,
           subject: { ...baseCastAct.subject, metamagic },
           initialHoles:
             metamagicHoles.length === 0 ? [savingThrowHole] : metamagicHoles,
-          label: `${invocation.spell.name} (${label})`,
-          summary: `${baseCastAct.summary} Cast with ${label}.`,
         };
       },
     ),
@@ -364,8 +354,6 @@ function slowActivePenaltiesCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -375,8 +363,6 @@ function slowActivePenaltiesCastAct(
       invocation: slowActivePenaltiesInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -384,7 +370,7 @@ function slowActivePenaltiesCastAct(
 function slowActivePenaltiesMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SlowActivePenaltiesSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
@@ -424,16 +410,6 @@ function slowActivePenaltiesCastSummary(
   invocation: SlowActivePenaltiesSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function slowActivePenaltiesCastSummaryWithSavingThrow(
-  invocation: SlowActivePenaltiesSpellInvocation,
-): string {
-  return `${slowActivePenaltiesCastSummary(
-    invocation,
-  )} Table-supplied chosen creatures in the Cube make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveSlowActivePenalties(
@@ -488,7 +464,7 @@ function resolveSlowActivePenalties(
   }
   const savingThrowValidation = validateSavingThrowOutcomes(
     input.fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,

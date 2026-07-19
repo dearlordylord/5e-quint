@@ -146,8 +146,6 @@ function discoverBlurAttackRollDefenseCastAct(
         invocation: blurAttackRollDefenseInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: blurAttackRollDefenseCastSummary(invocation),
       initialHoles: [],
     },
   ];

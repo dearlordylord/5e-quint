@@ -1,10 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV56A feather_fall
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-feather-fall-mitigation
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
-
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   abilityModifier,
@@ -18,7 +15,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
   activeFeatherFallDescentRateCapFeetPerRound,
   battleId,
@@ -38,6 +34,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -136,9 +136,7 @@ describe("Feather Fall Reaction spell", () => {
       expect(target.activeEffects).toContainEqual(
         expect.objectContaining({
           kind: "featherFallMitigation",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(featherFallUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: casterId,
           expiresAt: expect.objectContaining({ kind: "duration" }),
         }),

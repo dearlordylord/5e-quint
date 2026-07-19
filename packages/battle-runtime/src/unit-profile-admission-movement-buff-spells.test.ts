@@ -219,7 +219,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
         expect.objectContaining({
           subject: expect.objectContaining({
             tag: "bonusActionStandardAction",
-            sourceUnitId: expeditiousRetreatUnitId,
+            sourceProcedureRef: expect.any(String),
             action: "dash",
           }),
         }),

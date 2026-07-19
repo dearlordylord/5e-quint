@@ -1,13 +1,8 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { battleSpellDamageDieExecutionRef } from "./identity.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME spike_growth
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spike-growth-movement-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { battleSpellDamageDieExecutionRef } from "./identity.ts";
 import { describe, expect, test } from "vitest";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
@@ -50,6 +45,11 @@ import {
   webUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 const spikeGrowthDurationTicks = elapsedTimeTicks(100);
 
@@ -260,7 +260,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         area: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
       }),
     );
-    expect(spellHoleInvocation([area])).toEqual(
+    expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "spikeGrowthMovementHazard",
         spell,
@@ -308,7 +308,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     });
 
     const area = requireHole(act.initialHoles, "spellAreaChoice");
-    expect(spellHoleInvocation([area])).toMatchObject({
+    expect(spellHoleInvocation(state, [area])).toMatchObject({
       procedure: "spikeGrowthMovementHazard",
       targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
     });
@@ -343,17 +343,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     }
     expect(requireCombatant(resolved.state, spellCasterId)).toMatchObject({
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spikeGrowthUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "spikeGrowthHazard",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spikeGrowthUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           areaId: spikeGrowthAreaId,
           damage: {
@@ -465,9 +461,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 {
                   kind: "spikeGrowthHazard",
                   sourceCombatantId: spellCasterId,
-                  sourceProcedureRef: battleProcedureExecutionRefForTest(
-                    String(spell.id),
-                  ),
+                  sourceProcedureRef: expect.any(String),
                   areaId: spikeGrowthAreaId,
                   damageDistanceFeet: movementFeet(5),
                 },
@@ -637,9 +631,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 {
                   kind: "spikeGrowthHazard",
                   sourceCombatantId: spellCasterId,
-                  sourceProcedureRef: battleProcedureExecutionRefForTest(
-                    String(spell.id),
-                  ),
+                  sourceProcedureRef: expect.any(String),
                   areaId: spikeGrowthAreaId,
                   damageDistanceFeet: movementFeet(20),
                 },

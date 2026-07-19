@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
@@ -13,12 +12,12 @@ import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-suppor
 // UNIT-IDENTITY-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
 // UNIT-IDENTITY-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
 // UNIT-IDENTITY-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 import {
   characterAttackSubjectForTest,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
-
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -39,7 +38,6 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.ts";
-
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -62,15 +60,17 @@ import magicMissileInput from "../../surface/content/magic_missile.json";
 import massCureWoundsInput from "../../surface/content/mass_cure_wounds.json";
 import massHealingWordInput from "../../surface/content/mass_healing_word.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
-
 import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
+  type AvailableBattleAct,
   battleAreaId,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   battleId,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
@@ -670,6 +670,7 @@ function createRuleCoreSpellDriver() {
           resolveBattleSubject({
             state,
             subject: actionSpellSubject(
+              state,
               magicMissileRepeatedDamageAllocationRef(),
             ),
             fills: [],
@@ -680,15 +681,18 @@ function createRuleCoreSpellDriver() {
         state = spellBattle();
         resetProjection();
         const subject = actionSpellSubject(
+          state,
           magicMissileRepeatedDamageAllocationRef(),
         );
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
           "spellTargetAllocation",
         );
-        const allocation = spellTargetAllocationFill(target, [
-          { targetId, count: 3 },
-        ]);
+        const allocation = spellTargetAllocationFill(
+          target,
+          [{ targetId, count: 3 }],
+          subject.procedureRef,
+        );
         const damage = requireHole(
           resolveBattleSubject({ state, subject, fills: [allocation] }),
           "rolledDice",
@@ -821,6 +825,7 @@ function createRuleCoreSpellDriver() {
         });
         resetProjection();
         const subject = actionSpellSubject(
+          state,
           spellSlotInvocationRef("mage_armor", 1, "persistentArmorEffect"),
         );
         const target = requireHole(
@@ -841,6 +846,7 @@ function createRuleCoreSpellDriver() {
           resolveBattleSubject({
             state,
             subject: actionSpellSubject(
+              state,
               spellSlotInvocationRef("mage_armor", 1, "persistentArmorEffect"),
             ),
             fills: [],
@@ -856,15 +862,18 @@ function createRuleCoreSpellDriver() {
         });
         resetProjection();
         const subject = actionSpellSubject(
+          state,
           magicMissileRepeatedDamageAllocationRef(),
         );
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
           "spellTargetAllocation",
         );
-        const allocation = spellTargetAllocationFill(target, [
-          { targetId, count: 3 },
-        ]);
+        const allocation = spellTargetAllocationFill(
+          target,
+          [{ targetId, count: 3 }],
+          subject.procedureRef,
+        );
         const damage = requireHole(
           resolveBattleSubject({ state, subject, fills: [allocation] }),
           "rolledDice",
@@ -945,9 +954,11 @@ function createRuleCoreSpellDriver() {
           resolveBattleSubject({ state, subject: releaseSubject, fills: [] }),
           "spellTargetAllocation",
         );
-        const allocation = spellTargetAllocationFill(releaseTarget, [
-          { targetId, count: 3 },
-        ]);
+        const allocation = spellTargetAllocationFill(
+          releaseTarget,
+          [{ targetId, count: 3 }],
+          releaseSubject.procedureRef,
+        );
         const damage = requireHole(
           resolveBattleSubject({
             state,
@@ -1041,6 +1052,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle();
       resetProjection();
       const subject = actionSpellSubject(
+        state,
         cantripSpellInvocationRef(
           recordSelectedUnitRuntimeBoundaryId("ray_of_frost"),
           "spellAttackDamage",
@@ -1101,6 +1113,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle();
       resetProjection();
       const subject = actionSpellSubject(
+        state,
         cantripSpellInvocationRef(
           recordSelectedUnitRuntimeBoundaryId("ray_of_frost"),
           "spellAttackDamage",
@@ -1150,6 +1163,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle({ includeSecondTarget: true });
       resetProjection();
       const subject = actionSpellSubject(
+        state,
         cantripSpellInvocationRef(
           recordSelectedUnitRuntimeBoundaryId("acid_splash"),
           "saveGatedDamage",
@@ -1194,6 +1208,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle({ includeSecondTarget: true });
       resetProjection();
       const subject = actionSpellSubject(
+        state,
         cantripSpellInvocationRef(
           recordSelectedUnitRuntimeBoundaryId("acid_splash"),
           "saveGatedDamage",
@@ -1775,6 +1790,7 @@ type DirectHitPointRestorationSpellId =
   | "mass_healing_word";
 
 function actionSpellSubject(
+  state: BattleState,
   invocation: SpellInvocationRef,
   mode: Extract<
     BattleSubject,
@@ -1782,16 +1798,19 @@ function actionSpellSubject(
   >["mode"] = {
     tag: "cast",
   },
-): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell"; readonly invocation: unknown }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: casterId,
-    invocation,
-    mode,
-  };
+): Extract<AvailableBattleAct["subject"], { readonly tag: "actionSpell" }> {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === casterId &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        invocation.spellId &&
+      candidate.subject.mode.tag === mode.tag,
+  );
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected admitted action Spell subject.");
+  }
+  return act.subject;
 }
 
 function targetAttackSubject(
@@ -1880,7 +1899,7 @@ function spellTargetListFill(
     throw new Error("Expected spellTargetList hole.");
   }
   const targetIds = [targetId, secondTargetId];
-  if (hole.spell.targeting.kind === "pointOriginSphereTargetList") {
+  if (sourceProcedureRef === "mass_cure_wounds") {
     return {
       kind: "spellTargetList",
       holeId: hole.holeId,
@@ -1892,7 +1911,7 @@ function spellTargetListFill(
           sourceProcedureRef:
             battleProcedureExecutionRefForTest(sourceProcedureRef),
           areaId: battleAreaId(`mbt:${sourceProcedureRef}:point-origin-sphere`),
-          radiusFeet: hole.spell.targeting.area.radiusFeet,
+          radiusFeet: movementFeet(30),
           targetIds,
         },
       ],
@@ -1918,6 +1937,7 @@ function spellTargetAllocationFill(
     readonly targetId: CombatantId;
     readonly count: number;
   }[],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleFill {
   if (hole.kind !== "spellTargetAllocation") {
     throw new Error("Expected spellTargetAllocation hole.");
@@ -1930,9 +1950,7 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId,
       targetId: allocation.targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(hole.spell.spell.id),
-      ),
+      sourceProcedureRef,
     })),
   };
 }
@@ -1963,12 +1981,6 @@ function savingThrowOutcomeFill(
 ): BattleFill {
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected savingThrowOutcome hole.");
-  }
-  if (!("spell" in hole)) {
-    throw new Error("Expected spell Saving Throw outcome hole.");
-  }
-  if (hole.spell.targeting.kind === "singleCombatant") {
-    throw new Error("Expected area spell Saving Throw outcome hole.");
   }
   return {
     kind: "savingThrowOutcome",

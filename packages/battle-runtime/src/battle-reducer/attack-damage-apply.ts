@@ -20,7 +20,9 @@ import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra"
 import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import { characterUnitFeatureProcedureId } from "../character-execution.ts";
+import {
+  characterUnitFeatureProcedureId,
+} from "../character-execution.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import { boundAttackExecutionSelectionMatchesOption } from "../battle-action-options.ts";
 import type {

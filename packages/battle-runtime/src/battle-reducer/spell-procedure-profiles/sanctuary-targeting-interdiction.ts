@@ -182,8 +182,6 @@ function discoverSanctuaryTargetingInterdictionCastAct(
             invocation: sanctuaryTargetingInterdictionInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: sanctuaryTargetingInterdictionCastSummary(invocation),
           initialHoles: [targetHole],
         },
       ];

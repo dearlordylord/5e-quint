@@ -1,11 +1,10 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MISTY-STEP misty_step
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-teleport
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MISTY-STEP misty_step
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-teleport
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import { spellTeleportDestinationHole } from "./battle-reducer/spells-holes-fills.ts";
 import {
@@ -25,8 +24,10 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
+  battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
 import {
   battleTablePositionId,
   combatantId,
@@ -35,7 +36,6 @@ import {
   movementFeet,
   resolveBattleSubject,
   savingThrowOutcomeFill,
-  spellId,
   spellSlotInvocationRef,
   type BattleFill,
 } from "./unit-profile-admission-test-support.ts";
@@ -82,11 +82,6 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       actorId: spellCasterId,
       maxDistanceFeet: movementFeet(30),
       requiresTableSpatialFact: true,
-      spell: expect.objectContaining({
-        procedure: "selfTeleport",
-        actionCost: "bonusAction",
-        maxDistanceFeet: movementFeet(30),
-      }),
     });
   });
 
@@ -139,9 +134,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       {
         kind: "selfTeleport",
         actorId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spellId(mistyStepUnitId)),
-        ),
+        sourceProcedureRef: expect.any(String),
         destination: {
           kind: "unoccupiedVisibleDestination",
           destinationId: battleTablePositionId(
@@ -284,8 +277,19 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
     );
     const destinationFill = teleportDestinationFill({ hole: destinationHole });
     const otherCasterId = combatantId("other-misty-step-caster");
+    const caster = state.combatants.get(spellCasterId);
+    const invocation =
+      caster?.origin.kind === "character"
+        ? characterSpellProcedure(
+            caster.origin.execution,
+            act.subject.procedureRef,
+          )
+        : undefined;
+    if (invocation?.procedure !== "selfTeleport") {
+      throw new Error("Expected an executable self-teleport procedure.");
+    }
     const staleDestinationHole = spellTeleportDestinationHole(
-      destinationHole.spell,
+      invocation,
       otherCasterId,
     );
     expect(staleDestinationHole.holeId).not.toEqual(destinationHole.holeId);

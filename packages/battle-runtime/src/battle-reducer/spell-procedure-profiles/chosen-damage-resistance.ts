@@ -193,8 +193,6 @@ function discoverChosenDamageResistanceCastAct(
         invocation: chosenDamageResistanceInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
-      label: invocation.spell.name,
-      summary: chosenDamageResistanceCastSummary(invocation),
       initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
     },
   ];
@@ -394,29 +392,30 @@ function applyChosenDamageResistanceEffect(input: {
   };
 }
 
-const ChosenDamageResistanceInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "chosenDamageResistance" }
-  >
->(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("chosenDamageResistance"),
-    spell: BattleRuntimeObjectSchema,
-    actionCost: Schema.Literal("magicAction"),
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Literal(1),
-      requiredTargetDisposition: Schema.Literal("willing"),
+export const ChosenDamageResistanceInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chosenDamageResistance" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("chosenDamageResistance"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+        requiredTargetDisposition: Schema.Literal("willing"),
+      }),
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      expiresAt: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
     }),
-    damageTypeChoices: Schema.Array(DamageTypeSchema),
-    expiresAt: BattleRuntimeObjectSchema,
-    rangeFeet: MovementFeet,
-  }),
-);
+  );
 
 export const chosenDamageResistanceProfile: SpellProcedureProfile<
   "chosenDamageResistance",

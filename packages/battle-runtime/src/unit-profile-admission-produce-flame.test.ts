@@ -1,8 +1,6 @@
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87A produce_flame
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-held-light-emitter
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 import { BattleHoleSchema } from "./index.ts";
@@ -43,6 +41,10 @@ import {
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
   test("produce_flame is admitted as a Bonus Action cantrip held light", () => {
@@ -357,7 +359,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(lit.state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "heldLightHurl",
         spell,
@@ -408,17 +410,15 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       "attackRoll",
     );
     const encoded = Schema.encodeUnknownSync(BattleHoleSchema)(attackHole);
-    const legacySpell = {
-      ...(encoded as { readonly spell: object }).spell,
-    } as {
-      sourceEffectRef?: unknown;
-    };
-    delete legacySpell.sourceEffectRef;
+    if (typeof encoded !== "object" || encoded === null) {
+      throw new Error("Expected encoded battle hole object.");
+    }
+    expect(encoded).not.toHaveProperty("spell");
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(BattleHoleSchema)({
           ...encoded,
-          spell: legacySpell,
+          spell: { procedure: "heldLightHurl" },
         }),
       ),
     ).toBe(true);

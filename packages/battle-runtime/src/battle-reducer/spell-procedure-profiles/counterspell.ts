@@ -25,8 +25,6 @@ import {
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   interruptedProcedureSubject,
@@ -39,7 +37,6 @@ import {
   type BattleTurnResources,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { BattleSubject } from "../../battle-subjects.ts";
 import { spellId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
@@ -54,20 +51,24 @@ import {
   markSpellSlotExpendedThisTurn,
   releasePendingSpellSlotUseThisTurn,
 } from "../spell-turn-resources.ts";
-import {
-  type SpellAdmissionContext,
-  type SpellProcedureProfile,
-  type SpellProcedureProfileResolveInput,
-} from "./profile.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import type {
+  BattleSubject,
+  SpellInvocationRef,
+} from "../../battle-subjects.ts";
+import {
+  spellProcedureInvocationSchema,
+  type SpellAdmissionContext,
+  type SpellProcedureProfile,
+  type SpellProcedureProfileResolveInput,
+} from "./profile.ts";
 
 type CounterspellInvocation = Extract<
   SupportedSpellInvocation,
@@ -238,7 +239,7 @@ function resolveCounterspell(
     }
     const validation = validateSavingThrowOutcomes(
       input.fillSet.savingThrowOutcomes,
-      savingThrowHole,
+      input.invocation,
       input.input.state,
       input.input.subject.reactorId,
       input.input.frame.casterId,

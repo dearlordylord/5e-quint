@@ -4241,13 +4241,12 @@ function empoweredDamageRollFill(
 function assertTransmutedDamageHole(damageHole: BattleHole): void {
   if (
     damageHole.kind !== "rolledDice" ||
-    !("spell" in damageHole) ||
-    !("damage" in damageHole.spell) ||
-    !("damageType" in damageHole.spell.damage) ||
-    damageHole.spell.damage.damageType !== "poison"
+    !("critical" in damageHole) ||
+    damageHole.critical
   ) {
-    throw new Error("Expected Transmuted Spell damage hole to use Poison.");
+    throw new Error("Expected a noncritical Transmuted Spell damage hole.");
   }
+  expect("spell" in damageHole).toBe(false);
 }
 
 function quickenedCureWoundsSubject(): Extract<

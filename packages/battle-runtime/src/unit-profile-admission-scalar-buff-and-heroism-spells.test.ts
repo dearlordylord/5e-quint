@@ -109,7 +109,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       mode: { tag: "cast" },
     });
     const tempHpHole = requireHole(act.initialHoles, "rolledDice");
-    expect(spellHoleInvocation([tempHpHole])).toEqual(
+    expect(spellHoleInvocation(state, [tempHpHole])).toEqual(
       expect.objectContaining({
         procedure: "scalarBuff",
         effect: {
@@ -1383,7 +1383,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     expect(targetListHole).toEqual(
       expect.objectContaining({ minTargets: 1, maxTargets: 3 }),
     );
-    expect(spellHoleInvocation([targetListHole])).toEqual(
+    expect(spellHoleInvocation(state, [targetListHole])).toEqual(
       expect.objectContaining({
         procedure: "scalarBuff",
         effect: {

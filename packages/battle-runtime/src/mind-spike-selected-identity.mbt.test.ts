@@ -1,13 +1,9 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike
 // UNIT-IDENTITY-REPLAY: L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike doResolveMindSpikeFailedSaveConcentrationDuration doResolveMindSpikeSuccessfulSaveHalfDamage
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { type SimpleActionMap, type SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
-
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-
 import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
@@ -50,6 +46,10 @@ import {
   spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 const driverSchema = {
   init: {},
@@ -254,7 +254,7 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
     }),
     "savingThrowOutcome",
   );
-  expect(spellHoleInvocation([savingThrow])).toEqual(
+  expect(spellHoleInvocation(state, [savingThrow])).toEqual(
     expect.objectContaining({
       procedure: "saveGatedDamage",
       spell,

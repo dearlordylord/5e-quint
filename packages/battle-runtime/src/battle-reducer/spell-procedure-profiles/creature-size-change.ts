@@ -24,7 +24,6 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
@@ -58,12 +57,6 @@ import {
   spendSpellCastResources,
 } from "../spells-resolve-resources.ts";
 import {
-  discoverExtendedSpellMetamagicSelections,
-  extendedSpellDurationModifierForApplications,
-  spellMetamagicLabel,
-  type SpellMetamagicApplicationFact,
-} from "../metamagic-support.ts";
-import {
   spellTargetHole,
   spellTargetIsKnownWilling,
   spellTargetIsLegal,
@@ -84,6 +77,11 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  discoverExtendedSpellMetamagicSelections,
+  extendedSpellDurationModifierForApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
 
 type CreatureSizeChangeInvocation = CreatureSizeChangeSpellInvocation;
 
@@ -330,15 +328,12 @@ function discoverCreatureSizeChangeCastAct(
       invocation: creatureSizeChangeInvocationRef(invocation),
       mode: { tag: "cast" as const },
     },
-    label: `${invocation.spell.name} (${creatureSizeChangeLabel(invocation)})`,
-    summary: creatureSizeChangeCastSummary(invocation),
     initialHoles: [targetHole],
   };
   const metamagicCastActs = discoverExtendedSpellMetamagicSelections({
     actor: state.combatants.get(actorId),
     invocation,
   }).map((metamagic) => {
-    const label = spellMetamagicLabel(metamagic);
     return {
       subject: {
         tag: "actionSpell" as const,
@@ -348,8 +343,6 @@ function discoverCreatureSizeChangeCastAct(
         mode: { tag: "cast" as const },
         metamagic,
       },
-      label: `${invocation.spell.name} (${creatureSizeChangeLabel(invocation)}, ${label})`,
-      summary: `${creatureSizeChangeCastSummary(invocation)} ${label}.`,
       initialHoles: [targetHole],
     };
   });
@@ -499,7 +492,7 @@ function resolveCreatureSizeChange(
   if (input.fillSet.savingThrowOutcomes !== undefined) {
     const validation = validateSavingThrowOutcomes(
       input.fillSet.savingThrowOutcomes,
-      savingThrowHole,
+      input.invocation,
       input.input.state,
       input.actorId,
       undefined,

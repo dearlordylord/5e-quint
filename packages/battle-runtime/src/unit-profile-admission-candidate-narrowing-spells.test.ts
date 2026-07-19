@@ -1,15 +1,10 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84B sorcerous_burst
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield counterspell
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   counterspellUnitId,
@@ -53,6 +48,11 @@ import {
   validateSpellDamageFill,
 } from "./unit-profile-admission-test-support.ts";
 import type { SpellMarkedDamageRider } from "./unit-profile-admission-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 describe("QMBT15 Spell Unit admission candidate narrowing", () => {
   test("fire_bolt is admitted as creature-or-object ranged spell attack damage with object ignition projection", () => {
@@ -104,7 +104,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -176,7 +176,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -272,32 +272,36 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       }),
       "rolledDice",
     );
-    expect(spellHoleInvocation([damage])).toEqual(
-      expect.objectContaining({
-        procedure: "spellAttackDamage",
-        spell,
-        targeting: { kind: "singleCreatureOrObject" },
-        attackKind: "ranged_spell_attack",
-        damage: {
-          kind: "selectedSorcerousBurstDamage",
-          expr: { dice: 2, dieSize: 8 },
-          damageType: "thunder",
-          maxDieAdditionalDiceLimit: 3,
-        },
-        rangeFeet: 120,
-      }),
-    );
     expect(damage).toMatchObject({
       label: "Sorcerous Burst damage (2d8-thunder)",
+      sourceProcedureRef: act.subject.procedureRef,
     });
-    const selectedSorcerousBurstInvocation = spellHoleInvocation([damage]);
+    const unselectedSorcerousBurstInvocation = spellHoleInvocation(state, [
+      damage,
+    ]);
     if (
-      !isSelectedSorcerousBurstDamageInvocation(
-        selectedSorcerousBurstInvocation,
-      )
+      unselectedSorcerousBurstInvocation.procedure !== "spellAttackDamage" ||
+      unselectedSorcerousBurstInvocation.damage.kind !==
+        "sorcerousBurstDamageTypeChoice"
     ) {
-      throw new Error("Expected selected Sorcerous Burst spell attack damage.");
+      throw new Error("Expected Sorcerous Burst spell attack damage choice.");
     }
+    const selectedSorcerousBurstInvocation = {
+      ...unselectedSorcerousBurstInvocation,
+      sourceProcedureRef: act.subject.procedureRef,
+      damage: {
+        kind: "selectedSorcerousBurstDamage" as const,
+        expr: unselectedSorcerousBurstInvocation.damage.expr,
+        damageType: "thunder" as const,
+        maxDieAdditionalDiceLimit:
+          unselectedSorcerousBurstInvocation.damage.maxDieAdditionalDiceLimit,
+      },
+    };
+    expect(
+      isSelectedSorcerousBurstDamageInvocation(
+        selectedSorcerousBurstInvocation,
+      ),
+    ).toBe(true);
     const markedDamageRider = {
       kind: "spellMarkedDamageRider" as const,
       effectRef: battleActiveEffectExecutionRefForTest("candidate-mark"),
@@ -531,9 +535,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(resolved.state.lightEmitters).toEqual([
       expect.objectContaining({
         kind: "objectInvisibleRevealLightEmitter",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(starryWispUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         objectId,
         emission: { kind: "dim", radiusFeet: movementFeet(10) },

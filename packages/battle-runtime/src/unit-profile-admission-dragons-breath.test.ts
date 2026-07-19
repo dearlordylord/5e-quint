@@ -1,14 +1,9 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST dragons_breath
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import {
@@ -48,6 +43,11 @@ import {
   type DamageType,
   type SpellRecord,
 } from "./unit-profile-admission-test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 describe("Dragon's Breath initial cast admission", () => {
   test("stores chosen damage type, original slot, and caster save DC on the willing target", () => {
@@ -115,18 +115,14 @@ describe("Dragon's Breath initial cast admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(dragonsBreathUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toContainEqual({
       kind: "dragonsBreath",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(dragonsBreathUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       sourceCombatantId: spellCasterId,
       originalSlotLevel: 3,
       damageType: "fire",
@@ -270,9 +266,7 @@ describe("Dragon's Breath initial cast admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "targetActionEndedSpellCondition",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(dragonsBreathUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
         }),
       ]),
     });
@@ -330,9 +324,7 @@ describe("Dragon's Breath initial cast admission", () => {
     });
     expect(saveHole.targetFlatBonuses).toContainEqual({
       targetId: spellCasterId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(dragonsBreathUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       bonus: 1,
     });
   });

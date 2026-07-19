@@ -38,7 +38,6 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import { bindSpellProcedureExecutionFacts } from "../../character-execution.ts";
-
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -71,12 +70,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import {
-  spellAdmissionBattleTurn,
-  spellAdmissionOngoingSpellEffectSuppressed,
-} from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
   DamageTypeSchema,
@@ -85,6 +79,11 @@ import {
   SpellEffectSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionBattleTurn,
+  spellAdmissionOngoingSpellEffectSuppressed,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -421,8 +420,6 @@ function discoverObjectContactDamageCastAct(
         invocation: objectContactDamageInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
-      label: invocation.spell.name,
-      summary: objectContactDamageCastSummary(invocation),
       initialHoles: [spellObjectTargetHole(invocation)],
     },
   ];
@@ -442,8 +439,6 @@ function discoverObjectContactDamageRepeatCastAct(
         invocation: objectContactDamageRepeatInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
-      label: `${invocation.spell.name} damage`,
-      summary: objectContactDamageRepeatCastSummary(invocation),
       initialHoles: [
         spellObjectContactTargetsHole({
           state,

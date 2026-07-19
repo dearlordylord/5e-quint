@@ -8,15 +8,6 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { Match } from "effect";
 import type { BattleSubject } from "../battle-subjects.ts";
-import type {
-  AvailableBattleAct,
-  BattleCreatureState,
-  BattleDamageRelationshipDecisions,
-  BattleFill,
-  BattleHole,
-  BattleResolutionInput,
-  BattleState,
-} from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   activeEffectArmorClass,
@@ -24,6 +15,15 @@ import {
 } from "./creature-state.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { applyBattleHitPointDamage } from "./damage-apply.ts";
+import type {
+  BattleActDiscoveryCandidate,
+  BattleCreatureState,
+  BattleDamageRelationshipDecisions,
+  BattleFill,
+  BattleHole,
+  BattleResolutionInput,
+  BattleState,
+} from "../battle-reducer.ts";
 
 export type CreatureAttackState = {
   readonly creatureAHp: number;
@@ -93,7 +93,7 @@ export function resolveCreatureAttack(
 
 export function minimalCreatureAttackActs(
   state: BattleState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actorId = currentActorId(state);
   const actor = state.combatants.get(actorId);
   if (
@@ -107,17 +107,14 @@ export function minimalCreatureAttackActs(
   const targetIds = [...state.combatants.keys()];
   return targetIds
     .filter((targetId) => targetId !== actorId)
-    .map((targetId): AvailableBattleAct => {
+    .map((targetId): BattleActDiscoveryCandidate => {
       const subject: CreatureAttackSubject = {
         tag: "creatureAttack",
         actorId,
         targetId,
       };
       return {
-        presentation: { kind: "intrinsic" },
         subject,
-        label: "Creature Attack",
-        summary: "Resolve a minimal creature attack hit and damage.",
         initialHoles: [creatureAttackRollHole(subject)],
       };
     });

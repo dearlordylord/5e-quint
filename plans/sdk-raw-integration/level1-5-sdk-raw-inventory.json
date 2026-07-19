@@ -97110,19 +97110,7 @@
             "label: \"Thunderwave self-origin Cube Saving Throw outcomes\"",
             "ability: \"con\"",
             "dc: { kind: \"caster_spell_save_dc\" }",
-            "targeting: { kind: \"selfOriginCube\", sideFeet: 15 }",
-            "damage: { expr: { dice: 2, dieSize: 8 }, damageType: \"thunder\" }",
-            "successDamage: \"half\"",
-            "rangeFeet: 0",
-            "failedSavePostDamageRiders: []",
-            "postSaveAreaEffect:",
-            "kind: \"thunderwave\"",
-            "creaturePush:",
-            "unsecuredObjectPush:",
-            "objectLocation: \"entirely_within_area\"",
-            "audibleBoom:",
-            "sound: \"thunderous boom\"",
-            "audibleRadiusFeet: 300",
+            "outcomeTargeting: \"area\"",
             "thunderwaveSavingThrowOutcomeFill(save, input.casterId",
             "expect(saveFill.value).toEqual({",
             "originAnchorId: input.casterId",
@@ -97147,11 +97135,10 @@
         {
           "anchor": "function requireThunderwaveSavingThrowHole",
           "needles": [
-            "Expected Thunderwave spell Saving Throw outcome hole.",
-            "spell.procedure !== \"saveGatedDamage\"",
-            "spell.spell.id !== thunderwaveSpellId",
-            "spell.targeting.kind !== \"selfOriginCube\"",
-            "spell.postSaveAreaEffect?.kind !== \"thunderwave\""
+            "\"outcomeTargeting\" in hole",
+            "hole.outcomeTargeting !== \"area\"",
+            "hole.ability !== \"con\"",
+            "Expected Thunderwave self-origin Cube Saving Throw hole."
           ]
         },
         {
@@ -97221,19 +97208,7 @@
             "label: \"Thunderwave self-origin Cube Saving Throw outcomes\"",
             "ability: \"con\"",
             "dc: { kind: \"caster_spell_save_dc\" }",
-            "targeting: { kind: \"selfOriginCube\", sideFeet: 15 }",
-            "damage: { expr: { dice: 2, dieSize: 8 }, damageType: \"thunder\" }",
-            "successDamage: \"half\"",
-            "rangeFeet: 0",
-            "failedSavePostDamageRiders: []",
-            "postSaveAreaEffect:",
-            "kind: \"thunderwave\"",
-            "creaturePush:",
-            "unsecuredObjectPush:",
-            "objectLocation: \"entirely_within_area\"",
-            "audibleBoom:",
-            "sound: \"thunderous boom\"",
-            "audibleRadiusFeet: 300",
+            "outcomeTargeting: \"area\"",
             "thunderwaveSavingThrowOutcomeFill(save, input.casterId",
             "expect(saveFill.value).toEqual({",
             "originAnchorId: input.casterId",
@@ -97258,11 +97233,10 @@
         {
           "anchor": "function requireThunderwaveSavingThrowHole",
           "needles": [
-            "Expected Thunderwave spell Saving Throw outcome hole.",
-            "spell.procedure !== \"saveGatedDamage\"",
-            "spell.spell.id !== thunderwaveSpellId",
-            "spell.targeting.kind !== \"selfOriginCube\"",
-            "spell.postSaveAreaEffect?.kind !== \"thunderwave\""
+            "\"outcomeTargeting\" in hole",
+            "hole.outcomeTargeting !== \"area\"",
+            "hole.ability !== \"con\"",
+            "Expected Thunderwave self-origin Cube Saving Throw hole."
           ]
         },
         {
@@ -97861,7 +97835,8 @@
       "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
       "rowKey": "level-5:Monk:monk_stunning_strike",
       "tracerNeedles": [
-        "monkStunningStrikeUnitId"
+        "binding.procedure.supportKind === \"stunningStrike\"",
+        "sourceProcedureRef: stunningStrikeProcedureRef"
       ]
     },
     {

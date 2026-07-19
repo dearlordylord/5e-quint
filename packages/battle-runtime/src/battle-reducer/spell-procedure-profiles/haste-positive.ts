@@ -299,8 +299,6 @@ function discoverHastePositiveCastAct(
             invocation: hastePositiveInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: hastePositiveCastSummary(invocation),
           initialHoles: [targetHole],
         },
       ];
@@ -499,8 +497,9 @@ function applyHastePositiveEffects(
     }
     const allocation = allocateBattleActiveEffectRef({
       state: nextState,
-      owner: target,
+      ownerId: targetId,
     });
+    if (allocation.tag === "ownerNotFound") return nextState;
     const allocatedTarget = allocation.owner;
     const nextEffects = hastePositiveEffects(invocation).map((effect) =>
       effect.kind === "spellGrantedActionResource"

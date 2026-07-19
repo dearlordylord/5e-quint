@@ -207,8 +207,6 @@ function discoverDamageReductionCastAct(
         invocation: damageReductionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: damageReductionCastSummary(invocation),
       initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
     },
   ];
@@ -340,7 +338,7 @@ function resolveDamageReduction(
       };
 }
 
-const DamageReductionInvocationSchema = spellProcedureInvocationSchema<
+export const DamageReductionInvocationSchema = spellProcedureInvocationSchema<
   Extract<SupportedSpellInvocation, { readonly procedure: "damageReduction" }>
 >(
   Schema.Struct({

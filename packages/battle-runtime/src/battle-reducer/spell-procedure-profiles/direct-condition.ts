@@ -186,8 +186,6 @@ function discoverDirectConditionCastAct(
             invocation: directConditionInvocationRef(invocation),
             mode: { tag: "cast" },
           },
-          label: invocation.spell.name,
-          summary: directConditionCastSummary(invocation),
           initialHoles: [targetHole],
         },
       ];

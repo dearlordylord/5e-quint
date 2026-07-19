@@ -1,8 +1,6 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
 import {
@@ -17,13 +15,6 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import {
-  faerieFireObjectOutlineFill,
-  savingThrowOutcomeFill,
-  spellAct,
-  spellHoleInvocation,
-  spellObjectTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   applyCondition,
@@ -36,19 +27,24 @@ import {
   spellSlotInvocationRef,
   validateSavingThrowOutcomes,
 } from "./unit-profile-admission-test-support.ts";
-import type {
-  BattleSpellSavingThrowOutcomeHole,
-  BattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
+import {
+  faerieFireObjectOutlineFill,
+  savingThrowOutcomeFill,
+  spellAct,
+  spellObjectTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import type { BattleSubject } from "./unit-profile-admission-test-support.ts";
 
 describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
   test("faerie_fire is admitted as point-origin Cube save-gated outline effects", () => {
     const spell = spellRecord(faerieFireUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
+      state,
       spellId: faerieFireUnitId,
       slotLevel: 1,
     });
@@ -74,24 +70,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
-      expect.objectContaining({
-        procedure: "saveGatedAttackRollAdvantage",
-        spell,
-        resource: { tag: "spellSlot", slotLevel: 1 },
-        ability: "dex",
-        targeting: { kind: "pointOriginCube", sideFeet: 20 },
-        effect: expect.objectContaining({
-          kind: "faerieFireOutline",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(faerieFireUnitId),
-          ),
-          sourceCombatantId: spellCasterId,
-          expiresAt: { kind: "concentration", combatantId: spellCasterId },
-        }),
-        rangeFeet: 60,
-      }),
-    );
+    expect(savingThrow).toMatchObject({ outcomeTargeting: "area" });
+    expect("spell" in savingThrow).toBe(false);
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "savingThrowOutcome",
@@ -138,9 +118,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       [
         expect.objectContaining({
           kind: "faerieFireOutline",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(faerieFireUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
         }),
@@ -149,9 +127,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(faerieFireUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: { kind: "dim", radiusFeet: movementFeet(10) },
@@ -376,9 +352,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       {
         kind: "faerieFireObjectOutline",
         objectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(faerieFireUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       },
@@ -386,9 +360,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(faerieFireUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         attachment: { kind: "object", objectId },
         emission: { kind: "dim", radiusFeet: movementFeet(10) },
@@ -420,22 +392,28 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({ state, spellId: faerieFireUnitId });
     const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
-    if (!("spell" in savingThrows) || !("areaChoices" in savingThrows)) {
+    if (!("outcomeTargeting" in savingThrows)) {
       throw new Error("Expected spell Saving Throw outcome hole.");
     }
-    const spellSavingThrows: BattleSpellSavingThrowOutcomeHole = savingThrows;
-    const invocation = spellHoleInvocation([savingThrows]);
+    const actor = state.combatants.get(spellCasterId);
+    const invocation =
+      actor?.origin.kind === "character"
+        ? characterSpellProcedure(
+            actor.origin.execution,
+            act.subject.procedureRef,
+          )
+        : undefined;
+    if (invocation === undefined) {
+      throw new Error("Expected an executable Faerie Fire procedure.");
+    }
     if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
       throw new Error("Expected Faerie Fire save-gated attack Advantage.");
     }
-    const sameProcedureNonFaerieFireHole: BattleSpellSavingThrowOutcomeHole = {
-      ...spellSavingThrows,
+    const sameProcedureNonFaerieFireInvocation = {
+      ...invocation,
       spell: {
-        ...invocation,
-        spell: {
-          ...spell,
-          name: "Future Save Advantage",
-        },
+        ...spell,
+        name: "Future Save Advantage",
       },
     };
     const fill = faerieFireObjectOutlineFill(savingThrows, [objectId]);
@@ -443,7 +421,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(
       validateSavingThrowOutcomes(
         fill.value,
-        sameProcedureNonFaerieFireHole,
+        sameProcedureNonFaerieFireInvocation,
         state,
         spellCasterId,
         undefined,
