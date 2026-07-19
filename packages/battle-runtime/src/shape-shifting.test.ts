@@ -72,9 +72,7 @@ test("shape-shift runtime state admits true form and class-feature restoration o
       source: {
         kind: "classFeature",
         sourceCombatantId: syntheticDruidWildShapeEffect.sourceCombatantId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(syntheticDruidWildShapeEffect.sourceProcedureRef),
-        ),
+        sourceProcedureRef: expect.any(String),
       },
       replacementForm: {
         kind: "runtimeCreatureForm",

@@ -103,7 +103,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         access: { tag: "prepared" },
         resource: { tag: "spellSlot", slotLevel: 2 },
@@ -148,7 +148,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([upcastAttackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [upcastAttackRoll])).toEqual(
       expect.objectContaining({
         resource: { tag: "spellSlot", slotLevel: 3 },
         targeting: {

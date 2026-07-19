@@ -1,5 +1,3 @@
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity chromatic_orb doResolveChromaticOrbDuplicateDamageLeap
@@ -10,8 +8,9 @@ import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { Either } from "effect";
-
 import {
   armorClass,
   defaultArmorClassState,
@@ -29,17 +28,20 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-
 import {
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
 } from "./battle-reducer/domain-constants.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
+import { expect } from "vitest";
 import {
   battleId,
   battleObjectId,
   characterId,
+  characterProcedureBinding,
   combatantId,
   discoverBattleActs,
   initiativeScore,
@@ -55,13 +57,10 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type SpellInvocationRef,
   type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
-  type SupportedSpellInvocation,
+  type SpellInvocationRef,
 } from "./index.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 const level1DamageSpellUnitIds = [
   "burning_hands",
@@ -131,22 +130,6 @@ type ObjectTargetChoiceFill = Extract<
   BattleFill,
   { readonly kind: "objectTargetChoice" }
 >;
-type SpellAttackDamageInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "spellAttackDamage" }
->;
-type ChainedSpellAttackDamageInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "chainedSpellAttackDamage" }
->;
-type SaveGatedDamageInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "saveGatedDamage" }
->;
-type SpellPostDamageRider =
-  SpellAttackDamageInvocation["postDamageRiders"][number];
-type SpellFailedSavePostDamageRider =
-  SaveGatedDamageInvocation["failedSavePostDamageRiders"][number];
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -1004,7 +987,7 @@ function resolveStarryWispObjectSpellAttackDamageAndDimLight(
       damageRollFill(damage, [starryWispObjectDamageRoll]),
     ],
   });
-  assertStarryWispObjectResolution(result);
+  assertStarryWispObjectResolution(result, act.subject.procedureRef);
   return result;
 }
 
@@ -1252,7 +1235,159 @@ function actionSpellAct(
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
   }
+  assertSelectedSpellProcedureProfile(state, act, spellId);
   return act;
+}
+
+function assertSelectedSpellProcedureProfile(
+  state: BattleState,
+  act: ActionSpellAct,
+  spellId: Level1DamageSpellUnitId,
+): void {
+  const actor = state.combatants.get(act.subject.actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected selected spell actor to be a character.");
+  }
+  const binding = characterProcedureBinding(
+    actor.origin.execution,
+    act.subject.procedureRef,
+  );
+  if (binding?.procedure.kind !== "spellInvocation") {
+    throw new Error("Expected selected spell execution binding.");
+  }
+  const expected = {
+    burning_hands: {
+      procedure: "saveGatedDamage",
+      targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+      damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
+      successDamage: "half",
+      rangeFeet: 0,
+    },
+    chromatic_orb: {
+      procedure: "chainedSpellAttackDamage",
+      targeting: { kind: "singleCombatant" },
+      attackKind: "ranged_spell_attack",
+      damage: { expr: { dice: 3, dieSize: 8 } },
+      damageTypeChoices: [...CHROMATIC_ORB_DAMAGE_TYPES],
+      rangeFeet: 90,
+      leapRangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+    },
+    ice_knife: {
+      procedure: "attackBurstSaveDamage",
+      targeting: { kind: "singleCombatant" },
+      attackKind: "ranged_spell_attack",
+      rangeFeet: 60,
+      damage: { expr: { dice: 1, dieSize: 10 }, damageType: "piercing" },
+      burst: {
+        targeting: { kind: "primaryTargetOriginEmanation", radiusFeet: 5 },
+        damage: { expr: { dice: 2, dieSize: 6 }, damageType: "cold" },
+        successDamage: "none",
+      },
+    },
+    poison_spray: {
+      procedure: "spellAttackDamage",
+      targeting: { kind: "singleCombatant" },
+      attackKind: "ranged_spell_attack",
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 1, dieSize: 12 },
+        damageType: "poison",
+      },
+      postDamageRiders: [],
+      rangeFeet: 30,
+    },
+    ray_of_sickness: {
+      procedure: "spellAttackDamage",
+      targeting: { kind: "singleCombatant" },
+      attackKind: "ranged_spell_attack",
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 2, dieSize: 8 },
+        damageType: "poison",
+      },
+      postDamageRiders: [
+        {
+          kind: "condition",
+          condition: "poisoned",
+          expiresAt: "endOfCasterNextTurn",
+        },
+      ],
+      rangeFeet: 60,
+    },
+    sacred_flame: {
+      procedure: "saveGatedDamage",
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "radiant" },
+      successDamage: "none",
+      failedSavePostDamageRiders: [],
+      rangeFeet: 60,
+    },
+    sorcerous_burst: {
+      procedure: "spellAttackDamage",
+      targeting: { kind: "singleCreatureOrObject" },
+      attackKind: "ranged_spell_attack",
+      damage: {
+        kind: "sorcerousBurstDamageTypeChoice",
+        expr: { dice: 1, dieSize: 8 },
+        maxDieAdditionalDiceLimit: 3,
+        damageTypeChoices: [...sorcerousBurstDamageTypes],
+      },
+      postDamageRiders: [],
+      rangeFeet: 120,
+    },
+    starry_wisp: {
+      procedure: "spellAttackDamage",
+      targeting: { kind: "singleCreatureOrObject" },
+      attackKind: "ranged_spell_attack",
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 1, dieSize: 8 },
+        damageType: "radiant",
+      },
+      postDamageRiders: [
+        {
+          kind: "lightEmission",
+          emission: { kind: "dim", radiusFeet: movementFeet(10) },
+          expiresAt: "endOfCasterNextTurn",
+        },
+        {
+          kind: "invisibleBenefitDenied",
+          expiresAt: "endOfCasterNextTurn",
+        },
+      ],
+      rangeFeet: 60,
+    },
+    vicious_mockery: {
+      procedure: "saveGatedDamage",
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "psychic" },
+      successDamage: "none",
+      failedSavePostDamageRiders: [
+        {
+          kind: "nextAttackRollByTarget",
+          mode: "disadvantage",
+          expiresAt: "endOfTargetNextTurn",
+        },
+      ],
+      rangeFeet: 60,
+    },
+  } as const satisfies Record<Level1DamageSpellUnitId, object>;
+  const profile = level1DamageSpellInvocationProfiles[spellId];
+  const accessAndResource =
+    profile.tag === "spellSlot"
+      ? {
+          access: { tag: "prepared" },
+          resource: { tag: "spellSlot", slotLevel: profile.slotLevel },
+        }
+      : {
+          access: { tag: "classCantrip" },
+          resource: { tag: "none" },
+        };
+  expect(binding.procedure.invocation).toMatchObject({
+    spell: { id: spellId },
+    ...accessAndResource,
+    ...expected[spellId],
+  });
 }
 
 function isExpectedLevel1DamageSpellInvocation(
@@ -1444,22 +1579,12 @@ function requireHole<K extends BattleHole["kind"]>(
 function assertBurningHandsSavingThrowProfile(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Burning Hands spell Saving Throw outcome hole.");
-  }
-  const invocation = hole.spell;
   if (
-    invocation.procedure !== "saveGatedDamage" ||
-    invocation.spell.id !== "burning_hands" ||
+    !("outcomeTargeting" in hole) ||
     hole.ability !== "dex" ||
     hole.dc.kind !== "caster_spell_save_dc" ||
-    invocation.targeting.kind !== "selfOriginCone" ||
-    Number(invocation.targeting.lengthFeet) !== 15 ||
-    invocation.damage.expr.dice !== 3 ||
-    invocation.damage.expr.dieSize !== 6 ||
-    invocation.damage.damageType !== "fire" ||
-    invocation.successDamage !== "half" ||
-    Number(invocation.rangeFeet) !== 0
+    hole.outcomeTargeting !== "area" ||
+    "spell" in hole
   ) {
     throw new Error("Burning Hands Saving Throw profile drifted.");
   }
@@ -1468,19 +1593,7 @@ function assertBurningHandsSavingThrowProfile(
 function assertBurningHandsDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Burning Hands spell damage roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "saveGatedDamage" ||
-    invocation.spell.id !== "burning_hands" ||
-    invocation.damage.expr.dice !== 3 ||
-    invocation.damage.expr.dieSize !== 6 ||
-    invocation.damage.damageType !== "fire" ||
-    invocation.successDamage !== "half" ||
-    hole.critical
-  ) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Burning Hands damage profile drifted.");
   }
 }
@@ -1488,8 +1601,10 @@ function assertBurningHandsDamageProfile(
 function assertChromaticOrbDamageTypeChoiceProfile(
   hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
 ): void {
-  assertChromaticOrbInvocationProfile(hole.spell);
-  if (!sameStringSet(hole.choices, CHROMATIC_ORB_DAMAGE_TYPES)) {
+  if (
+    !sameStringSet(hole.choices, CHROMATIC_ORB_DAMAGE_TYPES) ||
+    "spell" in hole
+  ) {
     throw new Error("Chromatic Orb damage type choice profile drifted.");
   }
 }
@@ -1497,20 +1612,15 @@ function assertChromaticOrbDamageTypeChoiceProfile(
 function assertChromaticOrbAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Chromatic Orb spell Attack Roll hole.");
+  if ("spell" in hole) {
+    throw new Error("Chromatic Orb Attack Roll leaked authored payload.");
   }
-  assertChromaticOrbInvocationProfile(hole.spell);
 }
 
 function assertChromaticOrbDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Chromatic Orb damage roll hole.");
-  }
-  assertChromaticOrbInvocationProfile(hole.spell);
-  if (hole.critical) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Chromatic Orb damage profile drifted.");
   }
 }
@@ -1527,59 +1637,18 @@ function assertChromaticOrbLeapTargetProfile(
   }
 }
 
-function assertChromaticOrbInvocationProfile(
-  invocation: SupportedSpellInvocation,
-): asserts invocation is ChainedSpellAttackDamageInvocation {
-  if (
-    invocation.procedure !== "chainedSpellAttackDamage" ||
-    invocation.spell.id !== "chromatic_orb" ||
-    invocation.resource.tag !== "spellSlot" ||
-    Number(invocation.resource.slotLevel) !== 1 ||
-    invocation.targeting.kind !== "singleCombatant" ||
-    invocation.attackKind !== "ranged_spell_attack" ||
-    invocation.damage.expr.dice !== 3 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    !sameStringSet(invocation.damageTypeChoices, CHROMATIC_ORB_DAMAGE_TYPES) ||
-    Number(invocation.rangeFeet) !== 90 ||
-    Number(invocation.leapRangeFeet) !== Number(CHROMATIC_ORB_LEAP_RANGE_FEET)
-  ) {
-    throw new Error("Chromatic Orb chained spell profile drifted.");
-  }
-}
-
 function assertIceKnifeAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Ice Knife spell Attack Roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "attackBurstSaveDamage" ||
-    invocation.spell.id !== "ice_knife" ||
-    invocation.targeting.kind !== "singleCombatant" ||
-    invocation.attackKind !== "ranged_spell_attack" ||
-    Number(invocation.rangeFeet) !== 60
-  ) {
-    throw new Error("Ice Knife Attack Roll profile drifted.");
+  if ("spell" in hole) {
+    throw new Error("Ice Knife Attack Roll leaked authored payload.");
   }
 }
 
 function assertIceKnifeAttackDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Ice Knife attack damage roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "attackBurstSaveDamage" ||
-    invocation.spell.id !== "ice_knife" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 10 ||
-    invocation.damage.damageType !== "piercing" ||
-    hole.critical
-  ) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Ice Knife attack damage profile drifted.");
   }
 }
@@ -1587,21 +1656,12 @@ function assertIceKnifeAttackDamageProfile(
 function assertIceKnifeBurstSavingThrowProfile(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Ice Knife burst Saving Throw outcome hole.");
-  }
-  const invocation = hole.spell;
   if (
-    invocation.procedure !== "attackBurstSaveDamage" ||
-    invocation.spell.id !== "ice_knife" ||
+    !("outcomeTargeting" in hole) ||
     hole.ability !== "dex" ||
     hole.dc.kind !== "caster_spell_save_dc" ||
-    invocation.burst.targeting.kind !== "primaryTargetOriginEmanation" ||
-    Number(invocation.burst.targeting.radiusFeet) !== 5 ||
-    invocation.burst.damage.expr.dice !== 2 ||
-    invocation.burst.damage.expr.dieSize !== 6 ||
-    invocation.burst.damage.damageType !== "cold" ||
-    invocation.burst.successDamage !== "none"
+    hole.outcomeTargeting !== "area" ||
+    "spell" in hole
   ) {
     throw new Error("Ice Knife burst Saving Throw profile drifted.");
   }
@@ -1610,19 +1670,7 @@ function assertIceKnifeBurstSavingThrowProfile(
 function assertIceKnifeBurstDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Ice Knife burst damage roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "attackBurstSaveDamage" ||
-    invocation.spell.id !== "ice_knife" ||
-    invocation.burst.damage.expr.dice !== 2 ||
-    invocation.burst.damage.expr.dieSize !== 6 ||
-    invocation.burst.damage.damageType !== "cold" ||
-    invocation.burst.successDamage !== "none" ||
-    hole.critical
-  ) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Ice Knife burst damage profile drifted.");
   }
 }
@@ -1630,40 +1678,15 @@ function assertIceKnifeBurstDamageProfile(
 function assertPoisonSprayAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Poison Spray spell Attack Roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "poison_spray" ||
-    invocation.resource.tag !== "none" ||
-    invocation.targeting.kind !== "singleCombatant" ||
-    invocation.attackKind !== "ranged_spell_attack" ||
-    Number(invocation.rangeFeet) !== 30
-  ) {
-    throw new Error("Poison Spray Attack Roll profile drifted.");
+  if ("spell" in hole) {
+    throw new Error("Poison Spray Attack Roll leaked authored payload.");
   }
 }
 
 function assertPoisonSprayDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Poison Spray damage roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "poison_spray" ||
-    invocation.resource.tag !== "none" ||
-    invocation.damage.kind !== "fixedSpellAttackDamage" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 12 ||
-    invocation.damage.damageType !== "poison" ||
-    invocation.postDamageRiders.length !== 0 ||
-    hole.critical
-  ) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Poison Spray damage profile drifted.");
   }
 }
@@ -1683,75 +1706,28 @@ function assertSinglePrimaryTargetChoiceProfile(
 function assertRayOfSicknessAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Ray of Sickness spell Attack Roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "ray_of_sickness" ||
-    invocation.resource.tag !== "spellSlot" ||
-    Number(invocation.resource.slotLevel) !== 1 ||
-    invocation.targeting.kind !== "singleCombatant" ||
-    invocation.attackKind !== "ranged_spell_attack" ||
-    Number(invocation.rangeFeet) !== 60
-  ) {
-    throw new Error("Ray of Sickness Attack Roll profile drifted.");
+  if ("spell" in hole) {
+    throw new Error("Ray of Sickness Attack Roll leaked authored payload.");
   }
 }
 
 function assertRayOfSicknessDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Ray of Sickness damage roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "ray_of_sickness" ||
-    invocation.resource.tag !== "spellSlot" ||
-    Number(invocation.resource.slotLevel) !== 1 ||
-    invocation.damage.kind !== "fixedSpellAttackDamage" ||
-    invocation.damage.expr.dice !== 2 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.damageType !== "poison" ||
-    hole.critical
-  ) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Ray of Sickness damage profile drifted.");
-  }
-  const [postDamageRider] = invocation.postDamageRiders;
-  if (
-    invocation.postDamageRiders.length !== 1 ||
-    postDamageRider === undefined ||
-    postDamageRider.kind !== "condition" ||
-    postDamageRider.condition !== "poisoned" ||
-    postDamageRider.expiresAt !== "endOfCasterNextTurn"
-  ) {
-    throw new Error("Ray of Sickness post-damage rider profile drifted.");
   }
 }
 
 function assertSacredFlameSavingThrowProfile(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Sacred Flame spell Saving Throw outcome hole.");
-  }
-  const invocation = hole.spell;
   if (
-    invocation.procedure !== "saveGatedDamage" ||
-    invocation.spell.id !== "sacred_flame" ||
-    invocation.resource.tag !== "none" ||
+    !("outcomeTargeting" in hole) ||
     hole.ability !== "dex" ||
     hole.dc.kind !== "caster_spell_save_dc" ||
-    invocation.targeting.kind !== "singleCombatant" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.damageType !== "radiant" ||
-    invocation.successDamage !== "none" ||
-    invocation.failedSavePostDamageRiders.length !== 0 ||
-    Number(invocation.rangeFeet) !== 60
+    hole.outcomeTargeting !== "singleTarget" ||
+    "spell" in hole
   ) {
     throw new Error("Sacred Flame Saving Throw profile drifted.");
   }
@@ -1760,21 +1736,7 @@ function assertSacredFlameSavingThrowProfile(
 function assertSacredFlameDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Sacred Flame spell damage roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "saveGatedDamage" ||
-    invocation.spell.id !== "sacred_flame" ||
-    invocation.resource.tag !== "none" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.damageType !== "radiant" ||
-    invocation.successDamage !== "none" ||
-    invocation.failedSavePostDamageRiders.length !== 0 ||
-    hole.critical
-  ) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Sacred Flame damage profile drifted.");
   }
 }
@@ -1782,91 +1744,31 @@ function assertSacredFlameDamageProfile(
 function assertViciousMockerySavingThrowProfile(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error(
-      "Expected Vicious Mockery spell Saving Throw outcome hole.",
-    );
-  }
-  const invocation = hole.spell;
   if (
-    invocation.procedure !== "saveGatedDamage" ||
-    invocation.spell.id !== "vicious_mockery" ||
-    invocation.resource.tag !== "none" ||
+    !("outcomeTargeting" in hole) ||
     hole.ability !== "wis" ||
     hole.dc.kind !== "caster_spell_save_dc" ||
-    invocation.targeting.kind !== "singleCombatant" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 6 ||
-    invocation.damage.damageType !== "psychic" ||
-    invocation.successDamage !== "none" ||
-    Number(invocation.rangeFeet) !== 60
+    hole.outcomeTargeting !== "singleTarget" ||
+    "spell" in hole
   ) {
     throw new Error("Vicious Mockery Saving Throw profile drifted.");
   }
-  assertViciousMockeryFailedSavePostDamageRiders(
-    invocation.failedSavePostDamageRiders,
-  );
 }
 
 function assertViciousMockeryDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Vicious Mockery spell damage roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "saveGatedDamage" ||
-    invocation.spell.id !== "vicious_mockery" ||
-    invocation.resource.tag !== "none" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 6 ||
-    invocation.damage.damageType !== "psychic" ||
-    invocation.successDamage !== "none" ||
-    hole.critical
-  ) {
+  if (!("critical" in hole) || hole.critical || "spell" in hole) {
     throw new Error("Vicious Mockery damage profile drifted.");
-  }
-  assertViciousMockeryFailedSavePostDamageRiders(
-    invocation.failedSavePostDamageRiders,
-  );
-}
-
-function assertViciousMockeryFailedSavePostDamageRiders(
-  riders: readonly SpellFailedSavePostDamageRider[],
-): void {
-  const [rider] = riders;
-  if (
-    riders.length !== 1 ||
-    rider === undefined ||
-    rider.kind !== "nextAttackRollByTarget" ||
-    rider.mode !== "disadvantage" ||
-    rider.expiresAt !== "endOfTargetNextTurn"
-  ) {
-    throw new Error("Vicious Mockery failed-save rider profile drifted.");
   }
 }
 
 function assertSorcerousBurstDamageTypeChoiceProfile(
   hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
 ): void {
-  const invocation = hole.spell;
   if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "sorcerous_burst" ||
-    invocation.resource.tag !== "none" ||
-    invocation.targeting.kind !== "singleCreatureOrObject" ||
-    invocation.attackKind !== "ranged_spell_attack" ||
-    invocation.damage.kind !== "sorcerousBurstDamageTypeChoice" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.maxDieAdditionalDiceLimit !== 3 ||
     !sameStringSet(hole.choices, sorcerousBurstDamageTypes) ||
-    !sameStringSet(
-      invocation.damage.damageTypeChoices,
-      sorcerousBurstDamageTypes,
-    ) ||
-    Number(invocation.rangeFeet) !== 120
+    "spell" in hole
   ) {
     throw new Error("Sorcerous Burst damage type choice profile drifted.");
   }
@@ -1875,46 +1777,19 @@ function assertSorcerousBurstDamageTypeChoiceProfile(
 function assertSorcerousBurstAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Sorcerous Burst spell Attack Roll hole.");
-  }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "sorcerous_burst" ||
-    invocation.resource.tag !== "none" ||
-    invocation.targeting.kind !== "singleCreatureOrObject" ||
-    invocation.attackKind !== "ranged_spell_attack" ||
-    invocation.damage.kind !== "selectedSorcerousBurstDamage" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.damageType !== "thunder" ||
-    invocation.damage.maxDieAdditionalDiceLimit !== 3 ||
-    Number(invocation.rangeFeet) !== 120
-  ) {
-    throw new Error("Sorcerous Burst Attack Roll profile drifted.");
+  if ("spell" in hole) {
+    throw new Error("Sorcerous Burst Attack Roll leaked authored payload.");
   }
 }
 
 function assertSorcerousBurstDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Sorcerous Burst damage roll hole.");
-  }
-  const invocation = hole.spell;
   if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "sorcerous_burst" ||
-    invocation.resource.tag !== "none" ||
-    invocation.damage.kind !== "selectedSorcerousBurstDamage" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.damageType !== "thunder" ||
-    invocation.damage.maxDieAdditionalDiceLimit !== 3 ||
-    invocation.postDamageRiders.length !== 0 ||
+    !("critical" in hole) ||
     hole.label !== "Sorcerous Burst damage (1d8-thunder)" ||
-    hole.critical
+    hole.critical ||
+    "spell" in hole
   ) {
     throw new Error("Sorcerous Burst damage profile drifted.");
   }
@@ -1931,84 +1806,27 @@ function assertStarryWispObjectTargetProfile(
 function assertStarryWispAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Starry Wisp spell Attack Roll hole.");
+  if ("spell" in hole) {
+    throw new Error("Starry Wisp Attack Roll leaked authored payload.");
   }
-  const invocation = hole.spell;
-  if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "starry_wisp" ||
-    invocation.resource.tag !== "none" ||
-    invocation.targeting.kind !== "singleCreatureOrObject" ||
-    invocation.attackKind !== "ranged_spell_attack" ||
-    invocation.damage.kind !== "fixedSpellAttackDamage" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.damageType !== "radiant" ||
-    Number(invocation.rangeFeet) !== starryWispRangeFeet
-  ) {
-    throw new Error("Starry Wisp Attack Roll profile drifted.");
-  }
-  assertStarryWispPostDamageRiders(invocation.postDamageRiders);
 }
 
 function assertStarryWispDamageProfile(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): void {
-  if (!("spell" in hole) || !("critical" in hole)) {
-    throw new Error("Expected Starry Wisp damage roll hole.");
-  }
-  const invocation = hole.spell;
   if (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.spell.id !== "starry_wisp" ||
-    invocation.resource.tag !== "none" ||
-    invocation.damage.kind !== "fixedSpellAttackDamage" ||
-    invocation.damage.expr.dice !== 1 ||
-    invocation.damage.expr.dieSize !== 8 ||
-    invocation.damage.damageType !== "radiant" ||
+    !("critical" in hole) ||
     hole.label !== "Starry Wisp damage (1d8-radiant)" ||
-    hole.critical
+    hole.critical ||
+    "spell" in hole
   ) {
     throw new Error("Starry Wisp damage profile drifted.");
-  }
-  assertStarryWispPostDamageRiders(invocation.postDamageRiders);
-}
-
-function assertStarryWispPostDamageRiders(
-  riders: readonly SpellPostDamageRider[],
-): void {
-  const lightRider = riders.find(
-    (
-      rider,
-    ): rider is Extract<
-      SpellPostDamageRider,
-      { readonly kind: "lightEmission" }
-    > => rider.kind === "lightEmission",
-  );
-  const invisibleRider = riders.find(
-    (
-      rider,
-    ): rider is Extract<
-      SpellPostDamageRider,
-      { readonly kind: "invisibleBenefitDenied" }
-    > => rider.kind === "invisibleBenefitDenied",
-  );
-  if (
-    riders.length !== 2 ||
-    lightRider === undefined ||
-    lightRider.emission.kind !== "dim" ||
-    Number(lightRider.emission.radiusFeet) !== starryWispDimLightRadiusFeet ||
-    lightRider.expiresAt !== "endOfCasterNextTurn" ||
-    invisibleRider === undefined ||
-    invisibleRider.expiresAt !== "endOfCasterNextTurn"
-  ) {
-    throw new Error("Starry Wisp post-damage rider profile drifted.");
   }
 }
 
 function assertStarryWispObjectResolution(
   result: BattleResolutionResult,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): asserts result is Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
@@ -2040,7 +1858,7 @@ function assertStarryWispObjectResolution(
     result.state.lightEmitters.length !== 1 ||
     emitter === undefined ||
     emitter.kind !== "objectInvisibleRevealLightEmitter" ||
-    emitter.sourceProcedureRef !== "starry_wisp" ||
+    emitter.sourceProcedureRef !== sourceProcedureRef ||
     emitter.sourceCombatantId !== casterId ||
     emitter.objectId !== starryWispObjectId ||
     emitter.emission.kind !== "dim" ||

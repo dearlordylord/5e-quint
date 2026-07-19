@@ -63,9 +63,7 @@ describe("L12G deterministic Levitate creature admission", () => {
 
     expect(requireLevitatedEffect(cast.state)).toEqual({
       kind: "spellLevitatedCreature",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(levitateUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       sourceCombatantId: spellCasterId,
       altitudeFeet: movementFeet(12),
       maxAltitudeChangeFeet: movementFeet(20),

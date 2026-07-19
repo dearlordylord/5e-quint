@@ -701,10 +701,6 @@ function cunningStrikeSavingThrowHole(
           },
         }
       : {}),
-    unitFeature: {
-      unitId: context.unitId,
-      label: context.label,
-    },
     ability: save.ability,
     dc: requireCunningStrikeSaveDc(state, context),
     targetIds: [context.targetId],

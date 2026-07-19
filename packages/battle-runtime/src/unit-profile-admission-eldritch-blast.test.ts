@@ -93,7 +93,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackSequence",
         spell,

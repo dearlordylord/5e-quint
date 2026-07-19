@@ -1,9 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  resolveBattleSubject,
-  requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
@@ -14,6 +8,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-LESSER-RESTORATION lesser_restoration
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save spell.invocation-sleep-target-admission spell.invocation-direct-condition-removal
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -77,6 +72,11 @@ import {
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSleepTargetAdmissionProfile,
 } from "./unit-profile-admission-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 
 describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
   test("hold_person is admitted with Humanoid filtering, Paralyzed lifecycle, and Concentration cleanup", () => {
@@ -125,7 +125,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       expect.arrayContaining([spellTargetId, secondHumanoidId]),
     );
     expect(targetHole.choices).not.toContain(beastId);
-    expect(spellHoleInvocation([targetHole])).toEqual(
+    expect(spellHoleInvocation(state, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -640,7 +640,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(targetHole.choices).toEqual(
       expect.arrayContaining([spellTargetId, beastId, undeadId]),
     );
-    expect(spellHoleInvocation([targetHole])).toEqual(
+    expect(spellHoleInvocation(state, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -715,7 +715,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       "wis",
       "cha",
     ]);
-    expect(spellHoleInvocation([abilityHole])).toEqual(
+    expect(spellHoleInvocation(state, [abilityHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -961,7 +961,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         choices: ["blinded", "deafened"],
       }),
     );
-    expect(spellHoleInvocation([targetHole])).toEqual(
+    expect(spellHoleInvocation(state, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -1083,11 +1083,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("color_spray is admitted as a self-origin Cone save-gated slot condition spell", () => {
     const spell = spellRecord(colorSprayUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
+      state,
       spellId: colorSprayUnitId,
       slotLevel: 1,
     });
@@ -1113,7 +1114,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -1140,11 +1141,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
   });
   test("entangle is admitted as a point-origin Cube save-gated slot condition spell", () => {
     const spell = spellRecord(entangleUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
+      state,
       spellId: entangleUnitId,
       slotLevel: 1,
     });
@@ -1166,7 +1168,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -1199,11 +1201,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
   });
   test("sleep is admitted as point-origin Sphere target admission", () => {
     const spell = spellRecord(sleepUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
+      state,
       spellId: sleepUnitId,
       slotLevel: 1,
     });
@@ -1225,7 +1228,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "sleepTargetAdmission",
         spell,
@@ -1357,7 +1360,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       "paralyzed",
       "poisoned",
     ]);
-    expect(spellHoleInvocation([conditionHole])).toEqual(
+    expect(spellHoleInvocation(state, [conditionHole])).toEqual(
       expect.objectContaining({
         procedure: "directConditionRemoval",
         spell,

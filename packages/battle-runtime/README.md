@@ -170,8 +170,9 @@ branch:
 1. Extend a support-profile parser shape/tag to admit the new Surface mechanics.
 2. Thread the parsed profile through discovery and resolution.
 3. Add/update contract tests that prove the profile path for the new record.
-4. Keep any authored ids only as retained identity on subjects/snapshots/resource
-   keys, not as semantic switches.
+4. Keep authored ids at the outer selection and presentation boundary. Reducer
+   subjects and snapshots carry typed execution references and procedure facts,
+   never authored identity as an execution or replay key.
 
 If a new package/file needs allowlisting, update
 `scripts/check-authored-id-dispatch-boundary.cjs` with a narrow path rule and a
@@ -198,9 +199,11 @@ Saving Throws use their existing roll-mode projections.
 `@dnd/battle-runtime` admits authored Surface records through support profiles:
 small, procedure-facing parser outputs that prove the record shape matches an
 implemented battle procedure. Profiles are not a new executable authored-content
-language. They retain the original Surface record/id for labels, subjects,
-resource keys, snapshots, and traceability, but reducer branch selection must use
-the parsed profile tag and structure.
+language. They may retain the original Surface record/id at support-profile
+admission and outer presentation joins for labels and traceability. Reducer
+subjects and snapshots retain only the typed execution references and procedure
+facts admitted from those profiles; reducer branch selection uses the parsed
+profile tag and structure.
 
 The support-profile parser surface should cover these profile families:
 

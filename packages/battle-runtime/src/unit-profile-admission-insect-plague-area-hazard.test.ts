@@ -138,7 +138,7 @@ function resolveInsectPlagueSave(input: {
 
 describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("insect plague is admitted as a ten-minute point-origin Sphere hazard", () => {
-    const { spell, act } = castInsectPlague();
+    const { spell, state, act } = castInsectPlague();
 
     expect({
       ...act.subject,
@@ -160,7 +160,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         area: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
       }),
     );
-    expect(spellHoleInvocation([area])).toEqual(
+    expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "insectPlagueAreaHazard",
         spell,

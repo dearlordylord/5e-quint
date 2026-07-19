@@ -263,8 +263,6 @@ function discoverDancingLightsCastAct(
         invocation: dancingLightsCastInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: dancingLightsCastSummary(invocation),
       initialHoles: [
         spellDancingLightsPlacementHole(invocation, invocation.form, []),
       ],
@@ -289,8 +287,6 @@ function discoverDancingLightsRepositionAct(
             invocation: dancingLightsRepositionInvocationRef(invocation),
             mode: { tag: "cast" },
           },
-          label: `${invocation.spell.name} movement`,
-          summary: dancingLightsRepositionCastSummary(invocation),
           initialHoles: [
             spellDancingLightsPlacementHole(
               invocation,

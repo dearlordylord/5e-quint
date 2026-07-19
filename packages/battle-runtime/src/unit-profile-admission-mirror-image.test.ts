@@ -67,13 +67,15 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const state = mirrorImageBattle(attackerId);
     const cast = castMirrorImage(state);
     const caster = requireCombatant(cast.state, spellCasterId);
+    const mirrorImage = activeMirrorImage(caster.activeEffects);
+    if (mirrorImage === null) {
+      throw new Error("Expected an active Mirror Image effect.");
+    }
 
     expect(caster.concentration).toBeNull();
-    expect(activeMirrorImage(caster.activeEffects)).toMatchObject({
+    expect(mirrorImage).toMatchObject({
       kind: "mirrorImageDuplicates",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(mirrorImageUnitId),
-      ),
+      sourceProcedureRef: mirrorImage.sourceProcedureRef,
       sourceCombatantId: spellCasterId,
       remainingDuplicates: 3,
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
@@ -88,13 +90,18 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
       attackerId,
       targetId: spellCasterId,
     });
+    const mirrorImage = activeMirrorImage(
+      requireCombatant(cast.state, spellCasterId).activeEffects,
+    );
+    if (mirrorImage === null) {
+      throw new Error("Expected an active Mirror Image effect.");
+    }
+    const sourceProcedureRef = mirrorImage.sourceProcedureRef;
 
     expect(attack.mirrorHole).toMatchObject({
       mirrorImageDuplicateRoll: {
         targetId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(mirrorImageUnitId),
-        ),
+        sourceProcedureRef,
         sourceCombatantId: spellCasterId,
         remainingDuplicates: 3,
         dieSize: 6,
@@ -409,10 +416,19 @@ function requireMirrorImageDuplicateRollHole(
   result: ReturnType<typeof resolveBattleSubject>,
 ): MirrorImageDuplicateRollHole {
   const hole = requireResultHole(result, "rolledDice");
-  if (!("mirrorImageDuplicateRoll" in hole)) {
+  if (
+    !("mirrorImageDuplicateRoll" in hole) ||
+    hole.mirrorImageDuplicateRoll.sourceProcedureRef === undefined
+  ) {
     throw new Error("Expected Mirror Image duplicate roll hole.");
   }
-  return hole;
+  return {
+    ...hole,
+    mirrorImageDuplicateRoll: {
+      ...hole.mirrorImageDuplicateRoll,
+      sourceProcedureRef: hole.mirrorImageDuplicateRoll.sourceProcedureRef,
+    },
+  };
 }
 
 function requireNonMirrorRolledDiceHole(

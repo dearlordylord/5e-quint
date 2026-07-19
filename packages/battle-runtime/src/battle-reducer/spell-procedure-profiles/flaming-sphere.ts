@@ -268,10 +268,6 @@ function discoverFlamingSphereCastAct(
         invocation: flamingSphereInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${flamingSphereCastSummary(
-        invocation,
-      )} The table supplies the sphere area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

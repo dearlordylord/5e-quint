@@ -38,22 +38,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  commandOptionChoiceHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowTargeting,
-  spellTargetListHole,
-} from "../spells-holes-fills.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
 import { resolveCommandSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -70,6 +54,20 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  commandOptionChoiceHole,
+  heightenedSpellTargetChoiceHole,
+  spellSavingThrowTargeting,
+  spellTargetListHole,
+} from "../spells-holes-fills.ts";
 
 type CommandSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -256,13 +254,10 @@ function discoverCommandCastAct(
   }
 
   const commandOptionHole = commandOptionChoiceHole(invocation);
-  const baseCastAct = commandCastAct(
-    actorId,
-    invocation,
-    [targetHole, commandOptionHole],
-    invocation.spell.name,
-    commandCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = commandCastAct(actorId, invocation, [
+    targetHole,
+    commandOptionHole,
+  ]);
   const metamagicCastActs = commandMetamagicCastActs({
     state,
     actorId,
@@ -279,7 +274,7 @@ function commandMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState;
-  readonly invocation: CommandSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<CommandSpellInvocation>;
   readonly targetHole: BattleHole;
   readonly commandOptionHole: BattleHole;
   readonly baseCastAct: BattleActDiscoveryCandidate;
@@ -288,7 +283,6 @@ function commandMetamagicCastActs(input: {
     actor: input.actor,
     invocation: input.invocation,
   }).map((metamagic) => {
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...input.baseCastAct,
       subject: {
@@ -305,8 +299,6 @@ function commandMetamagicCastActs(input: {
         ),
         input.commandOptionHole,
       ],
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${input.baseCastAct.summary} Cast with ${label}.`,
     };
   });
 }
@@ -315,8 +307,6 @@ function commandCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<CommandSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -326,8 +316,6 @@ function commandCastAct(
       invocation: commandInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -335,7 +323,7 @@ function commandCastAct(
 function commandMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: CommandSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<CommandSpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
@@ -373,16 +361,6 @@ function commandInvocationRef(
 
 function commandCastSummary(invocation: CommandSpellInvocation): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function commandCastSummaryWithSavingThrow(
-  invocation: CommandSpellInvocation,
-): string {
-  return `${commandCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws. Failed targets follow the selected command on their next turns.`;
 }
 
 function resolveCommand(input: CommandResolveInput): BattleResolutionResult {

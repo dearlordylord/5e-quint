@@ -226,8 +226,6 @@ function discoverOngoingSpellEndCastAct(
         invocation: ongoingSpellEndInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: ongoingSpellEndCastSummary(invocation),
       initialHoles: [ongoingSpellTargetChoiceHole(state, actorId, invocation)],
     },
   ];

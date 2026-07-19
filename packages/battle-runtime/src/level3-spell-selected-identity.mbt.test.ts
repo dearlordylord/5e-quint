@@ -1,15 +1,12 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding haste protection_from_energy sleet_storm slow
 // UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding doDiscoverGlyphDurableOccurrence doDiscoverGlyphExplosiveRuneRelease doDiscoverGlyphStoredSpellRelease
 // UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES haste doDiscoverHastePositiveEffects
 // UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES protection_from_energy doDiscoverProtectionFromEnergyResistance
 // UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES sleet_storm doDiscoverSleetStormAreaHazard
 // UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES slow doDiscoverSlowActivePenalties
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
-
 import {
   glyphDurableOccurrenceProfileForSpell,
   glyphExplosiveRuneReleaseProfileForSpell,
@@ -42,10 +39,11 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type {
-  BattleHole,
-  BattleSpellSavingThrowOutcomeHole,
-} from "./unit-profile-admission-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
+import type { BattleHole } from "./unit-profile-admission-test-support.ts";
 
 const LEVEL3_SPELL_SELECTED_IDENTITY_TASK_ID =
   "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES";
@@ -354,16 +352,8 @@ function verifySlowActivePenalties(input: {
       dc: { kind: "caster_spell_save_dc" },
     }),
   );
-  expect(savingThrow.spell).toEqual(
-    expect.objectContaining({
-      procedure: "slowActivePenalties",
-      spell: input.spell,
-      resource: { tag: "spellSlot", slotLevel: 3 },
-      targeting: { kind: "pointOriginCube", sideFeet: 40 },
-      maxTargets: 6,
-      rangeFeet: 120,
-    }),
-  );
+  expect("spell" in savingThrow).toBe(false);
+  expect(input.spell.id).toBe(slowUnitId);
 }
 
 function discoverGlyphDurableOccurrence(): Level3SpellSelectedIdentityProjection {
@@ -453,10 +443,10 @@ function glyphSpell(): SpellRecord {
 
 function requireSpellSavingThrowOutcomeHole(
   holes: readonly BattleHole[],
-): BattleSpellSavingThrowOutcomeHole {
+): Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> {
   const hole = requireHole(holes, "savingThrowOutcome");
-  if (!("spell" in hole)) {
-    throw new Error("Expected spell Saving Throw outcome hole.");
+  if ("spell" in hole) {
+    throw new Error("Spell Saving Throw hole leaked authored payload.");
   }
   return hole;
 }

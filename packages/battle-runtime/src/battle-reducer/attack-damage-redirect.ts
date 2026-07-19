@@ -437,10 +437,6 @@ export function attackDamageReductionZeroDamageRedirectHoles(
             },
           }
         : {}),
-      unitFeature: {
-        unitId: offer.unitId,
-        label: offer.label,
-      },
       ability: offer.redirect.saveAbility,
       dc: { kind: "fixed", dc: offer.redirect.saveDc },
       targetIds: targetChoices,
@@ -459,11 +455,6 @@ export function attackDamageReductionZeroDamageRedirectHoles(
       holeInstanceKey:
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_INSTANCE,
       label: `${offer.label} redirected damage`,
-      unitFeature: {
-        unitId: offer.unitId,
-        label: offer.label,
-        modifierKind: "attackDamageReduction",
-      },
     },
   ];
 }

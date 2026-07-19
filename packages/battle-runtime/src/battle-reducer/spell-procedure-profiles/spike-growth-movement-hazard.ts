@@ -200,10 +200,6 @@ function discoverSpikeGrowthMovementHazardCastAct(
         invocation: spikeGrowthMovementHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${spikeGrowthMovementHazardCastSummary(
-        invocation,
-      )} The table supplies the Spike Growth area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

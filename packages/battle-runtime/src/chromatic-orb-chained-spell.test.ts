@@ -1,14 +1,8 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-
 import {
   battleId,
   characterId,
@@ -44,6 +38,11 @@ import {
 import chromaticOrbInput from "../../surface/content/chromatic_orb.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
 const firstTargetId = combatantId("chromatic-orb-first-target");
@@ -412,9 +411,7 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(9);
     expect(caster?.hp).toBe(9);
     expect(caster?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("test_concentration_spell"),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(

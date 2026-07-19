@@ -161,8 +161,6 @@ function discoverExpeditiousRetreatDashCastAct(
       mode: { tag: "cast" as const },
       speedKind,
     },
-    label: invocation.spell.name,
-    summary: expeditiousRetreatDashCastSummary(invocation),
     initialHoles: [],
   }));
 }

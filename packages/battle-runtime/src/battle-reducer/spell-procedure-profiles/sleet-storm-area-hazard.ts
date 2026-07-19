@@ -257,10 +257,6 @@ function discoverSleetStormAreaHazardCastAct(
         invocation: sleetStormAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${sleetStormAreaHazardCastSummary(
-        invocation,
-      )} The table supplies the Sleet Storm cylinder area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

@@ -33,14 +33,17 @@ export {
   type CharacterId,
   type InitiativeScore,
 } from "./identity.ts";
+
 export type {
   CharacterExecutionState,
   CharacterProcedureBinding,
 } from "./character-execution.ts";
+
 export {
   characterProcedureBinding,
   characterProcedureBindingSnapshots,
 } from "./character-execution.ts";
+
 export type {
   StatBlockExecutionAdmission,
   StatBlockExecutionRestoreIssue,
@@ -51,15 +54,18 @@ export type {
   StatBlockProcedureBindingSnapshot,
   StatBlockResourcePoolState,
 } from "./stat-block-execution.ts";
+
 export {
   restoreStatBlockExecutionAdmission,
   restoreStatBlockExecutionAdmissions,
   statBlockExecutionSnapshot,
 } from "./stat-block-execution.ts";
+
 export type {
   CharacterZeroHpLifecycleInit,
   ZeroHpLifecycle,
 } from "./zero-hp-lifecycle.ts";
+
 export {
   BATTLE_TRACE_HOLE_KINDS,
   battleActTraceCheckpoint,
@@ -68,15 +74,19 @@ export {
   type BattleTraceCheckpoint,
   type BattleTraceHoleKind,
 } from "./battle-trace-contract.ts";
+
 export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
+
 export {
   BattleActPresentationSchema,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
+
 export {
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
 } from "./active-effect/execution-ref.ts";
+
 export {
   admitCharacterProcedureSelectionSubject,
   battleActSpellPresentation,
@@ -84,31 +94,37 @@ export {
   battleActSpellSlotPresentation,
   battleActUnitPresentation,
 } from "./battle-act-composition.ts";
+
 export {
   combatantCanSee,
   combatantHasSeeInvisibleAndEtherealEffect,
   seeInvisibleRevealsEtherealWitness,
   seeInvisibleRevealsInvisibleObject,
 } from "./battle-reducer/creature-state-leaves.ts";
+
 export {
   battleWeaponItemHasMagicWeaponEnhancement,
   battleWeaponItemMagicWeaponEnhancementBonus,
 } from "./battle-reducer/attack-damage-apply.ts";
+
 export {
   battleHoleFamilyKind,
   thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
   type BattleHoleFamilyKind,
 } from "./battle-reducer/hole-helpers.ts";
+
 export {
   battleFillKind,
   battleSubjectKind,
   type BattleFillKind,
   type BattleSubjectKind,
 } from "./battle-protocol-kinds.ts";
+
 export type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
+
 export {
   CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
@@ -150,6 +166,7 @@ export {
   type CharacterBattleSpellcastingState,
   type PactOfTheChainFindFamiliarInvocationMode,
 } from "./character-battle-resources.ts";
+
 export {
   admitCompanionToBattle,
   applyFindFamiliarZeroHitPointDisappearance,
@@ -170,6 +187,7 @@ export {
   type WildCompanionCastInput,
   type WildCompanionSpend,
 } from "./find-familiar-lifecycle.ts";
+
 export type {
   BattleCompanionAbsentState,
   BattleCompanionPlacement,
@@ -180,11 +198,13 @@ export type {
   BattleCompanionState,
   BattleCompanionStoredForm,
 } from "./companion-state.ts";
+
 export {
   findFamiliarCompanionEntryForOwner,
   findFamiliarCompanionForOwner,
   findFamiliarCreatureTypeOverrideForOwner,
 } from "./find-familiar-state.ts";
+
 export {
   FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
   deliverTouchSpellThroughFindFamiliar,
@@ -194,8 +214,11 @@ export {
   type FindFamiliarTelepathicConnection,
   type FindFamiliarWithin100FeetFact,
 } from "./find-familiar-telepathy.ts";
-export { type PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
+
+export type { PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
+
 export { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+
 export {
   combatantPerceptionCommunicationProjection,
   type BattleCharacterSpeechProjection,
@@ -204,12 +227,14 @@ export {
   type BattleCreatureSpecialSense,
   type BattleStatBlockCommunicationText,
 } from "./creature-perception-communication.ts";
+
 export {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
 } from "./battle-interrupt-triggers.ts";
+
 export {
   BATTLE_RUNTIME_COMMANDS,
   BATTLE_MOVEMENT_SPEED_KINDS,
@@ -242,6 +267,7 @@ export {
   type SpellSlotProcedure,
   type SpellSubjectMode,
 } from "./battle-subjects.ts";
+
 export type {
   BattleWeaponDamage,
   CharacterAttackActionOption,
@@ -254,6 +280,7 @@ export type {
   UnarmedStrikeDamageEffect,
   UnarmedStrikeDamageProfile,
 } from "./battle-action-options.ts";
+
 export type {
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
@@ -269,16 +296,19 @@ export type {
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
 } from "./battle-init.ts";
+
 export {
   KNOCKED_OUT_UNCONSCIOUS,
   battleAvailableDruidWildShapeKnownForms,
 } from "./battle-init.ts";
+
 export {
   WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES,
   wildShapeFormActionSurfaceInventory,
   type WildShapeFormActionSurfaceCategory,
   type WildShapeFormActionSurfaceInventoryEntry,
 } from "./statblock-action-support.ts";
+
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,
@@ -491,10 +521,12 @@ export {
   type WildShapeEquipmentDispositionFillValue,
   type WildShapeLoadoutObjectRef,
 } from "./battle-reducer.ts";
+
 export {
   resolveBattlePossessionAttempt,
   type BattlePossessionAttemptInput,
 } from "./battle-reducer/spell-condition-effects-helpers.ts";
+
 export {
   resolveFailedSavingThrowReroll,
   type FailedSavingThrowRerollInput,
@@ -502,6 +534,7 @@ export {
   type FailedSavingThrowRerollIssueReason,
   type FailedSavingThrowRerollResult,
 } from "./battle-reducer/failed-saving-throw-reroll.ts";
+
 export {
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,
   type BattleCreatureSpaceOccupantFootprintFact,
@@ -512,6 +545,7 @@ export {
   type BattleCreatureSpaceTableRouteDerivationResult,
   type BattleRouteDerivedCreatureSpaceTraversalMovementFact,
 } from "./battle-reducer/creature-space-table-route.ts";
+
 export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -670,6 +704,7 @@ export {
   type StunningStrikeProfile,
   type WeaponDamageDiceRollChoiceProfile,
 } from "./unit-feature-support.ts";
+
 export {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
@@ -685,6 +720,7 @@ export {
   revertDruidWildShapeForm,
   removeEndedDruidWildShapeEffects,
 } from "./battle-reducer/druid-wild-shape.ts";
+
 export {
   battleShapeShiftedRuntimeState,
   combatantIsShapeShifted,

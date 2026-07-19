@@ -1,9 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME alter_self
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   alterSelfUnitId,
@@ -107,9 +105,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "selfTransformation",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(alterSelfUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         mode: "aquaticAdaptation",
         expiresAt: {
@@ -179,9 +175,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "selfTransformation",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(alterSelfUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         mode: "naturalWeapons",
         naturalWeaponDamageType: "slashing",
@@ -245,8 +239,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       effect: {
         kind: "damage",
         damage: {
-          kind: "authoredReplacement",
-          sourceUnitId: alterSelfUnitId,
+          kind: "procedureReplacement",
           dice: 1,
           dieSize: 6,
           damageType: "slashing",
@@ -362,9 +355,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "selfTransformation",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(alterSelfUnitId),
-        ),
+        sourceProcedureRef: activeBefore.sourceProcedureRef,
         sourceCombatantId: spellCasterId,
         mode: "changeAppearance",
         expiresAt: activeBefore.expiresAt,
@@ -452,9 +443,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "selfTransformation",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(alterSelfUnitId),
-        ),
+        sourceProcedureRef: activeBefore.sourceProcedureRef,
         sourceCombatantId: spellCasterId,
         mode: "naturalWeapons",
         naturalWeaponDamageType: "piercing",
@@ -507,9 +496,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "selfTransformation",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(alterSelfUnitId),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
         }),
       ]),
     );

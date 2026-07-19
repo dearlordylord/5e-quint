@@ -2430,17 +2430,6 @@ function savingThrowOutcomeFill(
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected savingThrowOutcome.");
   }
-  if (!("spell" in hole)) {
-    return {
-      kind: "savingThrowOutcome",
-      holeId: hole.holeId,
-      value: { outcomes },
-    };
-  }
-  const targeting = hole.spell.targeting;
-  if (targeting.kind === "singleCombatant") {
-    throw new Error("Expected area spell Saving Throw outcome hole.");
-  }
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,

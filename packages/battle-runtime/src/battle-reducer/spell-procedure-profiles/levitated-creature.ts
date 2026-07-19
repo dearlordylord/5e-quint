@@ -197,8 +197,6 @@ function discoverLevitatedCreatureCastAct(
               invocation: levitatedCreatureInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
-            label: invocation.spell.name,
-            summary: levitatedCreatureCastSummary(invocation),
             initialHoles: [targetHole],
           },
         ];
@@ -339,7 +337,7 @@ function resolveLevitatedCreature(
   if (input.fillSet.savingThrowOutcomes !== undefined) {
     const validation = validateSavingThrowOutcomes(
       input.fillSet.savingThrowOutcomes,
-      savingThrowHole,
+      input.invocation,
       input.input.state,
       input.actorId,
       undefined,

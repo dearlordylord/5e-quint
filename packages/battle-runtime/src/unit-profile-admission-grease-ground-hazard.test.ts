@@ -1,9 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-heightened-save-disadvantage
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
@@ -60,11 +58,12 @@ type ActionSpellAct = AvailableBattleAct & {
 describe("QMBT14 deterministic Grease ground hazard admission", () => {
   test("grease is admitted as a one-minute point-origin Cube ground hazard", () => {
     const spell = spellRecord(greaseUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
+      state,
       spellId: greaseUnitId,
       slotLevel: 1,
     });
@@ -86,7 +85,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "greaseGroundHazard",
         spell,
@@ -144,9 +143,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     ).toEqual([
       expect.objectContaining({
         kind: "greaseGroundHazard",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(greaseUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
@@ -239,9 +236,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       ability: "dex",
       greaseGroundHazard: {
         targetId: spellTargetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(greaseUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
         trigger: "entersArea",

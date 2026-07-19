@@ -1128,6 +1128,7 @@ function objectContactSavingThrowOutcomeHole(input: {
   });
   return {
     kind: "savingThrowOutcome",
+    outcomeTargeting: "targetList",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${input.invocation.spell.name} holding or wearing Constitution save`,

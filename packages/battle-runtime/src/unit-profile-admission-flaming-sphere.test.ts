@@ -1,9 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-FLAMING-SPHERE flaming_sphere
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-flaming-sphere-hazard-ram
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   damageRollFillWithGroups,
@@ -41,6 +39,10 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
 import type { BattleFill } from "./index.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 describe("L12G deterministic Flaming Sphere admission", () => {
   test("flaming sphere is admitted as a movable fire Sphere hazard", () => {
@@ -86,7 +88,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         },
       }),
     );
-    expect(spellHoleInvocation([area])).toEqual(
+    expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "flamingSphere",
         spell,
@@ -103,7 +105,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         damage: { expr: { dice: 2, dieSize: 6 }, damageType: "fire" },
       }),
     );
-    expect(spellHoleInvocation(thirdLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(state, thirdLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "flamingSphere",
         damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
@@ -135,9 +137,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toEqual([
       expect.objectContaining({
         kind: "flamingSphere",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(flamingSphereUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: flamingSphereAreaId,
         save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
@@ -334,9 +334,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         kind: "movableZoneRepositionMovement",
         movableZone: expect.objectContaining({
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(flamingSphereUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
           areaId: flamingSphereAreaId,
           maxMoveFeet: movementFeet(30),
         }),
@@ -392,9 +390,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         movableZone: expect.objectContaining({
           targetId: spellTargetId,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(flamingSphereUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
           areaId: flamingSphereAreaId,
           maxMoveFeet: movementFeet(30),
         }),

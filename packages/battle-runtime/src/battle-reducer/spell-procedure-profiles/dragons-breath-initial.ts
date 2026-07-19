@@ -212,8 +212,6 @@ function discoverDragonsBreathInitialCastAct(
             invocation: dragonsBreathInitialInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: dragonsBreathInitialCastSummary(invocation),
           initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
         },
       ];
@@ -359,28 +357,29 @@ function resolveDragonsBreathInitial(
   });
 }
 
-export const DragonsBreathInitialInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "dragonsBreathInitial" }
-  >
->(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("dragonsBreathInitial"),
-    spell: BattleRuntimeObjectSchema,
-    actionCost: Schema.Literal("bonusAction"),
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Literal(1),
+export const DragonsBreathInitialInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "dragonsBreathInitial" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("dragonsBreathInitial"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      rangeFeet: MovementFeet,
     }),
-    activeEffect: BattleRuntimeObjectSchema,
-    damageTypeChoices: Schema.Array(DamageTypeSchema),
-    rangeFeet: MovementFeet,
-  }),
-);
+  );
 export const dragonsBreathInitialProfile = {
   procedure: "dragonsBreathInitial",
   invocationSchema: DragonsBreathInitialInvocationSchema,

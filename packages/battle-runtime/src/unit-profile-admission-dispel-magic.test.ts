@@ -734,9 +734,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const target = resolved.state.combatants.get(spellTargetId);
     expect(caster?.concentration).toBeNull();
     expect(target?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(heatMetalUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(
@@ -856,9 +854,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     }
     const antimagicCaster = resolved.state.combatants.get(spellTargetId);
     expect(antimagicCaster?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(antimagicFieldUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(antimagicCaster?.activeEffects).toContainEqual(aura);

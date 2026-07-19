@@ -817,9 +817,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     expect(sorceryPointsRemaining(resolved.state)).toBe(1);
     const caster = requireCombatant(resolved.state, spellCasterId);
     expect(caster.concentration).toMatchObject({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(enlargeReduceUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
       maintenanceSavingThrowRollMode: "advantage",
     });

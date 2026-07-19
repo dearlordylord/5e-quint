@@ -50,37 +50,6 @@ import { admitRegisteredSpellProcedureProfiles } from "./spell-procedure-profile
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
-export * from "./spells-profiles-support.ts";
-export {
-  animalFriendshipSaveGateConditionSpell,
-  areaSaveGateSpellRangeFeet,
-  charmPersonSaveGateConditionSpell,
-  colorSpraySaveGateConditionSpell,
-  entangleSaveGateConditionSpell,
-  faerieFireSaveGateAttackRollAdvantageSpell,
-  hasSaveGateRepeatSaves,
-  isViciousMockeryNextAttackRiderShape,
-  saveGateTargeting,
-  supportedCantripSaveGateDamageProfile,
-  supportedFailedSavePostDamageRiders,
-  supportedPreparedSaveGateAttackRollAdvantageProfile,
-  supportedPreparedSaveGateConditionProfile,
-  supportedPreparedSaveGateConditionImmunityProfile,
-  supportedPreparedSaveGateDamageProfile,
-  supportedSaveGateConditionSpell,
-  supportedSaveGateDamageProfile,
-  supportedSaveGateFailedSaveEffects,
-} from "./spell-procedure-profiles/_save-gate-helpers.ts";
-export {
-  diceExprWithDelta,
-  singleTargetSpellRangeFeet,
-  supportedDamageAmountExpr,
-  supportedRepeatedEffectCount,
-} from "./spells-profile-shared.ts";
-export { supportedPreparedSleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
-export { supportedPreparedHideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
-export { supportedPreparedGreaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
-export { supportedPreparedCommandProfile } from "./spell-procedure-profiles/command.ts";
 
 export function admittedSpellActs(
   actor: BattleCreatureState,

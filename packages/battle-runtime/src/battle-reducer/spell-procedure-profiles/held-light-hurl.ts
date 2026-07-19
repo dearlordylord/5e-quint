@@ -19,7 +19,6 @@
 
 import { attackBonus, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -45,9 +44,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   AttackBonus,
   BattleRuntimeObjectSchema,
@@ -57,6 +54,10 @@ import {
   NoSpellInvocationResourceSchema,
   SingleCreatureOrObjectSpellTargetingSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type HeldLightHurlInvocation = Extract<
   SupportedSpellInvocation,
@@ -161,8 +162,6 @@ function discoverHeldLightHurlCastAct(
         invocation,
         heldLightHurlInvocationRef(invocation),
       ),
-      label: invocation.spell.name,
-      summary: heldLightHurlCastSummary(invocation),
       initialHoles,
     },
   ];

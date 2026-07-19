@@ -87,10 +87,6 @@ export function openHandTechniqueDecisionHoleForFlurryHit(
     holeId: OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
     holeInstanceKey: OPEN_HAND_TECHNIQUE_DECISION_HOLE_INSTANCE,
     label: "Open Hand Technique",
-    unitFeature: {
-      unitId: hit.unitId,
-      label: "Open Hand Technique",
-    },
     choices: OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   };
 }
@@ -299,10 +295,6 @@ function openHandTechniqueSavingThrowHole(
           },
         }
       : {}),
-    unitFeature: {
-      unitId: hit.unitId,
-      label: "Open Hand Technique",
-    },
     ability,
     dc: {
       kind: "fixed",

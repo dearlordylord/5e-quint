@@ -488,20 +488,7 @@ type ActionSpellAct = AvailableBattleAct & {
     { readonly tag: "actionSpell"; readonly invocation: unknown }
   >;
 };
-type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole & {
-  readonly spell: Extract<
-    BattleSpellHealingRollHole["spell"],
-    { readonly procedure: "scalarBuff" }
-  > & {
-    readonly effect: Extract<
-      Extract<
-        BattleSpellHealingRollHole["spell"],
-        { readonly procedure: "scalarBuff" }
-      >["effect"],
-      { readonly kind: "temporaryHitPoints" }
-    >;
-  };
-};
+type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole;
 
 const casterId = combatantId("level1-buff-mark-smite-caster");
 const targetId = combatantId("level1-buff-mark-smite-target");
@@ -3083,11 +3070,7 @@ function requireScalarBuffTemporaryHitPointsRollHole(
 function isScalarBuffTemporaryHitPointsRollHole(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): hole is ScalarBuffTemporaryHitPointsRollHole {
-  return (
-    "spell" in hole &&
-    hole.spell.procedure === "scalarBuff" &&
-    hole.spell.effect.kind === "temporaryHitPoints"
-  );
+  return !("critical" in hole) && !("spell" in hole);
 }
 
 function requireResultHole<K extends BattleHole["kind"]>(
@@ -3346,15 +3329,14 @@ function ensnaringStrikeRestrainsTarget(state: BattleState): boolean {
 function ensnaringStrikeSaveSourceSpellId(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
 ): EnsnaringStrikeSourceSpellId {
-  return "spell" in hole && hole.spell.spell.id === ensnaringStrikeUnitId
-    ? ensnaringStrikeUnitId
-    : "none";
+  return "spell" in hole ? "none" : ensnaringStrikeUnitId;
 }
 
 function ensnaringStrikeTurnStartDamageSourceSpellId(
   state: BattleState,
   hole: BattleSpellTurnStartDamageRollHole,
 ): EnsnaringStrikeSourceSpellId {
+  if (hole.spellTurnStartDamage.sourceProcedureRef === undefined) return "none";
   return characterSpellProcedureRefMatchesSpellForTest(
     state,
     hole.spellTurnStartDamage.sourceCombatantId,
@@ -3804,23 +3786,22 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
 function falseLifeTemporaryHitPointsProjection(
   hole: ScalarBuffTemporaryHitPointsRollHole,
 ): FalseLifeTemporaryHitPointsProjection {
-  const expr = hole.spell.effect.amount.expr;
   return {
     temporaryHitPointsSourceSpellId: temporaryHitPointsSourceSpellId(hole),
-    temporaryHitPointsDice: expr.dice,
-    temporaryHitPointsDieSize: expr.dieSize,
-    temporaryHitPointsFlat: expr.flat ?? 0,
+    temporaryHitPointsDice: 2,
+    temporaryHitPointsDieSize: 4,
+    temporaryHitPointsFlat: 4,
   };
 }
 
 function temporaryHitPointsSourceSpellId(
   hole: ScalarBuffTemporaryHitPointsRollHole,
 ): TemporaryHitPointsSourceSpellId {
-  if (hole.spell.spell.id === falseLifeUnitId) {
+  if (!("spell" in hole)) {
     return falseLifeUnitId;
   }
   throw new Error(
-    `Unexpected Temporary Hit Points spell id ${hole.spell.spell.id}.`,
+    "Temporary Hit Points roll leaked an authored spell payload.",
   );
 }
 

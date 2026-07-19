@@ -130,6 +130,12 @@ import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeStrengthRollMode,
 } from "./creature-size-change-effects.ts";
+import type { BattleSpellTargetListProcedure } from "./spell-target-list-procedures.ts";
+
+type BattleSpellTargetListInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: BattleSpellTargetListProcedure }
+>;
 
 const OBJECT_DAMAGE_IMMUNITIES = [
   "poison",
@@ -159,17 +165,19 @@ type SpellObjectDamageInvocation =
 export function spellAttackRollHole(
   state: BattleState,
   attackerId: CombatantId,
-  invocation: Extract<
-    BattleExecutableSpellInvocation,
-    {
-      readonly procedure:
-        | "attackBurstSaveDamage"
-        | "heldLightHurl"
-        | "spellCreatedHeldObjectAttack"
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack"
-        | "spellAttackDamage";
-    }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "attackBurstSaveDamage"
+          | "heldLightHurl"
+          | "spellCreatedHeldObjectAttack"
+          | "spiritualWeaponAttackProxy"
+          | "spiritualWeaponRepeatAttack"
+          | "spellAttackDamage";
+      }
+    >
   >,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
@@ -180,9 +188,11 @@ export function spellAttackRollHole(
 }
 
 export function spellAttackSequencePartAttackRollHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellAttackSequence" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spellAttackSequence" }
+    >
   >,
   partIndex: number,
   rollMode?: AttackRollMode,
@@ -197,7 +207,7 @@ export function spellAttackSequencePartAttackRollHole(
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} ${partName} ${partIndex + 1} spell attack roll`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     attackBonus: invocation.attackBonus,
     ...(rollMode === undefined ? {} : { rollMode }),
   };
@@ -226,9 +236,11 @@ function spellAttackSequencePartAttackRollProtocolId(
 }
 
 export function spellObjectAttackRollHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
+    >
   >,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
@@ -236,17 +248,19 @@ export function spellObjectAttackRollHole(
 }
 
 function spellAttackRollHoleBase(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "attackBurstSaveDamage"
-        | "heldLightHurl"
-        | "spellCreatedHeldObjectAttack"
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack"
-        | "spellAttackDamage";
-    }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "attackBurstSaveDamage"
+          | "heldLightHurl"
+          | "spellCreatedHeldObjectAttack"
+          | "spiritualWeaponAttackProxy"
+          | "spiritualWeaponRepeatAttack"
+          | "spellAttackDamage";
+      }
+    >
   >,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
@@ -255,7 +269,7 @@ function spellAttackRollHoleBase(
     holeId: ATTACK_ROLL_HOLE_ID,
     holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
     label: `${invocation.spell.name} spell attack roll`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     attackBonus: invocation.attackBonus,
     ...(rollMode === undefined ? {} : { rollMode }),
   };
@@ -295,7 +309,7 @@ export function spellDamageTypeChoiceHole(
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} damage type`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices,
   };
 }
@@ -341,7 +355,7 @@ export function spellConditionChoices(
 }
 
 export function spellConditionChoiceHole(
-  invocation: SpellConditionChoiceInvocation,
+  invocation: BattleExecutableSpellInvocation<SpellConditionChoiceInvocation>,
 ): BattleSpellConditionChoiceHole {
   const protocolId = spellConditionChoiceHoleProtocolId(invocation);
   return {
@@ -349,7 +363,7 @@ export function spellConditionChoiceHole(
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} condition`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices: spellConditionChoices(invocation),
   };
 }
@@ -369,9 +383,11 @@ function spellConditionChoiceHoleProtocolId(
 export function chainedSpellTargetHole(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chainedSpellAttackDamage" }
+    >
   >;
   readonly stepIndex: number;
   readonly targeted: readonly CombatantId[];
@@ -437,7 +453,7 @@ export function chainedSpellAttackRollHole(
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} spell attack roll ${stepIndex + 1}`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     attackBonus: invocation.attackBonus,
     ...(rollMode === undefined ? {} : { rollMode }),
     ...attackRollMissToHitReplacementHolePayload(state, attackerId),
@@ -445,9 +461,11 @@ export function chainedSpellAttackRollHole(
 }
 
 export function chainedSpellDamageRollHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chainedSpellAttackDamage" }
+    >
   >,
   damageType: DamageType,
   step: { readonly stepIndex: number; readonly critical: boolean },
@@ -467,7 +485,7 @@ export function chainedSpellDamageRollHole(
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} damage ${step.stepIndex + 1} (${expr})`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     critical: step.critical,
   };
 }
@@ -596,7 +614,7 @@ export function spellDamageTypes(
 }
 
 export function spellDamageHole(
-  invocation: SupportedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SupportedDamageSpellInvocation>,
   critical = false,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): BattleSpellDamageRollHole {
@@ -607,14 +625,12 @@ export function spellDamageHole(
   );
   return {
     kind: "rolledDice",
-    holeId: holeId(
-      `battle:spell:damage-result:${invocation.procedure}:${expr}`,
-    ),
+    holeId: spellDamageHoleId(invocation, critical, spellMarkedDamageRiders),
     holeInstanceKey: holeInstanceKey(
       `battle:spell:damage-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} damage (${expr})`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     critical,
     ...(spellMarkedDamageRiders.length === 0
       ? {}
@@ -622,10 +638,25 @@ export function spellDamageHole(
   };
 }
 
+function spellDamageHoleId(
+  invocation: SupportedDamageSpellInvocation,
+  critical: boolean,
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[],
+): BattleHoleId {
+  const expr = spellDamageExpression(
+    invocation,
+    critical,
+    spellMarkedDamageRiders,
+  );
+  return holeId(`battle:spell:damage-result:${invocation.procedure}:${expr}`);
+}
+
 export function spellAttackSequencePartDamageHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellAttackSequence" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spellAttackSequence" }
+    >
   >,
   partIndex: number,
   critical = false,
@@ -647,7 +678,7 @@ export function spellAttackSequencePartDamageHole(
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} ${partName} ${partIndex + 1} damage (${expr})`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     critical,
     ...(spellMarkedDamageRiders.length === 0
       ? {}
@@ -680,64 +711,95 @@ function spellAttackSequencePartDamageProtocolId(
 }
 
 export function spellBurstDamageHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "attackBurstSaveDamage" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "attackBurstSaveDamage" }
+    >
   >,
 ): BattleSpellDamageRollHole {
   const expr = spellBurstDamageExpression(invocation);
   return {
     kind: "rolledDice",
-    holeId: holeId(
-      `battle:spell:burst-damage-result:${invocation.procedure}:${expr}`,
-    ),
+    holeId: spellBurstDamageHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
       `battle:spell:burst-damage-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} burst damage (${expr})`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     critical: false,
   };
 }
 
-export function spellHealingRollHole(
+function spellBurstDamageHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
+    { readonly procedure: "attackBurstSaveDamage" }
+  >,
+): BattleHoleId {
+  const expr = spellBurstDamageExpression(invocation);
+  return holeId(
+    `battle:spell:burst-damage-result:${invocation.procedure}:${expr}`,
+  );
+}
+
+export function spellHealingRollHole(
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "directHitPointRestoration" }
+    >
   >,
 ): BattleSpellHealingRollHole {
   const expr = spellHealingExpression(invocation);
   return {
     kind: "rolledDice",
-    holeId: holeId(
-      `battle:spell:healing-result:${invocation.procedure}:${expr}`,
-    ),
+    holeId: spellHealingRollHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
       `battle:spell:healing-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} healing (${expr})`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
   };
 }
 
-export function spellScalarBuffRollHole(
+function spellHealingRollHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "scalarBuff" }
+    { readonly procedure: "directHitPointRestoration" }
+  >,
+): BattleHoleId {
+  const expr = spellHealingExpression(invocation);
+  return holeId(`battle:spell:healing-result:${invocation.procedure}:${expr}`);
+}
+
+export function spellScalarBuffRollHole(
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "scalarBuff" }>
   >,
 ): BattleSpellHealingRollHole {
   const expr = scalarBuffTemporaryHitPointsExpression(invocation);
   return {
     kind: "rolledDice",
-    holeId: holeId(
-      `battle:spell:scalar-buff-result:${invocation.procedure}:${expr}`,
-    ),
+    holeId: spellScalarBuffRollHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
       `battle:spell:scalar-buff-result:${invocation.procedure}:${expr}`,
     ),
     label: `${invocation.spell.name} Temporary Hit Points (${expr})`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
   };
+}
+
+function spellScalarBuffRollHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+): BattleHoleId {
+  const expr = scalarBuffTemporaryHitPointsExpression(invocation);
+  return holeId(
+    `battle:spell:scalar-buff-result:${invocation.procedure}:${expr}`,
+  );
 }
 
 export function spellRollModifierSkillChoiceHoleId(
@@ -747,9 +809,8 @@ export function spellRollModifierSkillChoiceHoleId(
 }
 
 export function spellRollModifierSkillChoiceHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
   >,
 ): BattleSpellSkillChoiceHole {
   return {
@@ -759,7 +820,7 @@ export function spellRollModifierSkillChoiceHole(
       `battle:spell:skill-choice:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} skill`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices: invocation.skillChoices ?? [],
   };
 }
@@ -774,9 +835,8 @@ export function spellRollModifierAbilityChoiceHoleId(
 }
 
 export function spellRollModifierAbilityChoiceHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
   >,
 ): BattleSpellAbilityChoiceHole {
   return {
@@ -786,7 +846,7 @@ export function spellRollModifierAbilityChoiceHole(
       `battle:spell:ability-choice:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} ability`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices: invocation.abilityChoices ?? [],
   };
 }
@@ -813,9 +873,8 @@ export function spellRollModifierTargetAbilityChoicesHoleId(
 }
 
 export function spellRollModifierTargetAbilityChoicesHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
   >,
 ): BattleSpellTargetAbilityChoicesHole {
   return {
@@ -825,7 +884,7 @@ export function spellRollModifierTargetAbilityChoicesHole(
       `battle:spell:target-ability-choices:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} abilities by target`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices: invocation.abilityChoices ?? [],
   };
 }
@@ -841,10 +900,12 @@ export function spellAbilityChoiceHoleId(
 }
 
 export function spellAbilityChoiceHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    | { readonly procedure: "markedDamageRider"; readonly action: "cast" }
-    | { readonly procedure: "saveGatedDamage" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      | { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+      | { readonly procedure: "saveGatedDamage" }
+    >
   >,
 ): BattleSpellAbilityChoiceHole {
   return {
@@ -854,7 +915,7 @@ export function spellAbilityChoiceHole(
       `battle:spell:ability-choice:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} ability`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices:
       invocation.procedure === "saveGatedDamage"
         ? (invocation.failedSaveAbilityChoices ?? [])
@@ -865,9 +926,11 @@ export function spellAbilityChoiceHole(
 }
 
 export function thaumaturgyActiveOneMinuteEffectCountHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "thaumaturgyBoomingVoice" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "thaumaturgyBoomingVoice" }
+    >
   >,
 ): BattleThaumaturgyActiveOneMinuteEffectCountHole {
   return {
@@ -875,7 +938,7 @@ export function thaumaturgyActiveOneMinuteEffectCountHole(
     holeId: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
     holeInstanceKey: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
     label: `${invocation.spell.name} total active 1-minute effects`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     maximumActiveOneMinuteEffects: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
     requiresTableSpellEffectCount: true,
   };
@@ -927,6 +990,10 @@ export function spellSavingThrowOutcomeHole(
       : invocation.procedure === "rollModifier"
         ? (invocation.saveGate?.ability ?? "cha")
         : invocation.ability;
+  const targeting =
+    invocation.procedure === "rollModifier"
+      ? invocation.targeting
+      : spellSavingThrowTargeting(invocation);
   return {
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
@@ -942,7 +1009,14 @@ export function spellSavingThrowOutcomeHole(
           ? `${invocation.spell.name} Saving Throw outcome`
           : `${invocation.spell.name} ${spellAreaTargetingLabel(targeting)} Saving Throw outcomes`;
     })(),
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
+    outcomeTargeting:
+      targeting.kind === "singleCombatant" ||
+      targeting.kind === "singleCreatureOrObject"
+        ? "singleTarget"
+        : targeting.kind === "targetList"
+          ? "targetList"
+          : "area",
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
       actorId,
@@ -1006,7 +1080,7 @@ export function carefulSpellProtectedTargetsHoleId(
 export function carefulSpellProtectedTargetsHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleSpellTargetListHole["spell"],
+  invocation: BattleExecutableSpellInvocation<BattleSpellTargetListInvocation>,
 ): BattleSpellTargetListHole {
   const actor = state.combatants.get(actorId);
   const maxProtectedTargets =
@@ -1019,14 +1093,16 @@ export function carefulSpellProtectedTargetsHole(
       : 1;
   return {
     kind: "spellTargetList",
+    procedure: invocation.procedure,
     holeId: carefulSpellProtectedTargetsHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
       `battle:spell:careful-spell:protected-targets:${invocation.procedure}`,
     ),
     label: `${invocation.spell.name} Careful Spell protected targets`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     minTargets: 1,
     maxTargets: maxProtectedTargets,
+    spatialTargeting: { kind: "individualTargets" },
     choices: [...state.combatants.keys()].filter(
       (targetId) => targetId !== actorId,
     ),
@@ -1054,7 +1130,7 @@ export function isHeightenedSpellTargetChoiceHoleId(
 export function heightenedSpellTargetChoiceHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SupportedSpellInvocation>,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
@@ -1063,6 +1139,7 @@ export function heightenedSpellTargetChoiceHole(
       `${HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX}${invocation.spell.id}`,
     ),
     label: `${invocation.spell.name} Heightened Spell target`,
+    procedureRef: invocation.sourceProcedureRef,
     choices: [...state.combatants.keys()].filter(
       (targetId) => targetId !== actorId,
     ),
@@ -1484,7 +1561,7 @@ export function validateSpellDamageFill(
   }
   if (
     fill.holeId !==
-    spellDamageHole(invocation, critical, spellMarkedDamageRiders).holeId
+    spellDamageHoleId(invocation, critical, spellMarkedDamageRiders)
   ) {
     return critical
       ? "Critical hit spell damage must use the critical spell damage hole."
@@ -1650,12 +1727,7 @@ export function validateSpellAttackSequencePartDamageFill(
   }
   if (
     fill.holeId !==
-    spellAttackSequencePartDamageHole(
-      invocation,
-      partIndex,
-      critical,
-      spellMarkedDamageRiders,
-    ).holeId
+    spellAttackSequencePartDamageHoleId(invocation, partIndex, critical)
   ) {
     return critical
       ? "Critical hit spell attack sequence damage must use the critical damage hole."
@@ -1696,7 +1768,7 @@ export function validateSpellHealingFill(
     { readonly procedure: "directHitPointRestoration" }
   >,
 ): string | null {
-  if (fill.holeId !== spellHealingRollHole(invocation).holeId) {
+  if (fill.holeId !== spellHealingRollHoleId(invocation)) {
     return "Spell healing must use the selected spell act healing hole.";
   }
   return validateRolledDiceFillForDiceExpr(fill, {
@@ -1715,7 +1787,7 @@ export function validateScalarBuffTemporaryHitPointsFill(
   if (invocation.effect.kind !== "temporaryHitPoints") {
     return "Scalar buff dice are only valid for Temporary Hit Points effects.";
   }
-  if (fill.holeId !== spellScalarBuffRollHole(invocation).holeId) {
+  if (fill.holeId !== spellScalarBuffRollHoleId(invocation)) {
     return "Temporary Hit Points must use the selected scalar buff spell hole.";
   }
   return validateRolledDiceFillForDiceExpr(fill, {
@@ -1731,7 +1803,7 @@ export function validateSpellBurstDamageFill(
     { readonly procedure: "attackBurstSaveDamage" }
   >,
 ): string | null {
-  if (fill.holeId !== spellBurstDamageHole(invocation).holeId) {
+  if (fill.holeId !== spellBurstDamageHoleId(invocation)) {
     return "Ice Knife burst damage must use the burst damage hole.";
   }
   return validateRolledDiceFillForDiceExpr(fill, {

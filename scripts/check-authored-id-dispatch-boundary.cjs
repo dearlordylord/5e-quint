@@ -3,6 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const assert = require("node:assert/strict");
+const ts = require("typescript");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const PACKAGES_ROOT = path.join(REPO_ROOT, "packages");
@@ -270,11 +271,61 @@ function assertBattleReplayExecutionBoundary() {
       sliceEnd: "export type CharacterBattleCreatureState",
     },
     {
+      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      patterns: [/readonly (?:spell|unit|unitFeature):/],
+      sliceStart: "export type BattleSpellAreaChoiceHole",
+      sliceEnd: "export type BattleFill =",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      patterns: [
+        /BattleActDiscoveryText/,
+        /readonly (?:label|summary|presentation):/,
+      ],
+      sliceStart: "type BattleActExecution<",
+      sliceEnd: "export type BattleActExecutionCandidate",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      patterns: [/readonly (?:invocation|spell|unit):/],
+      sliceStart: "export type BattleReadiedSpell =",
+      sliceEnd: "export type BattleReadiedMovement =",
+    },
+    {
       relativePath:
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
       patterns: [/unitId:\s*Schema\.String/],
       sliceStart: "const BattleCharacterResourceSnapshotSchema",
       sliceEnd: "const StatBlockResourcePoolStateSchema",
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+      patterns: [
+        /as unknown as Schema\.Schema<BattleHole>/,
+        /(?:spell|unit):(?!\s*Schema\.optionalWith\(Schema\.Never)/,
+        /unitFeature:/,
+      ],
+      sliceStart: "const BattleHoleBaseSchema",
+      sliceEnd: "const BattleDieRollResultSchema",
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+      patterns: [/(?:label|summary|presentation):\s*Schema\./],
+      sliceStart: "const BattleActExecutionCandidateSchema",
+      sliceEnd: "const BattleReadiedSpellSnapshotSchema",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      patterns: [/readonly (?:unitId|invocation|occurrence):/],
+      sliceStart: "export type CharacterProcedureBindingSnapshot =",
+      sliceEnd: "type CharacterExecutionStateData =",
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      patterns: [/BattleActDiscoverySubject as BattleSubject/],
     },
     {
       relativePath: "packages/battle-runtime/src/character-execution.ts",
@@ -358,6 +409,190 @@ function assertBattleReplayExecutionBoundary() {
     );
   }
   process.exit(1);
+}
+
+function presentationReturningHelperNames(source) {
+  const helpers = new Set();
+  const visit = (node) => {
+    if (
+      ts.isFunctionDeclaration(node) &&
+      node.name !== undefined &&
+      node.body !== undefined &&
+      /\b(?:label|summary)\s*:/.test(node.body.getText(source))
+    ) {
+      helpers.add(node.name.text);
+    }
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer !== undefined &&
+      (ts.isArrowFunction(node.initializer) ||
+        ts.isFunctionExpression(node.initializer)) &&
+      /\b(?:label|summary)\s*:/.test(node.initializer.body.getText(source))
+    ) {
+      helpers.add(node.name.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return helpers;
+}
+
+function assertNoReducerOwnedActPresentation(options = {}) {
+  const reducerRoot = path.join(
+    REPO_ROOT,
+    "packages/battle-runtime/src/battle-reducer",
+  );
+  const files = [
+    ...(options.includeRepository === false
+      ? []
+      : [
+          path.join(REPO_ROOT, "packages/battle-runtime/src/battle-reducer.ts"),
+          ...listFiles(reducerRoot),
+        ]),
+    ...(options.sources ?? []).map((source) => source.file),
+  ];
+  const violations = [];
+
+  for (const file of files) {
+    const content =
+      options.sources?.find((source) => source.file === file)?.content ??
+      fs.readFileSync(file, "utf8");
+    const source = ts.createSourceFile(
+      file,
+      content,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TS,
+    );
+    const presentationHelpers = presentationReturningHelperNames(source);
+    const presentationBindings = new Set();
+    const presentationNamePattern = /(?:label|summary|presentation|text)/i;
+    const initializerMayOwnPresentationText = (initializer) => {
+      if (ts.isObjectLiteralExpression(initializer)) {
+        return initializer.properties.some(
+          (property) =>
+            (ts.isPropertyAssignment(property) ||
+              ts.isShorthandPropertyAssignment(property)) &&
+            (ts.isIdentifier(property.name) ||
+              ts.isStringLiteral(property.name)) &&
+            (property.name.text === "label" ||
+              property.name.text === "summary"),
+        );
+      }
+      if (ts.isConditionalExpression(initializer)) {
+        return (
+          initializerMayOwnPresentationText(initializer.whenTrue) ||
+          initializerMayOwnPresentationText(initializer.whenFalse)
+        );
+      }
+      if (ts.isCallExpression(initializer)) {
+        const callee = initializer.expression.getText(source);
+        return (
+          presentationNamePattern.test(callee) ||
+          presentationHelpers.has(callee)
+        );
+      }
+      return (
+        ts.isIdentifier(initializer) &&
+        (presentationBindings.has(initializer.text) ||
+          presentationNamePattern.test(initializer.text))
+      );
+    };
+    const declarations = [];
+    const collectPresentationBindings = (node) => {
+      if (
+        ts.isVariableDeclaration(node) &&
+        ts.isIdentifier(node.name) &&
+        node.initializer !== undefined
+      ) {
+        declarations.push(node);
+      }
+      ts.forEachChild(node, collectPresentationBindings);
+    };
+    collectPresentationBindings(source);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const declaration of declarations) {
+        if (
+          !presentationBindings.has(declaration.name.text) &&
+          initializerMayOwnPresentationText(declaration.initializer)
+        ) {
+          presentationBindings.add(declaration.name.text);
+          changed = true;
+        }
+      }
+    }
+    const visit = (node) => {
+      if (ts.isObjectLiteralExpression(node)) {
+        const properties = new Map();
+        for (const property of node.properties) {
+          if (
+            (ts.isPropertyAssignment(property) ||
+              ts.isShorthandPropertyAssignment(property)) &&
+            (ts.isIdentifier(property.name) ||
+              ts.isStringLiteral(property.name))
+          ) {
+            properties.set(property.name.text, property);
+          }
+        }
+        const spreadsPresentationText = node.properties.some(
+          (property) =>
+            ts.isSpreadAssignment(property) &&
+            ((ts.isIdentifier(property.expression) &&
+              (presentationBindings.has(property.expression.text) ||
+                presentationNamePattern.test(property.expression.text))) ||
+              (ts.isCallExpression(property.expression) &&
+                (presentationNamePattern.test(
+                  property.expression.expression.getText(source),
+                ) ||
+                  presentationHelpers.has(
+                    property.expression.expression.getText(source),
+                  )))),
+        );
+        if (
+          properties.has("subject") &&
+          ((properties.has("initialHoles") &&
+            (properties.has("label") || properties.has("summary"))) ||
+            spreadsPresentationText)
+        ) {
+          const position = source.getLineAndCharacterOfPosition(
+            node.getStart(),
+          );
+          violations.push(
+            `${path.relative(REPO_ROOT, file)}:${position.line + 1}`,
+          );
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+  }
+
+  assert.deepEqual(
+    violations,
+    options.expectedViolations ?? [],
+    `reducer discovery owns act label/summary at ${violations.join(", ")}`,
+  );
+}
+
+function assertActPresentationGateSelfTests() {
+  const file = path.join(REPO_ROOT, "synthetic-presentation-bypass.ts");
+  const content = `
+      function detailsFor() { return { label: "Legacy", summary: "Legacy" }; }
+      const conditional = true ? detailsFor() : { label: "Other", summary: "Other" };
+      const direct = { ...detailsFor(), subject: {}, initialHoles: [] };
+      const indirect = { ...conditional, subject: {}, initialHoles: [] };
+    `;
+  assertNoReducerOwnedActPresentation({
+    includeRepository: false,
+    sources: [{ file, content }],
+    expectedViolations: [
+      "synthetic-presentation-bypass.ts:4",
+      "synthetic-presentation-bypass.ts:5",
+    ],
+  });
 }
 
 function countChar(text, char) {
@@ -1702,6 +1937,8 @@ function runSelfTest() {
 
 function main() {
   assertBattleReplayExecutionBoundary();
+  assertActPresentationGateSelfTests();
+  assertNoReducerOwnedActPresentation();
   runSelfTest();
 
   if (!fs.existsSync(PACKAGES_ROOT)) {

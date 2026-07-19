@@ -253,12 +253,6 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
     expect(savingThrows).toMatchObject({
       label: "Burning Hands self-origin Cone Saving Throw outcomes",
       ability: "dex",
-      spell: {
-        targeting: { kind: "selfOriginCone", lengthFeet: 15 },
-        damage: { expr: { dice: 4, dieSize: 6 }, damageType: "fire" },
-        successDamage: "half",
-        rangeFeet: 0,
-      },
     });
     const saveFill = savingThrowOutcomeFill(savingThrows, [
       { targetId: skeletonId, succeeded: false },

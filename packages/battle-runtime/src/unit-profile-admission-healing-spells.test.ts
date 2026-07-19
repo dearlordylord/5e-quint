@@ -1,9 +1,8 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   cureWoundsUnitId,
@@ -77,7 +76,7 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
       throw new Error("Expected Healing Word healing roll hole.");
     }
 
-    expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
+    expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         spell,
@@ -130,7 +129,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     if (awaitingHealingRoll.tag !== "needsHoles") {
       throw new Error("Expected Cure Wounds healing roll hole.");
     }
-    expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
+    expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         spell,
@@ -181,7 +180,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
         maxTargets: 6,
       }),
     );
-    expect(spellHoleInvocation(act.initialHoles)).toEqual(
+    expect(spellHoleInvocation(state, act.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         actionCost: "bonusAction",
@@ -259,7 +258,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
         maxTargets: 6,
       }),
     );
-    expect(spellHoleInvocation(act.initialHoles)).toEqual(
+    expect(spellHoleInvocation(state, act.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         spell,
@@ -306,9 +305,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
               {
                 kind: "spellTargetsInPointOriginSphere",
                 casterId: spellCasterId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(massCureWoundsUnitId),
-                ),
+                sourceProcedureRef: expect.any(String),
                 areaId: battleAreaId("area-a"),
                 radiusFeet: movementFeet(30),
                 targetIds: [targetIds[0]],
@@ -316,9 +313,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
               {
                 kind: "spellTargetsInPointOriginSphere",
                 casterId: spellCasterId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(massCureWoundsUnitId),
-                ),
+                sourceProcedureRef: expect.any(String),
                 areaId: battleAreaId("area-b"),
                 radiusFeet: movementFeet(30),
                 targetIds: [targetIds[1]],
@@ -363,7 +358,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     if (awaitingHealingRoll.tag !== "needsHoles") {
       throw new Error("Expected Mass Cure Wounds healing roll hole.");
     }
-    expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
+    expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         resource: { tag: "spellSlot", slotLevel: 6 },

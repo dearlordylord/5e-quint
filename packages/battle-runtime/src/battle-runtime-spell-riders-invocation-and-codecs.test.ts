@@ -787,29 +787,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       holeId: holeId("battle:test:charm-person-save"),
       holeInstanceKey: holeInstanceKey("battle:test:charm-person-save"),
       label: "Charm Person Saving Throw outcomes",
-      spell: {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: 1 },
-        procedure: "saveGatedCondition",
-        spell: { id: "charm_person" },
-        ability: "wis",
-        dc: { kind: "caster_spell_save_dc" },
-        targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-        targetCreatureTypes: ["humanoid"],
-        effect: {
-          kind: "fixed",
-          condition: "charmed",
-          expiresAt: {
-            kind: "duration",
-            durationTicks: elapsedTimeTicks(600),
-          },
-          escape: { kind: "targetDamagedByCasterOrAlly" },
-          turnStartDamage: null,
-          repeatSave: null,
-        },
-        saveRollModeRule: { kind: "hostileTarget", mode: "advantage" },
-        rangeFeet: movementFeet(30),
-      },
+      sourceProcedureRef: battleProcedureExecutionRefForTest("charm-person"),
+      outcomeTargeting: "singleTarget",
       ability: "wis",
       dc: { kind: "caster_spell_save_dc" },
       areaChoices: [],
@@ -829,6 +808,29 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     expect(decoded.right).toMatchObject({
       kind: "savingThrowOutcome",
       targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
+    });
+  });
+
+  test("spell target-list codec preserves the willing-target evidence request", () => {
+    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)({
+      kind: "spellTargetList",
+      holeId: holeId("battle:test:willing-target-list"),
+      holeInstanceKey: holeInstanceKey("battle:test:willing-target-list"),
+      label: "Synthetic willing targets",
+      sourceProcedureRef: battleProcedureExecutionRefForTest("willing-target-list"),
+      procedure: "jumpMovementReplacement",
+      minTargets: 1,
+      maxTargets: 1,
+      spatialTargeting: { kind: "individualTargets" },
+      choices: [fighterId],
+      requiresTableSpatialFact: true,
+      requiresKnownWillingTargets: true,
+    });
+
+    if (Either.isLeft(decoded)) throw new Error(String(decoded.left));
+    expect(decoded.right).toMatchObject({
+      kind: "spellTargetList",
+      requiresKnownWillingTargets: true,
     });
   });
 

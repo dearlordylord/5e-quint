@@ -28,21 +28,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
 import { supportedPreparedSaveGateConditionImmunityProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionImmunitySpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -60,6 +45,19 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowTargeting,
+} from "../spells-holes-fills.ts";
 
 type SaveGatedConditionImmunitySpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -102,13 +100,9 @@ function discoverSaveGatedConditionImmunityCastAct(
     actorId,
     invocation,
   );
-  const baseCastAct = saveGatedConditionImmunityCastAct(
-    actorId,
-    invocation,
-    [savingThrowHole],
-    invocation.spell.name,
-    saveGatedConditionImmunityCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = saveGatedConditionImmunityCastAct(actorId, invocation, [
+    savingThrowHole,
+  ]);
   return [
     baseCastAct,
     ...saveGatedConditionImmunityMetamagicCastActs({
@@ -126,7 +120,7 @@ function saveGatedConditionImmunityMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: SaveGatedConditionImmunitySpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<SaveGatedConditionImmunitySpellInvocation>;
   readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
@@ -146,7 +140,6 @@ function saveGatedConditionImmunityMetamagicCastActs(input: {
         input.invocation,
         applications,
       );
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...input.baseCastAct,
       subject: {
@@ -157,10 +150,6 @@ function saveGatedConditionImmunityMetamagicCastActs(input: {
         metamagicInitialHoles.length === 0
           ? input.baseHoles
           : metamagicInitialHoles,
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${saveGatedConditionImmunityCastSummaryWithSavingThrow(
-        input.invocation,
-      )} Cast with ${label}.`,
     };
   });
 }
@@ -169,8 +158,6 @@ function saveGatedConditionImmunityCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedConditionImmunitySpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -180,8 +167,6 @@ function saveGatedConditionImmunityCastAct(
       invocation: saveGatedConditionImmunityInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -189,7 +174,7 @@ function saveGatedConditionImmunityCastAct(
 function saveGatedConditionImmunityMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SaveGatedConditionImmunitySpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedConditionImmunitySpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
@@ -229,16 +214,6 @@ function saveGatedConditionImmunityCastSummary(
   invocation: SaveGatedConditionImmunitySpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function saveGatedConditionImmunityCastSummaryWithSavingThrow(
-  invocation: SaveGatedConditionImmunitySpellInvocation,
-): string {
-  return `${saveGatedConditionImmunityCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveSaveGatedConditionImmunity(

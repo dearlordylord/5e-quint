@@ -18,7 +18,6 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
-import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -32,21 +31,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { resolveGreaseGroundHazardSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -54,7 +38,6 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
@@ -62,6 +45,20 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import { Either, Schema } from "effect";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowTargeting,
+} from "../spells-holes-fills.ts";
 
 type GreaseGroundHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -211,13 +208,9 @@ function discoverGreaseGroundHazardCastAct(
     actorId,
     invocation,
   );
-  const baseCastAct = greaseGroundHazardCastAct(
-    actorId,
-    invocation,
-    [savingThrowHole],
-    invocation.spell.name,
-    greaseGroundHazardCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = greaseGroundHazardCastAct(actorId, invocation, [
+    savingThrowHole,
+  ]);
   return [
     baseCastAct,
     ...greaseGroundHazardMetamagicCastActs({
@@ -235,7 +228,7 @@ function greaseGroundHazardMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: GreaseGroundHazardSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>;
   readonly baseCastAct: BattleActDiscoveryCandidate;
   readonly baseHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
@@ -254,7 +247,6 @@ function greaseGroundHazardMetamagicCastActs(input: {
       input.invocation,
       applications,
     );
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...input.baseCastAct,
       subject: {
@@ -265,10 +257,6 @@ function greaseGroundHazardMetamagicCastActs(input: {
         metamagicInitialHoles.length === 0
           ? input.baseHoles
           : metamagicInitialHoles,
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${greaseGroundHazardCastSummaryWithSavingThrow(
-        input.invocation,
-      )} Cast with ${label}.`,
     };
   });
 }
@@ -277,8 +265,6 @@ function greaseGroundHazardCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -288,8 +274,6 @@ function greaseGroundHazardCastAct(
       invocation: greaseGroundHazardInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -297,7 +281,7 @@ function greaseGroundHazardCastAct(
 function greaseGroundHazardMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: GreaseGroundHazardSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
@@ -337,16 +321,6 @@ function greaseGroundHazardCastSummary(
   invocation: GreaseGroundHazardSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function greaseGroundHazardCastSummaryWithSavingThrow(
-  invocation: GreaseGroundHazardSpellInvocation,
-): string {
-  return `${greaseGroundHazardCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveGreaseGroundHazard(

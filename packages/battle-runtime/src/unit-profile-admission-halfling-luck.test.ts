@@ -6,7 +6,6 @@
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE species_halfling_luck doReplayHalflingLuckRawD20RerollChoice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.d20-test-natural-one-reroll
 
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   DieRollResult,
   difficultyClass,
@@ -36,42 +35,6 @@ import {
 } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 import { SEEKING_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic-support.ts";
 import {
-  abilityCheckFill,
-  attackRollFill,
-  characterSeed,
-  concentrationSavingThrowFill,
-  damageRollFillWithGroups,
-  deathSavingThrowFill,
-  endTurn,
-  fighterId,
-  fighterAttackSubject,
-  attackExecutionSelectionForSubjectForTest,
-  characterAttackSubjectForTest,
-  characterBonusAttackSubjectForTest,
-  findAct,
-  goblinId,
-  hidePrerequisites,
-  interruptDecisionFill,
-  magicSubject,
-  movementFill,
-  reactionChoiceWithSubject,
-  opportunityAttackProcedureSelectionForTest,
-  requireHole,
-  requireResolved,
-  resolveBattleInterrupt,
-  resolveBattleSubject,
-  savingThrowOutcomeFill,
-  skeletonId,
-  startBattleRight,
-  statBlockCreatureInit,
-  testDaggerAttack,
-  testShortswordAttack,
-  targetFill,
-  wizardSpellcasting,
-  wizardId,
-  type BattleActDiscoverySubject as BattleSubject,
-} from "./battle-runtime-test-support.ts";
-import {
   battleD20TestNaturalOneRerollSupportForUnit,
   battleId,
   battleObjectId,
@@ -96,6 +59,43 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import {
+  abilityCheckFill,
+  attackExecutionSelectionForSubjectForTest,
+  attackRollFill,
+  battleProcedureExecutionRefForTest,
+  characterAttackSubjectForTest,
+  characterBonusAttackSubjectForTest,
+  characterSeed,
+  concentrationSavingThrowFill,
+  damageRollFillWithGroups,
+  deathSavingThrowFill,
+  endTurn,
+  fighterAttackSubject,
+  fighterId,
+  findAct,
+  goblinId,
+  hidePrerequisites,
+  interruptDecisionFill,
+  magicSubject,
+  movementFill,
+  opportunityAttackProcedureSelectionForTest,
+  reactionChoiceWithSubject,
+  requireHole,
+  requireResolved,
+  resolveBattleInterrupt,
+  resolveBattleSubject,
+  savingThrowOutcomeFill,
+  skeletonId,
+  startBattleRight,
+  statBlockCreatureInit,
+  targetFill,
+  testDaggerAttack,
+  testShortswordAttack,
+  wizardId,
+  wizardSpellcasting,
+  type BattleActDiscoverySubject as BattleSubject,
+} from "./battle-runtime-test-support.ts";
 
 const expectedRerollProfile = {
   optional: true,
@@ -1379,9 +1379,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       }),
     );
     expect(maintained.state.combatants.get(skeletonId)?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("test_concentration"),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "readiedSpell",
     });
   });

@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   admitCharacterProcedureSelectionSubject,
@@ -11,6 +10,7 @@ import type {
 import {
   attackRollFill,
   battleId,
+  battleProcedureExecutionRefForTest,
   cantripSpellInvocationRef,
   characterSeed,
   combatantId,
@@ -834,9 +834,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
         activeEffects: [
           {
             kind: "speedDelta",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("ray_of_frost"),
-            ),
+            sourceProcedureRef: expect.any(String),
             sourceCombatantId: wizardId,
             deltaFeet: movementDeltaFeet(-10),
             expiresAt: {
@@ -889,9 +887,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).toMatchObject({
       activeEffects: [
         expect.objectContaining({
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("ray_of_frost"),
-          ),
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
       ],

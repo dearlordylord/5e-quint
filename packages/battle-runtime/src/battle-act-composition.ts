@@ -6,26 +6,43 @@ import type {
 } from "./battle-reducer.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Match } from "effect";
-import type {
-  CharacterProcedureBattleSubject,
-  CharacterProcedureSelectionSubject,
-  SpellInvocationRef,
+import {
+  isCharacterProcedureBattleSubject,
+  isCharacterProcedureSelectionSubject,
 } from "./battle-subjects.ts";
-import { isCharacterProcedureSelectionSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-invocation-ref.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
+import { spellActiveEffectForExecutionRef } from "./active-effect/execution-ref.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
+import { attackActionOptionPresentationName } from "./battle-reducer/statblock.ts";
+import { maxJumpMovementReplacementDistanceFeet } from "./battle-reducer/jump-movement-replacement.ts";
+import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+import type {
+  BattleSubject,
+  CharacterProcedureBattleSubject,
+  CharacterProcedureSelectionSubject,
+  SpellInvocationRef,
+} from "./battle-subjects.ts";
 import {
   BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
   characterExecutionWithSpellInvocations,
+  characterSpellProcedure,
   characterSpellProcedureInvocationRef,
   characterUnitProcedureRefs,
 } from "./character-execution.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
+
+const byTag = Match.discriminator("tag");
+
+type IntrinsicBattleSubject = Exclude<
+  BattleSubject,
+  CharacterProcedureBattleSubject
+>;
 
 export function battleActSpellPresentation(
   act: AvailableBattleAct,
@@ -197,10 +214,14 @@ function admitCharacterProcedureDiscoveryActs(
     if (!characterIds.has(subject.actorId)) {
       return isCharacterProcedureSelectionSubject(subject)
         ? []
-        : [{ ...act, subject, presentation: { kind: "intrinsic" } }];
+        : isCharacterProcedureBattleSubject(subject)
+          ? []
+          : [composeIntrinsicAct(state, act, subject)];
     }
     if (!isCharacterProcedureSelectionSubject(subject)) {
-      return [{ ...act, subject, presentation: { kind: "intrinsic" } }];
+      return isCharacterProcedureBattleSubject(subject)
+        ? []
+        : [composeIntrinsicAct(state, act, subject)];
     }
     return characterProcedureRefsForSelection(state, subject).flatMap(
       (procedureRef): readonly AvailableBattleAct[] => {
@@ -230,7 +251,7 @@ function admitCharacterProcedureDiscoveryActs(
                       label: text.label,
                       summary: text.summary,
                       subject: admittedSubject,
-                      initialHoles: admissionBoundProcedureHoles(
+                      initialHoles: admissionBoundTargetChoiceHoles(
                         act.initialHoles,
                         procedureRef,
                       ),
@@ -241,6 +262,225 @@ function admitCharacterProcedureDiscoveryActs(
       },
     );
   });
+}
+
+function composeIntrinsicAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+  subject: IntrinsicBattleSubject,
+): AvailableBattleAct {
+  const text = intrinsicActPresentationText(state, subject);
+  return {
+    ...act,
+    ...text,
+    subject,
+    presentation: { kind: "intrinsic" },
+  };
+}
+
+function intrinsicActPresentationText(
+  state: BattleState,
+  subject: IntrinsicBattleSubject,
+): { readonly label: string; readonly summary: string } {
+  if (subject.tag === "action" && subject.action === "attack") {
+    const attack = attackActionOptionsForActor(state, subject.actorId).find(
+      (candidate) => candidate.procedureRef === subject.procedureRef,
+    );
+    if (attack !== undefined) {
+      const attackName = attackActionOptionPresentationName(
+        state,
+        subject.actorId,
+        attack,
+      );
+      return {
+        label: "Attack",
+        summary: `Take the Attack action with ${attackName}.`,
+      };
+    }
+  }
+  if (subject.tag === "action" && subject.action === "escapeSpellRestraint") {
+    const effect = [...state.combatants.values()].flatMap((combatant) => {
+      const candidate = spellActiveEffectForExecutionRef(
+        combatant.activeEffects,
+        subject.effectRef,
+      );
+      return candidate === undefined ? [] : [candidate];
+    })[0];
+    if (effect !== undefined && "sourceProcedureRef" in effect) {
+      const source = state.combatants.get(effect.sourceCombatantId);
+      if (source?.origin.kind === "character") {
+        const invocation = characterSpellProcedure(
+          source.origin.execution,
+          effect.sourceProcedureRef,
+        );
+        if (invocation !== undefined) {
+          const help = subject.actorId !== subject.targetId;
+          const label = `${help ? "Help escape" : "Escape"} ${invocation.spell.name}`;
+          return {
+            label,
+            summary: help
+              ? `Use an action while within reach of the target to attempt to end ${invocation.spell.name}.`
+              : `Use an action to attempt to end ${invocation.spell.name}.`,
+          };
+        }
+      }
+    }
+  }
+  if (
+    subject.tag === "runtimeCommand" &&
+    subject.command === "releaseReadiedSpell"
+  ) {
+    const caster = state.combatants.get(subject.readiedSpellCasterId);
+    if (caster?.origin.kind === "character") {
+      const invocation = characterSpellProcedure(
+        caster.origin.execution,
+        subject.procedureRef,
+      );
+      if (invocation !== undefined) {
+        return {
+          label: `Release ${invocation.spell.name}`,
+          summary: `Release ${invocation.spell.name} with a Reaction.`,
+        };
+      }
+    }
+  }
+  if (
+    subject.tag === "runtimeCommand" &&
+    subject.command === "jumpMovementReplacement"
+  ) {
+    const actor = state.combatants.get(subject.actorId);
+    const effect = spellActiveEffectForExecutionRef(
+      actor?.activeEffects ?? [],
+      subject.effectRef,
+    );
+    if (effect?.kind === "jumpMovementReplacement") {
+      return {
+        label: "Jump",
+        summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxJumpMovementReplacementDistanceFeet(state, subject.actorId, effect)} feet using table-supplied landing facts.`,
+      };
+    }
+  }
+  if (
+    (subject.tag === "action" && subject.action === "multiattack") ||
+    (subject.tag === "bonusAction" &&
+      subject.action === "statBlockActionOption")
+  ) {
+    const actor = state.combatants.get(subject.actorId);
+    if (actor?.origin.kind === "statBlock") {
+      const presentation = statBlockProcedurePresentations(actor.origin).find(
+        (candidate) => candidate.procedureRef === subject.procedureRef,
+      );
+      if (presentation !== undefined && presentation.kind !== "attack") {
+        return {
+          label: presentation.label,
+          summary: `Use ${presentation.label}.`,
+        };
+      }
+    }
+  }
+  const label = intrinsicActPresentationLabel(subject);
+  return { label, summary: `Use ${label}.` };
+}
+
+const INTRINSIC_ACTION_LABELS = {
+  attack: "Attack",
+  dash: "Dash",
+  disengage: "Disengage",
+  dodge: "Dodge",
+  helpAttack: "Help",
+  hide: "Hide",
+  multiattack: "Multiattack",
+  ready: "Ready",
+  search: "Search",
+  grapple: "Unarmed Strike (Grapple)",
+  shove: "Unarmed Strike (Shove)",
+  escapeGrapple: "Escape Grapple",
+  escapeSpellRestraint: "Escape Spell Restraint",
+  shakeAwakeFromSleep: "Shake Awake",
+  shakeAwakeFromHypnoticPattern: "Shake Awake",
+} as const satisfies Record<
+  Extract<BattleSubject, { readonly tag: "action" }>["action"],
+  string
+>;
+
+const INTRINSIC_RUNTIME_COMMAND_LABELS = {
+  endTurn: "End Turn",
+  endConcentration: "End Concentration",
+  move: "Move",
+  standFromProne: "Stand",
+  releaseReadiedSpell: "Release Readied Spell",
+  releaseReadiedMovement: "Release Readied Movement",
+  castTriggeredReactionSpell: "Cast Reaction Spell",
+  castAttackHitBonusActionSpell: "Cast Bonus Action Spell",
+  releaseGrapple: "Release Grapple",
+  opportunityAttack: "Opportunity Attack",
+  retaliationAttack: "Retaliation Attack",
+  greaseGroundHazardSave: "Grease Saving Throw",
+  webRestraintSave: "Web Saving Throw",
+  sleetStormAreaHazardSave: "Sleet Storm Saving Throw",
+  insectPlagueAreaHazardSave: "Insect Plague Saving Throw",
+  cloudkillAreaHazardSave: "Cloudkill Saving Throw",
+  disperseCloudkill: "Disperse Cloudkill",
+  webRestrainedNoLongerInArea: "Leave Web",
+  webAreaRemoved: "Remove Web Area",
+  gustOfWindLineSave: "Gust of Wind Saving Throw",
+  gustOfWindLineDirectionChange: "Change Gust of Wind Direction",
+  movableZoneSave: "Movable Zone Saving Throw",
+  moonbeamCylinderExit: "Leave Moonbeam Cylinder",
+  movableZoneReposition: "Move Movable Zone",
+  movableZoneRam: "Ram with Movable Zone",
+  releaseSpellCreatedHeldObject: "Release spell-created held object",
+  protectionRelevantEffectSave: "Protection Saving Throw",
+  creatureTypeProtectionConditionAttempt: "Protected Condition Attempt",
+  creatureTypeProtectionPossessionAttempt: "Protected Possession Attempt",
+  disperseFogCloud: "Disperse Fog Cloud",
+  wardingBondSeparation: "End Warding Bond",
+  jumpMovementReplacement: "Jump",
+  dragonsBreathExhale: "Exhale Dragon's Breath",
+  replaceSelfTransformationMode: "Replace Self Transformation Mode",
+  commandGrovel: "Command: Grovel",
+  commandDrop: "Command: Drop",
+  commandApproach: "Command: Approach",
+  commandFlee: "Command: Flee",
+  levitateAltitudeControl: "Levitate altitude control",
+  creatureFalls: "Fall",
+} as const satisfies Record<
+  Extract<BattleSubject, { readonly tag: "runtimeCommand" }>["command"],
+  string
+>;
+
+function intrinsicActPresentationLabel(
+  subject: IntrinsicBattleSubject,
+): string {
+  return Match.value(subject).pipe(
+    byTag("action", (value) => INTRINSIC_ACTION_LABELS[value.action]),
+    byTag(
+      "runtimeCommand",
+      (value) => INTRINSIC_RUNTIME_COMMAND_LABELS[value.command],
+    ),
+    byTag("bonusAction", (value) =>
+      value.action === "offHandAttack"
+        ? "Light Property Bonus Action Attack"
+        : value.action === "martialArtsUnarmedStrike"
+          ? "Martial Arts Bonus Unarmed Strike"
+          : "Bonus Action",
+    ),
+    byTag("companionLifecycle", (value) =>
+      value.action === "reappear"
+        ? "Reappear Familiar"
+        : value.action === "temporarilyDismiss"
+          ? "Dismiss Familiar"
+          : "Dismiss Familiar Forever",
+    ),
+    byTag("findFamiliarSharedSenses", () => "Share Familiar Senses"),
+    byTag("pactOfTheChainFamiliarAttack", () => "Pact Familiar Attack"),
+    byTag("creatureAttack", () => "Attack"),
+    byTag(
+      "monkFocusFlurryOfBlowsStrike",
+      () => "Flurry of Blows Unarmed Strike",
+    ),
+    Match.exhaustive,
+  );
 }
 
 function characterProcedurePresentationText(
@@ -305,9 +545,43 @@ function characterProcedurePresentationText(
   )?.unit;
   if (unit === undefined) return undefined;
   const name = battleUnitPresentationName(unit);
+  if (subject.tag === "monkFocusOption") {
+    if (subject.option === "flurryOfBlows") {
+      return {
+        label: `${name}: Flurry of Blows`,
+        summary:
+          "Spend 1 Focus Point and a Bonus Action to make Unarmed Strikes.",
+      };
+    }
+    if (subject.option === "patientDefense") {
+      return subject.mode === "freeDisengage"
+        ? {
+            label: `${name}: Disengage`,
+            summary: "Take the Disengage action as a Bonus Action.",
+          }
+        : {
+            label: `${name}: Disengage and Dodge`,
+            summary:
+              "Spend 1 Focus Point and a Bonus Action to take the Disengage and Dodge actions.",
+          };
+    }
+    return subject.mode === "freeDash"
+      ? {
+          label: `${name}: Dash`,
+          summary: "Take the Dash action as a Bonus Action.",
+        }
+      : {
+          label: `${name}: Disengage and Dash`,
+          summary:
+            "Spend 1 Focus Point and a Bonus Action to take the Disengage and Dash actions.",
+        };
+  }
   if (subject.tag === "bonusActionStandardAction") {
     const actionName = alternateActionPresentationName(subject.action);
-    return { label: name, summary: `${actionName} as a Bonus Action.` };
+    return {
+      label: `${name}: ${actionName}`,
+      summary: `${actionName} as a Bonus Action.`,
+    };
   }
   return { label: name, summary: `Use ${name}.` };
 }
@@ -451,7 +725,7 @@ function battleUnitPresentationName(unit: BattleUnitRef["unit"]): string {
   return "syntheticLabel" in unit ? unit.syntheticLabel : unit.name;
 }
 
-function admissionBoundProcedureHoles(
+function admissionBoundTargetChoiceHoles(
   holes: BattleActDiscoveryCandidate["initialHoles"],
   procedureRef: BattleProcedureExecutionRef,
 ): BattleActDiscoveryCandidate["initialHoles"] {

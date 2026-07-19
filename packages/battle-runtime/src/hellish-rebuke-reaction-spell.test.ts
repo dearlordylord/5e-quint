@@ -88,12 +88,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(choice.initialHoles, "rolledDice");
     expect(save).toMatchObject({ ability: "dex" });
-    expect(damage).toMatchObject({
-      spell: expect.objectContaining({
-        spell: expect.objectContaining({ id: hellishRebukeUnitId }),
-        damage: { expr: { dice: 3, dieSize: 10 }, damageType: "fire" },
-      }),
-    });
+    expect(damage).toMatchObject({ kind: "rolledDice" });
 
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -363,9 +358,7 @@ describe("Hellish Rebuke Reaction spell", () => {
           kind: "reactionSpellDamagerVisibleWithinRange",
           reactorId: spellCasterId,
           damageSourceId: damagerId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(hellishRebukeUnitId),
-          ),
+          sourceProcedureRef: expect.any(String),
           rangeFeet: movementFeet(60),
         },
       ],

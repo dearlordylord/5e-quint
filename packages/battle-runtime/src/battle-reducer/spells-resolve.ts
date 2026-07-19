@@ -280,7 +280,6 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import { resolveReadySpellAct } from "./spells-resolve-release.ts";
 import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/profile.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
-export * from "./spells-resolve-release.ts";
 
 type SpellAttackDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -615,7 +614,7 @@ function spellAttackRollHoleWithSeekingOption(
 function spellDamageHoleWithEmpoweredOption(
   state: BattleState,
   attackerId: CombatantId,
-  invocation: SupportedDamageSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SupportedDamageSpellInvocation>,
   critical: boolean,
   castApplications: readonly SpellMetamagicApplicationFact[],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
@@ -1671,7 +1670,10 @@ function resolveSpellActInternal(
           spellDamageHoleWithEmpoweredOption(
             spellResolutionStateAfterCriticalMovement,
             subject.actorId,
-            requestedDamageInvocation,
+            {
+              ...requestedDamageInvocation,
+              sourceProcedureRef: invocationForResolution.sourceProcedureRef,
+            },
             hit && critical,
             metamagicApplicationsForDamageAndSpend ?? [],
             spellMarkedDamageRiders,
@@ -3400,3 +3402,5 @@ export function resolveBonusActionDashSpellAct(
     fillSet,
   });
 }
+
+export { resolveSpellRelease } from "./spells-resolve-release.ts";

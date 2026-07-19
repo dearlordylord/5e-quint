@@ -43,24 +43,16 @@ import {
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
-
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-
 import { type StandardActionKind } from "@dnd/shared/game-facts";
-
 import {
   damageAmount as toDamageAmount,
   type DamageAmount,
 } from "@dnd/shared/types";
-
 import type { UnitRecord } from "@dnd/surface/surface/types";
-
 import { Match } from "effect";
-
 import * as Either from "effect/Either";
-
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   permanentlyDismissFindFamiliar,
@@ -86,7 +78,6 @@ import {
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
 } from "../find-familiar-state.ts";
-
 import {
   sameBattleSubject,
   type BattleSubject,
@@ -102,9 +93,7 @@ import {
   characterUnitProcedureId,
 } from "../character-execution.ts";
 import { characterUnitProcedureQueryForSubject } from "../battle-composition-admission.ts";
-
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
-
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   battleStateAfterCreatureAttackDamage,
@@ -121,7 +110,6 @@ import {
   levitateAltitudeChangeHole,
   updateLevitatedCreatureAltitude,
 } from "./levitate-creature.ts";
-
 import {
   battleSubjectActorId,
   closeLegendaryActionWindow,
@@ -147,7 +135,6 @@ import {
   damageRelationshipDecisionHole,
   DamageRelationshipDecisionsByHole,
 } from "./damage-relationship-decisions.ts";
-
 import {
   attackActionOptionsForActor,
   damageDispositionFillFor,
@@ -155,20 +142,12 @@ import {
   damageDispositionForTarget,
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
-
 import { needsHolesResult } from "./hole-helpers.ts";
-
 import {
   interruptAttackExecutionSelectionsEqual,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
-
-import {
-  attackDamageEventAmountForTarget,
-  attackDamageEventEntries,
-  damageAmountByTypeEntriesAfterScalarReduction,
-} from "./attack-damage-events.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
   conditionApplicationPreventedByCreatureTypeProtection,
@@ -228,38 +207,12 @@ import {
   isAttackHitBonusActionSpellInvocation,
   isTriggeredReactionSpellInvocation,
 } from "./spell-interrupt-procedure-kinds.ts";
-import { battleAttackHostParticipantId } from "./attack-damage-events.ts";
 import {
   battleStateAfterWardingBondSeparation,
   wardingBondSeparationFactsAreSatisfied,
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
-export {
-  battleAttackHostParticipantId,
-  attackDamageInterruptionFrame,
-  parseAttackDamageInterruptionFrame,
-  attackDamageEventAfterPendingReduction,
-  attackDamageEventAfterPendingReductions,
-  attackDamageEventAmountBeforeTargetAdjustments,
-  attackDamageEventAmountForTarget,
-  attackDamageEventEntries,
-  attackDamageEventWithEntries,
-  attackFillsThroughAttackRoll,
-  damageAmountByTypeEntriesAfterScalarReduction,
-} from "./attack-damage-events.ts";
-export {
-  attackDamageReductionRedirectResource,
-  attackDamageReductionRedirectResourceAvailable,
-  attackDamageReductionZeroDamageRedirectHoles,
-  attackDamageReductionZeroDamageRedirectSelection,
-  attackDamageReductionZeroDamageRedirectTargetChoices,
-  hasAttackDamageReductionRedirectTargetSpatialFact,
-  resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
-  spendAttackDamageReductionRedirectResource,
-} from "./attack-damage-redirect.ts";
-
 import { expendSpellSlot } from "./spell-effects.ts";
-
 import {
   battleLightEmitters,
   battleObscurementZones,
@@ -272,7 +225,6 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-
 import {
   applyAvailableSourceDamageRollPenalty,
   damageAmountByTypeAfterTargetAdjustments,
@@ -280,7 +232,6 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
-
 import {
   claimPendingSpellSlotUseThisTurn,
   markSpellSlotExpendedThisTurn,
@@ -289,7 +240,6 @@ import {
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
-
 import {
   resolveBonusActionDashSpellAct,
   resolveBonusActionSpellAct,
@@ -302,11 +252,9 @@ import {
   spellFillSetContainsOnlySpellCastReactionFacts,
 } from "./spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
-
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
-
 import type {
   BattleAfterDamageEvent,
   BattleActiveEffect,
@@ -426,6 +374,12 @@ import {
   subjectAllowedDuringStatBlockMultiattackDispatch,
   KnockedOutConditionState,
 } from "../battle-reducer.ts";
+import {
+  attackDamageEventAmountForTarget,
+  attackDamageEventEntries,
+  battleAttackHostParticipantId,
+  damageAmountByTypeEntriesAfterScalarReduction,
+} from "./attack-damage-events.ts";
 
 type ResolveBattleSubjectInternalOptions = {
   readonly replayingInterruptedProcedure?: boolean;
@@ -4247,7 +4201,7 @@ function resolveHellishRebukeReactionSpellCommand(
   }
   const savingThrowValidation = validateSavingThrowOutcomes(
     fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.state,
     input.subject.reactorId,
     input.frame.damageSourceId,
@@ -6576,7 +6530,10 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
     ),
     lightEmitters: battleLightEmitters(state),
     obscurementZones: battleObscurementZones(state),
-    acts: discoverBattleActs(state),
+    acts: discoverBattleActs(state).map(({ subject, initialHoles }) => ({
+      subject,
+      initialHoles,
+    })),
     turn: battleTurnSnapshot(state),
     readiedResponses: {
       spells: [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
@@ -7150,3 +7107,28 @@ function retaliationDamageSourceWithinFiveFeet(
       fact.damageSourceId === frame.damageSourceId,
   );
 }
+
+export {
+  battleAttackHostParticipantId,
+  attackDamageInterruptionFrame,
+  parseAttackDamageInterruptionFrame,
+  attackDamageEventAfterPendingReduction,
+  attackDamageEventAfterPendingReductions,
+  attackDamageEventAmountBeforeTargetAdjustments,
+  attackDamageEventAmountForTarget,
+  attackDamageEventEntries,
+  attackDamageEventWithEntries,
+  attackFillsThroughAttackRoll,
+  damageAmountByTypeEntriesAfterScalarReduction,
+} from "./attack-damage-events.ts";
+
+export {
+  attackDamageReductionRedirectResource,
+  attackDamageReductionRedirectResourceAvailable,
+  attackDamageReductionZeroDamageRedirectHoles,
+  attackDamageReductionZeroDamageRedirectSelection,
+  attackDamageReductionZeroDamageRedirectTargetChoices,
+  hasAttackDamageReductionRedirectTargetSpatialFact,
+  resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
+  spendAttackDamageReductionRedirectResource,
+} from "./attack-damage-redirect.ts";

@@ -297,10 +297,6 @@ function discoverMoonbeamCastAct(
         invocation: moonbeamInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${moonbeamCastSummary(
-        invocation,
-      )} The table supplies the Moonbeam cylinder area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

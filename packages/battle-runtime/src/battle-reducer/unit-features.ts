@@ -26,25 +26,18 @@ import {
   grantUnitActionResource,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-
 import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
-
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
-
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-
 import {
   characterLevel,
   difficultyClass,
@@ -52,11 +45,8 @@ import {
   MovementFeet,
   proficiencyBonusForCharacterLevel,
 } from "@dnd/shared/types";
-
 import type { DiceExpr } from "@dnd/surface/surface/types";
-
 import * as Either from "effect/Either";
-
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
@@ -64,9 +54,7 @@ import {
 } from "../character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import { characterUnitFeatureProcedureId } from "../character-execution.ts";
-
 import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
-
 import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   attackActionAreaSaveDamageReplacementProfileForUnit,
@@ -75,14 +63,12 @@ import {
   type SupportedUnitFeatureProfile,
   type SupportedDruidWildShapeKnownFormProfile,
 } from "../unit-feature-support.ts";
-
 import {
   combatantCanSee,
   currentActorId,
   normalizeBattleGrapples,
   combatantWearingArmorCategory,
 } from "./creature-state-leaves.ts";
-
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -97,7 +83,6 @@ import {
   assumeDruidWildShapeForm,
   dismissDruidWildShapeForm,
 } from "./druid-wild-shape.ts";
-
 import {
   applyBattleHitPointDamage,
   applyHpHealing,
@@ -118,31 +103,25 @@ import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
 } from "./antimagic-field-magical-effect-interdiction.ts";
-
 import { snapshotBattle, spendReaction } from "./dispatcher.ts";
 import {
   reactionModifierResourceAvailable,
   reactionReductionResourceDieRollTotal,
   spendReactionModifierResource,
 } from "./reaction-modifiers.ts";
-
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
-
 import {
   attackRollHitsWithCriticalThreshold,
   spellSaveDcForCaster,
   openClassFeatureExtraAttackResource,
   spendAttackActionResource,
 } from "./attack-resolution.ts";
-
 import { needsHolesResult } from "./hole-helpers.ts";
-
 import {
   activeOngoingFeatureOccurrenceFromProfile,
   extendOngoingFeatureToEndOfNextTurn,
   ongoingFeatureLifecycleHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
-
 import { invalidResult } from "./result-helpers.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
@@ -155,16 +134,8 @@ import {
   wildShapeLoadoutObjectRefs,
   type WildShapeLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
-
 import { attackActionOptionName } from "./statblock-attacks.ts";
-import {
-  attackActionOptionPresentationName,
-  statBlockAttackProcedureSection,
-  attackSubjectPart,
-} from "./statblock.ts";
-
 import { attackTargetHole } from "./hole-helpers.ts";
-
 import type {
   BattleActDiscoveryCandidate,
   BardicInspirationFailedD20TestResolutionInput,
@@ -197,6 +168,10 @@ import {
   spellAttackRerollUnsupportedIssue,
   validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
+import {
+  attackSubjectPart,
+  statBlockAttackProcedureSection,
+} from "./statblock.ts";
 
 const WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL =
   "druid-wild-shape-equipment-disposition";
@@ -234,8 +209,6 @@ export function supportedUnitFeatureActs(
               actorId,
               unitId: unitFeature.unit.id,
             },
-            label: unitFeature.unit.name,
-            summary: "Grant one additional non-Magic action this turn.",
             initialHoles: [],
           },
         ];
@@ -253,8 +226,6 @@ export function supportedUnitFeatureActs(
               actorId,
               unitId: unitFeature.unit.id,
             },
-            label: unitFeature.unit.name,
-            summary: "Activate an ongoing feature occurrence.",
             initialHoles: [],
           },
         ];
@@ -273,9 +244,6 @@ export function supportedUnitFeatureActs(
               actorId,
               unitId: unitFeature.unit.id,
             },
-            label: unitFeature.unit.name,
-            summary:
-              "Spend a Bonus Action and one use to grant one Bardic Inspiration die.",
             initialHoles: [
               bardicInspirationGrantTargetHole(state, actorId, unitFeature),
             ],
@@ -305,8 +273,6 @@ export function supportedUnitFeatureActs(
                 actorId,
                 unitId: unitFeature.unit.id,
               },
-              label: unitFeature.unit.name,
-              summary: "Spend a Bonus Action and one use to regain Hit Points.",
               initialHoles: [selfBonusActionHealingRollHole(unitFeature)],
             },
           ]
@@ -346,9 +312,6 @@ function attackActionAreaSaveDamageReplacementActs(
                 actorId: actor.combatantId,
                 unitId: unitFeature.unit.id,
               },
-              label: unitFeature.unit.name,
-              summary:
-                "Replace one Attack action attack and spend one use to resolve area Saving Throws and damage.",
               initialHoles: [
                 attackActionAreaSaveDamageReplacementSavingThrowHole(
                   state,
@@ -394,9 +357,6 @@ function magicActionHealingPoolActs(
                 actorId: actor.combatantId,
                 unitId: unitFeature.unit.id,
               },
-              label: unitFeature.unit.name,
-              summary:
-                "Spend a Magic Action and one resource use to distribute Hit Point healing among Bloodied creatures.",
               initialHoles: [
                 magicActionHealingPoolDistributionHole(
                   state,
@@ -437,9 +397,6 @@ function magicActionAreaSaveDamageHealingActs(
               actorId: actor.combatantId,
               unitId: unitFeature.unit.id,
             },
-            label: unitFeature.unit.name,
-            summary:
-              "Spend a Magic Action and one resource use to resolve area Saving Throws, Necrotic damage, and Hit Point healing.",
             initialHoles: magicActionAreaSaveDamageHealingHoles(
               state,
               actor.combatantId,
@@ -484,9 +441,6 @@ function magicActionSaveGatedConditionActs(
               actorId: actor.combatantId,
               unitId: unitFeature.unit.id,
             },
-            label: unitFeature.unit.name,
-            summary:
-              "Spend a Magic Action and one resource use to force Wisdom Saving Throws and apply Frightened on failures.",
             initialHoles: [
               magicActionSaveGatedConditionSavingThrowHole(
                 state,
@@ -528,9 +482,6 @@ function paladinSacredWeaponActs(
           unitId: unitFeature.unit.id,
           weaponItemId: weapon.itemId,
         },
-        label: `${unitFeature.unit.name}: ${weapon.attackName}`,
-        summary:
-          "Spend the Attack action and one Channel Divinity use to imbue this held Melee weapon.",
         initialHoles: [],
       }));
     },
@@ -564,8 +515,6 @@ function paladinSacredWeaponDismissActs(
               actorId: actor.combatantId,
               unitId: unitFeature.unit.id,
             },
-            label: `${unitFeature.unit.name}: Dismiss`,
-            summary: "End the active Sacred Weapon effect.",
             initialHoles: [],
           },
         ];
@@ -652,9 +601,6 @@ function rogueSteadyAimActs(
         actorId: actor.combatantId,
         unitId: unitFeature.unit.id,
       },
-      label: unitFeature.unit.name,
-      summary:
-        "Spend a Bonus Action to gain Advantage on the next attack roll this turn and set Speed to 0.",
       initialHoles: [],
     }),
   );
@@ -677,9 +623,6 @@ export function druidWildShapeActsForResource(
             action: "assumeForm" as const,
             formStatBlockId: admission.statBlock.id,
           },
-          label: `${unitFeature.unit.name}: ${admission.statBlock.statBlock.displayName}`,
-          summary:
-            "Spend a Bonus Action and one use to assume this known Beast form.",
           initialHoles: wildShapeInitialEquipmentDispositionHoles(
             actor,
             admission.execution.scopeRef,
@@ -697,8 +640,6 @@ export function druidWildShapeActsForResource(
               unitId: unitFeature.unit.id,
               action: "dismiss" as const,
             },
-            label: `${unitFeature.unit.name}: Dismiss`,
-            summary: "Spend a Bonus Action to dismiss the active Beast form.",
             initialHoles: [],
           },
         ];
@@ -2868,10 +2809,6 @@ function attackActionAreaSaveDamageReplacementSavingThrowHole(
           },
         }
       : {}),
-    unitFeature: {
-      unitId: unitFeature.unit.id,
-      label: unitFeature.unit.name,
-    },
     ability: unitFeature.breath.save.ability,
     dc: {
       kind: "fixed",
@@ -2912,7 +2849,6 @@ function attackActionAreaSaveDamageReplacementDamageRollHole(
         unitFeature,
       ),
     label: `${unitFeature.unit.name} damage (${diceExprLabel(expr)})`,
-    unitFeature,
   };
 }
 
@@ -3213,10 +3149,6 @@ function magicActionSaveGatedConditionSavingThrowHole(
           },
         }
       : {}),
-    unitFeature: {
-      unitId: unitFeature.unit.id,
-      label: unitFeature.unit.name,
-    },
     ability: unitFeature.condition.save.ability,
     dc: { kind: "fixed", dc },
     targetIds,
@@ -3604,10 +3536,6 @@ function magicActionAreaSaveDamageHealingSavingThrowHole(
           },
         }
       : {}),
-    unitFeature: {
-      unitId: unitFeature.unit.id,
-      label: unitFeature.unit.name,
-    },
     ability: unitFeature.damageHealing.save.ability,
     dc: { kind: "fixed", dc },
     targetIds: [...state.combatants.keys()].filter(
@@ -3660,7 +3588,6 @@ function magicActionAreaSaveDamageHealingDamageRollHole(
     holeInstanceKey:
       magicActionAreaSaveDamageHealingDamageRollHoleInstanceKey(unitFeature),
     label: `${unitFeature.unit.name} damage (${diceExprLabel(unitFeature.damageHealing.damage.amount.expr)})`,
-    unitFeature,
   };
 }
 
@@ -3673,7 +3600,6 @@ function magicActionAreaSaveDamageHealingHealingRollHole(
     holeInstanceKey:
       magicActionAreaSaveDamageHealingHealingRollHoleInstanceKey(unitFeature),
     label: `${unitFeature.unit.name} healing (${diceExprLabel(unitFeature.damageHealing.healing.amount.expr)})`,
-    unitFeature,
   };
 }
 
@@ -4365,7 +4291,6 @@ export function selfBonusActionHealingRollHole(
     holeId: selfBonusActionHealingRollHoleId(unitFeature),
     holeInstanceKey: selfBonusActionHealingRollHoleInstanceKey(unitFeature),
     label: `${unitFeature.unit.name} healing (${unitFeature.dice}d${unitFeature.dieSize})`,
-    unitFeature,
   };
 }
 
@@ -4462,12 +4387,6 @@ export function discoverLegendaryActionActs(
                   action: "attack" as const,
                   ...attackSubjectPart(attack),
                 },
-                label: "Legendary Action",
-                summary: `Take the Legendary Action ${attackActionOptionPresentationName(
-                  state,
-                  actorId,
-                  attack,
-                )}.`,
                 initialHoles: [targetHole],
               },
             ];

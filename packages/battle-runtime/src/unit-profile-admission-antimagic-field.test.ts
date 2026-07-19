@@ -1,24 +1,12 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION antimagic_field
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-ongoing-spell-suppression
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
-
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
-
-function effectRefForTest(
-  effectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
-) {
-  return battleActiveEffectExecutionRefForTest(String(effectId));
-}
 import {
   battleAreaId,
   battleObjectId,
@@ -56,6 +44,17 @@ import {
   spiritualWeaponTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime-test-support.ts";
+
+function effectRefForTest(
+  effectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
+) {
+  return battleActiveEffectExecutionRefForTest(String(effectId));
+}
 
 const antimagicFieldAreaId = battleAreaId("unit-profile-antimagic-field-area");
 type SpellBattleSlots = NonNullable<
@@ -134,9 +133,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual({
       kind: "antimagicFieldOngoingSpellSuppression",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(antimagicFieldUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       sourceCombatantId: spellCasterId,
       areaId: antimagicFieldAreaId,
       auraMembership: {

@@ -328,8 +328,6 @@ function discoverSelfTransformationModeCastAct(
         invocation: selfTransformationModeInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
-      label: invocation.spell.name,
-      summary: selfTransformationModeCastSummary(invocation),
       initialHoles: [selfTransformationModeChoiceHole(invocation)],
     },
   ];
@@ -465,7 +463,10 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   );
   if (modeEffect.tag === "needsModeChoice") {
     return needsHolesResult(input.state, input.subject, [
-      selfTransformationModeChoiceHole(input.invocation),
+      selfTransformationModeChoiceHole({
+        ...input.invocation,
+        sourceProcedureRef: input.subject.procedureRef,
+      }),
     ]);
   }
   if (modeEffect.tag === "needsDamageType") {

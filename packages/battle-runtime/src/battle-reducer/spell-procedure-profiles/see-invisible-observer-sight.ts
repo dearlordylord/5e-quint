@@ -139,8 +139,6 @@ function discoverSeeInvisibleObserverSightCastAct(
         invocation: seeInvisibleObserverSightInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: seeInvisibleObserverSightCastSummary(invocation),
       initialHoles: [],
     },
   ];

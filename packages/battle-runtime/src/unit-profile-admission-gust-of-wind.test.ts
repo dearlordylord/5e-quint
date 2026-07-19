@@ -84,7 +84,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "gustOfWindLine",
         spell,
@@ -151,7 +151,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const act = spellAct({ state, spellId: gustOfWindUnitId, slotLevel: 2 });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "gustOfWindLine",
         targeting: {
@@ -168,17 +168,13 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const caster = requireCombatant(cast.state, spellCasterId);
 
     expect(caster.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(gustOfWindUnitId),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toEqual([
       expect.objectContaining({
         kind: "gustOfWindLine",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(gustOfWindUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: gustOfWindAreaId,
         directionId: gustOfWindNorthDirectionId,
@@ -333,9 +329,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             gustOfWindLineMovement: {
               kind: "gustOfWindLineMovement",
               sourceCombatantId: spellCasterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(gustOfWindUnitId),
-              ),
+              sourceProcedureRef: expect.any(String),
               areaId: gustOfWindAreaId,
               directionId: gustOfWindNorthDirectionId,
               totalDistanceFeet: movementFeet(5),

@@ -40,7 +40,6 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-
 import {
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
@@ -67,12 +66,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import {
-  spellAdmissionBattleTurn,
-  spellAdmissionOngoingSpellEffectSuppressed,
-} from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   AttackBonus,
   BattleRuntimeObjectSchema,
@@ -82,6 +76,11 @@ import {
   SpellEffectSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionBattleTurn,
+  spellAdmissionOngoingSpellEffectSuppressed,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 type SpiritualWeaponAttackProxyInvocation = Extract<
   SupportedSpellInvocation,
@@ -423,8 +422,6 @@ function discoverSpiritualWeaponAttackProxyCastAct(
             invocation: spiritualWeaponAttackProxyInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: `${spiritualWeaponAttackProxyCastSummary(invocation)} The table supplies the spectral force position and target adjacency.`,
           initialHoles: [
             spiritualWeaponForcePositionHole(invocation),
             targetHole,
@@ -450,8 +447,6 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
             invocation: spiritualWeaponRepeatAttackInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: `${invocation.spell.name} attack`,
-          summary: spiritualWeaponRepeatAttackCastSummary(invocation),
           initialHoles: [
             spiritualWeaponForcePositionHole(invocation),
             targetHole,

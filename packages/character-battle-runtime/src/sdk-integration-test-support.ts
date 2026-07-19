@@ -1385,12 +1385,7 @@ export function areaSavingThrowOutcomeFill(
     readonly succeeded: boolean;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
-  if (
-    !("spell" in hole) ||
-    hole.spell.procedure === "rollModifier" ||
-    hole.spell.targeting.kind === "singleCombatant" ||
-    hole.spell.targeting.kind === "targetList"
-  ) {
+  if (!("outcomeTargeting" in hole) || hole.outcomeTargeting !== "area") {
     throw new Error("Expected area Saving Throw outcome hole.");
   }
   return {

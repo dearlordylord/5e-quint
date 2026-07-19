@@ -245,10 +245,6 @@ function discoverInsectPlagueAreaHazardCastAct(
         invocation: insectPlagueAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${insectPlagueAreaHazardCastSummary(
-        invocation,
-      )} The table supplies the Insect Plague sphere area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

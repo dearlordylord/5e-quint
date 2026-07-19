@@ -266,7 +266,6 @@ export {
 
 type GrapplerPunchAndGrabEligibility = {
   readonly link: BattleGrappleLink;
-  readonly unitFeature: BattleUnitFeatureDecisionHole["unitFeature"];
 };
 
 function grapplerPunchAndGrabEligibilityForHit(input: {
@@ -278,13 +277,14 @@ function grapplerPunchAndGrabEligibilityForHit(input: {
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): GrapplerPunchAndGrabEligibility | null {
   const attacker = input.state.combatants.get(input.attackerId);
-  const unitFeature = grapplerPunchAndGrabUnitFeature(attacker);
+  const supportsPunchAndGrab =
+    grapplerSupportProfileRefForCombatant(attacker) !== null;
   if (
     input.subject.tag !== "action" ||
     input.subject.action !== "attack" ||
     currentActorId(input.state) !== input.attackerId ||
     input.attack.kind !== "unarmedStrike" ||
-    unitFeature === null ||
+    !supportsPunchAndGrab ||
     input.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn.includes(
       input.attackerId,
     )
@@ -297,19 +297,7 @@ function grapplerPunchAndGrabEligibilityForHit(input: {
     input.targetId,
     grappleFactsForUnarmedStrikeHit(input),
   );
-  return link.tag === "ok" ? { link: link.link, unitFeature } : null;
-}
-
-function grapplerPunchAndGrabUnitFeature(
-  attacker: BattleCreatureState | undefined,
-): BattleUnitFeatureDecisionHole["unitFeature"] | null {
-  const support = grapplerSupportProfileRefForCombatant(attacker);
-  return support === null
-    ? null
-    : {
-        unitId: support.unitRef.unit.id,
-        label: "Punch and Grab",
-      };
+  return link.tag === "ok" ? { link: link.link } : null;
 }
 
 function brutalStrikeDecisionHoleForAttack(
@@ -330,10 +318,6 @@ function brutalStrikeDecisionHoleForAttack(
         holeId: BRUTAL_STRIKE_DECISION_HOLE_ID,
         holeInstanceKey: BRUTAL_STRIKE_DECISION_HOLE_INSTANCE,
         label: "Use Brutal Strike",
-        unitFeature: {
-          unitId: selection.unitId,
-          label: "Brutal Strike",
-        },
         choices: BRUTAL_STRIKE_DECISION_CHOICES,
       };
 }
@@ -368,7 +352,7 @@ function brutalStrikeSelection(
   attackerId: CombatantId,
   attack: SupportedAttackActionOption,
 ): {
-  readonly unitId: BattleUnitFeatureDecisionHole["unitFeature"]["unitId"];
+  readonly unitId: string;
   readonly procedureRef: BattleProcedureExecutionRef;
 } | null {
   if (
@@ -547,15 +531,12 @@ function attackDamageTypeForBrutalStrike(attack: SupportedAttackActionOption) {
   return null;
 }
 
-function grapplerPunchAndGrabDecisionHole(
-  eligibility: GrapplerPunchAndGrabEligibility,
-): BattleUnitFeatureDecisionHole {
+function grapplerPunchAndGrabDecisionHole(): BattleUnitFeatureDecisionHole {
   return {
     kind: "unitFeatureDecision",
     holeId: GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
     holeInstanceKey: GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE,
     label: "Use Punch and Grab",
-    unitFeature: eligibility.unitFeature,
     choices: ["use", "decline"],
   };
 }
@@ -624,7 +605,7 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
           ),
         };
   }
-  const decisionHole = grapplerPunchAndGrabDecisionHole(eligibility);
+  const decisionHole = grapplerPunchAndGrabDecisionHole();
   if (input.fillSet.grapplerPunchAndGrabDecision === undefined) {
     if (input.fillSet.grapplerPunchAndGrabOutcome !== undefined) {
       return {
@@ -3259,14 +3240,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           ),
         };
   }
-  const unitId = decisionHole.unitFeature.unitId;
   const selection = huntersPreyHordeBreakerSelection(
     input.state,
     input.subject.actorId,
     input.firstTargetId,
     input.attack,
   );
-  if (selection === null || selection.unitId !== unitId) {
+  if (selection === null) {
     return {
       tag: "result",
       result: invalidResult(
@@ -3276,6 +3256,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  const { unitId } = selection;
   if (input.fillSet.huntersPreyHordeBreakerDecision === undefined) {
     return {
       tag: "result",

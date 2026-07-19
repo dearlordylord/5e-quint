@@ -165,6 +165,7 @@ export function spellTargetHole(
     holeId: ATTACK_TARGET_HOLE_ID,
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
     label: `${invocation.spell.name} target`,
+    procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
     spellTargetSpatialFactRequest: {
       casterId: actorId,
@@ -219,13 +220,15 @@ function spiritualWeaponRepeatTargetingAllows(
 }
 
 export function spiritualWeaponForcePositionHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack";
-    }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "spiritualWeaponAttackProxy"
+          | "spiritualWeaponRepeatAttack";
+      }
+    >
   >,
 ): BattleSpiritualWeaponForcePositionHole {
   const mode =
@@ -245,7 +248,7 @@ export function spiritualWeaponForcePositionHole(
       mode === "cast"
         ? `${invocation.spell.name} force position`
         : `${invocation.spell.name} force reposition`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     mode,
     maxDistanceFeet,
     requiresTableSpatialFact: true,
@@ -292,9 +295,11 @@ export function spiritualWeaponForcePositionInvalidReason(
 export function spellAttackSequencePartTargetHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "spellAttackSequence" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spellAttackSequence" }
+    >
   >,
   partIndex: number,
 ): BattleTargetChoiceHole {
@@ -305,6 +310,7 @@ export function spellAttackSequencePartTargetHole(
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} ${partName} ${partIndex + 1} target`,
+    procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
     spellTargetSpatialFactRequest: {
       casterId: actorId,
@@ -412,7 +418,7 @@ export function magicWeaponTargetItemHole(
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} target item`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableItemFact: true,
   };
 }
@@ -429,9 +435,13 @@ export function spellObjectContactTargetsHole(input: {
   readonly state: BattleState;
   readonly sourceCombatantId: CombatantId;
   readonly objectId: BattleObjectId;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "objectContactDamage" | "objectContactDamageRepeat" }
+  readonly invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure: "objectContactDamage" | "objectContactDamageRepeat";
+      }
+    >
   >;
   readonly requiresObjectWithinRange: boolean;
 }): BattleObjectContactTargetsHole {
@@ -466,9 +476,13 @@ export function spellObjectContactTargetsHole(input: {
 }
 
 export function objectContactDamageSourceProcedureRef(
-  invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "objectContactDamage" | "objectContactDamageRepeat" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure: "objectContactDamage" | "objectContactDamageRepeat";
+      }
+    >
   >,
 ): BattleProcedureExecutionRef {
   return invocation.procedure === "objectContactDamageRepeat"
@@ -486,14 +500,16 @@ export function spellObjectContactTargetsHoleId(input: {
 }
 
 export function spellDancingLightsPlacementHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "dancingLightsSeparateCast"
-        | "dancingLightsCombinedCast"
-        | "dancingLightsReposition";
-    }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "dancingLightsSeparateCast"
+          | "dancingLightsCombinedCast"
+          | "dancingLightsReposition";
+      }
+    >
   >,
   form: BattleDancingLightsPlacementHole["form"],
   activeLightIds: readonly BattleDancingLightsPlacementHole["activeLightIds"][number][],
@@ -506,7 +522,7 @@ export function spellDancingLightsPlacementHole(
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} placement`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     mode,
     form,
     activeLightIds,
@@ -548,9 +564,11 @@ export function spellTargetAllocationHoleId(
 export function spellTargetAllocationHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "repeatedDamageAllocation" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "repeatedDamageAllocation" }
+    >
   >,
 ): BattleSpellTargetAllocationHole {
   const holeKey = `battle:spell:target-allocation:${invocation.procedure}`;
@@ -559,7 +577,7 @@ export function spellTargetAllocationHole(
     holeId: spellTargetAllocationHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} target allocation`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     allocationCount: repeatedDamageAllocationTargetCardinality(
       repeatedDamageAllocationAdmissionFactsForInvocation(invocation),
     ).maximumTargetCount,
@@ -587,12 +605,20 @@ export function spellTargetListHole(
   );
   return {
     kind: "spellTargetList",
+    procedure: invocation.procedure,
     holeId: spellTargetListHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} targets`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     minTargets: invocation.targeting.minTargets,
     maxTargets: targetListHoleMaxTargets(invocation, choices.length),
+    spatialTargeting:
+      invocation.targeting.kind === "pointOriginSphereTargetList"
+        ? {
+            kind: "pointOriginSphere",
+            radiusFeet: invocation.targeting.area.radiusFeet,
+          }
+        : { kind: "individualTargets" },
     requiresTableSpatialFact: true,
     ...(spellInvocationRequiresKnownWillingTarget(invocation)
       ? { requiresKnownWillingTargets: true as const }
@@ -637,9 +663,8 @@ function targetListHoleMaxTargets(
 }
 
 export function commandOptionChoiceHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "command" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "command" }>
   >,
 ): BattleCommandOptionChoiceHole {
   const holeKey = `battle:spell:command-option:${invocation.procedure}`;
@@ -648,7 +673,7 @@ export function commandOptionChoiceHole(
     holeId: commandOptionChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} command option`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices: COMMAND_OPTIONS,
   };
 }
@@ -663,9 +688,11 @@ export function commandOptionChoiceHoleId(
 }
 
 export function selfTransformationModeChoiceHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "selfTransformationMode" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "selfTransformationMode" }
+    >
   >,
 ): BattleSelfTransformationModeChoiceHole {
   const holeKey = `battle:spell:self-transformation-mode:${invocation.procedure}`;
@@ -674,7 +701,7 @@ export function selfTransformationModeChoiceHole(
     holeId: selfTransformationModeChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} mode`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     choices: invocation.modeChoices,
   };
 }
@@ -691,21 +718,23 @@ export function selfTransformationModeChoiceHoleId(
 }
 
 export function spellAreaChoiceHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "fogCloudObscurement"
-        | "magicalDarknessPointOrigin"
-        | "antimagicFieldOngoingSpellSuppression"
-        | "flamingSphere"
-        | "spikeGrowthMovementHazard"
-        | "moonbeam"
-        | "sleetStormAreaHazard"
-        | "insectPlagueAreaHazard"
-        | "cloudkillAreaHazard"
-        | "webRestraintHazard";
-    }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "fogCloudObscurement"
+          | "magicalDarknessPointOrigin"
+          | "antimagicFieldOngoingSpellSuppression"
+          | "flamingSphere"
+          | "spikeGrowthMovementHazard"
+          | "moonbeam"
+          | "sleetStormAreaHazard"
+          | "insectPlagueAreaHazard"
+          | "cloudkillAreaHazard"
+          | "webRestraintHazard";
+      }
+    >
   >,
 ): BattleSpellAreaChoiceHole {
   const holeKey = `battle:spell:area-choice:${invocation.procedure}`;
@@ -714,7 +743,7 @@ export function spellAreaChoiceHole(
     holeId: spellAreaChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} area`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     area: invocation.targeting,
   };
 }
@@ -741,9 +770,8 @@ export function spellAreaChoiceHoleId(
 }
 
 export function spellTeleportDestinationHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "selfTeleport" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "selfTeleport" }>
   >,
   actorId: CombatantId,
 ): BattleTeleportDestinationHole {
@@ -753,7 +781,7 @@ export function spellTeleportDestinationHole(
     holeId: spellTeleportDestinationHoleId(invocation, actorId),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} destination`,
-    spell: invocation,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     actorId,
     maxDistanceFeet: invocation.maxDistanceFeet,
     requiresTableSpatialFact: true,
@@ -812,6 +840,7 @@ export function spellTargetSpatialFactMatches(
   invocation: BattleExecutableSpellInvocation,
   options: SpellTargetLegalityOptions = {},
 ): boolean {
+  const sourceProcedureRef = invocation.sourceProcedureRef;
   if (
     invocation.procedure === "spiritualWeaponAttackProxy" ||
     invocation.procedure === "spiritualWeaponRepeatAttack"
@@ -821,7 +850,7 @@ export function spellTargetSpatialFactMatches(
       fact.kind === "spiritualWeaponTargetWithinForceReach" &&
       fact.casterId === actorId &&
       fact.targetId === targetId &&
-      fact.sourceProcedureRef === invocation.sourceProcedureRef &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       (forcePositionId === undefined ||
         fact.forcePositionId === forcePositionId) &&
       fact.reachFeet === invocation.forceReachFeet
@@ -832,7 +861,7 @@ export function spellTargetSpatialFactMatches(
       fact.kind === "featherFallTargetFallingWithinRange" &&
       fact.casterId === actorId &&
       fact.targetId === targetId &&
-      fact.sourceProcedureRef === invocation.sourceProcedureRef &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.rangeFeet === invocation.rangeFeet
     );
   }
@@ -842,7 +871,7 @@ export function spellTargetSpatialFactMatches(
   if (
     fact.casterId !== actorId ||
     fact.targetId !== targetId ||
-    fact.sourceProcedureRef !== invocation.sourceProcedureRef
+    fact.sourceProcedureRef !== sourceProcedureRef
   ) {
     return false;
   }
@@ -1264,6 +1293,7 @@ export function spellTargetIsKnownWilling(
   invocation?: BattleExecutableSpellInvocation,
   facts: readonly BattleTargetSpatialFact[] = [],
 ): boolean {
+  const sourceProcedureRef = invocation?.sourceProcedureRef;
   return (
     actorId === targetId ||
     (invocation !== undefined &&
@@ -1272,7 +1302,7 @@ export function spellTargetIsKnownWilling(
           fact.kind === "spellTargetKnownWilling" &&
           fact.casterId === actorId &&
           fact.targetId === targetId &&
-          fact.sourceProcedureRef === invocation.sourceProcedureRef,
+          fact.sourceProcedureRef === sourceProcedureRef,
       ))
   );
 }

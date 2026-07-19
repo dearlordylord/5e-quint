@@ -2,7 +2,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import { bindSpellProcedureExecutionFacts } from "../character-execution.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import { movementFeet } from "@dnd/shared/types";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -52,6 +51,8 @@ import type {
   BattleState,
 } from "../battle-reducer.ts";
 import { MOVEMENT_HOLE_ID } from "../battle-reducer.ts";
+import { characterSpellProcedure } from "../character-execution.ts";
+import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 
 export function applyBattleMovement(
   state: BattleState,
@@ -125,10 +126,14 @@ export function readiedSpellInitialHoles(
   casterId: CombatantId,
   readied: BattleReadiedSpell,
 ): readonly BattleHole[] {
-  const invocation = bindSpellProcedureExecutionFacts(
-    readied.invocation,
-    readied.procedureRef,
-  );
+  const caster = state.combatants.get(casterId);
+  const invocation =
+    caster?.origin.kind === "character"
+      ? characterSpellProcedure(caster.origin.execution, readied.procedureRef)
+      : undefined;
+  if (invocation === undefined || !isReadiedSpellInvocation(invocation)) {
+    return [];
+  }
   if (invocation.procedure === "saveGatedDamage") {
     return invocation.targeting.kind === "singleCombatant"
       ? [spellTargetHole(state, casterId, invocation)]
@@ -190,6 +195,18 @@ export function resolveReleaseReadiedSpellCommand(
       "No matching readied spell is currently being held.",
     );
   }
+  const caster = input.state.combatants.get(casterId);
+  const invocation =
+    caster?.origin.kind === "character"
+      ? characterSpellProcedure(caster.origin.execution, readied.procedureRef)
+      : undefined;
+  if (invocation === undefined || !isReadiedSpellInvocation(invocation)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The readied spell procedure is no longer available.",
+    );
+  }
 
   const releaseSubject: Extract<
     BattleSubject,
@@ -208,7 +225,7 @@ export function resolveReleaseReadiedSpellCommand(
       handledInterruptTrigger: options.handledInterruptTrigger,
       reactionContinuationSubject: input.subject,
     },
-    bindSpellProcedureExecutionFacts(readied.invocation, readied.procedureRef),
+    invocation,
   );
   if (released.tag === "needsHoles") {
     return { ...released, subject: input.subject };

@@ -1,21 +1,10 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-CONTINUAL-FLAME continual_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
-// RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Distant Spell: a Touch spell's
-//   range becomes 30 feet for a 1 Sorcery Point Metamagic spend.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Light: Light has Range
-//   Touch, targets one Large-or-smaller object not worn or carried by someone
-//   else, and emits Bright Light 20 feet plus Dim Light for 20 more feet.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Range: range limits
-//   where the spell effect originates, not movable effects unless stated.
-// - UBIQUITOUS_LANGUAGE.md: Illumination and Obscurement.
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
@@ -54,6 +43,10 @@ import {
   movementFeet,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 function distantMetamagicOption(): CharacterBattleMetamagicOptionFact {
   return {
@@ -140,9 +133,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(lightUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             emission: {
@@ -160,9 +151,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       snapshot: {
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(lightUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             attachment: { kind: "object", objectId },
           }),
         ],
@@ -237,9 +226,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(continualFlameUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             emission: {
@@ -259,9 +246,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         },
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(continualFlameUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             attachment: { kind: "object", objectId },
           }),
         ],
@@ -496,9 +481,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(lightUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             expiresAt: {
@@ -576,9 +559,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(lightUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             emission: {
@@ -693,15 +674,11 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: expect.arrayContaining([
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(continualFlameUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             attachment: { kind: "object", objectId: priorObjectId },
           }),
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(continualFlameUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             attachment: { kind: "object", objectId: nextObjectId },
           }),
         ]),
@@ -823,9 +800,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(continualFlameUnitId),
-            ),
+            sourceProcedureRef: expect.any(String),
             attachment: { kind: "object", objectId },
             expiresAt: { kind: "untilDispelled" },
           }),

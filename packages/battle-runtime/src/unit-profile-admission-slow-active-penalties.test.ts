@@ -115,17 +115,8 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(savingThrow.spell).toEqual(
-      expect.objectContaining({
-        procedure: "slowActivePenalties",
-        spell,
-        resource: { tag: "spellSlot", slotLevel: 3 },
-        targeting: { kind: "pointOriginCube", sideFeet: 40 },
-        maxTargets: 6,
-        rangeFeet: 120,
-        durationTicks: elapsedTimeTicks(10),
-      }),
-    );
+    expect(savingThrow).toMatchObject({ outcomeTargeting: "area" });
+    expect("spell" in savingThrow).toBe(false);
 
     const baseTarget = requireCombatant(state, spellTargetId);
     const baseArmorClass = Number(
@@ -784,8 +775,8 @@ function requireSpellSavingThrowOutcomeHole(
   holes: readonly BattleHole[],
 ): BattleSpellSavingThrowOutcomeHole {
   const hole = requireHole(holes, "savingThrowOutcome");
-  if (!("spell" in hole)) {
-    throw new Error("Expected spell Saving Throw outcome hole.");
+  if (!("sourceProcedureRef" in hole)) {
+    throw new Error("Expected a spell Saving Throw outcome projection.");
   }
   return hole;
 }

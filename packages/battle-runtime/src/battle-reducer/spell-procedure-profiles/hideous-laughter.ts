@@ -31,21 +31,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import {
-  type SpellMetamagicApplicationFact,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellTargetListHole,
-} from "../spells-holes-fills.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
 import { resolveHideousLaughterSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -62,6 +48,18 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellTargetListHole,
+} from "../spells-holes-fills.ts";
 
 type HideousLaughterSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -241,13 +239,7 @@ function discoverHideousLaughterCastAct(
     return [];
   }
 
-  const baseCastAct = hideousLaughterCastAct(
-    actorId,
-    invocation,
-    [targetHole],
-    invocation.spell.name,
-    hideousLaughterCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = hideousLaughterCastAct(actorId, invocation, [targetHole]);
   const metamagicCastActs = hideousLaughterMetamagicCastActs({
     state,
     actorId,
@@ -264,7 +256,7 @@ function hideousLaughterMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly actor: BattleCreatureState;
-  readonly invocation: HideousLaughterSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>;
   readonly targetHole: BattleHole;
   readonly baseCastAct: BattleActDiscoveryCandidate;
 }): readonly BattleActDiscoveryCandidate[] {
@@ -272,7 +264,6 @@ function hideousLaughterMetamagicCastActs(input: {
     actor: input.actor,
     invocation: input.invocation,
   }).map((metamagic) => {
-    const label = spellMetamagicLabel(metamagic);
     return {
       ...input.baseCastAct,
       subject: {
@@ -288,8 +279,6 @@ function hideousLaughterMetamagicCastActs(input: {
           spellMetamagicApplications(input.actor, metamagic),
         ),
       ],
-      label: `${input.invocation.spell.name} (${label})`,
-      summary: `${input.baseCastAct.summary} Cast with ${label}.`,
     };
   });
 }
@@ -298,8 +287,6 @@ function hideousLaughterCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -309,8 +296,6 @@ function hideousLaughterCastAct(
       invocation: hideousLaughterInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -318,7 +303,7 @@ function hideousLaughterCastAct(
 function hideousLaughterMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HideousLaughterSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const holes: BattleHole[] = [];
@@ -355,16 +340,6 @@ function hideousLaughterCastSummary(
   invocation: HideousLaughterSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function hideousLaughterCastSummaryWithSavingThrow(
-  invocation: HideousLaughterSpellInvocation,
-): string {
-  return `${hideousLaughterCastSummary(
-    invocation,
-  )} Table-supplied affected targets make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function resolveHideousLaughter(

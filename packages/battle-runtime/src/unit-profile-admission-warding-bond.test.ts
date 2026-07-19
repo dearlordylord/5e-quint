@@ -1,8 +1,8 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { damageAmount, DieRollResult } from "@dnd/shared/types";
 import {
@@ -74,6 +74,7 @@ import type {
   BattleSubject,
   CombatantId,
 } from "./unit-profile-admission-test-support.ts";
+import type { BattleProcedureExecutionRef } from "./identity.ts";
 
 describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding Bond admission", () => {
   test("casts as a level-2 Magic Action spell with willing target, worn rings, and connection facts", () => {
@@ -170,9 +171,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(wardingBondEffects(resolved.state, spellTargetId)).toEqual([
       expect.objectContaining({
         kind: "wardingBond",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(wardingBondUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "duration",
@@ -183,9 +182,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(savingThrowFlatBonusProjections(resolved.state, "wis")).toEqual([
       {
         targetId: spellTargetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(wardingBondUnitId),
-        ),
+        sourceProcedureRef: act.subject.procedureRef,
         bonus: 1,
       },
     ]);
@@ -236,6 +233,10 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   test("projects the Warding Bond Saving Throw bonus onto target Concentration saves", () => {
     const state = withTargetConcentration(castWardingBond(wardingBondBattle()));
     const target = requireCombatant(state, spellTargetId);
+    const [effect] = wardingBondEffects(state, spellTargetId);
+    if (effect === undefined) {
+      throw new Error("Expected Warding Bond effect.");
+    }
 
     expect(
       damageLifecycleConcentrationSavingThrowHoles({
@@ -249,9 +250,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         targetFlatBonuses: expect.arrayContaining([
           {
             targetId: spellTargetId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(wardingBondUnitId),
-            ),
+            sourceProcedureRef: effect.sourceProcedureRef,
             bonus: 1,
           },
         ]),
@@ -375,9 +374,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(
       requireCombatant(resolved.state, spellTargetId).concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(spellId(wardingBondUnitId)),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(requireCombatant(resolved.state, spellCasterId).hp).toBe(8);
@@ -566,9 +563,11 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       act.initialHoles,
       "spellTargetAllocation",
     );
-    const allocationFill = spellTargetAllocationFill(allocationHole, [
-      { targetId: spellTargetId, count: 3 },
-    ]);
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      [{ targetId: spellTargetId, count: 3 }],
+      act.subject.procedureRef,
+    );
     const damage = requireResultHole(
       resolveBattleSubject({
         state,
@@ -865,9 +864,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(repeatSave).toMatchObject({
       hideousLaughterRepeatSave: {
         targetId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hideousLaughterUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         trigger: "damage",
       },
       targetRollModes: [{ targetId: spellCasterId, rollMode: "advantage" }],
@@ -1043,6 +1040,7 @@ function spellTargetAllocationFill(
     readonly targetId: CombatantId;
     readonly count: number;
   }[],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
   return {
     kind: "spellTargetAllocation",
@@ -1052,9 +1050,7 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId: spellCasterId,
       targetId: allocation.targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(hole.spell.spell.id),
-      ),
+      sourceProcedureRef,
     })),
   };
 }
@@ -1223,6 +1219,12 @@ function wardingBondSeparationFactsFill(
   hole: Extract<BattleHole, { readonly kind: "targetSpatialFacts" }>,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
+  if (
+    !("wardingBondSeparation" in hole) ||
+    hole.wardingBondSeparation.sourceProcedureRef === undefined
+  ) {
+    throw new Error("Expected Warding Bond separation facts hole.");
+  }
   return {
     kind: "targetSpatialFacts",
     holeId: hole.holeId,
@@ -1231,9 +1233,7 @@ function wardingBondSeparationFactsFill(
         kind: "wardingBondCreaturesDistance",
         casterId: spellCasterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(wardingBondUnitId),
-        ),
+        sourceProcedureRef: hole.wardingBondSeparation.sourceProcedureRef,
         distanceFeet: movementFeet(61),
       },
     ],

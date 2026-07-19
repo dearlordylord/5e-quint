@@ -1,4 +1,3 @@
-import { Brand, Schema } from "effect";
 import * as Either from "effect/Either";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
@@ -41,6 +40,8 @@ import {
   sameSpellInvocationRef,
   supportedSpellInvocationRef,
 } from "./battle-reducer/spells-invocation-ref.ts";
+import { Brand, Match, Schema } from "effect";
+import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 
 export type UnitSupportProfileKind<TProfile = BattleUnitSupportProfile> =
   TProfile extends string
@@ -149,7 +150,6 @@ export type CharacterProcedureBindingSnapshot =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly procedure: {
         readonly kind: "unitFeature";
-        readonly unitId: UnitRecord["id"];
         readonly supportKind: CharacterUnitProcedureKind;
       };
     }
@@ -157,7 +157,6 @@ export type CharacterProcedureBindingSnapshot =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly procedure: {
         readonly kind: "unitSupportProfile";
-        readonly unitId: UnitRecord["id"];
         readonly supportKind: UnitSupportProfileKind;
       };
     }
@@ -165,14 +164,13 @@ export type CharacterProcedureBindingSnapshot =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly procedure: {
         readonly kind: "spellInvocation";
-        readonly invocation: SupportedSpellInvocation;
+        readonly executionFacts: SpellExecutionFacts;
       };
     }
   | {
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly procedure: {
         readonly kind: "unavailableSpellInvocation";
-        readonly occurrence: SpellInvocationOccurrence;
       };
     };
 
@@ -280,6 +278,21 @@ export function characterExecutionWithSpellInvocations(
 ): CharacterExecutionState {
   let refreshed = false;
   const refreshedBindings = execution.procedureBindings.map((binding) => {
+    if (binding.procedure.kind === "unavailableSpellInvocation") {
+      const occurrence = binding.procedure.occurrence;
+      const currentInvocation = invocations.find((invocation) =>
+        spellInvocationMatchesOccurrence(invocation, occurrence),
+      );
+      if (currentInvocation === undefined) return binding;
+      refreshed = true;
+      return {
+        ...binding,
+        procedure: {
+          kind: "spellInvocation" as const,
+          invocation: currentInvocation,
+        },
+      };
+    }
     if (binding.procedure.kind !== "spellInvocation") {
       return binding;
     }
@@ -365,8 +378,41 @@ function allocateCharacterProcedureBindings(
 
 export function characterProcedureBindingSnapshots(
   execution: CharacterExecutionState,
+  executionFactsFor: (
+    invocation: SupportedSpellInvocation,
+  ) => SpellExecutionFacts,
 ): readonly CharacterProcedureBindingSnapshot[] {
-  return execution.procedureBindings;
+  return execution.procedureBindings.map(
+    (binding): CharacterProcedureBindingSnapshot =>
+      Match.value(binding.procedure).pipe(
+        Match.when({ kind: "unitFeature" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            supportKind: procedure.supportKind,
+          },
+        })),
+        Match.when({ kind: "unitSupportProfile" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            supportKind: procedure.supportKind,
+          },
+        })),
+        Match.when({ kind: "spellInvocation" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            executionFacts: executionFactsFor(procedure.invocation),
+          },
+        })),
+        Match.when({ kind: "unavailableSpellInvocation" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: { kind: procedure.kind },
+        })),
+        Match.exhaustive,
+      ),
+  );
 }
 
 export function characterUnitProcedureRef(

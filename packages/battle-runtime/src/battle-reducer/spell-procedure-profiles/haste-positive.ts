@@ -299,8 +299,6 @@ function discoverHastePositiveCastAct(
             invocation: hastePositiveInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: hastePositiveCastSummary(invocation),
           initialHoles: [targetHole],
         },
       ];

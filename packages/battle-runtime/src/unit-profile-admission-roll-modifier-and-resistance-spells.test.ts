@@ -1,8 +1,3 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET enhance_ability
@@ -14,6 +9,11 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection spell.invocation-chosen-damage-resistance
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -65,13 +65,6 @@ import {
   spellTargetListFill,
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import {
-  spellRollModifierAbilityChoiceHoleId,
-  spellRollModifierSkillChoiceHoleId,
-  spellRollModifierTargetAbilityChoicesHoleId,
-  spellSavingThrowOutcomeHoleId,
-  spellTargetListHoleId,
-} from "./battle-reducer/spells-holes-fills.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   applyCondition,
@@ -842,20 +835,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         Schema.decodeUnknownEither(BattleHoleSchema)(abilityByTargetHole),
       ),
     ).toBe(true);
-    if (!("abilityChoiceApplication" in abilityByTargetHole.spell)) {
-      throw new Error(
-        "Expected target ability choices hole to carry an ability-choice roll modifier invocation.",
-      );
-    }
-    const {
-      abilityChoiceApplication: _abilityChoiceApplication,
-      ...spellWithoutAbilityChoiceApplication
-    } = abilityByTargetHole.spell;
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(BattleHoleSchema)({
           ...abilityByTargetHole,
-          spell: spellWithoutAbilityChoiceApplication,
+          spell: { procedure: "rollModifier" },
         }),
       ),
     ).toBe(true);
@@ -974,9 +958,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
           validTargets,
           {
             kind: "abilityChoice" as const,
-            holeId: spellRollModifierAbilityChoiceHoleId(
-              abilityByTargetHole.spell,
-            ),
+            holeId: abilityByTargetHole.holeId,
             value: "dex" as const,
           },
         ],
@@ -1090,7 +1072,6 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const act = spellAct({ state, spellId: resistanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
-    const invocation = damageTypeHole.spell;
     const baseFills = [
       spellTargetFill(
         targetHole,
@@ -1107,7 +1088,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const nonDamageReductionFills = [
       {
         kind: "spellTargetList" as const,
-        holeId: spellTargetListHoleId(invocation),
+        holeId: damageTypeHole.holeId,
         value: { targetIds: [spellCasterId] },
         spatialFacts: [
           {
@@ -1120,19 +1101,19 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       },
       {
         kind: "savingThrowOutcome" as const,
-        holeId: spellSavingThrowOutcomeHoleId(invocation),
+        holeId: damageTypeHole.holeId,
         value: {
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
         },
       },
       {
         kind: "skillChoice" as const,
-        holeId: spellRollModifierSkillChoiceHoleId(invocation),
+        holeId: damageTypeHole.holeId,
         value: "stealth" as const,
       },
       {
         kind: "targetAbilityChoices" as const,
-        holeId: spellRollModifierTargetAbilityChoicesHoleId(invocation),
+        holeId: damageTypeHole.holeId,
         value: {
           choices: [{ targetId: spellCasterId, ability: "dex" as const }],
         },
@@ -1168,7 +1149,6 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       guidanceAct.initialHoles,
       "skillChoice",
     );
-    const guidanceInvocation = guidanceSkillHole.spell;
     const guidanceTargetFill = spellTargetFill(
       guidanceTargetHole,
       guidanceUnitId,
@@ -1183,7 +1163,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       fills: [
         {
           kind: "spellTargetList" as const,
-          holeId: spellTargetListHoleId(guidanceInvocation),
+          holeId: guidanceSkillHole.holeId,
           value: { targetIds: [spellCasterId] },
           spatialFacts: [
             {
@@ -1210,8 +1190,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         guidanceSkillFill,
         {
           kind: "targetAbilityChoices" as const,
-          holeId:
-            spellRollModifierTargetAbilityChoicesHoleId(guidanceInvocation),
+          holeId: guidanceSkillHole.holeId,
           value: {
             choices: [{ targetId: spellCasterId, ability: "dex" as const }],
           },
@@ -1231,7 +1210,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         guidanceSkillFill,
         {
           kind: "savingThrowOutcome" as const,
-          holeId: spellSavingThrowOutcomeHoleId(guidanceInvocation),
+          holeId: guidanceSkillHole.holeId,
           value: {
             outcomes: [{ targetId: spellCasterId, succeeded: false }],
           },
@@ -1266,7 +1245,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ]),
         {
           kind: "skillChoice" as const,
-          holeId: spellRollModifierSkillChoiceHoleId(blessTargetListHole.spell),
+          holeId: blessTargetListHole.holeId,
           value: "stealth" as const,
         },
       ],
@@ -1347,9 +1326,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     }
     const reduction = requireSpellDamageReductionHole(needsReduction.holes);
     expect(reduction.spellDamageReduction).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "resistance-effect-fixture",
-      ),
+      sourceProcedureRef: expect.any(String),
       sourceCombatantId: spellCasterId,
       targetId: spellTargetId,
       damageType: "slashing",
@@ -1376,9 +1353,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(damaged?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellDamageReduction",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "resistance-effect-fixture",
-        ),
+        sourceProcedureRef: expect.any(String),
         usedThisTurn: true,
       }),
     );

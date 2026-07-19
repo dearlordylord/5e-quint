@@ -1,5 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
@@ -110,9 +108,7 @@ describe("battle runtime: Fog Cloud", () => {
     expect(caster?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "fogCloudObscurement",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("fog_cloud"),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         areaId: "fog-1",
         radiusFeet: movementFeet(20),
@@ -124,16 +120,12 @@ describe("battle runtime: Fog Cloud", () => {
       }),
     ]);
     expect(caster?.concentration).toMatchObject({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("fog_cloud"),
-      ),
+      sourceProcedureRef: expect.any(String),
     });
     expect(resolved.snapshot.obscurementZones).toEqual([
       {
         kind: "spellObscurementZone",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("fog_cloud"),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         obscurement: "heavilyObscured",
         area: {

@@ -613,7 +613,6 @@ export function resolveReadySpellAct(
     readiedSpells: new Map(afterPriorConcentration.readiedSpells).set(
       input.subject.actorId,
       {
-        invocation,
         procedureRef: input.subject.procedureRef,
         trigger: input.subject.mode.trigger,
         expiresAt: {

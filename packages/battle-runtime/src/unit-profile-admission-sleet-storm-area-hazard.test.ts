@@ -1,14 +1,12 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellSlotPresentation,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm doReplaySleetStormAreaHazard
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sleet-storm-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
@@ -45,6 +43,10 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 import { discoverBattleActs } from "./index.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 const syntheticTargetConcentrationSpellId =
   "synthetic_sleet_storm_concentration_fixture";
@@ -216,7 +218,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
         },
       }),
     );
-    expect(spellHoleInvocation([area])).toEqual(
+    expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "sleetStormAreaHazard",
         spell,
@@ -232,7 +234,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
         rangeFeet: movementFeet(150),
       }),
     );
-    expect(spellHoleInvocation(fourthLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(state, fourthLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "sleetStormAreaHazard",
         resource: { tag: "spellSlot", slotLevel: 4 },

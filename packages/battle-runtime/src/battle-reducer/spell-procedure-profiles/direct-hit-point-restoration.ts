@@ -280,8 +280,6 @@ function discoverDirectHitPointRestorationCastAct(
               invocation,
               directHitPointRestorationInvocationRef(invocation),
             ),
-            label: invocation.spell.name,
-            summary: directHitPointRestorationCastSummary(invocation),
             initialHoles: [targetHole],
           },
         ];

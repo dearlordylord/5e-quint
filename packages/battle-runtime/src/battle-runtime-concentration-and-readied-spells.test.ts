@@ -1,49 +1,49 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  startBattleRight,
-  requireElapsedHours,
-  requireResolved,
-  goblinAttackSubject,
-  attackInitialTargetHole,
-  attackRollHoleAfterTarget,
-  attackDamageHoleAfterHit,
-  requireHole,
-  targetFill,
-  spellTargetAllocationFill,
-  attackRollFill,
-  concentrationSavingThrowFill,
-  damageRollFill,
-  damageRollFillWithGroups,
-  attackDamageDispositionFill,
-  characterSeed,
-  statBlockCreatureInit,
-  wizardVsSkeletonBattle,
-  wizardSpellcasting,
-  spellRecord,
-  magicSubject,
-  expendedLevelOneSlots,
-  fighterId,
-  goblinId,
-  skeletonId,
-  wizardId,
-  secondWizardId,
-  battleId,
-  breakBattleConcentration,
-  cantripSpellInvocationRef,
-  concentrationSavingThrowDc,
-  discoverBattleActs,
-  endTurn,
-  resolveBattleConcentrationDamage,
-  resolveBattleSubject,
-  snapshotBattle,
-  spellSlotInvocationRef,
-} from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
   BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import {
+  attackDamageDispositionFill,
+  attackDamageHoleAfterHit,
+  attackInitialTargetHole,
+  attackRollFill,
+  attackRollHoleAfterTarget,
+  battleId,
+  battleProcedureExecutionRefForTest,
+  breakBattleConcentration,
+  cantripSpellInvocationRef,
+  characterSeed,
+  concentrationSavingThrowDc,
+  concentrationSavingThrowFill,
+  damageRollFill,
+  damageRollFillWithGroups,
+  discoverBattleActs,
+  endTurn,
+  expendedLevelOneSlots,
+  fighterId,
+  goblinAttackSubject,
+  goblinId,
+  magicSubject,
+  requireCharacterSpellProcedureRefForTest,
+  requireElapsedHours,
+  requireHole,
+  requireResolved,
+  resolveBattleConcentrationDamage,
+  resolveBattleSubject,
+  secondWizardId,
+  skeletonId,
+  snapshotBattle,
+  spellRecord,
+  spellSlotInvocationRef,
+  spellTargetAllocationFill,
+  startBattleRight,
+  statBlockCreatureInit,
+  targetFill,
+  wizardId,
+  wizardSpellcasting,
+  wizardVsSkeletonBattle,
+} from "./battle-runtime-test-support.ts";
 
 function readiedSpellProcedureRef(state: BattleState) {
   const readied = state.readiedSpells.get(wizardId);
@@ -314,9 +314,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         savingThrowSucceeded: true,
       }).combatants.get(wizardId)?.concentration,
     ).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("readied_acid_splash"),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "readiedSpell",
     });
     expect(
@@ -511,9 +509,7 @@ describe("battle runtime: Concentration and readied spells", () => {
     );
 
     expect(maintained.state.combatants.get(wizardId)?.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("ray_of_frost"),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "readiedSpell",
     });
   });

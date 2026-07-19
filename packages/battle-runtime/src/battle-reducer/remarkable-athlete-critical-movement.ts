@@ -41,8 +41,8 @@ export type RemarkableAthleteCriticalHitMovementFills = {
 };
 
 type RemarkableAthleteCriticalHitMovementProfile = {
-  readonly unitId: BattleUnitFeatureDecisionHole["unitFeature"]["unitId"];
-  readonly label: BattleUnitFeatureDecisionHole["unitFeature"]["label"];
+  readonly unitId: string;
+  readonly label: string;
 };
 
 type RemarkableAthleteCriticalHitMovementBudget = {
@@ -247,7 +247,7 @@ function maxMovementBudgetFeet(
 }
 
 function remarkableAthleteCriticalHitMovementDecisionHole(
-  profile: RemarkableAthleteCriticalHitMovementProfile,
+  _profile: RemarkableAthleteCriticalHitMovementProfile,
 ): BattleUnitFeatureDecisionHole {
   return {
     kind: "unitFeatureDecision",
@@ -255,7 +255,6 @@ function remarkableAthleteCriticalHitMovementDecisionHole(
     holeInstanceKey:
       REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_INSTANCE,
     label: "Use Remarkable Athlete movement",
-    unitFeature: profile,
     choices: ["use", "decline"],
   };
 }

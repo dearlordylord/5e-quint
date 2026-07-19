@@ -1,6 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV89A chill_touch
@@ -14,6 +11,7 @@ import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-01-L5-AREA-SAVE-DAMAGE cone_of_cold flame_strike
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import fc from "fast-check";
@@ -85,14 +83,19 @@ import {
   repeatedDamageAllocationInvocationFacts,
   repeatedDamageAllocationInvocationResourceFacts,
 } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 const fireballObjectId = battleObjectId("unit-profile-fireball-object");
 
 describe("QMBT14 deterministic damage Spell Unit admission", () => {
   test("magic_missile is admitted through catalog spell access and projected as a prepared slot spell", () => {
     const spell = spellRecord(magicMissileUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state: spellBattle({ preparedSpells: [spell] }),
+      state,
       spellId: magicMissileUnitId,
     });
 
@@ -109,7 +112,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       ),
       mode: { tag: "cast" },
     });
-    const invocation = spellActInvocation(act);
+    const invocation = spellActInvocation(state, act);
     expect(invocation).toEqual(
       expect.objectContaining({
         procedure: "repeatedDamageAllocation",
@@ -160,8 +163,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("ray_of_frost is admitted through catalog spell access and projected as a cantrip spell attack", () => {
     const spell = spellRecord(rayOfFrostUnitId);
+    const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state: spellBattle({ cantrips: [spell] }),
+      state,
       spellId: rayOfFrostUnitId,
     });
 
@@ -253,7 +257,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         }),
         "attackRoll",
       );
-      const invocation = spellHoleInvocation([attackRoll]);
+      const invocation = spellHoleInvocation(state, [attackRoll]);
       if (invocation.procedure !== "spellAttackDamage") {
         throw new Error("Expected synthetic spell attack procedure.");
       }
@@ -415,8 +419,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("acid_splash is admitted through catalog spell access and projected as a save-gated cantrip", () => {
     const spell = spellRecord(acidSplashUnitId);
+    const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state: spellBattle({ cantrips: [spell] }),
+      state,
       spellId: acidSplashUnitId,
     });
 
@@ -429,7 +434,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
       mode: { tag: "cast" },
     });
-    expect(spellActInvocation(act)).toEqual(
+    expect(spellActInvocation(state, act)).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -494,7 +499,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -688,8 +693,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("poison_spray is admitted through catalog spell access and projected as a pure damage cantrip spell attack", () => {
     const spell = spellRecord(poisonSprayUnitId);
+    const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state: spellBattle({ cantrips: [spell] }),
+      state,
       spellId: poisonSprayUnitId,
     });
 
@@ -720,7 +726,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -743,8 +749,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("chill_touch is admitted as creature-or-object melee spell attack with Hit Point regain prevention rider", () => {
     const spell = spellRecord(chillTouchUnitId);
+    const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state: spellBattle({ cantrips: [spell] }),
+      state,
       spellId: chillTouchUnitId,
     });
 
@@ -772,7 +779,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -806,8 +813,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("shocking_grasp is admitted as melee spell attack with Opportunity Attack denial rider", () => {
     const spell = spellRecord(shockingGraspUnitId);
+    const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state: spellBattle({ cantrips: [spell] }),
+      state,
       spellId: shockingGraspUnitId,
     });
 
@@ -838,7 +846,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -859,8 +867,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("guiding_bolt is admitted as ranged spell attack with next attack Advantage rider", () => {
     const spell = spellRecord(guidingBoltUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state: spellBattle({ preparedSpells: [spell] }),
+      state,
       spellId: guidingBoltUnitId,
     });
 
@@ -892,7 +901,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -914,8 +923,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("ray_of_sickness is admitted as ranged spell attack with Poisoned rider", () => {
     const spell = spellRecord(rayOfSicknessUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state: spellBattle({ preparedSpells: [spell] }),
+      state,
       spellId: rayOfSicknessUnitId,
     });
 
@@ -947,7 +957,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation([attackRoll])).toEqual(
+    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
@@ -969,8 +979,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("vicious_mockery is admitted as save-gated cantrip with next attack Disadvantage rider", () => {
     const spell = spellRecord(viciousMockeryUnitId);
+    const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state: spellBattle({ cantrips: [spell] }),
+      state,
       spellId: viciousMockeryUnitId,
     });
 
@@ -1001,7 +1012,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "savingThrowOutcome",
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1118,8 +1129,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("sacred_flame is admitted through catalog spell access and projected as single-target save-gated cantrip damage", () => {
     const spell = spellRecord(sacredFlameUnitId);
+    const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state: spellBattle({ cantrips: [spell] }),
+      state,
       spellId: sacredFlameUnitId,
     });
 
@@ -1147,7 +1159,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "savingThrowOutcome",
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1170,11 +1182,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("inflict_wounds is admitted through prepared spell access and projected as single-target save-gated slot damage", () => {
     const spell = spellRecord(inflictWoundsUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 3, count: 1 }],
-      }),
+      state,
       spellId: inflictWoundsUnitId,
       slotLevel: 3,
     });
@@ -1210,7 +1223,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "savingThrowOutcome",
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1234,11 +1247,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("mind_spike is admitted as single-target Wisdom save Psychic slot damage", () => {
     const spell = spellRecord(mindSpikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 3, count: 1 }],
-      }),
+      state,
       spellId: mindSpikeUnitId,
       slotLevel: 3,
     });
@@ -1270,7 +1284,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
       "savingThrowOutcome",
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1619,11 +1633,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("burning_hands is admitted as a self-origin Cone save-gated slot damage spell", () => {
     const spell = spellRecord(burningHandsUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      }),
+      state,
       spellId: burningHandsUnitId,
       slotLevel: 2,
     });
@@ -1645,7 +1660,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1669,11 +1684,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("lightning_bolt is admitted as a self-origin Line save-gated slot damage spell", () => {
     const spell = spellRecord(lightningBoltUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 4, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 4, count: 1 }],
-      }),
+      state,
       spellId: lightningBoltUnitId,
       slotLevel: 4,
     });
@@ -1699,7 +1715,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1724,11 +1740,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("cone_of_cold is admitted as a level-5 self-origin Cone save-gated slot damage spell", () => {
     const spell = spellRecord(coneOfColdUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 5, count: 1 }],
-      }),
+      state,
       spellId: coneOfColdUnitId,
       slotLevel: 5,
     });
@@ -1754,7 +1771,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1779,11 +1796,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("flame_strike is admitted as point-origin Cylinder save-gated slot damage with fire and radiant components", () => {
     const spell = spellRecord(flameStrikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 5, count: 1 }],
-      }),
+      state,
       spellId: flameStrikeUnitId,
       slotLevel: 5,
     });
@@ -1809,7 +1827,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -1970,11 +1988,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("fireball is admitted as point-origin Sphere save damage with object ignition facts", () => {
     const spell = spellRecord(fireballUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 4, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 4, count: 1 }],
-      }),
+      state,
       spellId: fireballUnitId,
       slotLevel: 4,
     });
@@ -1996,7 +2015,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -2149,11 +2168,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("shatter is admitted as point-origin Sphere save damage", () => {
     const spell = spellRecord(shatterUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
     const act = spellAct({
-      state: spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 3, count: 1 }],
-      }),
+      state,
       spellId: shatterUnitId,
       slotLevel: 3,
     });
@@ -2175,7 +2195,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation([savingThrow])).toEqual(
+    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,

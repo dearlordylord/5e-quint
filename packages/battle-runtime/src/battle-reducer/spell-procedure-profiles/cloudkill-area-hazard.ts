@@ -237,10 +237,6 @@ function discoverCloudkillAreaHazardCastAct(
         invocation: cloudkillAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${cloudkillAreaHazardCastSummary(
-        invocation,
-      )} The table supplies the Cloudkill sphere area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

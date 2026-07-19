@@ -100,8 +100,6 @@ function discoverAttackBurstSaveDamageCastAct(
               invocation,
               attackBurstSaveDamageInvocationRef(invocation),
             ),
-            label: invocation.spell.name,
-            summary: attackBurstSaveDamageCastSummary(invocation),
             initialHoles: [targetHole],
           },
         ];

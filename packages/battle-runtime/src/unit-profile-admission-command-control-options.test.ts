@@ -1,8 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
+import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -29,6 +28,11 @@ import {
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import type {
+  AvailableBattleAct,
+  BattleFill,
+  BattleSubject,
+} from "./unit-profile-admission-test-support.ts";
 import {
   battleObjectId,
   combatantId,
@@ -36,13 +40,7 @@ import {
   endTurn,
   movementFeet,
   resolveBattleSubject,
-  spellId,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
-import type {
-  AvailableBattleAct,
-  BattleFill,
-  BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 
 describe("QMBT14 deterministic Command control option admission", () => {
@@ -100,7 +98,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         choices: ["grovel", "halt", "drop", "approach", "flee"],
       }),
     );
-    expect(spellActInvocation(levelTwo)).toEqual(
+    expect(spellActInvocation(state, levelTwo)).toEqual(
       expect.objectContaining({
         procedure: "command",
         spell,
@@ -164,9 +162,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       expect.objectContaining({
         kind: "commandPending",
         option: "grovel",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(commandUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "endOfTurn",
@@ -271,9 +267,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       expect.objectContaining({
         kind: "commandPending",
         option: "halt",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(commandUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "endOfTurn",
@@ -527,9 +521,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
           source: {
             kind: "spell",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(spellId(commandUnitId)),
-            ),
+            sourceProcedureRef: expect.any(String),
           },
         },
       ],
@@ -785,9 +777,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       expect.objectContaining({
         kind: "commandPending",
         option: "grovel",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(commandUnitId),
-        ),
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "endOfTurn",

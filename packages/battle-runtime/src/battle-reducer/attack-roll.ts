@@ -45,7 +45,6 @@ import type {
   OngoingFeatureRollModifier,
   SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
-import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
@@ -91,34 +90,17 @@ import {
   ongoingFeatureSourceKeyForUnit,
 } from "./creature-state.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
-import {
-  attackActionBonusWithPassiveFeatureBonus,
-  attackActionOptionName,
-  attackTargetConstraint,
-  attackRollMissToHitReplacementHolePayloadForAttacker,
-  targetHasAdjacentNonIncapacitatedAlly,
-} from "./statblock-attacks.ts";
 import { attackDamageDieFloorChoiceUnitIds } from "./attack-damage-die-floor-choice.ts";
 import {
   activeRageSourceKeysForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
 } from "./barbarian-frenzy.ts";
 import {
-  attackTargetIsLegal,
-  attackTargetRangeBand,
-  attackExecutionSelectionMatchesOption,
-  effectiveWalkSpeed,
-} from "./movement-speed.ts";
-import {
   combatantCanSee,
   combatantInvisibleBenefitDenied,
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import {
-  attackRollTargetIsEnemy,
-  savingThrowTargetsEnemy,
-} from "./roll-trigger-relationship-facts.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
 import {
   activeOngoingFeatureOccurrenceFromProfile,
@@ -152,13 +134,31 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
 } from "./domain-constants.ts";
-import { combatantProficiencyBonus } from "./movement-speed.ts";
 import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { weaponAttackDamageExpression } from "./statblock-attacks.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
+import {
+  attackExecutionSelectionMatchesOption,
+  attackTargetIsLegal,
+  attackTargetRangeBand,
+  combatantProficiencyBonus,
+  effectiveWalkSpeed,
+} from "./movement-speed.ts";
+import {
+  attackRollTargetIsEnemy,
+  parseSavingThrowRelationshipFacts,
+  savingThrowTargetsEnemy,
+} from "./roll-trigger-relationship-facts.ts";
+import {
+  attackActionBonusWithPassiveFeatureBonus,
+  attackActionOptionName,
+  attackRollMissToHitReplacementHolePayloadForAttacker,
+  attackTargetConstraint,
+  targetHasAdjacentNonIncapacitatedAlly,
+  weaponAttackDamageExpression,
+} from "./statblock-attacks.ts";
 
 const WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE = [
   { supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE, property: "push" },
@@ -950,10 +950,6 @@ export function tacticalMasterReplacementDecisionHole(
         holeId: TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID,
         holeInstanceKey: TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_INSTANCE,
         label: "Tactical Master mastery replacement",
-        unitFeature: {
-          unitId: selection.unitId,
-          label: "Tactical Master",
-        },
         choices: TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
       };
 }
@@ -1160,10 +1156,6 @@ export function weaponMasteryToppleSavingThrowHole(
           },
         }
       : {}),
-    unitFeature: {
-      unitId: selection.unitId,
-      label: "Topple",
-    },
     ability: "con",
     dc: {
       kind: "fixed",
@@ -1278,10 +1270,6 @@ export function weaponMasteryCleaveDecisionHole(
         holeId: WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
         holeInstanceKey: WEAPON_MASTERY_CLEAVE_DECISION_HOLE_INSTANCE,
         label: "Use Cleave",
-        unitFeature: {
-          unitId: selection.unitId,
-          label: "Cleave",
-        },
         choices: ["use", "decline"],
       }
     : null;
@@ -1406,10 +1394,6 @@ export function huntersPreyHordeBreakerDecisionHole(
         holeId: HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
         holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
         label: "Use Horde Breaker",
-        unitFeature: {
-          unitId: selection.unitId,
-          label: "Horde Breaker",
-        },
         choices: ["use", "decline"],
       };
 }

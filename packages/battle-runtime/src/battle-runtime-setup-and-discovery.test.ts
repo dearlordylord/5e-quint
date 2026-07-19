@@ -93,7 +93,6 @@ describe("battle runtime: setup and discovery", () => {
             actorId: goblinId,
             command: "endTurn",
           },
-          label: "End Turn",
           initialHoles: [],
         },
       ],
@@ -163,37 +162,16 @@ describe("battle runtime: setup and discovery", () => {
       }),
       "attackRoll",
     );
-    if (!("spell" in attackRoll)) {
-      throw new Error("Expected prepared spell attack-roll hole.");
-    }
-    if (attackRoll.spell.procedure !== "spellAttackDamage") {
-      throw new Error("Expected spellAttackDamage invocation.");
-    }
+    expect("spell" in attackRoll).toBe(false);
 
     const encoded = Schema.encodeSync(BattleHoleSchema)(attackRoll);
     expect(encoded).toMatchObject({
       kind: "attackRoll",
-      spell: {
-        access: { tag: "prepared" },
-        procedure: "spellAttackDamage",
-        damage: {
-          kind: "fixedSpellAttackDamage",
-          damageType: "radiant",
-        },
-      },
     });
+    expect(encoded).not.toHaveProperty("spell");
 
     const decoded = Schema.decodeUnknownSync(BattleHoleSchema)(encoded);
-    if (!("spell" in decoded)) {
-      throw new Error("Expected decoded prepared spell attack-roll hole.");
-    }
-    if (decoded.spell.procedure !== "spellAttackDamage") {
-      throw new Error("Expected decoded spellAttackDamage invocation.");
-    }
-    expect(decoded.spell.damage).toMatchObject({
-      kind: "fixedSpellAttackDamage",
-      damageType: "radiant",
-    });
+    expect("spell" in decoded).toBe(false);
   });
 
   test("startBattle preserves caller-supplied order among tied Initiative scores", () => {

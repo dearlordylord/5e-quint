@@ -195,9 +195,7 @@ function isSpellcastingModifierTemporaryHitPointsAmount(
 function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<
-    ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
-  >,
+  invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
@@ -216,11 +214,6 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
               ),
             mode: { tag: "cast" },
           },
-          label: invocation.spell.name,
-          summary:
-            conditionImmunityAndTurnStartTemporaryHitPointsCastSummary(
-              invocation,
-            ),
           initialHoles: [targetHole],
         },
       ];

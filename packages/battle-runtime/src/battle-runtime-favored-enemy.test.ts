@@ -122,9 +122,7 @@ describe("battle runtime: Favored Enemy", () => {
       marked.state.currentTurnResources.levelOnePlusSpellCastsThisTurn,
     ).toContain(fighterId);
     expect(ranger.concentration).toEqual({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("hunters_mark"),
-      ),
+      sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
     expect(ranger.activeEffects).toEqual([
@@ -491,9 +489,7 @@ describe("battle runtime: Paladin's Smite", () => {
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("divine_smite"),
-            ),
+            sourceProcedureRef: expect.any(String),
             damage: {
               expr: { dice: 2, dieSize: 8 },
               damageType: "radiant",

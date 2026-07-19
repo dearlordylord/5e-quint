@@ -106,17 +106,7 @@ type SavingThrowOutcomeHole = Extract<
   { readonly kind: "savingThrowOutcome" }
 >;
 type ThunderwaveSavingThrowOutcomeHole = BattleSpellSavingThrowOutcomeHole & {
-  readonly spell: Extract<
-    BattleSpellSavingThrowOutcomeHole["spell"],
-    { readonly procedure: "saveGatedDamage" }
-  > & {
-    readonly spell: { readonly id: typeof thunderwaveSpellId };
-    readonly targeting: {
-      readonly kind: "selfOriginCube";
-      readonly sideFeet: 15;
-    };
-    readonly postSaveAreaEffect: { readonly kind: "thunderwave" };
-  };
+  readonly outcomeTargeting: "area";
 };
 
 const fighterId = combatantId("combatant:l1-sdk-fighter");
@@ -1603,7 +1593,7 @@ describe("level 1 SDK RAW integration", () => {
       { spellLevel: 1, count: 1, expended: 1 },
     ]);
     expect(caster.concentration).toEqual({
-    sourceProcedureRef: act.subject.procedureRef,
+      sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toEqual([
@@ -2206,29 +2196,7 @@ function assertLevelOneThunderwave(input: {
     label: "Thunderwave self-origin Cube Saving Throw outcomes",
     ability: "con",
     dc: { kind: "caster_spell_save_dc" },
-    spell: {
-      targeting: { kind: "selfOriginCube", sideFeet: 15 },
-      damage: { expr: { dice: 2, dieSize: 8 }, damageType: "thunder" },
-      successDamage: "half",
-      rangeFeet: 0,
-      failedSavePostDamageRiders: [],
-      postSaveAreaEffect: {
-        kind: "thunderwave",
-        creaturePush: {
-          distanceFeet: 10,
-          originDirection: "away_from_caster",
-        },
-        unsecuredObjectPush: {
-          distanceFeet: 10,
-          originDirection: "away_from_caster",
-          objectLocation: "entirely_within_area",
-        },
-        audibleBoom: {
-          sound: "thunderous boom",
-          audibleRadiusFeet: 300,
-        },
-      },
-    },
+    outcomeTargeting: "area",
   });
 
   const saveFill = thunderwaveSavingThrowOutcomeFill(save, input.casterId, [
@@ -8520,22 +8488,14 @@ function martialArtsBonusUnarmedStrikeAct(
 function requireThunderwaveSavingThrowHole(
   hole: SavingThrowOutcomeHole,
 ): ThunderwaveSavingThrowOutcomeHole {
-  if (!("spell" in hole)) {
-    throw new Error("Expected Thunderwave spell Saving Throw outcome hole.");
-  }
-  const spell = hole.spell;
   if (
-    spell.procedure !== "saveGatedDamage" ||
-    spell.spell.id !== thunderwaveSpellId ||
-    spell.targeting.kind !== "selfOriginCube" ||
-    spell.targeting.sideFeet !== 15 ||
-    spell.postSaveAreaEffect?.kind !== "thunderwave"
+    !("outcomeTargeting" in hole) ||
+    hole.outcomeTargeting !== "area" ||
+    hole.ability !== "con"
   ) {
     throw new Error("Expected Thunderwave self-origin Cube Saving Throw hole.");
   }
-  // The checks above establish the exact Thunderwave spell-hole shape; the cast
-  // carries those literal refinements through the mixed Saving Throw hole union.
-  return hole as ThunderwaveSavingThrowOutcomeHole;
+  return { ...hole, outcomeTargeting: hole.outcomeTargeting };
 }
 
 function thunderwaveSavingThrowOutcomeFill(

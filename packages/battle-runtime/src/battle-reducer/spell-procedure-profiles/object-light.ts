@@ -27,7 +27,6 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-
 import {
   battleSpellEffectOccurrenceId,
   spellId,
@@ -51,11 +50,6 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellInvocationEffectiveSpellLevel } from "../spells-effective-level.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
-  discoverDistantSpellMetamagicSelections,
-  spellMetamagicLabel,
-  type SpellMetamagicApplicationFact,
-} from "../metamagic-support.ts";
-import {
   spellObjectLightTargetFact,
   spellObjectTargetHole,
   type ObjectLightTargetFact,
@@ -76,6 +70,10 @@ import {
   SizeSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  discoverDistantSpellMetamagicSelections,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
 
 const LIGHT_OBJECT_MAX_SIZE = "large" as const;
 
@@ -332,15 +330,12 @@ function discoverObjectLightCastAct(
       invocation: objectLightInvocationRef(invocation),
       mode: { tag: "cast" as const },
     },
-    label: invocation.spell.name,
-    summary: objectLightCastSummary(invocation),
     initialHoles: [spellObjectTargetHole(invocation)],
   };
   const metamagicCastActs = discoverDistantSpellMetamagicSelections({
     actor: state.combatants.get(actorId),
     invocation,
   }).map((metamagic) => {
-    const label = spellMetamagicLabel(metamagic);
     return {
       subject: {
         tag: "actionSpell" as const,
@@ -350,8 +345,6 @@ function discoverObjectLightCastAct(
         mode: { tag: "cast" as const },
         metamagic,
       },
-      label: `${invocation.spell.name} (${label})`,
-      summary: `${objectLightCastSummary(invocation)} ${label}.`,
       initialHoles: [spellObjectTargetHole(invocation)],
     };
   });

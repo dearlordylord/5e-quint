@@ -88,7 +88,7 @@ describe("battle runtime: Open Hand Technique", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "opportunityAttackDenied",
-          sourceUnitId: "monk_open_hand_technique",
+          sourceProcedureRef: expect.any(String),
           sourceCombatantId: fighterId,
         }),
       ]),

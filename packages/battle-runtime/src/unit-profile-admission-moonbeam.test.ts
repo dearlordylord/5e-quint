@@ -114,7 +114,7 @@ describe("L12G deterministic Moonbeam admission", () => {
         },
       }),
     );
-    expect(spellHoleInvocation([area])).toEqual(
+    expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "moonbeam",
         spell,
@@ -132,7 +132,7 @@ describe("L12G deterministic Moonbeam admission", () => {
         damage: { expr: { dice: 2, dieSize: 10 }, damageType: "radiant" },
       }),
     );
-    expect(spellHoleInvocation(thirdLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(state, thirdLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "moonbeam",
         damage: { expr: { dice: 3, dieSize: 10 }, damageType: "radiant" },

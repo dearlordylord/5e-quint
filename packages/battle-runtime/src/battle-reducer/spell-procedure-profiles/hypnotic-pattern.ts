@@ -50,19 +50,6 @@ import {
 } from "../spell-condition-effects-helpers.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowOutcomeHole,
-} from "../spells-holes-fills.ts";
-import {
   saveMetamagicSelectionState,
   validateSavingThrowOutcomes,
 } from "../spells-resolve-save-gates.ts";
@@ -85,6 +72,17 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+} from "../metamagic-support.ts";
+import {
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHole,
+  spellSavingThrowOutcomeHole,
+} from "../spells-holes-fills.ts";
 
 type HypnoticPatternSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -296,13 +294,9 @@ function discoverHypnoticPatternCastAct(
     actorId,
     invocation,
   );
-  const baseCastAct = hypnoticPatternCastAct(
-    actorId,
-    invocation,
-    [savingThrowHole],
-    invocation.spell.name,
-    hypnoticPatternCastSummaryWithSavingThrow(invocation),
-  );
+  const baseCastAct = hypnoticPatternCastAct(actorId, invocation, [
+    savingThrowHole,
+  ]);
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [baseCastAct];
@@ -312,7 +306,6 @@ function discoverHypnoticPatternCastAct(
     ...discoverSpellMetamagicSelections({ actor, invocation }).map(
       (metamagic) => {
         const applications = spellMetamagicApplications(actor, metamagic);
-        const label = spellMetamagicLabel(metamagic);
         return {
           ...baseCastAct,
           subject: { ...baseCastAct.subject, metamagic },
@@ -322,8 +315,6 @@ function discoverHypnoticPatternCastAct(
             invocation,
             applications,
           ),
-          label: `${invocation.spell.name} (${label})`,
-          summary: `${baseCastAct.summary} Cast with ${label}.`,
         };
       },
     ),
@@ -334,8 +325,6 @@ function hypnoticPatternCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
   initialHoles: readonly BattleHole[],
-  label: string,
-  summary: string,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -345,8 +334,6 @@ function hypnoticPatternCastAct(
       invocation: hypnoticPatternInvocationRef(invocation),
       mode: { tag: "cast" },
     },
-    label,
-    summary,
     initialHoles,
   };
 }
@@ -354,7 +341,7 @@ function hypnoticPatternCastAct(
 function hypnoticPatternMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HypnoticPatternSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
   metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
 ): readonly BattleHole[] {
   const holes: BattleHole[] = [];
@@ -391,16 +378,6 @@ function hypnoticPatternCastSummary(
   invocation: HypnoticPatternSpellInvocation,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function hypnoticPatternCastSummaryWithSavingThrow(
-  invocation: HypnoticPatternSpellInvocation,
-): string {
-  return `${hypnoticPatternCastSummary(
-    invocation,
-  )} Table-supplied Cube affected creatures that can see the pattern make ${spellSavingThrowAbility(
-    invocation,
-  ).toUpperCase()} Saving Throws.`;
 }
 
 function ordinaryHypnoticPatternReleaseResource(
@@ -523,7 +500,7 @@ function resolveHypnoticPattern(
   }
   const savingThrowValidation = validateSavingThrowOutcomes(
     input.fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,

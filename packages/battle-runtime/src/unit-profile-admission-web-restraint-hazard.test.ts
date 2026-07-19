@@ -132,7 +132,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         area: { kind: "pointOriginCube", sideFeet: movementFeet(20) },
       }),
     );
-    expect(spellHoleInvocation([area])).toEqual(
+    expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "webRestraintHazard",
         spell,
@@ -144,7 +144,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         rangeFeet: movementFeet(60),
       }),
     );
-    expect(spellHoleInvocation(thirdLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(state, thirdLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "webRestraintHazard",
         resource: { tag: "spellSlot", slotLevel: 3 },

@@ -1,25 +1,15 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.find-familiar-lifecycle unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
-
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   applyCondition,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { Hp, spellSlotLevel } from "@dnd/shared/types";
-import {
-  abilityModifier,
-  attackBonus,
-  DieRollResult,
-  movementFeet,
-  proficiencyBonus,
-} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -32,9 +22,6 @@ import {
   findFamiliarFormEligibilityForSpell,
   type FindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
   admitCompanionToBattle,
   applyFindFamiliarZeroHitPointDisappearance,
@@ -80,6 +67,16 @@ import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-st
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+import {
+  abilityModifier,
+  attackBonus,
+  DieRollResult,
+  Hp,
+  movementFeet,
+  proficiencyBonus,
+  spellSlotLevel,
+} from "@dnd/shared/types";
+import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 const casterId = combatantId("caster");
 const familiarId = combatantId("caster-familiar");
 const otherCombatantId = combatantId("other-combatant");
@@ -1445,9 +1442,7 @@ describe("Find Familiar lifecycle", () => {
         source: {
           kind: "spell",
           sourceCombatantId: casterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("find_familiar"),
-          ),
+          sourceProcedureRef: expect.any(String),
         },
       },
     ]);

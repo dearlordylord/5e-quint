@@ -252,10 +252,6 @@ function discoverWebRestraintHazardCastAct(
         invocation: webRestraintHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: `${webRestraintHazardCastSummary(
-        invocation,
-      )} The table supplies the Web cube area identity.`,
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];

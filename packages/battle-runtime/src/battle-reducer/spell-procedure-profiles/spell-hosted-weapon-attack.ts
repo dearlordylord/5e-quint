@@ -21,7 +21,6 @@ import type {
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
-
 import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -50,9 +49,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 import {
   AbilityModifier,
@@ -63,6 +60,10 @@ import {
   DamageTypeSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 const DAMAGE_TYPE_CHOICES = [
   "radiant",
@@ -255,8 +256,6 @@ function discoverSpellHostedWeaponAttackCastAct(
             mode: { tag: "cast" },
             componentWeaponItemId: invocation.componentWeapon.itemId,
           },
-          label: `${invocation.spell.name} (${invocation.componentWeapon.attack.weapon.name})`,
-          summary: spellHostedWeaponAttackCastSummary(invocation),
           initialHoles: [spellDamageTypeChoiceHole(invocation), targetHole],
         },
       ];
@@ -405,33 +404,34 @@ function spellHostedWeaponAttackBonusDamageAdditions(
       ];
 }
 
-export const SpellHostedWeaponAttackInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellHostedWeaponAttack" }
-  >
->(
-  Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
-    procedure: Schema.Literal("spellHostedWeaponAttack"),
-    spell: BattleRuntimeObjectSchema,
-    actionCost: Schema.Literal("magicAction"),
-    componentWeapon: Schema.Struct({
-      itemId: Schema.String,
-      attack: BoundCharacterWeaponAttackActionOptionSchema,
-    }),
-    spellcastingAbilityModifier: AbilityModifier,
-    attackBonus: AttackBonus,
-    damageTypeChoices: Schema.Array(DamageTypeSchema),
-    bonusDamage: Schema.NullOr(
-      Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
-        damageType: DamageTypeSchema,
+export const SpellHostedWeaponAttackInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spellHostedWeaponAttack" }
+    >
+  >(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellHostedWeaponAttack"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      componentWeapon: Schema.Struct({
+        itemId: Schema.String,
+        attack: BoundCharacterWeaponAttackActionOptionSchema,
       }),
-    ),
-  }),
-);
+      spellcastingAbilityModifier: AbilityModifier,
+      attackBonus: AttackBonus,
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      bonusDamage: Schema.NullOr(
+        Schema.Struct({
+          expr: BattleRuntimeObjectSchema,
+          damageType: DamageTypeSchema,
+        }),
+      ),
+    }),
+  );
 export const spellHostedWeaponAttackProfile: SpellProcedureProfile<
   "spellHostedWeaponAttack",
   SpellHostedWeaponAttackInvocation,

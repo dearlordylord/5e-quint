@@ -493,7 +493,7 @@ export function rollModifierSpellAffectedTargets(input: {
   }
   const validation = validateSavingThrowOutcomes(
     input.fillSet.savingThrowOutcomes,
-    savingThrowHole,
+    input.invocation,
     input.input.state,
     input.actorId,
     undefined,

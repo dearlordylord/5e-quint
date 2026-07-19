@@ -22,7 +22,6 @@ import type {
   ActionEconomyState,
   RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-
 import {
   actionResourceAllows,
   canSpendAction,
@@ -31,23 +30,17 @@ import {
   canSpendUnarmedStrikeActionResource,
   spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
-
 import { type StandardActionKind } from "@dnd/shared/game-facts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
-
 import { Match } from "effect";
-
 import * as Either from "effect/Either";
-
 import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
-
 import type {
   BattleMovementSpeedKind,
   BattleSubject,
   CharacterProcedureSelectionSubject,
 } from "../battle-subjects.ts";
 import { isCharacterProcedureSelectionSubject } from "../battle-subjects.ts";
-
 import { CombatantId } from "../identity.ts";
 import {
   findFamiliarCompanionEntryForOwner,
@@ -61,7 +54,6 @@ import {
   findFamiliarConnectionHole,
   findFamiliarTouchDeliveryTargetHoles,
 } from "../find-familiar-companion-subjects.ts";
-
 import {
   attackActionOptionsForActor,
   martialArtsBonusUnarmedStrikeActionOptionForActor,
@@ -70,27 +62,20 @@ import {
 } from "./attack-damage-apply.ts";
 import { minimalCreatureAttackActs } from "./creature-attack.ts";
 import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
-
 import {
   helpAttackAllyChoices,
   helpAttackAllyHole,
 } from "./attack-resolution.ts";
-
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
-import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 import {
   activeLevitatedCreatureTargetsControlledBy,
   levitateAltitudeChangeHole,
 } from "./levitate-creature.ts";
 import { dragonsBreathExhaleActs } from "./dragons-breath.ts";
-
 import {
   combatantCanTakeActions,
   combatantCanTakeReactions,
 } from "./creature-state.ts";
-
-import { interruptTriggerLabel } from "./dispatcher.ts";
-
 import {
   attackTargetChoices,
   attackTargetHole,
@@ -108,13 +93,11 @@ import {
   shoveTargetHole,
   sleepShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
-
 import {
   combatantCanMoveInState,
   movementHoleHasRemainingBudget,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
-
 import {
   hypnoticPatternShakeAwakeTargetChoices,
   protectionRelevantEffectSavingThrowOutcomeHole,
@@ -122,34 +105,17 @@ import {
   sleepShakeAwakeTargetChoices,
   spellRestraintEffectEntries,
 } from "./spell-condition-effects-helpers.ts";
-
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { supportedSpellInvocationMatchesRef } from "./spells-invocation-ref.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import {
-  activeSelfTransformationModeEffect,
-  selfTransformationModeLabel,
-  spellCreatedHeldObjectEffectsForActor,
-} from "./spells-active-effects.ts";
-
-import { attackActionOptionName } from "./statblock-attacks.ts";
-
-import {
-  attackActionOptionIsOrdinaryAttackAction,
-  attackActionOptionPresentationName,
-  statBlockAttackActionOptions,
-  statBlockAttackProcedureSection,
-  attackSubjectPart,
-} from "./statblock.ts";
-import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
   statBlockProcedurePresentations,
   statBlockProcedureResourcesAvailable,
 } from "../stat-block-execution.ts";
-
 import {
   greaseGroundHazardSavingThrowOutcomeHole,
   webRestraintSavingThrowOutcomeHole,
@@ -172,22 +138,35 @@ import {
   type FlamingSphereEffect,
   type MoonbeamEffect,
 } from "./turn-end-movement.ts";
-
 import { supportedUnitFeatureActs } from "./unit-features.ts";
 import { monkFocusActs } from "./monk-focus.ts";
 import {
   isWardingBondEffect,
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
-
+import {
+  SELF_TRANSFORMATION_MODE_KINDS,
+  SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
+  discoverLegendaryActionActs,
+} from "../battle-reducer.ts";
+import { characterSpellProcedure } from "../character-execution.ts";
+import {
+  activeSelfTransformationModeEffect,
+  spellCreatedHeldObjectEffectsForActor,
+} from "./spells-active-effects.ts";
+import {
+  attackActionOptionIsOrdinaryAttackAction,
+  attackSubjectPart,
+  statBlockAttackActionOptions,
+  statBlockAttackProcedureSection,
+} from "./statblock.ts";
 import type {
-  BattleActExecutionCandidate,
   BattleActDiscoveryCandidate,
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
-  SelfTransformationModeKind,
   ClassFeatureExtraAttackActionResource,
+  SelfTransformationModeKind,
   StatBlockBattleCreatureState,
   StatBlockMultiattackActionResource,
   SupportedSpellInvocation,
@@ -202,11 +181,6 @@ type CloudkillAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "cloudkillAreaHazard" }
 >;
-import {
-  SELF_TRANSFORMATION_MODE_KINDS,
-  SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
-  discoverLegendaryActionActs,
-} from "../battle-reducer.ts";
 export function discoverBattleActCandidates(
   state: BattleState,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -241,8 +215,6 @@ function discoverBattleActsWithoutRouteEvents(
           command: "commandGrovel" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         },
-        label: "Command: Grovel",
-        summary: "Have the Prone condition and end the turn.",
         initialHoles: [],
       })),
     ];
@@ -267,8 +239,6 @@ function discoverBattleActsWithoutRouteEvents(
         );
         return {
           subject,
-          label: "Command: Drop",
-          summary: "Drop held objects and end the turn.",
           initialHoles:
             canonicalObjectIds === null
               ? [commandDropHeldObjectFactsHole(subject)]
@@ -291,8 +261,6 @@ function discoverBattleActsWithoutRouteEvents(
           command: "commandApproach" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         },
-        label: "Command: Approach",
-        summary: "Move toward the caster by a supplied shortest/direct route.",
         initialHoles: combatantCanMoveInState(state, actorId)
           ? [movementHole(state, actorId)]
           : [],
@@ -313,9 +281,6 @@ function discoverBattleActsWithoutRouteEvents(
           command: "commandFlee" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         },
-        label: "Command: Flee",
-        summary:
-          "Move away from the caster by supplied fastest-available means.",
         initialHoles: combatantCanMoveInState(state, actorId)
           ? [movementHole(state, actorId)]
           : [],
@@ -369,8 +334,6 @@ function discoverBattleActsWithoutRouteEvents(
                   action: "attack" as const,
                   ...attackSubjectPart(attack),
                 },
-                label: "Attack",
-                summary: `Take the Attack action with ${attackActionOptionPresentationName(state, actorId, attack)}.`,
                 initialHoles: [targetHole],
               },
             ];
@@ -386,9 +349,6 @@ function discoverBattleActsWithoutRouteEvents(
     acts.push(...moonbeamEndTurnSaveActs(state, actorId));
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
-      label: "End Turn",
-      summary:
-        "End the current combatant's turn and close pending Multiattack dispatches.",
       initialHoles: [],
     });
     return acts;
@@ -406,8 +366,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "disengage" },
-      label: "Disengage",
-      summary: "Prevent Movement from provoking Opportunity Attacks this turn.",
       initialHoles: [],
     });
   }
@@ -417,9 +375,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "dodge" },
-      label: "Dodge",
-      summary:
-        "Impose Disadvantage on attacks against you until your next turn.",
       initialHoles: [],
     });
   }
@@ -430,9 +385,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "helpAttack" },
-      label: "Help",
-      summary:
-        "Help an ally's next attack roll against an enemy within 5 feet.",
       initialHoles: [helpAttackAllyHole(state, actorId)],
     });
   }
@@ -443,8 +395,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "shakeAwakeFromSleep" },
-      label: "Shake Awake",
-      summary: "Use an action to shake an adjacent creature out of Sleep.",
       initialHoles: [sleepShakeAwakeTargetHole(state, actorId)],
     });
   }
@@ -459,9 +409,6 @@ function discoverBattleActsWithoutRouteEvents(
         actorId,
         action: "shakeAwakeFromHypnoticPattern",
       },
-      label: "Shake Awake",
-      summary:
-        "Use an action to shake an adjacent creature out of Hypnotic Pattern.",
       initialHoles: [hypnoticPatternShakeAwakeTargetHole(state, actorId)],
     });
   }
@@ -477,8 +424,6 @@ function discoverBattleActsWithoutRouteEvents(
           action: "ready" as const,
           readyTrigger: trigger,
         },
-        label: "Ready",
-        summary: `Prepare a Reaction for ${interruptTriggerLabel(trigger)}.`,
         initialHoles: [],
       })),
     );
@@ -490,8 +435,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "hide" },
-      label: "Hide",
-      summary: "Make a Dexterity (Stealth) check to become hidden.",
       initialHoles: [hideAbilityCheckHole(state, actorId)],
     });
   }
@@ -503,8 +446,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "search" },
-      label: "Search",
-      summary: "Make a Wisdom (Perception) check to find a hidden creature.",
       initialHoles: [searchTargetHole(state, actorId)],
     });
   }
@@ -517,8 +458,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "grapple" },
-      label: "Unarmed Strike (Grapple)",
-      summary: "Replace one attack with an Unarmed Strike Grapple.",
       initialHoles: [grappleTargetHole(state, actorId)],
     });
   }
@@ -531,8 +470,6 @@ function discoverBattleActsWithoutRouteEvents(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "shove" },
-      label: "Unarmed Strike (Shove)",
-      summary: "Replace one attack with an Unarmed Strike Shove.",
       initialHoles: [shoveTargetHole(state, actorId)],
     });
   }
@@ -546,8 +483,6 @@ function discoverBattleActsWithoutRouteEvents(
     if (grapple !== undefined) {
       acts.push({
         subject: { tag: "action", actorId, action: "escapeGrapple" },
-        label: "Escape Grapple",
-        summary: "Use an action to attempt to end the Grappled condition.",
         initialHoles: [escapeGrappleOutcomeHole(state, grapple, actorId)],
       });
     }
@@ -573,14 +508,6 @@ function discoverBattleActsWithoutRouteEvents(
           targetId,
           effectRef: spellActiveEffectExecutionRef(effect),
         },
-        label:
-          actorId === targetId
-            ? "Escape spell restraint"
-            : "Help escape spell restraint",
-        summary:
-          actorId === targetId
-            ? "Use an action to attempt to end a spell-imposed Restrained condition."
-            : "Use an action while within reach of the target to attempt to end a spell-imposed Restrained condition.",
         initialHoles: [
           escapeSpellRestraintAbilityCheckHole(state, effect, {
             actorId,
@@ -604,8 +531,6 @@ function discoverBattleActsWithoutRouteEvents(
           action: "offHandAttack",
           ...attackExecutionSelectionForOption(offHand),
         },
-        label: "Light Property Bonus Action Attack",
-        summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
         initialHoles: [attackTargetHole(state, actorId, offHand)],
       });
     }
@@ -625,8 +550,6 @@ function discoverBattleActsWithoutRouteEvents(
         action: "martialArtsUnarmedStrike",
         ...attackExecutionSelectionForOption(martialArtsUnarmedStrike),
       },
-      label: "Martial Arts Bonus Unarmed Strike",
-      summary: "Make an Unarmed Strike as a Bonus Action.",
       initialHoles: [
         attackTargetHole(state, actorId, martialArtsUnarmedStrike),
       ],
@@ -655,8 +578,6 @@ function discoverBattleActsWithoutRouteEvents(
   if (standFromProneCostFeet(state, actorId) !== null) {
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
-      label: "Stand",
-      summary: "Spend Movement equal to half Speed and end Prone.",
       initialHoles: [],
     });
   }
@@ -703,8 +624,6 @@ function companionProtocolActs(
         actorId,
         action: "permanentlyDismiss",
       },
-      label: "Dismiss Familiar Forever",
-      summary: "Use a Magic action to permanently dismiss a retained familiar.",
       initialHoles: [],
     };
     if (familiar.status === "temporarilyDismissed") {
@@ -715,9 +634,6 @@ function companionProtocolActs(
             actorId,
             action: "reappear",
           },
-          label: "Reappear Familiar",
-          summary:
-            "Use a Magic action to make a temporarily dismissed familiar reappear.",
           initialHoles: [
             companionReappearancePlacementHole({ ownerId: actorId }),
             companionReappearanceInitiativeHole({ ownerId: actorId }),
@@ -742,9 +658,6 @@ function companionProtocolActs(
           actorId,
           action: "temporarilyDismiss",
         },
-        label: "Dismiss Familiar",
-        summary:
-          "Use a Magic action to temporarily dismiss a present familiar.",
         initialHoles: [
           companionHeldObjectFactsHole({ companionId: familiarId }),
         ],
@@ -755,9 +668,6 @@ function companionProtocolActs(
           actorId,
           action: "permanentlyDismiss",
         },
-        label: "Dismiss Familiar Forever",
-        summary:
-          "Use a Magic action to permanently dismiss a present familiar.",
         initialHoles: [],
       },
     );
@@ -769,8 +679,6 @@ function companionProtocolActs(
         actorId,
         familiarId,
       },
-      label: "Share Familiar Senses",
-      summary: "Use a Bonus Action to see and hear through a present familiar.",
       initialHoles: [
         findFamiliarConnectionHole({
           ownerId: actorId,
@@ -842,8 +750,6 @@ function findFamiliarTouchSpellActs(input: {
               ? {}
               : { componentWeaponItemId: subject.componentWeaponItemId }),
           },
-          label: `Familiar Delivery: ${act.label}`,
-          summary: "Deliver a Touch spell through a present familiar.",
           initialHoles: [
             findFamiliarConnectionHole({
               ownerId: input.actorId,
@@ -877,7 +783,7 @@ function touchSpellDeliveryInvocation(
 function levitateAltitudeControlActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     !combatantCanTakeActions(actor) ||
@@ -895,9 +801,6 @@ function levitateAltitudeControlActs(
         effectRef: spellActiveEffectExecutionRef(effect),
         targetId,
       },
-      label: "Levitate altitude control",
-      summary:
-        "Use a Magic action to move the levitated target up or down while it remains within the spell's range.",
       initialHoles: [
         levitateAltitudeChangeHole({
           actorId,
@@ -912,7 +815,7 @@ function levitateAltitudeControlActs(
 function spellCreatedHeldObjectReleaseActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   return spellCreatedHeldObjectEffectsForActor(actor)
     .filter((effect) => effect.objectState.kind === "held")
@@ -923,8 +826,6 @@ function spellCreatedHeldObjectReleaseActs(
         command: "releaseSpellCreatedHeldObject" as const,
         effectRef: spellActiveEffectExecutionRef(effect),
       },
-      label: "Release spell-created held object",
-      summary: "Let go of the active spell-created held object.",
       initialHoles: [],
     }));
 }
@@ -932,7 +833,7 @@ function spellCreatedHeldObjectReleaseActs(
 function selfTransformationModeReplacementActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const activeEffect = activeSelfTransformationModeEffect(actor);
   if (
@@ -946,10 +847,8 @@ function selfTransformationModeReplacementActs(
   }
   return SELF_TRANSFORMATION_MODE_KINDS.filter(
     (mode): mode is SelfTransformationModeKind => mode !== activeEffect.mode,
-  ).flatMap((mode): readonly BattleActExecutionCandidate[] => {
+  ).flatMap((mode): readonly BattleActDiscoveryCandidate[] => {
     const baseAct = {
-      summary:
-        "Replace the active self-transformation option with a Magic action.",
       initialHoles: [],
     };
     return mode === "naturalWeapons"
@@ -964,7 +863,6 @@ function selfTransformationModeReplacementActs(
               mode,
               naturalWeaponDamageType,
             },
-            label: `Self Transformation: ${selfTransformationModeLabel(mode)} (${naturalWeaponDamageType})`,
           }),
         )
       : [
@@ -977,7 +875,6 @@ function selfTransformationModeReplacementActs(
               effectRef: spellActiveEffectExecutionRef(activeEffect),
               mode,
             },
-            label: `Self Transformation: ${selfTransformationModeLabel(mode)}`,
           },
         ];
   });
@@ -986,7 +883,7 @@ function selfTransformationModeReplacementActs(
 function pactOfTheChainFamiliarAttackActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
     !canSpendAction(state.currentTurnResources, "attack") ||
@@ -1031,8 +928,6 @@ function pactOfTheChainFamiliarAttackActs(
                   ? { statBlockDamageNotation: "static" as const }
                   : {}),
               },
-              label: "Pact Familiar Attack",
-              summary: `Forgo one Attack-action attack for the familiar to attack with ${attackActionOptionPresentationName(state, familiarId, attack)}.`,
               initialHoles: [targetHole],
             },
           ];
@@ -1040,11 +935,9 @@ function pactOfTheChainFamiliarAttackActs(
   );
 }
 
-function endTurnAct(actorId: CombatantId): BattleActExecutionCandidate {
+function endTurnAct(actorId: CombatantId): BattleActDiscoveryCandidate {
   return {
     subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
-    label: "End Turn",
-    summary: "End the current combatant's turn.",
     initialHoles: [],
   };
 }
@@ -1052,7 +945,7 @@ function endTurnAct(actorId: CombatantId): BattleActExecutionCandidate {
 function endConcentrationActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined || actor.concentration === null) {
     return [];
@@ -1060,8 +953,6 @@ function endConcentrationActs(
   return [
     {
       subject: { tag: "runtimeCommand", actorId, command: "endConcentration" },
-      label: "End Concentration",
-      summary: "End Concentration without spending an action.",
       initialHoles: [],
     },
   ];
@@ -1070,24 +961,40 @@ function endConcentrationActs(
 function readiedSpellReleaseActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
-  return [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
-    subject: {
-      tag: "runtimeCommand" as const,
-      actorId,
-      command: "releaseReadiedSpell" as const,
-      readiedSpellCasterId: casterId,
-      procedureRef: readiedSpell.procedureRef,
-    },
-    label: `Release ${readiedSpell.invocation.spell.name}`,
-    summary: `Release ${readiedSpell.invocation.spell.name} with a Reaction.`,
-    initialHoles: readiedSpellInitialHoles(state, casterId, readiedSpell),
-  }));
+): readonly BattleActDiscoveryCandidate[] {
+  return [...state.readiedSpells].flatMap(([casterId, readiedSpell]) => {
+    const caster = state.combatants.get(casterId);
+    const invocation =
+      caster?.origin.kind === "character"
+        ? characterSpellProcedure(
+            caster.origin.execution,
+            readiedSpell.procedureRef,
+          )
+        : undefined;
+    return invocation === undefined
+      ? []
+      : [
+          {
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId,
+              command: "releaseReadiedSpell" as const,
+              readiedSpellCasterId: casterId,
+              procedureRef: readiedSpell.procedureRef,
+            },
+            initialHoles: readiedSpellInitialHoles(
+              state,
+              casterId,
+              readiedSpell,
+            ),
+          },
+        ];
+  });
 }
 
 export function releaseGrappleActs(
   state: BattleState,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return state.grapples.map((grapple) => ({
     subject: {
       tag: "runtimeCommand" as const,
@@ -1095,8 +1002,6 @@ export function releaseGrappleActs(
       command: "releaseGrapple" as const,
       targetId: grapple.targetId,
     },
-    label: "Release Grapple",
-    summary: "Release a grappled target without spending an action.",
     initialHoles: [],
   }));
 }
@@ -1104,10 +1009,10 @@ export function releaseGrappleActs(
 function greaseGroundHazardEntrySaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([, combatant]) =>
     combatant.activeEffects.flatMap(
-      (effect): readonly BattleActExecutionCandidate[] => {
+      (effect): readonly BattleActDiscoveryCandidate[] => {
         if (effect.kind !== "greaseGroundHazard") {
           return [];
         }
@@ -1122,10 +1027,10 @@ function greaseGroundHazardEntrySaveActs(
 function greaseGroundHazardEndTurnActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([, combatant]) =>
     combatant.activeEffects.flatMap(
-      (effect): readonly BattleActExecutionCandidate[] => {
+      (effect): readonly BattleActDiscoveryCandidate[] => {
         if (effect.kind !== "greaseGroundHazard") {
           return [];
         }
@@ -1142,7 +1047,7 @@ function greaseGroundHazardSaveAct(
   actorId: CombatantId,
   effect: GreaseGroundHazardEffect,
   trigger: "entersArea" | "endsTurnInArea",
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1151,11 +1056,6 @@ function greaseGroundHazardSaveAct(
       areaId: effect.areaId,
       trigger,
     },
-    label: trigger === "entersArea" ? "Enter Grease" : "End Turn in Grease",
-    summary:
-      trigger === "entersArea"
-        ? "Resolve the table-supplied Grease area-entry Dexterity Saving Throw."
-        : "Resolve the table-supplied Grease end-turn Dexterity Saving Throw.",
     initialHoles: [
       greaseGroundHazardSavingThrowOutcomeHole(state, actorId, effect, trigger),
     ],
@@ -1176,7 +1076,7 @@ function activeWebRestraintHazards(
 function webRestraintEntrySaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return activeWebRestraintHazards(state).flatMap((effect) =>
     effect.entrySavedThisTurn.includes(actorId)
       ? []
@@ -1187,7 +1087,7 @@ function webRestraintEntrySaveActs(
 function webRestraintStartTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return activeWebRestraintHazards(state).flatMap((effect) =>
     effect.startTurnSavedThisTurn.includes(actorId)
       ? []
@@ -1200,7 +1100,7 @@ function webRestraintSaveAct(
   actorId: CombatantId,
   effect: WebRestraintHazardEffect,
   trigger: "entersArea" | "startsTurnInArea",
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1209,11 +1109,6 @@ function webRestraintSaveAct(
       areaId: effect.areaId,
       trigger,
     },
-    label: trigger === "entersArea" ? "Enter Web" : "Start Turn in Web",
-    summary:
-      trigger === "entersArea"
-        ? "Resolve the table-supplied first-entry Web Dexterity Saving Throw."
-        : "Resolve the table-supplied start-turn Web Dexterity Saving Throw.",
     initialHoles: [
       webRestraintSavingThrowOutcomeHole(state, actorId, effect, trigger),
     ],
@@ -1223,13 +1118,13 @@ function webRestraintSaveAct(
 function webRestrainedNoLongerInAreaActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
   }
   return actor.activeEffects.flatMap(
-    (effect): readonly BattleActExecutionCandidate[] => {
+    (effect): readonly BattleActDiscoveryCandidate[] => {
       if (
         effect.kind !== "spellCondition" ||
         effect.condition !== "restrained" ||
@@ -1250,9 +1145,6 @@ function webRestrainedNoLongerInAreaActs(
             command: "webRestrainedNoLongerInArea" as const,
             areaId: web.areaId,
           },
-          label: "Leave Web",
-          summary:
-            "Apply the table-supplied fact that the restrained target is no longer in the Web area.",
           initialHoles: [],
         }));
     },
@@ -1262,7 +1154,7 @@ function webRestrainedNoLongerInAreaActs(
 function webAreaRemovalActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return activeWebRestraintHazards(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
@@ -1270,9 +1162,6 @@ function webAreaRemovalActs(
       command: "webAreaRemoved" as const,
       areaId: effect.areaId,
     },
-    label: "Remove Web Area",
-    summary:
-      "Apply a table-supplied Web collapse, burn-away, or removal fact and end the spell area.",
     initialHoles: [],
   }));
 }
@@ -1291,7 +1180,7 @@ function activeGustOfWindLineEffects(
 function gustOfWindLineEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return activeGustOfWindLineEffects(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
@@ -1301,9 +1190,6 @@ function gustOfWindLineEndTurnSaveActs(
       directionId: effect.directionId,
       trigger: "endsTurnInLine" as const,
     },
-    label: "End Turn in Gust of Wind",
-    summary:
-      "Resolve the table-supplied Gust of Wind Line end-turn STR Saving Throw.",
     initialHoles: [
       gustOfWindLineSavingThrowOutcomeHole(
         state,
@@ -1318,7 +1204,7 @@ function gustOfWindLineEndTurnSaveActs(
 function gustOfWindLineDirectionChangeActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
@@ -1337,9 +1223,6 @@ function gustOfWindLineDirectionChangeActs(
               areaId: effect.areaId,
               directionId: effect.directionId,
             },
-            label: "Change Gust of Wind Direction",
-            summary:
-              "Spend a Bonus Action using a table-supplied Gust of Wind Line direction.",
             initialHoles: [gustOfWindLineDirectionChoiceHole(effect)],
           },
         ]
@@ -1360,7 +1243,7 @@ function gustOfWindLineDirectionChangeIsLaterTurn(
 function flamingSphereEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return activeFlamingSphereEffects(state).map((effect) =>
     flamingSphereSaveAct(state, actorId, effect),
   );
@@ -1369,7 +1252,7 @@ function flamingSphereEndTurnSaveActs(
 function flamingSphereRamActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
@@ -1388,7 +1271,7 @@ function flamingSphereRamActs(
 function flamingSphereRepositionActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
@@ -1417,7 +1300,7 @@ function flamingSphereSaveAct(
   state: BattleState,
   actorId: CombatantId,
   effect: FlamingSphereEffect,
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1426,9 +1309,6 @@ function flamingSphereSaveAct(
       areaId: effect.areaId,
       trigger: "endsTurnWithinFiveFeetOfSphere",
     },
-    label: "End Turn within 5 feet of Flaming Sphere",
-    summary:
-      "Resolve the table-supplied Flaming Sphere end-within-5-feet Dexterity Saving Throw and damage.",
     initialHoles: [
       flamingSphereSavingThrowOutcomeHole(
         state,
@@ -1443,7 +1323,7 @@ function flamingSphereSaveAct(
 function flamingSphereRepositionAct(
   actorId: CombatantId,
   effect: FlamingSphereEffect,
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1451,9 +1331,6 @@ function flamingSphereRepositionAct(
       command: "movableZoneReposition",
       areaId: effect.areaId,
     },
-    label: "Move Flaming Sphere",
-    summary:
-      "Spend a Bonus Action using table-supplied Flaming Sphere movement that does not enter a creature's space.",
     initialHoles: [flamingSphereRepositionMovementHole(effect)],
   };
 }
@@ -1463,7 +1340,7 @@ function flamingSphereRamAct(
   actorId: CombatantId,
   targetId: CombatantId,
   effect: FlamingSphereEffect,
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1473,9 +1350,6 @@ function flamingSphereRamAct(
       areaId: effect.areaId,
       trigger: "rammedBySphere",
     },
-    label: "Ram with Flaming Sphere",
-    summary:
-      "Spend a Bonus Action using table-supplied Flaming Sphere movement into the target's space and resolve its save and damage.",
     initialHoles: [
       flamingSphereRamMovementHole(targetId, effect),
       flamingSphereSavingThrowOutcomeHole(
@@ -1499,7 +1373,7 @@ function activeMoonbeamEffects(state: BattleState): readonly MoonbeamEffect[] {
 function moonbeamEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return activeMoonbeamEffects(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
@@ -1508,9 +1382,6 @@ function moonbeamEndTurnSaveActs(
       areaId: effect.areaId,
       trigger: "endsTurnInArea" as const,
     },
-    label: `End Turn in Movable Zone`,
-    summary:
-      "Resolve the table-supplied Moonbeam end-turn CON Saving Throw and radiant damage.",
     initialHoles: [
       moonbeamSavingThrowOutcomeHole(state, actorId, effect, "endsTurnInArea"),
     ],
@@ -1520,7 +1391,7 @@ function moonbeamEndTurnSaveActs(
 function moonbeamCylinderExitActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return activeMoonbeamEffects(state)
     .filter((effect) => effect.shapeShiftSuppressed.includes(actorId))
     .map((effect) => ({
@@ -1530,9 +1401,6 @@ function moonbeamCylinderExitActs(
         command: "moonbeamCylinderExit" as const,
         areaId: effect.areaId,
       },
-      label: "Leave Moonbeam Cylinder",
-      summary:
-        "Apply the table-supplied fact that the shape-shift-suppressed target has left this Moonbeam Cylinder.",
       initialHoles: [],
     }));
 }
@@ -1540,7 +1408,7 @@ function moonbeamCylinderExitActs(
 function moonbeamRepositionActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
@@ -1558,9 +1426,6 @@ function moonbeamRepositionActs(
               command: "movableZoneReposition" as const,
               areaId: effect.areaId,
             },
-            label: "Move Movable Zone",
-            summary:
-              "Spend a Magic Action using table-supplied Moonbeam movement that does not enter a creature's space.",
             initialHoles: [moonbeamRepositionMovementHole(effect)],
           },
         ]
@@ -1571,7 +1436,7 @@ function moonbeamRepositionActs(
 function protectionRelevantEffectSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return protectionRelevantEffectsForTarget(state, actorId).map((effect) => {
     const hole = protectionRelevantEffectSavingThrowOutcomeHole(
       state,
@@ -1587,9 +1452,6 @@ function protectionRelevantEffectSaveActs(
         effectRef: spellActiveEffectExecutionRef(effect),
         relevantEffect,
       },
-      label: `${relevantEffect} save`,
-      summary:
-        "Resolve a new Saving Throw against an already-applied effect relevant to Protection from Evil and Good.",
       initialHoles: [hole],
     };
   });
@@ -1598,10 +1460,10 @@ function protectionRelevantEffectSaveActs(
 function fogCloudStrongWindDispersalActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.flatMap(
-      (effect): readonly BattleActExecutionCandidate[] =>
+      (effect): readonly BattleActDiscoveryCandidate[] =>
         effect.kind === "fogCloudObscurement"
           ? [fogCloudStrongWindDispersalAct(actorId, effect)]
           : [],
@@ -1612,7 +1474,7 @@ function fogCloudStrongWindDispersalActs(
 function fogCloudStrongWindDispersalAct(
   actorId: CombatantId,
   effect: FogCloudObscurementEffect,
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1620,8 +1482,6 @@ function fogCloudStrongWindDispersalAct(
       command: "disperseFogCloud",
       areaId: effect.areaId,
     },
-    label: "Disperse Fog Cloud",
-    summary: "End the table-supplied Fog Cloud area because of strong wind.",
     initialHoles: [],
   };
 }
@@ -1629,10 +1489,10 @@ function fogCloudStrongWindDispersalAct(
 function cloudkillStrongWindDispersalActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.flatMap(
-      (effect): readonly BattleActExecutionCandidate[] =>
+      (effect): readonly BattleActDiscoveryCandidate[] =>
         effect.kind === "cloudkillAreaHazard"
           ? [cloudkillStrongWindDispersalAct(actorId, effect)]
           : [],
@@ -1643,7 +1503,7 @@ function cloudkillStrongWindDispersalActs(
 function cloudkillStrongWindDispersalAct(
   actorId: CombatantId,
   effect: CloudkillAreaHazardEffect,
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1651,8 +1511,6 @@ function cloudkillStrongWindDispersalAct(
       command: "disperseCloudkill",
       areaId: effect.areaId,
     },
-    label: "Disperse Cloudkill",
-    summary: "End the table-supplied Cloudkill area because of strong wind.",
     initialHoles: [],
   };
 }
@@ -1660,10 +1518,10 @@ function cloudkillStrongWindDispersalAct(
 function wardingBondSeparationActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([targetId, combatant]) =>
     combatant.activeEffects.flatMap(
-      (effect): readonly BattleActExecutionCandidate[] =>
+      (effect): readonly BattleActDiscoveryCandidate[] =>
         isWardingBondEffect(effect)
           ? [wardingBondSeparationAct(actorId, targetId, effect)]
           : [],
@@ -1675,7 +1533,7 @@ function wardingBondSeparationAct(
   actorId: CombatantId,
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>,
-): BattleActExecutionCandidate {
+): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
@@ -1684,9 +1542,6 @@ function wardingBondSeparationAct(
       effectRef: spellActiveEffectExecutionRef(effect),
       targetId,
     },
-    label: "End Warding Bond",
-    summary:
-      "End the Warding Bond because the connected creatures are more than 60 feet apart.",
     initialHoles: [
       wardingBondSeparationFactsHole({
         sourceCombatantId: effect.sourceCombatantId,
@@ -1700,7 +1555,7 @@ function wardingBondSeparationAct(
 export function movementActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const movementHoleForActor = movementHole(state, actorId);
   if (
     !combatantCanMoveInState(state, actorId) ||
@@ -1714,8 +1569,6 @@ export function movementActs(
   return [
     {
       subject: { tag: "runtimeCommand", actorId, command: "move" },
-      label: "Move",
-      summary: "Spend Movement using table-supplied movement cost.",
       initialHoles: [movementHoleForActor],
     },
     ...jumpMovementReplacementActs(state, actorId, movementHoleForActor),
@@ -1726,13 +1579,13 @@ function jumpMovementReplacementActs(
   state: BattleState,
   actorId: CombatantId,
   movementHoleForActor: ReturnType<typeof movementHole>,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
   }
   return actor.activeEffects.flatMap(
-    (effect): readonly BattleActExecutionCandidate[] => {
+    (effect): readonly BattleActDiscoveryCandidate[] => {
       if (
         effect.kind !== "jumpMovementReplacement" ||
         effect.usedThisTurn ||
@@ -1749,8 +1602,6 @@ function jumpMovementReplacementActs(
             command: "jumpMovementReplacement" as const,
             effectRef: spellActiveEffectExecutionRef(effect),
           },
-          label: "Jump",
-          summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxJumpMovementReplacementDistanceFeet(state, actorId, effect)} feet using table-supplied landing facts.`,
           initialHoles: [movementHoleForActor],
         },
       ];
@@ -1761,16 +1612,13 @@ function jumpMovementReplacementActs(
 export function dashActsForActor(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) return [];
   const speedKinds = representedMovementSpeedKinds(actor);
 
   return speedKinds.map((speedKind) => ({
     subject: dashSubjectForSpeedKind(actorId, speedKind),
-    label: "Dash",
-    summary:
-      "Gain extra Movement equal to the chosen Speed for the current turn.",
     initialHoles: [],
   }));
 }
@@ -1785,7 +1633,7 @@ export function dashSubjectForSpeedKind(
 export function statBlockMultiattackActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     actor?.origin.kind !== "statBlock" ||
@@ -1818,8 +1666,6 @@ export function statBlockMultiattackActs(
           action: "multiattack" as const,
           procedureRef: binding.procedureRef,
         },
-        label: presentation.label,
-        summary: `Take the Attack action using ${presentation.label}.`,
         initialHoles: [],
       },
     ];
@@ -1829,7 +1675,7 @@ export function statBlockMultiattackActs(
 export function statBlockBonusActionOptionActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleActExecutionCandidate[] {
+): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     actor?.origin.kind !== "statBlock" ||
@@ -1873,8 +1719,6 @@ export function statBlockBonusActionOptionActs(
               procedureRef: binding.procedureRef,
               standardAction,
             },
-            label: presentation.label,
-            summary: `Use ${presentation.label} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
             initialHoles:
               standardAction === "hide"
                 ? [hideAbilityCheckHole(state, actorId)]

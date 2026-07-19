@@ -209,8 +209,6 @@ function discoverJumpMovementReplacementCastAct(
             invocation: jumpMovementReplacementInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
-          label: invocation.spell.name,
-          summary: jumpMovementReplacementCastSummary(invocation),
           initialHoles: [targetHole],
         },
       ];

@@ -21,7 +21,6 @@ import {
 } from "@dnd/shared/types";
 import type { SpellRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-
 import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
 import {
   maybeOpenInterruptWindow,
@@ -48,15 +47,17 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
   BoundCharacterWeaponAttackActionOptionSchema,
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellProcedureInvocationSchema,
+} from "./profile.ts";
 
 const SHILLELAGH_WEAPON_UNIT_IDS = [
   "weapon_club",
@@ -286,8 +287,6 @@ function discoverWeaponAttackOverrideCastAct(
         mode: { tag: "cast" },
         componentWeaponItemId: invocation.attachedWeapon.itemId,
       },
-      label: `${invocation.spell.name} (${invocation.attachedWeapon.attack.weapon.name})`,
-      summary: weaponAttackOverrideCastSummary(invocation),
       initialHoles: [],
     },
   ];

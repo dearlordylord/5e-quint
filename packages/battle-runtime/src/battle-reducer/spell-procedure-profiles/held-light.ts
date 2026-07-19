@@ -152,8 +152,6 @@ function discoverHeldLightCastAct(
         invocation: heldLightInvocationRef(invocation),
         mode: { tag: "cast" },
       },
-      label: invocation.spell.name,
-      summary: heldLightCastSummary(invocation),
       initialHoles: [],
     },
   ];

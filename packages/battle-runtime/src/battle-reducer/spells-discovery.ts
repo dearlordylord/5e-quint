@@ -26,17 +26,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-interrupt-triggers.ts";
 import {
-  interruptTriggerLabel,
-  type BattleHole,
-  type BattleActDiscoveryCandidate,
-  type BattleCreatureState,
-  type BattleExecutableSpellInvocation,
-  type BattleState,
-  type ReadiedSpellInvocation,
-  type SupportedSpellInvocation,
-  type TargetListSpellInvocation,
-} from "../battle-reducer.ts";
-import {
   isCharacterProcedureSelectionSubject,
   type CharacterProcedureSelectionSubject,
   type SpellInvocationRef,
@@ -66,18 +55,28 @@ import {
   spellCastCanTriggerCounterspell,
   type CounterspellCapableReactor,
 } from "./counterspell-reaction-discovery.ts";
+import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-runtime.ts";
+import {
+  type BattleActDiscoveryCandidate,
+  type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
+  type BattleHole,
+  type BattleState,
+  type ReadiedSpellInvocation,
+  type SupportedSpellInvocation,
+  type TargetListSpellInvocation,
+} from "../battle-reducer.ts";
 import {
   actorCanOfferQuickenedSpellMetamagic,
+  admitSpellMetamagicApplications,
   discoverTransmutedSpellMetamagicSelections,
   discoverTwinnedSpellMetamagicSelections,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
-  spellMetamagicApplications,
   spellInvocationSupportsQuickenedActionRewrite,
-  transmutedSpellMetamagicLabel,
+  spellMetamagicApplications,
   twinnedSpellTargetCountInvocation,
-  admitSpellMetamagicApplications,
 } from "./metamagic.ts";
-import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-runtime.ts";
+import { spellSubjectTagForInvocation } from "./spell-execution-facts.ts";
 
 type SpellProcedureProfileDiscovery = {
   readonly discoverCastAct: (
@@ -256,8 +255,6 @@ function spellActWithQuickenedRewrite(input: {
               mode: subject.mode,
               metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
             },
-            label: `${input.act.label} (Quickened Spell)`,
-            summary: `Cast ${input.act.label} with Quickened Spell as a Bonus Action.`,
           },
         ]
       : [];
@@ -288,15 +285,12 @@ function spellActWithTransmutedDamageType(input: {
     actor: input.actor,
     invocation,
   }).map((metamagic) => {
-    const label = transmutedSpellMetamagicLabel(metamagic);
     return {
       ...input.act,
       subject: {
         ...subject,
         metamagic,
       },
-      label: `${input.act.label} (${label})`,
-      summary: `${input.act.summary} Cast with ${label}.`,
     };
   });
   return [input.act, ...transmutedActs];
@@ -354,8 +348,6 @@ function spellActWithTwinnedTargetCount(input: {
           ...act.subject,
           metamagic,
         },
-        label: `${act.label} (Twinned Spell)`,
-        summary: `${act.summary} Cast with Twinned Spell.`,
       }));
   });
   return [input.act, ...twinnedActs];
@@ -461,74 +453,6 @@ export function spellInvocationCastSummary(
 ): string {
   const profile = spellProcedureProfileFor(invocation.procedure);
   return registeredSpellProcedureCastSummary(profile, invocation);
-}
-
-export function spellSubjectTagForInvocation(
-  invocation: SupportedSpellInvocation,
-): "actionSpell" | "bonusActionSpell" {
-  if (invocation.procedure === "heldLight") {
-    return "bonusActionSpell";
-  }
-  if (
-    invocation.procedure === "spellCreatedHeldObject" ||
-    invocation.procedure === "spellCreatedHeldObjectReEvoke"
-  ) {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "dancingLightsReposition") {
-    return "bonusActionSpell";
-  }
-  if (
-    invocation.procedure === "objectContactDamageRepeat" ||
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack"
-  ) {
-    return "bonusActionSpell";
-  }
-  if (
-    invocation.procedure === "directHitPointRestoration" &&
-    invocation.actionCost === "bonusAction"
-  ) {
-    return "bonusActionSpell";
-  }
-  if (
-    invocation.procedure === "scalarBuff" &&
-    invocation.actionCost === "bonusAction"
-  ) {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "weaponDamageRider") {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "magicWeaponEnhancement") {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "weaponAttackOverride") {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "jumpMovementReplacement") {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "selfTeleport") {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "sanctuaryTargetingInterdiction") {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "directConditionRemoval") {
-    return "bonusActionSpell";
-  }
-  if (
-    invocation.procedure === "afterHitDamage" ||
-    invocation.procedure === "afterHitTimedDamageAndSave" ||
-    invocation.procedure === "afterHitDamageAndIllumination"
-  ) {
-    return "bonusActionSpell";
-  }
-  if (invocation.procedure === "markedDamageRider") {
-    return "bonusActionSpell";
-  }
-  return "actionSpell";
 }
 
 export function spellCastSelectionSubject(
@@ -654,8 +578,6 @@ export function readiedSpellAct(
       invocation: supportedSpellInvocationRef(invocation),
       mode: { tag: "ready" as const, trigger },
     },
-    label: `Ready ${invocation.spell.name}`,
-    summary: `Ready ${invocation.spell.name} for ${interruptTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
     initialHoles: [],
   }));
 }

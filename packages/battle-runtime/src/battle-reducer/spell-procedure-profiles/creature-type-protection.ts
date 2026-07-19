@@ -248,8 +248,6 @@ function discoverCreatureTypeProtectionCastAct(
           invocation: creatureTypeProtectionInvocationRef(invocation),
           mode: { tag: "cast" as const },
         },
-        label: invocation.spell.name,
-        summary: creatureTypeProtectionCastSummary(invocation),
         initialHoles: [],
       },
     ];
@@ -267,8 +265,6 @@ function discoverCreatureTypeProtectionCastAct(
               invocation: creatureTypeProtectionInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
-            label: invocation.spell.name,
-            summary: creatureTypeProtectionCastSummary(invocation),
             initialHoles: [targetHole],
           },
         ];

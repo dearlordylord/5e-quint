@@ -4,7 +4,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-08-ROGUE-SUPREME-SNEAK rogue_supreme_sneak
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
-
 import {
   battleFillEquals,
   type BattleActiveEffect,
@@ -13,14 +12,17 @@ import {
   type BattleHole,
   type BattleState,
 } from "./battle-reducer.ts";
+import { difficultyClass, movementFeet } from "@dnd/shared/types";
 import {
   attackDamageDispositionFill,
   attackDamageHoleAfterHit,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
-  attackTargetFill,
   attackRollFill,
   attackRollHoleAfterTarget,
+  attackTargetFill,
   battleId,
+  characterBonusAttackSubjectForTest,
   characterSeed,
   combatantId,
   concentrationSavingThrowFill,
@@ -30,16 +32,15 @@ import {
   elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
-  attackExecutionSelectionForSubjectForTest,
-  characterBonusAttackSubjectForTest,
   fighterId,
-  goblinId,
   goblinAttackSubject,
+  goblinId,
   hasCondition,
   interruptDecisionFill,
   movementFill,
-  reactionChoiceWithSubject,
   opportunityAttackProcedureSelectionForTest,
+  reactionChoiceWithSubject,
+  requireCharacterUnitProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleInterrupt,
@@ -47,16 +48,18 @@ import {
   savingThrowOutcomeFill,
   sneakAttackFeature,
   startBattleRight,
-  statBlockRecord,
   statBlockCreatureInit,
+  statBlockRecord,
   targetFill,
   testCharacterD20Statistics,
   testDaggerAttack,
   testShortswordAttack,
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
-import { difficultyClass, movementFeet } from "@dnd/shared/types";
-import { battleCunningStrikeOptionGrantSupportForUnit } from "./unit-feature-support.ts";
+import {
+  CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+  battleCunningStrikeOptionGrantSupportForUnit,
+} from "./unit-feature-support.ts";
 
 describe("battle runtime: Cunning Strike", () => {
   test("exposes typed Cunning Strike options from an eligible Sneak Attack damage rider", () => {
@@ -397,7 +400,17 @@ describe("battle runtime: Cunning Strike", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "unitFeatureConditionEndTurnSave",
-          sourceUnitId: "rogue_cunning_strike",
+          sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+            window.state,
+            fighterId,
+            "rogue_cunning_strike",
+            {
+              kind: "unitSupportProfile",
+              supportKinds: new Set([
+                CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+              ]),
+            },
+          ),
           sourceCombatantId: fighterId,
           condition: "poisoned",
           expiresAt: {
