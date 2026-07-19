@@ -150,6 +150,7 @@ export const DECISION_REASONS = [
   "implementation-required-after-findings",
   "accepted-result-queued",
   "integration-target-lease-acquired",
+  "integration-review-accepted",
   "tracker-completion-confirmed",
   "resource-capacity-available",
 ] as const;
@@ -254,8 +255,24 @@ export type OperationOccurrence =
       "review-findings-returned"
     >
   | OccurrenceFor<
-      Extract<WorkflowOperation, { readonly verdict: "accept" }>,
+      Extract<
+        WorkflowOperation,
+        {
+          readonly tag: "TaskReviewVerdictReturned";
+          readonly verdict: "accept";
+        }
+      >,
       "accepted-result-queued"
+    >
+  | OccurrenceFor<
+      Extract<
+        WorkflowOperation,
+        {
+          readonly tag: "IntegrationReviewVerdictReturned";
+          readonly verdict: "accept";
+        }
+      >,
+      "integration-review-accepted"
     >
   | OccurrenceFor<
       Extract<WorkflowOperation, { readonly tag: "AcceptedResultQueued" }>,
@@ -480,6 +497,7 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
     readonly completed: boolean;
   };
   const actors = new Map<ActorInvocationId, ActorRecord>();
+  const seenSessionIds = new Set<AgentSessionId>();
   let authoritativeTaskIds = new Set<TaskId>();
   let previousCursor = -1;
   let previousJournalPosition = 0;
@@ -641,13 +659,9 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
                       binding.supersededSessionId,
                   )
               : undefined;
-        const sessionAlreadyBound = [...actors.values()].some(
-          (candidate) =>
-            candidate.actor.sessionBinding.sessionId === binding.sessionId &&
-            !candidate.completed,
-        );
+        const sessionIsFresh = !seenSessionIds.has(binding.sessionId);
         const lineageMatches =
-          (binding.tag === "InitialSession" && !sessionAlreadyBound) ||
+          (binding.tag === "InitialSession" && sessionIsFresh) ||
           (prior !== undefined &&
             prior.completed &&
             prior.actor.role === startedActor.role &&
@@ -656,9 +670,10 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
               ? prior.node.tag === "IntegrationLifecycle" &&
                 occurrence.operation.node.tag === "IntegrationLifecycle" &&
                 prior.node.targetId === occurrence.operation.node.targetId
-              : prior.node.taskId === occurrence.operation.node.taskId) &&
+              : sameWorkflowNode(prior.node, occurrence.operation.node)) &&
             (prior.actor.sessionBinding.sessionId !== binding.sessionId) ===
-              (binding.tag === "ReplacementSession"));
+              (binding.tag === "ReplacementSession") &&
+            (binding.tag === "ResumedSession" || sessionIsFresh));
         if (!lineageMatches) {
           issues.push({
             tag: "InvalidSessionLineage",
@@ -670,6 +685,7 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           node: occurrence.operation.node,
           completed: false,
         });
+        seenSessionIds.add(binding.sessionId);
       } else if (
         (occurrence.operation.tag === "TaskReviewVerdictReturned" ||
           occurrence.operation.tag === "IntegrationReviewVerdictReturned") &&

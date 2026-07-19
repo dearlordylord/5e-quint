@@ -83,11 +83,12 @@ const traceItemDetail = (
         "actor",
         actor !== null
           ? `${actor.role} · ${actor.invocationId}`
-          : item.occurrence.operation.tag === "TaskReviewVerdictReturned" ||
-              item.occurrence.operation.tag ===
-                "IntegrationReviewVerdictReturned"
+          : item.occurrence.operation.tag === "TaskReviewVerdictReturned"
             ? `task-reviewer · ${item.occurrence.operation.actorInvocationId}`
-            : "coordinator",
+            : item.occurrence.operation.tag ===
+                "IntegrationReviewVerdictReturned"
+              ? `integration-reviewer · ${item.occurrence.operation.actorInvocationId}`
+              : "coordinator",
       ],
       ...(actor === null ? [] : [["session", sessionDetail(actor)] as const]),
       ["workflow node", node.tag],

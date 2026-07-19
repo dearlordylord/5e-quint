@@ -233,6 +233,89 @@ describe("trace projections", () => {
     });
   });
 
+  it("rejects relabeling a completed session as initial", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-170-implementation-round-2",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                actor: {
+                  ...occurrence.operation.actor,
+                  sessionBinding: {
+                    tag: "InitialSession",
+                    sessionId: "session:gh-170-implementer",
+                  },
+                },
+              },
+            }
+          : occurrence,
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-170-implementer-round-2",
+    });
+  });
+
+  it("rejects replacement with a previously used session", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-170-implementation-round-2",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                actor: {
+                  ...occurrence.operation.actor,
+                  sessionBinding: {
+                    tag: "ReplacementSession",
+                    sessionId: "session:gh-46-reviewer",
+                    supersededSessionId: "session:gh-170-implementer",
+                  },
+                },
+              },
+            }
+          : occurrence,
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-170-implementer-round-2",
+    });
+  });
+
+  it("rejects continuation into another attempt worktree", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-170-implementation-round-2",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                node: {
+                  ...occurrence.operation.node,
+                  attemptId: "attempt:gh-170-2",
+                  worktreeId: "worktree:gh-170-2",
+                },
+              },
+            }
+          : occurrence,
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-170-implementer-round-2",
+    });
+  });
+
   it("retains canonical operation, authority, target, and causal identity", () => {
     const projection = projectAt(makeTrackerDagRun("resume-bound-session"), 10);
     const integration = projection.occurrences.find(

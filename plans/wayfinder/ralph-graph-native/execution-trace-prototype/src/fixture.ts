@@ -314,7 +314,7 @@ const integrationReviewVerdictOccurred = (
     predecessors: [
       { occurrenceId: predecessor, relation: "workflow-progression" },
     ],
-    decisionReason: "accepted-result-queued",
+    decisionReason: "integration-review-accepted",
   });
 
 const completionOccurred = (

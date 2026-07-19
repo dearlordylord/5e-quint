@@ -26,7 +26,7 @@ export interface TaskDagRewrite {
 
 export interface ActorStreamEntry {
   readonly tag: "output" | "gap";
-  readonly cursor: number;
+  readonly cursor: TraceCursor;
   readonly summary: string;
   readonly evidenceIds: ReadonlyArray<EvidenceId>;
 }
@@ -51,18 +51,18 @@ interface ActorSpanBase {
   readonly taskId: TaskId;
   readonly actor: ActorIdentity;
   readonly stage: ActorStage;
-  readonly startCursor: number;
+  readonly startCursor: TraceCursor;
 }
 
 export type ActorSpan = ActorSpanBase &
   (
     | {
         readonly tag: "ActiveActorSpan";
-        readonly throughCursor: number;
+        readonly throughCursor: TraceCursor;
       }
     | {
         readonly tag: "CompletedActorSpan";
-        readonly endCursor: number;
+        readonly endCursor: TraceCursor;
       }
   );
 
@@ -74,6 +74,7 @@ export type TaskExecutionProjection = { readonly taskId: TaskId } & (
   | { readonly tag: "queued-for-integration" }
   | { readonly tag: "integrating" }
   | { readonly tag: "reviewing-integration" }
+  | { readonly tag: "integration-accepted-awaiting-completion" }
   | { readonly tag: "completion-acknowledged" }
 );
 
@@ -115,9 +116,11 @@ const unique = <Value>(values: ReadonlyArray<Value>): ReadonlyArray<Value> => [
   ...new Set(values),
 ];
 
+type ValidatedTraceItem = ValidatedTraceRun["items"][number];
+
 type TracePrefix = readonly [
-  SemanticTraceItem & { readonly tag: "TrackerRevisionObserved" },
-  ...ReadonlyArray<SemanticTraceItem>,
+  ValidatedTraceItem & { readonly tag: "TrackerRevisionObserved" },
+  ...ReadonlyArray<ValidatedTraceItem>,
 ];
 
 const taskDagAt = (items: TracePrefix): TaskDagRevision => {
@@ -183,7 +186,7 @@ const rewriteAt = (items: TracePrefix): TaskDagRewrite | null => {
 };
 
 const actorsAt = (
-  items: ReadonlyArray<SemanticTraceItem>,
+  items: ReadonlyArray<ValidatedTraceItem>,
   occurrences: ReadonlyArray<OperationOccurrence>,
 ): ReadonlyArray<ActorProjection> => {
   const identities = new Map<ActorInvocationId, ActorIdentity>();
@@ -240,11 +243,13 @@ const actorsAt = (
 };
 
 const actorSpansAt = (
-  items: ReadonlyArray<SemanticTraceItem>,
-  cursor: number,
+  items: ReadonlyArray<ValidatedTraceItem>,
+  cursor: TraceCursor,
 ): ReadonlyArray<ActorSpan> => {
   const operationItems = items.filter(
-    (item): item is SemanticTraceItem & { readonly tag: "OperationOccurred" } =>
+    (
+      item,
+    ): item is ValidatedTraceItem & { readonly tag: "OperationOccurred" } =>
       item.tag === "OperationOccurred",
   );
 
@@ -289,7 +294,7 @@ const taskExecutionAfter = (
   if (operation.tag === "IntegrationReviewVerdictReturned") {
     return operation.verdict === "findings"
       ? { taskId, tag: "integrating" }
-      : { taskId, tag: "reviewing-integration" };
+      : { taskId, tag: "integration-accepted-awaiting-completion" };
   }
   if (operation.tag === "AcceptedResultQueued") {
     return { taskId, tag: "queued-for-integration" };
