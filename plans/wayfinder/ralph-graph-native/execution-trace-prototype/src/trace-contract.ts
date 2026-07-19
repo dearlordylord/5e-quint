@@ -13,6 +13,15 @@ export type TrackerRevision = `tracker-revision:${string}`;
 export type IntegrationId = `integration:${string}`;
 export type IntegrationTargetId = `integration-target:${string}`;
 
+declare const traceCursorBrand: unique symbol;
+declare const journalPositionBrand: unique symbol;
+declare const observedAtBrand: unique symbol;
+export type TraceCursor = number & { readonly [traceCursorBrand]: true };
+export type JournalPosition = number & {
+  readonly [journalPositionBrand]: true;
+};
+export type ObservedAt = string & { readonly [observedAtBrand]: true };
+
 export const TASK_LIFECYCLES = ["open", "closed"] as const;
 export type TaskLifecycle = (typeof TASK_LIFECYCLES)[number];
 
@@ -308,7 +317,26 @@ export type TraceRun =
 
 declare const validatedTraceRun: unique symbol;
 
-export type ValidatedTraceRun = TraceRun & {
+type ValidatedTraceItem<Item extends SemanticTraceItem = SemanticTraceItem> =
+  Item extends SemanticTraceItem
+    ? Omit<Item, "cursor" | "observedAt" | "journalPosition"> & {
+        readonly cursor: TraceCursor;
+        readonly observedAt: ObservedAt;
+      } & (Item extends { readonly tag: "OperationOccurred" }
+          ? { readonly journalPosition: JournalPosition }
+          : object)
+    : never;
+
+type ValidatedTraceItems = readonly [
+  ValidatedTraceItem<TrackerRevisionObserved>,
+  ...ReadonlyArray<ValidatedTraceItem>,
+];
+
+type ValidatedRun<Run extends TraceRun = TraceRun> = Run extends TraceRun
+  ? Omit<Run, "items"> & { readonly items: ValidatedTraceItems }
+  : never;
+
+export type ValidatedTraceRun = ValidatedRun & {
   readonly [validatedTraceRun]: true;
 };
 
@@ -318,7 +346,17 @@ export type TraceValidationIssue =
   | { readonly tag: "DanglingTaskParent"; readonly taskId: TaskId }
   | { readonly tag: "DanglingPrerequisite"; readonly taskId: TaskId }
   | { readonly tag: "TaskDependencyCycle"; readonly taskId: TaskId }
+  | { readonly tag: "InvalidCursor"; readonly cursor: number }
   | { readonly tag: "NonIncreasingCursor"; readonly cursor: number }
+  | { readonly tag: "InvalidObservedAt"; readonly observedAt: string }
+  | {
+      readonly tag: "InvalidJournalPosition";
+      readonly journalPosition: number;
+    }
+  | {
+      readonly tag: "NonIncreasingJournalPosition";
+      readonly journalPosition: number;
+    }
   | {
       readonly tag: "DuplicateObservation";
       readonly observationId: ObservationId;
@@ -344,6 +382,18 @@ export type TraceValidationIssue =
     }
   | {
       readonly tag: "UnknownActor";
+      readonly actorInvocationId: ActorInvocationId;
+    }
+  | {
+      readonly tag: "InvalidActorCompletion";
+      readonly actorInvocationId: ActorInvocationId | null;
+    }
+  | {
+      readonly tag: "ActorAlreadyCompleted";
+      readonly actorInvocationId: ActorInvocationId;
+    }
+  | {
+      readonly tag: "InvalidSessionLineage";
       readonly actorInvocationId: ActorInvocationId;
     };
 
@@ -392,15 +442,8 @@ const taskDagIssues = (
     }
     if (visited.has(taskId)) return;
     visiting.add(taskId);
-    const task = byId.get(taskId);
-    const dependencies = [
-      ...(task?.parentTaskId === null || task?.parentTaskId === undefined
-        ? []
-        : [task.parentTaskId]),
-      ...(task?.prerequisiteIds ?? []),
-    ];
-    for (const dependencyId of dependencies) {
-      if (byId.has(dependencyId)) visit(dependencyId);
+    for (const prerequisiteId of byId.get(taskId)?.prerequisiteIds ?? []) {
+      if (byId.has(prerequisiteId)) visit(prerequisiteId);
     }
     visiting.delete(taskId);
     visited.add(taskId);
@@ -414,15 +457,27 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
   const observations = new Map<ObservationId, TrackerRevision>();
   const occurrences = new Set<OccurrenceId>();
   const operations = new Set<OperationId>();
-  const actors = new Set<ActorInvocationId>();
+  type ActorRecord = {
+    readonly actor: ActorIdentity;
+    readonly node: WorkflowNode;
+    readonly completed: boolean;
+  };
+  const actors = new Map<ActorInvocationId, ActorRecord>();
   let authoritativeTaskIds = new Set<TaskId>();
   let previousCursor = -1;
+  let previousJournalPosition = 0;
 
   for (const item of trace.items) {
+    if (!Number.isSafeInteger(item.cursor) || item.cursor < 0) {
+      issues.push({ tag: "InvalidCursor", cursor: item.cursor });
+    }
     if (item.cursor <= previousCursor) {
       issues.push({ tag: "NonIncreasingCursor", cursor: item.cursor });
     }
     previousCursor = item.cursor;
+    if (!/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(item.observedAt)) {
+      issues.push({ tag: "InvalidObservedAt", observedAt: item.observedAt });
+    }
     if (item.tag === "TrackerRevisionObserved") {
       if (observations.has(item.observationId)) {
         issues.push({
@@ -436,6 +491,21 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
       continue;
     }
     if (item.tag === "OperationOccurred") {
+      if (
+        !Number.isSafeInteger(item.journalPosition) ||
+        item.journalPosition <= 0
+      ) {
+        issues.push({
+          tag: "InvalidJournalPosition",
+          journalPosition: item.journalPosition,
+        });
+      } else if (item.journalPosition <= previousJournalPosition) {
+        issues.push({
+          tag: "NonIncreasingJournalPosition",
+          journalPosition: item.journalPosition,
+        });
+      }
+      previousJournalPosition = item.journalPosition;
       const occurrence = item.occurrence;
       if (occurrences.has(occurrence.id)) {
         issues.push({
@@ -486,14 +556,95 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
           actorInvocationId: occurrence.actorCompletion.actorInvocationId,
         });
       }
+      const completedActor =
+        occurrence.actorCompletion.tag === "ActorCompleted"
+          ? actors.get(occurrence.actorCompletion.actorInvocationId)
+          : undefined;
+      const operation = occurrence.operation;
+      const expectedCompletionRole =
+        operation.tag === "TaskReviewVerdictReturned"
+          ? "task-reviewer"
+          : operation.tag === "TrackerCompletionAcknowledged"
+            ? "integration-agent"
+            : operation.tag === "ActorInvocationStarted" &&
+                operation.stage === "fresh-task-review"
+              ? "implementer"
+              : operation.tag === "ActorInvocationStarted" &&
+                  operation.stage === "fresh-integration-review"
+                ? "integration-agent"
+                : null;
+      const completionMatchesOperation =
+        expectedCompletionRole === null
+          ? occurrence.actorCompletion.tag === "NoActorCompleted"
+          : completedActor !== undefined &&
+            completedActor.actor.role === expectedCompletionRole &&
+            completedActor.node.taskId === operation.node.taskId &&
+            (operation.tag !== "TaskReviewVerdictReturned" ||
+              operation.actorInvocationId ===
+                occurrence.actorCompletion.actorInvocationId);
+      if (!completionMatchesOperation) {
+        issues.push({
+          tag: "InvalidActorCompletion",
+          actorInvocationId:
+            occurrence.actorCompletion.tag === "ActorCompleted"
+              ? occurrence.actorCompletion.actorInvocationId
+              : null,
+        });
+      } else if (completedActor?.completed === true) {
+        issues.push({
+          tag: "ActorAlreadyCompleted",
+          actorInvocationId: completedActor.actor.invocationId,
+        });
+      } else if (completedActor !== undefined) {
+        actors.set(completedActor.actor.invocationId, {
+          ...completedActor,
+          completed: true,
+        });
+      }
       if (occurrence.operation.tag === "ActorInvocationStarted") {
-        if (actors.has(occurrence.operation.actor.invocationId)) {
+        const startedActor = occurrence.operation.actor;
+        if (actors.has(startedActor.invocationId)) {
           issues.push({
             tag: "DuplicateActorInvocation",
-            actorInvocationId: occurrence.operation.actor.invocationId,
+            actorInvocationId: startedActor.invocationId,
           });
         }
-        actors.add(occurrence.operation.actor.invocationId);
+        const binding = startedActor.sessionBinding;
+        const prior =
+          binding.tag === "ResumedSession"
+            ? actors.get(binding.previousInvocationId)
+            : binding.tag === "ReplacementSession"
+              ? [...actors.values()]
+                  .reverse()
+                  .find(
+                    (candidate) =>
+                      candidate.actor.sessionBinding.sessionId ===
+                      binding.supersededSessionId,
+                  )
+              : undefined;
+        const lineageMatches =
+          binding.tag === "InitialSession" ||
+          (prior !== undefined &&
+            prior.actor.role === startedActor.role &&
+            (startedActor.role === "integration-agent" ||
+            startedActor.role === "integration-reviewer"
+              ? prior.node.tag === "IntegrationLifecycle" &&
+                occurrence.operation.node.tag === "IntegrationLifecycle" &&
+                prior.node.targetId === occurrence.operation.node.targetId
+              : prior.node.taskId === occurrence.operation.node.taskId) &&
+            (prior.actor.sessionBinding.sessionId !== binding.sessionId) ===
+              (binding.tag === "ReplacementSession"));
+        if (!lineageMatches) {
+          issues.push({
+            tag: "InvalidSessionLineage",
+            actorInvocationId: startedActor.invocationId,
+          });
+        }
+        actors.set(startedActor.invocationId, {
+          actor: startedActor,
+          node: occurrence.operation.node,
+          completed: false,
+        });
       } else if (
         occurrence.operation.tag === "TaskReviewVerdictReturned" &&
         !actors.has(occurrence.operation.actorInvocationId)
@@ -515,15 +666,13 @@ export const validateTraceRun = (trace: TraceRun): TraceValidationResult => {
     }
   }
 
-  return issues.length === 0
-    ? { tag: "ValidTrace", trace: trace as ValidatedTraceRun }
-    : {
-        tag: "InvalidTrace",
-        issues: issues as [
-          TraceValidationIssue,
-          ...Array<TraceValidationIssue>,
-        ],
-      };
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return { tag: "InvalidTrace", issues: [firstIssue, ...remainingIssues] };
+  }
+  // This is the sole cast into the private validated type: every primitive,
+  // identity, graph, actor, lineage, and ordering invariant was checked above.
+  return { tag: "ValidTrace", trace: trace as ValidatedTraceRun };
 };
 
 export const assertValidTraceRun = (trace: TraceRun): ValidatedTraceRun => {

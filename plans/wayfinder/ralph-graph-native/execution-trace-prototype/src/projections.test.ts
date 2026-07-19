@@ -21,10 +21,10 @@ import {
 describe("trace projections", () => {
   it("rejects invalid trace ordering before projection", () => {
     const valid = makeTrackerDagRun("resume-bound-session");
-    const invalid = {
+    const invalid: TraceRun = {
       ...valid,
       items: [valid.items[0], { ...valid.items[1], cursor: 0 }],
-    } as TraceRun;
+    };
 
     const result = validateTraceRun(invalid);
     expect(result.tag).toBe("InvalidTrace");
@@ -34,6 +34,48 @@ describe("trace projections", () => {
         cursor: 0,
       });
     }
+  });
+
+  it("keeps grouping independent from prerequisite cycle detection", () => {
+    const trace: TraceRun = {
+      schemaVersion: 1,
+      mode: "simulation",
+      scenarioId: "scenario:independent-grouping-and-dependency",
+      basis: { tag: "SyntheticStress" },
+      items: [
+        {
+          tag: "TrackerRevisionObserved",
+          cursor: 0,
+          observedAt: "00:00:00",
+          observationId: "observation:independent-relations",
+          taskDag: {
+            revision: "tracker-revision:independent-relations",
+            tasks: [
+              {
+                id: "task:parent",
+                title: "Parent blocked by its child",
+                lifecycle: "open",
+                parentTaskId: null,
+                prerequisiteIds: ["task:child"],
+                assignment: { tag: "Unassigned" },
+                labels: [],
+              },
+              {
+                id: "task:child",
+                title: "Grouped child",
+                lifecycle: "open",
+                parentTaskId: "task:parent",
+                prerequisiteIds: [],
+                assignment: { tag: "Unassigned" },
+                labels: [],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    expect(validateTraceRun(trace).tag).toBe("ValidTrace");
   });
 
   it("retains canonical operation, authority, target, and causal identity", () => {
