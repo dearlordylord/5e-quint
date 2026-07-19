@@ -38,7 +38,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     [
       targetId,
       effect.sourceCombatantId,
-      effect.sourceSpellId,
+      effect.sourceProcedureRef,
       trigger,
       ...(trigger === "damage" ? [damageEventKey] : []),
     ]
@@ -49,10 +49,10 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} repeat WIS save`,
+    label: "Repeat WIS save",
     hideousLaughterRepeatSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       trigger,
       save: effect.save,

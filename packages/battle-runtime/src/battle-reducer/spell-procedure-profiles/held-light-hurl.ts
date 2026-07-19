@@ -23,13 +23,19 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
-import { spellSubjectTagForInvocation } from "../spells-discovery.ts";
+import {
+  BattleActiveEffectExecutionRef,
+  spellId,
+  type CombatantId,
+} from "../../identity.ts";
+import { characterSpellProcedure } from "../../character-execution.ts";
+import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
@@ -89,6 +95,7 @@ function admitHeldLightHurl(
   const damageEffect = hurlOperation.effect.onHit[0];
   if (
     damageEffect?.kind !== "damage" ||
+    !Schema.is(DamageTypeSchema)(damageEffect.damageType) ||
     damageEffect.damageType !== "fire" ||
     damageEffect.amount === undefined
   ) {
@@ -103,31 +110,44 @@ function admitHeldLightHurl(
     return [];
   }
   const spellcasting = ctx.actor.origin.spellcasting;
-  return [
-    {
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
-      procedure: "heldLightHurl",
-      spell,
-      targeting: { kind: "singleCreatureOrObject" },
-      damage: {
-        expr: damageExpr,
-        damageType: damageEffect.damageType,
+  const attackKind = hurlOperation.effect.attackKind;
+  const damageType = damageEffect.damageType;
+  return ctx.actor.activeEffects.flatMap((effect) => {
+    if (effect.kind !== "heldLight") return [];
+    const source = characterSpellProcedure(
+      ctx.actor.origin.execution,
+      effect.sourceProcedureRef,
+    );
+    if (source?.procedure !== "heldLight" || source.spell.id !== spell.id) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "classCantrip" },
+        resource: { tag: "none" },
+        procedure: "heldLightHurl",
+        sourceEffectRef: effect.effectRef,
+        spell,
+        targeting: { kind: "singleCreatureOrObject" },
+        damage: {
+          expr: damageExpr,
+          damageType,
+        },
+        rangeFeet: movementFeet(60),
+        attackKind,
+        attackBonus: attackBonus(
+          Number(spellcasting.spellcastingAbilityModifier) +
+            Number(spellcasting.proficiencyBonus),
+        ),
       },
-      rangeFeet: movementFeet(60),
-      attackKind: hurlOperation.effect.attackKind,
-      attackBonus: attackBonus(
-        Number(spellcasting.spellcastingAbilityModifier) +
-          Number(spellcasting.proficiencyBonus),
-      ),
-    },
-  ];
+    ];
+  });
 }
 
 function discoverHeldLightHurlCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HeldLightHurlInvocation,
+  invocation: BattleExecutableSpellInvocation<HeldLightHurlInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles = [
@@ -136,12 +156,11 @@ function discoverHeldLightHurlCastAct(
   ];
   return [
     {
-      subject: {
-        tag: spellSubjectTagForInvocation(invocation),
+      subject: spellCastSelectionSubject(
         actorId,
-        invocation: heldLightHurlInvocationRef(invocation),
-        mode: { tag: "cast" as const },
-      },
+        invocation,
+        heldLightHurlInvocationRef(invocation),
+      ),
       label: invocation.spell.name,
       summary: heldLightHurlCastSummary(invocation),
       initialHoles,
@@ -176,6 +195,7 @@ const HeldLightHurlInvocationSchema = spellProcedureInvocationSchema<
     access: ClassCantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("heldLightHurl"),
+    sourceEffectRef: BattleActiveEffectExecutionRef,
     spell: BattleRuntimeObjectSchema,
     targeting: SingleCreatureOrObjectSpellTargetingSchema,
     damage: Schema.Struct({

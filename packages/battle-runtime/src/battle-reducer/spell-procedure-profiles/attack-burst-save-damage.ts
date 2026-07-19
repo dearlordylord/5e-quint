@@ -26,6 +26,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -35,7 +36,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
   readiedSpellAct,
-  spellSubjectTagForInvocation,
+  spellCastSelectionSubject,
 } from "../spells-discovery.ts";
 import {
   supportedPreparedAttackBurstSaveDamageProfile,
@@ -86,7 +87,7 @@ function admitAttackBurstSaveDamage(
 function discoverAttackBurstSaveDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: AttackBurstSaveDamageInvocation,
+  invocation: BattleExecutableSpellInvocation<AttackBurstSaveDamageInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
@@ -94,12 +95,11 @@ function discoverAttackBurstSaveDamageCastAct(
       ? []
       : [
           {
-            subject: {
-              tag: spellSubjectTagForInvocation(invocation),
+            subject: spellCastSelectionSubject(
               actorId,
-              invocation: attackBurstSaveDamageInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
+              invocation,
+              attackBurstSaveDamageInvocationRef(invocation),
+            ),
             label: invocation.spell.name,
             summary: attackBurstSaveDamageCastSummary(invocation),
             initialHoles: [targetHole],

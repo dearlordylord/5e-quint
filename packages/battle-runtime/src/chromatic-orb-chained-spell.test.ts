@@ -1,3 +1,9 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import * as Either from "effect/Either";
@@ -9,7 +15,6 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   startBattle,
   type BattleActiveEffect,
   type AvailableBattleAct,
@@ -18,7 +23,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -56,14 +61,19 @@ const statBlockCatalog = statBlockCatalogResult.catalog;
 const chromaticOrb = decodeSpellRecord(chromaticOrbInput);
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 
 describe("Chromatic Orb chained spell attack", () => {
   test("is offered for the chained spell attack shape without requiring SRD identity", () => {
     const canonicalState = chromaticOrbBattle({ spellLevel: 1 });
     const canonicalAct = chromaticOrbAct(canonicalState);
-    expect(canonicalAct.subject.invocation.spellId).toBe("chromatic_orb");
+    expect(battleActSpellPresentation(canonicalAct)?.invocation.spellId).toBe(
+      "chromatic_orb",
+    );
 
     const noncanonicalLookalike = {
       ...chromaticOrb,
@@ -82,8 +92,10 @@ describe("Chromatic Orb chained spell attack", () => {
       discoverBattleActs(lookalikeState).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === noncanonicalLookalike.id &&
-          candidate.subject.invocation.procedure === "chainedSpellAttackDamage",
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            noncanonicalLookalike.id &&
+          battleActSpellPresentation(candidate)?.invocation.procedure ===
+            "chainedSpellAttackDamage",
       ),
     ).toBe(true);
   });
@@ -400,7 +412,9 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(9);
     expect(caster?.hp).toBe(9);
     expect(caster?.concentration).toEqual({
-      sourceSpellId: "test_concentration_spell",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("test_concentration_spell"),
+      ),
       effectKind: "spellEffect",
     });
     expect(
@@ -559,8 +573,10 @@ function chromaticOrbAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === chromaticOrb.id &&
-      candidate.subject.invocation.procedure === "chainedSpellAttackDamage",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        chromaticOrb.id &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "chainedSpellAttackDamage",
   );
   if (act?.subject.tag !== "actionSpell") {
     throw new Error("Expected Chromatic Orb action spell act.");
@@ -572,8 +588,10 @@ function chromaticOrbReadyAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === chromaticOrb.id &&
-      candidate.subject.invocation.procedure === "chainedSpellAttackDamage" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        chromaticOrb.id &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "chainedSpellAttackDamage" &&
       candidate.subject.mode.tag === "ready" &&
       candidate.subject.mode.trigger === "spellCast",
   );
@@ -702,7 +720,9 @@ function withTargetConcentration(state: BattleState): BattleState {
     combatants: new Map(state.combatants).set(firstTargetId, {
       ...target,
       concentration: {
-        sourceSpellId: "test_concentration_spell",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("test_concentration_spell"),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -722,7 +742,10 @@ function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
   }
   const wardingBondEffect = {
     kind: "wardingBond",
-    sourceSpellId: "warding_bond",
+    effectRef: battleActiveEffectExecutionRefForTest("chromatic-ward"),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("warding_bond"),
+    ),
     sourceCombatantId: spellCasterId,
     expiresAt: {
       kind: "duration",
@@ -731,7 +754,9 @@ function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
   } satisfies Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>;
   const hideousLaughterEffect = {
     kind: "hideousLaughter",
-    sourceSpellId: "test_hideous_laughter",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("test_hideous_laughter"),
+    ),
     sourceCombatantId: secondTargetId,
     conditionHadNonSpellProneSource: false,
     conditionHadNonSpellIncapacitatedSource: false,
@@ -749,7 +774,9 @@ function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
       .set(spellCasterId, {
         ...caster,
         concentration: {
-          sourceSpellId: "test_concentration_spell",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("test_concentration_spell"),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [...caster.activeEffects, hideousLaughterEffect],
@@ -761,7 +788,9 @@ function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
       .set(secondTargetId, {
         ...hideousLaughterSource,
         concentration: {
-          sourceSpellId: "test_hideous_laughter",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("test_hideous_laughter"),
+          ),
           effectKind: "spellEffect",
         },
       }),
@@ -811,7 +840,9 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId,
-        spellId: chromaticOrb.id,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(chromaticOrb.id),
+        ),
       },
     ],
   };
@@ -833,7 +864,9 @@ function spellLeapTargetFill(
             kind: "spellLeapTargetWithinRange",
             previousTargetId,
             targetId,
-            spellId: chromaticOrb.id,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(chromaticOrb.id),
+            ),
             rangeFeet: movementFeet(30),
           },
         ]

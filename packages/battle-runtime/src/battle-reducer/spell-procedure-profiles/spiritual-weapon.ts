@@ -44,6 +44,7 @@ import { Either } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -191,7 +192,6 @@ function admitSpiritualWeaponRepeatAttack(
       if (
         effect.kind !== "spiritualWeapon" ||
         effect.sourceCombatantId !== ctx.actor.combatantId ||
-        effect.sourceSpellId !== spell.id ||
         spellAdmissionOngoingSpellEffectSuppressed(
           ctx,
           antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
@@ -409,7 +409,7 @@ function spiritualWeaponAttackTargetMatchesForce(
 function discoverSpiritualWeaponAttackProxyCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpiritualWeaponAttackProxyInvocation,
+  invocation: BattleExecutableSpellInvocation<SpiritualWeaponAttackProxyInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -419,6 +419,7 @@ function discoverSpiritualWeaponAttackProxyCastAct(
           subject: {
             tag: "bonusActionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: spiritualWeaponAttackProxyInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
@@ -435,7 +436,7 @@ function discoverSpiritualWeaponAttackProxyCastAct(
 function discoverSpiritualWeaponRepeatAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpiritualWeaponRepeatAttackInvocation,
+  invocation: BattleExecutableSpellInvocation<SpiritualWeaponRepeatAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -445,6 +446,7 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
           subject: {
             tag: "bonusActionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: spiritualWeaponRepeatAttackInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },

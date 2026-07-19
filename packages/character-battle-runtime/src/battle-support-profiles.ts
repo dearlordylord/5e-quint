@@ -268,7 +268,7 @@ function uniqueBattleUnitRefs(
 ): readonly BattleUnitRef[] {
   return refs.reduce<BattleUnitRef[]>((uniqueRefs, ref) => {
     const existingIndex = uniqueRefs.findIndex(
-      (candidate) => candidate.unitId === ref.unitId,
+      (candidate) => candidate.unit.id === ref.unit.id,
     );
     if (existingIndex === -1) {
       uniqueRefs.push(ref);
@@ -277,7 +277,7 @@ function uniqueBattleUnitRefs(
 
     const existing = uniqueRefs[existingIndex];
     uniqueRefs[existingIndex] = {
-      unitId: existing.unitId,
+      unit: existing.unit,
       supportProfiles: uniqueBattleSupportProfiles([
         ...existing.supportProfiles,
         ...ref.supportProfiles,
@@ -303,8 +303,10 @@ function uniqueBattleSupportProfiles(
 ): readonly BattleUnitRef["supportProfiles"][number][] {
   return profiles.filter(
     (profile, index) =>
-      profiles.findIndex((candidate) =>
-        battleSupportProfileKey(candidate) === battleSupportProfileKey(profile),
+      profiles.findIndex(
+        (candidate) =>
+          battleSupportProfileKey(candidate) ===
+          battleSupportProfileKey(profile),
       ) === index,
   );
 }

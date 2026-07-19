@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
@@ -37,13 +40,16 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
       spellId: healingWordUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "healing_word",
-        1,
-        "directHitPointRestoration",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef("healing_word", 1, "directHitPointRestoration"),
       ),
       mode: { tag: "cast" },
     });
@@ -94,13 +100,16 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       spellId: cureWoundsUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "cure_wounds",
-        1,
-        "directHitPointRestoration",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef("cure_wounds", 1, "directHitPointRestoration"),
       ),
       mode: { tag: "cast" },
     });
@@ -148,13 +157,20 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       spellId: massHealingWordUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "mass_healing_word",
-        3,
-        "directHitPointRestoration",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(
+          "mass_healing_word",
+          3,
+          "directHitPointRestoration",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -219,13 +235,20 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       spellId: massCureWoundsUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "mass_cure_wounds",
-        5,
-        "directHitPointRestoration",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(
+          "mass_cure_wounds",
+          5,
+          "directHitPointRestoration",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -283,7 +306,9 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
               {
                 kind: "spellTargetsInPointOriginSphere",
                 casterId: spellCasterId,
-                spellId: massCureWoundsUnitId,
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String(massCureWoundsUnitId),
+                ),
                 areaId: battleAreaId("area-a"),
                 radiusFeet: movementFeet(30),
                 targetIds: [targetIds[0]],
@@ -291,7 +316,9 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
               {
                 kind: "spellTargetsInPointOriginSphere",
                 casterId: spellCasterId,
-                spellId: massCureWoundsUnitId,
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String(massCureWoundsUnitId),
+                ),
                 areaId: battleAreaId("area-b"),
                 radiusFeet: movementFeet(30),
                 targetIds: [targetIds[1]],

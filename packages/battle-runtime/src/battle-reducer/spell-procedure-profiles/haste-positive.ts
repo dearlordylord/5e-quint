@@ -27,12 +27,14 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type HastePositiveSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -198,7 +200,6 @@ function hastePositiveSpellProjection(
     activeEffects: {
       speedRatio: {
         kind: "speedRatio",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         numerator: speedRatio.numerator,
         denominator: speedRatio.denominator,
@@ -206,7 +207,6 @@ function hastePositiveSpellProjection(
       },
       armorClassBonus: {
         kind: "spellArmorClassBonus",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         bonus: armorClassBonus.delta.amount,
         negatedSpellIds: [],
@@ -214,7 +214,6 @@ function hastePositiveSpellProjection(
       },
       dexteritySavingThrowAdvantage: {
         kind: "savingThrowRollMode",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         ability: "dex",
         mode: savingThrowAdvantage.mode,
@@ -222,14 +221,12 @@ function hastePositiveSpellProjection(
       },
       grantedActionResource: {
         kind: "spellGrantedActionResource",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         restriction: extraAction.restriction,
         expiresAt,
       },
       spellEndTargetState: {
         kind: "spellEndTargetState",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         condition: spellEndLethargy.condition,
         expiresAt,
@@ -288,7 +285,7 @@ function isHastePositiveActionRestriction(
 function discoverHastePositiveCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: HastePositiveSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -298,6 +295,7 @@ function discoverHastePositiveCastAct(
           subject: {
             tag: "actionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: hastePositiveInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
@@ -309,7 +307,7 @@ function discoverHastePositiveCastAct(
 }
 
 function hastePositiveInvocationRef(
-  invocation: HastePositiveSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "spellSlot",
@@ -320,7 +318,7 @@ function hastePositiveInvocationRef(
 }
 
 function hastePositiveCastSummary(
-  invocation: HastePositiveSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
@@ -458,7 +456,7 @@ function hasNonHastePositiveFill(
 function hastePositiveTargetSelection(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: HastePositiveSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): HastePositiveTargetSelection {
   if (input.fillSet.targetList !== undefined) {
@@ -492,41 +490,54 @@ function applyHastePositiveEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: HastePositiveSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       return nextState;
     }
-    const nextEffects = hastePositiveEffects(invocation).map((effect) => ({
-      ...effect,
-      sourceCombatantId: actorId,
-    }));
+    const allocation = allocateBattleActiveEffectRef({
+      state: nextState,
+      owner: target,
+    });
+    const allocatedTarget = allocation.owner;
+    const nextEffects = hastePositiveEffects(invocation).map((effect) =>
+      effect.kind === "spellGrantedActionResource"
+        ? {
+            ...effect,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            sourceCombatantId: actorId,
+            effectRef: allocation.effectRef,
+          }
+        : {
+            ...effect,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            sourceCombatantId: actorId,
+          },
+    );
     const activeEffects = [
-      ...target.activeEffects.filter(
+      ...allocatedTarget.activeEffects.filter(
         (effect) =>
           !(
             isHastePositiveActiveEffect(effect) &&
-            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
             effect.sourceCombatantId === actorId
           ),
       ),
       ...nextEffects,
     ];
     return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(
+      ...allocation.state,
+      combatants: new Map(allocation.state.combatants).set(
         targetId,
-        battleCreatureWithSpellActiveEffects(target, activeEffects),
+        battleCreatureWithSpellActiveEffects(allocatedTarget, activeEffects),
       ),
     };
   }, state);
 }
 
-function hastePositiveEffects(
-  invocation: HastePositiveSpellInvocation,
-): readonly Extract<
+type HastePositiveActiveEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind:
@@ -536,7 +547,14 @@ function hastePositiveEffects(
       | "spellGrantedActionResource"
       | "spellEndTargetState";
   }
->[] {
+>;
+
+type HastePositiveEffectTemplate =
+  HastePositiveSpellInvocation["activeEffects"][keyof HastePositiveSpellInvocation["activeEffects"]];
+
+function hastePositiveEffects(
+  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
+): readonly HastePositiveEffectTemplate[] {
   return [
     invocation.activeEffects.speedRatio,
     invocation.activeEffects.armorClassBonus,
@@ -548,7 +566,7 @@ function hastePositiveEffects(
 
 function isHastePositiveActiveEffect(
   effect: BattleActiveEffect,
-): effect is ReturnType<typeof hastePositiveEffects>[number] {
+): effect is HastePositiveActiveEffect {
   return (
     effect.kind === "speedRatio" ||
     effect.kind === "spellArmorClassBonus" ||

@@ -49,6 +49,7 @@ import type {
 } from "../battle-reducer.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "../unit-feature-support.ts";
 import type {
+  BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
@@ -329,6 +330,7 @@ export function assumeDruidWildShapeForm(input: {
   readonly state: BattleState;
   readonly actor: CharacterBattleCreatureState;
   readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly form: BattleDruidWildShapeKnownForm;
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
@@ -363,7 +365,7 @@ export function assumeDruidWildShapeForm(input: {
       input.actor.activeEffects,
       {
         kind: "druidWildShapeForm",
-        sourceUnitId: input.unitId,
+        sourceProcedureRef: input.procedureRef,
         sourceCombatantId: input.actor.combatantId,
         formStatBlockId: input.form.id,
         formLimbs: input.formLimbs,

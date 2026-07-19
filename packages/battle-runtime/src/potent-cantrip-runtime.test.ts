@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.potent-cantrip
 import { describe, expect, test } from "vitest";
 
@@ -247,7 +249,8 @@ describe("Potent Cantrip runtime", () => {
     const act = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === "fire_bolt",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "fire_bolt",
     );
     if (act === undefined) {
       throw new Error("Expected Fire Bolt action spell act.");
@@ -264,7 +267,9 @@ describe("Potent Cantrip runtime", () => {
           kind: "spellObjectTarget",
           casterId: wizardId,
           objectId,
-          spellId: "fire_bolt",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("fire_bolt"),
+          ),
           rangeFeet: movementFeet(120),
           armorClass: armorClass(13),
           damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
@@ -273,7 +278,9 @@ describe("Potent Cantrip runtime", () => {
           kind: "spellObjectIgnition",
           casterId: wizardId,
           objectId,
-          spellId: "fire_bolt",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("fire_bolt"),
+          ),
           disposition: { kind: "flammableUnattended" },
         },
       ],

@@ -48,7 +48,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: savageAttackerUnitId,
+        unit: unitLibrary.requireUnit(savageAttackerUnitId),
         supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
       }),
     );
@@ -481,7 +481,7 @@ describe("QMBT21 Classic non-SRD deterministic feature profile slice", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: myceliumStepUnitId,
+        unit: unitLibrary.requireUnit(myceliumStepUnitId),
         supportProfiles: [
           {
             kind: "alternateActionCost",

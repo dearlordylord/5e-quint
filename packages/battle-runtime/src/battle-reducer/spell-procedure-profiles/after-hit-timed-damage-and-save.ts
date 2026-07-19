@@ -38,6 +38,7 @@ import {
   type AttackSpellDamageAddition,
   type AvailableBattleAct,
   type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
   type BattleInterruptedProcedure,
   type BattleInterruptCheckpoint,
   type BattleResolutionInputForSubject,
@@ -148,7 +149,6 @@ function admitAfterHitTimedDamageAndSave(
           activeEffect: {
             kind: "spellTurnStartDamageAndSave",
             source: "afterHitTimedDamageAndSave",
-            sourceSpellId: spell.id,
             sourceCombatantId: ctx.actor.combatantId,
             damage: {
               expr: turnStartDamageExpr,
@@ -277,7 +277,7 @@ function applyAfterHitTimedDamageAndSaveSpellEffect(
   state: BattleState,
   targetId: CombatantId,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "afterHitTimedDamageAndSave" }
   >,
 ): BattleState {
@@ -288,12 +288,15 @@ function applyAfterHitTimedDamageAndSaveSpellEffect(
   const replacing = target.activeEffects.filter(
     (effect) =>
       effect.kind === "spellTurnStartDamageAndSave" &&
-      effect.sourceSpellId === invocation.spell.id &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
   );
   const activeEffects = [
     ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-    invocation.activeEffect,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+    },
   ];
   return {
     ...state,
@@ -349,7 +352,7 @@ function resolveAfterHitTimedDamageAndSave(
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
     sourceProcedure: "afterHitTimedDamageAndSave",
-    sourceSpellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
     sourceCombatantId: input.input.subject.casterId,
     damage: {
       expr: input.invocation.immediateDamage.expr,

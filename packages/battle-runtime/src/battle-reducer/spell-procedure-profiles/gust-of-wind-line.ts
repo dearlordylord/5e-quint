@@ -32,6 +32,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -258,7 +259,7 @@ function isGustOfWindLineSaveGate(
 function discoverGustOfWindLineCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: GustOfWindLineSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
@@ -326,7 +327,7 @@ function gustOfWindLineMetamagicCastActs(input: {
 
 function gustOfWindLineCastAct(
   actorId: CombatantId,
-  invocation: GustOfWindLineSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -335,6 +336,7 @@ function gustOfWindLineCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: gustOfWindLineInvocationRef(invocation),
       mode: { tag: "cast" },
     },

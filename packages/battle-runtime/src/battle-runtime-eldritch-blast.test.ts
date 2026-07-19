@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   requireResolved,
@@ -69,12 +72,16 @@ describe("battle runtime: Eldritch Blast", () => {
       ): hole is Extract<BattleHole, { readonly kind: "objectTargetChoice" }> =>
         hole.kind === "objectTargetChoice",
     );
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef(
-        "eldritch_blast",
-        "spellAttackSequence",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        cantripSpellInvocationRef("eldritch_blast", "spellAttackSequence"),
       ),
       mode: { tag: "cast" },
     });
@@ -325,14 +332,18 @@ describe("battle runtime: Eldritch Blast", () => {
       combatants: new Map(baseState.combatants).set(skeletonId, {
         ...target,
         concentration: {
-          sourceSpellId: "test_concentration",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("test_concentration"),
+          ),
           effectKind: "readiedSpell",
         },
         activeEffects: [
           ...target.activeEffects,
           {
             kind: "spellDamageReduction" as const,
-            sourceSpellId: "resistance",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("resistance"),
+            ),
             sourceCombatantId: wizardId,
             damageType: "force" as const,
             amount: { dice: 1 as const, dieSize: 4 as const },
@@ -473,7 +484,9 @@ describe("battle runtime: Eldritch Blast", () => {
     expect(damagedTarget).toMatchObject({
       hp: Hp(4),
       concentration: {
-        sourceSpellId: "test_concentration",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("test_concentration"),
+        ),
         effectKind: "readiedSpell",
       },
     });
@@ -548,7 +561,9 @@ describe("battle runtime: Eldritch Blast", () => {
       combatants: new Map(concentrationState.combatants).set(skeletonId, {
         ...concentratingTarget,
         concentration: {
-          sourceSpellId: "test_concentration",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("test_concentration"),
+          ),
           effectKind: "readiedSpell",
         },
       }),
@@ -617,7 +632,9 @@ describe("battle runtime: Eldritch Blast", () => {
           ...reductionTarget.activeEffects,
           {
             kind: "spellDamageReduction" as const,
-            sourceSpellId: "resistance",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("resistance"),
+            ),
             sourceCombatantId: wizardId,
             damageType: "force" as const,
             amount: { dice: 1 as const, dieSize: 4 as const },
@@ -685,7 +702,7 @@ describe("battle runtime: Eldritch Blast", () => {
           resources: [{ unit: relentlessEndurance }],
           characterUnitRefs: [
             {
-              unitId: "orc_relentless_endurance",
+              unit: unitLibrary.requireUnit("orc_relentless_endurance"),
               supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
             },
           ],
@@ -768,9 +785,32 @@ describe("battle runtime: Eldritch Blast", () => {
         subject: {
           tag: "actionSpell",
           actorId: secondWizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            startBattleRight({
+              battleId: battleId(`battle-eldritch-blast-readied-${trigger}`),
+              combatants: [
+                characterSeed({
+                  combatantId: secondWizardId,
+                  displayName: "Second Wizard",
+                  initiative: 30,
+                  attack: null,
+                  spellcasting: wizardSpellcasting(),
+                }),
+                characterSeed({
+                  combatantId: wizardId,
+                  displayName: "Warlock",
+                  initiative: 20,
+                  attack: null,
+                  spellcasting: wizardSpellcasting({
+                    cantrips: [spellRecord("eldritch_blast")],
+                    preparedSpells: [],
+                  }),
+                }),
+                skeletonCreatureInit({ initiative: 10 }),
+              ],
+            }),
+            secondWizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger },
         },

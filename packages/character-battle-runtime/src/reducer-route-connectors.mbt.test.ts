@@ -2,6 +2,7 @@ import * as path from "node:path";
 
 import {
   type AvailableBattleAct,
+  battleActSpellPresentation,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -1066,7 +1067,7 @@ function requireHeightenedBurningHandsAct(
     } =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === actorId &&
-      JSON.stringify(candidate.subject.invocation) ===
+      JSON.stringify(battleActSpellPresentation(candidate)?.invocation) ===
         JSON.stringify(expectedInvocation) &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === "saving_throw_disadvantage",

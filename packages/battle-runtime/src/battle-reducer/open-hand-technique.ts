@@ -18,7 +18,12 @@ import type {
 } from "../battle-reducer.ts";
 import type { BattleActiveEffect } from "../active-effect/types.ts";
 import type { MonkFocusFlurryOfBlowsStrikeSubject } from "../battle-subjects.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  MONK_FOCUS_PROCEDURE_QUERY,
+  characterUnitProcedureRef,
+  characterUnitProcedureId,
+} from "../character-execution.ts";
 import type {
   BattleOpenHandTechniqueSupportProfile,
   BattleUnitSupportProfile,
@@ -56,6 +61,7 @@ type OpenHandTechniqueFlurryHit = {
   readonly targetId: CombatantId;
   readonly subject: MonkFocusFlurryOfBlowsStrikeSubject;
   readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly profile: BattleOpenHandTechniqueSupportProfile;
 };
 
@@ -324,7 +330,7 @@ function applyOpenHandTechniqueOpportunityAttackDenial(
   if (target === undefined) return state;
   const effect: BattleActiveEffect = {
     kind: "opportunityAttackDenied",
-    sourceUnitId: hit.unitId,
+    sourceProcedureRef: hit.procedureRef,
     sourceCombatantId: hit.actorId,
     expiresAt: { kind: "startOfTurn", combatantId: hit.targetId },
   };
@@ -337,8 +343,8 @@ function applyOpenHandTechniqueOpportunityAttackDenial(
           (candidate) =>
             !(
               candidate.kind === "opportunityAttackDenied" &&
-              "sourceUnitId" in candidate &&
-              candidate.sourceUnitId === hit.unitId &&
+              "sourceProcedureRef" in candidate &&
+              candidate.sourceProcedureRef === hit.procedureRef &&
               candidate.sourceCombatantId === hit.actorId
             ),
         ),
@@ -442,21 +448,35 @@ function openHandTechniqueFlurryHit(
       isMonkFocusFlurryOfBlowsActionResource(
         resource,
         actorId,
-        subject.resourceUnitId,
+        subject.focusProcedureRef,
       ),
     )
   ) {
     return null;
   }
+  const focusUnitId = characterUnitProcedureId(
+    actor.origin.execution,
+    subject.focusProcedureRef,
+    MONK_FOCUS_PROCEDURE_QUERY,
+  );
+  if (focusUnitId === undefined) return null;
   const selectedProfile = actor.origin.characterUnitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.flatMap((supportProfile) =>
-      openHandTechniqueSupportProfile(unitRef.unitId, supportProfile),
+      openHandTechniqueSupportProfile(unitRef.unit.id, supportProfile),
     ),
   )[0];
   if (selectedProfile === undefined) return null;
+  const procedureRef = characterUnitProcedureRef(
+    actor.origin.execution,
+    selectedProfile.unitId,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([selectedProfile.profile.kind]),
+    },
+  );
   if (
-    selectedProfile.profile.technique.trigger.resourceUnitId !==
-    subject.resourceUnitId
+    procedureRef === undefined ||
+    selectedProfile.profile.technique.trigger.resourceUnitId !== focusUnitId
   ) {
     return null;
   }
@@ -465,6 +485,7 @@ function openHandTechniqueFlurryHit(
     targetId,
     subject,
     unitId: selectedProfile.unitId,
+    procedureRef,
     profile: selectedProfile.profile,
   };
 }

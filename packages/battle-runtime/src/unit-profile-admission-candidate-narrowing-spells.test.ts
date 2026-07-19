@@ -1,3 +1,9 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84B sorcerous_burst
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
@@ -60,12 +66,16 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       spellId: fireBoltUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: cantripSpellInvocationRef(
-        fireBoltUnitId,
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        cantripSpellInvocationRef(fireBoltUnitId, "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     });
@@ -128,12 +138,16 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       spellId: spell.id,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: cantripSpellInvocationRef(
-        starryWispUnitId,
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        cantripSpellInvocationRef(starryWispUnitId, "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     });
@@ -201,7 +215,8 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     const readiedSorcerousBurstActs = discoverBattleActs(state).filter(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.spellId === sorcerousBurstUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          sorcerousBurstUnitId &&
         candidate.subject.mode.tag === "ready",
     );
     expect(readiedSorcerousBurstActs).toEqual([]);
@@ -285,7 +300,10 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     }
     const markedDamageRider = {
       kind: "spellMarkedDamageRider" as const,
-      sourceSpellId: spellId("hunters_mark"),
+      effectRef: battleActiveEffectExecutionRefForTest("candidate-mark"),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spellId("hunters_mark")),
+      ),
       sourceCombatantId: spellCasterId,
       targetCombatantId: spellTargetId,
       transfer: {
@@ -513,7 +531,9 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(resolved.state.lightEmitters).toEqual([
       expect.objectContaining({
         kind: "objectInvisibleRevealLightEmitter",
-        sourceSpellId: starryWispUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(starryWispUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         objectId,
         emission: { kind: "dim", radiusFeet: movementFeet(10) },

@@ -43,6 +43,7 @@ import {
   type PactOfTheChainFindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import * as Either from "effect/Either";
+import type { BattleResourcePoolExecutionRef } from "./identity.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.failed-saving-throw-reroll unit-feature.paladin-sacred-weapon
@@ -172,6 +173,7 @@ type PactOfTheChainFindFamiliarSpellRecord = SpellRecord & {
 };
 
 type CharacterBattleResourceStateBase = {
+  readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   readonly unit: UnitRecord;
 };
 
@@ -463,13 +465,14 @@ export function parseCharacterBattleClassLevels(
 export function characterResourceState(
   input: CharacterBattleResourceInit,
   classLevels: readonly CharacterBattleClassLevel[],
+  resourcePoolRef: BattleResourcePoolExecutionRef,
 ): CharacterBattleResourceState {
   const initIssue = characterBattleResourceInitIssue(input, classLevels);
   if (initIssue !== null) {
     throw new Error(initIssue);
   }
   const resource = characterBattleResourceForUnit(input.unit);
-  const base = { unit: input.unit };
+  const base = { resourcePoolRef, unit: input.unit };
   if (resource.kind === "point_pool") {
     const defaultPointsRemaining = characterBattleResourceMaxPoints({
       unit: input.unit,

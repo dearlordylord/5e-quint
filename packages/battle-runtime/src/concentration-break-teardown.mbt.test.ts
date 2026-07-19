@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // RAW trace:
 // - .references/srd-5.2.1/Rules-Glossary.md#Concentration: a Concentration
@@ -28,6 +30,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
+  resolveBattleSubject,
   attackRollFill,
   concentrationSavingThrowFill,
   damageRollFill,
@@ -50,12 +53,11 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 const concentrationBreakTeardownScenarios = [
@@ -369,19 +371,26 @@ function stateAfterBlurCast(
   };
 }
 
-function concentrationSpellCastAct(
-  state: BattleState,
-): ReturnType<typeof discoverBattleActs>[number] & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+function concentrationSpellCastAct(state: BattleState): ReturnType<
+  typeof discoverBattleActs
+>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 } {
   const act = discoverBattleActs(state).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
-      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "actionSpell"; readonly invocation: unknown }
+      >;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "blurAttackRollDefense",
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "blurAttackRollDefense",
   );
   if (act === undefined) {
     throw new Error("Expected Concentration spell cast act.");
@@ -389,9 +398,9 @@ function concentrationSpellCastAct(
   return act;
 }
 
-function endConcentrationAct(
-  state: BattleState,
-): ReturnType<typeof discoverBattleActs>[number] & {
+function endConcentrationAct(state: BattleState): ReturnType<
+  typeof discoverBattleActs
+>[number] & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
@@ -560,14 +569,18 @@ function stateWithPreexistingBlurConcentration(
     combatants: new Map(state.combatants).set(spellCasterId, {
       ...caster,
       concentration: {
-        sourceSpellId: blurUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(blurUnitId),
+        ),
         effectKind: "spellEffect",
       },
       activeEffects: [
         ...caster.activeEffects,
         {
           kind: "blurred",
-          sourceSpellId: blurUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(blurUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",
@@ -599,6 +612,9 @@ function concentrationBreakTeardownProjection(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownProjection {
   const caster = requireCombatant(state.battle, spellCasterId);
+  const blurredEffect = caster.activeEffects.find(
+    (effect) => effect.kind === "blurred",
+  );
   return {
     scenario: state.scenario,
     damageTaken: state.damageTaken,
@@ -606,8 +622,9 @@ function concentrationBreakTeardownProjection(
     saveRollTotal: state.saveRollTotal,
     concentrationSaveOffered: state.concentrationSaveOffered,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === blurUnitId &&
-      caster.concentration.effectKind === "spellEffect",
+      blurredEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        blurredEffect.sourceProcedureRef,
     blurredEffectCount: blurredEffectCount(state.battle),
     spellSlotExpended: casterSpellSlotExpended(state.battle),
     teardownBeforeNextCommand: state.teardownBeforeNextCommand,

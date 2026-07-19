@@ -75,7 +75,6 @@ import type {
   BattleState,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
-import type { ClassFeatureExtraAttackActionResource } from "./battle-reducer/battle-runtime-protocol.ts";
 
 const syntheticExtraAttackCounts = [1, 2, 3] as const;
 type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
@@ -103,7 +102,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
         }),
       ).toEqual(
         Either.right({
-          unitId,
+          unit,
           supportProfiles: [extraAttackSupportProfile],
         }),
       );
@@ -128,7 +127,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
           actionResources: [
             expect.objectContaining({
               source: "classFeatureExtraAttack",
-              sourceUnitId: fighterExtraAttackUnitId,
+              sourceOwnerId: spellCasterId,
             }),
           ],
         },
@@ -281,11 +280,6 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       }
 
       expect(classFeatureExtraAttackSlotCount(first.state)).toBe(3);
-      expect(classFeatureExtraAttackSourceUnitIds(first.state)).toEqual([
-        "test_synthetic_attack_count_3",
-        "test_synthetic_attack_count_3",
-        "test_synthetic_attack_count_3",
-      ]);
     },
   );
 
@@ -445,7 +439,7 @@ function syntheticExtraAttackBattleUnitRef(
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: unit.id,
+      unit,
       supportProfiles: [{ ...extraAttackSupportProfile, additionalAttacks }],
     }),
   );
@@ -495,25 +489,6 @@ function classFeatureExtraAttackSlotCount(state: BattleState): number {
   ).length;
 }
 
-function classFeatureExtraAttackSourceUnitIds(
-  state: BattleState,
-): readonly string[] {
-  return snapshotBattle(state)
-    .turn.actionResources.filter(isSpellCasterClassFeatureExtraAttackResource)
-    .map((resource) => resource.sourceUnitId);
-}
-
-function isSpellCasterClassFeatureExtraAttackResource(
-  resource: ReturnType<
-    typeof snapshotBattle
-  >["turn"]["actionResources"][number],
-): resource is ClassFeatureExtraAttackActionResource {
-  return (
-    resource.source === "classFeatureExtraAttack" &&
-    resource.sourceOwnerId === spellCasterId
-  );
-}
-
 function resolveWeaponAttackMiss(
   state: BattleState,
 ): ReturnType<typeof resolveBattleSubject> {
@@ -556,7 +531,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: barbarianFastMovementUnitId,
+        unit: unitLibrary.requireUnit(barbarianFastMovementUnitId),
         supportProfiles: [fastMovementSupportProfile()],
       }),
     );
@@ -696,7 +671,7 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: monkUnarmoredMovementUnitId,
+        unit: unitLibrary.requireUnit(monkUnarmoredMovementUnitId),
         supportProfiles: [monkUnarmoredMovementSupportProfile()],
       }),
     );
@@ -853,7 +828,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: monkAcrobaticMovementUnitId,
+        unit: unitLibrary.requireUnit(monkAcrobaticMovementUnitId),
         supportProfiles: [acrobaticMovementSupportProfile()],
       }),
     );
@@ -1025,7 +1000,7 @@ describe("CRPI-READY-028 deterministic Second-Story Work admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: rogueSecondStoryWorkUnitId,
+        unit: unitLibrary.requireUnit(rogueSecondStoryWorkUnitId),
         supportProfiles: [secondStoryWorkSupportProfile()],
       }),
     );
@@ -1104,7 +1079,7 @@ describe("QMBT44 deterministic Roving admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: rangerRovingUnitId,
+        unit: unitLibrary.requireUnit(rangerRovingUnitId),
         supportProfiles: [rovingSupportProfile()],
       }),
     );
@@ -1341,7 +1316,7 @@ function acrobaticMovementBattle(
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: monkAcrobaticMovementUnitId,
+      unit: unitLibrary.requireUnit(monkAcrobaticMovementUnitId),
       supportProfiles: [acrobaticMovementSupportProfile()],
     }),
   );
@@ -1413,7 +1388,7 @@ function secondStoryWorkBattle(): BattleState {
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: rogueSecondStoryWorkUnitId,
+      unit: unitLibrary.requireUnit(rogueSecondStoryWorkUnitId),
       supportProfiles: [secondStoryWorkSupportProfile()],
     }),
   );

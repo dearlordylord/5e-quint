@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // RAW trace:
@@ -55,7 +58,6 @@ import {
   findFamiliarTelepathicConnection,
   initiativeScore,
   reappearTemporarilyDismissedFindFamiliar,
-  resolveBattleSubject,
   sameBattleSubject,
   shareFindFamiliarSenses,
   startBattle,
@@ -65,7 +67,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type AvailableBattleAct,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import {
@@ -687,16 +689,22 @@ function actionSpellAct(
   state: BattleState,
   spellId: "cure_wounds",
 ): AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 } {
   const act = discoverBattleActs(state).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
-      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "actionSpell"; readonly invocation: unknown }
+      >;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action spell act.`);
@@ -742,7 +750,8 @@ function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
       >;
     } =>
       candidate.subject.tag === "findFamiliarTouchSpell" &&
-      candidate.subject.invocation.spellId === "cure_wounds",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "cure_wounds",
   );
   if (act === undefined) {
     throw new Error("Expected Find Familiar Touch delivery act.");
@@ -801,7 +810,9 @@ function touchSpellTargetFill(
         ownerId: casterId,
         familiarId,
         targetId,
-        spellId: "cure_wounds",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("cure_wounds"),
+        ),
       },
     ],
   };

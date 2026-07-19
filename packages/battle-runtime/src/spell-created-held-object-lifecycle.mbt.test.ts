@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spell-created-held-object
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 // RAW trace:
@@ -41,7 +42,7 @@ import type {
   BattleActiveEffect,
   BattleResolutionResult,
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   breakBattleConcentration,
@@ -457,12 +458,15 @@ function spellCreatedHeldObjectProjection(
       handUseIsFree(caster.armorClass.leftHandUse) ||
       handUseIsFree(caster.armorClass.rightHandUse),
     casterConcentrating:
-      caster.concentration?.sourceSpellId === flameBladeUnitId &&
+      activeEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        activeEffect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     lightProjected: snapshotBattle(state.battle).lightEmitters.some(
       (emitter) =>
         emitter.kind === "spellLightEmitter" &&
-        emitter.sourceSpellId === flameBladeUnitId &&
+        activeEffect !== undefined &&
+        emitter.sourceProcedureRef === activeEffect.sourceProcedureRef &&
         emitter.sourceCombatantId === spellCasterId &&
         emitter.attachment.kind === "combatant" &&
         emitter.attachment.combatantId === spellCasterId &&
@@ -488,8 +492,10 @@ function maybeInitialCastAct(state: BattleState) {
     spellId: flameBladeUnitId,
     slotLevel: 2,
   });
-  return act?.subject.invocation.tag === "spellSlot" &&
-    act.subject.invocation.procedure === "spellCreatedHeldObject"
+  return act !== undefined &&
+    battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+    battleActSpellPresentation(act)?.invocation.procedure ===
+      "spellCreatedHeldObject"
     ? act
     : undefined;
 }
@@ -505,8 +511,10 @@ function requireInitialCastAct(state: BattleState) {
 
 function maybeAttackAct(state: BattleState) {
   const act = maybeSpellAct({ state, spellId: flameBladeUnitId });
-  return act?.subject.invocation.tag === "spellEffect" &&
-    act.subject.invocation.procedure === "spellCreatedHeldObjectAttack"
+  return act !== undefined &&
+    battleActSpellPresentation(act)?.invocation.tag === "spellEffect" &&
+    battleActSpellPresentation(act)?.invocation.procedure ===
+      "spellCreatedHeldObjectAttack"
     ? act
     : undefined;
 }
@@ -522,8 +530,10 @@ function requireAttackAct(state: BattleState) {
 
 function maybeReEvokeAct(state: BattleState) {
   const act = maybeBonusSpellAct({ state, spellId: flameBladeUnitId });
-  return act?.subject.invocation.tag === "spellEffect" &&
-    act.subject.invocation.procedure === "spellCreatedHeldObjectReEvoke"
+  return act !== undefined &&
+    battleActSpellPresentation(act)?.invocation.tag === "spellEffect" &&
+    battleActSpellPresentation(act)?.invocation.procedure ===
+      "spellCreatedHeldObjectReEvoke"
     ? act
     : undefined;
 }
@@ -559,8 +569,7 @@ function requireReleaseAct(state: BattleState): AvailableBattleAct & {
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "releaseSpellCreatedHeldObject" &&
-      candidate.subject.sourceSpellId === flameBladeUnitId,
+      candidate.subject.command === "releaseSpellCreatedHeldObject",
   );
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -582,7 +591,6 @@ function spellCreatedHeldObjectEffect(
       { readonly kind: "spellCreatedHeldObject" }
     > =>
       effect.kind === "spellCreatedHeldObject" &&
-      effect.sourceSpellId === flameBladeUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.expiresAt.kind === "concentration" &&
       effect.expiresAt.combatantId === spellCasterId,
@@ -600,7 +608,7 @@ function withHeldObjectDurationTicks(
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellCreatedHeldObject" &&
-        effect.sourceSpellId === flameBladeUnitId
+        effect.sourceCombatantId === spellCasterId
           ? {
               ...effect,
               expiresAt: { ...effect.expiresAt, durationTicks },
@@ -696,7 +704,6 @@ function isScenarioOutcomeTag(
 ): tag is keyof typeof SCENARIO_OUTCOME_BY_TAG {
   return Object.hasOwn(SCENARIO_OUTCOME_BY_TAG, tag);
 }
-
 
 function spellCreatedHeldObjectUnexpectedHole(raw: unknown): never {
   throw new Error(

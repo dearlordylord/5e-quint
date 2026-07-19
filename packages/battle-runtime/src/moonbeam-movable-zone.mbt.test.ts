@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -40,7 +41,9 @@ const syntheticShapeTargetId = combatantId("synthetic-shape-target");
 const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: syntheticShapeCasterId,
-  sourceSpellId: "synthetic_shape_spell",
+  sourceProcedureRef: battleProcedureExecutionRefForTest(
+    String("synthetic_shape_spell"),
+  ),
   sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-effect"),
   replacementForm: {
     kind: "runtimeCreatureForm",

@@ -1,4 +1,8 @@
-import { BattleFillSchema, BattleSubjectSchema } from "@dnd/battle-runtime";
+import {
+  BattleActPresentationSchema,
+  BattleFillSchema,
+  BattleSubjectSchema,
+} from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import type { McpSessionSnapshot } from "./session-store.ts";
@@ -23,6 +27,7 @@ export const McpSessionSnapshotSchema = Schema.Struct({
   transientBattleFills: Schema.Union(
     Schema.Struct({
       subject: BattleSubjectSchema,
+      presentation: BattleActPresentationSchema,
       fills: Schema.Array(BattleFillSchema),
     }),
     Schema.Null,

@@ -15,6 +15,8 @@
 
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  characterUnitProcedureId,
   characterUnitProcedureRef,
 } from "../character-execution.ts";
 import {
@@ -51,7 +53,7 @@ import {
   proficiencyBonusForCharacterLevel,
 } from "@dnd/shared/types";
 
-import type { DiceExpr, UnitRecord } from "@dnd/surface/surface/types";
+import type { DiceExpr } from "@dnd/surface/surface/types";
 
 import * as Either from "effect/Either";
 
@@ -60,12 +62,10 @@ import {
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
-import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
-
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import { characterUnitFeatureProcedureId } from "../character-execution.ts";
 
-import { CombatantId } from "../identity.ts";
+import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
 
 import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -540,15 +540,20 @@ function paladinSacredWeaponActs(
 function paladinSacredWeaponDismissActs(
   actor: CharacterBattleCreatureState,
 ): readonly BattleActDiscoveryCandidate[] {
-  const activeUnitIds = new Set(
+  const activeProcedureRefs = new Set(
     actor.activeEffects.flatMap((effect) =>
       effect.kind === "paladinSacredWeapon" &&
       effect.sourceCombatantId === actor.combatantId
-        ? [effect.sourceUnitId]
+        ? [effect.sourceProcedureRef]
         : [],
     ),
   );
-  return [...activeUnitIds].flatMap((unitId) => {
+  return [...activeProcedureRefs].flatMap((procedureRef) => {
+    const unitId = characterUnitFeatureProcedureId(
+      actor.origin.execution,
+      procedureRef,
+    );
+    if (unitId === undefined) return [];
     const unitFeature = actor.origin.paladinSacredWeaponProfiles.get(unitId);
     return unitFeature === undefined
       ? []
@@ -677,7 +682,7 @@ export function druidWildShapeActsForResource(
             "Spend a Bonus Action and one use to assume this known Beast form.",
           initialHoles: wildShapeInitialEquipmentDispositionHoles(
             actor,
-            admission.statBlock,
+            admission.execution.scopeRef,
           ),
         }))
       : [];
@@ -702,13 +707,13 @@ export function druidWildShapeActsForResource(
 
 function wildShapeInitialEquipmentDispositionHoles(
   actor: CharacterBattleCreatureState,
-  form: BattleDruidWildShapeKnownForm,
+  formExecutionRef: BattleWildShapeEquipmentDispositionHole["formExecutionRef"],
 ): readonly BattleWildShapeEquipmentDispositionHole[] {
   const candidates = wildShapeLoadoutObjectRefs(actor.origin.selectedLoadout);
   return [
     wildShapeEquipmentDispositionHole({
       actorId: actor.combatantId,
-      formStatBlockId: form.id,
+      formExecutionRef,
       candidates,
     }),
   ];
@@ -716,7 +721,7 @@ function wildShapeInitialEquipmentDispositionHoles(
 
 function wildShapeEquipmentDispositionHole(input: {
   readonly actorId: CombatantId;
-  readonly formStatBlockId: BattleWildShapeEquipmentDispositionHole["formStatBlockId"];
+  readonly formExecutionRef: BattleWildShapeEquipmentDispositionHole["formExecutionRef"];
   readonly candidates: BattleWildShapeEquipmentDispositionHole["candidates"];
 }): BattleWildShapeEquipmentDispositionHole {
   const protocolId = wildShapeEquipmentDispositionProtocolId(input);
@@ -726,18 +731,18 @@ function wildShapeEquipmentDispositionHole(input: {
     kind: "wildShapeEquipmentDisposition",
     label: "Druid Wild Shape object handling and equipment disposition",
     actorId: input.actorId,
-    formStatBlockId: input.formStatBlockId,
+    formExecutionRef: input.formExecutionRef,
     candidates: input.candidates,
   };
 }
 
 function wildShapeEquipmentDispositionProtocolId(input: {
   readonly actorId: CombatantId;
-  readonly formStatBlockId: BattleWildShapeEquipmentDispositionHole["formStatBlockId"];
+  readonly formExecutionRef: BattleWildShapeEquipmentDispositionHole["formExecutionRef"];
 }): string {
   return `${WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL}:${encodeURIComponent(
     input.actorId,
-  )}:${encodeURIComponent(input.formStatBlockId)}`;
+  )}:${encodeURIComponent(input.formExecutionRef)}`;
 }
 
 export function supportedUnitFeatureProfileForResource(
@@ -979,13 +984,13 @@ export function resolveUnitFeatureHeldWeaponActivation(
         (effect) =>
           !(
             effect.kind === "paladinSacredWeapon" &&
-            effect.sourceUnitId === unitFeature.unit.id &&
+            effect.sourceProcedureRef === input.subject.procedureRef &&
             effect.sourceCombatantId === actor.combatantId
           ),
       ),
       {
         kind: "paladinSacredWeapon",
-        sourceUnitId: unitFeature.unit.id,
+        sourceProcedureRef: input.subject.procedureRef,
         sourceCombatantId: actor.combatantId,
         weaponItemId: input.subject.weaponItemId,
         expiresAt: {
@@ -1022,7 +1027,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
 function resolvePaladinSacredWeaponDismissUnitFeature(
   input: UnitFeatureBattleResolutionInput,
   actor: CharacterBattleCreatureState,
-  unitFeature: Extract<
+  _unitFeature: Extract<
     SupportedUnitFeatureProfile,
     { readonly kind: "paladinSacredWeapon" }
   >,
@@ -1038,7 +1043,7 @@ function resolvePaladinSacredWeaponDismissUnitFeature(
     (effect) =>
       !(
         effect.kind === "paladinSacredWeapon" &&
-        effect.sourceUnitId === unitFeature.unit.id &&
+        effect.sourceProcedureRef === input.subject.procedureRef &&
         effect.sourceCombatantId === actor.combatantId
       ),
   );
@@ -1099,8 +1104,8 @@ function resolveRogueSteadyAimUnitFeature(
     ...actor.activeEffects.filter(
       (effect) =>
         !(
-          "sourceUnitId" in effect &&
-          effect.sourceUnitId === unitFeature.unit.id &&
+          "sourceProcedureRef" in effect &&
+          effect.sourceProcedureRef === input.subject.procedureRef &&
           effect.sourceCombatantId === actor.combatantId &&
           (effect.kind === "nextAttackRollBySelf" ||
             effect.kind === "selfSpeedZero")
@@ -1108,7 +1113,7 @@ function resolveRogueSteadyAimUnitFeature(
     ),
     {
       kind: "nextAttackRollBySelf",
-      sourceUnitId: unitFeature.unit.id,
+      sourceProcedureRef: input.subject.procedureRef,
       sourceCombatantId: actor.combatantId,
       mode: unitFeature.steadyAim.attackRoll.mode,
       expiresAt: {
@@ -1119,7 +1124,7 @@ function resolveRogueSteadyAimUnitFeature(
     } as const,
     {
       kind: "selfSpeedZero",
-      sourceUnitId: unitFeature.unit.id,
+      sourceProcedureRef: input.subject.procedureRef,
       sourceCombatantId: actor.combatantId,
       expiresAt: {
         kind: "endOfTurn",
@@ -1195,6 +1200,7 @@ function resolveMagicActionHealingPoolUnitFeature(
   const validation = validateMagicActionHealingPoolDistribution({
     state: input.state,
     actorId: actor.combatantId,
+    sourceProcedureRef: input.subject.procedureRef,
     unitFeature,
     fill: distribution.value,
   });
@@ -1301,6 +1307,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const validation = validateMagicActionAreaSaveDamageHealing({
     state: input.state,
     actorId: actor.combatantId,
+    sourceProcedureRef: input.subject.procedureRef,
     unitFeature,
     savingThrows: fills.value.savingThrows,
     healingTarget: fills.value.healingTarget,
@@ -1452,6 +1459,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
   const validation = validateMagicActionSaveGatedCondition({
     state: input.state,
     actor,
+    sourceProcedureRef: input.subject.procedureRef,
     unitFeature,
     savingThrows: fills.value.savingThrows,
   });
@@ -1521,6 +1529,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
     stateAfterSpend,
     actor.combatantId,
     unitFeature,
+    input.subject.procedureRef,
     failedTargetIds,
   );
   return {
@@ -1541,8 +1550,13 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape is no longer available for the current actor.",
     );
   }
+  const unitId = characterUnitProcedureId(
+    actor.origin.execution,
+    input.subject.procedureRef,
+    DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  );
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === input.subject.unitId,
+    (candidate) => candidate.unit.id === unitId,
   );
   const unitFeature =
     resource === undefined
@@ -1618,7 +1632,7 @@ export function resolveDruidWildShapeUnitFeature(
     );
   }
   const formAdmission = actor.origin.druidWildShapeAvailableForms?.find(
-    (candidate) => candidate.statBlock.id === subject.formStatBlockId,
+    (candidate) => candidate.execution.scopeRef === subject.formExecutionRef,
   );
   if (formAdmission === undefined) {
     return invalidResult(
@@ -1633,7 +1647,7 @@ export function resolveDruidWildShapeUnitFeature(
   );
   const expectedEquipmentDispositionHole = wildShapeEquipmentDispositionHole({
     actorId: actor.combatantId,
-    formStatBlockId: form.id,
+    formExecutionRef: formAdmission.execution.scopeRef,
     candidates: equipmentCandidates,
   });
   const equipmentDisposition = (() => {
@@ -1703,7 +1717,7 @@ export function resolveDruidWildShapeUnitFeature(
     origin: {
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
-        candidate.unit.id === subject.unitId &&
+        candidate.unit.id === resource.unit.id &&
         resourceHasUsesRemaining(candidate)
           ? spendCharacterResourceUse(candidate)
           : candidate,
@@ -1721,7 +1735,8 @@ export function resolveDruidWildShapeUnitFeature(
   const nextState = assumeDruidWildShapeForm({
     state: stateWithResourceSpend,
     actor: nextActor,
-    unitId: subject.unitId,
+    unitId: resource.unit.id,
+    procedureRef: input.subject.procedureRef,
     form,
     formLimbs: equipmentDisposition.formLimbs,
     equipmentDisposition: wildShapeActiveEquipmentDispositions(
@@ -1735,8 +1750,8 @@ export function resolveDruidWildShapeUnitFeature(
     snapshot: snapshotBattle(nextState),
     ...wildShapeDroppedObjectsResultField({
       actorId: actor.combatantId,
-      sourceUnitId: subject.unitId,
-      formStatBlockId: form.id,
+      procedureRef: input.subject.procedureRef,
+      formExecutionRef: formAdmission.execution.scopeRef,
       dispositions: equipmentDisposition.dispositions,
     }),
   };
@@ -1744,14 +1759,14 @@ export function resolveDruidWildShapeUnitFeature(
 
 function wildShapeDroppedObjectsResultField(input: {
   readonly actorId: BattleDroppedObjectOutcome["actorId"];
-  readonly sourceUnitId: Extract<
+  readonly procedureRef: Extract<
     BattleDroppedObjectOutcome["source"],
     { readonly kind: "druidWildShape" }
-  >["sourceUnitId"];
-  readonly formStatBlockId: Extract<
+  >["procedureRef"];
+  readonly formExecutionRef: Extract<
     BattleDroppedObjectOutcome["source"],
     { readonly kind: "druidWildShape" }
-  >["formStatBlockId"];
+  >["formExecutionRef"];
   readonly dispositions: readonly ResolvedWildShapeEquipmentDisposition[];
 }): Pick<
   Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
@@ -1767,8 +1782,8 @@ function wildShapeDroppedObjectsResultField(input: {
               objectId: disposition.item.objectId,
               source: {
                 kind: "druidWildShape",
-                sourceUnitId: input.sourceUnitId,
-                formStatBlockId: input.formStatBlockId,
+                procedureRef: input.procedureRef,
+                formExecutionRef: input.formExecutionRef,
               },
             },
           ]
@@ -1852,6 +1867,7 @@ export function resolveBardicInspirationGrantUnitFeature(
       targetFill.value.spatialFacts ?? [],
       input.subject.actorId,
       target.combatantId,
+      input.subject.procedureRef,
       unitFeature,
     )
   ) {
@@ -1867,7 +1883,7 @@ export function resolveBardicInspirationGrantUnitFeature(
       input.subject.actorId,
       target,
       targetFill.value.spatialFacts ?? [],
-      unitFeature,
+      input.subject.procedureRef,
     )
   ) {
     return invalidResult(
@@ -1906,7 +1922,7 @@ export function resolveBardicInspirationGrantUnitFeature(
       ...target.activeEffects,
       {
         kind: "bardicInspirationDie",
-        sourceUnitId: unitFeature.unit.id,
+        sourceProcedureRef: input.subject.procedureRef,
         sourceCombatantId: input.subject.actorId,
         dieSize: unitFeature.dieSize,
         expiresAt: {
@@ -2187,6 +2203,7 @@ function hasBardicInspirationRangeFact(
   facts: readonly BattleTargetSpatialFact[],
   bardId: CombatantId,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   unitFeature: Extract<
     SupportedUnitFeatureProfile,
     { readonly kind: "bardicInspirationGrant" }
@@ -2197,7 +2214,7 @@ function hasBardicInspirationRangeFact(
       fact.kind === "bardicInspirationTargetWithinRange" &&
       fact.bardId === bardId &&
       fact.targetId === targetId &&
-      fact.unitId === unitFeature.unit.id &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.rangeFeet === unitFeature.rangeFeet,
   );
 }
@@ -2245,6 +2262,7 @@ function magicActionHealingPoolDistributionFill(
 function validateMagicActionHealingPoolDistribution(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly unitFeature: Extract<
     SupportedUnitFeatureProfile,
     { readonly kind: "magicActionHealingPool" }
@@ -2309,6 +2327,7 @@ function validateMagicActionHealingPoolDistribution(input: {
         input.fill.spatialFacts,
         input.actorId,
         allocation.targetId,
+        input.sourceProcedureRef,
         input.unitFeature,
       )
     ) {
@@ -2448,6 +2467,7 @@ function hasMagicActionHealingPoolRangeFact(
   facts: readonly BattleTargetSpatialFact[],
   actorId: CombatantId,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   unitFeature: Extract<
     SupportedUnitFeatureProfile,
     { readonly kind: "magicActionHealingPool" }
@@ -2458,7 +2478,7 @@ function hasMagicActionHealingPoolRangeFact(
       fact.kind === "magicActionHealingPoolTargetWithinRange" &&
       fact.actorId === actorId &&
       fact.targetId === targetId &&
-      fact.unitId === unitFeature.unit.id &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.rangeFeet === unitFeature.healingPool.rangeFeet,
   );
 }
@@ -2489,7 +2509,7 @@ function attackActionAreaSaveDamageReplacementProfileForResource(
   resource: CharacterBattleResourceState,
 ): AttackActionAreaSaveDamageReplacementProfile | null {
   const support = actor.origin.characterUnitRefs
-    .find((unitRef) => unitRef.unitId === resource.unit.id)
+    .find((unitRef) => unitRef.unit.id === resource.unit.id)
     ?.supportProfiles.find(
       (
         profile,
@@ -3082,6 +3102,7 @@ function magicActionSaveGatedConditionSavingThrowHoleInstanceKey(
 function validateMagicActionSaveGatedCondition(input: {
   readonly state: BattleState;
   readonly actor: CharacterBattleCreatureState;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly unitFeature: MagicActionSaveGatedConditionProfile;
   readonly savingThrows: MagicActionSaveGatedConditionSavingThrowFill;
 }):
@@ -3145,6 +3166,7 @@ function validateMagicActionSaveGatedCondition(input: {
         input.savingThrows.spatialFacts ?? [],
         input.actor.combatantId,
         outcome.targetId,
+        input.sourceProcedureRef,
         input.unitFeature,
       )
     ) {
@@ -3245,6 +3267,7 @@ function magicActionSaveGatedConditionHasTargetSpatialFact(
   facts: readonly BattleTargetSpatialFact[],
   actorId: CombatantId,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   unitFeature: MagicActionSaveGatedConditionProfile,
 ): boolean {
   return facts.some(
@@ -3252,7 +3275,7 @@ function magicActionSaveGatedConditionHasTargetSpatialFact(
       fact.kind === "unitFeatureVisibleTargetWithinRange" &&
       fact.actorId === actorId &&
       fact.targetId === targetId &&
-      fact.unitId === unitFeature.unit.id &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.rangeFeet === unitFeature.condition.targetSelection.rangeFeet,
   );
 }
@@ -3261,6 +3284,7 @@ function applyMagicActionSaveGatedConditionFailures(
   state: BattleState,
   actorId: CombatantId,
   unitFeature: MagicActionSaveGatedConditionProfile,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): BattleState {
   const combatants = new Map(state.combatants);
@@ -3270,7 +3294,7 @@ function applyMagicActionSaveGatedConditionFailures(
     if (target === undefined) continue;
     const activeEffect = {
       kind: "unitFeatureCondition" as const,
-      sourceUnitId: unitFeature.unit.id,
+      sourceProcedureRef,
       sourceCombatantId: actorId,
       condition: unitFeature.condition.onFail.condition,
       conditionHadNonSpellSource: hasCondition(
@@ -3297,7 +3321,7 @@ function applyMagicActionSaveGatedConditionFailures(
           (candidate) =>
             !(
               candidate.kind === "unitFeatureCondition" &&
-              candidate.sourceUnitId === unitFeature.unit.id &&
+              candidate.sourceProcedureRef === sourceProcedureRef &&
               candidate.sourceCombatantId === actorId &&
               candidate.condition === unitFeature.condition.onFail.condition
             ),
@@ -3418,6 +3442,7 @@ function magicActionAreaSaveDamageHealingFills(
 function validateMagicActionAreaSaveDamageHealing(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly unitFeature: MagicActionAreaSaveDamageHealingProfile;
   readonly savingThrows: MagicActionAreaSaveDamageHealingSavingThrowFill;
   readonly healingTarget: MagicActionAreaSaveDamageHealingTargetFill;
@@ -3467,6 +3492,7 @@ function validateMagicActionAreaSaveDamageHealing(input: {
   const areaFact = magicActionAreaSaveDamageHealingAreaFact(
     input.savingThrows.spatialFacts ?? [],
     input.actorId,
+    input.sourceProcedureRef,
     input.unitFeature,
   );
   if (areaFact === undefined) {
@@ -3654,6 +3680,7 @@ function magicActionAreaSaveDamageHealingHealingRollHole(
 function magicActionAreaSaveDamageHealingAreaFact(
   facts: readonly BattleTargetSpatialFact[],
   actorId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   unitFeature: MagicActionAreaSaveDamageHealingProfile,
 ):
   | Extract<
@@ -3670,7 +3697,7 @@ function magicActionAreaSaveDamageHealingAreaFact(
     > =>
       fact.kind === "magicActionAreaSaveDamageHealingTargetsInSphere" &&
       fact.actorId === actorId &&
-      fact.unitId === unitFeature.unit.id &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.originWithinRangeFeet ===
         unitFeature.damageHealing.area.origin.rangeFeet &&
       fact.radiusFeet === unitFeature.damageHealing.area.shape.radiusFeet,
@@ -3766,10 +3793,7 @@ function bardicInspirationTargetCanSeeOrHear(
   bardId: CombatantId,
   target: BattleCreatureState,
   facts: readonly BattleTargetSpatialFact[],
-  unitFeature: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "bardicInspirationGrant" }
-  >,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): boolean {
   if (!bardicInspirationTargetCanPerceiveSurroundings(target)) {
     return false;
@@ -3783,7 +3807,7 @@ function bardicInspirationTargetCanSeeOrHear(
           fact.kind === "bardicInspirationTargetCanHear" &&
           fact.bardId === bardId &&
           fact.targetId === target.combatantId &&
-          fact.unitId === unitFeature.unit.id,
+          fact.sourceProcedureRef === sourceProcedureRef,
       ))
   );
 }
@@ -3942,7 +3966,7 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
       input.abilityCheck.targetSpatialFacts,
       input.reactorId,
       input.abilityCheck.actorId,
-      input.unitId,
+      procedureRef,
       modifier.rangeFeet,
     )
   ) {
@@ -4000,7 +4024,7 @@ export function hasReactionRollOrDamageReductionRangeFact(
   facts: readonly BattleTargetSpatialFact[],
   reactorId: CombatantId,
   targetId: CombatantId,
-  unitId: UnitRecord["id"],
+  sourceProcedureRef: BattleProcedureExecutionRef,
   rangeFeet: MovementFeet,
 ): boolean {
   return facts.some(
@@ -4008,7 +4032,7 @@ export function hasReactionRollOrDamageReductionRangeFact(
       fact.kind === "reactionRollOrDamageReductionTargetWithinRange" &&
       fact.reactorId === reactorId &&
       fact.targetId === targetId &&
-      fact.unitId === unitId &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.rangeFeet === rangeFeet,
   );
 }
@@ -4041,7 +4065,7 @@ export function resolveExtraActionGrantUnitFeature(
   const granted = grantUnitActionResource(
     input.state.currentTurnResources,
     input.subject.actorId,
-    input.subject.unitId,
+    input.subject.procedureRef,
     unitFeature.restriction,
   );
   if (Either.isLeft(granted)) {
@@ -4059,7 +4083,7 @@ export function resolveExtraActionGrantUnitFeature(
     origin: {
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
-        candidate.unit.id === input.subject.unitId &&
+        candidate.unit.id === resource.unit.id &&
         resourceHasUsesRemaining(candidate)
           ? {
               ...spendCharacterResourceUse(candidate),
@@ -4131,7 +4155,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
       origin: {
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
-          candidate.unit.id === input.subject.unitId &&
+          candidate.unit.id === resource.unit.id &&
           resourceHasUsesRemaining(candidate)
             ? spendCharacterResourceUse(candidate)
             : candidate,
@@ -4228,7 +4252,7 @@ export function resolveOngoingFeatureUnitFeature(
     );
   }
 
-  const occurrenceKey = ongoingFeatureSourceKeyForUnit(input.subject.unitId);
+  const occurrenceKey = ongoingFeatureSourceKeyForUnit(unitFeature.unit.id);
   const activeOngoingFeature =
     activeOngoingFeatureOccurrencesForCombatant(actor).get(occurrenceKey);
   const nextActiveOngoingFeatureOccurrences = new Map(
@@ -4255,7 +4279,7 @@ export function resolveOngoingFeatureUnitFeature(
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
         activeOngoingFeature === undefined &&
-        candidate.unit.id === input.subject.unitId &&
+        candidate.unit.id === unitFeature.unit.id &&
         unitFeature.spendsUse &&
         resourceHasUsesRemaining(candidate)
           ? spendCharacterResourceUse(candidate)

@@ -5,6 +5,7 @@ import type {
 import type {
   BattleFill,
   BattleId,
+  BattleActPresentation,
   BattleState,
   BattleSubject,
   CharacterId,
@@ -63,6 +64,7 @@ export type CharacterSessionRegistry = {
 
 export type BattleFillSession = {
   readonly subject: BattleSubject;
+  readonly presentation: BattleActPresentation;
   readonly fills: readonly BattleFill[];
 };
 
@@ -174,6 +176,7 @@ export function createMcpSessionStore(
             ? null
             : {
                 subject: store.pendingBattleFills.subject,
+                presentation: store.pendingBattleFills.presentation,
                 fills: store.pendingBattleFills.fills,
               },
       };

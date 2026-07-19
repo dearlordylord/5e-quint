@@ -34,6 +34,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type MirrorImageHitInterceptionSpellInvocation,
@@ -104,7 +105,6 @@ function mirrorImageHitInterceptionShape(
     : {
         activeEffect: {
           kind: "mirrorImageDuplicates",
-          sourceSpellId: spell.id,
           sourceCombatantId: actorId,
           remainingDuplicates: MIRROR_IMAGE_INITIAL_DUPLICATES,
           expiresAt: {
@@ -143,13 +143,14 @@ function admitMirrorImageHitInterception(
 function discoverMirrorImageHitInterceptionCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: MirrorImageHitInterceptionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: mirrorImageHitInterceptionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -161,7 +162,7 @@ function discoverMirrorImageHitInterceptionCastAct(
 }
 
 function mirrorImageHitInterceptionInvocationRef(
-  invocation: MirrorImageHitInterceptionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "spellSlot",
@@ -172,7 +173,7 @@ function mirrorImageHitInterceptionInvocationRef(
 }
 
 function mirrorImageHitInterceptionCastSummary(
-  invocation: MirrorImageHitInterceptionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
 ): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
@@ -180,7 +181,7 @@ function mirrorImageHitInterceptionCastSummary(
 function applyMirrorImageHitInterceptionEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: MirrorImageHitInterceptionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -188,6 +189,7 @@ function applyMirrorImageHitInterceptionEffect(
   }
   const nextEffect = {
     ...invocation.activeEffect,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
   };
   const activeEffects = [
@@ -195,7 +197,7 @@ function applyMirrorImageHitInterceptionEffect(
       (effect) =>
         !(
           effect.kind === "mirrorImageDuplicates" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId
         ),
     ),

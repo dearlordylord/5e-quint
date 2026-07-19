@@ -17,8 +17,12 @@ import {
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
-import type { SpellId } from "../identity.ts";
 import type { CombatantId } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+} from "../identity.ts";
+import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -55,16 +59,16 @@ type HypnoticPatternControlEffect = Extract<
 >;
 export type SpellConcentrationEffectSource = {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };
 
 export function spellConcentrationEffectSourceFromEffect(
   effect: BattleActiveEffect,
 ): SpellConcentrationEffectSource | null {
-  return "sourceSpellId" in effect
+  return "sourceProcedureRef" in effect
     ? {
         sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
       }
     : null;
 }
@@ -150,13 +154,13 @@ export function concentrationSpellEffectSourcesDirectlyApplyingCondition(
     }
     const source = {
       sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
     };
     if (
       sources.some(
         (existing) =>
           existing.sourceCombatantId === source.sourceCombatantId &&
-          existing.sourceSpellId === source.sourceSpellId,
+          existing.sourceProcedureRef === source.sourceProcedureRef,
       )
     ) {
       continue;
@@ -259,7 +263,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     "battle:protection-relevant-effect-save:",
     targetId,
     effect.sourceCombatantId,
-    effect.sourceSpellId,
+    effect.sourceProcedureRef,
     relevantEffect,
   ]
     .map(String)
@@ -268,10 +272,10 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${relevantEffect} save`,
+    label: `${relevantEffect} save`,
     protectionRelevantEffectSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       relevantEffect,
       save: effect.save,
@@ -302,13 +306,11 @@ export function protectionRelevantEffectFor(
   state: BattleState,
   targetId: CombatantId,
   sourceCombatantId: CombatantId,
-  sourceSpellId: SpellId,
   relevantEffect: ProtectionRelevantEffectKind,
 ): ProtectionRelevantEffect | undefined {
   return protectionRelevantEffectsForTarget(state, targetId).find(
     (effect) =>
       effect.sourceCombatantId === sourceCombatantId &&
-      effect.sourceSpellId === sourceSpellId &&
       protectionRelevantEffectKind(effect) === relevantEffect,
   );
 }
@@ -510,7 +512,7 @@ function isConcentrationSpellEffectDirectlyApplyingCondition(
   } {
   return (
     activeEffectDirectlyAppliesCondition(effect, condition) &&
-    "sourceSpellId" in effect &&
+    "sourceProcedureRef" in effect &&
     "sourceCombatantId" in effect &&
     "expiresAt" in effect &&
     effect.expiresAt.kind === "concentration"
@@ -572,15 +574,12 @@ export function spellRestraintEffectEntries(
 export function spellRestraintEffectFor(
   state: BattleState,
   combatantId: CombatantId,
-  sourceSpellId: SpellId,
-  sourceCombatantId: CombatantId,
+  effectRef: BattleActiveEffectExecutionRef,
 ):
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
   | undefined {
   return spellRestraintEffects(state, combatantId).find(
-    (effect) =>
-      effect.sourceSpellId === sourceSpellId &&
-      effect.sourceCombatantId === sourceCombatantId,
+    (effect) => spellActiveEffectExecutionRef(effect) === effectRef,
   );
 }
 
@@ -734,7 +733,7 @@ export function removeHypnoticPatternControlEffectsFromTarget(
       combatants,
       {
         sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
       },
     );
   }
@@ -794,7 +793,8 @@ export function combatantsAfterHideousLaughterSpellEndedIfNoEffects(
   if (
     sourceCombatant === undefined ||
     sourceCombatant.concentration?.effectKind !== "spellEffect" ||
-    sourceCombatant.concentration.sourceSpellId !== source.sourceSpellId
+    sourceCombatant.concentration.sourceProcedureRef !==
+      source.sourceProcedureRef
   ) {
     return combatants;
   }
@@ -820,7 +820,8 @@ export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
   if (
     sourceCombatant === undefined ||
     sourceCombatant.concentration?.effectKind !== "spellEffect" ||
-    sourceCombatant.concentration.sourceSpellId !== source.sourceSpellId
+    sourceCombatant.concentration.sourceProcedureRef !==
+      source.sourceProcedureRef
   ) {
     return combatants;
   }
@@ -837,7 +838,7 @@ export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSourc
   const uniqueSources = [
     ...new Map(
       sources.map((source) => [
-        `${source.sourceCombatantId}\u0000${source.sourceSpellId}`,
+        `${source.sourceCombatantId}\u0000${source.sourceProcedureRef}`,
         source,
       ]),
     ).values(),
@@ -870,7 +871,7 @@ function sameHideousLaughterSpellEffect(
 ): effect is HideousLaughterEffect {
   return (
     effect.kind === "hideousLaughter" &&
-    effect.sourceSpellId === source.sourceSpellId &&
+    effect.sourceProcedureRef === source.sourceProcedureRef &&
     effect.sourceCombatantId === source.sourceCombatantId
   );
 }
@@ -881,8 +882,8 @@ function sameConcentrationSpellEffectSource(
 ): boolean {
   return (
     effect.sourceCombatantId === source.sourceCombatantId &&
-    "sourceSpellId" in effect &&
-    effect.sourceSpellId === source.sourceSpellId &&
+    "sourceProcedureRef" in effect &&
+    effect.sourceProcedureRef === source.sourceProcedureRef &&
     "expiresAt" in effect &&
     effect.expiresAt.kind === "concentration"
   );

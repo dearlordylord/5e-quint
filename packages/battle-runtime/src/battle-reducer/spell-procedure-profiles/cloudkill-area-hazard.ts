@@ -226,13 +226,14 @@ function cloudkillSaveGateDamageAmount(
 function discoverCloudkillAreaHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: CloudkillAreaHazardSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<CloudkillAreaHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: cloudkillAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },

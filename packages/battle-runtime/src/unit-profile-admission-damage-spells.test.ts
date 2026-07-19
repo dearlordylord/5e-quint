@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV89A chill_touch
@@ -93,7 +96,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: magicMissileUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -159,7 +165,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: rayOfFrostUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -411,7 +420,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: acidSplashUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
@@ -454,10 +466,17 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef("acid_arrow", 2, "spellAttackDamage"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef("acid_arrow", 2, "spellAttackDamage"),
+      ),
       mode: { tag: "cast" },
     });
     const attackRoll = requireResultHole(
@@ -562,7 +581,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellTurnEndDamage",
-        sourceSpellId: acidArrowUnitId,
+        sourceProcedureRef: hitAct.subject.procedureRef,
         damage: { expr: { dice: 2, dieSize: 4 }, damageType: "acid" },
       }),
     );
@@ -581,7 +600,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(laterDamage).toMatchObject({
       spellTurnEndDamage: {
         targetId: spellTargetId,
-        sourceSpellId: acidArrowUnitId,
+        sourceProcedureRef: hitAct.subject.procedureRef,
         damage: { expr: { dice: 2, dieSize: 4 }, damageType: "acid" },
       },
     });
@@ -674,7 +693,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: poisonSprayUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -726,7 +748,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: chillTouchUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef("chill_touch", "spellAttackDamage"),
@@ -786,7 +811,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: shockingGraspUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -836,7 +864,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: guidingBoltUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -888,7 +919,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: rayOfSicknessUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -940,7 +974,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: viciousMockeryUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
@@ -1086,7 +1123,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellId: sacredFlameUnitId,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef("sacred_flame", "saveGatedDamage"),
@@ -1139,7 +1179,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1200,7 +1243,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(mindSpikeUnitId, 3, "saveGatedDamage"),
@@ -1302,14 +1348,17 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ).toEqual([]);
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
-    ).toEqual({ sourceSpellId: mindSpikeUnitId, effectKind: "spellEffect" });
+    ).toEqual({
+      sourceProcedureRef: act.subject.procedureRef,
+      effectKind: "spellEffect",
+    });
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
       {
         kind: "spellConcentrationDuration",
         sourceCombatantId: spellCasterId,
-        sourceSpellId: mindSpikeUnitId,
+        sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -1388,7 +1437,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
           effect.kind === "spellConcentrationDuration" &&
-          effect.sourceSpellId === mindSpikeUnitId &&
+          effect.sourceCombatantId === spellCasterId &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -1421,7 +1470,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       combatants: new Map(state.combatants).set(spellCasterId, {
         ...caster,
         concentration: {
-          sourceSpellId: spellId("synthetic_prior_concentration"),
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(spellId("synthetic_prior_concentration")),
+          ),
           effectKind: "spellEffect",
         },
       }),
@@ -1473,14 +1524,17 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     }
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
-    ).toEqual({ sourceSpellId: mindSpikeUnitId, effectKind: "spellEffect" });
+    ).toEqual({
+      sourceProcedureRef: act.subject.procedureRef,
+      effectKind: "spellEffect",
+    });
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
       {
         kind: "spellConcentrationDuration",
         sourceCombatantId: spellCasterId,
-        sourceSpellId: mindSpikeUnitId,
+        sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -1503,7 +1557,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       combatants: new Map(state.combatants).set(spellCasterId, {
         ...caster,
         concentration: {
-          sourceSpellId: spellId("synthetic_prior_concentration"),
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(spellId("synthetic_prior_concentration")),
+          ),
           effectKind: "spellEffect",
         },
       }),
@@ -1572,7 +1628,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef("burning_hands", 2, "saveGatedDamage"),
@@ -1619,7 +1678,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 4,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1671,7 +1733,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 5,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1723,7 +1788,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 5,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1911,7 +1979,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 4,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(fireballUnitId, 4, "saveGatedDamage"),
@@ -1988,7 +2059,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           kind: "startsBurning",
           objectId: fireballObjectId,
           sourceCombatantId: spellCasterId,
-          sourceSpellId: spellId(fireballUnitId),
+          sourceProcedureRef: act.subject.procedureRef,
         },
       ],
     });
@@ -2043,7 +2114,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           kind: "startsBurning",
           objectId: fireballObjectId,
           sourceCombatantId: spellCasterId,
-          sourceSpellId: spellId(fireballUnitId),
+          sourceProcedureRef: act.subject.procedureRef,
         },
       ],
     });
@@ -2087,7 +2158,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(shatterUnitId, 3, "saveGatedDamage"),

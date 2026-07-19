@@ -299,7 +299,6 @@ function armorClassBaseSourceForFormula(
       base: armorClass(formula.base),
       abilityModifiers: ["dex"],
       source: "spell_base_plus_ability",
-      sourceUnitId,
     };
   }
   if (formula.kind === "base_plus_dex_con") {

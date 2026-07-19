@@ -1,3 +1,5 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import type { BattleProcedureExecutionRef } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
@@ -8,7 +10,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  requireCharacterSpellProcedureRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 import {
   aidUnitId,
   barkskinUnitId,
@@ -67,6 +72,20 @@ import type {
 
 const featherFallUnitId = "feather_fall";
 
+function withoutKnownWillingFacts<
+  T extends Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" | "spellTargetList" }
+  >,
+>(fill: T): T {
+  return {
+    ...fill,
+    spatialFacts: fill.spatialFacts?.filter(
+      (fact) => fact.kind !== "spellTargetKnownWilling",
+    ),
+  };
+}
+
 describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   test("false_life is admitted as self Temporary Hit Points with slot scaling", () => {
     const spell = spellRecord(falseLifeUnitId);
@@ -76,10 +95,17 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     });
     const act = spellAct({ state, spellId: falseLifeUnitId, slotLevel: 2 });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(falseLifeUnitId, 2, "scalarBuff"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(falseLifeUnitId, 2, "scalarBuff"),
+      ),
       mode: { tag: "cast" },
     });
     const tempHpHole = requireHole(act.initialHoles, "rolledDice");
@@ -170,7 +196,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
         effect.kind === "speedDelta" &&
-        effect.sourceSpellId === longstriderUnitId
+        effect.sourceCombatantId === spellCasterId
           ? {
               ...effect,
               expiresAt: {
@@ -264,12 +290,11 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       ],
     });
 
-    expect(resolved).toEqual({
+    expect(resolved).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
       message:
         "Scalar buff spells use target fills and optional scalar dice roll.",
-      snapshot: snapshotBattle(state),
     });
   });
 
@@ -282,7 +307,11 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     if (target === undefined) {
       throw new Error("Expected Longstrider target.");
     }
-    const priorCasterId = combatantId("unit-profile-prior-longstrider-caster");
+    const act = spellAct({
+      state,
+      spellId: longstriderUnitId,
+      slotLevel: 1,
+    });
     const stateWithPriorCasting: BattleState = {
       ...state,
       combatants: new Map(state.combatants).set(spellTargetId, {
@@ -291,8 +320,8 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
           ...target.activeEffects,
           {
             kind: "speedDelta",
-            sourceSpellId: longstriderUnitId,
-            sourceCombatantId: priorCasterId,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
             deltaFeet: movementDeltaFeet(10),
             expiresAt: {
               kind: "duration",
@@ -302,11 +331,6 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       }),
     };
-    const act = spellAct({
-      state: stateWithPriorCasting,
-      spellId: longstriderUnitId,
-      slotLevel: 1,
-    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     const resolved = resolveBattleSubject({
@@ -343,7 +367,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ?.activeEffects.filter(
           (effect) =>
             effect.kind === "speedDelta" &&
-            effect.sourceSpellId === longstriderUnitId,
+            effect.sourceCombatantId === spellCasterId,
         ) ?? [];
     expect(speedEffects).toEqual([
       expect.objectContaining({ sourceCombatantId: spellCasterId }),
@@ -356,10 +380,17 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const act = bonusSpellAct({ state, spellId: shieldOfFaithUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(shieldOfFaithUnitId, 1, "scalarBuff"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(shieldOfFaithUnitId, 1, "scalarBuff"),
+      ),
       mode: { tag: "cast" },
     });
 
@@ -409,23 +440,32 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const act = bonusSpellAct({ state, spellId: barkskinUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(barkskinUnitId, 2, "scalarBuff"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(barkskinUnitId, 2, "scalarBuff"),
+      ),
       mode: { tag: "cast" },
     });
-    expect(targetHole.choices).toEqual([spellCasterId]);
+    expect(targetHole.choices).toEqual([spellCasterId, spellTargetId]);
 
     const unwillingTarget = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(
-          targetHole,
-          barkskinUnitId,
-          spellCasterId,
-          spellTargetId,
+        withoutKnownWillingFacts(
+          spellTargetFill(
+            targetHole,
+            barkskinUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
         ),
       ],
     });
@@ -473,7 +513,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       target.activeEffects.filter(
         (effect) =>
           effect.kind === "spellArmorClassFloor" &&
-          effect.sourceSpellId === barkskinUnitId,
+          effect.sourceProcedureRef === act.subject.procedureRef,
       ),
     ).toEqual([
       expect.objectContaining({
@@ -486,7 +526,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
         effect.kind === "spellArmorClassFloor" &&
-        effect.sourceSpellId === barkskinUnitId
+        effect.sourceProcedureRef === act.subject.procedureRef
           ? {
               ...effect,
               expiresAt: {
@@ -605,18 +645,29 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       "spellTargetList",
     );
 
-    expect(levelTwoAct.subject).toMatchObject({
+    expect({
+      ...levelTwoAct.subject,
+      invocation: battleActSpellPresentation(levelTwoAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(spiderClimbUnitId, 2, "scalarBuff"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(spiderClimbUnitId, 2, "scalarBuff"),
+      ),
       mode: { tag: "cast" },
     });
-    expect(levelTwoTargetHole.choices).toEqual([spellCasterId]);
+    expect(levelTwoTargetHole.choices).toEqual([
+      spellCasterId,
+      spellTargetId,
+      secondTargetId,
+    ]);
     expect(targetListHole).toEqual(
       expect.objectContaining({
         minTargets: 1,
         maxTargets: 2,
-        choices: [spellCasterId],
+        choices: [spellCasterId, spellTargetId, secondTargetId],
       }),
     );
 
@@ -624,9 +675,14 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       state,
       subject: levelThreeAct.subject,
       fills: [
-        spellTargetListFill(targetListHole, spellCasterId, spiderClimbUnitId, [
-          secondTargetId,
-        ]),
+        withoutKnownWillingFacts(
+          spellTargetListFill(
+            targetListHole,
+            spellCasterId,
+            spiderClimbUnitId,
+            [secondTargetId],
+          ),
+        ),
       ],
     });
     expect(unwillingTarget).toMatchObject({
@@ -685,7 +741,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     }
     const expectedEffect = expect.objectContaining({
       kind: "specialSpeedGrant",
-      sourceSpellId: spiderClimbUnitId,
+      sourceProcedureRef: levelThreeAct.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       speedKind: "climb",
       expiresAt: {
@@ -737,7 +793,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "specialSpeedGrant",
-          sourceSpellId: spiderClimbUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
         }),
       ]),
     );
@@ -783,18 +839,29 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       "spellTargetList",
     );
 
-    expect(levelThreeAct.subject).toMatchObject({
+    expect({
+      ...levelThreeAct.subject,
+      invocation: battleActSpellPresentation(levelThreeAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(flyUnitId, 3, "scalarBuff"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(flyUnitId, 3, "scalarBuff"),
+      ),
       mode: { tag: "cast" },
     });
-    expect(levelThreeTargetHole.choices).toEqual([spellCasterId]);
+    expect(levelThreeTargetHole.choices).toEqual([
+      spellCasterId,
+      spellTargetId,
+      secondTargetId,
+    ]);
     expect(targetListHole).toEqual(
       expect.objectContaining({
         minTargets: 1,
         maxTargets: 2,
-        choices: [spellCasterId],
+        choices: [spellCasterId, spellTargetId, secondTargetId],
       }),
     );
 
@@ -802,9 +869,11 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       state,
       subject: levelFourAct.subject,
       fills: [
-        spellTargetListFill(targetListHole, spellCasterId, flyUnitId, [
-          secondTargetId,
-        ]),
+        withoutKnownWillingFacts(
+          spellTargetListFill(targetListHole, spellCasterId, flyUnitId, [
+            secondTargetId,
+          ]),
+        ),
       ],
     });
     expect(unwillingTarget).toMatchObject({
@@ -863,7 +932,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     }
     const expectedEffect = expect.objectContaining({
       kind: "specialSpeedGrant",
-      sourceSpellId: flyUnitId,
+      sourceProcedureRef: levelFourAct.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       speedKind: "fly",
       speed: { kind: "fixed", speedFeet: movementFeet(60) },
@@ -959,7 +1028,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "specialSpeedGrant",
-          sourceSpellId: flyUnitId,
+          sourceCombatantId: spellCasterId,
         }),
       ]),
     );
@@ -980,7 +1049,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
           effect.kind === "specialSpeedGrant" &&
-          effect.sourceSpellId === flyUnitId
+          effect.sourceCombatantId === spellCasterId
             ? {
                 ...effect,
                 expiresAt: {
@@ -1039,12 +1108,20 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       broken,
       spellCasterId,
     );
+    const featherFallProcedureRef = requireCharacterSpellProcedureRefForTest(
+      broken,
+      spellCasterId,
+      spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
+    );
     const fallWitness = resolveFlySpeedGrantEndFallCleanup({
       state: broken,
       targetId: spellCasterId,
       witness: {
         kind: "cannotStopFall",
-        reactionSpellTargetFacts: featherFallTriggerFacts(spellCasterId),
+        reactionSpellTargetFacts: featherFallTriggerFacts(
+          spellCasterId,
+          featherFallProcedureRef,
+        ),
       },
     });
 
@@ -1065,7 +1142,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "specialSpeedGrant",
-          sourceSpellId: flyUnitId,
+          sourceCombatantId: spellCasterId,
         }),
       ]),
     );
@@ -1111,9 +1188,12 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
             kind: "castTriggeredReactionSpell",
             procedureRef: featherFallChoice.subject.procedureRef,
             fills: [
-              featherFallTargetListFill(targetList, spellCasterId, [
+              featherFallTargetListFill(
+                targetList,
+                featherFallChoice.subject.procedureRef,
                 spellCasterId,
-              ]),
+                [spellCasterId],
+              ),
             ],
           },
         },
@@ -1158,7 +1238,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
           effect.kind === "specialSpeedGrant" &&
-          effect.sourceSpellId === flyUnitId
+          effect.sourceCombatantId === spellCasterId
             ? endedEffect
             : effect,
         ),
@@ -1220,7 +1300,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "specialSpeedGrant",
-        sourceSpellId: flyUnitId,
+        sourceCombatantId: spellCasterId,
         speedKind: "fly",
         hover: true,
       }),
@@ -1287,10 +1367,17 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const act = spellAct({ state, spellId: aidUnitId, slotLevel: 3 });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(aidUnitId, 3, "scalarBuff"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(aidUnitId, 3, "scalarBuff"),
+      ),
       mode: { tag: "cast" },
     });
     expect(targetListHole).toEqual(
@@ -1303,7 +1390,6 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
           kind: "hitPointMaximumIncrease",
           activeEffect: expect.objectContaining({
             kind: "hitPointMaximumIncrease",
-            sourceSpellId: aidUnitId,
             amount: 10,
             expiresAt: expect.objectContaining({ kind: "duration" }),
           }),
@@ -1381,7 +1467,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
         effect.kind === "hitPointMaximumIncrease" &&
-        effect.sourceSpellId === aidUnitId
+        effect.sourceCombatantId === spellCasterId
           ? {
               ...effect,
               expiresAt: {
@@ -1433,7 +1519,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       expiredTarget?.activeEffects.some(
         (effect) =>
           effect.kind === "hitPointMaximumIncrease" &&
-          effect.sourceSpellId === aidUnitId,
+          effect.sourceCombatantId === spellCasterId,
       ),
     ).toBe(false);
   });
@@ -1450,7 +1536,11 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     if (target === undefined) {
       throw new Error("Expected Aid target.");
     }
-    const priorCasterId = combatantId("unit-profile-prior-aid-caster");
+    const act = spellAct({
+      state,
+      spellId: aidUnitId,
+      slotLevel: 2,
+    });
     const stateWithStrongerAid: BattleState = {
       ...state,
       combatants: new Map(state.combatants).set(spellTargetId, {
@@ -1461,8 +1551,8 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
           ...target.activeEffects,
           {
             kind: "hitPointMaximumIncrease",
-            sourceSpellId: aidUnitId,
-            sourceCombatantId: priorCasterId,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
             amount: 10,
             expiresAt: {
               kind: "duration",
@@ -1472,11 +1562,6 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       }),
     };
-    const act = spellAct({
-      state: stateWithStrongerAid,
-      spellId: aidUnitId,
-      slotLevel: 2,
-    });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     const resolved = resolveBattleSubject({
@@ -1510,12 +1595,10 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       resolved.state.combatants
         .get(spellTargetId)
         ?.activeEffects.filter(
-          (effect) =>
-            effect.kind === "hitPointMaximumIncrease" &&
-            effect.sourceSpellId === aidUnitId,
+          (effect) => effect.kind === "hitPointMaximumIncrease",
         ) ?? [];
     expect(aidEffects).toEqual([
-      expect.objectContaining({ amount: 10, sourceCombatantId: priorCasterId }),
+      expect.objectContaining({ amount: 10, sourceCombatantId: spellCasterId }),
       expect.objectContaining({ amount: 5, sourceCombatantId: spellCasterId }),
     ]);
 
@@ -1551,9 +1634,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       afterStrongerAidExpires.state.combatants
         .get(spellTargetId)
         ?.activeEffects.filter(
-          (effect) =>
-            effect.kind === "hitPointMaximumIncrease" &&
-            effect.sourceSpellId === aidUnitId,
+          (effect) => effect.kind === "hitPointMaximumIncrease",
         ) ?? [];
     expect(remainingAidEffects).toEqual([
       expect.objectContaining({ amount: 5, sourceCombatantId: spellCasterId }),
@@ -1638,7 +1719,7 @@ function requireFlySpeedGrant(
       (candidate): candidate is EndedFlySpeedGrant =>
         candidate.kind === "specialSpeedGrant" &&
         candidate.speedKind === "fly" &&
-        candidate.sourceSpellId === flyUnitId,
+        candidate.sourceCombatantId === spellCasterId,
     );
   if (effect === undefined) {
     throw new Error("Expected active Fly Speed grant.");
@@ -1663,13 +1744,14 @@ function requirePendingFlySpeedGrantCleanup(
 
 function featherFallTriggerFacts(
   fallingCreatureId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): readonly BattleTargetSpatialFact[] {
   return [
     {
       kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
       reactorId: spellCasterId,
       fallingCreatureId,
-      spellId: featherFallUnitId,
+      sourceProcedureRef,
       rangeFeet: movementFeet(60),
     },
   ];
@@ -1677,6 +1759,7 @@ function featherFallTriggerFacts(
 
 function featherFallTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   casterIdValue: CombatantId,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
@@ -1688,7 +1771,7 @@ function featherFallTargetListFill(
       kind: "featherFallTargetFallingWithinRange",
       casterId: casterIdValue,
       targetId,
-      spellId: featherFallUnitId,
+      sourceProcedureRef,
       rangeFeet: movementFeet(60),
     })),
   };
@@ -1708,27 +1791,36 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
     const act = spellAct({ state, spellId: heroismUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        heroismUnitId,
-        1,
-        "conditionImmunityAndTurnStartTemporaryHitPoints",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(
+          heroismUnitId,
+          1,
+          "conditionImmunityAndTurnStartTemporaryHitPoints",
+        ),
       ),
       mode: { tag: "cast" },
     });
-    expect(targetHole.choices).toEqual([spellCasterId]);
+    expect(targetHole.choices).toEqual([spellCasterId, spellTargetId]);
 
     const unwillingTarget = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(
-          targetHole,
-          heroismUnitId,
-          spellCasterId,
-          spellTargetId,
+        withoutKnownWillingFacts(
+          spellTargetFill(
+            targetHole,
+            heroismUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
         ),
       ],
     });
@@ -1758,14 +1850,14 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
       [
         expect.objectContaining({
           kind: "conditionImmunity",
-          sourceSpellId: heroismUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "frightened",
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
         }),
         expect.objectContaining({
           kind: "turnStartTemporaryHitPoints",
-          sourceSpellId: heroismUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           amount: 3,
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
@@ -1890,15 +1982,21 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
     expect(targetHole).toEqual(
       expect.objectContaining({ minTargets: 1, maxTargets: 2 }),
     );
-    expect(targetHole.choices).toEqual([spellCasterId]);
+    expect(targetHole.choices).toEqual([
+      spellCasterId,
+      spellTargetId,
+      secondTargetId,
+    ]);
     const unwillingTargets = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        spellTargetListFill(targetHole, spellCasterId, heroismUnitId, [
-          spellCasterId,
-          secondTargetId,
-        ]),
+        withoutKnownWillingFacts(
+          spellTargetListFill(targetHole, spellCasterId, heroismUnitId, [
+            spellCasterId,
+            secondTargetId,
+          ]),
+        ),
       ],
     });
     expect(unwillingTargets).toMatchObject({

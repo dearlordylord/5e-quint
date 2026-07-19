@@ -26,6 +26,7 @@ import { Either } from "effect"
 
 import {
   counterspellDecision,
+  type CounterspellTriggerFact,
   counterspellTriggerFact,
   damageRollFillWithGroups,
   deathSavingThrowFill,
@@ -613,7 +614,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
   const pending = resolveBattleSubject({
     state: builder.state,
     subject: act.subject,
-    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(plan))]
+    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(plan, act.subject.procedureRef))]
   })
   const spellReady = resolveSpellCastWindows(builder, plan, pending)
 
@@ -743,7 +744,11 @@ function resolveCounterspellChain(
           choice,
           nextLink === undefined
             ? []
-            : [spellCastReactionFactsFill([counterspellFactForLink(nextLink, link.reactorId)])]
+            : [
+                spellCastReactionFactsFill([
+                  counterspellFactForLink(nextLink, link.reactorId, choice.subject.procedureRef)
+                ])
+              ]
         )
       )
     })
@@ -904,16 +909,19 @@ function requireCurrentActor(state: BattleState, actorId: CombatantId): void {
   }
 }
 
-function counterspellFactsForPlan(plan: AreaSpellPlan) {
+function counterspellFactsForPlan(
+  plan: AreaSpellPlan,
+  sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"]
+) {
   if (plan.reaction.kind === "counterspellChain") {
-    return [counterspellFactForLink(plan.reaction.chain[0], plan.casterId)]
+    return [counterspellFactForLink(plan.reaction.chain[0], plan.casterId, sourceProcedureRef)]
   }
   if (plan.reaction.kind === "declinedCounterspell") {
     return [
       counterspellTriggerFact({
         reactorId: plan.reaction.reactorId,
         casterId: plan.casterId,
-        spellId: counterspellUnitId,
+        sourceProcedureRef,
         rangeFeet: counterspellRangeFeet
       })
     ]
@@ -936,11 +944,15 @@ function counterspellFactsDetail(plan: AreaSpellPlan): string {
   return "The table projection supplies no eligible Counterspell reactor for this casting."
 }
 
-function counterspellFactForLink(link: CounterspellChainLink, casterId: CombatantId) {
+function counterspellFactForLink(
+  link: CounterspellChainLink,
+  casterId: CombatantId,
+  sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"]
+) {
   return counterspellTriggerFact({
     reactorId: link.reactorId,
     casterId,
-    spellId: counterspellUnitId,
+    sourceProcedureRef,
     rangeFeet: counterspellRangeFeet
   })
 }

@@ -1,4 +1,5 @@
 import {
+  requireCharacterSpellProcedureRefForTest,
   startBattleRight,
   requireResolved,
   requireHole,
@@ -21,7 +22,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
-import type { BattleSubject } from "./battle-runtime-test-support.ts";
+import type { BattleActDiscoverySubject as BattleSubject } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () => {
@@ -141,10 +142,10 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef(
-        "inflict_wounds",
-        2,
-        "saveGatedDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("inflict_wounds", 2, "saveGatedDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -238,7 +239,11 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: spellSlotInvocationRef("burning_hands", 2, "saveGatedDamage"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        wizardId,
+        spellSlotInvocationRef("burning_hands", 2, "saveGatedDamage"),
+      ),
       mode: { tag: "cast" },
     };
     const savingThrows = requireHole(

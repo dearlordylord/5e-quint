@@ -1,3 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 import {
   startBattleRight,
   requireElapsedHours,
@@ -52,10 +58,12 @@ describe("battle runtime: Fog Cloud", () => {
     const levelOneAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        candidate.subject.invocation.tag === "spellSlot" &&
-        candidate.subject.invocation.spellId === "fog_cloud" &&
-        candidate.subject.invocation.slotLevel === 1 &&
-        candidate.subject.invocation.procedure === "fogCloudObscurement",
+        battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "fog_cloud" &&
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1 &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "fogCloudObscurement",
     );
     if (levelOneAct === undefined) {
       throw new Error("Expected level-1 Fog Cloud action spell act.");
@@ -102,7 +110,9 @@ describe("battle runtime: Fog Cloud", () => {
     expect(caster?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "fogCloudObscurement",
-        sourceSpellId: "fog_cloud",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("fog_cloud"),
+        ),
         sourceCombatantId: wizardId,
         areaId: "fog-1",
         radiusFeet: movementFeet(20),
@@ -114,12 +124,16 @@ describe("battle runtime: Fog Cloud", () => {
       }),
     ]);
     expect(caster?.concentration).toMatchObject({
-      sourceSpellId: "fog_cloud",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("fog_cloud"),
+      ),
     });
     expect(resolved.snapshot.obscurementZones).toEqual([
       {
         kind: "spellObscurementZone",
-        sourceSpellId: "fog_cloud",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("fog_cloud"),
+        ),
         sourceCombatantId: wizardId,
         obscurement: "heavilyObscured",
         area: {

@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   goblinAttackSubject,
@@ -280,7 +281,9 @@ describe("battle runtime: Cutting Words", () => {
             kind: "reactionRollOrDamageReductionTargetWithinRange",
             reactorId: fighterId,
             targetId: goblinId,
-            unitId: cuttingWords.id,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(cuttingWords.id),
+            ),
             rangeFeet: movementFeet(60),
           },
         ],
@@ -338,7 +341,9 @@ describe("battle runtime: Cutting Words", () => {
             kind: "reactionRollOrDamageReductionTargetWithinRange",
             reactorId: fighterId,
             targetId: goblinId,
-            unitId: cuttingWords.id,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(cuttingWords.id),
+            ),
             rangeFeet: movementFeet(60),
           },
         ],
@@ -396,7 +401,9 @@ describe("battle runtime: Cutting Words", () => {
               kind: "reactionRollOrDamageReductionTargetWithinRange",
               reactorId: fighterId,
               targetId: goblinId,
-              unitId: cuttingWords.id,
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(cuttingWords.id),
+              ),
               rangeFeet: movementFeet(60),
             },
           ],
@@ -442,7 +449,9 @@ describe("battle runtime: Cutting Words", () => {
           kind: "reactionRollOrDamageReductionTargetWithinRange" as const,
           reactorId: fighterId,
           targetId: goblinId,
-          unitId: cuttingWords.id,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(cuttingWords.id),
+          ),
           rangeFeet: movementFeet(60),
         },
       ],

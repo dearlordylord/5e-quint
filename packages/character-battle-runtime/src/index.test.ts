@@ -32,6 +32,8 @@ import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+  battleActDruidWildShapePresentation,
+  battleActUnitPresentation,
   battleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
@@ -46,6 +48,7 @@ import {
   startBattle,
 } from "@dnd/battle-runtime";
 import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
+import { battleResourcePoolExecutionRefForTest } from "./sdk-integration-test-support.ts";
 import {
   abilityScoreAssignment,
   characterDraconicAncestrySelection,
@@ -1209,7 +1212,7 @@ describe("Character Sheet battle handoff", () => {
       discoverBattleActs(state).flatMap((act) =>
         act.subject.tag === "druidWildShape" &&
         act.subject.action === "assumeForm"
-          ? [act.subject.formStatBlockId]
+          ? [battleActDruidWildShapePresentation(act)?.formStatBlockId]
           : [],
       ),
     ).toEqual([
@@ -1355,7 +1358,7 @@ describe("Character Sheet battle handoff", () => {
       ),
     );
     const wildShapeRef = refs.find(
-      (candidate) => candidate.unitId === "druid_wild_shape",
+      (candidate) => candidate.unit.id === "druid_wild_shape",
     );
 
     expect(wildShapeRef?.supportProfiles).toContainEqual(
@@ -1392,7 +1395,7 @@ describe("Character Sheet battle handoff", () => {
       ]),
     );
     expect(
-      refs.find((ref) => ref.unitId === "ranger_hunters_prey"),
+      refs.find((ref) => ref.unit.id === "ranger_hunters_prey"),
     ).not.toHaveProperty("selectedOption");
   });
 
@@ -1739,6 +1742,8 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: driftedWildShapeUnit,
+              resourcePoolRef:
+                battleResourcePoolExecutionRefForTest("drifted-wild-shape"),
               resource: driftedWildShapeResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -2496,7 +2501,7 @@ describe("Character Sheet battle handoff", () => {
       discoverBattleActs(state).some(
         (act) =>
           act.subject.tag === "unitFeature" &&
-          act.subject.unitId === "sorcerer_font_of_magic",
+          battleActUnitPresentation(act)?.unitId === "sorcerer_font_of_magic",
       ),
     ).toBe(false);
   });
@@ -2686,6 +2691,8 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: favoredEnemy,
+              resourcePoolRef:
+                battleResourcePoolExecutionRefForTest("favored-enemy"),
               resource: favoredEnemyResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -2745,6 +2752,9 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: favoredEnemy,
+              resourcePoolRef: battleResourcePoolExecutionRefForTest(
+                "drifted-favored-enemy",
+              ),
               resource: {
                 ...favoredEnemyResource,
                 cap: {
@@ -2821,6 +2831,8 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: focusUnit,
+              resourcePoolRef:
+                battleResourcePoolExecutionRefForTest("focus-expended"),
               resource: focusResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(0),
@@ -2879,6 +2891,8 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: driftedFocusUnit,
+              resourcePoolRef:
+                battleResourcePoolExecutionRefForTest("drifted-focus"),
               resource: driftedFocusResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -2970,6 +2984,8 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: focusUnit,
+              resourcePoolRef:
+                battleResourcePoolExecutionRefForTest("focus-recovered"),
               resource: focusResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -3033,6 +3049,9 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: driftedFontOfMagicUnit,
+              resourcePoolRef: battleResourcePoolExecutionRefForTest(
+                "drifted-font-of-magic",
+              ),
               resource: driftedFontOfMagicResource,
               pointsRemaining: resourceCount(5),
             },
@@ -3081,6 +3100,8 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: paladinsSmite,
+              resourcePoolRef:
+                battleResourcePoolExecutionRefForTest("paladins-smite"),
               resource: paladinsSmiteResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(0),
@@ -3142,6 +3163,9 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: favoredEnemy,
+              resourcePoolRef: battleResourcePoolExecutionRefForTest(
+                "threshold-favored-enemy",
+              ),
               resource: {
                 ...favoredEnemyResource,
                 cap: {

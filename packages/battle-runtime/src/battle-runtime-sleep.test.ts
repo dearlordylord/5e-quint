@@ -1,4 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
+  requireCharacterSpellProcedureRefForTest,
   startBattleRight,
   requireElapsedHours,
   requireResolved,
@@ -41,7 +43,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
@@ -115,7 +117,9 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepPendingRepeatSave",
-          sourceSpellId: "sleep",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("sleep"),
+          ),
           sourceCombatantId: wizardId,
           save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
           repeatAt: { kind: "endOfTurn", combatantId: goblinId, round: 1 },
@@ -154,13 +158,17 @@ describe("battle runtime: Sleep", () => {
       combatants: new Map(base.combatants).set(goblinId, {
         ...goblin,
         concentration: {
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [
           {
             kind: "spellBaseArmorClass",
-            sourceSpellId: "mage_armor",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("mage_armor"),
+            ),
             sourceCombatantId: goblinId,
             base: 13,
             ability: "dex",
@@ -198,7 +206,9 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepPendingRepeatSave",
-          sourceSpellId: "sleep",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("sleep"),
+          ),
           sourceCombatantId: wizardId,
         }),
       ],
@@ -378,7 +388,7 @@ describe("battle runtime: Sleep", () => {
       ability: "wis",
       sleepRepeatSave: {
         targetId: goblinId,
-        sourceSpellId: "sleep",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(String("sleep")),
         sourceCombatantId: wizardId,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       },
@@ -472,7 +482,9 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepUnconscious",
-          sourceSpellId: "sleep",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("sleep"),
+          ),
           sourceCombatantId: wizardId,
           expiresAt: { kind: "concentration", combatantId: wizardId },
         }),
@@ -601,14 +613,18 @@ describe("battle runtime: Sleep", () => {
       combatants: new Map(goblinTurnBase.combatants).set(goblinId, {
         ...goblin,
         concentration: {
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [
           ...goblin.activeEffects,
           {
             kind: "spellBaseArmorClass",
-            sourceSpellId: "mage_armor",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("mage_armor"),
+            ),
             sourceCombatantId: goblinId,
             base: 13,
             ability: "dex",
@@ -645,7 +661,9 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "sleepUnconscious",
-          sourceSpellId: "sleep",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("sleep"),
+          ),
           sourceCombatantId: wizardId,
         }),
       ],
@@ -922,10 +940,10 @@ describe("battle runtime: Sleep", () => {
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
-      invocation: spellSlotInvocationRef(
-        "magic_missile",
-        1,
-        "repeatedDamageAllocation",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        fighterId,
+        spellSlotInvocationRef("magic_missile", 1, "repeatedDamageAllocation"),
       ),
       mode: { tag: "cast" },
     };
@@ -1727,10 +1745,10 @@ describe("battle runtime: Sleep", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "sleep",
-            1,
-            "sleepTargetAdmission",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
           ),
           mode: { tag: "ready", trigger: "spellCast" },
         },

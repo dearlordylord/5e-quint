@@ -15,9 +15,11 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { Match } from "effect";
+import { bindSpellProcedureExecutionFacts } from "../character-execution.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleMagicalDarknessAreaChoice,
+  BattleExecutableSpellInvocation,
   BattleSpellAreaIdentityChoice,
   BattleSpellAreaChoice,
   BattleResolutionResult,
@@ -106,7 +108,7 @@ function ordinarySpellCastResource(
 function areaOngoingSpellReleaseResourceState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly errorState: BattleState;
   readonly resource: AreaOngoingSpellReleaseResource;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
@@ -161,7 +163,11 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
     kind: "storedGlyphSpellRelease",
     selfOriginAreaAnchorId: input.selfOriginAreaAnchorId,
   } as const;
-  return Match.value(input.invocation).pipe(
+  const invocation = bindSpellProcedureExecutionFacts(
+    input.invocation,
+    input.input.subject.procedureRef,
+  );
+  return Match.value(invocation).pipe(
     byProcedure("fogCloudObscurement", (invocation) =>
       resolveFogCloudObscurementSpellAct({
         ...input,
@@ -219,7 +225,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "fogCloudObscurement" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -302,7 +308,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "magicalDarknessPointOrigin" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -393,7 +399,7 @@ function magicalDarknessAreaChoiceInvalidReason(
   state: ActionSpellBattleResolutionInput["state"],
   areaChoice: BattleMagicalDarknessAreaChoice,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "magicalDarknessPointOrigin" }
   >,
 ): string | null {
@@ -432,7 +438,7 @@ export function resolveFlamingSphereSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "flamingSphere" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -515,7 +521,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "spikeGrowthMovementHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -598,7 +604,7 @@ export function resolveMoonbeamSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "moonbeam" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -681,7 +687,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "webRestraintHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -764,7 +770,7 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "sleetStormAreaHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -837,7 +843,7 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "insectPlagueAreaHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -912,7 +918,7 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "cloudkillAreaHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -987,7 +993,7 @@ export function resolveGustOfWindLineSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "gustOfWindLine" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -1108,7 +1114,7 @@ export function resolveGustOfWindLineSpellAct(input: {
       {
         trigger: "saveFailed",
         targetId: failedTargetIds[0]!,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject:

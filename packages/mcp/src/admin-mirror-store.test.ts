@@ -151,6 +151,7 @@ function envelope(input: {
     publisherInstanceId: adminMirrorPublisherInstanceId(
       input.publisher ?? "publisher-a",
     ),
+    selectedContent: null,
     sequence: adminMirrorSequence(input.sequence),
     sourceProcessId: 1,
   };

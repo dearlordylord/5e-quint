@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.hunters-prey
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
@@ -335,7 +336,9 @@ function projectRejectSameTarget(): HuntersPreyProjection {
         {
           kind: "hordeBreakerSecondTargetEligible",
           attackerId: fighterId,
-          unitId: "ranger_hunters_prey",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("ranger_hunters_prey"),
+          ),
           originalTargetId: goblinId,
           secondTargetId: goblinId,
         },
@@ -422,7 +425,9 @@ function resolveHordeBreakerUse(input: { readonly primaryHit?: boolean } = {}) {
     {
       kind: "hordeBreakerSecondTargetEligible",
       attackerId: fighterId,
-      unitId: "ranger_hunters_prey",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("ranger_hunters_prey"),
+      ),
       originalTargetId: goblinId,
       secondTargetId: skeletonId,
     },
@@ -574,7 +579,7 @@ function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {
           },
         };
   return {
-    unitId: unit.id,
+    unit: unitLibrary.requireUnit(unit.id),
     supportProfiles: [
       {
         kind: "huntersPrey",
@@ -586,7 +591,7 @@ function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {
 
 function extraAttackUnitRef(): BattleUnitRef {
   return {
-    unitId: syntheticExtraAttackUnitId,
+    unit: unitLibrary.requireUnit(syntheticExtraAttackUnitId),
     supportProfiles: [
       {
         kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,

@@ -27,6 +27,7 @@ import {
   type BattleHole,
   type BattleState,
   type BattleSubject,
+  type BattleProcedureExecutionRef,
 } from "./index.ts";
 import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -432,7 +433,7 @@ export function relentlessEnduranceBattle(input: {
         ],
         characterUnitRefs: [
           {
-            unitId: orcRelentlessEnduranceUnitId,
+            unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
             supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
           },
         ],
@@ -512,14 +513,16 @@ function isBonusActionWalkDashAct(
   );
 }
 
-export function adrenalineRushDashSubject(): Extract<
+export function adrenalineRushDashSubject(
+  procedureRef: BattleProcedureExecutionRef,
+): Extract<
   BattleSubject,
   { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
 > {
   return {
     tag: "bonusActionStandardAction",
     actorId: spellCasterId,
-    sourceUnitId: orcAdrenalineRushUnitId,
+    procedureRef,
     action: "dash",
     speedKind: "walk",
   };
@@ -639,7 +642,7 @@ export function extraAttackBattleUnitRef(
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId,
+      unit,
       supportProfiles: [extraAttackSupportProfile],
     }),
   );
@@ -660,7 +663,7 @@ export function attackDamageRiderBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: rogueSneakAttackUnitId,
+      unit: unitLibrary.requireUnit(rogueSneakAttackUnitId),
       supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
     }),
   );
@@ -681,7 +684,7 @@ export function savageAttackerBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: savageAttackerUnitId,
+      unit: unitLibrary.requireUnit(savageAttackerUnitId),
       supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
     }),
   );
@@ -702,7 +705,7 @@ export function greatWeaponFightingBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: greatWeaponFightingUnitId,
+      unit: unitLibrary.requireUnit(greatWeaponFightingUnitId),
       supportProfiles: [ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE],
     }),
   );
@@ -723,7 +726,7 @@ export function archeryBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: archeryUnitId,
+      unit: unitLibrary.requireUnit(archeryUnitId),
       supportProfiles: [archerySupportProfile],
     }),
   );
@@ -744,7 +747,7 @@ export function combatProwessBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: boonOfCombatProwessUnitId,
+      unit: unitLibrary.requireUnit(boonOfCombatProwessUnitId),
       supportProfiles: [combatProwessSupportProfile],
     }),
   );
@@ -765,7 +768,7 @@ export function fastMovementBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: barbarianFastMovementUnitId,
+      unit: unitLibrary.requireUnit(barbarianFastMovementUnitId),
       supportProfiles: [fastMovementSupportProfile()],
     }),
   );
@@ -786,7 +789,7 @@ export function rovingBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: rangerRovingUnitId,
+      unit: unitLibrary.requireUnit(rangerRovingUnitId),
       supportProfiles: [rovingSupportProfile()],
     }),
   );
@@ -807,7 +810,7 @@ export function monkUnarmoredMovementBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: monkUnarmoredMovementUnitId,
+      unit: unitLibrary.requireUnit(monkUnarmoredMovementUnitId),
       supportProfiles: [monkUnarmoredMovementSupportProfile()],
     }),
   );
@@ -828,7 +831,7 @@ export function adrenalineRushBattleUnitRef(): Extract<
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: orcAdrenalineRushUnitId,
+      unit: unitLibrary.requireUnit(orcAdrenalineRushUnitId),
       supportProfiles: [adrenalineRushSupportProfile()],
     }),
   );

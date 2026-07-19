@@ -1,12 +1,12 @@
 import { Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-import type {
-  ActionRestriction,
-  SpellRecord,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
-import { CreatureId as CreatureIdSchema } from "@dnd/shared/types";
+import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
+import {
+  CreatureId as CreatureIdSchema,
+  type BattleActiveEffectExecutionRef,
+  type BattleProcedureExecutionRef,
+} from "@dnd/shared/types";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
 import {
@@ -50,7 +50,9 @@ import {
 
 const sourceOwnerId = Schema.decodeUnknownSync(CreatureIdSchema)("owner-a");
 const unitActionId: UnitRecord["id"] = "unit-action-a";
-const spellActionId: SpellRecord["id"] = "spell-action-a";
+const unitActionProcedureRef = unitActionId as BattleProcedureExecutionRef;
+const spellEffectRef =
+  "synthetic-active-effect-ref-a" as BattleActiveEffectExecutionRef;
 const attackOnlyRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],
@@ -140,7 +142,7 @@ describe("action-economy-algebra", () => {
       grantUnitActionResource(
         spentBonusAction.right,
         sourceOwnerId,
-        unitActionId,
+        unitActionProcedureRef,
         attackOnlyRestriction,
       ),
     ).toEqual(Either.left("no action resource available"));
@@ -229,7 +231,7 @@ describe("action-economy-algebra", () => {
       grantUnitActionResource(
         granted,
         sourceOwnerId,
-        unitActionId,
+        unitActionProcedureRef,
         attackOnlyRestriction,
       ),
     ).toEqual(Either.left("unit-granted action resource already granted"));
@@ -239,7 +241,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       sourceOwnerId,
-      spellActionId,
+      spellEffectRef,
       oneAttackDashDisengageHideUtilizeRestriction,
     );
     expect(Either.isRight(granted)).toBe(true);
@@ -263,7 +265,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       sourceOwnerId,
-      spellActionId,
+      spellEffectRef,
       {
         kind: "allow_only",
         actions: [{ action: "dash" }],
@@ -286,7 +288,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       sourceOwnerId,
-      spellActionId,
+      spellEffectRef,
       oneAttackDashDisengageHideUtilizeRestriction,
     );
     expect(Either.isRight(granted)).toBe(true);
@@ -296,7 +298,7 @@ describe("action-economy-algebra", () => {
       grantSpellEffectActionResource(
         granted.right,
         sourceOwnerId,
-        spellActionId,
+        spellEffectRef,
         oneAttackDashDisengageHideUtilizeRestriction,
       ),
     ).toEqual(Either.left("spell-effect action resource already granted"));
@@ -437,7 +439,7 @@ function grantTestUnitActionResource(): ActionEconomyState {
   const granted = grantUnitActionResource(
     resetTurnActionEconomy(emptyActionEconomyState()),
     sourceOwnerId,
-    unitActionId,
+    unitActionProcedureRef,
     attackOnlyRestriction,
   );
   expect(Either.isRight(granted)).toBe(true);

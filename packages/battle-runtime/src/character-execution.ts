@@ -1,19 +1,21 @@
-import { Brand } from "effect";
+import { Brand, Schema } from "effect";
 import * as Either from "effect/Either";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
   NonNegativeInteger,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type {
   BattleCharacterExecutionScopeRef,
+  BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
   BattleId,
   CombatantId,
   BattleExecutionScopeOrdinal,
 } from "./identity.ts";
 import {
+  BattleActiveEffectExecutionRef as BattleActiveEffectExecutionRefSchema,
   battleCharacterExecutionScopeRef,
   battleProcedureExecutionRef,
 } from "./identity.ts";
@@ -27,7 +29,10 @@ import {
   type SupportedUnitFeatureProfile,
   battleUnitSupportProfilesForUnit,
 } from "./unit-feature-support.ts";
-import type { SupportedSpellInvocation } from "./battle-reducer.ts";
+import type {
+  BattleExecutableSpellInvocation,
+  SupportedSpellInvocation,
+} from "./battle-reducer.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { SpellInvocationRef } from "./battle-subjects.ts";
 import {
@@ -122,7 +127,10 @@ export type SpellInvocationOccurrence = {
   readonly invocationRef: SpellInvocationRef;
 } & (
   | { readonly kind: "invocationRefOnly" }
-  | { readonly kind: "activeEffect"; readonly effectId: string }
+  | {
+      readonly kind: "activeEffect";
+      readonly effectRef: BattleActiveEffectExecutionRef;
+    }
   | { readonly kind: "componentWeapon"; readonly itemId: string }
   | { readonly kind: "attachedWeapon"; readonly itemId: string }
 );
@@ -224,7 +232,7 @@ export function characterExecutionFromUnits(input: {
   }
   const explicitUnitSupportProcedures = input.unitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.map((profile) => ({
-      unitId: unitRef.unitId,
+      unitId: unitRef.unit.id,
       profile,
     })),
   );
@@ -411,6 +419,24 @@ export function characterSpellProcedureRef(
   )?.procedureRef;
 }
 
+export function characterSpellProcedureRefsForAdmissionContent(
+  execution: CharacterExecutionState,
+  spell: SpellRecord,
+): readonly BattleProcedureExecutionRef[] {
+  return execution.procedureBindings.flatMap((binding) => {
+    const procedure = binding.procedure;
+    if (procedure.kind === "spellInvocation") {
+      return procedure.invocation.spell.id === spell.id
+        ? [binding.procedureRef]
+        : [];
+    }
+    return procedure.kind === "unavailableSpellInvocation" &&
+      procedure.occurrence.invocationRef.spellId === spell.id
+      ? [binding.procedureRef]
+      : [];
+  });
+}
+
 export function characterStoredSpellProcedureRef(
   execution: CharacterExecutionState,
   invocation: SupportedSpellInvocation,
@@ -440,9 +466,9 @@ function spellInvocationOccurrence(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationOccurrence {
   const invocationRef = supportedSpellInvocationRef(invocation);
-  const effectId = spellInvocationEffectOccurrenceId(invocation);
-  if (effectId !== undefined) {
-    return { invocationRef, kind: "activeEffect", effectId };
+  const effectRef = spellInvocationEffectExecutionRef(invocation);
+  if (effectRef !== undefined) {
+    return { invocationRef, kind: "activeEffect", effectRef };
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return {
@@ -475,7 +501,7 @@ function spellInvocationMatchesOccurrence(
   }
   if (occurrence.kind === "activeEffect") {
     return (
-      spellInvocationEffectOccurrenceId(invocation) === occurrence.effectId
+      spellInvocationEffectExecutionRef(invocation) === occurrence.effectRef
     );
   }
   if (occurrence.kind === "componentWeapon") {
@@ -493,28 +519,28 @@ function spellInvocationMatchesOccurrence(
   return (
     invocation.procedure !== "spellHostedWeaponAttack" &&
     invocation.procedure !== "weaponAttackOverride" &&
-    spellInvocationEffectOccurrenceId(invocation) === undefined
+    spellInvocationEffectExecutionRef(invocation) === undefined
   );
 }
 
-function spellInvocationEffectOccurrenceId(
+function spellInvocationEffectExecutionRef(
   invocation: SupportedSpellInvocation,
-): string | undefined {
+): BattleActiveEffectExecutionRef | undefined {
+  if (
+    "activeEffectRef" in invocation &&
+    Schema.is(BattleActiveEffectExecutionRefSchema)(invocation.activeEffectRef)
+  ) {
+    return invocation.activeEffectRef;
+  }
   if ("activeEffect" in invocation) {
     const activeEffect: unknown = invocation.activeEffect;
-    if (typeof activeEffect === "object" && activeEffect !== null) {
-      if (
-        "sourceEffectId" in activeEffect &&
-        typeof activeEffect.sourceEffectId === "string"
-      ) {
-        return activeEffect.sourceEffectId;
-      }
-      if (
-        "effectId" in activeEffect &&
-        typeof activeEffect.effectId === "string"
-      ) {
-        return activeEffect.effectId;
-      }
+    if (
+      typeof activeEffect === "object" &&
+      activeEffect !== null &&
+      "effectRef" in activeEffect &&
+      Schema.is(BattleActiveEffectExecutionRefSchema)(activeEffect.effectRef)
+    ) {
+      return activeEffect.effectRef;
     }
   }
   return undefined;
@@ -534,14 +560,56 @@ export function characterSpellProcedureRefForInvocationRef(
   )?.procedureRef;
 }
 
+export function characterStoredSpellProcedureRefForInvocationRef(
+  execution: CharacterExecutionState,
+  invocationRef: SpellInvocationRef,
+): BattleProcedureExecutionRef | undefined {
+  return execution.procedureBindings.find((binding) =>
+    binding.procedure.kind === "spellInvocation"
+      ? sameSpellInvocationRef(
+          supportedSpellInvocationRef(binding.procedure.invocation),
+          invocationRef,
+        )
+      : binding.procedure.kind === "unavailableSpellInvocation" &&
+        sameSpellInvocationRef(
+          binding.procedure.occurrence.invocationRef,
+          invocationRef,
+        ),
+  )?.procedureRef;
+}
+
 export function characterSpellProcedure(
   execution: CharacterExecutionState,
   procedureRef: BattleProcedureExecutionRef,
-): SupportedSpellInvocation | undefined {
+): BattleExecutableSpellInvocation | undefined {
   const binding = execution.procedureBindings.find(
     (candidate) => candidate.procedureRef === procedureRef,
   );
   return binding?.procedure.kind === "spellInvocation"
-    ? binding.procedure.invocation
+    ? bindSpellProcedureExecutionFacts(
+        binding.procedure.invocation,
+        procedureRef,
+      )
     : undefined;
+}
+
+export function characterSpellProcedureInvocationRef(
+  execution: CharacterExecutionState,
+  procedureRef: BattleProcedureExecutionRef,
+): SpellInvocationRef | undefined {
+  const binding = characterProcedureBinding(execution, procedureRef);
+  return binding?.procedure.kind === "spellInvocation"
+    ? supportedSpellInvocationRef(binding.procedure.invocation)
+    : binding?.procedure.kind === "unavailableSpellInvocation"
+      ? binding.procedure.occurrence.invocationRef
+      : undefined;
+}
+
+export function bindSpellProcedureExecutionFacts<
+  I extends SupportedSpellInvocation,
+>(
+  invocation: I,
+  procedureRef: BattleProcedureExecutionRef,
+): BattleExecutableSpellInvocation<I> {
+  return { ...invocation, sourceProcedureRef: procedureRef };
 }

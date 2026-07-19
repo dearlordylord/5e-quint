@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
 import { describe, expect, test } from "vitest";
@@ -50,7 +53,10 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -77,7 +83,9 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         targeting: { kind: "pointOriginCube", sideFeet: 20 },
         effect: expect.objectContaining({
           kind: "faerieFireOutline",
-          sourceSpellId: faerieFireUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(faerieFireUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
         }),
@@ -130,7 +138,9 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       [
         expect.objectContaining({
           kind: "faerieFireOutline",
-          sourceSpellId: faerieFireUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(faerieFireUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
         }),
@@ -139,7 +149,9 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceSpellId: faerieFireUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(faerieFireUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: { kind: "dim", radiusFeet: movementFeet(10) },
@@ -364,7 +376,9 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       {
         kind: "faerieFireObjectOutline",
         objectId,
-        sourceSpellId: faerieFireUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(faerieFireUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       },
@@ -372,7 +386,9 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceSpellId: faerieFireUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(faerieFireUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         attachment: { kind: "object", objectId },
         emission: { kind: "dim", radiusFeet: movementFeet(10) },

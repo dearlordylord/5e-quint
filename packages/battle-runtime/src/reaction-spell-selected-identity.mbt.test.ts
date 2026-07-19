@@ -1,3 +1,8 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke counterspell
 // UNIT-IDENTITY-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
 // UNIT-IDENTITY-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
@@ -19,7 +24,10 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect, it } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   battleReducerStartRouteEvent,
@@ -29,7 +37,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -41,7 +48,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -792,7 +799,9 @@ function startMagicMissileWithCounterspell(input: {
             kind: "counterspellTriggerCasterVisibleWithinRange",
             reactorId,
             casterId: triggerCreatureId,
-            spellId: counterspellUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(counterspellUnitId),
+            ),
             rangeFeet: movementFeet(60),
           },
         ],
@@ -835,10 +844,13 @@ function magicMissileSubject(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === triggerCreatureId &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === magicMissileUnitId &&
-      candidate.subject.invocation.slotLevel === slotLevel &&
-      candidate.subject.invocation.procedure === "repeatedDamageAllocation",
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        magicMissileUnitId &&
+      battleActSpellSlotPresentation(candidate)?.invocation.slotLevel ===
+        slotLevel &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "repeatedDamageAllocation",
   );
   if (act === undefined) {
     throw new Error("Expected bound Magic Missile action spell.");
@@ -864,7 +876,9 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: triggerCreatureId,
         targetId: reactorId,
-        spellId: magicMissileUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(magicMissileUnitId),
+        ),
       },
     ],
   };
@@ -937,7 +951,9 @@ function attackTargetFill(input: {
               kind: "reactionSpellDamagerVisibleWithinRange" as const,
               reactorId,
               damageSourceId: triggerCreatureId,
-              spellId: "hellish_rebuke",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("hellish_rebuke"),
+              ),
               rangeFeet: movementFeet(60),
             },
           ]

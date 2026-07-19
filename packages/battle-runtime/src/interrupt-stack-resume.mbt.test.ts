@@ -41,6 +41,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
+  resolveBattleSubject,
   attackInitialTargetHole,
   attackExecutionSelectionForSubjectForTest,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -69,7 +70,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -80,7 +80,7 @@ import {
   type BattleInterruptedProcedure,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 

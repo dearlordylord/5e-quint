@@ -46,7 +46,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: boonOfCombatProwessUnitId,
+        unit: unitLibrary.requireUnit(boonOfCombatProwessUnitId),
         supportProfiles: [combatProwessSupportProfile],
       }),
     );

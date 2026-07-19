@@ -189,13 +189,14 @@ function spikeGrowthMovementHazardSpell(
 function discoverSpikeGrowthMovementHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: SpikeGrowthMovementHazardSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpikeGrowthMovementHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: spikeGrowthMovementHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },

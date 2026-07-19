@@ -55,7 +55,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: alertUnitId,
+        unit: unitLibrary.requireUnit(alertUnitId),
         supportProfiles: [alertSupportProfile],
       }),
     );
@@ -322,7 +322,7 @@ function alertBattleSetup(
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: alertUnitId,
+      unit: unitLibrary.requireUnit(alertUnitId),
       supportProfiles: [alertSupportProfile],
     }),
   );

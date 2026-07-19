@@ -41,6 +41,7 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  resolveBattleSubject,
   difficultyClass,
   characterAttackSubjectForTest,
   attackExecutionSelectionForSubjectForTest,
@@ -52,14 +53,13 @@ import {
   discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -655,7 +655,10 @@ function commandTargetTurn(
 
 function commandHaltTargetTurn(): {
   readonly state: BattleState;
-  readonly result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+  readonly result: Extract<
+    BattleResolutionResult,
+    { readonly tag: "resolved" }
+  >;
   readonly route: readonly ReducerRouteEvent[];
 } {
   const state = commandTargetTurn("halt");
@@ -677,7 +680,10 @@ function castCommand(
   option: CommandOptionFillValue,
   battleInput: Partial<Parameters<typeof spellBattle>[0]> = {},
 ): {
-  readonly result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+  readonly result: Extract<
+    BattleResolutionResult,
+    { readonly tag: "resolved" }
+  >;
   readonly route: readonly ReducerRouteEvent[];
 } {
   const state = spellBattle({

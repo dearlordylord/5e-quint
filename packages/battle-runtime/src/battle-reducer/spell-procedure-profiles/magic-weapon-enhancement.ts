@@ -198,13 +198,14 @@ function isMagicWeaponEnhancementBonus(
 function discoverMagicWeaponEnhancementCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: MagicWeaponEnhancementInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<MagicWeaponEnhancementInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: magicWeaponEnhancementInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -265,7 +266,7 @@ function resolveMagicWeaponEnhancement(
       targetItem.itemId,
       {
         exceptSourceCombatantId: input.actorId,
-        exceptSourceSpellId: input.invocation.spell.id,
+        exceptSourceProcedureRef: input.invocation.sourceProcedureRef,
       },
     )
   ) {
@@ -309,13 +310,13 @@ function resolveMagicWeaponEnhancement(
       (effect) =>
         !(
           effect.kind === "spellMagicWeaponEnhancement" &&
-          effect.sourceSpellId === input.invocation.spell.id &&
+          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
           effect.sourceCombatantId === input.actorId
         ),
     ),
     {
       kind: "spellMagicWeaponEnhancement",
-      sourceSpellId: input.invocation.spell.id,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       holderCombatantId: targetItem.holderCombatantId,
       weaponItemId: targetItem.itemId,

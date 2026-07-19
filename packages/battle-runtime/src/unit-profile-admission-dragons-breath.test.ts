@@ -1,3 +1,9 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST dragons_breath
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dragons-breath-granted-action
@@ -65,13 +71,16 @@ describe("Dragon's Breath initial cast admission", () => {
       throw new Error("Expected fixture caster Spell Save DC.");
     }
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        dragonsBreathUnitId,
-        3,
-        "dragonsBreathInitial",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(dragonsBreathUnitId, 3, "dragonsBreathInitial"),
       ),
       mode: { tag: "cast" },
     });
@@ -106,14 +115,18 @@ describe("Dragon's Breath initial cast admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toEqual({
-      sourceSpellId: dragonsBreathUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(dragonsBreathUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toContainEqual({
       kind: "dragonsBreath",
-      sourceSpellId: dragonsBreathUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(dragonsBreathUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       originalSlotLevel: 3,
       damageType: "fire",
@@ -257,7 +270,9 @@ describe("Dragon's Breath initial cast admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "targetActionEndedSpellCondition",
-          sourceSpellId: dragonsBreathUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(dragonsBreathUnitId),
+          ),
         }),
       ]),
     });
@@ -290,7 +305,10 @@ describe("Dragon's Breath initial cast admission", () => {
           ...caster.activeEffects,
           {
             kind: "wardingBond",
-            sourceSpellId: dragonsBreathUnitId,
+            effectRef: battleActiveEffectExecutionRefForTest("dragon-ward-one"),
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(dragonsBreathUnitId),
+            ),
             sourceCombatantId: spellTargetId,
             expiresAt: {
               kind: "duration",
@@ -312,7 +330,9 @@ describe("Dragon's Breath initial cast admission", () => {
     });
     expect(saveHole.targetFlatBonuses).toContainEqual({
       targetId: spellCasterId,
-      sourceSpellId: dragonsBreathUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(dragonsBreathUnitId),
+      ),
       bonus: 1,
     });
   });
@@ -694,7 +714,9 @@ function stateWithExhalingTargetActionEarlyEndCondition(
   }
   const effect = {
     kind: "targetActionEndedSpellCondition",
-    sourceSpellId: dragonsBreathUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(dragonsBreathUnitId),
+    ),
     sourceCombatantId: spellTargetId,
     condition: "invisible",
     conditionHadNonSpellSource: false,
@@ -731,7 +753,9 @@ function stateWithWardingBondSharedCasterConcentration(
     combatants: new Map(stateWithBond.combatants).set(spellTargetId, {
       ...sharedDamageCaster,
       concentration: {
-        sourceSpellId: dragonsBreathUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(dragonsBreathUnitId),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -746,7 +770,10 @@ function stateWithWardingBondTarget(
   const target = requireCombatant(state, targetId);
   const wardingBondEffect = {
     kind: "wardingBond",
-    sourceSpellId: dragonsBreathUnitId,
+    effectRef: battleActiveEffectExecutionRefForTest("dragon-ward-two"),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(dragonsBreathUnitId),
+    ),
     sourceCombatantId: sourceId,
     expiresAt: {
       kind: "duration",
@@ -770,7 +797,9 @@ function stateWithSpellDamageReduction(
   const target = requireCombatant(state, targetId);
   const spellDamageReductionEffect = {
     kind: "spellDamageReduction",
-    sourceSpellId: dragonsBreathUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(dragonsBreathUnitId),
+    ),
     sourceCombatantId: spellTargetId,
     damageType,
     amount: { dice: 1, dieSize: 4 },

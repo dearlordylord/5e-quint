@@ -43,10 +43,7 @@ export function ongoingSpellEffectRefForActiveEffect(
   return {
     kind: "spellActiveEffect",
     activeEffectKind: effect.kind,
-    sourceEffectId:
-      effect.kind === "spellObjectContactDamage"
-        ? effect.effectId
-        : effect.sourceEffectId,
+    effectRef: effect.effectRef,
   };
 }
 
@@ -56,10 +53,7 @@ export function antimagicFieldOngoingSpellEffectRefForActiveEffect(
   return {
     kind: "spellActiveEffect",
     activeEffectKind: effect.kind,
-    sourceEffectId:
-      effect.kind === "spellObjectContactDamage"
-        ? effect.effectId
-        : effect.sourceEffectId,
+    effectRef: effect.effectRef,
   };
 }
 
@@ -85,11 +79,16 @@ export function ongoingSpellEffectRefEquals(
   ) {
     return false;
   }
+  if (left.kind === "spellActiveEffect" && right.kind === "spellActiveEffect") {
+    return (
+      left.effectRef === right.effectRef &&
+      left.activeEffectKind === right.activeEffectKind
+    );
+  }
   return (
-    left.sourceEffectId === right.sourceEffectId &&
-    (left.kind !== "spellActiveEffect" ||
-      right.kind !== "spellActiveEffect" ||
-      left.activeEffectKind === right.activeEffectKind)
+    left.kind === "spellLightEmitter" &&
+    right.kind === "spellLightEmitter" &&
+    left.sourceEffectId === right.sourceEffectId
   );
 }
 
@@ -100,7 +99,7 @@ export function ongoingSpellEffectRefKey(
     return `light:${ref.sourceEffectId}`;
   }
   if (ref.kind === "spellActiveEffect") {
-    return `active:${ref.activeEffectKind}:${ref.sourceEffectId}`;
+    return `active:${ref.activeEffectKind}:${ref.effectRef}`;
   }
   return `antimagic-aura:${ref.sourceCombatantId}:${ref.areaId}`;
 }

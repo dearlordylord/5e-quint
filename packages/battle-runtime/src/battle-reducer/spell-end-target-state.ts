@@ -4,6 +4,7 @@
 import { type Round as RoundType } from "@dnd/shared/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -62,18 +63,16 @@ export function battleCreatureWithSpellEndTargetStatePromotions(input: {
     return input.combatant;
   }
 
-  const promotedEffects = endStates.flatMap((effect) =>
-    spellEndTargetStatePromotedEffects(
-      input.state,
-      input.combatant,
-      effect,
-      input.timing,
-    ),
+  return endStates.reduce(
+    (combatant, effect) =>
+      battleCreatureWithSpellEndTargetStatePromotion(
+        input.state,
+        combatant,
+        effect,
+        input.timing,
+      ),
+    input.combatant,
   );
-  return battleCreatureWithSpellActiveEffects(input.combatant, [
-    ...input.combatant.activeEffects,
-    ...promotedEffects,
-  ]);
 }
 
 function isSpellEndTargetState(
@@ -90,21 +89,26 @@ export function spellEndTargetStatePromotesIncapacitated(
   return isSpellEndTargetState(effect) && effect.condition === "incapacitated";
 }
 
-function spellEndTargetStatePromotedEffects(
+function battleCreatureWithSpellEndTargetStatePromotion(
   state: BattleState,
   combatant: BattleCreatureState,
   effect: SpellEndTargetStateActiveEffect,
   timing: EndOfNextTurnExpirationTiming,
-): readonly BattleActiveEffect[] {
+): BattleCreatureState {
   const expiresAt = endOfNextTurnExpiration(
     state,
     combatant.combatantId,
     timing,
   );
-  return [
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    battleId: state.battleId,
+    owner: combatant,
+  });
+  const promotedEffects: readonly BattleActiveEffect[] = [
     {
       kind: "spellCondition" as const,
-      sourceSpellId: effect.sourceSpellId,
+      effectRef: allocation.effectRef,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       condition: effect.condition,
       conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
@@ -117,9 +121,13 @@ function spellEndTargetStatePromotedEffects(
     },
     {
       kind: "spellSpeedZero" as const,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       expiresAt,
     },
   ];
+  return battleCreatureWithSpellActiveEffects(allocation.owner, [
+    ...allocation.owner.activeEffects,
+    ...promotedEffects,
+  ]);
 }

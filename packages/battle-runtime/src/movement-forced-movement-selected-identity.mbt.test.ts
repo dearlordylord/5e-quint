@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement
 // UNIT-IDENTITY-REPLAY: movement-forced-movement dissonant_whispers doDissonantWhispersForcedReactionMovement
@@ -34,7 +36,6 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -42,11 +43,12 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type BattleUnitRef,
   type CombatantId,
 } from "./index.ts";
@@ -117,7 +119,10 @@ type MovementForcedMovementSelectedIdentityProjection = {
 };
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type BonusActionDashSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -439,7 +444,7 @@ function replayDissonantWhispersForcedReactionMovementRoute(): readonly BattleRe
   });
   const act = actionSpellAct(state, "dissonant_whispers");
   const target = requireHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, "dissonant_whispers");
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const savingThrow = requireResultHole(
     resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
     "savingThrowOutcome",
@@ -493,7 +498,9 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
   const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-  const targetFill = spellTargetListFill(target, "command", [targetId]);
+  const targetFill = spellTargetListFill(target, act.subject.procedureRef, [
+    targetId,
+  ]);
   const optionFill: Extract<
     BattleFill,
     { readonly kind: "commandOptionChoice" }
@@ -1359,7 +1366,7 @@ function resolveDissonantWhispersForcedReactionMovement(
 ): BattleResolutionResult {
   const act = actionSpellAct(state, "dissonant_whispers");
   const target = requireHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, "dissonant_whispers");
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const savingThrow = requireResultHole(
     resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
     "savingThrowOutcome",
@@ -1409,7 +1416,9 @@ function resolveCommandFleeTargetTurn(
   const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-  const targetFill = spellTargetListFill(target, "command", [targetId]);
+  const targetFill = spellTargetListFill(target, act.subject.procedureRef, [
+    targetId,
+  ]);
   const optionFill: Extract<
     BattleFill,
     { readonly kind: "commandOptionChoice" }
@@ -1748,7 +1757,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -1763,7 +1772,7 @@ function bonusActionDashSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionDashSpellAct =>
       candidate.subject.tag === "bonusActionDashSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Dash spell act.`);
@@ -1802,8 +1811,7 @@ function commandFleeAct(state: BattleState): RuntimeCommandFleeAct {
     (candidate): candidate is RuntimeCommandFleeAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === targetId &&
-      candidate.subject.command === "commandFlee" &&
-      candidate.subject.sourceSpellId === "command",
+      candidate.subject.command === "commandFlee",
   );
   if (act === undefined) {
     throw new Error("Expected Command Flee runtime command.");
@@ -1837,7 +1845,7 @@ function requireHole<K extends BattleHole["kind"]>(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Extract<MovementForcedMovementSpellId, "dissonant_whispers">,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -1848,7 +1856,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ],
   };
@@ -1856,7 +1864,7 @@ function spellTargetFill(
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  spellId: Extract<MovementForcedMovementSpellId, "command">,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -1867,7 +1875,7 @@ function spellTargetListFill(
       kind: "spellTarget" as const,
       casterId,
       targetId,
-      spellId,
+      sourceProcedureRef,
     })),
   };
 }
@@ -1983,7 +1991,6 @@ function commandPendingEffectCount(state: BattleState): number {
         readonly kind: "commandPending";
       } =>
         effect.kind === "commandPending" &&
-        effect.sourceSpellId === "command" &&
         effect.sourceCombatantId === casterId,
     ).length ?? 0
   );
@@ -1998,7 +2005,6 @@ function spellDashBonusActionEffectCount(state: BattleState): number {
         readonly kind: "spellDashBonusAction";
       } =>
         effect.kind === "spellDashBonusAction" &&
-        effect.sourceSpellId === "expeditious_retreat" &&
         effect.sourceCombatantId === casterId,
     ).length ?? 0
   );

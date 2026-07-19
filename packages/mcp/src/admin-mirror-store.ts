@@ -74,7 +74,7 @@ export function createAdminMirrorStore(): AdminMirrorStore {
           createAdminMirrorPresentationTimelineEntry(
             envelope,
             receivedAtEpochMs,
-            latestBySession.get(envelope.mirrorSessionId)?.envelope.projection,
+            latestBySession.get(envelope.mirrorSessionId)?.envelope,
           ),
         ),
         multiSource: publishers.size > 1,

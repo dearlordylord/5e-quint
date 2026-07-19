@@ -33,6 +33,7 @@ import type { CharacterBattleClassLevelInit } from "./character-class-level.ts";
 import type { CharacterId, CombatantId, InitiativeScore } from "./identity.ts";
 import type {
   BattleDruidWildShapeKnownFormSupportProfile,
+  BattleUnitSupportSource,
   BattleUnitSupportProfile,
 } from "./unit-feature-support.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
@@ -43,7 +44,7 @@ import {
 } from "./druid-wild-shape-form-eligibility.ts";
 
 export type BattleUnitRef = {
-  readonly unitId: UnitRecord["id"];
+  readonly unit: BattleUnitSupportSource;
   readonly supportProfiles: readonly BattleUnitSupportProfile[];
 };
 

@@ -277,7 +277,7 @@ function objectTargetFacts(spellId: "fire_bolt") {
       kind: "spellObjectTarget" as const,
       casterId: wizardId,
       objectId,
-      spellId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
       rangeFeet: movementFeet(120),
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints" as const, hitPoints: Hp(8) },
@@ -286,7 +286,7 @@ function objectTargetFacts(spellId: "fire_bolt") {
       kind: "spellObjectIgnition" as const,
       casterId: wizardId,
       objectId,
-      spellId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
       disposition: { kind: "flammableUnattended" as const },
     },
   ];
@@ -335,3 +335,4 @@ function activeEffectCount(
   }
   return combatant.activeEffects.length;
 }
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

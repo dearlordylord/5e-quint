@@ -36,7 +36,6 @@ import {
   combatantId,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -48,6 +47,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
+  resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";

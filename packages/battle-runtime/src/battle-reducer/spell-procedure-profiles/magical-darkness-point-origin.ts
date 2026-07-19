@@ -176,13 +176,14 @@ function magicalDarknessPointOriginSpell(
 function discoverMagicalDarknessPointOriginCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: MagicalDarknessPointOriginSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<MagicalDarknessPointOriginSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: magicalDarknessPointOriginInvocationRef(invocation),
         mode: { tag: "cast" },
       },

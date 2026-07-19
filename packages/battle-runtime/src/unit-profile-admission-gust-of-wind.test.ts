@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME gust_of_wind
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-heightened-save-disadvantage
@@ -6,6 +8,7 @@ import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
+  requireCharacterSpellProcedureRefForTest,
   characterSeed,
   startBattleRight,
   statBlockCreatureInit,
@@ -60,10 +63,17 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     });
     const act = spellAct({ state, spellId: gustOfWindUnitId, slotLevel: 2 });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(gustOfWindUnitId, 2, "gustOfWindLine"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(gustOfWindUnitId, 2, "gustOfWindLine"),
+      ),
       mode: { tag: "cast" },
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
@@ -126,7 +136,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       discoverBattleActs(state).some(
         (act) =>
           act.subject.tag === "actionSpell" &&
-          act.subject.invocation.procedure === "gustOfWindLine",
+          battleActSpellPresentation(act)?.invocation.procedure ===
+            "gustOfWindLine",
       ),
     ).toBe(false);
   });
@@ -157,13 +168,17 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const caster = requireCombatant(cast.state, spellCasterId);
 
     expect(caster.concentration).toEqual({
-      sourceSpellId: gustOfWindUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(gustOfWindUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(caster.activeEffects).toEqual([
       expect.objectContaining({
         kind: "gustOfWindLine",
-        sourceSpellId: gustOfWindUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(gustOfWindUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         areaId: gustOfWindAreaId,
         directionId: gustOfWindNorthDirectionId,
@@ -270,7 +285,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           gustOfWindLineMovement: {
             kind: "gustOfWindLineMovement",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: gustOfWindUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(gustOfWindUnitId),
+            ),
             areaId: gustOfWindAreaId,
             directionId: gustOfWindNorthDirectionId,
             totalDistanceFeet: movementFeet(5),
@@ -316,7 +333,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             gustOfWindLineMovement: {
               kind: "gustOfWindLineMovement",
               sourceCombatantId: spellCasterId,
-              sourceSpellId: gustOfWindUnitId,
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(gustOfWindUnitId),
+              ),
               areaId: gustOfWindAreaId,
               directionId: gustOfWindNorthDirectionId,
               totalDistanceFeet: movementFeet(5),
@@ -357,7 +376,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
               {
                 kind: "greaseGroundHazard",
                 sourceCombatantId: spellCasterId,
-                sourceSpellId: greaseUnitId,
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String(greaseUnitId),
+                ),
                 areaId: greaseAreaId,
               },
             ],
@@ -367,7 +388,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           gustOfWindLineMovement: {
             kind: "gustOfWindLineMovement",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: gustOfWindUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(gustOfWindUnitId),
+            ),
             areaId: gustOfWindAreaId,
             directionId: gustOfWindNorthDirectionId,
             totalDistanceFeet: movementFeet(5),
@@ -675,7 +698,8 @@ function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "gustOfWindLine" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "gustOfWindLine" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -742,7 +766,9 @@ function withGreaseGroundHazard(state: BattleState): BattleState {
         {
           kind: "greaseGroundHazard" as const,
           sourceCombatantId: spellCasterId,
-          sourceSpellId: greaseUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(greaseUnitId),
+          ),
           areaId: greaseAreaId,
           heightenedSpellTargetDisadvantage: null,
           save: {

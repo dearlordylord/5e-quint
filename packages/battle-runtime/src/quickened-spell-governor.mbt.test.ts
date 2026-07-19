@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // RAW trace:
@@ -23,6 +26,11 @@ import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
 import {
+  EMPOWERED_METAMAGIC_EFFECT_KIND,
+  QUICKENED_METAMAGIC_EFFECT_KIND,
+  QUICKENED_SPELL_METAMAGIC_SELECTION,
+} from "./battle-reducer/metamagic.ts";
+import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
@@ -39,10 +47,23 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
-  EMPOWERED_METAMAGIC_EFFECT_KIND,
-  QUICKENED_METAMAGIC_EFFECT_KIND,
-  QUICKENED_SPELL_METAMAGIC_SELECTION,
-} from "./battle-reducer/metamagic.ts";
+  attackRollFill,
+  battleId,
+  characterSeed,
+  damageRollFillWithGroups,
+  fighterId,
+  findHole,
+  requireResolved,
+  savingThrowOutcomeFill,
+  skeletonId,
+  spellRecord,
+  startBattleRight,
+  statBlockCreatureInit,
+  targetFill,
+  unitLibrary,
+  wizardId,
+  wizardSpellcasting,
+} from "./battle-runtime-test-support.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,
@@ -55,26 +76,7 @@ import {
   battleReducerStartRouteEvent,
   characterBattleResourceIsPointPool,
   discoverBattleActs,
-  resolveBattleSubject,
 } from "./index.ts";
-import {
-  attackRollFill,
-  battleId,
-  characterSeed,
-  damageRollFillWithGroups,
-  fighterId,
-  findHole,
-  requireResolved,
-  savingThrowOutcomeFill,
-  skeletonId,
-  startBattleRight,
-  statBlockCreatureInit,
-  targetFill,
-  unitLibrary,
-  wizardId,
-  wizardSpellcasting,
-  spellRecord,
-} from "./battle-runtime-test-support.ts";
 
 const INVALID_KINDS = [
   "none",
@@ -612,14 +614,19 @@ function resolveQuickenedRestoration(
   state: QuickenedSpellGovernorRuntimeState,
 ): QuickenedSpellGovernorRuntimeState {
   const act = quickenedCureWoundsAct(state.battle);
-  expect(act.subject).toMatchObject(quickenedCureWoundsSubject(state.battle));
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject(quickenedCureWoundsSubject(state.battle));
   const targetHole = findHole(act.initialHoles, "targetChoice");
   const target = targetFill(targetHole, fighterId, [
     {
       kind: "spellTarget",
       casterId: wizardId,
       targetId: fighterId,
-      spellId: "cure_wounds",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("cure_wounds"),
+      ),
     },
   ]);
   const awaitingHealingRoll = resolveBattleSubject({
@@ -894,7 +901,7 @@ function quickenedSpellGovernorProjection(
     spellSlotActsAvailable: discoverBattleActs(state.battle).some(
       (candidate) =>
         "invocation" in candidate.subject &&
-        candidate.subject.invocation.tag === "spellSlot",
+        battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot",
     ),
     invalidKind: state.invalidKind,
     lastResult: state.lastResult,
@@ -924,7 +931,9 @@ function observeQuickenedRestorationRoute(
       kind: "spellTarget",
       casterId: wizardId,
       targetId: fighterId,
-      spellId: "cure_wounds",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("cure_wounds"),
+      ),
     },
   ]);
   const awaitingHealingRoll = resolveBattleSubject({
@@ -1249,7 +1258,8 @@ function isQuickenedCureWoundsAct(
 ): candidate is QuickenedBonusActionSpellAct {
   return (
     candidate.subject.tag === "bonusActionSpell" &&
-    candidate.subject.invocation.spellId === "cure_wounds" &&
+    battleActSpellPresentation(candidate)?.invocation.spellId ===
+      "cure_wounds" &&
     candidate.subject.metamagic?.some(
       (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
     ) === true
@@ -1262,7 +1272,8 @@ function quickenedCureWoundsSubject(
   const actionSpell = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "cure_wounds",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "cure_wounds",
   );
   if (actionSpell?.subject.tag !== "actionSpell") {
     throw new Error("Expected bound Cure Wounds spell procedure.");
@@ -1271,7 +1282,6 @@ function quickenedCureWoundsSubject(
     tag: "bonusActionSpell",
     actorId: actionSpell.subject.actorId,
     procedureRef: actionSpell.subject.procedureRef,
-    invocation: actionSpell.subject.invocation,
     mode: { tag: "cast" },
     metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
   };
@@ -1289,8 +1299,10 @@ function quickenedRayOfFrostAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === "ray_of_frost" &&
-      candidate.subject.invocation.procedure === "spellAttackDamage" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "ray_of_frost" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spellAttackDamage" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1309,7 +1321,7 @@ function quickenedSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === spellId &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1344,7 +1356,7 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId: wizardId,
       targetId,
-      spellId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
     })),
   };
 }

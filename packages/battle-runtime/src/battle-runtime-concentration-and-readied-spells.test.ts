@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   requireElapsedHours,
@@ -39,7 +41,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
@@ -84,10 +86,10 @@ describe("battle runtime: Concentration and readied spells", () => {
     const guidingSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
-      invocation: spellSlotInvocationRef(
-        "guiding_bolt",
-        1,
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        fighterId,
+        spellSlotInvocationRef("guiding_bolt", 1, "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -134,9 +136,10 @@ describe("battle runtime: Concentration and readied spells", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            wizardTurn,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
@@ -198,7 +201,9 @@ describe("battle runtime: Concentration and readied spells", () => {
         .set(wizardId, {
           ...wizard,
           concentration: {
-            sourceSpellId: "hold_person",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("hold_person"),
+            ),
             effectKind: "spellEffect",
           },
         })
@@ -207,7 +212,9 @@ describe("battle runtime: Concentration and readied spells", () => {
           activeEffects: [
             {
               kind: "spellBaseArmorClass",
-              sourceSpellId: "hold_person",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("hold_person"),
+              ),
               sourceCombatantId: wizardId,
               base: 13,
               ability: "dex",
@@ -251,9 +258,10 @@ describe("battle runtime: Concentration and readied spells", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "spellCast" },
         },
@@ -266,7 +274,9 @@ describe("battle runtime: Concentration and readied spells", () => {
       combatants: new Map(readied.combatants).set(wizardId, {
         ...wizard,
         concentration: {
-          sourceSpellId: "hold_person",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("hold_person"),
+          ),
           effectKind: "spellEffect",
         },
       }),
@@ -286,7 +296,9 @@ describe("battle runtime: Concentration and readied spells", () => {
       combatants: new Map(state.combatants).set(wizardId, {
         ...wizard,
         concentration: {
-          sourceSpellId: "readied_acid_splash",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("readied_acid_splash"),
+          ),
           effectKind: "readiedSpell",
         },
       }),
@@ -302,7 +314,9 @@ describe("battle runtime: Concentration and readied spells", () => {
         savingThrowSucceeded: true,
       }).combatants.get(wizardId)?.concentration,
     ).toEqual({
-      sourceSpellId: "readied_acid_splash",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("readied_acid_splash"),
+      ),
       effectKind: "readiedSpell",
     });
     expect(
@@ -497,7 +511,9 @@ describe("battle runtime: Concentration and readied spells", () => {
     );
 
     expect(maintained.state.combatants.get(wizardId)?.concentration).toEqual({
-      sourceSpellId: "ray_of_frost",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("ray_of_frost"),
+      ),
       effectKind: "readiedSpell",
     });
   });
@@ -668,9 +684,10 @@ describe("battle runtime: Concentration and readied spells", () => {
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
-        invocation: cantripSpellInvocationRef(
-          "ray_of_frost",
-          "spellAttackDamage",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          state,
+          wizardId,
+          cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),
         mode: { tag: "ready", trigger: "attackHit" },
       },
@@ -768,10 +785,14 @@ describe("battle runtime: Concentration and readied spells", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
@@ -861,9 +882,10 @@ describe("battle runtime: Concentration and readied spells", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
@@ -879,9 +901,10 @@ describe("battle runtime: Concentration and readied spells", () => {
         subject: {
           tag: "actionSpell",
           actorId: secondWizardId,
-          invocation: cantripSpellInvocationRef(
-            "acid_splash",
-            "saveGatedDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            secondWizardTurn,
+            secondWizardId,
+            cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),
           mode: { tag: "ready", trigger: "saveFailed" },
         },

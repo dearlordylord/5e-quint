@@ -1,3 +1,8 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-area-save-damage-healing
 import { describe, expect, test } from "vitest";
@@ -14,6 +19,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import {
+  requireCharacterUnitProcedureRefForTest,
   characterSeed,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -50,10 +56,17 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const state = landsAidBattle();
     const act = landsAidAct(state);
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
-      unitId: druidLandsAidUnitId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        spellCasterId,
+        druidLandsAidUnitId,
+      ),
     });
     expect(requireHole(act.initialHoles, "savingThrowOutcome")).toMatchObject({
       unitFeature: {
@@ -459,7 +472,7 @@ function landsAidActOrUndefined(state: BattleState) {
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === spellCasterId &&
-      act.subject.unitId === druidLandsAidUnitId,
+      battleActUnitPresentation(act)?.unitId === druidLandsAidUnitId,
   );
 }
 
@@ -494,7 +507,9 @@ function landsAidAreaFact(
   return {
     kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
     actorId: spellCasterId,
-    unitId: druidLandsAidUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(druidLandsAidUnitId),
+    ),
     originWithinRangeFeet: movementFeet(60),
     radiusFeet: movementFeet(10),
     targetIds,

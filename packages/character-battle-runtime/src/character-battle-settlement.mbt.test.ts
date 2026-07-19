@@ -57,6 +57,7 @@ import {
   characterSheetBattleInit,
   settleCharacterSheetFromBattle,
 } from "./index.ts";
+import { battleProcedureExecutionRefForTest } from "./sdk-integration-test-support.ts";
 
 const settlementScenarios = [
   "init",
@@ -555,7 +556,9 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
       ...combatant.activeEffects,
       {
         kind: "druidWildShapeForm",
-        sourceUnitId: "druid_wild_shape",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "settlement-active-wild-shape",
+        ),
         sourceCombatantId: combatant.combatantId,
         formStatBlockId: "stat_block_cat",
         formLimbs: { kind: "cannotHandleObjects" },
@@ -596,10 +599,13 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
     sheet,
   });
   const combatant = battle.combatant;
+  const activeStateProcedureRef = battleProcedureExecutionRefForTest(
+    "settlement-active-state-handoff",
+  );
   const activeStateCombatant: CharacterBattleCombatant = {
     ...combatant,
     concentration: {
-      sourceSpellId: "synthetic_active_state_handoff",
+      sourceProcedureRef: activeStateProcedureRef,
       effectKind: "spellEffect",
     },
     activeOngoingFeatureOccurrences: new Map([

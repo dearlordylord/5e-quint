@@ -1,3 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleSpellDamageDieExecutionRef } from "./identity.ts";
+import {
+  battleActDruidWildShapePresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME moonbeam
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-moonbeam-movable-zone
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
@@ -9,11 +15,12 @@ import {
   battleSpellEffectOccurrenceId,
   combatantShapeShiftingSuppressed,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type BattleActiveEffect,
   type SpellShapeShiftedFormActiveEffect,
 } from "./index.ts";
 import {
+  requireCharacterSpellProcedureRefForTest,
   BattleHoleSchema,
   BattleSnapshotSchema,
   characterSeed,
@@ -50,7 +57,6 @@ import {
   Hp,
   movementFeet,
   resolveBattleSubject,
-  spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -84,10 +90,17 @@ describe("L12G deterministic Moonbeam admission", () => {
       slotLevel: 3,
     });
 
-    expect(secondLevelAct.subject).toMatchObject({
+    expect({
+      ...secondLevelAct.subject,
+      invocation: battleActSpellPresentation(secondLevelAct)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(moonbeamUnitId, 2, "moonbeam"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(moonbeamUnitId, 2, "moonbeam"),
+      ),
       mode: { tag: "cast" },
     });
     const area = requireHole(secondLevelAct.initialHoles, "spellAreaChoice");
@@ -197,7 +210,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     ).toEqual([
       expect.objectContaining({
         kind: "moonbeam",
-        sourceSpellId: moonbeamUnitId,
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: moonbeamAreaId,
         save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
@@ -318,8 +331,7 @@ describe("L12G deterministic Moonbeam admission", () => {
               effectKind: "damage_dice_reroll",
               dice: [
                 {
-                  groupIndex: 0,
-                  resultIndex: 0,
+                  dieRef: battleSpellDamageDieExecutionRef(damage.holeId, 0, 0),
                   original: DieRollResult(5),
                   replacement: DieRollResult(1),
                 },
@@ -412,8 +424,6 @@ describe("L12G deterministic Moonbeam admission", () => {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
       command: "movableZoneSave" as const,
-      sourceCombatantId: spellCasterId,
-      sourceSpellId: spellId(moonbeamUnitId),
       areaId: moonbeamAreaId,
       trigger: "entersArea" as const,
     };
@@ -727,7 +737,10 @@ describe("L12G deterministic Moonbeam admission", () => {
     }
 
     const repositionAct = moonbeamRepositionAct(casterTurn.state);
-    expect(repositionAct.subject).toMatchObject({
+    expect({
+      ...repositionAct.subject,
+      invocation: battleActSpellPresentation(repositionAct)?.invocation,
+    }).toMatchObject({
       command: "movableZoneReposition",
       areaId: moonbeamAreaId,
     });
@@ -776,7 +789,9 @@ describe("L12G deterministic Moonbeam admission", () => {
 const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: spellCasterId,
-  sourceSpellId: "synthetic_shape_spell",
+  sourceProcedureRef: battleProcedureExecutionRefForTest(
+    String("synthetic_shape_spell"),
+  ),
   sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-spell-effect"),
   replacementForm: {
     kind: "runtimeCreatureForm",
@@ -790,7 +805,9 @@ const syntheticDruidWildShapeEffect: Extract<
 > = {
   kind: "druidWildShapeForm",
   sourceCombatantId: spellTargetId,
-  sourceUnitId: "synthetic_wild_shape_feature",
+  sourceProcedureRef: battleProcedureExecutionRefForTest(
+    "synthetic_wild_shape_feature",
+  ),
   formStatBlockId: "synthetic_beast_form",
   formLimbs: { kind: "cannotHandleObjects" },
   equipmentDisposition: [],
@@ -836,7 +853,8 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
     (act) =>
       act.subject.tag === "druidWildShape" &&
       act.subject.action === "assumeForm" &&
-      act.subject.formStatBlockId === "stat_block_riding_horse",
+      battleActDruidWildShapePresentation(act)?.formStatBlockId ===
+        "stat_block_riding_horse",
   )?.subject;
   if (wildShape?.tag !== "druidWildShape") {
     throw new Error("Expected Druid Wild Shape assume-form act.");
@@ -1029,8 +1047,6 @@ function moonbeamSaveSubject(
     tag: "runtimeCommand",
     actorId: spellTargetId,
     command: "movableZoneSave",
-    sourceCombatantId: spellCasterId,
-    sourceSpellId: spellId(moonbeamUnitId),
     areaId: moonbeamAreaId,
     trigger,
   };
@@ -1044,8 +1060,6 @@ function moonbeamCylinderExitSubject(): Extract<
     tag: "runtimeCommand",
     actorId: spellTargetId,
     command: "moonbeamCylinderExit",
-    sourceCombatantId: spellCasterId,
-    sourceSpellId: spellId(moonbeamUnitId),
     areaId: moonbeamAreaId,
   };
 }

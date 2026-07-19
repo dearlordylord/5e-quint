@@ -1,7 +1,14 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME levitate
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-levitated-creature
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import type {
+  BattleFill,
+  BattleHole,
+  BattleState,
+  CombatantId,
+} from "./index.ts";
 import {
   levitateUnitId,
   spellCasterId,
@@ -27,14 +34,7 @@ import {
   endTurn,
   movementFeet,
   resolveBattleSubject,
-  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type {
-  BattleFill,
-  BattleHole,
-  BattleState,
-  CombatantId,
-} from "./index.ts";
 
 describe("L12G deterministic Levitate creature admission", () => {
   test("levitate admits the creature branch as a level-2 Magic Action Spell Slot profile", () => {
@@ -48,11 +48,6 @@ describe("L12G deterministic Levitate creature admission", () => {
           procedureRef: expect.any(String),
           tag: "actionSpell",
           actorId: spellCasterId,
-          invocation: spellSlotInvocationRef(
-            levitateUnitId,
-            2,
-            "levitatedCreature",
-          ),
           mode: { tag: "cast" },
         },
       }),
@@ -68,7 +63,9 @@ describe("L12G deterministic Levitate creature admission", () => {
 
     expect(requireLevitatedEffect(cast.state)).toEqual({
       kind: "spellLevitatedCreature",
-      sourceSpellId: levitateUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(levitateUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       altitudeFeet: movementFeet(12),
       maxAltitudeChangeFeet: movementFeet(20),
@@ -316,7 +313,9 @@ describe("L12G deterministic Levitate creature admission", () => {
           levitatedMovement: {
             kind: "levitatedMovement",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: levitateUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(levitateUnitId),
+            ),
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "down",
@@ -342,7 +341,9 @@ describe("L12G deterministic Levitate creature admission", () => {
           levitatedMovement: {
             kind: "levitatedMovement",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: levitateUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(levitateUnitId),
+            ),
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "down",
@@ -405,7 +406,9 @@ describe("L12G deterministic Levitate creature admission", () => {
           {
             kind: "levitatedTargetWithinSpellRange",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: levitateUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(levitateUnitId),
+            ),
             targetId: spellTargetId,
             rangeFeet: movementFeet(60),
           },
@@ -457,7 +460,9 @@ describe("L12G deterministic Levitate creature admission", () => {
           levitatedMovement: {
             kind: "levitatedMovement",
             sourceCombatantId: spellCasterId,
-            sourceSpellId: levitateUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(levitateUnitId),
+            ),
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "up",

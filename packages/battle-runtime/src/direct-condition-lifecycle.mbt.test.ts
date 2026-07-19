@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   applyCondition,
   hasCondition,
@@ -126,11 +127,7 @@ function initialRuntimeState(
 function spellSlotLevelForBattle(
   slotLevel: number,
 ): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 {
-  if (
-    Number.isInteger(slotLevel) &&
-    slotLevel >= 1 &&
-    slotLevel <= 9
-  ) {
+  if (Number.isInteger(slotLevel) && slotLevel >= 1 && slotLevel <= 9) {
     return slotLevel as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   }
   throw new Error(`Invalid battle Spell Slot level ${slotLevel}.`);
@@ -179,26 +176,17 @@ function createDirectConditionLifecycleDriver() {
       },
       doAttackRollEarlyEnd: () => {
         state = resolveDirectConditionMbtStep(
-          endDirectConditionForTargetActionInRuntimeState(
-            state,
-            "attackRoll",
-          ),
+          endDirectConditionForTargetActionInRuntimeState(state, "attackRoll"),
         );
       },
       doDamageEarlyEnd: () => {
         state = resolveDirectConditionMbtStep(
-          endDirectConditionForTargetActionInRuntimeState(
-            state,
-            "damage",
-          ),
+          endDirectConditionForTargetActionInRuntimeState(state, "damage"),
         );
       },
       doSpellCastEarlyEnd: () => {
         state = resolveDirectConditionMbtStep(
-          endDirectConditionForTargetActionInRuntimeState(
-            state,
-            "spellCast",
-          ),
+          endDirectConditionForTargetActionInRuntimeState(state, "spellCast"),
         );
       },
       doConcentrationCleanup: () => {
@@ -273,12 +261,15 @@ function directConditionRuntimeProjection(
     targetCondition: directConditionTargetProjection(state.battle),
   };
   const caster = requireCombatant(state.battle, spellCasterId);
-  const expectedConcentration =
-    directConditionTargetHasSpellSource(projection.targetCondition);
+  const expectedConcentration = directConditionTargetHasSpellSource(
+    projection.targetCondition,
+  );
   expect(caster.concentration !== null).toBe(expectedConcentration);
   if (expectedConcentration) {
     expect(caster.concentration).toEqual({
-      sourceSpellId: invisibilityUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(invisibilityUnitId),
+      ),
       effectKind: "spellEffect",
     });
   }
@@ -327,7 +318,6 @@ function directConditionEffects(
       { readonly kind: "targetActionEndedSpellCondition" }
     > =>
       effect.kind === "targetActionEndedSpellCondition" &&
-      effect.sourceSpellId === invisibilityUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -339,7 +329,9 @@ function battleWithCasterConcentration(battle: BattleState): BattleState {
     combatants: new Map(battle.combatants).set(spellCasterId, {
       ...caster,
       concentration: {
-        sourceSpellId: invisibilityUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(invisibilityUnitId),
+        ),
         effectKind: "spellEffect",
       },
     }),
@@ -371,7 +363,6 @@ function battleWithDirectConditionDuration(
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
         effect.kind === "targetActionEndedSpellCondition" &&
-        effect.sourceSpellId === invisibilityUnitId &&
         effect.sourceCombatantId === spellCasterId &&
         effect.expiresAt.kind === "concentration"
           ? {
@@ -389,8 +380,15 @@ function battleWithDirectConditionDuration(
 
 function directConditionInvocation(
   slotLevel: number,
-): DirectConditionSpellInvocation {
+): DirectConditionSpellInvocation & {
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
+} {
   return {
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(invisibilityUnitId),
+    ),
     access: { tag: "prepared" },
     resource: {
       tag: "spellSlot",
@@ -402,7 +400,6 @@ function directConditionInvocation(
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     activeEffect: {
       kind: "targetActionEndedSpellCondition",
-      sourceSpellId: invisibilityUnitId,
       sourceCombatantId: spellCasterId,
       condition: "invisible",
       expiresAt: {
@@ -515,21 +512,25 @@ describe("Direct condition lifecycle MBT parity", () => {
     ).toBe(false);
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-direct-condition-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDirectConditionLifecycleDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: directConditionLifecycleStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-direct-condition-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDirectConditionLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: directConditionLifecycleStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeDirectConditionLifecycleQuintState(
@@ -544,23 +545,19 @@ function normalizeDirectConditionLifecycleQuintState(
     decodeHole: directConditionLifecycleHoleName,
   });
   if (protocol.holes.length !== 0) {
-    throw new Error("Expected Direct Condition lifecycle witness holes to be empty.");
+    throw new Error(
+      "Expected Direct Condition lifecycle witness holes to be empty.",
+    );
   }
   const normalized = {
     actionAvailable: booleanField(lifecycle, "actionAvailable"),
     slotLedger: {
       slotLevel: numberFromQuintInt(
-        quintField(
-          quintRecordField(lifecycle, "slotLedger"),
-          "slotLevel",
-        ),
+        quintField(quintRecordField(lifecycle, "slotLedger"), "slotLevel"),
         "qState.lifecycle.slotLedger.slotLevel",
       ),
       slotsRemaining: numberFromQuintInt(
-        quintField(
-          quintRecordField(lifecycle, "slotLedger"),
-          "slotsRemaining",
-        ),
+        quintField(quintRecordField(lifecycle, "slotLedger"), "slotsRemaining"),
         "qState.lifecycle.slotLedger.slotsRemaining",
       ),
     },
@@ -580,11 +577,9 @@ function normalizeDirectConditionLifecycleQuintState(
 function directConditionLifecycleHoleName(
   raw: unknown,
 ): DirectConditionLifecycleMbtHole {
-  return stringLiteralValue(
-    raw,
-    "qState.protocol.holes",
-    ["DirectConditionLifecycle"] as const,
-  );
+  return stringLiteralValue(raw, "qState.protocol.holes", [
+    "DirectConditionLifecycle",
+  ] as const);
 }
 
 function directConditionTargetFromQuintValue(

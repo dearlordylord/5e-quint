@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -25,18 +27,18 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
+  resolveBattleSubject,
   characterSpellInvocationRefForProcedureRefForTest,
   opportunityAttackProcedureSelectionForTest,
 } from "./battle-runtime-test-support.ts";
@@ -55,7 +57,10 @@ const spellCasterId = combatantId("shield-reaction-spell-caster");
 const spellTargetId = combatantId("shield-reaction-spell-target");
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -830,7 +835,8 @@ function spellAct(input: {
   const act = discoverBattleActs(input.state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === input.spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        input.spellId,
   );
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -1006,7 +1012,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
       },
     ],
   };
@@ -1015,7 +1021,7 @@ function spellTargetFill(
 function spellTargetAllocationFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
   casterId: CombatantId,
-  spellId: string,
+  sourceProcedureRef: string,
   allocations: readonly {
     readonly targetId: CombatantId;
     readonly count: number;
@@ -1029,7 +1035,8 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId,
       targetId: allocation.targetId,
-      spellId,
+      sourceProcedureRef:
+        battleProcedureExecutionRefForTest(sourceProcedureRef),
     })),
   };
 }

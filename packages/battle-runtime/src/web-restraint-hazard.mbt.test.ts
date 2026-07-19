@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -45,11 +46,10 @@ import {
 import {
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import type { WebRestraintHazardEffect } from "./battle-reducer/turn-end-movement.ts";
 
@@ -392,6 +392,16 @@ function resolveNoLongerInArea(state: WebRuntimeState): WebRuntimeState {
 }
 
 function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
+  const hazard = requireCombatant(
+    state.battle,
+    spellCasterId,
+  ).activeEffects.find(
+    (effect): effect is WebRestraintHazardEffect =>
+      effect.kind === "webRestraintHazard" && effect.areaId === webAreaId,
+  );
+  if (hazard === undefined) {
+    throw new Error("Expected active Web hazard.");
+  }
   const moveSubject: BattleSubject = {
     tag: "runtimeCommand",
     actorId: spellTargetId,
@@ -419,7 +429,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
               {
                 kind: "webAreaHazard",
                 sourceCombatantId: spellCasterId,
-                sourceSpellId: webUnitId,
+                sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: webAreaId,
               },
             ],
@@ -462,7 +472,6 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
   const hazard = caster.activeEffects.find(
     (effect): effect is WebRestraintHazardEffect =>
       effect.kind === "webRestraintHazard" &&
-      effect.sourceSpellId === webUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === webAreaId,
   );
@@ -477,7 +486,8 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
       }) !== undefined,
     hazardActive: hazard !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === webUnitId &&
+      hazard !== undefined &&
+      caster.concentration?.sourceProcedureRef === hazard.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     targetRestrained: target.conditions.restrained,
     entrySavedThisTurn:

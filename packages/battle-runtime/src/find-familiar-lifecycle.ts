@@ -38,7 +38,6 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { battleStateInitIssue } from "./battle-reducer/domain-helpers.ts";
 import type { CombatantId, InitiativeScore } from "./identity.ts";
-import { spellId } from "./identity.ts";
 import { findPresentFamiliarById } from "./find-familiar-state.ts";
 import {
   companionEntries,
@@ -74,13 +73,6 @@ import {
 import { expendSpellSlot } from "./battle-reducer/spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./battle-reducer/spell-turn-resources.ts";
 import { DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE } from "./unit-feature-support.ts";
-
-// Required SRD source-record id: Spells/Descriptions-E-L.md:313 says the
-// familiar leaves carried objects behind when it disappears; the dropped-object
-// outcome carries the spell source for trace consumers.
-const FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID = spellId(
-  "find_familiar" satisfies SpellRecord["id"],
-);
 
 type FindFamiliarCombatantRemoval =
   | { readonly tag: "resolved"; readonly state: BattleState }
@@ -1385,7 +1377,7 @@ function spendWildCompanionCost(input: {
 
 function characterHasWildCompanionFeature(
   characterUnitRefs: readonly {
-    readonly unitId: UnitRecord["id"];
+    readonly unit: { readonly id: UnitRecord["id"] };
     readonly supportProfiles: readonly unknown[];
   }[],
 ): boolean {
@@ -1407,9 +1399,9 @@ function droppedObjectsForFamiliarDisappearance(input: {
     actorId: input.familiarId,
     objectId,
     source: {
-      kind: "spell",
-      sourceCombatantId: input.casterId,
-      sourceSpellId: FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID,
+      kind: "companionDisappearance",
+      ownerId: input.casterId,
+      companionId: input.familiarId,
     },
   }));
 }

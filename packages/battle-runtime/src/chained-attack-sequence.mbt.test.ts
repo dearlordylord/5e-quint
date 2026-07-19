@@ -1,3 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActSpellSlotPresentation,
+} from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-chained-attack-damage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 // RAW trace:
@@ -26,13 +32,24 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
-  quintVariantTag,
   quintRecordField,
+  quintSet,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  combatantId,
+  discoverBattleActs,
+  type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
+  type BattleResolutionResult,
+  type BattleState,
+  type BattleActDiscoverySubject as BattleSubject,
+  type CombatantId,
+} from "./index.ts";
 import {
   chromaticOrbUnitId,
   spellCasterId,
@@ -41,18 +58,6 @@ import {
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import {
-  combatantId,
-  discoverBattleActs,
-  resolveBattleSubject,
-  type AvailableBattleAct,
-  type BattleFill,
-  type BattleHole,
-  type BattleResolutionResult,
-  type BattleState,
-  type BattleSubject,
-  type CombatantId,
-} from "./index.ts";
 
 const CHAINED_DAMAGE_TYPES = [
   "acid",
@@ -159,20 +164,12 @@ type ChainedAttackRuntimeState = {
   readonly lastResult: ChainedLastResult;
 };
 
-type ActionSpellSubject = Extract<
+type ChainedAttackSubject = Extract<
   BattleSubject,
   { readonly tag: "actionSpell" }
 >;
 
-type ChainedAttackSubject = ActionSpellSubject & {
-  readonly invocation: ActionSpellSubject["invocation"] & {
-    readonly procedure: "chainedSpellAttackDamage";
-  };
-};
-
-type ChainedActionSpellAct = AvailableBattleAct & {
-  readonly subject: ChainedAttackSubject;
-};
+type ChainedActionSpellAct = AvailableBattleAct;
 
 type ChainedReplaySequence = {
   readonly name: string;
@@ -525,6 +522,9 @@ function startCast(
   slotLevel: ChainedSlotLevel,
 ): ChainedAttackRuntimeState {
   const act = chainedAttackAct(state.baseBattle, slotLevel);
+  if (act.subject.tag !== "actionSpell") {
+    throw new Error("Expected chained Action spell subject.");
+  }
   return {
     ...state,
     subject: act.subject,
@@ -776,9 +776,12 @@ function chainedAttackAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ChainedActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "chainedSpellAttackDamage" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      Number(candidate.subject.invocation.slotLevel) === slotLevel,
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "chainedSpellAttackDamage" &&
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      Number(
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
+      ) === slotLevel,
   );
   if (act === undefined) {
     throw new Error(`Expected chained spell attack act at slot ${slotLevel}.`);
@@ -840,7 +843,9 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId,
-        spellId: chromaticOrbUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(chromaticOrbUnitId),
+        ),
       },
     ],
   };
@@ -864,7 +869,9 @@ function spellLeapTargetFill(
             kind: "spellLeapTargetWithinRange",
             previousTargetId,
             targetId,
-            spellId: chromaticOrbUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(chromaticOrbUnitId),
+            ),
             rangeFeet: movementFeet(30),
           },
         ]

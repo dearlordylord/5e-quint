@@ -1,3 +1,13 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  requireCharacterUnitProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
+import {
+  admitCharacterProcedureSelectionSubject,
+  battleActUnitPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
@@ -61,8 +71,9 @@ import {
 } from "./battle-runtime-test-support.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import type {
+  BattleActDiscoverySubject,
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
@@ -107,7 +118,11 @@ describe("battle runtime: class action features", () => {
       expect.objectContaining({
         tag: "unitFeature",
         actorId: fighterId,
-        unitId: "fighter_action_surge",
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          state,
+          fighterId,
+          "fighter_action_surge",
+        ),
       }),
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
@@ -118,7 +133,11 @@ describe("battle runtime: class action features", () => {
       subject: {
         tag: "unitFeature",
         actorId: fighterId,
-        unitId: "fighter_action_surge",
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          state,
+          fighterId,
+          "fighter_action_surge",
+        ),
       },
       fills: [],
     });
@@ -132,7 +151,11 @@ describe("battle runtime: class action features", () => {
               kind: "action",
               source: "unit",
               sourceOwnerId: fighterId,
-              sourceUnitId: "fighter_action_surge",
+              sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+                state,
+                fighterId,
+                "fighter_action_surge",
+              ),
               restriction: { kind: "exclude", actions: ["magic"] },
             },
           ],
@@ -174,7 +197,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "fighter_action_surge",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "fighter_action_surge",
+          ),
         },
         fills: [],
       }),
@@ -235,7 +262,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "fighter_action_surge",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            zeroHpActorState,
+            fighterId,
+            "fighter_action_surge",
+          ),
         },
         fills: [],
       }),
@@ -287,16 +318,12 @@ describe("battle runtime: class action features", () => {
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
     expect(
-      resolveBattleSubject({
-        state,
-        subject: {
-          tag: "unitFeature",
-          actorId: fighterId,
-          unitId: "fighter_action_surge",
-        },
-        fills: [],
+      admitCharacterProcedureSelectionSubject(state, {
+        tag: "unitFeature",
+        actorId: fighterId,
+        unitId: "fighter_action_surge",
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toBeUndefined();
   });
 
   test("Second Wind spends a Bonus Action and feature use to heal through the HP boundary", () => {
@@ -316,13 +343,17 @@ describe("battle runtime: class action features", () => {
     const secondWindAct = discoverBattleActs(state).find(
       (act) =>
         act.subject.tag === "unitFeature" &&
-        act.subject.unitId === "fighter_second_wind",
+        battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
     );
     expect(secondWindAct).toMatchObject({
       subject: {
         tag: "unitFeature",
         actorId: fighterId,
-        unitId: "fighter_second_wind",
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          state,
+          fighterId,
+          "fighter_second_wind",
+        ),
       },
       label: "Second Wind",
       initialHoles: [
@@ -371,7 +402,7 @@ describe("battle runtime: class action features", () => {
       discoverBattleActs(result.state).some(
         (act) =>
           act.subject.tag === "unitFeature" &&
-          act.subject.unitId === "fighter_second_wind",
+          battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
       ),
     ).toBe(false);
   });
@@ -418,7 +449,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "fighter_second_wind",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            noBonusActionState,
+            fighterId,
+            "fighter_second_wind",
+          ),
         },
         fills: [],
       }),
@@ -460,16 +495,12 @@ describe("battle runtime: class action features", () => {
       ],
     });
     expect(
-      resolveBattleSubject({
-        state: unsupportedState,
-        subject: {
-          tag: "unitFeature",
-          actorId: fighterId,
-          unitId: "fighter_second_wind",
-        },
-        fills: [],
+      admitCharacterProcedureSelectionSubject(unsupportedState, {
+        tag: "unitFeature",
+        actorId: fighterId,
+        unitId: "fighter_second_wind",
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toBeUndefined();
 
     const zeroHpActorState = startBattleRight({
       battleId: battleId("battle-second-wind-atZeroHitPoints-actor"),
@@ -488,7 +519,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "fighter_second_wind",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            zeroHpActorState,
+            fighterId,
+            "fighter_second_wind",
+          ),
         },
         fills: [],
       }),
@@ -516,13 +551,17 @@ describe("battle runtime: class action features", () => {
     const act = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "unitFeature" &&
-        candidate.subject.unitId === "rogue_steady_aim",
+        battleActUnitPresentation(candidate)?.unitId === "rogue_steady_aim",
     );
     expect(act).toMatchObject({
       subject: {
         tag: "unitFeature",
         actorId: fighterId,
-        unitId: "rogue_steady_aim",
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          state,
+          fighterId,
+          "rogue_steady_aim",
+        ),
       },
       label: "Steady Aim",
       initialHoles: [],
@@ -641,7 +680,11 @@ describe("battle runtime: class action features", () => {
     const subject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "rogue_steady_aim",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "rogue_steady_aim",
+      ),
     };
     const actor = state.combatants.get(fighterId);
     if (actor === undefined) {
@@ -658,7 +701,7 @@ describe("battle runtime: class action features", () => {
       discoverBattleActs(movedState).some(
         (candidate) =>
           candidate.subject.tag === "unitFeature" &&
-          candidate.subject.unitId === "rogue_steady_aim",
+          battleActUnitPresentation(candidate)?.unitId === "rogue_steady_aim",
       ),
     ).toBe(false);
     expect(
@@ -701,7 +744,11 @@ describe("battle runtime: class action features", () => {
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "barbarian_rage",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "barbarian_rage",
+      ),
     };
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
       expect.arrayContaining([expect.objectContaining(rageSubject)]),
@@ -821,15 +868,26 @@ describe("battle runtime: class action features", () => {
       combatants: new Map(state.combatants).set(fighterId, {
         ...concentratingActor,
         concentration: {
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           effectKind: "spellEffect" as const,
         },
       }),
     };
+    const rayOfFrostProcedureRef = requireCharacterSpellProcedureRefForTest(
+      concentratingState,
+      fighterId,
+      cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+    );
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "barbarian_rage",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        concentratingState,
+        fighterId,
+        "barbarian_rage",
+      ),
     };
     const raging = requireResolved(
       resolveBattleSubject({
@@ -846,10 +904,7 @@ describe("battle runtime: class action features", () => {
         {
           tag: "actionSpell",
           actorId: fighterId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
-          ),
+          procedureRef: rayOfFrostProcedureRef,
           mode: { tag: "cast" },
         },
       ]),
@@ -860,10 +915,7 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "actionSpell",
           actorId: fighterId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
-          ),
+          procedureRef: rayOfFrostProcedureRef,
           mode: { tag: "cast" },
         },
         fills: [],
@@ -893,9 +945,10 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "actionSpell",
           actorId: fighterId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            state,
+            fighterId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
@@ -909,7 +962,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_rage",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_rage",
+          ),
         },
         fills: [],
       }),
@@ -939,9 +996,10 @@ describe("battle runtime: class action features", () => {
     const spellSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        fighterId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -949,8 +1007,10 @@ describe("battle runtime: class action features", () => {
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.actorId === fighterId &&
-        act.subject.invocation.spellId === "ray_of_frost" &&
-        act.subject.invocation.procedure === "spellAttackDamage",
+        battleActSpellPresentation(act)?.invocation.spellId ===
+          "ray_of_frost" &&
+        battleActSpellPresentation(act)?.invocation.procedure ===
+          "spellAttackDamage",
     );
     const target = spellAct?.initialHoles[0];
     if (target?.kind !== "targetChoice") {
@@ -985,7 +1045,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "fighter_action_surge",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "fighter_action_surge",
+          ),
         },
         fills: [],
       }),
@@ -1024,7 +1088,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_rage",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_rage",
+          ),
         },
         fills: [],
       }),
@@ -1266,7 +1334,15 @@ describe("battle runtime: class action features", () => {
     });
     expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
       expect.arrayContaining([
-        { tag: "unitFeature", actorId: fighterId, unitId: "barbarian_rage" },
+        {
+          tag: "unitFeature",
+          actorId: fighterId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_rage",
+          ),
+        },
       ]),
     );
   });
@@ -1286,7 +1362,11 @@ describe("battle runtime: class action features", () => {
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "barbarian_rage",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "barbarian_rage",
+      ),
     };
     const raging = requireResolved(
       resolveBattleSubject({ state, subject: rageSubject, fills: [] }),
@@ -1344,7 +1424,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_rage",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_rage",
+          ),
         },
         fills: [],
       }),
@@ -1551,7 +1635,11 @@ describe("battle runtime: class action features", () => {
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "barbarian_rage",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        incapacitatedState,
+        fighterId,
+        "barbarian_rage",
+      ),
     };
     expect(
       discoverBattleActs(incapacitatedState).map((act) => act.subject),
@@ -1583,7 +1671,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_rage",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_rage",
+          ),
         },
         fills: [],
       }),
@@ -1653,7 +1745,11 @@ describe("battle runtime: class action features", () => {
     const subject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "sorcerer_innate_sorcery",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "sorcerer_innate_sorcery",
+      ),
     };
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
@@ -1689,7 +1785,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Innate Sorcery rejects exhausted uses and non-Sorcerer ownership", () => {
-    const subject: BattleSubject = {
+    const subject: BattleActDiscoverySubject = {
       tag: "unitFeature",
       actorId: fighterId,
       unitId: "sorcerer_innate_sorcery",
@@ -1742,7 +1838,11 @@ describe("battle runtime: class action features", () => {
     const subject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "sorcerer_innate_sorcery",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "sorcerer_innate_sorcery",
+      ),
     };
     let current = requireResolved(
       resolveBattleSubject({ state, subject, fills: [] }),
@@ -1793,7 +1893,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "sorcerer_innate_sorcery",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "sorcerer_innate_sorcery",
+          ),
         },
         fills: [],
       }),
@@ -1804,9 +1908,10 @@ describe("battle runtime: class action features", () => {
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        fighterId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -1835,7 +1940,9 @@ describe("battle runtime: class action features", () => {
               kind: "spellTarget",
               casterId: fighterId,
               targetId: goblinId,
-              spellId: "ray_of_frost",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("ray_of_frost"),
+              ),
             },
             {
               kind: "attackAttackerCannotSeeTarget",
@@ -1884,7 +1991,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "sorcerer_innate_sorcery",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "sorcerer_innate_sorcery",
+          ),
         },
         fills: [],
       }),
@@ -1895,9 +2006,10 @@ describe("battle runtime: class action features", () => {
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        fighterId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -1947,7 +2059,11 @@ describe("battle runtime: class action features", () => {
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "barbarian_rage",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "barbarian_rage",
+      ),
     };
     const raging = requireResolved(
       resolveBattleSubject({ state, subject: rageSubject, fills: [] }),
@@ -1992,7 +2108,11 @@ describe("battle runtime: class action features", () => {
         {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_reckless_attack",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_reckless_attack",
+          ),
         },
       ]),
     );
@@ -2098,7 +2218,11 @@ describe("battle runtime: class action features", () => {
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "barbarian_rage",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "barbarian_rage",
+      ),
     };
     const raging = requireResolved(
       resolveBattleSubject({ state, subject: rageSubject, fills: [] }),
@@ -2225,7 +2349,11 @@ describe("battle runtime: class action features", () => {
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
-      unitId: "barbarian_rage",
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        state,
+        fighterId,
+        "barbarian_rage",
+      ),
     };
     const ragingAfterRecklessMiss = requireResolved(
       resolveBattleSubject({
@@ -2650,7 +2778,11 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_reckless_attack",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_reckless_attack",
+          ),
         },
         fills: [],
       }),

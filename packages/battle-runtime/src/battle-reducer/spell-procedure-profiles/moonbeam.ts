@@ -286,13 +286,14 @@ function moonbeamDamageEffect(
 function discoverMoonbeamCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: MoonbeamSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<MoonbeamSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: moonbeamInvocationRef(invocation),
         mode: { tag: "cast" },
       },

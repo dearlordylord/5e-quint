@@ -1,3 +1,11 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellPresentation,
+  battleActSpellSlotPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME enlarge_reduce
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-creature-size-change
@@ -8,6 +16,25 @@ import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus, resourceCount } from "@dnd/shared/types";
 import type { Size } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
+import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
+import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { EXTENDED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import {
+  characterBattleResourceIsPointPool,
+  type CharacterBattleMetamagicOptionFact,
+  type CharacterBattlePointPoolResourceState,
+} from "./character-battle-resources.ts";
+import type { BattleActDiscoverySubject as BattleSubject } from "./index.ts";
+import {
+  enlargeReduceUnitId,
+  spellCasterId,
+  spellTargetId,
+  unitLibrary,
+  type ActionSpellAct,
+} from "./unit-profile-admission-catalog-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -35,25 +62,6 @@ import {
   type BattleState,
   type SpellMarkedDamageRider,
 } from "./unit-profile-admission-test-support.ts";
-import {
-  enlargeReduceUnitId,
-  type ActionSpellAct,
-  spellCasterId,
-  spellTargetId,
-  unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
-import {
-  characterBattleResourceIsPointPool,
-  type CharacterBattleMetamagicOptionFact,
-  type CharacterBattlePointPoolResourceState,
-} from "./character-battle-resources.ts";
-import { EXTENDED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
-import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
-import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
-import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
-import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
-import type { BattleSubject } from "./index.ts";
 
 function creatureSizeAct(
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
@@ -76,9 +84,10 @@ function creatureSizeActInState(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === enlargeReduceUnitId &&
-      candidate.subject.invocation.procedure === procedure,
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        enlargeReduceUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure === procedure,
   );
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -113,9 +122,11 @@ function extendedCreatureSizeAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === enlargeReduceUnitId &&
-      candidate.subject.invocation.procedure === procedure &&
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        enlargeReduceUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        procedure &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -130,13 +141,13 @@ function extendedCreatureSizeAct(
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
   test("admits only creature size increase and decrease spell-slot acts from the creature-or-object Surface target", () => {
     const { state } = creatureSizeAct("creatureSizeIncrease");
-    const procedures = discoverBattleActs(state).flatMap((act) =>
-      act.subject.tag === "actionSpell" &&
-      act.subject.invocation.tag === "spellSlot" &&
-      act.subject.invocation.spellId === enlargeReduceUnitId
-        ? [act.subject.invocation.procedure]
-        : [],
-    );
+    const procedures = discoverBattleActs(state).flatMap((act) => {
+      const presentation = battleActSpellSlotPresentation(act);
+      return act.subject.tag === "actionSpell" &&
+        presentation?.invocation.spellId === enlargeReduceUnitId
+        ? [presentation.invocation.procedure]
+        : [];
+    });
 
     expect(procedures).toEqual([
       "creatureSizeIncrease",
@@ -806,7 +817,9 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     expect(sorceryPointsRemaining(resolved.state)).toBe(1);
     const caster = requireCombatant(resolved.state, spellCasterId);
     expect(caster.concentration).toMatchObject({
-      sourceSpellId: enlargeReduceUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(enlargeReduceUnitId),
+      ),
       effectKind: "spellEffect",
       maintenanceSavingThrowRollMode: "advantage",
     });
@@ -900,7 +913,9 @@ function withSyntheticHitRider(
           ...caster.activeEffects,
           {
             kind: "spellWeaponDamageRider" as const,
-            sourceSpellId: "synthetic_reduce_floor_rider",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("synthetic_reduce_floor_rider"),
+            ),
             sourceCombatantId: spellCasterId,
             damage: {
               expr: { dice: 1, dieSize: 4 },
@@ -917,14 +932,18 @@ function withSyntheticHitRider(
               ...target.activeEffects,
               {
                 kind: "damageResistance" as const,
-                sourceSpellId: "synthetic_reduce_floor_resistance",
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String("synthetic_reduce_floor_resistance"),
+                ),
                 sourceCombatantId: spellTargetId,
                 damageType: "slashing" as const,
                 expiresAt: duration,
               },
               {
                 kind: "damageResistance" as const,
-                sourceSpellId: "synthetic_reduce_floor_resistance",
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String("synthetic_reduce_floor_resistance"),
+                ),
                 sourceCombatantId: spellTargetId,
                 damageType: "radiant" as const,
                 expiresAt: duration,
@@ -939,7 +958,10 @@ function withSyntheticMarkedDamageRider(state: BattleState): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const markedRider = {
     kind: "spellMarkedDamageRider",
-    sourceSpellId: spellId("synthetic_reduce_floor_mark"),
+    effectRef: battleActiveEffectExecutionRefForTest("reduce-floor-mark"),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spellId("synthetic_reduce_floor_mark")),
+    ),
     sourceCombatantId: spellCasterId,
     targetCombatantId: spellTargetId,
     transfer: {

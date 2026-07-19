@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-MIRROR-IMAGE mirror_image
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-mirror-image-hit-interception
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
@@ -45,7 +47,9 @@ type MirrorImageDuplicateRollHole = Extract<
 > & {
   readonly mirrorImageDuplicateRoll: {
     readonly targetId: CombatantId;
-    readonly sourceSpellId: string;
+    readonly sourceProcedureRef: ReturnType<
+      typeof battleProcedureExecutionRefForTest
+    >;
     readonly sourceCombatantId: CombatantId;
     readonly remainingDuplicates: 1 | 2 | 3;
     readonly dieSize: 6;
@@ -67,7 +71,9 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     expect(caster.concentration).toBeNull();
     expect(activeMirrorImage(caster.activeEffects)).toMatchObject({
       kind: "mirrorImageDuplicates",
-      sourceSpellId: mirrorImageUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(mirrorImageUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       remainingDuplicates: 3,
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
@@ -86,7 +92,9 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     expect(attack.mirrorHole).toMatchObject({
       mirrorImageDuplicateRoll: {
         targetId: spellCasterId,
-        sourceSpellId: mirrorImageUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(mirrorImageUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         remainingDuplicates: 3,
         dieSize: 6,
@@ -254,7 +262,7 @@ function castMirrorImage(
 > {
   const act = spellAct({ state, spellId: mirrorImageUnitId, slotLevel: 2 });
   expect(act.initialHoles).toEqual([]);
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
     spellId: mirrorImageUnitId,
     slotLevel: 2,

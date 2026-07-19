@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magical-darkness-point-origin
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // RAW trace:
@@ -53,7 +55,6 @@ import {
   battleObjectId,
   battleObscurementZones,
   breakBattleConcentration,
-  resolveBattleSubject,
   type BattleActiveEffect,
   type BattleAreaId,
   type BattleFill,
@@ -324,7 +325,9 @@ function darknessProjection(state: DarknessRuntimeState): DarknessProjection {
     darknessActive: activeEffect !== undefined,
     zoneProjected: zone !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === darknessUnitId &&
+      activeEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        activeEffect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     ordinarySightObscurement:
       zone === undefined
@@ -405,7 +408,9 @@ function trackedObjectSpellLightEmitter(input: {
   }
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: "synthetic_spell_light",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("synthetic_spell_light"),
+    ),
     sourceCombatantId: spellTargetId,
     sourceEffectId: input.sourceEffectId,
     sourceSpellLevel,

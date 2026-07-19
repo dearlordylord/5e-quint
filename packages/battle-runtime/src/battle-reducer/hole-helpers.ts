@@ -23,11 +23,16 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
-import type { CombatantId } from "../identity.ts";
 import type {
-  BattleMovementSpeedKind,
-  BattleSubject,
-  BonusActionStandardActionSubject,
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
+import {
+  battleSubjectForReplay,
+  type BattleMovementSpeedKind,
+  type BattleSubject,
+  type CharacterProcedureSelectionSubject,
 } from "../battle-subjects.ts";
 import {
   attackExecutionSelectionForOption,
@@ -293,7 +298,10 @@ export function bonusActionDashSubjectForSpeedKind(
   actorId: CombatantId,
   sourceUnitId: string,
   speedKind: BattleMovementSpeedKind,
-): BonusActionStandardActionSubject {
+): Extract<
+  CharacterProcedureSelectionSubject,
+  { readonly tag: "bonusActionStandardAction" }
+> {
   return {
     tag: "bonusActionStandardAction",
     actorId,
@@ -359,7 +367,7 @@ export function escapeSpellRestraintAbilityCheckHole(
     holeInstanceKey: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
     kind: "abilityCheck",
-    label: `Escape ${effect.sourceSpellId} Strength (Athletics) check (DC ${dc ?? 1})`,
+    label: `Escape spell restraint Strength (Athletics) check (DC ${dc ?? 1})`,
     ability: "str",
     skill: "athletics",
     dc: dc ?? difficultyClass(1),
@@ -536,7 +544,7 @@ function activeAbilityCheckRollModeEffectMatches(
             !ongoingSpellEffectSuppressedByAntimagicField(state, {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
-              sourceEffectId: effect.sourceEffectId,
+              effectRef: effect.sourceEffectRef,
             }))) &&
         effect.mode === mode,
     ) ??
@@ -557,7 +565,7 @@ function activeAnyAbilityCheckRollModeEffectMatches(
         !ongoingSpellEffectSuppressedByAntimagicField(state, {
           kind: "spellActiveEffect",
           activeEffectKind: "spellObjectContactDamage",
-          sourceEffectId: effect.sourceEffectId,
+          effectRef: effect.sourceEffectRef,
         }) &&
         effect.mode === mode,
     ) ?? false
@@ -660,7 +668,7 @@ export function needsHolesResult(
   return {
     tag: "needsHoles",
     state,
-    subject,
+    subject: battleSubjectForReplay(subject),
     holes,
     snapshot: snapshotBattle(state),
   };
@@ -910,29 +918,55 @@ export function bonusActionStandardActionActs(
         if (!alternateActionCostActionAvailable(state, actorId, action)) {
           return [];
         }
+        if (entry.source.kind === "spellEffect" && action !== "dash") {
+          return [];
+        }
         const speedKinds =
           action === "dash"
             ? representedMovementSpeedKinds(actor)
             : ["walk" as const];
-        return speedKinds.map((speedKind) => ({
-          subject:
-            action === "dash"
-              ? bonusActionDashSubjectForSpeedKind(
-                  actorId,
-                  entry.unitId,
-                  speedKind,
-                )
-              : {
-                  tag: "bonusActionStandardAction" as const,
-                  actorId,
-                  sourceUnitId: entry.unitId,
-                  action,
-                },
-          label: alternateActionCostActionLabel(action),
-          summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
-          initialHoles:
-            action === "hide" ? [hideAbilityCheckHole(state, actorId)] : [],
-        }));
+        return speedKinds.map((speedKind): BattleActDiscoveryCandidate => {
+          const presentation = {
+            label: alternateActionCostActionLabel(action),
+            summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
+            initialHoles:
+              action === "hide" ? [hideAbilityCheckHole(state, actorId)] : [],
+          };
+          if (entry.source.kind === "spellEffect") {
+            return {
+              ...presentation,
+              subject: {
+                tag: "bonusActionStandardAction",
+                actorId,
+                sourceProcedureRef: entry.source.procedureRef,
+                sourceEffectRef: entry.source.effectRef,
+                action: "dash",
+                speedKind,
+              },
+            };
+          }
+          if (action === "dash") {
+            return {
+              ...presentation,
+              subject: {
+                tag: "bonusActionStandardAction",
+                actorId,
+                sourceUnitId: entry.source.unitId,
+                action,
+                speedKind,
+              },
+            };
+          }
+          return {
+            ...presentation,
+            subject: {
+              tag: "bonusActionStandardAction",
+              actorId,
+              sourceUnitId: entry.source.unitId,
+              action,
+            },
+          };
+        });
       }),
   );
   const dashTemporaryHitPointActs =
@@ -960,7 +994,13 @@ export function bonusActionStandardActionActs(
 export function alternateActionCostProfilesForActor(
   combatant: BattleCreatureState | undefined,
 ): readonly {
-  readonly unitId: UnitRecord["id"];
+  readonly source:
+    | { readonly kind: "unit"; readonly unitId: UnitRecord["id"] }
+    | {
+        readonly kind: "spellEffect";
+        readonly procedureRef: BattleProcedureExecutionRef;
+        readonly effectRef: BattleActiveEffectExecutionRef;
+      };
   readonly profile: Extract<
     BattleUnitSupportProfile,
     { readonly kind: "alternateActionCost" }
@@ -973,7 +1013,12 @@ export function alternateActionCostProfilesForActor(
     (unitRef) =>
       unitRef.supportProfiles.flatMap((profile) =>
         typeof profile === "object" && profile.kind === "alternateActionCost"
-          ? [{ unitId: unitRef.unitId, profile }]
+          ? [
+              {
+                source: { kind: "unit" as const, unitId: unitRef.unit.id },
+                profile,
+              },
+            ]
           : [],
       ),
   );
@@ -981,7 +1026,11 @@ export function alternateActionCostProfilesForActor(
     effect.kind === "spellDashBonusAction"
       ? [
           {
-            unitId: effect.sourceSpellId,
+            source: {
+              kind: "spellEffect" as const,
+              procedureRef: effect.sourceProcedureRef,
+              effectRef: effect.effectRef,
+            },
             profile: {
               kind: "alternateActionCost" as const,
               from: {
@@ -1017,10 +1066,10 @@ export function bonusActionDashTemporaryHitPointsProfilesForActor(
         return [];
       }
       const resource = origin.resources.find(
-        (candidate) => candidate.unit.id === unitRef.unitId,
+        (candidate) => candidate.unit.id === unitRef.unit.id,
       );
       return resource !== undefined && resourceHasUsesRemaining(resource)
-        ? [{ unitId: unitRef.unitId, profile, resource }]
+        ? [{ unitId: unitRef.unit.id, profile, resource }]
         : [];
     }),
   );
@@ -1041,12 +1090,13 @@ export function alternateActionCostActionAvailable(
 
 export function actorHasAlternateActionCost(
   combatant: BattleCreatureState | undefined,
-  sourceUnitId: string,
+  sourceUnitId: string | undefined,
   action: AlternateActionCostAction,
 ): boolean {
   return alternateActionCostProfilesForActor(combatant).some(
     (entry) =>
-      entry.unitId === sourceUnitId &&
+      entry.source.kind === "unit" &&
+      entry.source.unitId === sourceUnitId &&
       entry.profile.to.kind === "bonusAction" &&
       entry.profile.from.actions.some((candidate) => candidate === action),
   );

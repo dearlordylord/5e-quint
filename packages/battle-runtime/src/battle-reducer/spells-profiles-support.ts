@@ -147,7 +147,6 @@ export function thaumaturgyBoomingVoiceProjection(
   return {
     activeEffect: {
       kind: "thaumaturgyBoomingVoice",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",
@@ -234,7 +233,7 @@ function scalarBuffRequiredTargetDisposition(
 
 export function scalarBuffSpellEffect(
   actorId: CombatantId,
-  spell: SpellRecord,
+  _spell: SpellRecord,
   effect: EffectAtom | OngoingEffect,
   duration: SpellRecord["mechanics"]["duration"],
   spellLevel: number,
@@ -271,7 +270,6 @@ export function scalarBuffSpellEffect(
           kind: "activeEffect",
           activeEffect: {
             kind: "specialSpeedGrant",
-            sourceSpellId: spell.id,
             sourceCombatantId: actorId,
             speedKind: effect.speedKind,
             speed: { kind: "equalToSpeed" },
@@ -296,7 +294,6 @@ export function scalarBuffSpellEffect(
           kind: "activeEffect",
           activeEffect: {
             kind: "specialSpeedGrant",
-            sourceSpellId: spell.id,
             sourceCombatantId: actorId,
             speedKind: effect.speedKind,
             speed: {
@@ -313,7 +310,6 @@ export function scalarBuffSpellEffect(
       kind: "activeEffect",
       activeEffect: {
         kind: "speedDelta",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         deltaFeet: movementDeltaFeet(effect.delta),
         expiresAt,
@@ -330,7 +326,6 @@ export function scalarBuffSpellEffect(
       kind: "activeEffect",
       activeEffect: {
         kind: "spellArmorClassBonus",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         bonus: effect.delta.dice,
         negatedSpellIds: [],
@@ -347,7 +342,6 @@ export function scalarBuffSpellEffect(
       kind: "activeEffect",
       activeEffect: {
         kind: "spellArmorClassFloor",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         floor: armorClass(effect.const),
         expiresAt,
@@ -366,7 +360,6 @@ export function scalarBuffSpellEffect(
           kind: "hitPointMaximumIncrease",
           activeEffect: {
             kind: "hitPointMaximumIncrease",
-            sourceSpellId: spell.id,
             sourceCombatantId: actorId,
             amount,
             expiresAt,
@@ -549,7 +542,7 @@ export function rollModifierSpellTargeting(
 
 export function rollModifierActiveEffect(
   actorId: CombatantId,
-  spell: SpellRecord,
+  _spell: SpellRecord,
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>,
   expiresAt: BattleActiveEffectExpiration,
 ): {
@@ -567,7 +560,6 @@ export function rollModifierActiveEffect(
   return {
     effect: {
       kind: "d20RollModifier",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       on: effect.on,
       delta,
@@ -580,7 +572,7 @@ export function rollModifierActiveEffect(
 
 export function rollModifierAbilityCheckRollModeEffect(
   actorId: CombatantId,
-  spell: SpellRecord,
+  _spell: SpellRecord,
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
   expiresAt: BattleActiveEffectExpiration,
 ): {
@@ -609,7 +601,6 @@ export function rollModifierAbilityCheckRollModeEffect(
   return {
     effect: {
       kind: "abilityCheckRollMode",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       mode: effect.mode,
       expiresAt,

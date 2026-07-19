@@ -12,6 +12,7 @@ import {
 import { Either } from "effect";
 import type {
   BattleResolutionResult,
+  BattleExecutableSpellInvocation,
   BattleSpellCastingTimeResource,
   BattleState,
   BattleTurnResources,
@@ -65,7 +66,7 @@ export function spellCastingTimeResourceForSpellCast(input: {
 export function spendSpellCastResources(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly errorState: BattleState;
   readonly startConcentration?: boolean;
   readonly skipTargetActionSpellCastEarlyEnd?: boolean;
@@ -276,7 +277,7 @@ export function spellRequiresConcentration(
 export function startSpellEffectConcentration(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -287,7 +288,7 @@ export function startSpellEffectConcentration(
     combatants: new Map(state.combatants).set(actorId, {
       ...actor,
       concentration: {
-        sourceSpellId: invocation.spell.id,
+        sourceProcedureRef: invocation.sourceProcedureRef,
         effectKind: "spellEffect",
       },
     }),

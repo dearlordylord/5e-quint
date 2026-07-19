@@ -1,3 +1,7 @@
+import {
+  battleActDruidWildShapePresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
@@ -22,45 +26,21 @@ import { expect, test } from "vitest";
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
 import {
-  activeDruidWildShapeForm,
-  activeDruidWildShapeEffect,
-  battleAvailableDruidWildShapeKnownForms,
-  battleShapeShiftedRuntimeState,
-  BattleFillSchema,
-  combatantAbilityCheckModifier,
-  combatantD20AbilityScore,
-  combatantHasActiveDruidWildShape,
-  combatantIsShapeShifted,
-  combatantSavingThrowModifier,
-  combatantSkillModifier,
-  parseSupportedUnitFeatureProfile,
-  revertShapeShiftedCombatantToTrueForm,
-  startBattle,
-  validateWildShapeEquipmentDispositionFill,
-  wildShapeLoadoutObjectRefs,
-  wildShapeFormActionSurfaceInventory,
-  type BattleFill,
-  type BattleCreatureState,
-  type BattleHole,
-  type BattleState,
-  type BattleSubject,
-  type CharacterBattleD20Statistics,
-  type CharacterBattleCreatureState,
-  type WildShapeEquipmentDispositionChoice,
-  type WildShapeLoadoutObjectRef,
-} from "./index.ts";
+  activeDruidWildShape,
+  spendActiveDruidWildShapeProcedureResources,
+} from "./battle-reducer/druid-wild-shape.ts";
 import {
+  attackInitialTargetHole,
+  attackRollFill,
+  attackTargetFill,
   battleId,
   battleObjectId,
   characterSeed,
   combatantId,
-  discoverBattleActs,
   damageRollFill,
-  goblinId,
-  attackInitialTargetHole,
-  attackRollFill,
-  attackTargetFill,
+  discoverBattleActs,
   findHole,
+  goblinId,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -73,11 +53,35 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 import {
-  activeDruidWildShape,
-  spendActiveDruidWildShapeProcedureResources,
-} from "./battle-reducer/druid-wild-shape.ts";
+  activeDruidWildShapeEffect,
+  activeDruidWildShapeForm,
+  battleAvailableDruidWildShapeKnownForms,
+  BattleFillSchema,
+  battleShapeShiftedRuntimeState,
+  combatantAbilityCheckModifier,
+  combatantD20AbilityScore,
+  combatantHasActiveDruidWildShape,
+  combatantIsShapeShifted,
+  combatantSavingThrowModifier,
+  combatantSkillModifier,
+  parseSupportedUnitFeatureProfile,
+  revertShapeShiftedCombatantToTrueForm,
+  startBattle,
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeFormActionSurfaceInventory,
+  wildShapeLoadoutObjectRefs,
+  type BattleCreatureState,
+  type BattleFill,
+  type BattleHole,
+  type BattleState,
+  type BattleActDiscoverySubject as BattleSubject,
+  type CharacterBattleCreatureState,
+  type CharacterBattleD20Statistics,
+  type WildShapeEquipmentDispositionChoice,
+  type WildShapeLoadoutObjectRef,
+} from "./index.ts";
+import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 
 const druidId = combatantId("wild-shape-druid");
 const ratId = "stat_block_rat";
@@ -379,6 +383,9 @@ test("requires and validates Wild Shape equipment disposition fills for selected
     action: "assumeForm",
     formStatBlockId: ridingHorseId,
   });
+  if (!("procedureRef" in subject) || subject.action !== "assumeForm") {
+    throw new Error("Expected admitted Wild Shape procedure.");
+  }
 
   const needsDisposition = resolveDruidWildShape(initial, subject);
   if (needsDisposition.tag !== "needsHoles") {
@@ -959,6 +966,9 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
     action: "assumeForm",
     formStatBlockId: ridingHorseId,
   });
+  if (!("procedureRef" in subject) || subject.action !== "assumeForm") {
+    throw new Error("Expected admitted Wild Shape procedure.");
+  }
   const needsDisposition = resolveDruidWildShape(initial, subject);
   if (needsDisposition.tag !== "needsHoles") {
     throw new Error("Expected Wild Shape equipment disposition hole.");
@@ -991,8 +1001,8 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
       objectId: shield.objectId,
       source: {
         kind: "druidWildShape",
-        sourceUnitId: subject.unitId,
-        formStatBlockId: ridingHorseId,
+        procedureRef: subject.procedureRef,
+        formExecutionRef: subject.formExecutionRef,
       },
     },
   ]);
@@ -2184,7 +2194,7 @@ function hasActionSpell(state: BattleState, spellId: string): boolean {
   return discoverBattleActs(state).some(
     (act) =>
       act.subject.tag === "actionSpell" &&
-      act.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(act)?.invocation.spellId === spellId,
   );
 }
 
@@ -2308,7 +2318,8 @@ function wildShapeSubject(
       act.subject.action === input.action &&
       (input.action === "dismiss" ||
         (act.subject.action === "assumeForm" &&
-          act.subject.formStatBlockId === input.formStatBlockId)),
+          battleActDruidWildShapePresentation(act)?.formStatBlockId ===
+            input.formStatBlockId)),
   )?.subject;
   if (subject?.tag !== "druidWildShape") {
     throw new Error("Expected Druid Wild Shape act.");

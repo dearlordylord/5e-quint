@@ -1,3 +1,5 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal moonbeam ray_of_enfeeblement scorching_ray shatter spiritual_weapon
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow doDiscoverAcidArrowAttackTiming
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH dragons_breath doDiscoverDragonsBreathInitial
@@ -25,7 +27,6 @@ import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-wi
 import {
   battleReducerStartRouteEvent,
   endTurn,
-  resolveBattleSubject,
   type BattleReducerRouteEvent,
   type BattleReducerRouteOwnerGroup,
   type BattleReducerRouteSubjectFamily,
@@ -527,7 +528,10 @@ function recordDiscoveredInvocation(
           slotLevel: input.slotLevel,
         });
 
-  expect(act.subject).toMatchObject({
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject({
     tag: input.actionTag,
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(

@@ -5,6 +5,13 @@ import type {
   AdminMirrorProjectionEnvelope,
   AdminSessionProjection,
 } from "./admin-mirror-contract.ts";
+import { battleActTimelineLabel } from "./battle-act-timeline-label.ts";
+import {
+  hasFillKind,
+  targetIdFromFills,
+} from "./admin-mirror-presentation-input.ts";
+
+export { battleActTimelineLabel } from "./battle-act-timeline-label.ts";
 
 type EventAction = {
   readonly detail: string;
@@ -14,10 +21,11 @@ type EventAction = {
 export function createAdminMirrorPresentationTimelineEntry(
   envelope: AdminMirrorProjectionEnvelope,
   receivedAtEpochMs: number,
-  previousProjection: AdminSessionProjection | undefined,
+  previousEnvelope: AdminMirrorProjectionEnvelope | undefined,
 ): AdminMirrorPresentationTimelineEntry {
   const battle = envelope.projection.battle;
-  const action = eventAction(previousProjection, envelope.projection);
+  const previousProjection = previousEnvelope?.projection;
+  const action = eventAction(previousEnvelope, envelope);
   const changes = hpChanges(previousProjection, envelope.projection);
   return {
     actionDetail: action?.detail ?? null,
@@ -143,11 +151,15 @@ function eventDebug(
 }
 
 function eventAction(
-  previousProjection: AdminSessionProjection | undefined,
-  projection: AdminSessionProjection,
+  previousEnvelope: AdminMirrorProjectionEnvelope | undefined,
+  envelope: AdminMirrorProjectionEnvelope,
 ): EventAction | null {
+  const previousProjection = previousEnvelope?.projection;
+  const projection = envelope.projection;
   const currentPending = projection.session.transientBattleFills;
-  if (currentPending !== null) return pendingAction(currentPending, projection);
+  if (currentPending !== null) {
+    return pendingAction(currentPending, projection, envelope.selectedContent);
+  }
 
   const previousPending = previousProjection?.session.transientBattleFills;
   if (
@@ -155,7 +167,12 @@ function eventAction(
     previousPending !== undefined &&
     previousPending !== null
   ) {
-    return resolvedAction(previousPending, previousProjection, projection);
+    return resolvedAction(
+      previousPending,
+      previousProjection,
+      projection,
+      previousEnvelope?.selectedContent ?? null,
+    );
   }
 
   if (previousProjection?.battle === null && projection.battle !== null) {
@@ -189,17 +206,16 @@ function pendingAction(
     AdminSessionProjection["session"]["transientBattleFills"]
   >,
   projection: AdminSessionProjection,
-): EventAction {
-  const subject = recordOf(pending.subject);
-  const actorId = stringField(subject, "actorId");
-  const actor =
-    actorId === null ? "Actor" : displayNameForCombatant(projection, actorId);
+  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
+): EventAction | null {
+  const subject = pending.subject;
+  const actor = displayNameForCombatant(projection, subject.actorId);
   const targetId = targetIdFromFills(pending.fills);
   const target =
     targetId === null ? null : displayNameForCombatant(projection, targetId);
 
   if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = stringField(subject, "attackName") ?? "Attack";
+    const attackName = subject.attackName;
     if (hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -221,8 +237,9 @@ function pendingAction(
     };
   }
 
-  if (subject.tag === "actionSpell") {
-    const spell = spellName(subject);
+  if (pending.presentation.kind === "spell") {
+    const spell = battleActTimelineLabel(pending.presentation, selectedContent);
+    if (spell === null) return null;
     if (hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -244,8 +261,15 @@ function pendingAction(
     };
   }
 
-  if (subject.tag === "unitFeature") {
-    const feature = unitFeatureName(stringField(subject, "unitId"));
+  if (
+    pending.presentation.kind === "unit" ||
+    pending.presentation.kind === "druidWildShapeForm"
+  ) {
+    const feature = battleActTimelineLabel(
+      pending.presentation,
+      selectedContent,
+    );
+    if (feature === null) return null;
     return {
       detail: `${actor} is resolving ${feature}.`,
       summary: `${actor} uses ${feature}`,
@@ -253,7 +277,7 @@ function pendingAction(
   }
 
   return {
-    detail: `Pending battle fills for ${String(subject.tag ?? "unknown subject")}.`,
+    detail: `Pending battle fills for ${subject.tag}.`,
     summary: "Battle action pending",
   };
 }
@@ -264,11 +288,10 @@ function resolvedAction(
   >,
   previousProjection: AdminSessionProjection,
   projection: AdminSessionProjection,
-): EventAction {
-  const subject = recordOf(pending.subject);
-  const actorId = stringField(subject, "actorId");
-  const actor =
-    actorId === null ? "Actor" : displayNameForCombatant(projection, actorId);
+  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
+): EventAction | null {
+  const subject = pending.subject;
+  const actor = displayNameForCombatant(projection, subject.actorId);
   const changes = hpChanges(previousProjection, projection);
   const targetId =
     targetIdFromFills(pending.fills) ?? changes[0]?.combatantId ?? null;
@@ -276,7 +299,7 @@ function resolvedAction(
     targetId === null ? null : displayNameForCombatant(projection, targetId);
 
   if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = stringField(subject, "attackName") ?? "Attack";
+    const attackName = subject.attackName;
     if (changes.length === 0 && hasFillKind(pending.fills, "attackRoll")) {
       return {
         detail:
@@ -298,8 +321,9 @@ function resolvedAction(
     };
   }
 
-  if (subject.tag === "actionSpell") {
-    const spell = spellName(subject);
+  if (pending.presentation.kind === "spell") {
+    const spell = battleActTimelineLabel(pending.presentation, selectedContent);
+    if (spell === null) return null;
     return {
       detail:
         target === null
@@ -312,8 +336,15 @@ function resolvedAction(
     };
   }
 
-  if (subject.tag === "unitFeature") {
-    const feature = unitFeatureName(stringField(subject, "unitId"));
+  if (
+    pending.presentation.kind === "unit" ||
+    pending.presentation.kind === "druidWildShapeForm"
+  ) {
+    const feature = battleActTimelineLabel(
+      pending.presentation,
+      selectedContent,
+    );
+    if (feature === null) return null;
     return {
       detail: `${actor} resolved ${feature}.`,
       summary: `${actor} uses ${feature}`,
@@ -321,7 +352,7 @@ function resolvedAction(
   }
 
   return {
-    detail: `Resolved battle fills for ${String(subject.tag ?? "unknown subject")}.`,
+    detail: `Resolved battle fills for ${subject.tag}.`,
     summary: "Battle action resolved",
   };
 }
@@ -397,54 +428,4 @@ function battleSummary(
     round: battle.round,
     turnOrder: battle.turnOrder,
   };
-}
-
-function targetIdFromFills(fills: readonly unknown[]): string | null {
-  for (const fill of fills) {
-    const record = recordOf(fill);
-    if (record.kind === "targetChoice") return stringField(record, "value");
-    if (record.kind === "spellTargetAllocation") {
-      const value = recordOf(record.value);
-      const allocations = Array.isArray(value.allocations)
-        ? value.allocations
-        : [];
-      return stringField(recordOf(allocations[0]), "targetId");
-    }
-  }
-  return null;
-}
-
-function hasFillKind(fills: readonly unknown[], kind: string): boolean {
-  return fills.some((fill) => recordOf(fill).kind === kind);
-}
-
-function spellName(subject: Readonly<Record<string, unknown>>): string {
-  const invocation = recordOf(subject.invocation);
-  return titleFromId(stringField(invocation, "spellId") ?? "spell");
-}
-
-function unitFeatureName(unitId: string | null): string {
-  return titleFromId(unitId ?? "feature");
-}
-
-function titleFromId(value: string): string {
-  return value
-    .split("_")
-    .filter((part) => part.length > 0)
-    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
-    .join(" ");
-}
-
-function recordOf(value: unknown): Readonly<Record<string, unknown>> {
-  return value !== null && typeof value === "object"
-    ? (value as Readonly<Record<string, unknown>>)
-    : {};
-}
-
-function stringField(
-  value: Readonly<Record<string, unknown>>,
-  key: string,
-): string | null {
-  const field = value[key];
-  return typeof field === "string" ? field : null;
 }

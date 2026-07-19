@@ -81,6 +81,7 @@ describe("MCP session wire projections", () => {
         currentActorId: combatantId("combatant:projection-test"),
       },
       transientBattleFills: {
+        presentation: { kind: "intrinsic" },
         subject: {
           tag: "runtimeCommand",
           actorId: combatantId("combatant:projection-test"),

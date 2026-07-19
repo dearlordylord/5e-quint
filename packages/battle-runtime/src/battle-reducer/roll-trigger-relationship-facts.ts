@@ -1,16 +1,13 @@
 import type {
+  BattleExecutableSpellInvocation,
   BattleSavingThrowRelationshipFact,
   BattleFill,
   BattleAttackRollRelationshipFact,
   BattleSpellTargetListRelationshipFact,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 
-type TargetChoiceFill = Extract<
-  BattleFill,
-  { readonly kind: "targetChoice" }
->;
+type TargetChoiceFill = Extract<BattleFill, { readonly kind: "targetChoice" }>;
 export type BattleAttackTargetChoiceFill = Omit<
   TargetChoiceFill,
   "relationshipFacts"
@@ -37,8 +34,7 @@ export function parseAttackTargetChoiceFill(
   | { readonly tag: "invalid"; readonly message: string } {
   if (
     !targetChoiceFillHasAttackRollRelationshipFacts(fill) ||
-    (relationshipDecisionRequired !==
-      (fill.relationshipFacts !== undefined)) ||
+    relationshipDecisionRequired !== (fill.relationshipFacts !== undefined) ||
     (fill.relationshipFacts !== undefined &&
       (fill.relationshipFacts[0].attackerId !== attackerId ||
         fill.relationshipFacts[0].targetId !== fill.value))
@@ -78,7 +74,7 @@ export function parseAttackRollRelationshipFacts(
 export function parseSpellTargetListRelationshipFacts(
   facts: readonly BattleSpellTargetListRelationshipFact[],
   casterId: CombatantId,
-  spellId: SupportedSpellInvocation["spell"]["id"],
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): readonly BattleSpellTargetListRelationshipFact[] | null {
   return relationshipFactsAnswerEachTargetExactlyOnce(
@@ -86,7 +82,7 @@ export function parseSpellTargetListRelationshipFacts(
     targetIds,
     (fact, targetId) =>
       fact.casterId === casterId &&
-      fact.spellId === spellId &&
+      fact.sourceProcedureRef === sourceProcedureRef &&
       fact.targetId === targetId,
   )
     ? facts
@@ -106,8 +102,7 @@ export function parseSavingThrowRelationshipFacts(
   return relationshipFactsAnswerEachTargetExactlyOnce(
     facts,
     targetIds,
-    (fact, targetId) =>
-      fact.actorId === actorId && fact.targetId === targetId,
+    (fact, targetId) => fact.actorId === actorId && fact.targetId === targetId,
   )
     ? facts
     : null;
@@ -158,13 +153,13 @@ export function spellTargetIsHostileToCaster(
   facts: readonly BattleSpellTargetListRelationshipFact[],
   casterId: CombatantId,
   targetId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): boolean {
   return facts.some(
     (fact) =>
       fact.casterId === casterId &&
       fact.targetId === targetId &&
-      fact.spellId === invocation.spell.id &&
+      fact.sourceProcedureRef === invocation.sourceProcedureRef &&
       fact.targetIsHostileToCaster,
   );
 }

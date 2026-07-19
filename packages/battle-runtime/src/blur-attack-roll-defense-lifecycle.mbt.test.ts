@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 // RAW trace:
@@ -37,7 +39,7 @@ import type {
   BattleTargetSpatialFact,
   CombatantId,
 } from "./index.ts";
-import { resolveBattleSubject } from "./index.ts";
+import {} from "./index.ts";
 import {
   attackTargetFill,
   requireCombatant,
@@ -88,7 +90,6 @@ const BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   NoOtherAdvantage: "noOtherAdvantage",
   ConcentrationBroken: "concentrationBroken",
 } as const;
-
 
 type BlurBypassSense = Extract<
   BattleTargetSpatialFact,
@@ -191,16 +192,20 @@ const blurAttackRollDefenseStateCheck = stateCheck(
 describe("Blur attack-roll defense lifecycle MBT parity", () => {
   it("creates a self Spell Effect with Concentration and Attack Roll Disadvantage", () => {
     const cast = castBlur(initialRuntimeState());
+    const caster = requireCombatant(cast.battle, spellCasterId);
+    const blurredEffect = caster.activeEffects.find(
+      (effect) => effect.kind === "blurred",
+    );
+    expect(blurredEffect).toBeDefined();
 
-    expect(requireCombatant(cast.battle, spellCasterId)).toMatchObject({
+    expect(caster).toMatchObject({
       concentration: {
-        sourceSpellId: blurUnitId,
+        sourceProcedureRef: blurredEffect?.sourceProcedureRef,
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "blurred",
-          sourceSpellId: blurUnitId,
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",
@@ -317,7 +322,7 @@ function castBlur(
     slotLevel: 2,
   });
   expect(act.initialHoles).toEqual([]);
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
     spellId: blurUnitId,
     slotLevel: 2,
@@ -352,7 +357,7 @@ function blurAttackRollDefenseProjection(
 ): BlurAttackRollDefenseProjection {
   const caster = requireCombatant(state.battle, spellCasterId);
   const spellSlotExpended = casterSpellSlotExpended(state.battle);
-  const blurredEffectActive = caster.activeEffects.some(
+  const blurredEffect = caster.activeEffects.find(
     (effect) => effect.kind === "blurred",
   );
   const attackRollMode = attackerAttackRollMode(state);
@@ -369,10 +374,11 @@ function blurAttackRollDefenseProjection(
       state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
-    blurredEffectActive,
+    blurredEffectActive: blurredEffect !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === blurUnitId &&
-      caster.concentration.effectKind === "spellEffect",
+      blurredEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        blurredEffect.sourceProcedureRef,
     attackerPerceivesWithBlindsight: state.bypassSense === "blindsight",
     attackerPerceivesWithTruesight: state.bypassSense === "truesight",
     otherAttackAdvantage: state.otherAttackAdvantage,
@@ -555,8 +561,7 @@ function attackRollMode(raw: unknown): AttackRollMode {
 
 function lastResult(raw: unknown): LastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

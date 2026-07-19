@@ -93252,7 +93252,7 @@
             "damageRollFillWithGroups(damage, [[6]])",
             "hp: Hp(7)",
             "kind: \"nextAttackRollBySelf\"",
-            "sourceSpellId: viciousMockerySpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "expiresAt: { kind: \"endOfTurn\", combatantId: monsterId, round: 1 }",
             "endTurn({ state: failedSave.state, actorId: input.casterId })",
@@ -93784,7 +93784,7 @@
           "needles": [
             "cantripSpellInvocationRef(spellId, \"heldLight\")",
             "candidate.subject.tag === \"bonusActionSpell\"",
-            "candidate.subject.invocation.procedure === expectedInvocation.procedure",
+            "battleActSpellPresentation(candidate)?.invocation.procedure",
             "return act;"
           ]
         },
@@ -93792,8 +93792,8 @@
           "anchor": "function hasCantripSpellInvocationAct",
           "needles": [
             "\"actorId\" in candidate.subject",
-            "\"invocation\" in candidate.subject",
-            "candidate.subject.invocation.procedure === expectedInvocation.procedure",
+            "battleActSpellPresentation(candidate)?.invocation.tag === \"cantrip\"",
+            "battleActSpellPresentation(candidate)?.invocation.procedure",
             "return discoverBattleActs(state).some("
           ]
         }
@@ -94021,7 +94021,7 @@
             "requiresTableSpellEffectCount: true",
             "noActiveThaumaturgyOneMinuteEffectsFill(countHole)",
             "kind: \"thaumaturgyBoomingVoice\"",
-            "sourceSpellId: thaumaturgySpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "kind: \"duration\"",
             "durationTicks: thaumaturgyDurationTicks",
@@ -94113,7 +94113,7 @@
             "damageRollFillWithGroups(damage, [[2, 2, 2, 2]])",
             "hp: Hp(5)",
             "kind: \"nextAttackRollAgainstSelf\"",
-            "sourceSpellId: guidingBoltSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "kind: \"endOfTurn\"",
             "combatantId: input.casterId",
             "round: 2",
@@ -94278,7 +94278,7 @@
             "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
             "rangeFeet: movementFeet(30)",
             "kind: \"sanctuaryWard\"",
-            "sourceSpellId: sanctuarySpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "save: { ability: \"wis\", dc: { kind: \"caster_spell_save_dc\" } }",
             "durationTicks: sanctuaryDurationTicks",
@@ -94294,9 +94294,9 @@
           "anchor": "function sanctuaryBonusActionSpellSlotAct",
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
-            "candidate.subject.invocation.tag === \"spellSlot\"",
-            "candidate.subject.invocation.spellId === sanctuarySpellId",
-            "candidate.subject.invocation.slotLevel === 1",
+            "battleActSpellPresentation(candidate)?.invocation.tag === \"spellSlot\"",
+            "battleActSpellPresentation(candidate)?.invocation.spellId",
+            "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
             "\"sanctuaryTargetingInterdiction\"",
             "return act;"
           ]
@@ -94309,7 +94309,7 @@
             "kind: \"spellTarget\"",
             "casterId",
             "targetId",
-            "spellId: sanctuarySpellId"
+            "sourceProcedureRef: battleProcedureExecutionRefForHole(hole)"
           ]
         }
       ],
@@ -94510,7 +94510,7 @@
             "ordinaryAttackDamageFills({",
             "damageDice: [[6]]",
             "hp: Hp(4)",
-            "sourceSpellId: chillTouchSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "combatantId: input.casterId",
             "round: 2",
@@ -94587,7 +94587,7 @@
             "ordinaryAttackDamageFills({",
             "damageDice: [[6]]",
             "hp: Hp(4)",
-            "sourceSpellId: chillTouchSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "combatantId: input.casterId",
             "round: 2",
@@ -94660,7 +94660,7 @@
             "ordinaryAttackDamageFills({",
             "damageDice: [[6]]",
             "hp: Hp(4)",
-            "sourceSpellId: chillTouchSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "combatantId: input.casterId",
             "round: 2",
@@ -94797,10 +94797,10 @@
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
             "candidate.subject.actorId === actorId",
-            "candidate.subject.invocation.tag === \"spellSlot\"",
-            "candidate.subject.invocation.spellId === hexSpellId",
-            "candidate.subject.invocation.slotLevel === 1",
-            "candidate.subject.invocation.procedure === \"markedDamageRider\""
+            "battleActSpellPresentation(candidate)?.invocation.tag === \"spellSlot\"",
+            "battleActSpellPresentation(candidate)?.invocation.spellId",
+            "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
+            "battleActSpellPresentation(candidate)?.invocation.procedure"
           ]
         },
         {
@@ -94905,7 +94905,7 @@
             "kind: \"spellTargetList\"",
             "value: { targetIds: [targetId] }",
             "kind: \"spellTarget\"",
-            "spellId: animalFriendshipSpellId"
+            "sourceProcedureRef: battleProcedureExecutionRefForHole(hole)"
           ]
         }
       ],
@@ -94995,7 +94995,7 @@
             "kind: \"spellTargetList\"",
             "value: { targetIds: [targetId] }",
             "kind: \"spellTarget\"",
-            "spellId: animalFriendshipSpellId"
+            "sourceProcedureRef: battleProcedureExecutionRefForHole(hole)"
           ]
         }
       ],
@@ -95085,7 +95085,7 @@
             "kind: \"spellTargetList\"",
             "value: { targetIds: [targetId] }",
             "kind: \"spellTarget\"",
-            "spellId: animalFriendshipSpellId"
+            "sourceProcedureRef: battleProcedureExecutionRefForHole(hole)"
           ]
         }
       ],
@@ -95172,7 +95172,7 @@
           "anchor": "function expectLevelOneHuntersMarkActiveEffect",
           "needles": [
             "kind: \"spellMarkedDamageRider\"",
-            "sourceSpellId: huntersMarkSpellId",
+            "sourceProcedureRef: input.sourceProcedureRef",
             "sourceCombatantId: input.casterId",
             "targetCombatantId: monsterId",
             "kind: \"findingAdvantage\"",
@@ -95186,11 +95186,11 @@
           "anchor": "function huntersMarkFavoredEnemyBonusActionSpellAct",
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
-            "candidate.subject.invocation.tag === \"classFeatureFreeCast\"",
-            "candidate.subject.invocation.spellId === huntersMarkSpellId",
-            "candidate.subject.invocation.resourceUnitId ===",
+            "invocation?.tag === \"classFeatureFreeCast\"",
+            "invocation.spellId === huntersMarkSpellId",
+            "invocation.resourceUnitId ===",
             "rangerFavoredEnemyUnitId",
-            "candidate.subject.invocation.procedure === \"markedDamageRider\""
+            "invocation.procedure === \"markedDamageRider\""
           ]
         }
       ],
@@ -95274,7 +95274,7 @@
           "anchor": "function expectLevelOneHuntersMarkActiveEffect",
           "needles": [
             "kind: \"spellMarkedDamageRider\"",
-            "sourceSpellId: huntersMarkSpellId",
+            "sourceProcedureRef: input.sourceProcedureRef",
             "sourceCombatantId: input.casterId",
             "targetCombatantId: monsterId",
             "kind: \"findingAdvantage\"",
@@ -95288,10 +95288,10 @@
           "anchor": "function huntersMarkSpellSlotBonusActionSpellAct",
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
-            "candidate.subject.invocation.tag === \"spellSlot\"",
-            "candidate.subject.invocation.spellId === huntersMarkSpellId",
-            "candidate.subject.invocation.slotLevel === 1",
-            "candidate.subject.invocation.procedure === \"markedDamageRider\""
+            "battleActSpellPresentation(candidate)?.invocation.tag === \"spellSlot\"",
+            "battleActSpellPresentation(candidate)?.invocation.spellId",
+            "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
+            "battleActSpellPresentation(candidate)?.invocation.procedure"
           ]
         }
       ],
@@ -95342,13 +95342,13 @@
           "anchor": "function assertLevelOneBless",
           "needles": [
             "spellSlotActForProcedure(state, blessSpellId, 1, \"rollModifier\")",
-            "const expectedEffect = expectedLevelOneBlessEffect(input.casterId)",
+            "const expectedEffect = expectedLevelOneBlessEffect(",
             "label: \"Bless targets\"",
             "maxTargets: 3",
             "procedure: \"rollModifier\"",
             "actionCost: \"magicAction\"",
             "rangeFeet: movementFeet(30)",
-            "effect: expectedEffect",
+            "effect: discoveryEffect",
             "blessTargetListFill(",
             "activeEffects",
             "toEqual([expectedEffect])",
@@ -95363,7 +95363,7 @@
           "anchor": "function expectedLevelOneBlessEffect",
           "needles": [
             "kind: \"d20RollModifier\"",
-            "sourceSpellId: blessSpellId",
+            "sourceProcedureRef,",
             "on: [\"attack_roll\", \"saving_throw\"]",
             "delta: { sign: \"+\", dice: 1, dieSize: 4 }",
             "skill: null",
@@ -95380,7 +95380,7 @@
             "kind: \"spellTarget\"",
             "casterId",
             "targetId",
-            "spellId: blessSpellId"
+            "sourceProcedureRef: battleProcedureExecutionRefForHole(hole)"
           ]
         }
       ],
@@ -95449,13 +95449,13 @@
           "anchor": "function assertLevelOneBless",
           "needles": [
             "spellSlotActForProcedure(state, blessSpellId, 1, \"rollModifier\")",
-            "const expectedEffect = expectedLevelOneBlessEffect(input.casterId)",
+            "const expectedEffect = expectedLevelOneBlessEffect(",
             "label: \"Bless targets\"",
             "maxTargets: 3",
             "procedure: \"rollModifier\"",
             "actionCost: \"magicAction\"",
             "rangeFeet: movementFeet(30)",
-            "effect: expectedEffect",
+            "effect: discoveryEffect",
             "blessTargetListFill(",
             "activeEffects",
             "toEqual([expectedEffect])",
@@ -95470,7 +95470,7 @@
           "anchor": "function expectedLevelOneBlessEffect",
           "needles": [
             "kind: \"d20RollModifier\"",
-            "sourceSpellId: blessSpellId",
+            "sourceProcedureRef,",
             "on: [\"attack_roll\", \"saving_throw\"]",
             "delta: { sign: \"+\", dice: 1, dieSize: 4 }",
             "skill: null",
@@ -95487,7 +95487,7 @@
             "kind: \"spellTarget\"",
             "casterId",
             "targetId",
-            "spellId: blessSpellId"
+            "sourceProcedureRef: battleProcedureExecutionRefForHole(hole)"
           ]
         }
       ],
@@ -95558,7 +95558,7 @@
           "needles": [
             "shieldOfFaithBonusActionSpellSlotAct(state, input.casterId)",
             "snapshotCombatant(",
-            "expectedLevelOneShieldOfFaithEffect(input.casterId)",
+            "expectedLevelOneShieldOfFaithEffect(",
             "tag: \"bonusActionSpell\"",
             "spellId: shieldOfFaithSpellId",
             "procedure: \"scalarBuff\"",
@@ -95581,7 +95581,7 @@
           "anchor": "function expectedLevelOneShieldOfFaithEffect",
           "needles": [
             "kind: \"spellArmorClassBonus\"",
-            "sourceSpellId: shieldOfFaithSpellId",
+            "sourceProcedureRef,",
             "bonus: 2",
             "negatedSpellIds: []",
             "expiresAt: {",
@@ -95687,7 +95687,7 @@
           "needles": [
             "shieldOfFaithBonusActionSpellSlotAct(state, input.casterId)",
             "snapshotCombatant(",
-            "expectedLevelOneShieldOfFaithEffect(input.casterId)",
+            "expectedLevelOneShieldOfFaithEffect(",
             "tag: \"bonusActionSpell\"",
             "spellId: shieldOfFaithSpellId",
             "procedure: \"scalarBuff\"",
@@ -95710,7 +95710,7 @@
           "anchor": "function expectedLevelOneShieldOfFaithEffect",
           "needles": [
             "kind: \"spellArmorClassBonus\"",
-            "sourceSpellId: shieldOfFaithSpellId",
+            "sourceProcedureRef,",
             "bonus: 2",
             "negatedSpellIds: []",
             "expiresAt: {",
@@ -96191,10 +96191,10 @@
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
             "candidate.subject.actorId === actorId",
-            "candidate.subject.invocation.tag === \"spellSlot\"",
-            "candidate.subject.invocation.spellId === healingWordSpellId",
-            "candidate.subject.invocation.slotLevel === 1",
-            "candidate.subject.invocation.procedure === \"directHitPointRestoration\""
+            "battleActSpellPresentation(candidate)?.invocation.tag === \"spellSlot\"",
+            "battleActSpellPresentation(candidate)?.invocation.spellId",
+            "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
+            "battleActSpellPresentation(candidate)?.invocation.procedure"
           ]
         }
       ],
@@ -96270,10 +96270,10 @@
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
             "candidate.subject.actorId === actorId",
-            "candidate.subject.invocation.tag === \"spellSlot\"",
-            "candidate.subject.invocation.spellId === healingWordSpellId",
-            "candidate.subject.invocation.slotLevel === 1",
-            "candidate.subject.invocation.procedure === \"directHitPointRestoration\""
+            "battleActSpellPresentation(candidate)?.invocation.tag === \"spellSlot\"",
+            "battleActSpellPresentation(candidate)?.invocation.spellId",
+            "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
+            "battleActSpellPresentation(candidate)?.invocation.procedure"
           ]
         }
       ],
@@ -96349,10 +96349,10 @@
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
             "candidate.subject.actorId === actorId",
-            "candidate.subject.invocation.tag === \"spellSlot\"",
-            "candidate.subject.invocation.spellId === healingWordSpellId",
-            "candidate.subject.invocation.slotLevel === 1",
-            "candidate.subject.invocation.procedure === \"directHitPointRestoration\""
+            "battleActSpellPresentation(candidate)?.invocation.tag === \"spellSlot\"",
+            "battleActSpellPresentation(candidate)?.invocation.spellId",
+            "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
+            "battleActSpellPresentation(candidate)?.invocation.procedure"
           ]
         }
       ],
@@ -96410,7 +96410,7 @@
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"speedDelta\"",
-            "sourceSpellId: rayOfFrostSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "deltaFeet: movementDeltaFeet(-10)",
             "kind: \"startOfTurn\"",
             "snapshotCombatant(resolved.state, monsterId).movement",
@@ -96481,7 +96481,7 @@
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"speedDelta\"",
-            "sourceSpellId: rayOfFrostSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "deltaFeet: movementDeltaFeet(-10)",
             "kind: \"startOfTurn\"",
             "snapshotCombatant(resolved.state, monsterId).movement",
@@ -96552,7 +96552,7 @@
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"opportunityAttackDenied\"",
-            "sourceSpellId: shockingGraspSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "expiresAt: { kind: \"startOfTurn\", combatantId: monsterId }",
             "{ spellLevel: 1, count: 2, expended: 0 }",
@@ -96618,7 +96618,7 @@
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"opportunityAttackDenied\"",
-            "sourceSpellId: shockingGraspSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "expiresAt: { kind: \"startOfTurn\", combatantId: monsterId }",
             "{ spellLevel: 1, count: 2, expended: 0 }",
@@ -96723,12 +96723,12 @@
             "mageArmorSpellId",
             "\"persistentArmorEffect\"",
             "\"targetChoice\"",
-            "choices: [input.casterId]",
+            "choices: expect.arrayContaining([input.casterId])",
             "spellTargetFill(",
             "snapshotCombatant(resolved.state, input.casterId)",
             "armorClass: input.expectedArmorClass",
             "kind: \"spellBaseArmorClass\"",
-            "sourceSpellId: mageArmorSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "base: 13",
             "ability: \"dex\"",
@@ -96783,12 +96783,12 @@
             "mageArmorSpellId",
             "\"persistentArmorEffect\"",
             "\"targetChoice\"",
-            "choices: [input.casterId]",
+            "choices: expect.arrayContaining([input.casterId])",
             "spellTargetFill(",
             "snapshotCombatant(resolved.state, input.casterId)",
             "armorClass: input.expectedArmorClass",
             "kind: \"spellBaseArmorClass\"",
-            "sourceSpellId: mageArmorSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "base: 13",
             "ability: \"dex\"",
@@ -96972,7 +96972,7 @@
             "damageRollFillWithGroups(damage, [[1, 1]])",
             "expect(poisonedTarget.hp).toBe(Hp(8));",
             "kind: \"spellCondition\"",
-            "sourceSpellId: rayOfSicknessSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "escape: null",
             "turnStartDamage: null",
@@ -97048,7 +97048,7 @@
             "damageRollFillWithGroups(damage, [[1, 1]])",
             "expect(poisonedTarget.hp).toBe(Hp(8));",
             "kind: \"spellCondition\"",
-            "sourceSpellId: rayOfSicknessSpellId",
+            "sourceProcedureRef: act.subject.procedureRef",
             "sourceCombatantId: input.casterId",
             "escape: null",
             "turnStartDamage: null",
@@ -97716,7 +97716,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "sourceUnitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],
@@ -97771,7 +97771,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "sourceUnitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],
@@ -97796,7 +97796,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "sourceUnitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],
@@ -97821,7 +97821,7 @@
           "needles": [
             "resolveWeaponAttackMiss({",
             "source: \"classFeatureExtraAttack\"",
-            "sourceUnitId: input.sourceUnitId"
+            "unit: expect.objectContaining({ id: input.sourceUnitId })"
           ]
         }
       ],

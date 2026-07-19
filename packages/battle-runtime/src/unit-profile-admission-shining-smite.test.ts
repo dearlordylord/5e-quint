@@ -129,7 +129,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({
-            sourceSpellId: shiningSmiteUnitId,
+            sourceProcedureRef: choice.subject.procedureRef,
             damage: {
               expr: { dice: 3, dieSize: 6 },
               damageType: "radiant",
@@ -157,14 +157,14 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(
       requireCombatant(afterWeaponDamage.state, spellCasterId).concentration,
     ).toEqual({
-      sourceSpellId: shiningSmiteUnitId,
+      sourceProcedureRef: choice.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(
       requireCombatant(afterWeaponDamage.state, spellTargetId).activeEffects,
     ).toContainEqual({
       kind: "shiningSmiteIllumination",
-      sourceSpellId: shiningSmiteUnitId,
+      sourceProcedureRef: choice.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       expiresAt: {
         kind: "concentration",
@@ -175,7 +175,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(snapshotBattle(afterWeaponDamage.state).lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
-        sourceSpellId: shiningSmiteUnitId,
+        sourceProcedureRef: choice.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: {

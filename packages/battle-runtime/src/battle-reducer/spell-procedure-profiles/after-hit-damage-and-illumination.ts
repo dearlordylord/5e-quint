@@ -41,6 +41,7 @@ import {
   type AttackSpellDamageAddition,
   type AvailableBattleAct,
   type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
   type BattleInterruptedProcedure,
   type BattleInterruptCheckpoint,
   type BattleResolutionInputForSubject,
@@ -149,7 +150,6 @@ function admitAfterHitDamageAndIllumination(
           },
           activeEffect: {
             kind: "shiningSmiteIllumination",
-            sourceSpellId: spell.id,
             sourceCombatantId: ctx.actor.combatantId,
             expiresAt: projection.expiresAt,
           },
@@ -269,7 +269,7 @@ function applyAfterHitDamageAndIlluminationSpellEffect(
   state: BattleState,
   targetId: CombatantId,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "afterHitDamageAndIllumination" }
   >,
 ): BattleState {
@@ -280,12 +280,15 @@ function applyAfterHitDamageAndIlluminationSpellEffect(
   const replacing = target.activeEffects.filter(
     (effect) =>
       effect.kind === "shiningSmiteIllumination" &&
-      effect.sourceSpellId === invocation.spell.id &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
   );
   const activeEffects = [
     ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-    invocation.activeEffect,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+    },
   ];
   return {
     ...state,
@@ -342,7 +345,7 @@ function resolveAfterHitDamageAndIllumination(
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
     sourceProcedure: "afterHitDamageAndIllumination",
-    sourceSpellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
     sourceCombatantId: input.input.subject.casterId,
     damage: {
       expr: input.invocation.damage.expr,

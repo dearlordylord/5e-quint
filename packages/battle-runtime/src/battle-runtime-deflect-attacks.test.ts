@@ -1,4 +1,5 @@
 import {
+  requireCharacterUnitProcedureRefForTest,
   startBattleRight,
   requireResolved,
   goblinAttackSubject,
@@ -158,7 +159,11 @@ describe("battle runtime: Deflect Attacks", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_rage",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_rage",
+          ),
         },
         fills: [],
       }),

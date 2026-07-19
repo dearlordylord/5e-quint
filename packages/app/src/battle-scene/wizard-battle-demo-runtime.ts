@@ -1,5 +1,6 @@
 import {
   type AvailableBattleAct,
+  battleActSpellSlotPresentation,
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
@@ -17,7 +18,7 @@ import { DieRollResult, movementFeet } from "@dnd/shared/types"
 
 type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
 
-type CounterspellTriggerFact = Extract<
+export type CounterspellTriggerFact = Extract<
   Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>["spatialFacts"][number],
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
 >
@@ -35,9 +36,8 @@ export function requireActionSpellAct(state: BattleState, selectedSpellId: strin
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === selectedSpellId &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      Number(candidate.subject.invocation.slotLevel) === slotLevel
+      battleActSpellSlotPresentation(candidate)?.invocation.spellId === selectedSpellId &&
+      Number(battleActSpellSlotPresentation(candidate)?.invocation.slotLevel) === slotLevel
   )
   if (act === undefined) {
     throw new Error(`Expected ${selectedSpellId} action spell act.`)
@@ -107,14 +107,14 @@ export function spellCastReactionFactsFill(
 export function counterspellTriggerFact(input: {
   readonly reactorId: CombatantId
   readonly casterId: CombatantId
-  readonly spellId: string
+  readonly sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"]
   readonly rangeFeet: number
 }): CounterspellTriggerFact {
   return {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    spellId: input.spellId,
+    sourceProcedureRef: input.sourceProcedureRef,
     rangeFeet: movementFeet(input.rangeFeet)
   }
 }

@@ -23,9 +23,11 @@ import {
   type AttackRollResult,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -409,7 +411,7 @@ export function spellDamageReductionRollProtocolId(
 ): string {
   return [
     SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX,
-    reduction.sourceSpellId,
+    reduction.sourceProcedureRef,
     reduction.sourceCombatantId,
     reduction.targetId,
     reduction.damageType,
@@ -434,7 +436,7 @@ export function sourceDamageRollPenaltyRollProtocolId(
 ): string {
   return [
     SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX,
-    penalty.sourceSpellId,
+    penalty.sourceProcedureRef,
     penalty.sourceCombatantId,
     penalty.affectedCombatantId,
     penalty.damageRollHoleId,
@@ -466,7 +468,7 @@ export function availableSpellDamageReduction(
   );
   return effect?.kind === "spellDamageReduction"
     ? {
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         sourceCombatantId: effect.sourceCombatantId,
         targetId: target.combatantId,
         damageType: effect.damageType,
@@ -491,7 +493,7 @@ export function availableSourceDamageRollPenalty(
   );
   return effect?.kind === "sourceDamageRollPenalty"
     ? {
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         sourceCombatantId: effect.sourceCombatantId,
         affectedCombatantId: source.combatantId,
         damageRollHoleId,
@@ -586,7 +588,7 @@ export function applyAvailableSpellDamageReduction(
   }
   const applied = applySpellDamageReductions(target, damageByType, [
     {
-      sourceSpellId: reduction.sourceSpellId,
+      sourceProcedureRef: reduction.sourceProcedureRef,
       sourceCombatantId: reduction.sourceCombatantId,
       targetId: reduction.targetId,
       damageType: reduction.damageType,
@@ -670,7 +672,7 @@ export function applySpellDamageReductions(
   const effectIndex = target.activeEffects.findIndex(
     (effect) =>
       effect.kind === "spellDamageReduction" &&
-      effect.sourceSpellId === reduction.sourceSpellId &&
+      effect.sourceProcedureRef === reduction.sourceProcedureRef &&
       effect.sourceCombatantId === reduction.sourceCombatantId &&
       effect.damageType === reduction.damageType &&
       !effect.usedThisTurn,
@@ -796,15 +798,15 @@ export function activeSpellWeaponDamageRiders(
 
 export function activeMarkedDamageRiderEffect(
   attacker: BattleCreatureState | undefined,
-  spellId?: SpellRecord["id"],
+  effectRef: BattleActiveEffectExecutionRef,
 ): SpellMarkedDamageRider | null {
-  const effects =
-    attacker?.activeEffects.filter(
+  return (
+    attacker?.activeEffects.find(
       (effect): effect is SpellMarkedDamageRider =>
         effect.kind === "spellMarkedDamageRider" &&
-        (spellId === undefined || effect.sourceSpellId === spellId),
-    ) ?? [];
-  return effects[0] ?? null;
+        effect.effectRef === effectRef,
+    ) ?? null
+  );
 }
 
 export function activeMarkedDamageRiders(

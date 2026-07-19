@@ -214,6 +214,136 @@ function lineNumberForIndex(content, index) {
   return line;
 }
 
+function assertBattleReplayExecutionBoundary() {
+  const checks = [
+    {
+      relativePath: "packages/battle-runtime/src/battle-subjects.ts",
+      patterns: [
+        /invocation:\s*SpellInvocationRefSchema/,
+        /unitId:\s*BattleSubjectTextSchema/,
+        /sourceUnitId:\s*BattleSubjectTextSchema/,
+        /resourceUnitId:\s*BattleSubjectTextSchema/,
+        /sourceSpellId:\s*SpellId/,
+        /formStatBlockId:\s*BattleSubjectTextSchema/,
+        /(?:subject|command)\.sourceSpellId/,
+        /subject\.formStatBlockId/,
+      ],
+      sliceStart: "export const BattleSubjectSchema",
+      sliceEnd: "type BattleSubjectWireValue",
+    },
+    {
+      relativePath: "packages/shared-algebras/src/action-economy-algebra.ts",
+      patterns: [
+        /readonly sourceUnitId:/,
+        /readonly sourceSpellId:/,
+        /resource\.sourceUnitId/,
+        /resource\.sourceSpellId/,
+      ],
+    },
+    {
+      relativePath: "packages/battle-runtime/src/active-effect/types.ts",
+      patterns: [
+        /readonly effectRef\?:/,
+        /type SpellObjectContactDamageActiveEffect[\s\S]{0,250}readonly effectId:/,
+        /type SpiritualWeaponActiveEffect[\s\S]{0,250}readonly sourceEffectId:/,
+      ],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+      patterns: [/exceptSourceSpellId/, /sourceSpellId/],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+      patterns: [
+        /BattleActPresentation/,
+        /characterProcedurePresentation/,
+        /battleActSpellPresentation/,
+        /battleStateWithCharacterExecutionBindings/,
+      ],
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      patterns: [/readonly unitId: UnitRecord\["id"\];/],
+      sliceStart: "export type BattleCharacterResourceSnapshot",
+      sliceEnd: "export type CharacterBattleCreatureState",
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+      patterns: [/unitId:\s*Schema\.String/],
+      sliceStart: "const BattleCharacterResourceSnapshotSchema",
+      sliceEnd: "const StatBlockResourcePoolStateSchema",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      patterns: [
+        /Object\.entries\([^)]*\)[\s\S]{0,500}sourceProcedureRef/,
+        /sourceProcedureRef:\s*(?:spell|invocation\.spell)\.id/,
+        /kind: "activeEffect"; readonly effectId:/,
+        /spellInvocationEffectOccurrenceId/,
+      ],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+      patterns: [
+        /spiritualWeaponSpellEffectOccurrenceId/,
+        /nextOrdinal[\s\S]{0,500}spiritualWeapon/,
+      ],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+      patterns: [/objectContactDamageEffectId/],
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-act-composition.ts",
+      patterns: [
+        /characterProcedurePresentationText[\s\S]{0,1500}\bfallback\b/,
+        /characterProcedurePresentationText[\s\S]{0,1500}characterSpellProcedure\(/,
+      ],
+    },
+    {
+      relativePath: "packages/battle-runtime/src/identity.ts",
+      patterns: [
+        /BattleActiveEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
+        /BattleSpellDamageDieExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
+      ],
+    },
+  ];
+  const failures = [];
+  for (const check of checks) {
+    const content = fs.readFileSync(
+      path.join(REPO_ROOT, check.relativePath),
+      "utf8",
+    );
+    const start =
+      check.sliceStart == null ? 0 : content.indexOf(check.sliceStart);
+    const end =
+      check.sliceEnd == null ? content.length : content.indexOf(check.sliceEnd);
+    const inspected = content.slice(start, end);
+    for (const pattern of check.patterns) {
+      const match = pattern.exec(inspected);
+      if (match == null) continue;
+      failures.push({
+        relativePath: check.relativePath,
+        line: lineNumberForIndex(content, start + match.index),
+        pattern: pattern.source,
+      });
+    }
+  }
+  if (failures.length === 0) return;
+  console.error("Battle replay authored-key violation(s) found:");
+  for (const failure of failures) {
+    console.error(
+      `  - ${failure.relativePath}:${failure.line} matches ${failure.pattern}`,
+    );
+  }
+  process.exit(1);
+}
+
 function countChar(text, char) {
   let count = 0;
   for (let i = 0; i < text.length; i += 1) {
@@ -1555,6 +1685,7 @@ function runSelfTest() {
 }
 
 function main() {
+  assertBattleReplayExecutionBoundary();
   runSelfTest();
 
   if (!fs.existsSync(PACKAGES_ROOT)) {

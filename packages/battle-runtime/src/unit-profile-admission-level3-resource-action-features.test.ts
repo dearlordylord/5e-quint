@@ -57,13 +57,13 @@ describe("L13UG-A17 level-3 resource and action feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: rogueFastHandsUnitId,
+        unit: unitLibrary.requireUnit(rogueFastHandsUnitId),
         supportProfiles: [supportProfile],
       }),
     );
-    expect(battleBonusActionDelegatedStandardActionsSupportForUnit(unit)).toEqual(
-      supportProfile,
-    );
+    expect(
+      battleBonusActionDelegatedStandardActionsSupportForUnit(unit),
+    ).toEqual(supportProfile);
     expect(
       parseSupportedUnitFeatureProfile(unit, [
         { className: "rogue", level: classLevel(3) },

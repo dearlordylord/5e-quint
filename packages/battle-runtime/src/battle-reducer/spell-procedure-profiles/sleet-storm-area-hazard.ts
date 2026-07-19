@@ -246,13 +246,14 @@ function isSleetStormAreaHazardSaveGate(
 function discoverSleetStormAreaHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: SleetStormAreaHazardSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SleetStormAreaHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: sleetStormAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },

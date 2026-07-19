@@ -12,6 +12,7 @@
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
 // Death Saving Throw ordering is intentionally outside this witness; this
 // fixture does not assert a same-timing ordering for that lifecycle.
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { difficultyClass, Hp, Round } from "@dnd/shared/types";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
@@ -54,6 +55,7 @@ import {
   type BattleActiveEffect,
   type BattleCreatureState,
   type BattleResolutionResult,
+  type BattleProcedureExecutionRef,
   type BattleHole,
   type BattleState,
   type OngoingFeatureSourceKey,
@@ -863,7 +865,7 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
     combatants: new Map(battle.combatants).set(fighterId, {
       ...fighter,
       concentration: {
-        sourceSpellId: syntheticSpellId(
+        sourceProcedureRef: syntheticSpellId(
           "synthetic_turn_boundary_target_concentration",
         ),
         effectKind: "spellEffect",
@@ -876,7 +878,9 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
 function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
   return {
     kind: "sleepPendingRepeatSave",
-    sourceSpellId: syntheticSpellId("synthetic_turn_boundary_sleep_repeat"),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(syntheticSpellId("synthetic_turn_boundary_sleep_repeat")),
+    ),
     sourceCombatantId: goblinId,
     conditionHadNonSpellSource: false,
     save: {
@@ -891,7 +895,7 @@ function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
 function fighterSpellConditionEndTurnSaveEffect(): BattleActiveEffect {
   return {
     kind: "spellConditionEndTurnSave",
-    sourceSpellId: syntheticSpellId(
+    sourceProcedureRef: syntheticSpellId(
       "synthetic_turn_boundary_condition_end_save",
     ),
     sourceCombatantId: goblinId,
@@ -909,7 +913,9 @@ function fighterSpellConditionEndTurnSaveEffect(): BattleActiveEffect {
 function fighterTurnEndDamageEffect(): BattleActiveEffect {
   return {
     kind: "spellTurnEndDamage",
-    sourceSpellId: turnEndDamageSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(turnEndDamageSpellId),
+    ),
     sourceCombatantId: goblinId,
     damage: {
       expr: { dice: 1, dieSize: 6 },
@@ -982,7 +988,9 @@ function turnStartDamageEffect(): BattleActiveEffect {
   return {
     kind: "spellTurnStartDamageAndSave",
     source: "turnBoundaryEffectLifecycle",
-    sourceSpellId: turnStartDamageSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(turnStartDamageSpellId),
+    ),
     sourceCombatantId: fighterId,
     damage: {
       expr: { dice: 1, dieSize: 4 },
@@ -1000,7 +1008,9 @@ function turnStartDamageEffect(): BattleActiveEffect {
 function turnEndDamageEffect(): BattleActiveEffect {
   return {
     kind: "spellTurnEndDamage",
-    sourceSpellId: turnEndDamageSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(turnEndDamageSpellId),
+    ),
     sourceCombatantId: fighterId,
     damage: {
       expr: { dice: 1, dieSize: 6 },
@@ -1013,7 +1023,9 @@ function turnEndDamageEffect(): BattleActiveEffect {
 function untilNextTurnEffect(): BattleActiveEffect {
   return {
     kind: "nextAttackRollBySelf",
-    sourceSpellId: untilNextTurnSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(untilNextTurnSpellId),
+    ),
     sourceCombatantId: fighterId,
     mode: "advantage",
     expiresAt: { kind: "startOfTurn", combatantId: fighterId },
@@ -1284,11 +1296,12 @@ function holeOrder(holes: readonly BattleHole[]): TurnBoundaryHoleOrder {
 function hasEffect(
   state: BattleState,
   combatantId: typeof fighterId | typeof goblinId,
-  sourceSpellId: SpellRecord["id"],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): boolean {
   return requireCombatant(state, combatantId).activeEffects.some(
     (effect) =>
-      "sourceSpellId" in effect && effect.sourceSpellId === sourceSpellId,
+      "sourceProcedureRef" in effect &&
+      effect.sourceProcedureRef === sourceProcedureRef,
   );
 }
 

@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike-option-grant
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-08-ROGUE-SUPREME-SNEAK rogue_supreme_sneak
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -523,7 +524,7 @@ function supremeSneakUnitRefs(): ReturnType<typeof cunningStrikeUnitRefs> {
   return [
     ...cunningStrikeUnitRefs(),
     {
-      unitId: unit.id,
+      unit: unitLibrary.requireUnit(unit.id),
       supportProfiles: [support],
     },
   ];
@@ -944,7 +945,9 @@ function cunningStrikeBattle(
         ...(input.targetConcentrating === true
           ? {
               concentration: {
-                sourceSpellId: "synthetic_cunning_strike_concentration",
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String("synthetic_cunning_strike_concentration"),
+                ),
                 effectKind: "spellEffect" as const,
               },
             }
@@ -972,7 +975,9 @@ function targetSizeChangeEffect(
 ): Extract<BattleActiveEffect, { readonly kind: "spellCreatureSizeChange" }> {
   return {
     kind: "spellCreatureSizeChange",
-    sourceSpellId: "enlarge_reduce",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("enlarge_reduce"),
+    ),
     sourceCombatantId: fighterId,
     direction,
     expiresAt: {

@@ -23,6 +23,7 @@ import {
   type MbtWitnessLastResult,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
+  resolveBattleSubject,
   characterSeed,
   deathSavingThrowFill,
   fighterId,
@@ -33,13 +34,12 @@ import {
   battleId,
   characterId,
   combatantId,
-  resolveBattleSubject,
   snapshotBattle,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -131,36 +131,42 @@ function createDeathSavingThrowDriver() {
         );
       },
       step: () => {},
-      getState: () =>
-        projectDeathSavingThrowMbtState(recorder.snapshot()),
+      getState: () => projectDeathSavingThrowMbtState(recorder.snapshot()),
     };
   });
 }
 
 const deathSavingThrowStateCheck = stateCheck(
   normalizeDeathSavingThrowQuintState,
-  (spec: DeathSavingThrowMbtProjection, impl: DeathSavingThrowMbtProjection) => {
+  (
+    spec: DeathSavingThrowMbtProjection,
+    impl: DeathSavingThrowMbtProjection,
+  ) => {
     expect(impl).toEqual(spec);
     return true;
   },
 );
 
 describe("Death Saving Throw MBT parity", () => {
-  it("replays start-turn Death Saving Throw holes for a Character Build combatant", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-death-saving-throw.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDeathSavingThrowDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(3),
-      stateCheck: deathSavingThrowStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays start-turn Death Saving Throw holes for a Character Build combatant",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-death-saving-throw.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDeathSavingThrowDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: deathSavingThrowStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeDeathSavingThrowQuintState(

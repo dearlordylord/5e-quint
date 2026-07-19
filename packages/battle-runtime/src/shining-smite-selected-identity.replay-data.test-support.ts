@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { expect } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
@@ -140,7 +141,9 @@ export const shiningSmiteSelectedIdentityReplay = {
               expect.objectContaining({
                 spellWeaponDamageRiders: [
                   expect.objectContaining({
-                    sourceSpellId: shiningSmiteUnitId,
+                    sourceProcedureRef: battleProcedureExecutionRefForTest(
+                      String(shiningSmiteUnitId),
+                    ),
                     damage: {
                       expr: { dice: 3, dieSize: 6 },
                       damageType: "radiant",
@@ -166,7 +169,9 @@ export const shiningSmiteSelectedIdentityReplay = {
             ).toEqual([
               {
                 kind: "spellLightEmitter",
-                sourceSpellId: shiningSmiteUnitId,
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String(shiningSmiteUnitId),
+                ),
                 sourceCombatantId: spellCasterId,
                 attachment: { kind: "combatant", combatantId: spellTargetId },
                 emission: {

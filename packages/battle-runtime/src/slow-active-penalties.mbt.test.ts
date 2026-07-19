@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // RAW trace:
@@ -42,7 +43,6 @@ import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/
 import {
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
@@ -71,7 +71,10 @@ import {
   spellAct,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { monsterMultiattackStatBlock } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  monsterMultiattackStatBlock,
+} from "./battle-runtime-test-support.ts";
 
 const LAST_RESULTS = [
   "init",
@@ -691,6 +694,21 @@ function slowActivePenaltiesProjection(
       (projection) => projection.targetId === spellTargetId,
     )?.bonus ?? 0;
   const turnResources = state.battle.currentTurnResources;
+  const slowEffect = target.activeEffects.find(
+    (effect) => effect.kind === "slowActivePenalties",
+  );
+  const casterConcentrationSourceProcedureRef =
+    caster.concentration?.sourceProcedureRef;
+  const casterHasConcentratedSlowEffect =
+    casterConcentrationSourceProcedureRef !== undefined &&
+    [...state.battle.combatants.values()].some((combatant) =>
+      combatant.activeEffects.some(
+        (effect) =>
+          effect.kind === "slowActivePenalties" &&
+          effect.sourceCombatantId === spellCasterId &&
+          effect.sourceProcedureRef === casterConcentrationSourceProcedureRef,
+      ),
+    );
   return {
     currentTurnRole: state.currentTurnRole,
     turnActionOrBonusChoice: actionOrBonusChoice(turnResources),
@@ -707,14 +725,12 @@ function slowActivePenaltiesProjection(
     statBlockMultiattackResourceCount: turnResources.actionResources.filter(
       (resource) => resource.source === "statBlockMultiattack",
     ).length,
-    targetSlowed: target.activeEffects.some(
-      (effect) => effect.kind === "slowActivePenalties",
-    ),
+    targetSlowed: slowEffect !== undefined,
     targetSpeedFeet: Number(effectiveWalkSpeed(target)),
     targetArmorClass: Number(currentArmorClass(activeEffectArmorClass(target))),
     dexteritySavingThrowDelta,
     targetCanReact: combatantCanTakeReactions(target),
-    casterConcentrating: caster.concentration?.sourceSpellId === slowUnitId,
+    casterConcentrating: casterHasConcentratedSlowEffect,
     holes: state.holes.map(slowHole),
     lastResult: state.lastResult,
   };
@@ -945,7 +961,7 @@ function spellActForActor(
         candidate.subject.tag === "bonusActionSpell" ||
         candidate.subject.tag === "bonusActionDashSpell") &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.invocation.spellId === unitId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === unitId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${unitId} spell act for ${actorId}.`);

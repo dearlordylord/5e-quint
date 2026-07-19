@@ -19,6 +19,7 @@ import {
   isTargetListSpellInvocation,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -96,7 +97,7 @@ function isSaveGatedConditionInvocation(
 function discoverSaveGatedConditionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SaveGatedConditionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   return invocation.targeting.kind === "singleCombatant" ||
@@ -114,7 +115,7 @@ function discoverTargetedSaveGatedConditionCastActs(
   state: BattleState,
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
-  invocation: SaveGatedConditionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole =
     invocation.targeting.kind === "singleCombatant"
@@ -154,7 +155,7 @@ function discoverAreaSaveGatedConditionCastActs(
   state: BattleState,
   actorId: CombatantId,
   actor: BattleCreatureState | undefined,
-  invocation: SaveGatedConditionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
@@ -187,7 +188,7 @@ function discoverAreaSaveGatedConditionCastActs(
 }
 
 function saveGatedConditionChoiceHoles(
-  invocation: SaveGatedConditionSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
 ): readonly BattleHole[] {
   return saveGatedConditionHasConditionChoice(invocation)
     ? [spellConditionChoiceHole(invocation)]
@@ -241,7 +242,7 @@ function saveGatedConditionMetamagicCastActs(input: {
 
 function saveGatedConditionCastAct(
   actorId: CombatantId,
-  invocation: SaveGatedConditionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -250,6 +251,7 @@ function saveGatedConditionCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: saveGatedConditionInvocationRef(invocation),
       mode: { tag: "cast" },
     },

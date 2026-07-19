@@ -33,6 +33,7 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import { type StandardActionKind } from "@dnd/shared/game-facts";
+import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 
 import { Match } from "effect";
 
@@ -41,14 +42,13 @@ import * as Either from "effect/Either";
 import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
 
 import type {
-  AdmittedCharacterProcedureBattleSubject,
   BattleMovementSpeedKind,
   BattleSubject,
-  CharacterProcedureBattleSubject,
+  CharacterProcedureSelectionSubject,
 } from "../battle-subjects.ts";
-import { isCharacterProcedureBattleSubject } from "../battle-subjects.ts";
+import { isCharacterProcedureSelectionSubject } from "../battle-subjects.ts";
 
-import { CombatantId, spellId } from "../identity.ts";
+import { CombatantId } from "../identity.ts";
 import {
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
@@ -181,7 +181,7 @@ import {
 } from "./warding-bond.ts";
 
 import type {
-  AvailableBattleAct,
+  BattleActExecutionCandidate,
   BattleActDiscoveryCandidate,
   BattleActiveEffect,
   BattleCreatureState,
@@ -207,181 +207,10 @@ import {
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
-import { battleReducerRouteEventsForDiscoveredAct } from "./reducer-route.ts";
-import {
-  BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
-  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-  MONK_FOCUS_PROCEDURE_QUERY,
-  characterExecutionWithSpellInvocations,
-  characterSpellProcedureRef,
-  characterUnitProcedureRefs,
-  type CharacterExecutionState,
-} from "../character-execution.ts";
-import type { BattleProcedureExecutionRef } from "../identity.ts";
-
-export function discoverBattleActs(
+export function discoverBattleActCandidates(
   state: BattleState,
-): readonly AvailableBattleAct[] {
-  const stateWithExecutionBindings =
-    battleStateWithCharacterExecutionBindings(state);
-  return withReducerRouteEvents(
-    stateWithExecutionBindings,
-    withCharacterExecutionReferences(
-      stateWithExecutionBindings,
-      discoverBattleActsWithoutRouteEvents(stateWithExecutionBindings),
-    ),
-  );
-}
-
-function battleStateWithCharacterExecutionBindings(
-  state: BattleState,
-): BattleState {
-  const combatants = new Map(state.combatants);
-  let changed = false;
-  for (const [combatantId, combatant] of state.combatants) {
-    if (combatant.origin.kind !== "character") continue;
-    const execution = characterExecutionWithSpellInvocations(
-      combatant.origin.execution,
-      supportedSpellActs(combatant, state),
-    );
-    if (execution === combatant.origin.execution) continue;
-    changed = true;
-    combatants.set(combatantId, {
-      ...combatant,
-      origin: { ...combatant.origin, execution },
-    });
-  }
-  return changed ? { ...state, combatants } : state;
-}
-
-function withCharacterExecutionReferences(
-  state: BattleState,
-  acts: readonly BattleActDiscoveryCandidate[],
-): readonly AvailableBattleAct[] {
-  const contexts = new Map<
-    CombatantId,
-    {
-      readonly execution: CharacterExecutionState;
-      readonly invocations: readonly SupportedSpellInvocation[];
-    }
-  >();
-  for (const [combatantId, combatant] of state.combatants) {
-    if (combatant.origin.kind !== "character") continue;
-    const invocations = supportedSpellActs(combatant, state);
-    contexts.set(combatantId, {
-      execution: characterExecutionWithSpellInvocations(
-        combatant.origin.execution,
-        invocations,
-      ),
-      invocations,
-    });
-  }
-  return acts.flatMap((act) => {
-    const subject = act.subject;
-    const characterProcedureSubject =
-      isCharacterProcedureBattleSubject(subject);
-    const context = contexts.get(subject.actorId);
-    if (context === undefined) {
-      return characterProcedureSubject
-        ? []
-        : [{ ...act, subject } satisfies AvailableBattleAct];
-    }
-    const { execution, invocations } = context;
-    if (
-      subject.tag === "actionSpell" ||
-      subject.tag === "bonusActionSpell" ||
-      subject.tag === "bonusActionDashSpell" ||
-      subject.tag === "findFamiliarTouchSpell"
-    ) {
-      const componentWeaponItemId =
-        "componentWeaponItemId" in subject
-          ? subject.componentWeaponItemId
-          : undefined;
-      const invocation = invocations.find(
-        (candidate) =>
-          supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-          (candidate.procedure !== "spellHostedWeaponAttack" ||
-            componentWeaponItemId === candidate.componentWeapon.itemId) &&
-          (candidate.procedure !== "weaponAttackOverride" ||
-            componentWeaponItemId === candidate.attachedWeapon.itemId),
-      );
-      const procedureRef =
-        invocation === undefined
-          ? undefined
-          : characterSpellProcedureRef(execution, invocation);
-      return bindCharacterProcedureActs(
-        act,
-        subject,
-        procedureRef === undefined ? [] : [procedureRef],
-      );
-    }
-    if (
-      subject.tag === "unitFeature" ||
-      subject.tag === "unitFeatureHeldWeaponActivation"
-    ) {
-      const procedureRefs = characterUnitProcedureRefs(
-        execution,
-        subject.unitId,
-        CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-      );
-      return bindCharacterProcedureActs(act, subject, procedureRefs);
-    }
-    if (subject.tag === "druidWildShape") {
-      const procedureRefs = characterUnitProcedureRefs(
-        execution,
-        subject.unitId,
-        DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-      );
-      return bindCharacterProcedureActs(act, subject, procedureRefs);
-    }
-    if (subject.tag === "bonusActionStandardAction") {
-      const unitProcedureRefs = characterUnitProcedureRefs(
-        execution,
-        subject.sourceUnitId,
-        BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
-      );
-      const spellInvocation = invocations.find(
-        (candidate) =>
-          candidate.procedure === "expeditiousRetreatDash" &&
-          candidate.spell.id === subject.sourceUnitId,
-      );
-      const spellProcedureRef =
-        spellInvocation === undefined
-          ? undefined
-          : characterSpellProcedureRef(execution, spellInvocation);
-      const procedureRefs =
-        unitProcedureRefs.length > 0
-          ? unitProcedureRefs
-          : spellProcedureRef === undefined
-            ? []
-            : [spellProcedureRef];
-      return bindCharacterProcedureActs(act, subject, procedureRefs);
-    }
-    if (subject.tag === "monkFocusOption") {
-      const procedureRefs = characterUnitProcedureRefs(
-        execution,
-        subject.resourceUnitId,
-        MONK_FOCUS_PROCEDURE_QUERY,
-      );
-      return bindCharacterProcedureActs(act, subject, procedureRefs);
-    }
-    return [{ ...act, subject } satisfies AvailableBattleAct];
-  });
-}
-
-function bindCharacterProcedureActs(
-  act: BattleActDiscoveryCandidate,
-  subject: CharacterProcedureBattleSubject,
-  procedureRefs: readonly BattleProcedureExecutionRef[],
-): readonly AvailableBattleAct[] {
-  return procedureRefs.map((procedureRef) => {
-    const admittedSubject: AdmittedCharacterProcedureBattleSubject = {
-      ...subject,
-      procedureRef,
-    };
-    return { ...act, subject: admittedSubject };
-  });
+): readonly BattleActDiscoveryCandidate[] {
+  return discoverBattleActsWithoutRouteEvents(state);
 }
 
 function discoverBattleActsWithoutRouteEvents(
@@ -410,8 +239,7 @@ function discoverBattleActsWithoutRouteEvents(
           tag: "runtimeCommand" as const,
           actorId,
           command: "commandGrovel" as const,
-          sourceCombatantId: effect.sourceCombatantId,
-          sourceSpellId: spellId(effect.sourceSpellId),
+          effectRef: spellActiveEffectExecutionRef(effect),
         },
         label: "Command: Grovel",
         summary: "Have the Prone condition and end the turn.",
@@ -431,8 +259,7 @@ function discoverBattleActsWithoutRouteEvents(
           tag: "runtimeCommand" as const,
           actorId,
           command: "commandDrop" as const,
-          sourceCombatantId: effect.sourceCombatantId,
-          sourceSpellId: spellId(effect.sourceSpellId),
+          effectRef: spellActiveEffectExecutionRef(effect),
         };
         const canonicalObjectIds = canonicalHeldObjectIdsForActor(
           state,
@@ -462,8 +289,7 @@ function discoverBattleActsWithoutRouteEvents(
           tag: "runtimeCommand" as const,
           actorId,
           command: "commandApproach" as const,
-          sourceCombatantId: effect.sourceCombatantId,
-          sourceSpellId: spellId(effect.sourceSpellId),
+          effectRef: spellActiveEffectExecutionRef(effect),
         },
         label: "Command: Approach",
         summary: "Move toward the caster by a supplied shortest/direct route.",
@@ -485,8 +311,7 @@ function discoverBattleActsWithoutRouteEvents(
           tag: "runtimeCommand" as const,
           actorId,
           command: "commandFlee" as const,
-          sourceCombatantId: effect.sourceCombatantId,
-          sourceSpellId: spellId(effect.sourceSpellId),
+          effectRef: spellActiveEffectExecutionRef(effect),
         },
         label: "Command: Flee",
         summary:
@@ -746,13 +571,12 @@ function discoverBattleActsWithoutRouteEvents(
           actorId,
           action: "escapeSpellRestraint",
           targetId,
-          sourceSpellId: spellId(effect.sourceSpellId),
-          sourceCombatantId: effect.sourceCombatantId,
+          effectRef: spellActiveEffectExecutionRef(effect),
         },
         label:
           actorId === targetId
-            ? `Escape ${effect.sourceSpellId}`
-            : `Help escape ${effect.sourceSpellId}`,
+            ? "Escape spell restraint"
+            : "Help escape spell restraint",
         summary:
           actorId === targetId
             ? "Use an action to attempt to end a spell-imposed Restrained condition."
@@ -850,16 +674,6 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
-}
-
-function withReducerRouteEvents(
-  state: BattleState,
-  acts: readonly AvailableBattleAct[],
-): readonly AvailableBattleAct[] {
-  return acts.map((act) => {
-    const routeEvents = battleReducerRouteEventsForDiscoveredAct(state, act);
-    return routeEvents === undefined ? act : { ...act, routeEvents };
-  });
 }
 
 function companionProtocolActs(
@@ -993,8 +807,10 @@ function findFamiliarTouchSpellActs(input: {
     (act): readonly BattleActDiscoveryCandidate[] => {
       const subject = act.subject;
       if (
+        !isCharacterProcedureSelectionSubject(subject) ||
         (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
-        subject.mode.tag !== "cast"
+        subject.mode.tag !== "cast" ||
+        subject.procedureRef === undefined
       ) {
         return [];
       }
@@ -1013,6 +829,7 @@ function findFamiliarTouchSpellActs(input: {
           subject: {
             tag: "findFamiliarTouchSpell",
             actorId: input.actorId,
+            procedureRef: subject.procedureRef,
             companionId: input.companionId,
             spellAction:
               subject.tag === "actionSpell" ? "action" : "bonusAction",
@@ -1043,7 +860,7 @@ function findFamiliarTouchSpellActs(input: {
 function touchSpellDeliveryInvocation(
   invocations: readonly SupportedSpellInvocation[],
   subject: Extract<
-    BattleSubject,
+    CharacterProcedureSelectionSubject,
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >,
 ): SupportedSpellInvocation | null {
@@ -1060,7 +877,7 @@ function touchSpellDeliveryInvocation(
 function levitateAltitudeControlActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     !combatantCanTakeActions(actor) ||
@@ -1075,8 +892,7 @@ function levitateAltitudeControlActs(
         tag: "runtimeCommand" as const,
         actorId,
         command: "levitateAltitudeControl" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
+        effectRef: spellActiveEffectExecutionRef(effect),
         targetId,
       },
       label: "Levitate altitude control",
@@ -1096,7 +912,7 @@ function levitateAltitudeControlActs(
 function spellCreatedHeldObjectReleaseActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   return spellCreatedHeldObjectEffectsForActor(actor)
     .filter((effect) => effect.objectState.kind === "held")
@@ -1105,8 +921,7 @@ function spellCreatedHeldObjectReleaseActs(
         tag: "runtimeCommand" as const,
         actorId,
         command: "releaseSpellCreatedHeldObject" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
+        effectRef: spellActiveEffectExecutionRef(effect),
       },
       label: "Release spell-created held object",
       summary: "Let go of the active spell-created held object.",
@@ -1117,7 +932,7 @@ function spellCreatedHeldObjectReleaseActs(
 function selfTransformationModeReplacementActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   const activeEffect = activeSelfTransformationModeEffect(actor);
   if (
@@ -1131,7 +946,7 @@ function selfTransformationModeReplacementActs(
   }
   return SELF_TRANSFORMATION_MODE_KINDS.filter(
     (mode): mode is SelfTransformationModeKind => mode !== activeEffect.mode,
-  ).flatMap((mode): readonly AvailableBattleAct[] => {
+  ).flatMap((mode): readonly BattleActExecutionCandidate[] => {
     const baseAct = {
       summary:
         "Replace the active self-transformation option with a Magic action.",
@@ -1145,8 +960,7 @@ function selfTransformationModeReplacementActs(
               tag: "runtimeCommand" as const,
               actorId,
               command: "replaceSelfTransformationMode" as const,
-              sourceCombatantId: activeEffect.sourceCombatantId,
-              sourceSpellId: spellId(activeEffect.sourceSpellId),
+              effectRef: spellActiveEffectExecutionRef(activeEffect),
               mode,
               naturalWeaponDamageType,
             },
@@ -1160,8 +974,7 @@ function selfTransformationModeReplacementActs(
               tag: "runtimeCommand" as const,
               actorId,
               command: "replaceSelfTransformationMode" as const,
-              sourceCombatantId: activeEffect.sourceCombatantId,
-              sourceSpellId: spellId(activeEffect.sourceSpellId),
+              effectRef: spellActiveEffectExecutionRef(activeEffect),
               mode,
             },
             label: `Self Transformation: ${selfTransformationModeLabel(mode)}`,
@@ -1173,7 +986,7 @@ function selfTransformationModeReplacementActs(
 function pactOfTheChainFamiliarAttackActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   if (
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
     !canSpendAction(state.currentTurnResources, "attack") ||
@@ -1227,7 +1040,7 @@ function pactOfTheChainFamiliarAttackActs(
   );
 }
 
-function endTurnAct(actorId: CombatantId): AvailableBattleAct {
+function endTurnAct(actorId: CombatantId): BattleActExecutionCandidate {
   return {
     subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
     label: "End Turn",
@@ -1239,7 +1052,7 @@ function endTurnAct(actorId: CombatantId): AvailableBattleAct {
 function endConcentrationActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined || actor.concentration === null) {
     return [];
@@ -1257,7 +1070,7 @@ function endConcentrationActs(
 function readiedSpellReleaseActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
     subject: {
       tag: "runtimeCommand" as const,
@@ -1274,7 +1087,7 @@ function readiedSpellReleaseActs(
 
 export function releaseGrappleActs(
   state: BattleState,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return state.grapples.map((grapple) => ({
     subject: {
       tag: "runtimeCommand" as const,
@@ -1291,30 +1104,36 @@ export function releaseGrappleActs(
 function greaseGroundHazardEntrySaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return [...state.combatants].flatMap(([, combatant]) =>
-    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] => {
-      if (effect.kind !== "greaseGroundHazard") {
-        return [];
-      }
-      return [greaseGroundHazardSaveAct(state, actorId, effect, "entersArea")];
-    }),
+    combatant.activeEffects.flatMap(
+      (effect): readonly BattleActExecutionCandidate[] => {
+        if (effect.kind !== "greaseGroundHazard") {
+          return [];
+        }
+        return [
+          greaseGroundHazardSaveAct(state, actorId, effect, "entersArea"),
+        ];
+      },
+    ),
   );
 }
 
 function greaseGroundHazardEndTurnActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return [...state.combatants].flatMap(([, combatant]) =>
-    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] => {
-      if (effect.kind !== "greaseGroundHazard") {
-        return [];
-      }
-      return [
-        greaseGroundHazardSaveAct(state, actorId, effect, "endsTurnInArea"),
-      ];
-    }),
+    combatant.activeEffects.flatMap(
+      (effect): readonly BattleActExecutionCandidate[] => {
+        if (effect.kind !== "greaseGroundHazard") {
+          return [];
+        }
+        return [
+          greaseGroundHazardSaveAct(state, actorId, effect, "endsTurnInArea"),
+        ];
+      },
+    ),
   );
 }
 
@@ -1323,14 +1142,12 @@ function greaseGroundHazardSaveAct(
   actorId: CombatantId,
   effect: GreaseGroundHazardEffect,
   trigger: "entersArea" | "endsTurnInArea",
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "greaseGroundHazardSave",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
       trigger,
     },
@@ -1359,7 +1176,7 @@ function activeWebRestraintHazards(
 function webRestraintEntrySaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return activeWebRestraintHazards(state).flatMap((effect) =>
     effect.entrySavedThisTurn.includes(actorId)
       ? []
@@ -1370,7 +1187,7 @@ function webRestraintEntrySaveActs(
 function webRestraintStartTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return activeWebRestraintHazards(state).flatMap((effect) =>
     effect.startTurnSavedThisTurn.includes(actorId)
       ? []
@@ -1383,14 +1200,12 @@ function webRestraintSaveAct(
   actorId: CombatantId,
   effect: WebRestraintHazardEffect,
   trigger: "entersArea" | "startsTurnInArea",
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "webRestraintSave",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
       trigger,
     },
@@ -1408,13 +1223,13 @@ function webRestraintSaveAct(
 function webRestrainedNoLongerInAreaActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
   }
   return actor.activeEffects.flatMap(
-    (effect): readonly AvailableBattleAct[] => {
+    (effect): readonly BattleActExecutionCandidate[] => {
       if (
         effect.kind !== "spellCondition" ||
         effect.condition !== "restrained" ||
@@ -1426,15 +1241,13 @@ function webRestrainedNoLongerInAreaActs(
         .filter(
           (web) =>
             web.sourceCombatantId === effect.sourceCombatantId &&
-            web.sourceSpellId === effect.sourceSpellId,
+            web.sourceProcedureRef === effect.sourceProcedureRef,
         )
         .map((web) => ({
           subject: {
             tag: "runtimeCommand" as const,
             actorId,
             command: "webRestrainedNoLongerInArea" as const,
-            sourceCombatantId: web.sourceCombatantId,
-            sourceSpellId: spellId(web.sourceSpellId),
             areaId: web.areaId,
           },
           label: "Leave Web",
@@ -1449,14 +1262,12 @@ function webRestrainedNoLongerInAreaActs(
 function webAreaRemovalActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return activeWebRestraintHazards(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
       actorId,
       command: "webAreaRemoved" as const,
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
     },
     label: "Remove Web Area",
@@ -1480,14 +1291,12 @@ function activeGustOfWindLineEffects(
 function gustOfWindLineEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return activeGustOfWindLineEffects(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
       actorId,
       command: "gustOfWindLineSave" as const,
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
       directionId: effect.directionId,
       trigger: "endsTurnInLine" as const,
@@ -1509,7 +1318,7 @@ function gustOfWindLineEndTurnSaveActs(
 function gustOfWindLineDirectionChangeActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   if (
     !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
@@ -1525,8 +1334,6 @@ function gustOfWindLineDirectionChangeActs(
               tag: "runtimeCommand" as const,
               actorId,
               command: "gustOfWindLineDirectionChange" as const,
-              sourceCombatantId: effect.sourceCombatantId,
-              sourceSpellId: spellId(effect.sourceSpellId),
               areaId: effect.areaId,
               directionId: effect.directionId,
             },
@@ -1553,7 +1360,7 @@ function gustOfWindLineDirectionChangeIsLaterTurn(
 function flamingSphereEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return activeFlamingSphereEffects(state).map((effect) =>
     flamingSphereSaveAct(state, actorId, effect),
   );
@@ -1562,7 +1369,7 @@ function flamingSphereEndTurnSaveActs(
 function flamingSphereRamActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   if (
     !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
@@ -1581,7 +1388,7 @@ function flamingSphereRamActs(
 function flamingSphereRepositionActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   if (
     !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
@@ -1610,14 +1417,12 @@ function flamingSphereSaveAct(
   state: BattleState,
   actorId: CombatantId,
   effect: FlamingSphereEffect,
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "movableZoneSave",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
       trigger: "endsTurnWithinFiveFeetOfSphere",
     },
@@ -1638,14 +1443,12 @@ function flamingSphereSaveAct(
 function flamingSphereRepositionAct(
   actorId: CombatantId,
   effect: FlamingSphereEffect,
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "movableZoneReposition",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
     },
     label: "Move Flaming Sphere",
@@ -1660,15 +1463,13 @@ function flamingSphereRamAct(
   actorId: CombatantId,
   targetId: CombatantId,
   effect: FlamingSphereEffect,
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "movableZoneRam",
       targetId,
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
       trigger: "rammedBySphere",
     },
@@ -1698,14 +1499,12 @@ function activeMoonbeamEffects(state: BattleState): readonly MoonbeamEffect[] {
 function moonbeamEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return activeMoonbeamEffects(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
       actorId,
       command: "movableZoneSave" as const,
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
       trigger: "endsTurnInArea" as const,
     },
@@ -1721,7 +1520,7 @@ function moonbeamEndTurnSaveActs(
 function moonbeamCylinderExitActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return activeMoonbeamEffects(state)
     .filter((effect) => effect.shapeShiftSuppressed.includes(actorId))
     .map((effect) => ({
@@ -1729,8 +1528,6 @@ function moonbeamCylinderExitActs(
         tag: "runtimeCommand" as const,
         actorId,
         command: "moonbeamCylinderExit" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
         areaId: effect.areaId,
       },
       label: "Leave Moonbeam Cylinder",
@@ -1743,7 +1540,7 @@ function moonbeamCylinderExitActs(
 function moonbeamRepositionActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
@@ -1759,8 +1556,6 @@ function moonbeamRepositionActs(
               tag: "runtimeCommand" as const,
               actorId,
               command: "movableZoneReposition" as const,
-              sourceCombatantId: effect.sourceCombatantId,
-              sourceSpellId: spellId(effect.sourceSpellId),
               areaId: effect.areaId,
             },
             label: "Move Movable Zone",
@@ -1776,7 +1571,7 @@ function moonbeamRepositionActs(
 function protectionRelevantEffectSaveActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return protectionRelevantEffectsForTarget(state, actorId).map((effect) => {
     const hole = protectionRelevantEffectSavingThrowOutcomeHole(
       state,
@@ -1789,11 +1584,10 @@ function protectionRelevantEffectSaveActs(
         tag: "runtimeCommand" as const,
         actorId,
         command: "protectionRelevantEffectSave" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
+        effectRef: spellActiveEffectExecutionRef(effect),
         relevantEffect,
       },
-      label: `${effect.sourceSpellId} ${relevantEffect} save`,
+      label: `${relevantEffect} save`,
       summary:
         "Resolve a new Saving Throw against an already-applied effect relevant to Protection from Evil and Good.",
       initialHoles: [hole],
@@ -1804,12 +1598,13 @@ function protectionRelevantEffectSaveActs(
 function fogCloudStrongWindDispersalActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] =>
-      effect.kind === "fogCloudObscurement"
-        ? [fogCloudStrongWindDispersalAct(actorId, effect)]
-        : [],
+    combatant.activeEffects.flatMap(
+      (effect): readonly BattleActExecutionCandidate[] =>
+        effect.kind === "fogCloudObscurement"
+          ? [fogCloudStrongWindDispersalAct(actorId, effect)]
+          : [],
     ),
   );
 }
@@ -1817,14 +1612,12 @@ function fogCloudStrongWindDispersalActs(
 function fogCloudStrongWindDispersalAct(
   actorId: CombatantId,
   effect: FogCloudObscurementEffect,
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "disperseFogCloud",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
     },
     label: "Disperse Fog Cloud",
@@ -1836,12 +1629,13 @@ function fogCloudStrongWindDispersalAct(
 function cloudkillStrongWindDispersalActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] =>
-      effect.kind === "cloudkillAreaHazard"
-        ? [cloudkillStrongWindDispersalAct(actorId, effect)]
-        : [],
+    combatant.activeEffects.flatMap(
+      (effect): readonly BattleActExecutionCandidate[] =>
+        effect.kind === "cloudkillAreaHazard"
+          ? [cloudkillStrongWindDispersalAct(actorId, effect)]
+          : [],
     ),
   );
 }
@@ -1849,14 +1643,12 @@ function cloudkillStrongWindDispersalActs(
 function cloudkillStrongWindDispersalAct(
   actorId: CombatantId,
   effect: CloudkillAreaHazardEffect,
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "disperseCloudkill",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
     },
     label: "Disperse Cloudkill",
@@ -1868,12 +1660,13 @@ function cloudkillStrongWindDispersalAct(
 function wardingBondSeparationActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   return [...state.combatants].flatMap(([targetId, combatant]) =>
-    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] =>
-      isWardingBondEffect(effect)
-        ? [wardingBondSeparationAct(actorId, targetId, effect)]
-        : [],
+    combatant.activeEffects.flatMap(
+      (effect): readonly BattleActExecutionCandidate[] =>
+        isWardingBondEffect(effect)
+          ? [wardingBondSeparationAct(actorId, targetId, effect)]
+          : [],
     ),
   );
 }
@@ -1882,14 +1675,13 @@ function wardingBondSeparationAct(
   actorId: CombatantId,
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>,
-): AvailableBattleAct {
+): BattleActExecutionCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
       command: "wardingBondSeparation",
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceSpellId: spellId(effect.sourceSpellId),
+      effectRef: spellActiveEffectExecutionRef(effect),
       targetId,
     },
     label: "End Warding Bond",
@@ -1898,7 +1690,7 @@ function wardingBondSeparationAct(
     initialHoles: [
       wardingBondSeparationFactsHole({
         sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         targetId,
       }),
     ],
@@ -1908,7 +1700,7 @@ function wardingBondSeparationAct(
 export function movementActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const movementHoleForActor = movementHole(state, actorId);
   if (
     !combatantCanMoveInState(state, actorId) ||
@@ -1934,13 +1726,13 @@ function jumpMovementReplacementActs(
   state: BattleState,
   actorId: CombatantId,
   movementHoleForActor: ReturnType<typeof movementHole>,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
   }
   return actor.activeEffects.flatMap(
-    (effect): readonly AvailableBattleAct[] => {
+    (effect): readonly BattleActExecutionCandidate[] => {
       if (
         effect.kind !== "jumpMovementReplacement" ||
         effect.usedThisTurn ||
@@ -1955,8 +1747,7 @@ function jumpMovementReplacementActs(
             tag: "runtimeCommand" as const,
             actorId,
             command: "jumpMovementReplacement" as const,
-            sourceCombatantId: effect.sourceCombatantId,
-            sourceSpellId: spellId(effect.sourceSpellId),
+            effectRef: spellActiveEffectExecutionRef(effect),
           },
           label: "Jump",
           summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxJumpMovementReplacementDistanceFeet(state, actorId, effect)} feet using table-supplied landing facts.`,
@@ -1970,7 +1761,7 @@ function jumpMovementReplacementActs(
 export function dashActsForActor(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) return [];
   const speedKinds = representedMovementSpeedKinds(actor);
@@ -1994,7 +1785,7 @@ export function dashSubjectForSpeedKind(
 export function statBlockMultiattackActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     actor?.origin.kind !== "statBlock" ||
@@ -2038,7 +1829,7 @@ export function statBlockMultiattackActs(
 export function statBlockBonusActionOptionActs(
   state: BattleState,
   actorId: CombatantId,
-): readonly AvailableBattleAct[] {
+): readonly BattleActExecutionCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     actor?.origin.kind !== "statBlock" ||

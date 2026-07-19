@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -15,7 +16,6 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,

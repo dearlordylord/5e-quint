@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { isDeepStrictEqual } from "node:util";
@@ -32,7 +33,6 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -40,7 +40,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 

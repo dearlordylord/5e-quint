@@ -2,10 +2,14 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE monk_heightened_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-04-MONK-STEP-OF-WIND-CARRY monk_heightened_focus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
-  applyCondition,
   actionSurgeResource,
+  applyCondition,
   attackRollFill,
   battleId,
   characterSeed,
@@ -29,7 +33,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Monk's Focus battle options", () => {
@@ -61,7 +65,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
         candidate.option === "patientDefense" &&
         candidate.mode === "freeDisengage",
     );
-    if (subject.tag !== "monkFocusOption") {
+    if (subject.tag !== "monkFocusOption" || !("procedureRef" in subject)) {
       throw new Error("Expected a Monk Focus option subject.");
     }
     const monk = state.combatants.get(fighterId);
@@ -966,8 +970,11 @@ function withJumpMovementReplacementEffect(state: BattleState): BattleState {
         ...monk.activeEffects,
         {
           kind: "jumpMovementReplacement",
+          effectRef: battleActiveEffectExecutionRefForTest("monk-jump"),
           sourceCombatantId: fighterId,
-          sourceSpellId: "jump",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("jump"),
+          ),
           movementCostFeet: movementFeet(10),
           maxJumpDistanceFeet: movementFeet(30),
           usedThisTurn: false,
@@ -1079,7 +1086,7 @@ function monkFocusUsesRemaining(
   );
   if (monk?.origin.kind !== "character") return undefined;
   const resource = monk.origin.resources.find(
-    (resource) => resource.unitId === "monk_monks_focus",
+    (resource) => resource.usage === "limited",
   );
   return resource?.usage === "limited" ? resource.usesRemaining : undefined;
 }

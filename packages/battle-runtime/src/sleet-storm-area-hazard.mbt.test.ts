@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleet-storm-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -36,12 +38,11 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleObscurementZones,
   endTurn,
-  resolveBattleSubject,
   type BattleActiveEffect,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   sleetStormAreaId,
@@ -214,7 +215,8 @@ describe("Sleet Storm area hazard MBT parity", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Sleet Storm save was already resolved for this target this turn.",
+      message:
+        "Sleet Storm save was already resolved for this target this turn.",
     });
     expect(sleetStormProjection(saved)).toMatchObject({
       savedThisTurn: true,
@@ -267,7 +269,8 @@ describe("Sleet Storm area hazard MBT parity", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Sleet Storm save was already resolved for this target this turn.",
+      message:
+        "Sleet Storm save was already resolved for this target this turn.",
     });
     expect(sleetStormProjection(saved)).toMatchObject({
       savedThisTurn: true,
@@ -310,7 +313,9 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
   const target = requireCombatant(state, spellTargetId);
   const concentrationEffect: BattleActiveEffect = {
     kind: "spellArmorClassBonus",
-    sourceSpellId: syntheticTargetConcentrationSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(syntheticTargetConcentrationSpellId),
+    ),
     sourceCombatantId: spellTargetId,
     bonus: 1,
     negatedSpellIds: [],
@@ -324,7 +329,9 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
       concentration: {
-        sourceSpellId: syntheticTargetConcentrationSpellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(syntheticTargetConcentrationSpellId),
+        ),
         effectKind: "spellEffect",
       },
       activeEffects: [...target.activeEffects, concentrationEffect],
@@ -419,6 +426,18 @@ function fillSleetStormSave(
 function moveWithDifficultTerrain(
   state: SleetStormRuntimeState,
 ): SleetStormRuntimeState {
+  const hazard = requireCombatant(
+    state.battle,
+    spellCasterId,
+  ).activeEffects.find(
+    (effect): effect is SleetStormAreaHazardEffect =>
+      effect.kind === "sleetStormAreaHazard" &&
+      effect.sourceCombatantId === spellCasterId &&
+      effect.areaId === sleetStormAreaId,
+  );
+  if (hazard === undefined) {
+    throw new Error("Expected active Sleet Storm area hazard.");
+  }
   const moveSubject: BattleSubject = {
     tag: "runtimeCommand",
     actorId: spellTargetId,
@@ -446,7 +465,7 @@ function moveWithDifficultTerrain(
               {
                 kind: "sleetStormHazard",
                 sourceCombatantId: spellCasterId,
-                sourceSpellId: sleetStormUnitId,
+                sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: sleetStormAreaId,
               },
             ],
@@ -488,7 +507,6 @@ function sleetStormProjection(
   const hazard = caster.activeEffects.find(
     (effect): effect is SleetStormAreaHazardEffect =>
       effect.kind === "sleetStormAreaHazard" &&
-      effect.sourceSpellId === sleetStormUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === sleetStormAreaId,
   );
@@ -503,19 +521,22 @@ function sleetStormProjection(
       }) !== undefined,
     hazardActive: hazard !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === sleetStormUnitId &&
+      hazard !== undefined &&
+      caster.concentration?.sourceProcedureRef === hazard.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     targetConcentrating:
-      target.concentration?.sourceSpellId ===
-        syntheticTargetConcentrationSpellId &&
-      target.concentration.effectKind === "spellEffect",
+      target.concentration?.sourceProcedureRef ===
+        battleProcedureExecutionRefForTest(
+          String(syntheticTargetConcentrationSpellId),
+        ) && target.concentration.effectKind === "spellEffect",
     targetProne: target.conditions.prone,
     savedThisTurn: hazard?.savedThisTurn.includes(spellTargetId) ?? false,
     movementSpentFeet: Number(target.movementSpentFeet),
     heavilyObscured: battleObscurementZones(state.battle).some(
       (zone) =>
         zone.kind === "spellObscurementZone" &&
-        zone.sourceSpellId === sleetStormUnitId &&
+        hazard !== undefined &&
+        zone.sourceProcedureRef === hazard.sourceProcedureRef &&
         zone.sourceCombatantId === spellCasterId &&
         zone.obscurement === "heavilyObscured" &&
         zone.area.kind === "pointOriginCylinder" &&

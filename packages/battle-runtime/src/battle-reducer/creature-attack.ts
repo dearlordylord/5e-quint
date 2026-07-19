@@ -114,6 +114,7 @@ export function minimalCreatureAttackActs(
         targetId,
       };
       return {
+        presentation: { kind: "intrinsic" },
         subject,
         label: "Creature Attack",
         summary: "Resolve a minimal creature attack hit and damage.",

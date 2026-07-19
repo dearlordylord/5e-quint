@@ -1,3 +1,7 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-CALM-EMOTIONS calm_emotions
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-save-gated-condition-immunity
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -43,13 +47,20 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        calmEmotionsUnitId,
-        2,
-        "saveGatedConditionImmunity",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(
+          calmEmotionsUnitId,
+          2,
+          "saveGatedConditionImmunity",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -72,14 +83,18 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         activeEffects: [
           expect.objectContaining({
             kind: "conditionImmunity",
-            sourceSpellId: calmEmotionsUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(calmEmotionsUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             condition: "charmed",
             expiresAt: { kind: "concentration", combatantId: spellCasterId },
           }),
           expect.objectContaining({
             kind: "conditionImmunity",
-            sourceSpellId: calmEmotionsUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(calmEmotionsUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             condition: "frightened",
             expiresAt: { kind: "concentration", combatantId: spellCasterId },
@@ -158,7 +173,9 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       [
         expect.objectContaining({
           kind: "conditionImmunity",
-          sourceSpellId: calmEmotionsUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(calmEmotionsUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           condition: "charmed",
           conditionHadNonSpellSource: true,
@@ -166,7 +183,9 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         }),
         expect.objectContaining({
           kind: "conditionImmunity",
-          sourceSpellId: calmEmotionsUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(calmEmotionsUnitId),
+          ),
           sourceCombatantId: spellCasterId,
           condition: "frightened",
           conditionHadNonSpellSource: true,

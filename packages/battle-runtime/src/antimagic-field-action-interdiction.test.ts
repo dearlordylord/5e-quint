@@ -1,3 +1,9 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -44,13 +50,11 @@ import {
 import {
   battleAreaId,
   battleId,
-  battleSpellEffectOccurrenceId,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
   combatantId,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   removeBattleCombatants,
   startBattle,
   type BattleActiveEffect,
@@ -381,10 +385,12 @@ function spiritualWeaponActiveEffect(): Extract<
   }
   return {
     kind: "spiritualWeapon",
-    sourceEffectId: battleSpellEffectOccurrenceId(
+    effectRef: battleActiveEffectExecutionRefForTest(
       "antimagic-action-spiritual-weapon",
     ),
-    sourceSpellId: spiritualWeaponUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spiritualWeaponUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     sourceSpellLevel,
     forcePositionId: battleTablePositionId(
@@ -516,7 +522,9 @@ function antimagicFieldAuraEffect(
 ): BattleActiveEffect {
   return {
     kind: "antimagicFieldOngoingSpellSuppression",
-    sourceSpellId: antimagicFieldUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
     sourceCombatantId: aura.sourceCombatantId,
     areaId: antimagicFieldAreaId,
     auraMembership: aura.membership,
@@ -600,7 +608,7 @@ function preserveLifeActOrUndefined(state: BattleState) {
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === spellCasterId &&
-      act.subject.unitId === clericPreserveLifeUnitId,
+      battleActUnitPresentation(act)?.unitId === clericPreserveLifeUnitId,
   );
 }
 

@@ -1,3 +1,8 @@
+import {
+  characterSpellProcedureRefMatchesSpellForTest,
+} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-SANCTUARY sanctuary
 // UNIT-IDENTITY-REPLAY: L1H-SANCTUARY sanctuary doCastSanctuaryWardCreation doInterdictDirectAttackFailedSaveLoss doInterdictDirectSpellSuccessfulSavePassThrough doRetargetDirectAttackToLegalReplacement doRejectIllegalReplacementTarget doExcludeAreaEffectFromInterdiction doEndWardOnWardedAttackRoll doEndWardOnWardedSpellCast doEndWardOnWardedDamageDealt
@@ -26,7 +31,6 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   startBattle,
   type AvailableBattleAct,
   type BattleActiveEffect,
@@ -37,7 +41,8 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleProcedureExecutionRef,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -137,7 +142,10 @@ type BonusActionSpellAct = AvailableBattleAct & {
   >;
 };
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
@@ -462,6 +470,7 @@ function observeWardCreationRoute(): SanctuaryRouteProjection {
         sanctuaryTargetListFill(
           requireHole(act.initialHoles, "spellTargetList"),
           wardedId,
+          act.subject.procedureRef,
         ),
       ],
     }),
@@ -512,7 +521,7 @@ function observeDirectSpellSuccessfulSaveRoute(): SanctuaryRouteProjection {
   const act = actionSpellAct(warded, fireBoltUnitId);
   const targetFill = spellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
-    fireBoltUnitId,
+    act.subject.procedureRef,
     casterId,
     wardedId,
   );
@@ -712,7 +721,7 @@ function observeSpellCastEarlyEndRoute(): SanctuaryRouteProjection {
       fills: [
         spellTargetFill(
           requireHole(act.initialHoles, "targetChoice"),
-          longstriderUnitId,
+          act.subject.procedureRef,
           casterId,
           casterId,
         ),
@@ -875,7 +884,7 @@ function projectDirectSpellSuccessfulSave(): SanctuarySelectedIdentityProjection
   const act = actionSpellAct(warded, fireBoltUnitId);
   const targetFill = spellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
-    fireBoltUnitId,
+    act.subject.procedureRef,
     casterId,
     wardedId,
   );
@@ -1089,7 +1098,7 @@ function projectSpellCastEarlyEnd(): SanctuarySelectedIdentityProjection {
       fills: [
         spellTargetFill(
           requireHole(act.initialHoles, "targetChoice"),
-          longstriderUnitId,
+          act.subject.procedureRef,
           casterId,
           casterId,
         ),
@@ -1126,7 +1135,13 @@ function projectBattleState(input: {
   return expectedProjection({
     wardPresent: ward !== undefined,
     wardSourceIsSanctuary:
-      ward?.sourceSpellId === sanctuaryUnitId &&
+      ward !== undefined &&
+      characterSpellProcedureRefMatchesSpellForTest(
+        input.state,
+        ward.sourceCombatantId,
+        ward.sourceProcedureRef,
+        sanctuaryUnitId,
+      ) &&
       ward.sourceCombatantId === casterId &&
       ward.save.ability === "wis",
     wardedHp: Number(combatant(input.state, wardedId).hp),
@@ -1247,6 +1262,7 @@ function castSanctuary(state: BattleState, targetId: CombatantId): BattleState {
         sanctuaryTargetListFill(
           requireHole(act.initialHoles, "spellTargetList"),
           targetId,
+          act.subject.procedureRef,
         ),
       ],
     }),
@@ -1258,7 +1274,7 @@ function bonusActionSanctuaryAct(state: BattleState): BonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.procedure ===
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
         "sanctuaryTargetingInterdiction",
   );
   if (act === undefined) {
@@ -1274,7 +1290,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected action spell act for ${spellId}.`);
@@ -1395,13 +1411,19 @@ function endTurnFor(state: BattleState, actorId: CombatantId): BattleState {
 function sanctuaryTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
     kind: "spellTargetList",
     holeId: hole.holeId,
     value: { targetIds: [targetId] },
     spatialFacts: [
-      { kind: "spellTarget", casterId, targetId, spellId: sanctuaryUnitId },
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      },
     ],
   };
 }
@@ -1432,7 +1454,7 @@ function attackTargetFill(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: SanctuarySelectedIdentitySpellUnitId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   casterIdValue: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -1453,7 +1475,12 @@ function spellTargetFill(
         }
       : {}),
     spatialFacts: [
-      { kind: "spellTarget", casterId: casterIdValue, targetId, spellId },
+      {
+        kind: "spellTarget",
+        casterId: casterIdValue,
+        targetId,
+        sourceProcedureRef,
+      },
     ],
   };
 }

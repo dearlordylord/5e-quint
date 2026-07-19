@@ -1,3 +1,5 @@
+import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
@@ -12,8 +14,10 @@
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 import {
+  resolveBattleSubject,
   characterAttackSubjectForTest,
   characterSpellInvocationRefForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
 import {
@@ -69,8 +73,8 @@ import {
   openCreatureFallsInterruptWindow,
   resolveBattleInterrupt,
   resolveFeatherFallLanding,
-  resolveBattleSubject,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
   type AvailableBattleAct,
   type BattleActiveEffect,
@@ -83,6 +87,7 @@ import {
   type BattleLightEmitterProjectionFact,
   type BattleObscurementZone,
   type BattleObjectId,
+  type BattleProcedureExecutionRef,
   type BattleReducerRouteEvent,
   type BattleReducerRouteSubjectFamily,
   type BattleResolutionResult,
@@ -91,7 +96,7 @@ import {
   type BattleSpellAreaChoice,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
@@ -256,7 +261,10 @@ type SelectedUnitIdentityReplay = {
 };
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type BonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -1385,7 +1393,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
   const state = featherFallBattle();
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const awaitingReaction = openFeatherFallWindow(state, [
-    featherFallTriggerFact(),
+    featherFallTriggerFact(featherFallProcedureRef(state)),
   ]);
   route.push(
     ...routeEventsOfSubject(
@@ -1411,6 +1419,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
+              choice.subject.procedureRef,
               [featherFallFallingAllyId, featherFallOtherFallingAllyId],
             ),
           ],
@@ -1499,6 +1508,8 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+          .sourceProcedureRef,
       }),
     ],
   });
@@ -1574,6 +1585,8 @@ function replayAreaHazardMovementRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+          .sourceProcedureRef,
       }),
     ],
   });
@@ -1594,9 +1607,11 @@ function replayMovementReplacementRoute(): readonly BattleReducerRouteEvent[] {
     state: initial,
     subject: castAct.subject,
     fills: [
-      jumpTargetListFill(requireHole(castAct.initialHoles, "spellTargetList"), [
-        jumpTargetId,
-      ]),
+      jumpTargetListFill(
+        requireHole(castAct.initialHoles, "spellTargetList"),
+        [jumpTargetId],
+        castAct.subject.procedureRef,
+      ),
     ],
   });
   if (cast.tag !== "resolved") {
@@ -1647,6 +1662,7 @@ function replayObjectLightEmitterRoute(): readonly BattleReducerRouteEvent[] {
     fills: [
       lightObjectTargetFill(
         requireHole(act.initialHoles, "objectTargetChoice"),
+        act.subject.procedureRef,
         {
           objectId: lightObjectId,
           size: "large",
@@ -1770,7 +1786,7 @@ function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
   const state = featherFallBattle();
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const awaitingReaction = openFeatherFallWindow(state, [
-    featherFallTriggerFact(),
+    featherFallTriggerFact(featherFallProcedureRef(state)),
   ]);
   route.push(
     ...routeEventsOfSubject(
@@ -1796,6 +1812,7 @@ function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
           fills: [
             featherFallTargetListFill(
               requireHole(choice.initialHoles, "spellTargetList"),
+              choice.subject.procedureRef,
               [featherFallFallingAllyId, featherFallOtherFallingAllyId],
             ),
           ],
@@ -2068,7 +2085,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         unwitnessedTrigger.tag === "resolved" &&
         unwitnessedTrigger.snapshot.pendingInterrupt === null;
       const awaitingReaction = openFeatherFallWindow(state, [
-        featherFallTriggerFact(),
+        featherFallTriggerFact(featherFallProcedureRef(state)),
       ]);
       const triggerOffered =
         awaitingReaction.tag === "needsHoles" &&
@@ -2093,6 +2110,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
               fills: [
                 featherFallTargetListFill(
                   requireHole(choice.initialHoles, "spellTargetList"),
+                  choice.subject.procedureRef,
                   [featherFallFallingAllyId, featherFallOtherFallingAllyId],
                 ),
               ],
@@ -2259,6 +2277,8 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: staleGreaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+              .sourceProcedureRef,
           }),
         ],
       });
@@ -2270,6 +2290,8 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: greaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+              .sourceProcedureRef,
           }),
         ],
       });
@@ -2391,7 +2413,13 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const cast = resolveBattleSubject({
         state,
         subject: castAct.subject,
-        fills: [jumpTargetListFill(targetList, [jumpTargetId])],
+        fills: [
+          jumpTargetListFill(
+            targetList,
+            [jumpTargetId],
+            castAct.subject.procedureRef,
+          ),
+        ],
       });
       if (cast.tag !== "resolved") {
         throw new Error(`Expected Jump cast to resolve, got ${cast.tag}.`);
@@ -2489,7 +2517,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             size: "huge",
           }),
@@ -2499,7 +2527,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             wornOrCarried: { kind: "someoneElse", relation: "worn" },
           }),
@@ -2509,7 +2537,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             wornOrCarried: { kind: "someoneElse", relation: "carried" },
           }),
@@ -2519,7 +2547,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state,
         subject: act.subject,
         fills: [
-          lightObjectTargetFill(targetHole, {
+          lightObjectTargetFill(targetHole, act.subject.procedureRef, {
             objectId: lightObjectId,
             size: "large",
             wornOrCarried: { kind: "caster" },
@@ -2548,6 +2576,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         fills: [
           lightObjectTargetFill(
             requireHole(recastAct.initialHoles, "objectTargetChoice"),
+            recastAct.subject.procedureRef,
             {
               objectId: lightRecastObjectId,
               size: "large",
@@ -2630,7 +2659,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const target = requireHole(hurlAct.initialHoles, "targetChoice");
       const targetFill = spellTargetFill(
         target,
-        produceFlameUnitId,
+        hurlAct.subject.procedureRef,
         casterId,
         observerId,
       );
@@ -3285,12 +3314,14 @@ function lightBattle(): BattleState {
 }
 
 function lightOneRoundRemainingBattle(): BattleState {
+  const battle = lightBattle();
   return {
-    ...lightBattle(),
+    ...battle,
     lightEmitters: [
       lightObjectSpellEmitter({
         objectId: lightExpiringObjectId,
         durationTicks: lightExpiringDurationTicks,
+        sourceProcedureRef: lightAct(battle).subject.procedureRef,
       }),
     ],
   };
@@ -3340,7 +3371,10 @@ function produceFlameOneRoundRemainingBattle(): BattleState {
       ...caster,
       activeEffects: [
         ...caster.activeEffects,
-        produceFlameHeldLightEffectValue(produceFlameExpiringDurationTicks),
+        produceFlameHeldLightEffectValue(
+          produceFlameExpiringDurationTicks,
+          produceFlameHeldLightAct(battle).subject.procedureRef,
+        ),
       ],
     }),
   };
@@ -3456,8 +3490,10 @@ function dancingLightsSeparateCastAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === dancingLightsUnitId &&
-      candidate.subject.invocation.procedure === "dancingLightsSeparateCast",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        dancingLightsUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "dancingLightsSeparateCast",
   );
   if (act === undefined) {
     throw new Error("Expected Dancing Lights separate cast action.");
@@ -3469,8 +3505,10 @@ function dancingLightsRepositionAct(state: BattleState): BonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === dancingLightsUnitId &&
-      candidate.subject.invocation.procedure === "dancingLightsReposition",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        dancingLightsUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "dancingLightsReposition",
   );
   if (act === undefined) {
     throw new Error("Expected Dancing Lights reposition Bonus Action.");
@@ -3482,8 +3520,10 @@ function faerieFireAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === faerieFireUnitId &&
-      candidate.subject.invocation.procedure === "saveGatedAttackRollAdvantage",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        faerieFireUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "saveGatedAttackRollAdvantage",
   );
   if (act === undefined) {
     throw new Error("Expected Faerie Fire save-gated outline action.");
@@ -3495,8 +3535,10 @@ function fogCloudAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === fogCloudUnitId &&
-      candidate.subject.invocation.procedure === "fogCloudObscurement",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        fogCloudUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "fogCloudObscurement",
   );
   if (act === undefined) {
     throw new Error("Expected Fog Cloud obscurement action.");
@@ -3508,8 +3550,10 @@ function greaseAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === greaseUnitId &&
-      candidate.subject.invocation.procedure === "greaseGroundHazard",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        greaseUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "greaseGroundHazard",
   );
   if (act === undefined) {
     throw new Error("Expected Grease ground-hazard action.");
@@ -3540,8 +3584,6 @@ function greaseGroundHazardSaveAct(
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "greaseGroundHazardSave" &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.sourceCombatantId === casterId &&
-      candidate.subject.sourceSpellId === greaseUnitId &&
       candidate.subject.areaId === greaseAreaId &&
       candidate.subject.trigger === trigger,
   );
@@ -3555,8 +3597,10 @@ function jumpCastAct(state: BattleState): BonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === jumpUnitId &&
-      candidate.subject.invocation.procedure === "jumpMovementReplacement",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        jumpUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "jumpMovementReplacement",
   );
   if (act === undefined) {
     throw new Error("Expected Jump movement replacement Bonus Action spell.");
@@ -3568,8 +3612,10 @@ function lightAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === lightUnitId &&
-      candidate.subject.invocation.procedure === "objectLight",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        lightUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "objectLight",
   );
   if (act === undefined) {
     throw new Error("Expected Light object-emitter action.");
@@ -3581,8 +3627,10 @@ function produceFlameHeldLightAct(state: BattleState): BonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === produceFlameUnitId &&
-      candidate.subject.invocation.procedure === "heldLight",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        produceFlameUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "heldLight",
   );
   if (act === undefined) {
     throw new Error("Expected Produce Flame held-light Bonus Action spell.");
@@ -3594,8 +3642,10 @@ function produceFlameHurlAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === produceFlameUnitId &&
-      candidate.subject.invocation.procedure === "heldLightHurl",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        produceFlameUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "heldLightHurl",
   );
   if (act === undefined) {
     throw new Error("Expected Produce Flame hurl Magic Action spell.");
@@ -3607,8 +3657,10 @@ function thunderwaveAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === thunderwaveUnitId &&
-      candidate.subject.invocation.procedure === "saveGatedDamage",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        thunderwaveUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "saveGatedDamage",
   );
   if (act === undefined) {
     throw new Error("Expected Thunderwave save-gated damage action.");
@@ -3635,9 +3687,7 @@ function maybeJumpMovementReplacementAct(
     (candidate): candidate is JumpMovementReplacementAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "jumpMovementReplacement" &&
-      candidate.subject.actorId === actorId &&
-      candidate.subject.sourceCombatantId === casterId &&
-      candidate.subject.sourceSpellId === jumpUnitId,
+      candidate.subject.actorId === actorId,
   );
 }
 
@@ -3845,6 +3895,7 @@ function greaseMovementFill(
   input: {
     readonly areaId: BattleAreaId;
     readonly movementCostFeet: MovementFeet;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -3860,7 +3911,7 @@ function greaseMovementFill(
           {
             kind: "greaseGroundHazard",
             sourceCombatantId: casterId,
-            sourceSpellId: spellRecord(greaseUnitId).id,
+            sourceProcedureRef: input.sourceProcedureRef,
             areaId: input.areaId,
           },
         ],
@@ -3874,6 +3925,7 @@ function greaseMovementFill(
 function jumpTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   targetIds: readonly CombatantId[],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
     kind: "spellTargetList",
@@ -3884,13 +3936,13 @@ function jumpTargetListFill(
         kind: "spellTarget" as const,
         casterId,
         targetId,
-        spellId: jumpUnitId,
+        sourceProcedureRef,
       },
       {
         kind: "spellTargetKnownWilling" as const,
         casterId,
         targetId,
-        spellId: jumpUnitId,
+        sourceProcedureRef,
       },
     ]),
   };
@@ -3943,6 +3995,7 @@ function jumpMovementReplacementFill(
 
 function lightObjectTargetFill(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   input: {
     readonly objectId: BattleObjectId;
     readonly size?: LightObjectTargetFact["size"];
@@ -3958,7 +4011,7 @@ function lightObjectTargetFill(
         kind: "spellObjectLightTarget",
         casterId,
         objectId: input.objectId,
-        spellId: lightUnitId,
+        sourceProcedureRef,
         size: input.size ?? "medium",
         wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
       },
@@ -4001,7 +4054,19 @@ function openFeatherFallWindow(
   });
 }
 
-function featherFallTriggerFact(): Extract<
+function featherFallProcedureRef(
+  state: BattleState,
+): BattleProcedureExecutionRef {
+  return requireCharacterSpellProcedureRefForTest(
+    state,
+    casterId,
+    spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
+  );
+}
+
+function featherFallTriggerFact(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+): Extract<
   BattleTargetSpatialFact,
   { readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange" }
 > {
@@ -4009,7 +4074,7 @@ function featherFallTriggerFact(): Extract<
     kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
     reactorId: casterId,
     fallingCreatureId: featherFallFallingAllyId,
-    spellId: featherFallUnitId,
+    sourceProcedureRef,
     rangeFeet: movementFeet(60),
   };
 }
@@ -4038,6 +4103,7 @@ function featherFallReactionChoice(
 
 function featherFallTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -4048,7 +4114,7 @@ function featherFallTargetListFill(
       kind: "featherFallTargetFallingWithinRange",
       casterId,
       targetId,
-      spellId: featherFallUnitId,
+      sourceProcedureRef,
       rangeFeet: movementFeet(60),
     })),
   };
@@ -4072,8 +4138,6 @@ function fogCloudStrongWindDispersalAct(
     (candidate): candidate is FogCloudStrongWindDispersalAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "disperseFogCloud" &&
-      candidate.subject.sourceCombatantId === casterId &&
-      candidate.subject.sourceSpellId === fogCloudUnitId &&
       candidate.subject.areaId === fogCloudAreaId,
   );
   if (act === undefined) {
@@ -4091,7 +4155,7 @@ function interruptDecisionFill(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Level1SpatialWitnessCatalogSpellId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -4104,7 +4168,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: sourceCombatantId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ],
   };
@@ -4288,7 +4352,7 @@ function attackRollModeForFaerieFireObject(
     resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [spellObjectTargetFill(objectTarget)],
+      fills: [spellObjectTargetFill(objectTarget, act.subject.procedureRef)],
     }),
     "attackRoll",
   );
@@ -4302,7 +4366,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellUnitId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellUnitId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellUnitId} action spell act.`);
@@ -4312,6 +4376,7 @@ function actionSpellAct(
 
 function spellObjectTargetFill(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "objectTargetChoice" }> {
   return {
     kind: "objectTargetChoice",
@@ -4322,7 +4387,7 @@ function spellObjectTargetFill(
         kind: "spellObjectTarget",
         casterId,
         objectId: faerieFireObjectId,
-        spellId: starryWispUnitId,
+        sourceProcedureRef,
         rangeFeet: starryWispObjectTargetRangeFeet,
         armorClass: faerieFireObjectArmorClass,
         damageDisposition: { kind: "tableResolved" },
@@ -4331,7 +4396,7 @@ function spellObjectTargetFill(
         kind: "spellObjectTargetSight",
         casterId,
         objectId: faerieFireObjectId,
-        spellId: starryWispUnitId,
+        sourceProcedureRef,
         attackerCanSeeObject: true,
       },
     ],
@@ -4374,7 +4439,6 @@ function fogCloudActiveEffect(
     ?.activeEffects.find(
       (effect): effect is FogCloudObscurementEffect =>
         effect.kind === "fogCloudObscurement" &&
-        effect.sourceSpellId === fogCloudUnitId &&
         effect.sourceCombatantId === casterId &&
         effect.areaId === fogCloudAreaId,
     );
@@ -4383,10 +4447,12 @@ function fogCloudActiveEffect(
 function fogCloudObscurementZone(
   state: BattleState,
 ): SpellObscurementZone | undefined {
+  const activeEffect = fogCloudActiveEffect(state);
   return battleObscurementZones(state).find(
     (zone): zone is SpellObscurementZone =>
       zone.kind === "spellObscurementZone" &&
-      zone.sourceSpellId === fogCloudUnitId &&
+      activeEffect !== undefined &&
+      zone.sourceProcedureRef === activeEffect.sourceProcedureRef &&
       zone.sourceCombatantId === casterId &&
       zone.obscurement === "heavilyObscured" &&
       zone.area.kind === "pointOriginSphere" &&
@@ -4395,10 +4461,12 @@ function fogCloudObscurementZone(
 }
 
 function fogCloudHeavilyObscuredZoneCount(state: BattleState): number {
+  const activeEffect = fogCloudActiveEffect(state);
   return battleObscurementZones(state).filter(
     (zone) =>
       zone.kind === "spellObscurementZone" &&
-      zone.sourceSpellId === fogCloudUnitId &&
+      activeEffect !== undefined &&
+      zone.sourceProcedureRef === activeEffect.sourceProcedureRef &&
       zone.sourceCombatantId === casterId &&
       zone.obscurement === "heavilyObscured" &&
       zone.area.areaId === fogCloudAreaId,
@@ -4523,10 +4591,19 @@ function greaseActiveEffects(
   return greaseCombatant(state, casterId).activeEffects.filter(
     (effect): effect is GreaseGroundHazardEffect =>
       effect.kind === "greaseGroundHazard" &&
-      effect.sourceSpellId === greaseUnitId &&
       effect.sourceCombatantId === casterId &&
       effect.areaId === greaseAreaId,
   );
+}
+
+function greaseGroundHazardEffect(
+  state: BattleState,
+): GreaseGroundHazardEffect {
+  const effect = greaseActiveEffects(state)[0];
+  if (effect === undefined) {
+    throw new Error("Expected active Grease ground hazard.");
+  }
+  return effect;
 }
 
 function greaseTargetProne(state: BattleState, targetId: CombatantId): boolean {
@@ -4621,7 +4698,6 @@ function jumpMovementReplacementEffect(
   return jumpCombatant(state, id).activeEffects.find(
     (effect): effect is JumpMovementReplacementEffect =>
       effect.kind === "jumpMovementReplacement" &&
-      effect.sourceSpellId === jumpUnitId &&
       effect.sourceCombatantId === casterId,
   );
 }
@@ -4869,13 +4945,17 @@ function casterConcentratingOnSelectedUnit(
   ) {
     return false;
   }
-  const sourceSpellId =
+  const sourceProcedureRef =
     lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
-      ? faerieFireUnitId
-      : dancingLightsUnitId;
+      ? state.objectOutlines.find(
+          (outline) =>
+            outline.kind === "faerieFireObjectOutline" &&
+            outline.sourceCombatantId === casterId,
+        )?.sourceProcedureRef
+      : dancingLightEmitters(state)[0]?.sourceProcedureRef;
   return (
-    state.combatants.get(casterId)?.concentration?.sourceSpellId ===
-    sourceSpellId
+    state.combatants.get(casterId)?.concentration?.sourceProcedureRef ===
+    sourceProcedureRef
   );
 }
 
@@ -4885,7 +4965,6 @@ function dancingLightEmitters(
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is DancingLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceSpellId === dancingLightsUnitId &&
       emitter.sourceCombatantId === casterId &&
       emitter.attachment.kind === "dancingLight",
   );
@@ -4895,7 +4974,6 @@ function faerieFireEmitters(state: BattleState): readonly SpellLightEmitter[] {
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is SpellLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceSpellId === faerieFireUnitId &&
       emitter.sourceCombatantId === casterId,
   );
 }
@@ -4906,7 +4984,6 @@ function lightObjectEmitters(
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is ObjectLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceSpellId === lightUnitId &&
       emitter.sourceCombatantId === casterId &&
       emitter.attachment.kind === "object",
   );
@@ -4918,7 +4995,6 @@ function produceFlameHeldLightEmitters(
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is CombatantLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.sourceSpellId === produceFlameUnitId &&
       emitter.sourceCombatantId === casterId &&
       emitter.attachment.kind === "combatant" &&
       emitter.attachment.combatantId === casterId,
@@ -5075,7 +5151,6 @@ function faerieFireOutlinedCreatureCount(state: BattleState): number {
       combatant.activeEffects.filter(
         (effect) =>
           effect.kind === "faerieFireOutline" &&
-          effect.sourceSpellId === faerieFireUnitId &&
           effect.sourceCombatantId === casterId,
       ).length,
     0,
@@ -5086,7 +5161,6 @@ function faerieFireOutlinedObjectCount(state: BattleState): number {
   return state.objectOutlines.filter(
     (outline) =>
       outline.kind === "faerieFireObjectOutline" &&
-      outline.sourceSpellId === faerieFireUnitId &&
       outline.sourceCombatantId === casterId,
   ).length;
 }
@@ -5199,10 +5273,11 @@ function lightObjectTargetRejected(result: BattleResolutionResult): boolean {
 function lightObjectSpellEmitter(input: {
   readonly objectId: BattleObjectId;
   readonly durationTicks: ElapsedTimeTicks;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): ObjectLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: lightUnitId,
+    sourceProcedureRef: input.sourceProcedureRef,
     sourceCombatantId: casterId,
     attachment: {
       kind: "object",
@@ -5228,9 +5303,7 @@ function produceFlameHeldLightEffect(
     (
       effect,
     ): effect is Extract<BattleActiveEffect, { readonly kind: "heldLight" }> =>
-      effect.kind === "heldLight" &&
-      effect.sourceSpellId === produceFlameUnitId &&
-      effect.sourceCombatantId === casterId,
+      effect.kind === "heldLight" && effect.sourceCombatantId === casterId,
   );
 }
 
@@ -5261,10 +5334,14 @@ function produceFlameHeldLightDurationTicks(
 
 function produceFlameHeldLightEffectValue(
   durationTicks: ElapsedTimeTicks,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleActiveEffect, { readonly kind: "heldLight" }> {
   return {
     kind: "heldLight",
-    sourceSpellId: produceFlameUnitId,
+    effectRef: battleActiveEffectExecutionRefForTest(
+      "synthetic-produce-flame-held-light",
+    ),
+    sourceProcedureRef,
     sourceCombatantId: casterId,
     brightRadiusFeet: produceFlameBrightRadiusFeet,
     dimAdditionalFeet: produceFlameDimAdditionalFeet,

@@ -10,7 +10,7 @@ import {
   battleSubjectKind,
   type BattleFill,
   type BattleHole,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 type BattleHoleFrontierRow = {
@@ -39,13 +39,12 @@ const battleHoleFrontierPath = new URL(
 );
 const repoRootPath = fileURLToPath(new URL("../../..", import.meta.url));
 const require = createRequire(import.meta.url);
-const { extractBattleSubjectKindCases } = require(
-  "../../../scripts/battle-subject-kind-folds.cjs",
-) as {
-  readonly extractBattleSubjectKindCases: (
-    rootPath: string,
-  ) => readonly BattleSubjectKindCase[];
-};
+const { extractBattleSubjectKindCases } =
+  require("../../../scripts/battle-subject-kind-folds.cjs") as {
+    readonly extractBattleSubjectKindCases: (
+      rootPath: string,
+    ) => readonly BattleSubjectKindCase[];
+  };
 
 function battleHoleFamilyRows(): readonly BattleHoleFrontierRow[] {
   return readFileSync(battleHoleFrontierPath, "utf8")

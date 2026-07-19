@@ -33,7 +33,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
   readiedSpellAct,
-  spellSubjectTagForInvocation,
+  spellCastSelectionSubject,
 } from "../spells-discovery.ts";
 import {
   supportedDamageAmountExpr,
@@ -138,7 +138,7 @@ function admitRepeatedDamageAllocation(
 function discoverRepeatedDamageAllocationCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: RepeatedDamageAllocationInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<RepeatedDamageAllocationInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetAllocationHole = spellTargetAllocationHole(
     state,
@@ -150,12 +150,11 @@ function discoverRepeatedDamageAllocationCastAct(
       ? []
       : [
           {
-            subject: {
-              tag: spellSubjectTagForInvocation(invocation),
+            subject: spellCastSelectionSubject(
               actorId,
-              invocation: repeatedDamageAllocationInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
+              invocation,
+              repeatedDamageAllocationInvocationRef(invocation),
+            ),
             label: invocation.spell.name,
             summary: repeatedDamageAllocationCastSummary(invocation),
             initialHoles: [targetAllocationHole],

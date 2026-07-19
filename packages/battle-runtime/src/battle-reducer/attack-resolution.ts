@@ -49,6 +49,7 @@ import {
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import { Match } from "effect";
+import { characterProcedureBinding } from "../character-execution.ts";
 
 import * as Either from "effect/Either";
 
@@ -70,6 +71,7 @@ import {
 } from "../character-battle-resources.ts";
 
 import { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
@@ -385,21 +387,64 @@ export function resolveDisengage(
   };
 }
 
+function bonusActionStandardActionProcedure(
+  actor: BattleCreatureState | undefined,
+  subject: BonusActionStandardActionBattleResolutionInput["subject"],
+):
+  | { readonly kind: "spell" }
+  | { readonly kind: "staleSpell" }
+  | { readonly kind: "unit"; readonly unitId: UnitRecord["id"] }
+  | undefined {
+  if (!isCharacterBattleCreatureState(actor)) return undefined;
+  const binding = characterProcedureBinding(
+    actor.origin.execution,
+    subject.procedureRef,
+  );
+  if (
+    binding?.procedure.kind === "spellInvocation" &&
+    binding.procedure.invocation.procedure === "expeditiousRetreatDash"
+  ) {
+    return "sourceEffectRef" in subject &&
+      actor.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellDashBonusAction" &&
+        effect.effectRef === subject.sourceEffectRef &&
+        effect.sourceProcedureRef === subject.procedureRef &&
+        effect.sourceCombatantId === actor.combatantId,
+      )
+      ? { kind: "spell" }
+      : { kind: "staleSpell" };
+  }
+  return binding?.procedure.kind === "unitFeature" ||
+    binding?.procedure.kind === "unitSupportProfile"
+    ? { kind: "unit", unitId: binding.procedure.unitId }
+    : undefined;
+}
+
 export function resolveBonusActionStandardAction(
   input: BonusActionStandardActionBattleResolutionInput,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
+  const procedure = bonusActionStandardActionProcedure(actor, input.subject);
+  if (procedure?.kind === "staleSpell") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The spell effect that granted this Bonus Action is no longer active.",
+    );
+  }
   if (
-    !actorHasAlternateActionCost(
-      actor,
-      input.subject.sourceUnitId,
-      input.subject.action,
-    ) &&
-    (input.subject.action !== "dash" ||
-      bonusActionDashTemporaryHitPointsForActor(
+    (procedure?.kind !== "unit" ||
+      !actorHasAlternateActionCost(
         actor,
-        input.subject.sourceUnitId,
-      ) === null)
+        procedure.unitId,
+        input.subject.action,
+      )) &&
+    (input.subject.action !== "dash" ||
+      (procedure?.kind !== "spell" &&
+        (procedure?.kind !== "unit" ||
+          bonusActionDashTemporaryHitPointsForActor(actor, procedure.unitId) ===
+            null)))
   ) {
     return invalidResult(
       input.state,
@@ -414,7 +459,12 @@ export function resolveBonusActionStandardAction(
     Match.when("hide", () =>
       resolveHide({
         ...input,
-        subject: { ...input.subject, action: "hide" },
+        subject: {
+          tag: "bonusActionStandardAction",
+          actorId: input.subject.actorId,
+          procedureRef: input.subject.procedureRef,
+          action: "hide",
+        },
       }),
     ),
     Match.exhaustive,
@@ -435,9 +485,10 @@ export function resolveBonusActionDash(
       "Dash actor is not in this battle.",
     );
   }
+  const procedure = bonusActionStandardActionProcedure(actor, input.subject);
   const dashTemporaryHitPoints = bonusActionDashTemporaryHitPointsForActor(
     actor,
-    input.subject.sourceUnitId,
+    procedure?.kind === "unit" ? procedure.unitId : undefined,
   );
   const speedKind =
     input.subject.action === "dash" ? input.subject.speedKind : "walk";
@@ -465,7 +516,7 @@ export function resolveBonusActionDash(
     spent.right,
   );
   if (dashTemporaryHitPoints !== null) {
-    if (!isCharacterBattleCreatureState(actor)) {
+    if (!isCharacterBattleCreatureState(actor) || procedure?.kind !== "unit") {
       return invalidResult(
         input.state,
         "unsupportedActOption",
@@ -475,7 +526,7 @@ export function resolveBonusActionDash(
     return resolveBonusActionDashTemporaryHitPoints(
       nextState,
       actor,
-      input.subject.sourceUnitId,
+      procedure.unitId,
     );
   }
   return {
@@ -869,13 +920,18 @@ export function resolveHide(
       "Hide is no longer available for the current actor.",
     );
   }
+  const bonusActionProcedure =
+    input.subject.tag === "bonusActionStandardAction"
+      ? bonusActionStandardActionProcedure(actor, input.subject)
+      : undefined;
   if (
     input.subject.tag === "bonusActionStandardAction" &&
-    !actorHasAlternateActionCost(
-      actor,
-      input.subject.sourceUnitId,
-      input.subject.action,
-    )
+    (bonusActionProcedure?.kind !== "unit" ||
+      !actorHasAlternateActionCost(
+        actor,
+        bonusActionProcedure.unitId,
+        input.subject.action,
+      ))
   ) {
     return invalidResult(
       input.state,
@@ -1167,6 +1223,19 @@ function helpAttackParticipantChoices(
         combatantId !== helperId && !zeroHpLifecycleIsTerminal(combatant),
     )
     .map(([combatantId]) => combatantId);
+}
+
+export function hasHelpAttackTargetSpatialFact(
+  facts: readonly BattleTargetSpatialFact[],
+  helperId: CombatantId,
+  targetEnemyId: CombatantId,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "helpAttackTargetWithin5Feet" &&
+      fact.helperId === helperId &&
+      fact.targetEnemyId === targetEnemyId,
+  );
 }
 
 export function resolveStatBlockBonusActionOption(
@@ -1658,8 +1727,7 @@ export function resolveEscapeSpellRestraint(
   const effect = spellRestraintEffectFor(
     input.state,
     input.subject.targetId,
-    input.subject.sourceSpellId,
-    input.subject.sourceCombatantId,
+    input.subject.effectRef,
   );
   if (effect === undefined) {
     return invalidResult(
@@ -2378,13 +2446,13 @@ export function spendAttackActionResource<T extends ActionEconomyState>(
 export function classFeatureExtraAttackForActor(
   actor: BattleCreatureState | undefined,
 ): {
-  readonly unitId: UnitRecord["id"];
   readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 } | null {
   if (actor?.origin.kind !== "character") return null;
   let strongest: {
-    readonly unitId: UnitRecord["id"];
     readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
   } | null = null;
   for (const unitRef of actor.origin.characterUnitRefs) {
     for (const profile of unitRef.supportProfiles) {
@@ -2392,13 +2460,22 @@ export function classFeatureExtraAttackForActor(
         typeof profile === "object" &&
         profile.kind === ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE
       ) {
+        const binding = actor.origin.execution.procedureBindings.find(
+          (candidate) =>
+            candidate.procedure.kind !== "spellInvocation" &&
+            candidate.procedure.kind !== "unavailableSpellInvocation" &&
+            candidate.procedure.unitId === unitRef.unit.id &&
+            candidate.procedure.supportKind ===
+              ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+        );
+        if (binding === undefined) continue;
         if (
           strongest === null ||
           profile.additionalAttacks > strongest.additionalAttacks
         ) {
           strongest = {
-            unitId: unitRef.unitId,
             additionalAttacks: profile.additionalAttacks,
+            sourceProcedureRef: binding.procedureRef,
           };
         }
       }
@@ -2434,7 +2511,7 @@ export function openClassFeatureExtraAttackResource(input: {
         kind: "action" as const,
         source: "classFeatureExtraAttack" as const,
         sourceOwnerId: input.actorId,
-        sourceUnitId: extraAttack.unitId,
+        sourceProcedureRef: extraAttack.sourceProcedureRef,
         restriction: {
           kind: "exclude" as const,
           actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,

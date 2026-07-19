@@ -13,15 +13,15 @@ import {
   battleUnitRefWithSupportProfiles,
   combatantId,
   discoverBattleActs,
-  resolveBattleSubject,
   type BattleState,
   type BattleFill,
   type BattleReducerRouteEvent,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
+  resolveBattleSubject,
   characterSeed,
   characterAttackSubjectForTest,
   attackExecutionSelectionForSubjectForTest,

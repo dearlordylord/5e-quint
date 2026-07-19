@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic
 // UNIT-IDENTITY-REPLAY: L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic doResolveExtendedCreatureSizeIncrease
@@ -188,8 +189,10 @@ function resolveExtendedCreatureSizeIncreaseSubject() {
   const extendedAct = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === enlargeReduceUnitId &&
-      candidate.subject.invocation.procedure === "creatureSizeIncrease" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        enlargeReduceUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "creatureSizeIncrease" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
       ) === true,

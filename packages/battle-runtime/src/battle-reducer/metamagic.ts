@@ -33,7 +33,10 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "../character-battle-resources.ts";
-import type { CombatantId } from "../identity.ts";
+import {
+  battleSpellDamageDieExecutionRef,
+  type CombatantId,
+} from "../identity.ts";
 import { combatantHasLevelOnePlusSpellCastThisTurn } from "./spell-turn-resources.ts";
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
 import {
@@ -169,9 +172,9 @@ export type SpellMetamagicAdmission =
     }
   | SpellMetamagicAdmissionIssue;
 
-type SpellMetamagicSubject = Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" | "bonusActionSpell" }
+type SpellMetamagicSubject = Pick<
+  Extract<BattleSubject, { readonly tag: "actionSpell" | "bonusActionSpell" }>,
+  "tag" | "mode" | "metamagic"
 >;
 
 export function admitSpellMetamagicApplications(input: {
@@ -343,9 +346,19 @@ export function effectiveEmpoweredSpellDamageRoll(
   const replacements = damageRoll.spellDamageReroll.dice;
   const [firstGroup, ...remainingGroups] = damageRoll.value;
   const value: BattleRolledDiceFill["value"] = [
-    effectiveEmpoweredSpellDiceGroup(firstGroup, 0, replacements),
+    effectiveEmpoweredSpellDiceGroup(
+      damageRoll.holeId,
+      firstGroup,
+      0,
+      replacements,
+    ),
     ...remainingGroups.map((group, index) =>
-      effectiveEmpoweredSpellDiceGroup(group, index + 1, replacements),
+      effectiveEmpoweredSpellDiceGroup(
+        damageRoll.holeId,
+        group,
+        index + 1,
+        replacements,
+      ),
     ),
   ];
   return {
@@ -355,6 +368,7 @@ export function effectiveEmpoweredSpellDamageRoll(
 }
 
 function effectiveEmpoweredSpellDiceGroup(
+  holeId: BattleRolledDiceFill["holeId"],
   group: BattleRolledDiceFill["value"][number],
   groupIndex: number,
   replacements: readonly BattleSpellDamageDieReroll[],
@@ -364,6 +378,7 @@ function effectiveEmpoweredSpellDiceGroup(
     results: [
       effectiveEmpoweredSpellDieResult(
         firstResult,
+        holeId,
         groupIndex,
         0,
         replacements,
@@ -371,6 +386,7 @@ function effectiveEmpoweredSpellDiceGroup(
       ...remainingResults.map((result, index) =>
         effectiveEmpoweredSpellDieResult(
           result,
+          holeId,
           groupIndex,
           index + 1,
           replacements,
@@ -382,14 +398,15 @@ function effectiveEmpoweredSpellDiceGroup(
 
 function effectiveEmpoweredSpellDieResult(
   result: BattleRolledDiceFill["value"][number]["results"][number],
+  holeId: BattleRolledDiceFill["holeId"],
   groupIndex: number,
   resultIndex: number,
   replacements: readonly BattleSpellDamageDieReroll[],
 ): BattleRolledDiceFill["value"][number]["results"][number] {
   const replacement = replacements.find(
     (candidate) =>
-      candidate.groupIndex === groupIndex &&
-      candidate.resultIndex === resultIndex,
+      candidate.dieRef ===
+      battleSpellDamageDieExecutionRef(holeId, groupIndex, resultIndex),
   );
   return replacement?.replacement ?? result;
 }
@@ -442,23 +459,24 @@ export function empoweredSpellDamageRerollValidationIssue(input: {
   if (selectedDice.length > empoweredSpellMaximumSelectedDice(input.actor)) {
     return "Empowered Spell selected damage dice exceed the caster's Charisma modifier minimum-one limit.";
   }
-  const seenPositions = new Set<string>();
+  const seenDice = new Set<string>();
   for (const selectedDie of selectedDice) {
-    if (
-      !Number.isInteger(selectedDie.groupIndex) ||
-      !Number.isInteger(selectedDie.resultIndex) ||
-      selectedDie.groupIndex < 0 ||
-      selectedDie.resultIndex < 0
-    ) {
-      return "Empowered Spell selected damage dice must identify existing original dice.";
-    }
-    const positionKey = `${selectedDie.groupIndex}:${selectedDie.resultIndex}`;
-    if (seenPositions.has(positionKey)) {
+    if (seenDice.has(selectedDie.dieRef)) {
       return "Empowered Spell cannot select the same damage die more than once.";
     }
-    seenPositions.add(positionKey);
-    const originalGroup = input.damageRoll.value[selectedDie.groupIndex];
-    const originalDie = originalGroup?.results[selectedDie.resultIndex];
+    seenDice.add(selectedDie.dieRef);
+    const originalDie = input.damageRoll.value
+      .flatMap((group, groupIndex) =>
+        group.results.map((result, resultIndex) => ({
+          dieRef: battleSpellDamageDieExecutionRef(
+            input.damageRoll.holeId,
+            groupIndex,
+            resultIndex,
+          ),
+          result,
+        })),
+      )
+      .find((candidate) => candidate.dieRef === selectedDie.dieRef)?.result;
     if (originalDie === undefined || originalDie !== selectedDie.original) {
       return "Empowered Spell selected original dice must match the pending spell damage roll.";
     }

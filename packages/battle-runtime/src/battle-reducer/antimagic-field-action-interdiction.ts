@@ -14,6 +14,10 @@ import type {
 } from "../battle-reducer.ts";
 import type { BattleAreaId, CombatantId } from "../identity.ts";
 import {
+  characterProcedureBinding,
+  characterSpellProcedure,
+} from "../character-execution.ts";
+import {
   spellInvocationIsSpellcasting,
   spellInvocationSpendsMagicAction,
 } from "./spell-turn-resources.ts";
@@ -122,7 +126,7 @@ function antimagicFieldSubjectInterdiction(
     subject.tag === "bonusActionSpell" ||
     subject.tag === "bonusActionDashSpell"
   ) {
-    const kind = spellActSubjectInterdictionKind(subject);
+    const kind = spellActSubjectInterdictionKind(state, subject);
     if (kind === null) {
       return null;
     }
@@ -156,10 +160,18 @@ function antimagicFieldSubjectInterdiction(
 }
 
 function spellActSubjectInterdictionKind(
+  state: BattleState,
   subject: SpellActSubject,
 ): AntimagicFieldInterdictionKind | null {
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "character") return null;
+  const invocation = characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+  );
+  if (invocation === undefined) return null;
   return NON_SPELLCASTING_SPELL_ACT_PROCEDURES.some(
-    (procedure) => procedure === subject.invocation.procedure,
+    (procedure) => procedure === invocation.procedure,
   )
     ? subject.tag === "actionSpell"
       ? "magicAction"
@@ -193,10 +205,7 @@ function activeMoonbeamEffectForRepositionSubject(
     [...state.combatants.values()].some((combatant) =>
       combatant.activeEffects.some(
         (effect) =>
-          effect.kind === "moonbeam" &&
-          effect.sourceCombatantId === subject.sourceCombatantId &&
-          effect.sourceSpellId === subject.sourceSpellId &&
-          effect.areaId === subject.areaId,
+          effect.kind === "moonbeam" && effect.areaId === subject.areaId,
       ),
     )
   );
@@ -207,9 +216,21 @@ function unitFeatureSubjectSpendsMagicAction(
   subject: Extract<BattleSubject, { readonly tag: "unitFeature" }>,
 ): boolean {
   const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "character") return false;
+  const binding = characterProcedureBinding(
+    actor.origin.execution,
+    subject.procedureRef,
+  );
+  if (
+    binding === undefined ||
+    (binding.procedure.kind !== "unitFeature" &&
+      binding.procedure.kind !== "unitSupportProfile")
+  ) {
+    return false;
+  }
+  const unitId = binding.procedure.unitId;
   return (
-    actor?.origin.kind === "character" &&
-    (actor.origin.magicActionHealingPoolProfiles.has(subject.unitId) ||
-      actor.origin.magicActionAreaSaveDamageHealingProfiles.has(subject.unitId))
+    actor.origin.magicActionHealingPoolProfiles.has(unitId) ||
+    actor.origin.magicActionAreaSaveDamageHealingProfiles.has(unitId)
   );
 }

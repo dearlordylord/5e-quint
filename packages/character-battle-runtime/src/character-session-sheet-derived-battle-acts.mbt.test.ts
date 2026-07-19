@@ -3,6 +3,7 @@ import * as path from "node:path";
 
 import {
   battleCreatureInitFromStatBlock,
+  battleActSpellPresentation,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -54,6 +55,7 @@ import {
   characterSheetBattleInit,
   settleCharacterSheetFromBattle,
 } from "./index.ts";
+import { battleProcedureExecutionRefForHole } from "./sdk-integration-test-support.ts";
 
 const sheetDerivedOutcomes = [
   "init",
@@ -374,7 +376,7 @@ function createSheetDerivedBattleActsDriver(input: {
             kind: "spellTarget",
             casterId: characterCombatantId,
             targetId: targetCombatantId,
-            spellId: "ray_of_sickness",
+            sourceProcedureRef: battleProcedureExecutionRefForHole(targetHole),
           },
         ]);
         const attackHole = requireHole(
@@ -740,7 +742,7 @@ function findRayOfSicknessAct(state: BattleState):
     } =>
       act.subject.tag === "actionSpell" &&
       act.subject.actorId === characterCombatantId &&
-      JSON.stringify(act.subject.invocation) ===
+      JSON.stringify(battleActSpellPresentation(act)?.invocation) ===
         JSON.stringify(
           spellSlotInvocationRef("ray_of_sickness", 1, "spellAttackDamage"),
         ) &&

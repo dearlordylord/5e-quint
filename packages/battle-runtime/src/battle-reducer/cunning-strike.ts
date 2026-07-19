@@ -9,6 +9,7 @@ import type { Ability, Size } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import type { BattleMovementSpeedKind } from "../battle-subjects.ts";
+import { characterUnitProcedureRef } from "../character-execution.ts";
 import type {
   AttackDamageRider,
   BattleCunningStrikeDamageContinuation,
@@ -118,12 +119,13 @@ export function eligibleCunningStrikeContexts(input: {
     return [];
   }
   const targetSize = combatantEffectiveSize(target);
+  const execution = attacker.origin.execution;
   const baseCunningStrikeProfiles = attacker.origin.characterUnitRefs.flatMap(
     (unitRef) =>
       unitRef.supportProfiles.flatMap((supportProfile) =>
         typeof supportProfile === "object" &&
         supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
-          ? [{ unitId: unitRef.unitId, supportProfile }]
+          ? [{ unitId: unitRef.unit.id, supportProfile }]
           : [],
       ),
   );
@@ -157,6 +159,15 @@ export function eligibleCunningStrikeContexts(input: {
         supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
           ? supportProfile.cunningStrike.options
           : [supportProfile.optionGrant.option];
+      const procedureRef = characterUnitProcedureRef(
+        execution,
+        unitRef.unit.id,
+        {
+          kind: "unitSupportProfile",
+          supportKinds: new Set([supportProfile.kind]),
+        },
+      );
+      if (procedureRef === undefined) return [];
       return options.flatMap((option) =>
         cunningStrikeOptionEligibleForTarget(
           option,
@@ -167,7 +178,8 @@ export function eligibleCunningStrikeContexts(input: {
               {
                 attackerId: input.attackerId,
                 targetId: input.targetId,
-                unitId: unitRef.unitId,
+                unitId: unitRef.unit.id,
+                procedureRef,
                 label: supportProfile.unit.name,
                 sourceDamageRiderUnitId: sourceRider.unitId,
                 support: baseProfile,
@@ -786,14 +798,14 @@ function applyCunningStrikeConditionEndTurnSaveFailure(
           (candidate) =>
             !(
               candidate.kind === "unitFeatureConditionEndTurnSave" &&
-              candidate.sourceUnitId === context.unitId &&
+              candidate.sourceProcedureRef === context.procedureRef &&
               candidate.sourceCombatantId === context.attackerId &&
               candidate.condition === effect.onFail.condition
             ),
         ),
         {
           kind: "unitFeatureConditionEndTurnSave",
-          sourceUnitId: context.unitId,
+          sourceProcedureRef: context.procedureRef,
           sourceCombatantId: context.attackerId,
           condition: effect.onFail.condition,
           conditionHadNonSpellSource:

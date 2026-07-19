@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   startBattleRight,
   requireResolved,
@@ -186,7 +188,9 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       result.state.combatants.get(skeletonId)?.activeEffects,
     ).toContainEqual({
       kind: "hitPointRegainPrevented",
-      sourceSpellId: "chill_touch",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("chill_touch"),
+      ),
       sourceCombatantId: wizardId,
       expiresAt: {
         kind: "endOfTurn",
@@ -198,7 +202,8 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     const healingWordAct = discoverBattleActs(result.state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "healing_word",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "healing_word",
     );
     if (healingWordAct === undefined) {
       throw new Error("Expected Healing Word bonus action spell act.");
@@ -221,7 +226,9 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
         ],
@@ -238,7 +245,9 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
           damageRollFillWithGroups(healingWordRoll, [[4, 4]]),
@@ -390,7 +399,8 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     const healingWordAct = discoverBattleActs(wizardThirdTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "healing_word",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "healing_word",
     );
     if (healingWordAct === undefined) {
       throw new Error("Expected Healing Word bonus action spell act.");
@@ -413,7 +423,9 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
         ],
@@ -430,7 +442,9 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
           damageRollFillWithGroups(healingWordRoll, [[4, 4]]),

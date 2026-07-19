@@ -37,7 +37,9 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 
+import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 import {
   classFeatureFreeCastSpellInvocationRef,
   spellEffectInvocationRef,
@@ -50,6 +52,7 @@ import {
   type BattleActiveEffectExpiration,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
@@ -124,7 +127,18 @@ function admitMarkedDamageRider(
   }
   const { abilityCheckBehavior, damageType, expr, rangeFeet, retargetTiming } =
     projection;
-  const activeMark = activeMarkedDamageRiderEffect(ctx.actor, spell.id);
+  const selectedExecutionRefs = new Set(
+    characterSpellProcedureRefsForAdmissionContent(
+      ctx.actor.origin.execution,
+      spell,
+    ),
+  );
+  const activeMark =
+    ctx.actor.activeEffects.find(
+      (effect): effect is SpellMarkedDamageRider =>
+        effect.kind === "spellMarkedDamageRider" &&
+        selectedExecutionRefs.has(effect.sourceProcedureRef),
+    ) ?? null;
   if (activeMark !== null) {
     // TODO: Allow an ordinary recast while the current mark is still active.
     // RAW permits replacing Concentration by casting the spell again and
@@ -424,7 +438,7 @@ function durationTiersEqual(
 function discoverMarkedDamageRiderCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: MarkedDamageRiderInvocation,
+  invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles =
@@ -439,6 +453,7 @@ function discoverMarkedDamageRiderCastAct(
           subject: {
             tag: "bonusActionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: markedDamageRiderInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
@@ -450,7 +465,7 @@ function discoverMarkedDamageRiderCastAct(
 }
 
 function markedDamageRiderInvocationRef(
-  invocation: MarkedDamageRiderInvocation,
+  invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
 ): SpellInvocationRef {
   return invocation.action === "transfer"
     ? spellEffectInvocationRef(
@@ -528,7 +543,7 @@ function resolveMarkedDamageRider(
   if (input.invocation.action === "transfer") {
     const activeMark = activeMarkedDamageRiderEffect(
       input.input.state.combatants.get(input.actorId),
-      input.invocation.spell.id,
+      input.invocation.activeEffect.effectRef,
     );
     if (
       activeMark === null ||
@@ -721,7 +736,7 @@ function applyMarkedDamageRiderSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  invocation: MarkedDamageRiderInvocation,
+  invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
   selectedAbility?: Ability,
 ): BattleState {
   const caster = state.combatants.get(actorId);
@@ -732,6 +747,13 @@ function applyMarkedDamageRiderSpellEffect(
     invocation.action === "transfer"
       ? invocation.activeEffect.expiresAt
       : invocation.expiresAt;
+  const occurrence =
+    invocation.action === "transfer"
+      ? { effectRef: invocation.activeEffect.effectRef, owner: caster }
+      : allocateBattleActiveEffectRefForCreature({
+          battleId: state.battleId,
+          owner: caster,
+        });
   const transfer: MarkedDamageRiderTransferState = {
     kind: "awaitingTargetDrop",
     retargetTiming:
@@ -744,13 +766,19 @@ function applyMarkedDamageRiderSpellEffect(
       (effect) =>
         !(
           effect.kind === "spellMarkedDamageRider" &&
-          effect.sourceSpellId === invocation.spell.id &&
+          (invocation.action === "transfer"
+            ? effect.effectRef === invocation.activeEffect.effectRef
+            : effect.sourceProcedureRef === invocation.sourceProcedureRef) &&
           effect.sourceCombatantId === actorId
         ),
     ),
     {
       kind: "spellMarkedDamageRider" as const,
-      sourceSpellId: invocation.spell.id,
+      effectRef: occurrence.effectRef,
+      sourceProcedureRef:
+        invocation.action === "transfer"
+          ? invocation.activeEffect.sourceProcedureRef
+          : invocation.sourceProcedureRef,
       sourceCombatantId: actorId,
       targetCombatantId: targetId,
       transfer,
@@ -768,7 +796,7 @@ function applyMarkedDamageRiderSpellEffect(
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
-      ...caster,
+      ...occurrence.owner,
       activeEffects,
     }),
   };

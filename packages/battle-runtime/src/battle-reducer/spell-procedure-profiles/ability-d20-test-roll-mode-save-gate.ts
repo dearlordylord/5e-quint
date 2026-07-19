@@ -19,6 +19,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -82,7 +83,7 @@ function isAbilityD20TestRollModeSaveGateInvocation(
 function discoverAbilityD20TestRollModeSaveGateCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: AbilityD20TestRollModeSaveGateSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<AbilityD20TestRollModeSaveGateSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -123,7 +124,7 @@ function discoverAbilityD20TestRollModeSaveGateCastAct(
 
 function abilityD20TestRollModeSaveGateCastAct(
   actorId: CombatantId,
-  invocation: AbilityD20TestRollModeSaveGateSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<AbilityD20TestRollModeSaveGateSpellInvocation>,
   initialHoles: readonly BattleHole[],
   label: string,
   summary: string,
@@ -132,6 +133,7 @@ function abilityD20TestRollModeSaveGateCastAct(
     subject: {
       tag: "actionSpell",
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: abilityD20TestRollModeSaveGateInvocationRef(invocation),
       mode: { tag: "cast" },
     },

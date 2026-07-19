@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting doReplayGreatWeaponFightingAttackDamageDieFloor
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-die-floor
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   greatWeaponFightingUnitId,
@@ -45,7 +46,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: greatWeaponFightingUnitId,
+        unit: unitLibrary.requireUnit(greatWeaponFightingUnitId),
         supportProfiles: [ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE],
       }),
     );
@@ -399,7 +400,9 @@ function withTargetSlashingResistance(state: BattleState): BattleState {
   }
   const resistance = {
     kind: "damageResistance",
-    sourceSpellId: "synthetic_gwf_resistance",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("synthetic_gwf_resistance"),
+    ),
     sourceCombatantId: spellTargetId,
     damageType: "slashing",
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },

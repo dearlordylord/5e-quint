@@ -18,6 +18,7 @@ import type {
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
+  enemyZeroHitPointTemporaryHitPointsProcedureRef,
   enemyZeroHitPointTemporaryHitPointsTriggerApplies,
   enemyZeroHitPointTransitionOccurs,
 } from "./enemy-zero-hit-point-temporary-hit-points.ts";
@@ -179,7 +180,7 @@ export function damageRelationshipDecisionHole(input: {
             question.kind,
             question.beneficiaryId,
             question.targetId,
-            question.unitId,
+            question.procedureRef,
           ]),
   }));
   const first = questionsWithIds[0];
@@ -254,8 +255,13 @@ function damageRelationshipQuestions(input: {
       continue;
     }
     for (const profile of beneficiary.origin.enemyZeroHitPointTemporaryHitPointsProfiles.values()) {
+      const procedureRef = enemyZeroHitPointTemporaryHitPointsProcedureRef(
+        beneficiary.origin.execution,
+        profile.unit.id,
+      );
+      if (procedureRef === undefined) continue;
       const triggerApplies = enemyZeroHitPointTemporaryHitPointsTriggerApplies({
-        profileUnitId: profile.unit.id,
+        procedureRef,
         beneficiaryId: beneficiary.combatantId,
         damageSourceId: input.damageSourceId,
         targetId: input.targetId,
@@ -268,7 +274,7 @@ function damageRelationshipQuestions(input: {
           kind: "enemyZeroHitPointTemporaryHitPoints",
           beneficiaryId: beneficiary.combatantId,
           targetId: input.targetId,
-          unitId: profile.unit.id,
+          procedureRef,
         });
       }
     }
@@ -306,7 +312,7 @@ function resolveDecisionAnswers(
       kind: question.kind,
       beneficiaryId: question.beneficiaryId,
       targetId: question.targetId,
-      unitId: question.unitId,
+      procedureRef: question.procedureRef,
       targetIsEnemy: answer?.answer === true,
     };
   });

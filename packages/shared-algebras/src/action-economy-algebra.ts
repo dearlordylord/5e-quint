@@ -6,14 +6,14 @@ import { Either, Match } from "effect";
 import type {
   ActionRestriction,
   ActionRestrictionAllowedAction,
-  SpellRecord,
-  UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
   STANDARD_ACTION_KINDS,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
 import type {
+  BattleProcedureExecutionRef,
+  BattleActiveEffectExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   CreatureId,
 } from "@dnd/shared/types";
@@ -28,14 +28,14 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "unit";
       readonly sourceOwnerId: CreatureId;
-      readonly sourceUnitId: UnitRecord["id"];
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly restriction: ActionRestriction;
     }
   | {
       readonly kind: "action";
       readonly source: "spellEffect";
       readonly sourceOwnerId: CreatureId;
-      readonly sourceSpellId: SpellRecord["id"];
+      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
       readonly restriction: ActionRestriction;
     }
   | {
@@ -49,14 +49,14 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "classFeatureExtraAttack";
       readonly sourceOwnerId: CreatureId;
-      readonly sourceUnitId: UnitRecord["id"];
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly restriction: ActionRestriction;
     }
   | {
       readonly kind: "action";
       readonly source: "monkFocusFlurryOfBlows";
       readonly sourceOwnerId: CreatureId;
-      readonly sourceUnitId: UnitRecord["id"];
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
     };
 
 const ACTION_OR_BONUS_ACTION_EXCLUSION_CHOICES = [
@@ -667,33 +667,33 @@ export function spendActivationResource<T extends ActionEconomyState>(
 export function hasUnitActionResource(
   state: ActionEconomyState,
   sourceOwnerId: CreatureId,
-  sourceUnitId: UnitRecord["id"],
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): boolean {
   return state.actionResources.some(
     (resource) =>
       resource.source === "unit" &&
       resource.sourceOwnerId === sourceOwnerId &&
-      resource.sourceUnitId === sourceUnitId,
+      resource.sourceProcedureRef === sourceProcedureRef,
   );
 }
 
 export function hasSpellEffectActionResource(
   state: ActionEconomyState,
   sourceOwnerId: CreatureId,
-  sourceSpellId: SpellRecord["id"],
+  sourceEffectRef: BattleActiveEffectExecutionRef,
 ): boolean {
   return state.actionResources.some(
     (resource) =>
       resource.source === "spellEffect" &&
       resource.sourceOwnerId === sourceOwnerId &&
-      resource.sourceSpellId === sourceSpellId,
+      resource.sourceEffectRef === sourceEffectRef,
   );
 }
 
 export function grantUnitActionResource<T extends ActionEconomyState>(
   state: T,
   sourceOwnerId: CreatureId,
-  sourceUnitId: UnitRecord["id"],
+  sourceProcedureRef: BattleProcedureExecutionRef,
   restriction: ActionRestriction,
 ): Either.Either<T, ActionEconomySpendError> {
   if (
@@ -702,7 +702,7 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
   ) {
     return Either.left("no action resource available");
   }
-  if (hasUnitActionResource(state, sourceOwnerId, sourceUnitId)) {
+  if (hasUnitActionResource(state, sourceOwnerId, sourceProcedureRef)) {
     return Either.left("unit-granted action resource already granted");
   }
 
@@ -714,7 +714,7 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
         kind: "action",
         source: "unit",
         sourceOwnerId,
-        sourceUnitId,
+        sourceProcedureRef,
         restriction,
       },
     ],
@@ -724,10 +724,10 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
 export function grantSpellEffectActionResource<T extends ActionEconomyState>(
   state: T,
   sourceOwnerId: CreatureId,
-  sourceSpellId: SpellRecord["id"],
+  sourceEffectRef: BattleActiveEffectExecutionRef,
   restriction: ActionRestriction,
 ): Either.Either<T, ActionEconomySpendError> {
-  if (hasSpellEffectActionResource(state, sourceOwnerId, sourceSpellId)) {
+  if (hasSpellEffectActionResource(state, sourceOwnerId, sourceEffectRef)) {
     return Either.left("spell-effect action resource already granted");
   }
 
@@ -739,7 +739,7 @@ export function grantSpellEffectActionResource<T extends ActionEconomyState>(
         kind: "action",
         source: "spellEffect",
         sourceOwnerId,
-        sourceSpellId,
+        sourceEffectRef,
         restriction,
       },
     ],

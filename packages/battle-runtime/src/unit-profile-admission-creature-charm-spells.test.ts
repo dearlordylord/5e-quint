@@ -1,6 +1,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV37 charm_person
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import type { BattleState } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   animalFriendshipUnitId,
@@ -105,7 +107,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceSpellId: animalFriendshipUnitId,
+        sourceProcedureRef: spellProcedureRef(act),
         sourceCombatantId: spellCasterId,
         condition: "charmed",
         expiresAt: expect.objectContaining({ kind: "duration" }),
@@ -267,7 +269,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: animalFriendshipUnitId,
+          sourceProcedureRef: spellProcedureRef(act),
         }),
       ]),
     });
@@ -282,6 +284,11 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         initiative: 8,
       },
     ]);
+    const sourceProcedureRef = spellConditionProcedureRef(
+      charmed,
+      beastId,
+      spellCasterId,
+    );
 
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
       damageSourceId: allyId,
@@ -301,7 +308,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: animalFriendshipUnitId,
+          sourceProcedureRef,
         }),
       ]),
     });
@@ -316,6 +323,11 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         initiative: 8,
       },
     ]);
+    const sourceProcedureRef = spellConditionProcedureRef(
+      charmed,
+      beastId,
+      spellCasterId,
+    );
 
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
       damageSourceId: otherId,
@@ -327,7 +339,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: animalFriendshipUnitId,
+          sourceProcedureRef,
           escape: { kind: "targetDamagedByCasterOrAlly" },
         }),
       ]),
@@ -357,21 +369,32 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     ]);
     const target = requireCombatant(charmed, beastId);
     const firstEffect = target.activeEffects.find(
-      (effect) =>
-        effect.kind === "spellCondition" &&
-        effect.sourceSpellId === animalFriendshipUnitId,
+      (effect) => effect.kind === "spellCondition",
     );
     if (firstEffect?.kind !== "spellCondition") {
       throw new Error("Expected Animal Friendship effect.");
+    }
+    const secondCharmed = resolvedAnimalFriendshipState(
+      beastId,
+      [],
+      secondCasterId,
+    );
+    const secondEffect = requireCombatant(
+      secondCharmed,
+      beastId,
+    ).activeEffects.find(
+      (effect) =>
+        effect.kind === "spellCondition" &&
+        effect.sourceCombatantId === secondCasterId,
+    );
+    if (secondEffect?.kind !== "spellCondition") {
+      throw new Error("Expected second-caster Animal Friendship effect.");
     }
     const twoEffectState = {
       ...charmed,
       combatants: new Map(charmed.combatants).set(beastId, {
         ...target,
-        activeEffects: [
-          firstEffect,
-          { ...firstEffect, sourceCombatantId: secondCasterId },
-        ],
+        activeEffects: [firstEffect, secondEffect],
       }),
     };
 
@@ -394,7 +417,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         expect.objectContaining({
           kind: "spellCondition",
           sourceCombatantId: secondCasterId,
-          sourceSpellId: animalFriendshipUnitId,
+          sourceProcedureRef: secondEffect.sourceProcedureRef,
         }),
       ],
     });
@@ -405,7 +428,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     const effect = requireCombatant(charmed, beastId).activeEffects.find(
       (candidate) =>
         candidate.kind === "spellCondition" &&
-        candidate.sourceSpellId === animalFriendshipUnitId,
+        candidate.sourceCombatantId === spellCasterId,
     );
 
     expect(effect).toMatchObject({
@@ -457,7 +480,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     expect(targetHole.relationshipFactRequest).toEqual({
       kind: "spellTargetIsHostileToCaster",
       casterId: spellCasterId,
-      spellId: charmPersonUnitId,
+      sourceProcedureRef: spellProcedureRef(act),
     });
 
     const targetFill = spellTargetListFill(
@@ -470,7 +493,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
           kind: "spellTargetIsHostileToCaster",
           casterId: spellCasterId,
           targetId: friendlyHumanoidId,
-          spellId: charmPersonUnitId,
+          sourceProcedureRef: spellProcedureRef(act),
           targetIsHostileToCaster: true,
         },
       ],
@@ -539,7 +562,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellCondition",
-        sourceSpellId: charmPersonUnitId,
+        sourceProcedureRef: spellProcedureRef(act),
         sourceCombatantId: spellCasterId,
         condition: "charmed",
         escape: { kind: "targetDamagedByCasterOrAlly" },
@@ -585,7 +608,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: charmPersonUnitId,
+          sourceProcedureRef: spellProcedureRef(act),
         }),
       ]),
     });
@@ -703,7 +726,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       activeEffects: expect.not.arrayContaining([
         expect.objectContaining({
           kind: "spellCondition",
-          sourceSpellId: charmPersonUnitId,
+          sourceProcedureRef: spellProcedureRef(act),
         }),
       ]),
     });
@@ -739,3 +762,27 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
   });
 });
+
+function spellProcedureRef(act: ReturnType<typeof spellAct>) {
+  const presentation = battleActSpellPresentation(act);
+  if (presentation === undefined) {
+    throw new Error("Expected admitted spell presentation.");
+  }
+  return presentation.procedureRef;
+}
+
+function spellConditionProcedureRef(
+  state: BattleState,
+  targetId: Parameters<typeof requireCombatant>[1],
+  sourceCombatantId: Parameters<typeof requireCombatant>[1],
+) {
+  const effect = requireCombatant(state, targetId).activeEffects.find(
+    (candidate) =>
+      candidate.kind === "spellCondition" &&
+      candidate.sourceCombatantId === sourceCombatantId,
+  );
+  if (effect?.kind !== "spellCondition") {
+    throw new Error("Expected admitted spell-condition execution binding.");
+  }
+  return effect.sourceProcedureRef;
+}

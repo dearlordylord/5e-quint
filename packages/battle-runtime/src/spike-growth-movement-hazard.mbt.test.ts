@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spike-growth-movement-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -41,13 +42,12 @@ import {
 import {
   breakBattleConcentration,
   endTurn,
-  resolveBattleSubject,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 
 const targetFullHp = 20;
@@ -326,7 +326,19 @@ function discoverMovementDamage(
     }),
     "movement",
   );
-  const fill = spikeGrowthMovementFill(movement);
+  const hazard = requireCombatant(
+    state.battle,
+    spellCasterId,
+  ).activeEffects.find(
+    (effect): effect is SpikeGrowthHazardEffect =>
+      effect.kind === "spikeGrowthHazard" &&
+      effect.sourceCombatantId === spellCasterId &&
+      effect.areaId === spikeGrowthAreaId,
+  );
+  if (hazard === undefined) {
+    throw new Error("Expected active Spike Growth hazard.");
+  }
+  const fill = spikeGrowthMovementFill(movement, hazard.sourceProcedureRef);
   const result = resolveBattleSubject({
     state: state.battle,
     subject,
@@ -397,6 +409,7 @@ function breakSpikeGrowthConcentration(
 
 function spikeGrowthMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  sourceProcedureRef: SpikeGrowthHazardEffect["sourceProcedureRef"],
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return movementFill(hole, {
     movementCostFeet,
@@ -407,7 +420,7 @@ function spikeGrowthMovementFill(
         {
           kind: "spikeGrowthHazard",
           sourceCombatantId: spellCasterId,
-          sourceSpellId: spikeGrowthUnitId,
+          sourceProcedureRef,
           areaId: spikeGrowthAreaId,
           damageDistanceFeet: movementFeet(damageDistanceFeet),
         },
@@ -426,7 +439,6 @@ function spikeGrowthProjection(
   const hazard = caster.activeEffects.find(
     (effect): effect is SpikeGrowthHazardEffect =>
       effect.kind === "spikeGrowthHazard" &&
-      effect.sourceSpellId === spikeGrowthUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === spikeGrowthAreaId,
   );
@@ -441,7 +453,8 @@ function spikeGrowthProjection(
       }) !== undefined,
     hazardActive: hazard !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === spikeGrowthUnitId &&
+      hazard !== undefined &&
+      caster.concentration?.sourceProcedureRef === hazard.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     targetHp: Number(target.hp),
     movementSpentFeet: Number(target.movementSpentFeet),

@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay roll-modifier-buff bless bane guidance resistance shield_of_faith
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff bless doBlessAttackAndSaveModifier
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff bane doBaneFailedSavePenalty
@@ -7,7 +9,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 import { describe, expect, it } from "vitest";
 import { Either } from "effect";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -32,7 +37,6 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -44,7 +48,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -99,7 +103,10 @@ type RollModifierBuffSelectedIdentityProjection = {
 };
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type BonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -549,7 +556,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -564,7 +571,7 @@ function bonusActionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Spell act.`);
@@ -596,7 +603,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId: selectedTargetId,
-        spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
       },
     ],
   };
@@ -604,7 +611,7 @@ function spellTargetFill(
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  spellId: RollModifierBuffSpellId,
+  sourceProcedureRef: RollModifierBuffSpellId,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -615,7 +622,8 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId,
       targetId,
-      spellId,
+      sourceProcedureRef:
+        battleProcedureExecutionRefForTest(sourceProcedureRef),
     })),
   };
 }
@@ -866,12 +874,12 @@ function activeEffectsFor(
 function isTrackedSpellEffect(
   effect: BattleActiveEffect,
 ): effect is BattleActiveEffect & {
-  readonly sourceSpellId: RollModifierBuffSpellId;
+  readonly sourceProcedureRef: RollModifierBuffSpellId;
 } {
   return (
-    "sourceSpellId" in effect &&
+    "sourceProcedureRef" in effect &&
     (rollModifierBuffSpellIds as readonly string[]).includes(
-      effect.sourceSpellId,
+      effect.sourceProcedureRef,
     )
   );
 }

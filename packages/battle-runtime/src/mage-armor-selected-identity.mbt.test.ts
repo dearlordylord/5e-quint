@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MAGE-ARMOR mage_armor
 // UNIT-IDENTITY-REPLAY: L1H-MAGE-ARMOR mage_armor doDiscoverMageArmorUnarmoredSelfTarget doRejectMageArmorArmoredTarget doResolveMageArmorBaseArmorClassProjection doExpireMageArmorDuration
 import { Either } from "effect";
@@ -37,7 +39,6 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -49,7 +50,8 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleProcedureExecutionRef,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -75,7 +77,10 @@ type MageArmorSelectedIdentityProjection = {
 
 type ArmorClassState = ReturnType<typeof defaultArmorClassState>;
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type ResolvedBattleResult = Extract<
   BattleResolutionResult,
@@ -200,7 +205,7 @@ function replayMageArmorBaseArmorClassProjectionRoute(): readonly BattleReducerR
   const result = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetChoiceFill(target, casterId)],
+    fills: [spellTargetChoiceFill(target, casterId, act.subject.procedureRef)],
   });
   requireResolved(result);
   return [
@@ -217,7 +222,9 @@ function replayMageArmorArmoredTargetRejectionRoute(): readonly BattleReducerRou
   const result = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetChoiceFill(target, armoredTargetId)],
+    fills: [
+      spellTargetChoiceFill(target, armoredTargetId, act.subject.procedureRef),
+    ],
   });
   if (result.tag !== "invalid" || result.reason !== "invalidFill") {
     throw new Error(
@@ -302,7 +309,9 @@ function projectArmoredTargetRejection(): MageArmorSelectedIdentityProjection {
   const result = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [spellTargetChoiceFill(target, armoredTargetId)],
+    fills: [
+      spellTargetChoiceFill(target, armoredTargetId, act.subject.procedureRef),
+    ],
   });
   return {
     ...projectBattleState(state),
@@ -349,7 +358,7 @@ function projectBattleState(
   const mageArmorEffect = caster.activeEffects.find(
     (effect) =>
       effect.kind === "spellBaseArmorClass" &&
-      effect.sourceSpellId === mageArmorUnitId,
+      effect.sourceCombatantId === casterId,
   );
   const projectedArmorClass = activeEffectArmorClass(caster);
   return {
@@ -376,7 +385,9 @@ function resolveMageArmorSelf(): ResolvedBattleResult {
     resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [spellTargetChoiceFill(target, casterId)],
+      fills: [
+        spellTargetChoiceFill(target, casterId, act.subject.procedureRef),
+      ],
     }),
   );
 }
@@ -387,8 +398,7 @@ function mageArmorNearlyExpiredState(
   const caster = requireCombatant(result.state, casterId);
   const activeEffects: BattleActiveEffect[] = caster.activeEffects.map(
     (effect) =>
-      isMageArmorDurationEffect(effect) &&
-      effect.sourceSpellId === mageArmorUnitId
+      isMageArmorDurationEffect(effect) && effect.sourceCombatantId === casterId
         ? {
             ...effect,
             expiresAt: {
@@ -526,9 +536,11 @@ function mageArmorAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === mageArmorUnitId &&
-      candidate.subject.invocation.procedure === "persistentArmorEffect",
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        mageArmorUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "persistentArmorEffect",
   );
   if (act === undefined) {
     throw new Error("Expected Mage Armor spell act.");
@@ -554,6 +566,7 @@ function targetChoiceHole(
 function spellTargetChoiceFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -564,13 +577,13 @@ function spellTargetChoiceFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId: mageArmorUnitId,
+        sourceProcedureRef,
       },
       {
         kind: "spellTargetKnownWilling",
         casterId,
         targetId,
-        spellId: mageArmorUnitId,
+        sourceProcedureRef,
       },
     ],
   };
@@ -616,7 +629,6 @@ function projectedBaseIsMageArmor(armorClass: ArmorClassState): boolean {
   return (
     armorClass.base.kind === "ability_sum" &&
     armorClass.base.source === "spell_base_plus_ability" &&
-    armorClass.base.sourceUnitId === mageArmorUnitId &&
     Number(armorClass.base.base) === mageArmorBaseArmorClass &&
     armorClass.base.abilityModifiers.length === 1 &&
     armorClass.base.abilityModifiers[0] === "dex"

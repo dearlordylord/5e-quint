@@ -241,13 +241,14 @@ function isWebRestraintEscapeOperation(
 function discoverWebRestraintHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: WebRestraintHazardSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<WebRestraintHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: webRestraintHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },

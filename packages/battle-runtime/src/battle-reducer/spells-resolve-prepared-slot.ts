@@ -18,7 +18,7 @@ import {
   type BattleResolutionResult,
   type BattleSpellTargetAllocationSpatialFact,
   type BattleTargetSpatialFact,
-  type SupportedSpellInvocation,
+  type BattleExecutableSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -77,7 +77,7 @@ export function resolvePreparedSlotSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "repeatedDamageAllocation" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -94,7 +94,7 @@ export function resolvePreparedSlotSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "repeatedDamageAllocation" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
@@ -145,6 +145,7 @@ export function resolvePreparedSlotSpellAct(input: {
   for (const allocation of targetAllocation.allocations) {
     const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
       state: input.input.state,
+      triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
       wardedCombatantId: allocation.targetId,
       triggeringTargetEventId: allocationHole.holeId,
@@ -258,6 +259,7 @@ export function resolvePreparedSlotSpellAct(input: {
     const fillSet = spellFillSet(
       fills,
       input.invocation,
+      input.invocation.sourceProcedureRef,
       input.actorId,
       input.input.state,
     );
@@ -768,7 +770,7 @@ function repeatedDamageAllocationSourceDamageRollHoleId(
 function repeatedDamageAllocationSpellDamageByType(
   target: BattleCreatureState,
   invocation: Extract<
-    SupportedSpellInvocation,
+    BattleExecutableSpellInvocation,
     { readonly procedure: "repeatedDamageAllocation" }
   >,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,

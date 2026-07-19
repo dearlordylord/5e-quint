@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay healing-stabilization spare_the_dying
 // UNIT-IDENTITY-REPLAY: healing-stabilization spare_the_dying doResolveSpareTheDyingStable
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
@@ -8,39 +11,18 @@ import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
-  Hp,
   abilityModifier,
   attackBonus,
+  Hp,
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import {
-  battleId,
-  battleReducerStartRouteEvent,
-  cantripSpellInvocationRef,
-  characterId,
-  combatantId,
-  discoverBattleActs,
-  initiativeScore,
-  resolveBattleSubject,
-  snapshotBattle,
-  startBattle,
-  type AvailableBattleAct,
-  type BattleCreatureInit,
-  type BattleFill,
-  type BattleHole,
-  type BattleResolutionResult,
-  type BattleState,
-  type BattleSubject,
-  type CombatantId,
-} from "./index.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   booleanField,
   decodeReducerRoute,
@@ -58,6 +40,26 @@ import {
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  battleId,
+  battleReducerStartRouteEvent,
+  cantripSpellInvocationRef,
+  characterId,
+  combatantId,
+  discoverBattleActs,
+  initiativeScore,
+  snapshotBattle,
+  startBattle,
+  type AvailableBattleAct,
+  type BattleCreatureInit,
+  type BattleFill,
+  type BattleHole,
+  type BattleResolutionResult,
+  type BattleState,
+  type BattleActDiscoverySubject as BattleSubject,
+  type CombatantId,
+} from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type HealingStabilizationProjection = {
@@ -84,7 +86,10 @@ type ZeroHitPointStabilizationRouteProjection = {
 };
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 
 const casterId = combatantId("healing-stabilization-caster");
@@ -354,7 +359,8 @@ function spareTheDyingAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "spare_the_dying",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "spare_the_dying",
   );
   if (act === undefined) {
     throw new Error("Expected Spare the Dying act.");
@@ -437,7 +443,9 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId: selectedTargetId,
-        spellId: "spare_the_dying",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("spare_the_dying"),
+        ),
       },
     ],
   };

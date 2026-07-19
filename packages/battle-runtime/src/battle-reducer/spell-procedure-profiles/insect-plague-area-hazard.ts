@@ -234,13 +234,14 @@ function insectPlagueSaveGateDamageAmount(
 function discoverInsectPlagueAreaHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: InsectPlagueAreaHazardSpellInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<InsectPlagueAreaHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: insectPlagueAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },

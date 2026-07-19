@@ -54,7 +54,7 @@ describe("manual MCP battle surface coverage", () => {
         ],
         characterUnitRefs: [
           {
-            unitId: "bard_bardic_inspiration",
+            unit: root.unitLibrary.requireUnit("bard_bardic_inspiration"),
             supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
           },
         ],
@@ -62,7 +62,7 @@ describe("manual MCP battle surface coverage", () => {
       statBlock(root, { combatantId: goblinId, initiative: 10 }),
     ]);
 
-    const act = requireAct(root, "Bardic Inspiration");
+    const act = requireUnitAct(root, "bard_bardic_inspiration");
     const target = requireHole(act.initialHoles, "targetChoice");
     const afterGrant = call(root, "fill_battle_hole", {
       subject: act.subject,
@@ -75,7 +75,7 @@ describe("manual MCP battle surface coverage", () => {
             kind: "bardicInspirationTargetWithinRange",
             bardId: "fighter",
             targetId: "goblin",
-            unitId: "bard_bardic_inspiration",
+            sourceProcedureRef: act.subject.procedureRef,
             rangeFeet: 60,
           },
         ],
@@ -94,7 +94,11 @@ describe("manual MCP battle surface coverage", () => {
             kind: "character",
             resources: expect.arrayContaining([
               expect.objectContaining({
-                unitId: "bard_bardic_inspiration",
+                resourcePoolRef: resourcePoolRefForUnit(
+                  root,
+                  fighterId,
+                  "bard_bardic_inspiration",
+                ),
                 usesRemaining: 2,
               }),
             ]),
@@ -132,7 +136,7 @@ describe("manual MCP battle surface coverage", () => {
       statBlock(root, { combatantId: goblinId, initiative: 10 }),
     ]);
 
-    const innate = requireAct(root, "Innate Sorcery");
+    const innate = requireUnitAct(root, "sorcerer_innate_sorcery");
     const afterInnate = call(root, "resolve_battle_act", {
       subject: innate.subject,
     });
@@ -158,7 +162,7 @@ describe("manual MCP battle surface coverage", () => {
         target.holeId,
         "fighter",
         "goblin",
-        "sorcerous_burst",
+        burst.subject.procedureRef,
       ),
     });
 
@@ -188,7 +192,7 @@ describe("manual MCP battle surface coverage", () => {
         },
         characterUnitRefs: [
           {
-            unitId: "monk_martial_arts",
+            unit: root.unitLibrary.requireUnit("monk_martial_arts"),
             supportProfiles: [MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE],
           },
         ],
@@ -196,7 +200,7 @@ describe("manual MCP battle surface coverage", () => {
       statBlock(root, { combatantId: goblinId, initiative: 10 }),
     ]);
 
-    const act = requireAct(root, "Martial Arts Bonus Unarmed Strike");
+    const act = requireUnitAct(root, "monk_martial_arts");
     const afterTarget = call(root, "fill_battle_hole", {
       subject: act.subject,
       fill: attackTargetFill(
@@ -237,7 +241,7 @@ describe("manual MCP battle surface coverage", () => {
         initiative: 20,
         characterUnitRefs: [
           {
-            unitId: "mastery_sap",
+            unit: sapRoot.unitLibrary.requireUnit("mastery_sap"),
             supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
           },
         ],
@@ -282,7 +286,7 @@ describe("manual MCP battle surface coverage", () => {
         },
         characterUnitRefs: [
           {
-            unitId: "mastery_topple",
+            unit: toppleRoot.unitLibrary.requireUnit("mastery_topple"),
             supportProfiles: [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE],
           },
         ],
@@ -319,7 +323,7 @@ describe("manual MCP battle surface coverage", () => {
         },
         characterUnitRefs: [
           {
-            unitId: "mastery_cleave",
+            unit: root.unitLibrary.requireUnit("mastery_cleave"),
             supportProfiles: [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE],
           },
         ],
@@ -414,11 +418,16 @@ describe("manual MCP battle surface coverage", () => {
     ]);
 
     const act = requireSpellAct(root, "mage_armor");
-    expect(act.summary).toBe("Cast Mage Armor using Armor of Shadows.");
+    expect(act.summary).toBe("Use Mage Armor.");
     const target = requireHole(act.initialHoles, "targetChoice");
     const afterTarget = call(root, "fill_battle_hole", {
       subject: act.subject,
-      fill: spellTargetFill(target.holeId, "fighter", "fighter", "mage_armor"),
+      fill: spellTargetFill(
+        target.holeId,
+        "fighter",
+        "fighter",
+        act.subject.procedureRef,
+      ),
     });
 
     expect(afterTarget.result).toMatchObject({
@@ -548,6 +557,11 @@ describe("manual MCP battle surface coverage", () => {
     ]);
 
     const goblinAttack = requireAct(root, "Attack", "Scimitar");
+    const hellishRebukeProcedureRef = spellProcedureRef(
+      root,
+      fighterId,
+      "hellish_rebuke",
+    );
     const afterTarget = call(root, "fill_battle_hole", {
       subject: goblinAttack.subject,
       fill: {
@@ -565,7 +579,7 @@ describe("manual MCP battle surface coverage", () => {
             kind: "reactionSpellDamagerVisibleWithinRange",
             reactorId: "fighter",
             damageSourceId: "goblin",
-            spellId: "hellish_rebuke",
+            sourceProcedureRef: hellishRebukeProcedureRef,
             rangeFeet: 60,
           },
         ],
@@ -666,6 +680,11 @@ describe("manual MCP battle surface coverage", () => {
       }),
     ]);
 
+    const featherFallProcedureRef = spellProcedureRef(
+      root,
+      fighterId,
+      "feather_fall",
+    );
     const falling = call(root, "resolve_battle_act", {
       subject: {
         tag: "runtimeCommand",
@@ -678,7 +697,7 @@ describe("manual MCP battle surface coverage", () => {
           kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
           reactorId: "fighter",
           fallingCreatureId: "ally",
-          spellId: "feather_fall",
+          sourceProcedureRef: featherFallProcedureRef,
           rangeFeet: 60,
         },
       ],
@@ -815,7 +834,12 @@ describe("manual MCP battle surface coverage", () => {
     const target = requireHole(fireBolt.initialHoles, "targetChoice");
     const afterTarget = call(tomeRoot, "fill_battle_hole", {
       subject: fireBolt.subject,
-      fill: spellTargetFill(target.holeId, "fighter", "goblin", "fire_bolt"),
+      fill: spellTargetFill(
+        target.holeId,
+        "fighter",
+        "goblin",
+        fireBolt.subject.procedureRef,
+      ),
     });
     expect(afterTarget.result).toMatchObject({
       tag: "needsHoles",
@@ -851,11 +875,18 @@ describe("manual MCP battle surface coverage", () => {
 
     const huntersMark = requireSpellAct(root, "hunters_mark");
     expect(huntersMark.subject.tag).toBe("bonusActionSpell");
-    expect(huntersMark.subject.invocation.tag).toBe("classFeatureFreeCast");
+    expect(huntersMark.presentation.invocation.tag).toBe(
+      "classFeatureFreeCast",
+    );
     const target = requireHole(huntersMark.initialHoles, "targetChoice");
     const afterTarget = call(root, "fill_battle_hole", {
       subject: huntersMark.subject,
-      fill: spellTargetFill(target.holeId, "fighter", "goblin", "hunters_mark"),
+      fill: spellTargetFill(
+        target.holeId,
+        "fighter",
+        "goblin",
+        huntersMark.subject.procedureRef,
+      ),
     });
 
     expect(afterTarget.result).toMatchObject({
@@ -864,7 +895,7 @@ describe("manual MCP battle surface coverage", () => {
     });
     const ranger = root.sessionStore.battleState?.combatants.get(fighterId);
     expect(ranger?.concentration).toEqual({
-      sourceSpellId: "hunters_mark",
+      sourceProcedureRef: huntersMark.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(ranger?.origin.kind).toBe("character");
@@ -952,7 +983,10 @@ describe("manual MCP battle surface coverage", () => {
     const discovered = call(root, "discover_battle_acts", {});
     const discoveredSpellIds = new Set(
       discovered.snapshot.acts.flatMap((candidate: Json) => {
-        const spellId = candidate.subject?.invocation?.spellId;
+        const spellId =
+          candidate.presentation?.kind === "spell"
+            ? candidate.presentation.invocation?.spellId
+            : undefined;
         return typeof spellId === "string" ? [spellId] : [];
       }),
     );
@@ -1279,10 +1313,61 @@ function requireAct(root: Root, label: string, attackName?: string): Json {
 function requireSpellAct(root: Root, spellId: string): Json {
   const discovered = call(root, "discover_battle_acts", {});
   const act = discovered.snapshot.acts.find(
-    (candidate: Json) => candidate.subject?.invocation?.spellId === spellId,
+    (candidate: Json) =>
+      candidate.presentation?.kind === "spell" &&
+      candidate.presentation.invocation?.spellId === spellId,
   );
   if (act === undefined) throw new Error(`Expected MCP spell act: ${spellId}`);
   return act;
+}
+
+function requireUnitAct(root: Root, unitId: string): Json {
+  const discovered = call(root, "discover_battle_acts", {});
+  const act = discovered.snapshot.acts.find(
+    (candidate: Json) =>
+      candidate.presentation?.kind === "unit" &&
+      candidate.presentation.unitId === unitId,
+  );
+  if (act === undefined) throw new Error(`Expected MCP unit act: ${unitId}`);
+  return act;
+}
+
+function spellProcedureRef(
+  root: Root,
+  actorId: ReturnType<typeof combatantId>,
+  spellId: string,
+): string {
+  const actor = root.sessionStore.battleState?.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character spell owner: ${actorId}`);
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "spellInvocation" &&
+      candidate.procedure.invocation.spell.id === spellId,
+  );
+  if (binding === undefined) {
+    throw new Error(`Expected admitted spell procedure: ${spellId}`);
+  }
+  return binding.procedureRef;
+}
+
+function resourcePoolRefForUnit(
+  root: Root,
+  actorId: ReturnType<typeof combatantId>,
+  unitId: string,
+): string {
+  const actor = root.sessionStore.battleState?.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character resource owner: ${actorId}`);
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.unit.id === unitId,
+  );
+  if (resource === undefined) {
+    throw new Error(`Expected admitted unit resource: ${unitId}`);
+  }
+  return resource.resourcePoolRef;
 }
 
 function requireHole(holes: readonly Json[], kind: string): Json {
@@ -1342,13 +1427,20 @@ function spellTargetFill(
   holeId: string,
   casterId: string,
   targetId: string,
-  spellId: string,
+  sourceProcedureRef: string,
 ) {
   return {
     kind: "targetChoice",
     holeId,
     value: targetId,
-    spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      },
+    ],
   };
 }
 

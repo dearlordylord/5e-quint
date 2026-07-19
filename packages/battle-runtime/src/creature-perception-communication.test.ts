@@ -3,12 +3,13 @@
 import { expect, test } from "vitest";
 
 import {
+  battleActDruidWildShapePresentation,
   combatantPerceptionCommunicationProjection,
   type BattleFill,
   type BattleCreatureState,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   battleId,
@@ -230,7 +231,8 @@ function wildShapeAssumeFormSubject(
     (act) =>
       act.subject.tag === "druidWildShape" &&
       act.subject.action === "assumeForm" &&
-      act.subject.formStatBlockId === formStatBlockId,
+      battleActDruidWildShapePresentation(act)?.formStatBlockId ===
+        formStatBlockId,
   )?.subject;
   if (subject?.tag !== "druidWildShape") {
     throw new Error("Expected Druid Wild Shape assume-form subject.");

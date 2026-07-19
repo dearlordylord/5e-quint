@@ -34,6 +34,7 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type DamageReductionSpellInvocation,
 } from "../../battle-reducer.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -134,7 +135,7 @@ function applyDamageReductionEffect(
   actorId: CombatantId,
   targetId: CombatantId,
   damageType: DamageType,
-  invocation: DamageReductionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<DamageReductionSpellInvocation>,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -142,7 +143,7 @@ function applyDamageReductionEffect(
   }
   const nextEffect = {
     kind: "spellDamageReduction" as const,
-    sourceSpellId: invocation.spell.id,
+    sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
     damageType,
     amount: invocation.amount,
@@ -154,7 +155,7 @@ function applyDamageReductionEffect(
       (effect) =>
         !(
           effect.kind === "spellDamageReduction" &&
-          effect.sourceSpellId === invocation.spell.id
+          effect.sourceProcedureRef === invocation.sourceProcedureRef
         ),
     ),
     nextEffect,
@@ -191,7 +192,7 @@ function admitDamageReduction(
 function discoverDamageReductionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DamageReductionSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<DamageReductionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
@@ -202,6 +203,7 @@ function discoverDamageReductionCastAct(
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: damageReductionInvocationRef(invocation),
         mode: { tag: "cast" },
       },

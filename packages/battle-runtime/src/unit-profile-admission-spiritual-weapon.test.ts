@@ -1,8 +1,13 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME spiritual_weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 import { describe, expect, test } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  requireCharacterSpellProcedureRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
@@ -75,13 +80,20 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       slotLevel: 4,
     });
 
-    expect(secondLevelAct.subject).toMatchObject({
+    expect({
+      ...secondLevelAct.subject,
+      invocation: battleActSpellPresentation(secondLevelAct)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        spiritualWeaponUnitId,
-        2,
-        "spiritualWeaponAttackProxy",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(
+          spiritualWeaponUnitId,
+          2,
+          "spiritualWeaponAttackProxy",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -119,10 +131,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     > = {
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        spiritualWeaponUnitId,
-        2,
-        "spiritualWeaponAttackProxy",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(
+          spiritualWeaponUnitId,
+          2,
+          "spiritualWeaponAttackProxy",
+        ),
       ),
       mode: { tag: "cast" },
     };
@@ -152,8 +168,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       discoverBattleActs(state).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
-          candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-          candidate.subject.invocation.procedure ===
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            spiritualWeaponUnitId &&
+          battleActSpellPresentation(candidate)?.invocation.procedure ===
             "spiritualWeaponAttackProxy",
       ),
     ).toBe(false);
@@ -175,8 +192,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         discoverBattleActs(state).some(
           (candidate) =>
             candidate.subject.tag === "bonusActionSpell" &&
-            candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-            candidate.subject.invocation.procedure ===
+            battleActSpellPresentation(candidate)?.invocation.spellId ===
+              spiritualWeaponUnitId &&
+            battleActSpellPresentation(candidate)?.invocation.procedure ===
               "spiritualWeaponAttackProxy",
         ),
       ).toBe(false);
@@ -250,7 +268,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toEqual({
-      sourceSpellId: spiritualWeaponUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spiritualWeaponUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(
@@ -258,7 +278,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spiritualWeapon",
-        sourceSpellId: spiritualWeaponUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spiritualWeaponUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         forcePositionId,
         forceReachFeet: movementFeet(5),
@@ -450,7 +472,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(
       requireCombatant(needsConcentration.state, spellCasterId).concentration,
     ).toEqual({
-      sourceSpellId: spiritualWeaponUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spiritualWeaponUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(
@@ -828,8 +852,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       discoverBattleActs(sameTurnWithBonusAction).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
-          candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-          candidate.subject.invocation.procedure ===
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            spiritualWeaponUnitId &&
+          battleActSpellPresentation(candidate)?.invocation.procedure ===
             "spiritualWeaponRepeatAttack",
       ),
     ).toBe(false);
@@ -900,8 +925,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const repeatAct = discoverBattleActs(casterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-        candidate.subject.invocation.procedure ===
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          spiritualWeaponUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
           "spiritualWeaponRepeatAttack",
     );
     expect(repeatAct).toBeDefined();
@@ -1068,8 +1094,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const repeatAct = discoverBattleActs(afterPriorSlotSpell).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-        candidate.subject.invocation.procedure ===
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          spiritualWeaponUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
           "spiritualWeaponRepeatAttack",
     );
     expect(repeatAct).toBeDefined();
@@ -1211,8 +1238,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const repeatAct = discoverBattleActs(casterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-        candidate.subject.invocation.procedure ===
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          spiritualWeaponUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
           "spiritualWeaponRepeatAttack",
     );
     expect(repeatAct).toBeDefined();
@@ -1362,8 +1390,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const repeatAct = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
-        candidate.subject.invocation.procedure ===
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          spiritualWeaponUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
           "spiritualWeaponRepeatAttack",
     );
     expect(repeatAct).toBeDefined();
@@ -1456,7 +1485,9 @@ function counterspellTriggerFact(input: {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    spellId: counterspellUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(counterspellUnitId),
+    ),
     rangeFeet: movementFeet(60),
   };
 }
@@ -1549,7 +1580,9 @@ function withSanctuaryWard(
   const ward: Extract<BattleActiveEffect, { readonly kind: "sanctuaryWard" }> =
     {
       kind: "sanctuaryWard",
-      sourceSpellId: "sanctuary",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("sanctuary"),
+      ),
       sourceCombatantId: spellTargetId,
       save: { ability: "wis", dc: { kind: "fixed", dc: 13 } },
       expiresAt: {

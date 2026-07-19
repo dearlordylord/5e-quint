@@ -1,3 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  resolveBattleSubject,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH calm_emotions charm_person darkness enthrall gust_of_wind invisibility levitate see_invisibility spike_growth web
 // UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH calm_emotions doDiscoverCalmEmotionsConditionImmunity
 // UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH charm_person doDiscoverCharmPersonSaveGatedCondition
@@ -19,7 +25,6 @@ import {
   battleReducerStartRouteEvent,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
@@ -27,7 +32,7 @@ import {
   type BattleReducerRouteOwnerGroup,
   type BattleReducerRouteSubjectFamily,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   calmEmotionsUnitId,
@@ -446,7 +451,9 @@ function spikeGrowthMovementFill(
         {
           kind: "spikeGrowthHazard",
           sourceCombatantId: spellCasterId,
-          sourceSpellId: spikeGrowthUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(spikeGrowthUnitId),
+          ),
           areaId: spikeGrowthAreaId,
           damageDistanceFeet: movementFeet(5),
         },
@@ -592,13 +599,16 @@ function recordDiscoveredInvocation(
     slotLevel: input.slotLevel,
   });
 
-  expect(act.subject).toMatchObject({
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
-    invocation: spellSlotInvocationRef(
-      input.spellId,
-      input.slotLevel,
-      input.procedure,
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      state,
+      spellCasterId,
+      spellSlotInvocationRef(input.spellId, input.slotLevel, input.procedure),
     ),
     mode: { tag: "cast" },
   });

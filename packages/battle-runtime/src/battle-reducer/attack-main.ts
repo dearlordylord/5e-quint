@@ -54,6 +54,7 @@ import {
   huntersPreyHordeBreakerAttackRollHole,
   huntersPreyHordeBreakerDamageHole,
   huntersPreyHordeBreakerDecisionHole,
+  huntersPreyHordeBreakerSelection,
   huntersPreyHordeBreakerTargetHole,
   huntersPreyHordeBreakerTargetIsLegal,
   recordHuntersPreyHordeBreakerUsed,
@@ -216,6 +217,8 @@ import type {
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { battleTablePositionId, type CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
+import { characterUnitProcedureRef } from "../character-execution.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -304,7 +307,7 @@ function grapplerPunchAndGrabUnitFeature(
   return support === null
     ? null
     : {
-        unitId: support.unitRef.unitId,
+        unitId: support.unitRef.unit.id,
         label: "Punch and Grab",
       };
 }
@@ -366,6 +369,7 @@ function brutalStrikeSelection(
   attack: SupportedAttackActionOption,
 ): {
   readonly unitId: BattleUnitFeatureDecisionHole["unitFeature"]["unitId"];
+  readonly procedureRef: BattleProcedureExecutionRef;
 } | null {
   if (
     currentActorId(state) !== attackerId ||
@@ -384,7 +388,18 @@ function brutalStrikeSelection(
         profile.kind === BRUTAL_STRIKE_SUPPORT_PROFILE,
     ),
   );
-  return unitRef === undefined ? null : { unitId: unitRef.unitId };
+  if (unitRef === undefined) return null;
+  const procedureRef = characterUnitProcedureRef(
+    attacker.origin.execution,
+    unitRef.unit.id,
+    {
+      kind: "unitSupportProfile",
+      supportKinds: new Set([BRUTAL_STRIKE_SUPPORT_PROFILE]),
+    },
+  );
+  return procedureRef === undefined
+    ? null
+    : { unitId: unitRef.unit.id, procedureRef };
 }
 
 function isBrutalStrikeDecisionChoice(
@@ -429,12 +444,12 @@ function applyBrutalStrikeAfterDamage(input: {
   readonly state: BattleState;
   readonly shovePushes: readonly BattleShovePushOutcome[];
 } {
-  const unitId = brutalStrikeSelection(
+  const selection = brutalStrikeSelection(
     input.state,
     input.attackerId,
     input.attack,
-  )?.unitId;
-  if (unitId === undefined || input.choice === null) {
+  );
+  if (selection === null || input.choice === null) {
     return { state: input.state, shovePushes: [] };
   }
   if (input.choice === "forceful_blow") {
@@ -469,12 +484,12 @@ function applyBrutalStrikeAfterDamage(input: {
         (effect) =>
           !(
             effect.kind === "unitFeatureSpeedDelta" &&
-            effect.sourceUnitId === unitId
+            effect.sourceProcedureRef === selection.procedureRef
           ),
       ),
       {
         kind: "unitFeatureSpeedDelta",
-        sourceUnitId: unitId,
+        sourceProcedureRef: selection.procedureRef,
         sourceCombatantId: input.attackerId,
         deltaFeet: movementDeltaFeet(-15),
         expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
@@ -786,6 +801,7 @@ export function resolveSelectedAttackProcedure(
 
   const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
     state: input.state,
+    triggeringProcedureRef: input.subject.procedureRef,
     triggeringCombatantId: attackerId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
@@ -3244,6 +3260,22 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         };
   }
   const unitId = decisionHole.unitFeature.unitId;
+  const selection = huntersPreyHordeBreakerSelection(
+    input.state,
+    input.subject.actorId,
+    input.firstTargetId,
+    input.attack,
+  );
+  if (selection === null || selection.unitId !== unitId) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        "Hunter's Prey Horde Breaker execution binding is no longer available.",
+      ),
+    };
+  }
   if (input.fillSet.huntersPreyHordeBreakerDecision === undefined) {
     return {
       tag: "result",
@@ -3292,6 +3324,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           input.state,
           input.subject.actorId,
           input.firstTargetId,
+          selection.procedureRef,
         ),
       ]),
     };
@@ -3303,7 +3336,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     !huntersPreyHordeBreakerTargetIsLegal({
       state: input.state,
       attackerId: input.subject.actorId,
-      unitId,
+      sourceProcedureRef: selection.procedureRef,
       firstTargetId: input.firstTargetId,
       secondTargetId,
       attack: input.attack,

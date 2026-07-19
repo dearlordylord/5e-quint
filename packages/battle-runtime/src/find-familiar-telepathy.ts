@@ -20,12 +20,11 @@ import {
   snapshotBattle,
 } from "./battle-reducer/dispatcher.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";
-import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spells-discovery.ts";
-import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-invocation-ref.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { findFamiliarCompanionEntryForOwner } from "./find-familiar-state.ts";
-import type { CombatantId } from "./identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
 
 export const FIND_FAMILIAR_TELEPATHY_RANGE_FEET = movementFeet(100);
 
@@ -150,11 +149,9 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   const actor = input.state.combatants.get(input.subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find((candidate) =>
-          supportedSpellInvocationMatchesRef(
-            candidate,
-            input.subject.invocation,
-          ),
+      ? characterSpellProcedure(
+          actor.origin.execution,
+          input.subject.procedureRef,
         )
       : undefined;
   if (
@@ -195,7 +192,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     fills: input.fills,
     ownerId: input.subject.actorId,
     familiarId: connection.familiarId,
-    spellId: invocation.spell.id,
+    sourceProcedureRef: invocation.sourceProcedureRef,
   });
   if (deliveryFills.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", deliveryFills.message);
@@ -276,7 +273,7 @@ function findFamiliarTouchDeliveryFills(input: {
   readonly fills: BattleResolutionInput["fills"];
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
-  readonly spellId: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }):
   | {
       readonly tag: "resolved";
@@ -317,7 +314,7 @@ function findFamiliarTouchDeliveryFills(input: {
         ownerId: input.ownerId,
         familiarId: input.familiarId,
         targetId: fill.value,
-        spellId: input.spellId,
+        sourceProcedureRef: input.sourceProcedureRef,
       }),
     );
     if (deliveryFact === undefined) {
@@ -333,7 +330,7 @@ function findFamiliarTouchDeliveryFills(input: {
           kind: "spellTarget",
           casterId: input.ownerId,
           targetId: fill.value,
-          spellId: input.spellId,
+          sourceProcedureRef: input.sourceProcedureRef,
         },
       ],
     });
@@ -355,14 +352,14 @@ function findFamiliarTouchSpellTargetFactMatches(input: {
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
   readonly targetId: CombatantId;
-  readonly spellId: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): boolean {
   return (
     input.fact.kind === "findFamiliarTouchSpellTarget" &&
     input.fact.ownerId === input.ownerId &&
     input.fact.familiarId === input.familiarId &&
     input.fact.targetId === input.targetId &&
-    input.fact.spellId === input.spellId
+    input.fact.sourceProcedureRef === input.sourceProcedureRef
   );
 }
 

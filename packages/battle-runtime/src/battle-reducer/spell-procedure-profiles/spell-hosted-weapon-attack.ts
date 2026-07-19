@@ -27,6 +27,7 @@ import {
   type ActionSpellBattleResolutionInput,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SpellHostedWeaponAttackInvocation,
@@ -235,7 +236,7 @@ function weaponMatchesProficiency(
 function discoverSpellHostedWeaponAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellHostedWeaponAttackInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellHostedWeaponAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = attackTargetHole(
     state,
@@ -249,6 +250,7 @@ function discoverSpellHostedWeaponAttackCastAct(
           subject: {
             tag: "actionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: spellHostedWeaponAttackInvocationRef(invocation),
             mode: { tag: "cast" },
             componentWeaponItemId: invocation.componentWeapon.itemId,
@@ -386,7 +388,7 @@ function spellHostedWeaponAttack(
 }
 
 function spellHostedWeaponAttackBonusDamageAdditions(
-  invocation: SpellHostedWeaponAttackInvocation,
+  invocation: BattleExecutableSpellInvocation<SpellHostedWeaponAttackInvocation>,
   actorId: CombatantId,
 ): readonly AttackSpellDamageAddition[] {
   return invocation.bonusDamage === null ||
@@ -396,7 +398,7 @@ function spellHostedWeaponAttackBonusDamageAdditions(
         {
           kind: "attackSpellDamageAddition",
           sourceProcedure: "spellHostedWeaponAttack",
-          sourceSpellId: invocation.spell.id,
+          sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: actorId,
           damage: invocation.bonusDamage,
         },

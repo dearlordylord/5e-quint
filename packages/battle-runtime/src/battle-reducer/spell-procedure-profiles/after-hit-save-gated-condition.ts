@@ -38,6 +38,7 @@ import {
   type AfterHitSaveGatedConditionSpellInvocation,
   type AvailableBattleAct,
   type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
   type BattleFill,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
@@ -300,7 +301,7 @@ function resolveAfterHitSaveGatedCondition(
       {
         trigger: "saveFailed",
         targetId: input.input.target.combatantId,
-        sourceSpellId: input.invocation.spell.id,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -380,6 +381,7 @@ function afterHitSaveGatedConditionFillSet(
   const fillSet = spellFillSet(
     fills,
     invocation,
+    input.subject.procedureRef,
     input.subject.actorId,
     input.state,
   );
@@ -429,7 +431,7 @@ export function afterHitSaveGatedConditionSavingThrowOutcomeHole(
   state: BattleState,
   casterId: CombatantId,
   target: BattleCreatureState,
-  invocation: AfterHitSaveGatedConditionInvocation,
+  invocation: BattleExecutableSpellInvocation<AfterHitSaveGatedConditionInvocation>,
 ): BattleSpellSavingThrowOutcomeHole {
   const base = spellSavingThrowOutcomeHole(state, casterId, invocation);
   return {

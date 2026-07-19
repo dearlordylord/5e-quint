@@ -42,7 +42,11 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { BattleObjectId, CombatantId } from "../identity.ts";
+import type {
+  BattleObjectId,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import {
   parseAttackTargetChoiceFill,
   parseSavingThrowRelationshipFacts,
@@ -292,6 +296,7 @@ export type SpellFillSet =
 export function spellFillSet(
   fills: readonly BattleFill[],
   invocation: SupportedSpellInvocation,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   actorId: CombatantId,
   state: BattleState,
 ): SpellFillSet {
@@ -1008,7 +1013,7 @@ export function spellFillSet(
         ? parseSpellTargetListRelationshipFacts(
             fill.relationshipFacts ?? [],
             actorId,
-            invocation.spell.id,
+            sourceProcedureRef,
             fill.value.targetIds,
           )
         : fill.relationshipFacts === undefined
@@ -2039,24 +2044,24 @@ export function spellFillSetSavingThrowTargeting(
       : { kind: "singleCombatant" };
 }
 
-function isTargetAbilityChoicesRollModifierInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "rollModifier" }
-> & { readonly abilityChoices: readonly Ability[] } {
+function isTargetAbilityChoicesRollModifierInvocation<
+  I extends SupportedSpellInvocation,
+>(
+  invocation: I,
+): invocation is I &
+  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }> & {
+    readonly abilityChoices: readonly Ability[];
+  } {
   return invocation.procedure === "rollModifier"
     ? invocation.abilityChoices !== null &&
         rollModifierUsesTargetAbilityChoices(invocation)
     : false;
 }
 
-function isRollModifierInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "rollModifier" }
-> {
+function isRollModifierInvocation<I extends SupportedSpellInvocation>(
+  invocation: I,
+): invocation is I &
+  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }> {
   return invocation.procedure === "rollModifier";
 }
 

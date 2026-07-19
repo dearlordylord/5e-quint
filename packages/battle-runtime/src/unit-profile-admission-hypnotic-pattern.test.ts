@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME hypnotic_pattern
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hypnotic-pattern-control
 import { describe, expect, test } from "vitest";
@@ -60,13 +63,16 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        hypnoticPatternUnitId,
-        3,
-        "hypnoticPattern",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(hypnoticPatternUnitId, 3, "hypnoticPattern"),
       ),
       mode: { tag: "cast" },
     });
@@ -110,7 +116,9 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(target.activeEffects).toEqual([
       expect.objectContaining({
         kind: "hypnoticPatternControl",
-        sourceSpellId: hypnoticPatternUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(hypnoticPatternUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         conditionHadNonSpellCharmedSource: false,
         conditionHadNonSpellIncapacitatedSource: false,
@@ -122,7 +130,9 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       }),
     ]);
     expect(requireCombatant(cast.state, spellCasterId).concentration).toEqual({
-      sourceSpellId: hypnoticPatternUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hypnoticPatternUnitId),
+      ),
       effectKind: "spellEffect",
     });
   });
@@ -170,7 +180,9 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           ...baseTarget.activeEffects,
           {
             kind: "creatureTypeProtection",
-            sourceSpellId: protectionFromEvilAndGoodUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(protectionFromEvilAndGoodUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             attackRollMode: "disadvantage",
             protectedAgainstCreatureTypes: ["humanoid"],
@@ -224,7 +236,9 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           ...baseTarget.activeEffects,
           {
             kind: "conditionImmunity",
-            sourceSpellId: calmEmotionsUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(calmEmotionsUnitId),
+            ),
             sourceCombatantId: spellCasterId,
             condition: "charmed",
             conditionHadNonSpellSource: false,

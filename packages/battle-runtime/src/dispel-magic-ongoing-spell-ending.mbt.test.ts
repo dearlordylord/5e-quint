@@ -1,3 +1,8 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 // RAW trace:
@@ -54,13 +59,13 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleAreaId,
   battleObjectId,
-  resolveBattleSubject,
   type BattleActiveEffect,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
+  type BattleProcedureExecutionRef,
   type BattleTrackedOngoingSpellLightEmitter,
   type CharacterBattleCreatureState,
 } from "./index.ts";
@@ -84,7 +89,6 @@ const DISPEL_MAGIC_ONGOING_SPELL_ENDING_SCENARIO_OUTCOME_BY_TAG: Readonly<
   UpcastAutoEnded: "upcastAutoEnded",
   AntimagicAuraUnaffected: "antimagicAuraUnaffected",
 } as const;
-
 
 type DispelMagicOngoingSpellEndingProjection = {
   readonly actionAvailable: boolean;
@@ -304,7 +308,9 @@ function initialRuntimeState(): DispelMagicRuntimeState {
         .set(spellCasterId, {
           ...caster,
           concentration: {
-            sourceSpellId: heatMetalUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(heatMetalUnitId),
+            ),
             effectKind: "spellEffect",
           },
           activeEffects: [
@@ -315,7 +321,9 @@ function initialRuntimeState(): DispelMagicRuntimeState {
         .set(spellTargetId, {
           ...target,
           concentration: {
-            sourceSpellId: antimagicFieldUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(antimagicFieldUnitId),
+            ),
             effectKind: "spellEffect",
           },
           activeEffects: [...target.activeEffects, antimagicFieldAuraEffect()],
@@ -337,6 +345,7 @@ function requestHigherLevelCheck(
   });
   const targetFill = ongoingSpellTargetFill(
     requireOngoingSpellTargetChoiceHole(act.initialHoles),
+    act.subject.procedureRef,
   );
   const result = requireNeedsHoles(
     resolveBattleSubject({
@@ -359,12 +368,11 @@ function requestHigherLevelCheck(
     dc: HIGHER_LEVEL_CHECK_DC,
     spellcastingAbilityCheck: {
       casterId: spellCasterId,
-      sourceSpellId: dispelMagicUnitId,
+      sourceProcedureRef: act.subject.procedureRef,
       target: { kind: "object", objectId: dispelledObjectId },
       effect: {
         kind: "spellActiveEffect",
         activeEffectKind: "spellObjectContactDamage",
-        sourceEffectId: highLevelEffectId,
       },
       contestedSpellLevel: HIGHER_LEVEL_SOURCE_SPELL_LEVEL,
     },
@@ -401,6 +409,7 @@ function resolveHigherLevelCheck(
       fills: [
         ongoingSpellTargetFill(
           requireOngoingSpellTargetChoiceHole(act.initialHoles),
+          act.subject.procedureRef,
         ),
         abilityCheckFill(checkHole, total),
       ],
@@ -429,6 +438,7 @@ function upcastAutoEnd(
       fills: [
         ongoingSpellTargetFill(
           requireOngoingSpellTargetChoiceHole(act.initialHoles),
+          act.subject.procedureRef,
         ),
       ],
     }),
@@ -467,6 +477,7 @@ function targetAntimagicAura(
       fills: [
         ongoingSpellTargetFill(
           requireOngoingSpellTargetChoiceHole(act.initialHoles),
+          act.subject.procedureRef,
           target,
         ),
       ],
@@ -484,6 +495,9 @@ function dispelProjection(
   state: DispelMagicRuntimeState,
 ): DispelMagicOngoingSpellEndingProjection {
   const caster = requireCharacterCombatant(state.battle, spellCasterId);
+  const highLevelEffect = caster.activeEffects.find(
+    (effect) => effect.kind === "spellObjectContactDamage",
+  );
   const projection = {
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
     slot3Available: spellSlotAvailable(caster, BASE_DISPEL_SLOT_LEVEL),
@@ -494,11 +508,9 @@ function dispelProjection(
         "sourceEffectId" in emitter &&
         emitter.sourceEffectId === lowLevelEffectId,
     ),
-    highLevelEffectActive: caster.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellObjectContactDamage" &&
-        effect.effectId === highLevelEffectId,
-    ),
+    highLevelEffectActive:
+      highLevelEffect?.effectRef ===
+      battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
     antimagicAuraActive: requireCombatant(
       state.battle,
       spellTargetId,
@@ -510,8 +522,9 @@ function dispelProjection(
     higherLevelCheckHoleCount: state.higherLevelCheckHoles.length,
     higherLevelCheckDc: state.higherLevelCheckHoles[0]?.dc ?? 0,
     highLevelCasterConcentrating:
-      caster.concentration?.sourceSpellId === heatMetalUnitId &&
-      caster.concentration.effectKind === "spellEffect",
+      highLevelEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        highLevelEffect.sourceProcedureRef,
     lastResult: state.lastResult,
   };
   expect(projection.higherLevelCheckHoleCount).toBeLessThanOrEqual(1);
@@ -524,7 +537,9 @@ function antimagicFieldAuraEffect(): Extract<
 > {
   return {
     kind: "antimagicFieldOngoingSpellSuppression",
-    sourceSpellId: antimagicFieldUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
     sourceCombatantId: spellTargetId,
     areaId: antimagicFieldAreaId,
     auraMembership: {
@@ -545,7 +560,9 @@ function antimagicFieldAuraEffect(): Extract<
 function lowLevelObjectLightEmitter(): BattleTrackedOngoingSpellLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: continualFlameUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(continualFlameUnitId),
+    ),
     sourceCombatantId: spellTargetId,
     sourceEffectId: lowLevelEffectId,
     sourceSpellLevel: testBattleSpellEffectLevel(2),
@@ -566,8 +583,10 @@ function highLevelObjectContactEffect(): Extract<
 > {
   return {
     kind: "spellObjectContactDamage",
-    effectId: highLevelEffectId,
-    sourceSpellId: heatMetalUnitId,
+    effectRef: battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(heatMetalUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     sourceSpellLevel: testBattleSpellEffectLevel(
       HIGHER_LEVEL_SOURCE_SPELL_LEVEL,
@@ -589,6 +608,7 @@ function highLevelObjectContactEffect(): Extract<
 
 function ongoingSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "ongoingSpellTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   target: BattleOngoingSpellTarget = {
     kind: "object",
     objectId: dispelledObjectId,
@@ -598,17 +618,20 @@ function ongoingSpellTargetFill(
     kind: "ongoingSpellTargetChoice",
     holeId: hole.holeId,
     value: target,
-    spatialFacts: [ongoingSpellTargetWithinRangeFact(target)],
+    spatialFacts: [
+      ongoingSpellTargetWithinRangeFact(target, sourceProcedureRef),
+    ],
   };
 }
 
 function ongoingSpellTargetWithinRangeFact(
   target: BattleOngoingSpellTarget,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleOngoingSpellTargetWithinRangeFact {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    spellId: dispelMagicUnitId,
+    sourceProcedureRef,
     target,
     rangeFeet: movementFeet(120),
   };
@@ -762,8 +785,7 @@ function compareDispelMagicStates(
 
 function lastResult(raw: unknown): LastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    DISPEL_MAGIC_ONGOING_SPELL_ENDING_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = DISPEL_MAGIC_ONGOING_SPELL_ENDING_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }
@@ -771,7 +793,6 @@ function lastResult(raw: unknown): LastResult {
     `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
   );
 }
-
 
 function isCharacterBattleCreatureState(
   combatant: BattleCreatureState,

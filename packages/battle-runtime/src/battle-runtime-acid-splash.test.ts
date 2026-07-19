@@ -1,4 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
+  requireCharacterSpellProcedureRefForTest,
   startBattleRight,
   requireResolved,
   requireHole,
@@ -18,7 +20,6 @@ import {
   secondSkeletonId,
   statBlockCatalog,
   battleId,
-  battleSubjectSelection,
   discoverBattleActs,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -44,59 +45,77 @@ describe("battle runtime: Acid Splash", () => {
     });
 
     expect(
-      discoverBattleActs(unsupportedState).map((act) =>
-        battleSubjectSelection(act.subject),
-      ),
+      discoverBattleActs(unsupportedState).map((act) => act.subject),
     ).toEqual(
       expect.arrayContaining([
         { tag: "action", actorId: wizardId, action: "grapple" },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            unsupportedState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            unsupportedState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            unsupportedState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            unsupportedState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          invocation: spellSlotInvocationRef(
-            "magic_missile",
-            1,
-            "repeatedDamageAllocation",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            unsupportedState,
+            wizardId,
+            spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
           ),
           mode: { tag: "ready", trigger: "afterDamage" },
         },
@@ -216,7 +235,9 @@ describe("battle runtime: Acid Splash", () => {
       combatants: new Map(baseState.combatants).set(skeletonId, {
         ...skeleton,
         concentration: {
-          sourceSpellId: "mage_armor",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("mage_armor"),
+          ),
           effectKind: "spellEffect" as const,
         },
       }),

@@ -40,6 +40,7 @@
 
 import { Either, Match } from "effect";
 
+import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import {
   canSpendMovement,
   canSpendBonusAction,
@@ -94,7 +95,9 @@ import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 
 import {
   battleObjectId,
+  type BattleAreaId,
   type BattleObjectId,
+  type BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
 
@@ -867,15 +870,15 @@ export function spellTurnEndDamageRollHole(
   effect: SpellTurnEndDamageEffect,
 ): BattleSpellTurnEndDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:spell-turn-end-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${expr}`;
+  const key = `battle:spell-turn-end-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} turn-end damage (${expr})`,
+    label: `Spell turn-end damage (${expr})`,
     spellTurnEndDamage: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       damage: effect.damage,
     },
@@ -931,15 +934,15 @@ export function spellTurnStartDamageRollHole(
 ): BattleSpellTurnStartDamageRollHole {
   const damage = spellTurnStartDamageForEffect(effect);
   const expr = `${damage.expr.dice}d${damage.expr.dieSize}`;
-  const key = `battle:spell-turn-start-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${expr}`;
+  const key = `battle:spell-turn-start-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} turn-start damage (${expr})`,
+    label: `Spell turn-start damage (${expr})`,
     spellTurnStartDamage: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       trigger: spellTurnStartDamageTrigger(effect),
       damage,
@@ -1020,10 +1023,10 @@ function spellTurnStartSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} turn-start ${effect.save.ability.toUpperCase()} save`,
+    label: `Turn-start ${effect.save.ability.toUpperCase()} save`,
     spellTurnStartSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       save: effect.save,
     },
@@ -1042,7 +1045,7 @@ function spellTurnStartSavingThrowOutcomeHoleKey(
     { readonly kind: "spellTurnStartDamageAndSave" }
   >,
 ): string {
-  return `battle:spell-turn-start-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}`;
+  return `battle:spell-turn-start-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
 }
 
 export function spellTurnStartSavingThrowOutcomeHoleId(
@@ -1138,15 +1141,15 @@ function sleepRepeatSavingThrowOutcomeHole(
   effect: SleepPendingRepeatSaveEffect,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSleepRepeatSavingThrowOutcomeHole {
-  const key = `battle:sleep-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}`;
+  const key = `battle:sleep-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} repeat WIS save`,
+    label: "Repeat WIS save",
     sleepRepeatSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       save: effect.save,
     },
@@ -1272,7 +1275,7 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
     "battle:spell-condition-end-turn-save",
     targetId,
     effect.sourceCombatantId,
-    effect.sourceSpellId,
+    effect.sourceProcedureRef,
     effect.condition,
   ]
     .map(String)
@@ -1281,10 +1284,10 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${effect.condition} end-turn save`,
+    label: `${effect.condition} end-turn save`,
     spellConditionEndTurnSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       condition: effect.condition,
       save: effect.save,
@@ -1339,7 +1342,7 @@ function spellConditionCountedEndTurnSavingThrowOutcomeHole(
     "battle:spell-condition-counted-end-turn-save",
     targetId,
     effect.sourceCombatantId,
-    effect.sourceSpellId,
+    effect.sourceProcedureRef,
     effect.condition,
   ]
     .map(String)
@@ -1348,10 +1351,10 @@ function spellConditionCountedEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${effect.condition} counted end-turn save`,
+    label: `${effect.condition} counted end-turn save`,
     spellConditionCountedEndTurnSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       condition: effect.condition,
       save: effect.save,
@@ -1402,17 +1405,22 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeHole(
 ): BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole {
   const key =
     UNIT_FEATURE_CONDITION_END_TURN_SAVE_HOLE_KEY_PREFIX +
-    [targetId, effect.sourceCombatantId, effect.sourceUnitId, effect.condition]
+    [
+      targetId,
+      effect.sourceCombatantId,
+      effect.sourceProcedureRef,
+      effect.condition,
+    ]
       .map(String)
       .join(":");
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceUnitId} ${effect.condition} end-turn save`,
+    label: `${effect.condition} end-turn save`,
     unitFeatureConditionEndTurnSave: {
       targetId,
-      sourceUnitId: effect.sourceUnitId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       condition: effect.condition,
       save: effect.save,
@@ -1461,7 +1469,7 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
     "battle:slow-active-penalties-end-turn-save",
     targetId,
     effect.sourceCombatantId,
-    effect.sourceSpellId,
+    effect.sourceProcedureRef,
   ]
     .map(String)
     .join(":");
@@ -1469,10 +1477,10 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} end-turn WIS save`,
+    label: "End-turn WIS save",
     slowActivePenaltiesEndTurnSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       save: effect.save,
     },
@@ -1520,7 +1528,7 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
     "battle:ability-d20-test-end-turn-save",
     targetId,
     effect.sourceCombatantId,
-    effect.sourceSpellId,
+    effect.sourceProcedureRef,
     effect.ability,
   ]
     .map(String)
@@ -1529,10 +1537,10 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${effect.ability.toUpperCase()} D20 Test end-turn save`,
+    label: `${effect.ability.toUpperCase()} D20 Test end-turn save`,
     abilityD20TestRollModeEndTurnSave: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       affectedAbility: effect.ability,
       save: effect.save,
@@ -1666,8 +1674,7 @@ export function commandPendingEffectForSubject(
     commandPendingEffectsForActor(state, subject.actorId).find(
       (effect) =>
         effect.option === option &&
-        effect.sourceSpellId === subject.sourceSpellId &&
-        effect.sourceCombatantId === subject.sourceCombatantId,
+        spellActiveEffectExecutionRef(effect) === subject.effectRef,
     ) ?? null
   );
 }
@@ -1720,7 +1727,7 @@ function commandDropHeldObjectFactsHoleId(
   >,
 ): BattleHoleId {
   return holeId(
-    `battle:command-drop:held-object-facts:${subject.actorId}:${subject.sourceCombatantId}:${subject.sourceSpellId}`,
+    `battle:command-drop:held-object-facts:${subject.actorId}:${subject.effectRef}`,
   );
 }
 
@@ -1928,8 +1935,8 @@ export function resolveCommandDropCommand(
       objectId,
       source: {
         kind: "spell",
-        sourceCombatantId: input.subject.sourceCombatantId,
-        sourceSpellId: input.subject.sourceSpellId,
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceProcedureRef: effect.sourceProcedureRef,
       },
     }),
   );
@@ -2337,14 +2344,29 @@ function greaseGroundHazardEffectFor(
     }
   >,
 ): GreaseGroundHazardEffect | undefined {
-  const source = state.combatants.get(subject.sourceCombatantId);
-  return source?.activeEffects.find(
+  return activeEffectForArea(
+    state,
+    subject.areaId,
     (effect): effect is GreaseGroundHazardEffect =>
-      effect.kind === "greaseGroundHazard" &&
-      effect.sourceSpellId === subject.sourceSpellId &&
-      effect.sourceCombatantId === subject.sourceCombatantId &&
-      effect.areaId === subject.areaId,
+      effect.kind === "greaseGroundHazard",
   );
+}
+
+function activeEffectForArea<
+  TEffect extends BattleActiveEffect & { readonly areaId: BattleAreaId },
+>(
+  state: BattleState,
+  areaId: BattleAreaId | string,
+  isExpectedEffect: (effect: BattleActiveEffect) => effect is TEffect,
+): TEffect | undefined {
+  for (const combatant of state.combatants.values()) {
+    const effect = combatant.activeEffects.find(
+      (candidate): candidate is TEffect =>
+        isExpectedEffect(candidate) && candidate.areaId === areaId,
+    );
+    if (effect !== undefined) return effect;
+  }
+  return undefined;
 }
 
 export function greaseGroundHazardSavingThrowOutcomeHole(
@@ -2353,15 +2375,15 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
   effect: GreaseGroundHazardEffect,
   trigger: "entersArea" | "endsTurnInArea",
 ): BattleGreaseGroundHazardSavingThrowOutcomeHole {
-  const key = `battle:grease-ground-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:grease-ground-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "end-turn"} DEX save`,
+    label: `${trigger === "entersArea" ? "Entry" : "End-turn"} DEX save`,
     greaseGroundHazard: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -2497,7 +2519,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -2533,13 +2555,11 @@ function webRestraintHazardEffectFor(
     }
   >,
 ): WebRestraintHazardEffect | undefined {
-  const source = state.combatants.get(subject.sourceCombatantId);
-  return source?.activeEffects.find(
+  return activeEffectForArea(
+    state,
+    subject.areaId,
     (effect): effect is WebRestraintHazardEffect =>
-      effect.kind === "webRestraintHazard" &&
-      effect.sourceSpellId === subject.sourceSpellId &&
-      effect.sourceCombatantId === subject.sourceCombatantId &&
-      effect.areaId === subject.areaId,
+      effect.kind === "webRestraintHazard",
   );
 }
 
@@ -2549,15 +2569,15 @@ export function webRestraintSavingThrowOutcomeHole(
   effect: WebRestraintHazardEffect,
   trigger: BattleWebRestraintTrigger,
 ): BattleWebRestraintSavingThrowOutcomeHole {
-  const key = `battle:web-restraint-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:web-restraint-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
     webRestraint: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -2683,7 +2703,7 @@ export function resolveWebRestraintSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -2724,16 +2744,11 @@ function sleetStormAreaHazardEffectFor(
     }
   >,
 ): SleetStormAreaHazardEffect | undefined {
-  const source = state.combatants.get(
-    subject.areaMembershipTrigger.sourceCombatantId,
-  );
-  return source?.activeEffects.find(
+  return activeEffectForArea(
+    state,
+    subject.areaMembershipTrigger.areaId,
     (effect): effect is SleetStormAreaHazardEffect =>
-      effect.kind === "sleetStormAreaHazard" &&
-      effect.sourceSpellId === subject.areaMembershipTrigger.sourceSpellId &&
-      effect.sourceCombatantId ===
-        subject.areaMembershipTrigger.sourceCombatantId &&
-      effect.areaId === subject.areaMembershipTrigger.areaId,
+      effect.kind === "sleetStormAreaHazard",
   );
 }
 
@@ -2761,15 +2776,15 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
   effect: SleetStormAreaHazardEffect,
   trigger: BattleSleetStormAreaHazardTrigger,
 ): BattleSleetStormAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
     sleetStormAreaHazard: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -2889,7 +2904,7 @@ export function resolveSleetStormAreaHazardSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -2927,16 +2942,11 @@ function insectPlagueAreaHazardEffectFor(
     }
   >,
 ): InsectPlagueAreaHazardEffect | undefined {
-  const source = state.combatants.get(
-    subject.areaMembershipTrigger.sourceCombatantId,
-  );
-  return source?.activeEffects.find(
+  return activeEffectForArea(
+    state,
+    subject.areaMembershipTrigger.areaId,
     (effect): effect is InsectPlagueAreaHazardEffect =>
-      effect.kind === "insectPlagueAreaHazard" &&
-      effect.sourceSpellId === subject.areaMembershipTrigger.sourceSpellId &&
-      effect.sourceCombatantId ===
-        subject.areaMembershipTrigger.sourceCombatantId &&
-      effect.areaId === subject.areaMembershipTrigger.areaId,
+      effect.kind === "insectPlagueAreaHazard",
   );
 }
 
@@ -2968,15 +2978,15 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
   effect: InsectPlagueAreaHazardEffect,
   trigger: BattleInsectPlagueAreaHazardTrigger,
 ): BattleInsectPlagueAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${insectPlagueAreaHazardTriggerLabel(trigger)} CON save`,
+    label: `${insectPlagueAreaHazardTriggerLabel(trigger)} CON save`,
     insectPlagueAreaHazard: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -3002,15 +3012,15 @@ function insectPlagueAreaHazardDamageRollHole(
   trigger: BattleInsectPlagueAreaHazardTrigger,
 ): BattleInsectPlagueAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}:${expr}`;
+  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${insectPlagueAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    label: `${insectPlagueAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     insectPlagueAreaHazard: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -3201,7 +3211,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -3307,16 +3317,11 @@ function cloudkillAreaHazardEffectFor(
     }
   >,
 ): CloudkillAreaHazardEffect | undefined {
-  const source = state.combatants.get(
-    subject.areaMembershipTrigger.sourceCombatantId,
-  );
-  return source?.activeEffects.find(
+  return activeEffectForArea(
+    state,
+    subject.areaMembershipTrigger.areaId,
     (effect): effect is CloudkillAreaHazardEffect =>
-      effect.kind === "cloudkillAreaHazard" &&
-      effect.sourceSpellId === subject.areaMembershipTrigger.sourceSpellId &&
-      effect.sourceCombatantId ===
-        subject.areaMembershipTrigger.sourceCombatantId &&
-      effect.areaId === subject.areaMembershipTrigger.areaId,
+      effect.kind === "cloudkillAreaHazard",
   );
 }
 
@@ -3352,15 +3357,15 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
 ): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${cloudkillAreaHazardTriggerLabel(trigger)} CON save`,
+    label: `${cloudkillAreaHazardTriggerLabel(trigger)} CON save`,
     cloudkillAreaHazard: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -3386,15 +3391,15 @@ function cloudkillAreaHazardDamageRollHole(
   trigger: BattleCloudkillAreaHazardTrigger,
 ): BattleCloudkillAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}:${expr}`;
+  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${cloudkillAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    label: `${cloudkillAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     cloudkillAreaHazard: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -3586,7 +3591,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -3700,7 +3705,8 @@ export function resolveWebRestrainedNoLongerInAreaCommand(
       "Web no-longer-in-area cleanup uses no fills.",
     );
   }
-  if (webRestraintHazardEffectFor(input.state, input.subject) === undefined) {
+  const effect = webRestraintHazardEffectFor(input.state, input.subject);
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3710,8 +3716,8 @@ export function resolveWebRestrainedNoLongerInAreaCommand(
   const nextState = removeWebRestrainedCondition({
     state: input.state,
     targetId: input.subject.actorId,
-    sourceCombatantId: input.subject.sourceCombatantId,
-    sourceSpellId: input.subject.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceProcedureRef: effect.sourceProcedureRef,
   });
   return nextState === input.state
     ? invalidResult(
@@ -3744,7 +3750,8 @@ export function resolveWebAreaRemovedCommand(
       "Web area removal uses no fills.",
     );
   }
-  if (webRestraintHazardEffectFor(input.state, input.subject) === undefined) {
+  const effect = webRestraintHazardEffectFor(input.state, input.subject);
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3753,7 +3760,7 @@ export function resolveWebAreaRemovedCommand(
   }
   const nextState = breakBattleConcentration(
     input.state,
-    input.subject.sourceCombatantId,
+    effect.sourceCombatantId,
   );
   return {
     tag: "resolved",
@@ -3855,7 +3862,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -3891,13 +3898,11 @@ function gustOfWindLineEffectFor(
     }
   >,
 ): GustOfWindLineEffect | undefined {
-  const source = state.combatants.get(subject.sourceCombatantId);
-  return source?.activeEffects.find(
+  return activeEffectForArea(
+    state,
+    subject.areaId,
     (effect): effect is GustOfWindLineEffect =>
       effect.kind === "gustOfWindLine" &&
-      effect.sourceSpellId === subject.sourceSpellId &&
-      effect.sourceCombatantId === subject.sourceCombatantId &&
-      effect.areaId === subject.areaId &&
       effect.directionId === subject.directionId,
   );
 }
@@ -3908,15 +3913,15 @@ export function gustOfWindLineSavingThrowOutcomeHole(
   effect: GustOfWindLineEffect,
   trigger: "endsTurnInLine",
 ): BattleGustOfWindLineSavingThrowOutcomeHole {
-  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${effect.directionId}:${trigger}`;
+  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${effect.directionId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} end-turn STR save`,
+    label: "End-turn STR save",
     gustOfWindLine: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       directionId: effect.directionId,
@@ -3952,14 +3957,14 @@ function gustOfWindLineHeightenedRollModeProjection(
 export function gustOfWindLineDirectionChoiceHole(
   effect: GustOfWindLineEffect,
 ): BattleGustOfWindLineDirectionChoiceHole {
-  const key = `battle:gust-of-wind-line-direction:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${effect.directionId}`;
+  const key = `battle:gust-of-wind-line-direction:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${effect.directionId}`;
   return {
     kind: "gustOfWindLineDirectionChoice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} Line direction`,
+    label: "Line direction",
     sourceCombatantId: effect.sourceCombatantId,
-    sourceSpellId: effect.sourceSpellId,
+    sourceProcedureRef: effect.sourceProcedureRef,
     areaId: effect.areaId,
     directionId: effect.directionId,
     requiresTableSpatialFact: true,
@@ -4092,7 +4097,7 @@ export function resolveGustOfWindLineSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -4131,7 +4136,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
   if (
     effect === undefined ||
     actor === undefined ||
-    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== effect.sourceCombatantId ||
     input.subject.actorId !== currentActorId(input.state) ||
     (effect.castTurn.actorId === input.subject.actorId &&
       effect.castTurn.round === input.state.initiative.round) ||
@@ -4195,7 +4200,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
       currentTurnResources: spent.right,
     },
     sourceCombatantId: effect.sourceCombatantId,
-    sourceSpellId: effect.sourceSpellId,
+    sourceProcedureRef: effect.sourceProcedureRef,
     areaId: effect.areaId,
     directionId: directionFill.value.directionId,
   });
@@ -4219,13 +4224,10 @@ function flamingSphereEffectFor(
     }
   >,
 ): FlamingSphereEffect | undefined {
-  const source = state.combatants.get(subject.sourceCombatantId);
-  return source?.activeEffects.find(
-    (effect): effect is FlamingSphereEffect =>
-      effect.kind === "flamingSphere" &&
-      effect.sourceSpellId === subject.sourceSpellId &&
-      effect.sourceCombatantId === subject.sourceCombatantId &&
-      effect.areaId === subject.areaId,
+  return activeEffectForArea(
+    state,
+    subject.areaId,
+    (effect): effect is FlamingSphereEffect => effect.kind === "flamingSphere",
   );
 }
 
@@ -4246,15 +4248,15 @@ export function flamingSphereRamMovementHole(
   targetId: CombatantId,
   effect: FlamingSphereEffect,
 ): BattleFlamingSphereRamMovementHole {
-  const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
+  const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
   return {
     kind: "movableZoneRamMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ram movement`,
+    label: "Ram movement",
     movableZone: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       maxMoveFeet: effect.ramMaxMoveFeet,
@@ -4266,14 +4268,14 @@ export function flamingSphereRamMovementHole(
 export function flamingSphereRepositionMovementHole(
   effect: FlamingSphereEffect,
 ): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:flaming-sphere-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
+  const key = `battle:flaming-sphere-reposition-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
   return {
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} reposition movement`,
+    label: "Reposition movement",
     movableZone: {
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       maxMoveFeet: effect.ramMaxMoveFeet,
@@ -4288,15 +4290,15 @@ export function flamingSphereSavingThrowOutcomeHole(
   effect: FlamingSphereEffect,
   trigger: BattleFlamingSphereTrigger,
 ): BattleFlamingSphereSavingThrowOutcomeHole {
-  const key = `battle:flaming-sphere-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:flaming-sphere-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} DEX save`,
+    label: `${flamingSphereTriggerLabel(trigger)} DEX save`,
     movableZone: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -4321,15 +4323,15 @@ function flamingSphereDamageRollHole(
   effect: FlamingSphereEffect,
   trigger: BattleFlamingSphereTrigger,
 ): BattleFlamingSphereDamageRollHole {
-  const key = `battle:flaming-sphere-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:flaming-sphere-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} damage`,
+    label: `${flamingSphereTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -4586,7 +4588,7 @@ export function resolveFlamingSphereSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -4708,7 +4710,7 @@ export function resolveFlamingSphereRepositionCommand(
   const effect = flamingSphereEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
-    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== effect.sourceCombatantId ||
     input.subject.actorId !== currentActorId(input.state)
   ) {
     return invalidResult(
@@ -4811,7 +4813,7 @@ export function resolveFlamingSphereRamCommand(
   if (
     effect === undefined ||
     target === undefined ||
-    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== effect.sourceCombatantId ||
     input.subject.actorId !== currentActorId(input.state)
   ) {
     return invalidResult(
@@ -4971,7 +4973,7 @@ export function resolveFlamingSphereRamCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.targetId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -5032,13 +5034,10 @@ function moonbeamEffectFor(
     }
   >,
 ): MoonbeamEffect | undefined {
-  const source = state.combatants.get(subject.sourceCombatantId);
-  return source?.activeEffects.find(
-    (effect): effect is MoonbeamEffect =>
-      effect.kind === "moonbeam" &&
-      effect.sourceSpellId === subject.sourceSpellId &&
-      effect.sourceCombatantId === subject.sourceCombatantId &&
-      effect.areaId === subject.areaId,
+  return activeEffectForArea(
+    state,
+    subject.areaId,
+    (effect): effect is MoonbeamEffect => effect.kind === "moonbeam",
   );
 }
 
@@ -5071,15 +5070,15 @@ export function moonbeamSavingThrowOutcomeHole(
   effect: MoonbeamEffect,
   trigger: BattleMoonbeamSaveTrigger,
 ): BattleMoonbeamSavingThrowOutcomeHole {
-  const key = `battle:moonbeam-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:moonbeam-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${moonbeamTriggerLabel(trigger)} CON save`,
+    label: `${moonbeamTriggerLabel(trigger)} CON save`,
     movableZone: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -5104,15 +5103,15 @@ function moonbeamDamageRollHole(
   effect: MoonbeamEffect,
   trigger: BattleMoonbeamSaveTrigger,
 ): BattleMoonbeamDamageRollHole {
-  const key = `battle:moonbeam-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  const key = `battle:moonbeam-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} ${moonbeamTriggerLabel(trigger)} damage`,
+    label: `${moonbeamTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       trigger,
@@ -5125,14 +5124,14 @@ function moonbeamDamageRollHole(
 export function moonbeamRepositionMovementHole(
   effect: MoonbeamEffect,
 ): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:moonbeam-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
+  const key = `battle:moonbeam-reposition-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
   return {
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${effect.sourceSpellId} reposition movement`,
+    label: "Reposition movement",
     movableZone: {
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
       maxMoveFeet: effect.repositionMaxMoveFeet,
@@ -5385,7 +5384,7 @@ export function resolveMoonbeamSaveCommand(
       {
         trigger: "saveFailed",
         targetId: input.subject.actorId,
-        sourceSpellId: effect.sourceSpellId,
+        sourceProcedureRef: effect.sourceProcedureRef,
         continuation: {
           kind: "replay",
           subject: input.subject,
@@ -5561,7 +5560,7 @@ export function resolveMoonbeamRepositionCommand(
   const effect = moonbeamEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
-    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== effect.sourceCombatantId ||
     input.subject.actorId !== currentActorId(input.state)
   ) {
     return invalidResult(
@@ -5687,7 +5686,7 @@ function applySleepRepeatSaveFills(
       { readonly kind: "sleepUnconscious" }
     > = {
       kind: "sleepUnconscious" as const,
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
         targetWithoutPending,
@@ -5966,7 +5965,7 @@ function removeAbilityD20TestRollModeEffectFromCombatants(
           effect !== expiringEffect &&
           !(
             effect.kind === "sourceDamageRollPenalty" &&
-            effect.sourceSpellId === expiringEffect.sourceSpellId &&
+            effect.sourceProcedureRef === expiringEffect.sourceProcedureRef &&
             effect.sourceCombatantId === expiringEffect.sourceCombatantId
           ),
       ),
@@ -6406,13 +6405,13 @@ export function tickDurationEffects(
         if (remainingTicks <= 0) {
           expiring.push(effect);
           if (
-            "sourceSpellId" in effect &&
+            "sourceProcedureRef" in effect &&
             "expiresAt" in effect &&
             effect.expiresAt.kind === "concentration"
           ) {
             expiredConcentrationSources.push({
               combatantId: effect.expiresAt.combatantId,
-              sourceSpellId: effect.sourceSpellId,
+              sourceProcedureRef: effect.sourceProcedureRef,
             });
           }
           continue;
@@ -6493,7 +6492,7 @@ export function tickDurationEffects(
 
 type ConcentrationEffectSource = {
   readonly combatantId: CombatantId;
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };
 
 function activeEffectDurationTicks(
@@ -6544,7 +6543,7 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
   const uniqueSources = [
     ...new Map(
       sources.map((source) => [
-        `${source.combatantId}\u0000${source.sourceSpellId}`,
+        `${source.combatantId}\u0000${source.sourceProcedureRef}`,
         source,
       ]),
     ).values(),
@@ -6611,7 +6610,8 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
       const concentrationExpired =
         id === source.combatantId &&
         combatant.concentration?.effectKind === "spellEffect" &&
-        combatant.concentration.sourceSpellId === source.sourceSpellId;
+        combatant.concentration.sourceProcedureRef ===
+          source.sourceProcedureRef;
       const nextCombatantBase: BattleCreatureState =
         combatant.positiveHpUnconscious === null
           ? {
@@ -6666,8 +6666,8 @@ function activeEffectExpiresWithConcentrationSource(
 ): boolean {
   if (
     effect.sourceCombatantId !== source.combatantId ||
-    !("sourceSpellId" in effect) ||
-    effect.sourceSpellId !== source.sourceSpellId
+    !("sourceProcedureRef" in effect) ||
+    effect.sourceProcedureRef !== source.sourceProcedureRef
   ) {
     return false;
   }
@@ -8081,8 +8081,7 @@ function jumpMovementReplacementEffectForSubject(
     actor.activeEffects.find(
       (effect): effect is JumpMovementReplacementEffect =>
         effect.kind === "jumpMovementReplacement" &&
-        effect.sourceCombatantId === subject.sourceCombatantId &&
-        effect.sourceSpellId === subject.sourceSpellId &&
+        spellActiveEffectExecutionRef(effect) === subject.effectRef &&
         !effect.usedThisTurn,
     ) ?? null
   );
@@ -8100,7 +8099,7 @@ function markJumpMovementReplacementUsed(
   const activeEffects = actor.activeEffects.map((effect) =>
     effect.kind === "jumpMovementReplacement" &&
     effect.sourceCombatantId === consumedEffect.sourceCombatantId &&
-    effect.sourceSpellId === consumedEffect.sourceSpellId
+    effect.sourceProcedureRef === consumedEffect.sourceProcedureRef
       ? { ...effect, usedThisTurn: true }
       : effect,
   );
@@ -8493,7 +8492,7 @@ function spikeGrowthHazardEffectFor(
     (effect): effect is SpikeGrowthHazardEffect =>
       effect.kind === "spikeGrowthHazard" &&
       effect.sourceCombatantId === source.sourceCombatantId &&
-      effect.sourceSpellId === source.sourceSpellId &&
+      effect.sourceProcedureRef === source.sourceProcedureRef &&
       effect.areaId === source.areaId,
   );
 }
@@ -8553,15 +8552,15 @@ function spikeGrowthMovementDamageRollHole(
   targetId: CombatantId,
   request: SpikeGrowthMovementDamageRequest,
 ): BattleSpikeGrowthMovementDamageRollHole {
-  const key = `battle:spike-growth-movement-damage:${targetId}:${request.effect.sourceCombatantId}:${request.effect.sourceSpellId}:${request.effect.areaId}:${request.distanceFeet}`;
+  const key = `battle:spike-growth-movement-damage:${targetId}:${request.effect.sourceCombatantId}:${request.effect.sourceProcedureRef}:${request.effect.areaId}:${request.distanceFeet}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${request.effect.sourceSpellId} movement damage`,
+    label: "Movement damage",
     spikeGrowthMovement: {
       targetId,
-      sourceSpellId: request.effect.sourceSpellId,
+      sourceProcedureRef: request.effect.sourceProcedureRef,
       sourceCombatantId: request.effect.sourceCombatantId,
       areaId: request.effect.areaId,
       distanceFeet: request.distanceFeet,
@@ -8864,7 +8863,7 @@ function activeAreaDifficultTerrainSourceMatches(
           (effect) =>
             effect.kind === "greaseGroundHazard" &&
             effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
             effect.areaId === terrainSource.areaId,
         ) === true,
     ),
@@ -8875,7 +8874,7 @@ function activeAreaDifficultTerrainSourceMatches(
           (effect) =>
             effect.kind === "webRestraintHazard" &&
             effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
             effect.areaId === terrainSource.areaId,
         ) === true,
     ),
@@ -8886,7 +8885,7 @@ function activeAreaDifficultTerrainSourceMatches(
           (effect) =>
             effect.kind === "sleetStormAreaHazard" &&
             effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
             effect.areaId === terrainSource.areaId,
         ) === true,
     ),
@@ -8897,7 +8896,7 @@ function activeAreaDifficultTerrainSourceMatches(
           (effect) =>
             effect.kind === "insectPlagueAreaHazard" &&
             effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
             effect.areaId === terrainSource.areaId,
         ) === true,
     ),
@@ -8908,7 +8907,7 @@ function activeAreaDifficultTerrainSourceMatches(
           (effect) =>
             effect.kind === "spikeGrowthHazard" &&
             effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
             effect.areaId === terrainSource.areaId,
         ) === true,
     ),
@@ -8919,7 +8918,7 @@ function activeAreaDifficultTerrainSourceMatches(
 function areaDifficultTerrainSourceKey(
   source: BattleAreaDifficultTerrainSource,
 ): string {
-  return `${source.kind}\u0000${source.sourceCombatantId}\u0000${source.sourceSpellId}\u0000${source.areaId}`;
+  return `${source.kind}\u0000${source.sourceCombatantId}\u0000${source.sourceProcedureRef}\u0000${source.areaId}`;
 }
 
 function validateAreaDifficultTerrainMovementFact(
@@ -9077,7 +9076,7 @@ function validateGustOfWindLineMovementFact(
     (candidate): candidate is GustOfWindLineEffect =>
       candidate.kind === "gustOfWindLine" &&
       candidate.sourceCombatantId === fact.sourceCombatantId &&
-      candidate.sourceSpellId === fact.sourceSpellId &&
+      candidate.sourceProcedureRef === fact.sourceProcedureRef &&
       candidate.areaId === fact.areaId &&
       candidate.directionId === fact.directionId,
   );

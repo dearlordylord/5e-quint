@@ -1,3 +1,9 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
@@ -57,9 +63,9 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
+  type BattleActiveEffect,
   type BattleState,
   type CombatantId,
-  resolveBattleSubject,
 } from "./index.ts";
 import {
   applyCondition,
@@ -95,13 +101,16 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 3,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "hold_person",
-        3,
-        "saveGatedCondition",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef("hold_person", 3, "saveGatedCondition"),
       ),
       mode: { tag: "cast" },
     });
@@ -182,7 +191,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "spellConditionEndTurnSave",
-          sourceSpellId: holdPersonUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "paralyzed",
           save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
@@ -199,7 +208,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [],
     });
     expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
-      { sourceSpellId: holdPersonUnitId, effectKind: "spellEffect" },
+      {
+        sourceProcedureRef: act.subject.procedureRef,
+        effectKind: "spellEffect",
+      },
     );
 
     const concentrationBroken = breakBattleConcentration(
@@ -218,7 +230,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         ...paralyzedTarget,
         activeEffects: paralyzedTarget.activeEffects.map((effect) =>
           effect.kind === "spellConditionEndTurnSave" &&
-          effect.sourceSpellId === holdPersonUnitId &&
+          effect.sourceCombatantId === spellCasterId &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -256,7 +268,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       expect.objectContaining({
         spellConditionEndTurnSave: expect.objectContaining({
           targetId: spellTargetId,
-          sourceSpellId: holdPersonUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
           condition: "paralyzed",
         }),
         ability: "wis",
@@ -296,7 +308,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(requireCombatant(cast, spellTargetId).activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellConditionEndTurnSave",
-        sourceSpellId: holdPersonUnitId,
         heightenedSpellTargetDisadvantage: {
           kind: "heightenedSpellTargetDisadvantage",
         },
@@ -307,7 +318,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     ).toContainEqual(
       expect.objectContaining({
         kind: "spellConditionEndTurnSave",
-        sourceSpellId: holdPersonUnitId,
         heightenedSpellTargetDisadvantage: null,
       }),
     );
@@ -436,7 +446,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
     const target = requireCombatant(baseState, spellTargetId);
     const targetConcentration = {
-      sourceSpellId: heroismUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(heroismUnitId),
+      ),
       effectKind: "spellEffect" as const,
     };
     const state = {
@@ -448,7 +460,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
           ...target.activeEffects,
           {
             kind: "turnStartTemporaryHitPoints" as const,
-            sourceSpellId: heroismUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(heroismUnitId),
+            ),
             sourceCombatantId: spellTargetId,
             amount: 3,
             expiresAt: {
@@ -494,7 +508,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       throw new Error("Expected target-concentrating Hold Person to resolve.");
     }
     expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
-      { sourceSpellId: holdPersonUnitId, effectKind: "spellEffect" },
+      {
+        sourceProcedureRef: act.subject.procedureRef,
+        effectKind: "spellEffect",
+      },
     );
     expect(resolved.state.combatants.get(spellTargetId)).toMatchObject({
       concentration: null,
@@ -502,7 +519,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "spellConditionEndTurnSave",
-          sourceSpellId: holdPersonUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
         }),
       ],
     });
@@ -511,7 +528,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         .get(spellTargetId)
         ?.activeEffects.some(
           (effect) =>
-            "sourceSpellId" in effect && effect.sourceSpellId === heroismUnitId,
+            (effect.kind === "conditionImmunity" ||
+              effect.kind === "turnStartTemporaryHitPoints") &&
+            effect.sourceCombatantId === spellCasterId,
         ),
     ).toBe(false);
   });
@@ -598,13 +617,16 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 5,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        holdMonsterUnitId,
-        5,
-        "saveGatedCondition",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(holdMonsterUnitId, 5, "saveGatedCondition"),
       ),
       mode: { tag: "cast" },
     });
@@ -670,10 +692,17 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 5,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(contagionUnitId, 5, "saveGatedDamage"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(contagionUnitId, 5, "saveGatedDamage"),
+      ),
       mode: { tag: "cast" },
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
@@ -774,7 +803,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(poisonedTarget.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "spellConditionCountedEndTurnSave",
-        sourceSpellId: contagionUnitId,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         condition: "poisoned",
         save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
@@ -906,13 +935,16 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "blindness_deafness",
-        2,
-        "saveGatedCondition",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef("blindness_deafness", 2, "saveGatedCondition"),
       ),
       mode: { tag: "cast" },
     });
@@ -996,7 +1028,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [
         expect.objectContaining({
           kind: "spellConditionEndTurnSave",
-          sourceSpellId: "blindness_deafness",
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "deafened",
           save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
@@ -1021,7 +1053,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       expect.objectContaining({
         spellConditionEndTurnSave: expect.objectContaining({
           targetId: spellTargetId,
-          sourceSpellId: "blindness_deafness",
+          sourceProcedureRef: act.subject.procedureRef,
           condition: "deafened",
         }),
         ability: "con",
@@ -1060,7 +1092,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -1114,7 +1149,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef("entangle", 1, "saveGatedCondition"),
@@ -1170,7 +1208,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       slotLevel: 1,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
@@ -1234,7 +1275,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const target = requireCombatant(baseState, spellTargetId);
     const paralyzedEffect = {
       kind: "spellConditionEndTurnSave" as const,
-      sourceSpellId: holdPersonUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(holdPersonUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       condition: "paralyzed" as const,
       conditionHadNonSpellSource: false,
@@ -1250,7 +1293,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     };
     const poisonedEffect = {
       kind: "spellConditionEndTurnSave" as const,
-      sourceSpellId: "synthetic_poison_spell",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_poison_spell"),
+      ),
       sourceCombatantId: spellCasterId,
       condition: "poisoned" as const,
       conditionHadNonSpellSource: false,
@@ -1287,13 +1332,20 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     };
     const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        lesserRestorationUnitId,
-        2,
-        "directConditionRemoval",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(
+          lesserRestorationUnitId,
+          2,
+          "directConditionRemoval",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -1363,7 +1415,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const target = requireCombatant(baseState, spellTargetId);
     const paralyzedEffect = {
       kind: "spellConditionEndTurnSave" as const,
-      sourceSpellId: holdPersonUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(holdPersonUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       condition: "paralyzed" as const,
       conditionHadNonSpellSource: false,
@@ -1391,7 +1445,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         .set(spellCasterId, {
           ...caster,
           concentration: {
-            sourceSpellId: holdPersonUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(holdPersonUnitId),
+            ),
             effectKind: "spellEffect" as const,
           },
         })
@@ -1509,8 +1565,9 @@ function heightenedSaveGatedConditionAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId &&
-      candidate.subject.invocation.procedure === "saveGatedCondition" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "saveGatedCondition" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1542,7 +1599,7 @@ function resolveContagionTargetEndTurnSave(
     expect.objectContaining({
       spellConditionCountedEndTurnSave: expect.objectContaining({
         targetId: spellTargetId,
-        sourceSpellId: contagionUnitId,
+        sourceProcedureRef: activeEffect?.sourceProcedureRef,
         sourceCombatantId: spellCasterId,
         condition: "poisoned",
       }),
@@ -1580,11 +1637,22 @@ function resolveContagionTargetEndTurnSave(
   return ended.state;
 }
 
-function contagionEffect(state: BattleState) {
+function contagionEffect(
+  state: BattleState,
+):
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellConditionCountedEndTurnSave" }
+    >
+  | undefined {
   return requireCombatant(state, spellTargetId).activeEffects.find(
-    (effect) =>
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellConditionCountedEndTurnSave" }
+    > =>
       effect.kind === "spellConditionCountedEndTurnSave" &&
-      effect.sourceSpellId === contagionUnitId &&
       effect.sourceCombatantId === spellCasterId &&
       effect.condition === "poisoned",
   );

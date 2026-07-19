@@ -1,5 +1,9 @@
+import { sameBattleSubject } from "./battle-subjects.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleep-repeat-save-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
+import { Either } from "effect";
+import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -17,8 +21,6 @@ import {
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -32,6 +34,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   fighterId,
+  resolveBattleSubject,
   skeletonId,
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
@@ -42,7 +45,6 @@ import {
   characterId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
   startBattle,
@@ -51,7 +53,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -666,7 +668,10 @@ function discoverSleepHoles(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act == null) {
     throw new Error("Expected Sleep spell act.");
@@ -683,7 +688,10 @@ function discoverSleepAct(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
+      ("invocation" in subject
+        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
+          subject.invocation.spellId
+        : sameBattleSubject(candidate.subject, subject)),
   );
   if (act == null) {
     throw new Error("Expected Sleep spell act.");

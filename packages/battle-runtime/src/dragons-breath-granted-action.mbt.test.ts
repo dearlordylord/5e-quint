@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // RAW trace:
@@ -50,7 +52,6 @@ import {
   breakBattleConcentration,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   spellSaveDcForCaster,
   type AvailableBattleAct,
   type BattleActiveEffect,
@@ -58,7 +59,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import {
   dragonsBreathUnitId,
@@ -97,7 +98,6 @@ const DRAGONS_BREATH_GRANTED_ACTION_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Exhaled: "exhaled",
   ConcentrationBroken: "concentrationBroken",
 } as const;
-
 
 type DragonsBreathGrantedActionState = {
   readonly turnRole: DragonsBreathTurnRole;
@@ -448,7 +448,6 @@ function requestSavingThrow(
     ability: "dex",
     dragonsBreath: {
       sourceCombatantId: spellCasterId,
-      sourceSpellId: dragonsBreathUnitId,
       lengthFeet: 15,
     },
   });
@@ -485,7 +484,7 @@ function resolveSavingThrow(
   expect(damageHole).toMatchObject({
     dragonsBreath: {
       sourceCombatantId: spellCasterId,
-      sourceSpellId: dragonsBreathUnitId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       damageType: effect.damageType,
       expr: {
         dice: Number(effect.originalSlotLevel) + 1,
@@ -603,7 +602,8 @@ function dragonsBreathGrantedActionProjection(
   const caster = requireCombatant(state.battle, spellCasterId);
   const effect = dragonsBreathTargetEffect(state.battle);
   const casterConcentrating =
-    caster.concentration?.sourceSpellId === dragonsBreathUnitId &&
+    effect !== undefined &&
+    caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef &&
     caster.concentration.effectKind === "spellEffect";
   const projection = {
     turnRole: state.turnRole,
@@ -639,7 +639,8 @@ function spellInvocationAvailable(state: BattleState): boolean {
   return discoverBattleActs(state).some(
     (act) =>
       act.subject.tag === "bonusActionSpell" &&
-      act.subject.invocation.spellId === dragonsBreathUnitId,
+      battleActSpellPresentation(act)?.invocation.spellId ===
+        dragonsBreathUnitId,
   );
 }
 
@@ -664,7 +665,6 @@ function dragonsBreathTargetEffect(
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
       effect.kind === "dragonsBreath" &&
-      effect.sourceSpellId === dragonsBreathUnitId &&
       effect.sourceCombatantId === spellCasterId,
   );
 }

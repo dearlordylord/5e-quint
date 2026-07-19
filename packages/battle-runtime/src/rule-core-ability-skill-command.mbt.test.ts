@@ -38,6 +38,7 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  resolveBattleSubject,
   abilityCheckFill,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
@@ -59,13 +60,12 @@ import {
 import {
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   snapshotBattle,
   type BattleActiveEffect,
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -200,24 +200,27 @@ type RuntimeCommandAct = ReturnType<typeof discoverBattleActs>[number] & {
 
 const componentOwner = "RuleCoreAbilitySkillCommandOwner";
 
-const initialProjection: Projection = withRuleCoreComponentRoute(componentOwner, {
-  lastScenario: "init",
-  targetHidden: false,
-  targetProne: false,
-  targetEffectCount: 0,
-  casterEffectCount: 0,
-  actionAvailable: true,
-  bonusActionAvailable: true,
-  movementSpentFeet: 0,
-  currentActor: "Fighter",
-  pendingCommandOption: "none",
-  droppedObjectCount: 0,
-  reactionWindowOpen: false,
-  haltSuppressed: false,
-  d20ModifierSkill: "none",
-  abilityCheckModeAbility: "none",
-  replayIndex: 0,
-});
+const initialProjection: Projection = withRuleCoreComponentRoute(
+  componentOwner,
+  {
+    lastScenario: "init",
+    targetHidden: false,
+    targetProne: false,
+    targetEffectCount: 0,
+    casterEffectCount: 0,
+    actionAvailable: true,
+    bonusActionAvailable: true,
+    movementSpentFeet: 0,
+    currentActor: "Fighter",
+    pendingCommandOption: "none",
+    droppedObjectCount: 0,
+    reactionWindowOpen: false,
+    haltSuppressed: false,
+    d20ModifierSkill: "none",
+    abilityCheckModeAbility: "none",
+    replayIndex: 0,
+  },
+);
 
 const driverSchema = {
   init: {},

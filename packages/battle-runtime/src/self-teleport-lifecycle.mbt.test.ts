@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-teleport
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
 // RAW trace:
@@ -43,7 +46,7 @@ import type {
   BattleState,
   CombatantId,
 } from "./index.ts";
-import { resolveBattleSubject, snapshotBattle } from "./index.ts";
+import { snapshotBattle } from "./index.ts";
 import {
   requireCombatant,
   requireHole,
@@ -482,8 +485,9 @@ function maybeSelfTeleportAct(state: BattleState) {
     spellId: mistyStepUnitId,
     slotLevel: 2,
   });
-  return act?.subject.invocation.tag === "spellSlot" &&
-    act.subject.invocation.procedure === "selfTeleport"
+  return act !== undefined &&
+    battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
+    battleActSpellPresentation(act)?.invocation.procedure === "selfTeleport"
     ? act
     : undefined;
 }
@@ -560,7 +564,9 @@ function antimagicFieldAuraEffect(
 ): BattleActiveEffect {
   return {
     kind: "antimagicFieldOngoingSpellSuppression",
-    sourceSpellId: antimagicFieldUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
     sourceCombatantId: aura.sourceCombatantId,
     areaId: ANTIMAGIC_FIELD_AREA_ID,
     auraMembership: aura.membership,
@@ -676,7 +682,6 @@ function isScenarioOutcomeTag(
 ): tag is keyof typeof SCENARIO_OUTCOME_BY_TAG {
   return Object.hasOwn(SCENARIO_OUTCOME_BY_TAG, tag);
 }
-
 
 function selfTeleportUnexpectedHole(raw: unknown): never {
   throw new Error(

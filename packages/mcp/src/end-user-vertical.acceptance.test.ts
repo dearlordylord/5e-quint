@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
+import { combatantId, type BattleActPresentation } from "@dnd/battle-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -441,6 +442,11 @@ describe("end-user MCP vertical", () => {
       expect.objectContaining({ combatantId: "goblin", hp: 10 }),
     ]);
 
+    const actionSurgeResourcePoolRef = resourcePoolRefForUnit(
+      root,
+      "fighter",
+      "fighter_action_surge",
+    );
     const surged = resolveUnitFeatureAct(
       root,
       "fighter",
@@ -450,7 +456,7 @@ describe("end-user MCP vertical", () => {
     expect(surged.snapshot.combatants[0].origin.resources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "fighter_action_surge",
+          resourcePoolRef: actionSurgeResourcePoolRef,
           usage: "limited",
           usesRemaining: 0,
           usedThisTurn: true,
@@ -496,13 +502,16 @@ describe("end-user MCP vertical", () => {
     expect(wizardActs.snapshot.acts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Magic Missile",
-          summary:
-            "Cast Magic Missile using a level 1 Spell Slot, allocating 3 repeated effects among targets.",
+          presentation: expect.objectContaining({
+            kind: "spell",
+            invocation: expect.objectContaining({ spellId: "magic_missile" }),
+          }),
         }),
         expect.objectContaining({
-          label: "Ray of Frost",
-          summary: "Cast Ray of Frost as a cantrip.",
+          presentation: expect.objectContaining({
+            kind: "spell",
+            invocation: expect.objectContaining({ spellId: "ray_of_frost" }),
+          }),
         }),
       ]),
     );
@@ -515,19 +524,43 @@ describe("end-user MCP vertical", () => {
         kind: "targetChoice",
         holeId: "battle:attack:target",
         value: "skeleton-b",
+        spatialFacts: [
+          {
+            kind: "spellTarget",
+            casterId: "wizard",
+            targetId: "skeleton-b",
+            sourceProcedureRef: rayOfFrostAct.subject.procedureRef,
+          },
+        ],
       },
     );
     expect(afterRayOfFrostTarget.result.tag).toBe("needsHoles");
-    fillBattleSubject(root, rayOfFrostAct.subject, {
-      kind: "attackRoll",
-      holeId: "battle:attack:roll",
-      value: { total: 18, naturalD20: 15 },
-    });
-    const afterRayDamage = fillBattleSubject(root, rayOfFrostAct.subject, {
-      kind: "rolledDice",
-      holeId: "battle:spell:damage-result:ray_of_frost:1d8-cold",
-      value: [{ results: [4] }],
-    });
+    const rayOfFrostAttackRoll = requireHole(
+      afterRayOfFrostTarget.result.holes,
+      "attackRoll",
+    );
+    const afterRayOfFrostAttackRoll = fillBattleSubject(
+      root,
+      afterRayOfFrostTarget.result.subject ?? rayOfFrostAct.subject,
+      {
+        kind: "attackRoll",
+        holeId: rayOfFrostAttackRoll.holeId,
+        value: { total: 18, naturalD20: 15 },
+      },
+    );
+    const rayOfFrostDamage = requireHole(
+      afterRayOfFrostAttackRoll.result.holes,
+      "rolledDice",
+    );
+    const afterRayDamage = fillBattleSubject(
+      root,
+      afterRayOfFrostAttackRoll.result.subject ?? rayOfFrostAct.subject,
+      {
+        kind: "rolledDice",
+        holeId: rayOfFrostDamage.holeId,
+        value: [{ results: [4] }],
+      },
+    );
     expect(afterRayDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
@@ -651,16 +684,39 @@ describe("end-user MCP vertical", () => {
     });
 
     const magicMissileAct = requireSpellAct(root, "wizard", "magic_missile");
-    fillBattleSubject(root, magicMissileAct.subject, {
-      kind: "spellTargetAllocation",
-      holeId: "battle:spell:target-allocation:magic_missile",
-      value: { allocations: [{ targetId: "skeleton-b", count: 3 }] },
-    });
-    const afterMagicMissile = fillBattleSubject(root, magicMissileAct.subject, {
-      kind: "rolledDice",
-      holeId: "battle:spell:damage-result:magic_missile:3d4+3-force",
-      value: [{ results: [2, 2, 2] }],
-    });
+    const afterMagicMissileTargets = fillBattleSubject(
+      root,
+      magicMissileAct.subject,
+      {
+        kind: "spellTargetAllocation",
+        holeId: requireHole(
+          magicMissileAct.initialHoles,
+          "spellTargetAllocation",
+        ).holeId,
+        value: { allocations: [{ targetId: "skeleton-b", count: 3 }] },
+        spatialFacts: [
+          {
+            kind: "spellTarget",
+            casterId: "wizard",
+            targetId: "skeleton-b",
+            sourceProcedureRef: magicMissileAct.subject.procedureRef,
+          },
+        ],
+      },
+    );
+    const magicMissileDamage = requireHole(
+      afterMagicMissileTargets.result.holes,
+      "rolledDice",
+    );
+    const afterMagicMissile = fillBattleSubject(
+      root,
+      afterMagicMissileTargets.result.subject ?? magicMissileAct.subject,
+      {
+        kind: "rolledDice",
+        holeId: magicMissileDamage.holeId,
+        value: [{ results: [2, 2, 2] }],
+      },
+    );
     expect(afterMagicMissile.result.tag).toBe("resolved");
     expect(afterMagicMissile.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
@@ -770,11 +826,17 @@ describe("end-user MCP vertical", () => {
     });
     endTurn(root, "goblin-a");
 
+    const bardicInspirationResourcePoolRef = resourcePoolRefForUnit(
+      root,
+      "bard",
+      "bard_bardic_inspiration",
+    );
     grantBardicInspiration(root);
     expect(combatant(root, "bard").origin.resources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "bard_bardic_inspiration",
+          resourcePoolRef: bardicInspirationResourcePoolRef,
+          usage: "limited",
           usesRemaining: 1,
         }),
       ]),
@@ -1018,10 +1080,11 @@ describe("end-user MCP vertical", () => {
     });
 
     const lightAct = requireSpellAct(root, wizardCombatantId, selectedSpellId);
-    expect(lightAct.subject).toMatchObject(
-      cantripSubject(wizardCombatantId, selectedSpellId, "objectLight"),
-    );
-    expect("procedureRef" in lightAct.subject).toBe(true);
+    expect(lightAct.subject).toMatchObject({
+      tag: "actionSpell",
+      actorId: wizardCombatantId,
+      procedureRef: expect.any(String),
+    });
     const objectTarget = requireHole(
       lightAct.initialHoles,
       "objectTargetChoice",
@@ -1038,7 +1101,7 @@ describe("end-user MCP vertical", () => {
             kind: "spellObjectLightTarget",
             casterId: wizardCombatantId,
             objectId: lightObjectId,
-            spellId: selectedSpellId,
+            sourceProcedureRef: lightAct.subject.procedureRef,
             size: "tiny",
             wornOrCarried: { kind: "caster" },
           },
@@ -1049,7 +1112,7 @@ describe("end-user MCP vertical", () => {
     expect(resolved.result.tag).toBe("resolved");
     expect(resolved.snapshot.lightEmitters).toEqual([
       expect.objectContaining({
-        sourceSpellId: selectedSpellId,
+        sourceProcedureRef: lightAct.subject.procedureRef,
         sourceCombatantId: wizardCombatantId,
         attachment: { kind: "object", objectId: lightObjectId },
         emission: {
@@ -1804,6 +1867,7 @@ function requireHole(
 type BattleActView = {
   readonly summary: string;
   readonly subject: BattleSubjectView;
+  readonly presentation: BattleActPresentation;
   readonly initialHoles: readonly BattleHoleView[];
 };
 
@@ -1870,32 +1934,50 @@ function requireUnitFeatureAct(
   root: ReturnType<typeof createMcpCompositionRoot>,
   actorId: string,
   unitId: string,
-): BattleActView {
-  return requireBattleAct(
+): BattleActView & {
+  readonly subject: BattleSubjectView & { readonly procedureRef: string };
+} {
+  const act = requireBattleAct(
     root,
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === actorId &&
-      "unitId" in act.subject &&
-      act.subject.unitId === unitId,
+      act.presentation.kind === "unit" &&
+      act.presentation.unitId === unitId,
     `${actorId} ${unitId}`,
   );
+  if (!("procedureRef" in act.subject)) {
+    throw new Error(`Expected bound unit procedure: ${actorId} ${unitId}`);
+  }
+  return {
+    ...act,
+    subject: { ...act.subject, procedureRef: act.subject.procedureRef },
+  };
 }
 
 function requireSpellAct(
   root: ReturnType<typeof createMcpCompositionRoot>,
   actorId: string,
   spellId: string,
-): BattleActView {
-  return requireBattleAct(
+): BattleActView & {
+  readonly subject: BattleSubjectView & { readonly procedureRef: string };
+} {
+  const act = requireBattleAct(
     root,
     (act) =>
       act.subject.tag === "actionSpell" &&
       act.subject.actorId === actorId &&
-      "invocation" in act.subject &&
-      act.subject.invocation.spellId === spellId,
+      act.presentation.kind === "spell" &&
+      act.presentation.invocation.spellId === spellId,
     `${actorId} ${spellId}`,
   );
+  if (!("procedureRef" in act.subject)) {
+    throw new Error(`Expected bound spell procedure: ${actorId} ${spellId}`);
+  }
+  return {
+    ...act,
+    subject: { ...act.subject, procedureRef: act.subject.procedureRef },
+  };
 }
 
 type TriggeredSpellChoiceView = {
@@ -2014,6 +2096,28 @@ function resolveUnitFeatureAct(
   return callTool(root, "resolve_battle_act", { subject: act.subject });
 }
 
+function resourcePoolRefForUnit(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  combatantIdText: string,
+  unitId: string,
+): string {
+  const actor = root.sessionStore.battleState?.combatants.get(
+    combatantId(combatantIdText),
+  );
+  if (actor?.origin.kind !== "character") {
+    throw new Error(
+      `Expected character combatant resource owner: ${combatantIdText}`,
+    );
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.unit.id === unitId,
+  );
+  if (resource === undefined) {
+    throw new Error(`Expected ${unitId} resource for ${combatantIdText}`);
+  }
+  return resource.resourcePoolRef;
+}
+
 function grantBardicInspiration(
   root: ReturnType<typeof createMcpCompositionRoot>,
 ) {
@@ -2030,7 +2134,7 @@ function grantBardicInspiration(
           kind: "bardicInspirationTargetWithinRange",
           bardId: "bard",
           targetId: "fighter",
-          unitId: "bard_bardic_inspiration",
+          sourceProcedureRef: act.subject.procedureRef,
           rangeFeet: 60,
         },
       ],
@@ -2124,6 +2228,12 @@ function castMagicMissile(
     kind: "spellTargetAllocation",
     holeId: targetAllocation.holeId,
     value: { allocations },
+    spatialFacts: allocations.map(({ targetId }) => ({
+      kind: "spellTarget",
+      casterId: actorId,
+      targetId,
+      sourceProcedureRef: act.subject.procedureRef,
+    })),
   });
   const damage = requireHole(afterTargets.result.holes, "rolledDice");
   return fillBattleSubject(root, afterTargets.result.subject ?? act.subject, {
@@ -2149,6 +2259,14 @@ function resolveSpellAttack(
     kind: "targetChoice",
     holeId: requireHole(act.initialHoles, "targetChoice").holeId,
     value: input.targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: input.actorId,
+        targetId: input.targetId,
+        sourceProcedureRef: act.subject.procedureRef,
+      },
+    ],
   });
   const attackRoll = requireHole(target.result.holes, "attackRoll");
   const afterAttackRoll = fillBattleSubject(
@@ -2253,35 +2371,34 @@ function fillBattleSubject(
     readonly value: unknown;
   },
 ) {
-  const spellId =
-    "invocation" in subject && "spellId" in subject.invocation
-      ? subject.invocation.spellId
-      : null;
+  const procedureRef = "procedureRef" in subject ? subject.procedureRef : null;
   const battleFill =
     fill.kind === "targetChoice" && fill.spatialFacts === undefined
       ? {
           ...fill,
           spatialFacts:
-            spellId !== null
+            subject.tag === "actionSpell" && procedureRef !== null
               ? [
                   {
                     kind: "spellTarget",
                     casterId: subject.actorId,
                     targetId: String(fill.value),
-                    spellId,
+                    sourceProcedureRef: procedureRef,
                   },
                 ]
-              : "procedureRef" in subject
+              : subject.tag === "action" && procedureRef !== null
                 ? [
                     {
                       kind: "attackTargetInMeleeReach",
                       actorId: subject.actorId,
                       targetId: String(fill.value),
-                      procedureRef: subject.procedureRef,
-                      ...(subject.attackAbility === undefined
+                      procedureRef,
+                      ...(!("attackAbility" in subject) ||
+                      subject.attackAbility === undefined
                         ? {}
                         : { attackAbility: subject.attackAbility }),
-                      ...(subject.attackDamageType === undefined
+                      ...(!("attackDamageType" in subject) ||
+                      subject.attackDamageType === undefined
                         ? {}
                         : { attackDamageType: subject.attackDamageType }),
                     },
@@ -2290,7 +2407,7 @@ function fillBattleSubject(
         }
       : fill.kind === "spellTargetAllocation" &&
           fill.spatialFacts === undefined &&
-          spellId !== null &&
+          procedureRef !== null &&
           typeof fill.value === "object" &&
           fill.value !== null &&
           "allocations" in fill.value &&
@@ -2301,7 +2418,7 @@ function fillBattleSubject(
               kind: "spellTarget",
               casterId: subject.actorId,
               targetId: String(allocation.targetId),
-              spellId,
+              sourceProcedureRef: procedureRef,
             })),
           }
         : fill;

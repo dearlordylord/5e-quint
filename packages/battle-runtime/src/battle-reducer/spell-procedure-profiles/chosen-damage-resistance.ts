@@ -18,6 +18,7 @@ import {
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
+  type BattleExecutableSpellInvocation,
   type ChosenDamageResistanceSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -177,7 +178,7 @@ function chosenDamageResistanceSpellProjection(
 function discoverChosenDamageResistanceCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ChosenDamageResistanceSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ChosenDamageResistanceSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
@@ -188,6 +189,7 @@ function discoverChosenDamageResistanceCastAct(
       subject: {
         tag: "actionSpell" as const,
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: chosenDamageResistanceInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
@@ -356,7 +358,7 @@ function applyChosenDamageResistanceEffect(input: {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly damageType: DamageType;
-  readonly invocation: ChosenDamageResistanceSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<ChosenDamageResistanceSpellInvocation>;
 }): BattleState {
   const target = input.state.combatants.get(input.targetId);
   if (target === undefined) {
@@ -364,7 +366,7 @@ function applyChosenDamageResistanceEffect(input: {
   }
   const nextEffect = {
     kind: "damageResistance" as const,
-    sourceSpellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
     sourceCombatantId: input.actorId,
     damageType: input.damageType,
     expiresAt: input.invocation.expiresAt,
@@ -377,7 +379,7 @@ function applyChosenDamageResistanceEffect(input: {
       (effect) =>
         !(
           effect.kind === "damageResistance" &&
-          effect.sourceSpellId === input.invocation.spell.id &&
+          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
           effect.sourceCombatantId === input.actorId
         ),
     ),

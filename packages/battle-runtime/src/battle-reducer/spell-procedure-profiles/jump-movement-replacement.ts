@@ -23,6 +23,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -31,6 +32,7 @@ import {
 import { spellId, type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
@@ -159,7 +161,6 @@ function jumpMovementReplacementSpellProjection(
         rangeFeet: movementFeet(5),
         activeEffect: {
           kind: "jumpMovementReplacement",
-          sourceSpellId: spell.id,
           sourceCombatantId: actorId,
           movementCostFeet: movementFeet(effect.movementCostFeet),
           maxJumpDistanceFeet: movementFeet(effect.maxJumpDistanceFeet),
@@ -194,7 +195,7 @@ function jumpMovementReplacementTargetCount(
 function discoverJumpMovementReplacementCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: JumpMovementReplacementInvocation,
+  invocation: BattleExecutableSpellInvocation<JumpMovementReplacementInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -204,6 +205,7 @@ function discoverJumpMovementReplacementCastAct(
           subject: {
             tag: "bonusActionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: jumpMovementReplacementInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
@@ -296,6 +298,7 @@ function resolveJumpMovementReplacement(
     input.actorId,
     input.fillSet.targetList.targetIds,
     input.invocation,
+    input.input.subject.procedureRef,
   );
   return spendSpellCastResources({
     state: effected,
@@ -310,31 +313,39 @@ function applyJumpMovementReplacementSpellEffect(
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
   invocation: JumpMovementReplacementInvocation,
+  procedureRef: BonusActionSpellBattleResolutionInput["subject"]["procedureRef"],
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       return nextState;
     }
+    const allocation = allocateBattleActiveEffectRef({
+      state: nextState,
+      owner: target,
+    });
+    const allocatedTarget = allocation.owner;
     const nextEffect = {
       ...invocation.activeEffect,
       sourceCombatantId: actorId,
+      sourceProcedureRef: procedureRef,
+      effectRef: allocation.effectRef,
     };
     const activeEffects = [
-      ...target.activeEffects.filter(
+      ...allocatedTarget.activeEffects.filter(
         (effect) =>
           !(
             effect.kind === "jumpMovementReplacement" &&
-            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceProcedureRef === procedureRef &&
             effect.sourceCombatantId === actorId
           ),
       ),
       nextEffect,
     ];
     return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
+      ...allocation.state,
+      combatants: new Map(allocation.state.combatants).set(targetId, {
+        ...allocatedTarget,
         activeEffects,
       }),
     };

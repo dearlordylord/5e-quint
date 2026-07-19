@@ -31,7 +31,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 type OpenHandTechniqueProjection = {

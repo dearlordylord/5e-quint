@@ -30,6 +30,7 @@ import {
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 import { applyDashToActor } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { revealHidden } from "../hole-helpers.ts";
@@ -137,7 +138,6 @@ function expeditiousRetreatDashActiveEffect(
   }
   return {
     kind: "spellDashBonusAction",
-    sourceSpellId: spell.id,
     sourceCombatantId: actorId,
     expiresAt: { kind: "concentration", combatantId: actorId },
   };
@@ -146,7 +146,7 @@ function expeditiousRetreatDashActiveEffect(
 function discoverExpeditiousRetreatDashCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: ExpeditiousRetreatDashInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ExpeditiousRetreatDashInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -156,6 +156,7 @@ function discoverExpeditiousRetreatDashCastAct(
     subject: {
       tag: "bonusActionDashSpell" as const,
       actorId,
+      procedureRef: invocation.sourceProcedureRef,
       invocation: expeditiousRetreatDashInvocationRef(invocation),
       mode: { tag: "cast" as const },
       speedKind,
@@ -302,13 +303,24 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    battleId: slotted.battleId,
+    owner: effectHost,
+  });
   const effectedActor = {
-    ...effectHost,
+    ...allocation.owner,
     concentration: {
-      sourceSpellId: input.invocation.spell.id,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       effectKind: "spellEffect" as const,
     },
-    activeEffects: [...effectHost.activeEffects, input.invocation.activeEffect],
+    activeEffects: [
+      ...effectHost.activeEffects,
+      {
+        ...input.invocation.activeEffect,
+        effectRef: allocation.effectRef,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
+      },
+    ],
   };
   const effected = {
     ...slotted,

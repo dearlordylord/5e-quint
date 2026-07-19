@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-range-increase
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic
 // UNIT-IDENTITY-REPLAY: L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic doResolveDistantObjectLight
@@ -190,8 +191,10 @@ function resolveDistantObjectLightSubject() {
   const distantAct = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === lightUnitId &&
-      candidate.subject.invocation.procedure === "objectLight" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        lightUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "objectLight" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
       ) === true,

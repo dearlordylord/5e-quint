@@ -26,9 +26,15 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import {
+  bindSpellProcedureExecutionFacts,
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedureRef,
+} from "../character-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import {
   effectiveCharacterBattleCantrips,
@@ -43,6 +49,7 @@ import { admitPersistentArmorEffectInvocationSpellAccess } from "./spell-procedu
 import { admitRegisteredSpellProcedureProfiles } from "./spell-procedure-profiles/registry.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
+import { isCharacterBattleCreatureState } from "./creature-state.ts";
 export * from "./spells-profiles-support.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
@@ -75,7 +82,7 @@ export { supportedPreparedHideousLaughterProfile } from "./spell-procedure-profi
 export { supportedPreparedGreaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 export { supportedPreparedCommandProfile } from "./spell-procedure-profiles/command.ts";
 
-export function supportedSpellActs(
+export function admittedSpellActs(
   actor: BattleCreatureState,
   state?: BattleState,
 ): readonly SupportedSpellInvocation[] {
@@ -97,7 +104,7 @@ export function supportedSpellActs(
     admitRegisteredSpellProcedureProfiles(spell, admissionContext),
   );
 
-  return [
+  const admittedInvocations = [
     ...profileAdmissions,
     ...spellcasting.invocationSpellAccesses.flatMap((access) =>
       admitPersistentArmorEffectInvocationSpellAccess(
@@ -115,6 +122,28 @@ export function supportedSpellActs(
     (invocation) =>
       !activeOngoingFeaturesPreventSpellInvocation(actor, invocation),
   );
+  return admittedInvocations;
+}
+
+export function supportedSpellActs(
+  actor: BattleCreatureState,
+  state?: BattleState,
+): readonly BattleExecutableSpellInvocation[] {
+  if (!isCharacterBattleCreatureState(actor)) return [];
+  const invocations = admittedSpellActs(actor, state);
+  const execution = characterExecutionWithSpellInvocations(
+    actor.origin.execution,
+    invocations,
+  );
+  return invocations.flatMap((invocation) => {
+    const sourceProcedureRef = characterSpellProcedureRef(
+      execution,
+      invocation,
+    );
+    return sourceProcedureRef === undefined
+      ? []
+      : [bindSpellProcedureExecutionFacts(invocation, sourceProcedureRef)];
+  });
 }
 
 export function supportedPreparedHellishRebukeReactionSpellProfile(

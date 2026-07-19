@@ -49,6 +49,25 @@ import {
   battleFailedSavingThrowRerollSupportForUnit,
   FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
+import { NonNegativeInteger } from "@dnd/shared/types";
+import {
+  battleCharacterExecutionScopeRef,
+  battleExecutionScopeOrdinal,
+  battleId,
+  battleResourcePoolExecutionRef,
+  combatantId,
+} from "./identity.ts";
+
+function resourcePoolRefForTest(unitId: UnitRecord["id"]) {
+  return battleResourcePoolExecutionRef(
+    battleCharacterExecutionScopeRef(
+      battleId("resource-unit-test"),
+      combatantId(unitId),
+      battleExecutionScopeOrdinal(0),
+    ),
+    NonNegativeInteger(0),
+  );
+}
 
 const indomitableSelectedIdentityDriverSchema = {
   doResolveIndomitableFailedSavingThrowReroll: {},
@@ -104,6 +123,7 @@ const indomitableSelectedIdentityActions = {
       const resource = characterResourceState(
         { unit },
         [{ className: "fighter", level: classLevel(9) }],
+        resourcePoolRefForTest(unit.id),
       );
       if (profile === null || profile === "unsupported") {
         throw new Error("Expected supported Indomitable profile.");
@@ -173,7 +193,10 @@ describe("QMBT7 deterministic Unit profile admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({ unitId: fighterSecondWindUnitId, supportProfiles: [] }),
+      Either.right({
+        unit: unitLibrary.requireUnit(fighterSecondWindUnitId),
+        supportProfiles: [],
+      }),
     );
     expect(profile).toEqual(
       expect.objectContaining({
@@ -200,7 +223,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: barbarianRecklessAttackUnitId,
+        unit: unitLibrary.requireUnit(barbarianRecklessAttackUnitId),
         supportProfiles: [],
       }),
     );
@@ -291,7 +314,7 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: fighterTacticalMindUnitId,
+        unit: unitLibrary.requireUnit(fighterTacticalMindUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -347,7 +370,8 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
 describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
   it("replays selected Unit identities deterministically", () => {
     for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions = new Set<IndomitableSelectedIdentityDriverAction>();
+      const replayedActions =
+        new Set<IndomitableSelectedIdentityDriverAction>();
 
       for (const sequence of replay.sequences) {
         let projection: IndomitableSelectedIdentityProjection | undefined;
@@ -385,7 +409,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: fighterIndomitableUnitId,
+        unit: unitLibrary.requireUnit(fighterIndomitableUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -434,6 +458,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     const resource = characterResourceState(
       { unit },
       [{ className: "fighter", level: classLevel(9) }],
+      resourcePoolRefForTest(unit.id),
     );
     if (profile === null || profile === "unsupported") {
       throw new Error("Expected supported Indomitable profile.");
@@ -476,6 +501,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     const resource = characterResourceState(
       { unit },
       [{ className: "fighter", level: classLevel(9) }],
+      resourcePoolRefForTest(unit.id),
     );
     if (profile === null || profile === "unsupported") {
       throw new Error("Expected supported Indomitable profile.");
@@ -518,14 +544,17 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     const resource = characterResourceState(
       { unit },
       [{ className: "fighter", level: classLevel(9) }],
+      resourcePoolRefForTest(unit.id),
     );
     const exhaustedResource = characterResourceState(
       { unit, usesRemaining: 0 },
       [{ className: "fighter", level: classLevel(9) }],
+      resourcePoolRefForTest(unit.id),
     );
     const wrongResource = characterResourceState(
       { unit: unitLibrary.requireUnit(fighterSecondWindUnitId) },
       [{ className: "fighter", level: classLevel(9) }],
+      resourcePoolRefForTest(fighterSecondWindUnitId),
     );
     if (profile === null || profile === "unsupported") {
       throw new Error("Expected supported Indomitable profile.");
@@ -613,9 +642,9 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       },
     } as unknown as UnitRecord;
 
-    expect(
-      battleFailedSavingThrowRerollSupportForUnit(malformedBonus),
-    ).toBe("unsupported");
+    expect(battleFailedSavingThrowRerollSupportForUnit(malformedBonus)).toBe(
+      "unsupported",
+    );
     expect(
       battleFailedSavingThrowRerollSupportForUnit(
         unitLibrary.requireUnit(fighterSecondWindUnitId),
@@ -632,7 +661,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: bardBardicInspirationUnitId,
+        unit: unitLibrary.requireUnit(bardBardicInspirationUnitId),
         supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
       }),
     );
@@ -793,7 +822,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: bardCuttingWordsUnitId,
+        unit: unitLibrary.requireUnit(bardCuttingWordsUnitId),
         supportProfiles: [supportProfile],
       }),
     );
@@ -990,7 +1019,7 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: sorcererInnateSorceryUnitId,
+        unit: unitLibrary.requireUnit(sorcererInnateSorceryUnitId),
         supportProfiles: [],
       }),
     );

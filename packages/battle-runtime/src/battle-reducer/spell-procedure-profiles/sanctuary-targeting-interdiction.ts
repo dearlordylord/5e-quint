@@ -24,6 +24,7 @@ import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -157,7 +158,6 @@ function sanctuaryTargetingInterdictionProjection(
         rangeFeet: movementFeet(30),
         activeEffect: {
           kind: "sanctuaryWard",
-          sourceSpellId: spell.id,
           sourceCombatantId: actorId,
           save: { ability: "wis", dc: operation.effect.dc },
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
@@ -168,7 +168,7 @@ function sanctuaryTargetingInterdictionProjection(
 function discoverSanctuaryTargetingInterdictionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SanctuaryTargetingInterdictionInvocation,
+  invocation: BattleExecutableSpellInvocation<SanctuaryTargetingInterdictionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -178,6 +178,7 @@ function discoverSanctuaryTargetingInterdictionCastAct(
           subject: {
             tag: "bonusActionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: sanctuaryTargetingInterdictionInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },

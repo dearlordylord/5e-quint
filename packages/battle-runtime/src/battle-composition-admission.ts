@@ -1,10 +1,14 @@
-import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import type {
+  CharacterProcedureBattleSubject,
+  CharacterProcedureSelectionSubject,
+} from "./battle-subjects.ts";
 import type { CharacterBattleCreatureState } from "./battle-reducer.ts";
 import {
   BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
+  characterSpellProcedureInvocationRef,
   characterSpellProcedureRef,
   characterSpellProcedureRefForInvocationRef,
   characterUnitProcedureRef,
@@ -13,11 +17,8 @@ import {
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-holes-fills.ts";
-export type CharacterProcedureSelectionSubject =
-  CharacterProcedureBattleSubject;
-
 export function characterUnitProcedureQueryForSubject(
-  subject: CharacterProcedureSelectionSubject,
+  subject: CharacterProcedureBattleSubject | CharacterProcedureSelectionSubject,
 ): CharacterUnitProcedureQuery | undefined {
   if (
     subject.tag === "unitFeature" ||
@@ -72,20 +73,25 @@ export function admitCharacterProcedureSelection(
     );
   }
   if (subject.tag === "bonusActionStandardAction") {
+    if ("sourceProcedureRef" in subject) {
+      const invocationRef = characterSpellProcedureInvocationRef(
+        actor.origin.execution,
+        subject.sourceProcedureRef,
+      );
+      if (invocationRef === undefined) return undefined;
+      const invocation = supportedSpellActs(actor).find(
+        (candidate) =>
+          candidate.procedure === "expeditiousRetreatDash" &&
+          supportedSpellInvocationMatchesRef(candidate, invocationRef),
+      );
+      return invocation === undefined ? undefined : subject.sourceProcedureRef;
+    }
     const unitProcedureRef = characterUnitProcedureRef(
       actor.origin.execution,
       subject.sourceUnitId,
       BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
     );
-    if (unitProcedureRef !== undefined) return unitProcedureRef;
-    const invocation = supportedSpellActs(actor).find(
-      (candidate) =>
-        candidate.procedure === "expeditiousRetreatDash" &&
-        candidate.spell.id === subject.sourceUnitId,
-    );
-    return invocation === undefined
-      ? undefined
-      : characterSpellProcedureRef(actor.origin.execution, invocation);
+    return unitProcedureRef;
   }
   return characterUnitProcedureRef(
     actor.origin.execution,

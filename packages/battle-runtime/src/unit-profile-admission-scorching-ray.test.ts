@@ -1,3 +1,5 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SCORCHING-RAY scorching_ray
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-independent-attack-sequence
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
@@ -51,13 +53,16 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        scorchingRayUnitId,
-        2,
-        "spellAttackSequence",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(scorchingRayUnitId, 2, "spellAttackSequence"),
       ),
       mode: { tag: "cast" },
     });

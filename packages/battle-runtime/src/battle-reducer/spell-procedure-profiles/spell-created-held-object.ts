@@ -43,12 +43,14 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
+import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -60,11 +62,11 @@ import {
   spellEffectInvocationRef,
 } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
 import { applySpellCreatedHeldObjectEffect } from "../spells-active-effects.ts";
-import { spellCreatedHeldObjectEffectForSource } from "../spells-active-effects.ts";
 import { setSpellCreatedHeldObjectState } from "../spells-active-effects.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
@@ -239,11 +241,17 @@ function spellCreatedHeldObjectEffectsForSpell(
   ctx: SpellAdmissionContext,
   spell: SpellRecord,
 ): readonly SpellCreatedHeldObjectActiveEffect[] {
+  const selectedExecutionRefs = new Set(
+    characterSpellProcedureRefsForAdmissionContent(
+      ctx.actor.origin.execution,
+      spell,
+    ),
+  );
   return ctx.actor.activeEffects.filter(
     (effect): effect is SpellCreatedHeldObjectActiveEffect =>
       effect.kind === "spellCreatedHeldObject" &&
       effect.sourceCombatantId === ctx.actor.combatantId &&
-      effect.sourceSpellId === spell.id,
+      selectedExecutionRefs.has(effect.sourceProcedureRef),
   );
 }
 
@@ -254,7 +262,10 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly proficiencyBonus: ProficiencyBonusType;
 }):
-  | (SpellCreatedHeldObjectActiveEffect & {
+  | (Omit<
+      SpellCreatedHeldObjectActiveEffect,
+      "effectRef" | "sourceProcedureRef"
+    > & {
       readonly objectState: { readonly kind: "held" };
     })
   | null {
@@ -338,7 +349,6 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
   }
   return {
     kind: "spellCreatedHeldObject",
-    sourceSpellId: spell.id,
     sourceCombatantId: input.actorId,
     objectState: { kind: "held" },
     light: {
@@ -407,7 +417,7 @@ function spellCreatedHeldObjectDamageExpr(
 function discoverSpellCreatedHeldObjectCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellCreatedHeldObjectInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
@@ -417,6 +427,7 @@ function discoverSpellCreatedHeldObjectCastAct(
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: spellCreatedHeldObjectInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -430,7 +441,7 @@ function discoverSpellCreatedHeldObjectCastAct(
 function discoverSpellCreatedHeldObjectAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellCreatedHeldObjectAttackInvocation,
+  invocation: BattleExecutableSpellInvocation<SpellCreatedHeldObjectAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -440,6 +451,7 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
           subject: {
             tag: "actionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: spellCreatedHeldObjectAttackInvocationRef(invocation),
             mode: { tag: "cast" },
           },
@@ -453,7 +465,7 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
 function discoverSpellCreatedHeldObjectReEvokeCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellCreatedHeldObjectReEvokeInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectReEvokeInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
@@ -463,6 +475,7 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: spellCreatedHeldObjectReEvokeInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -586,10 +599,26 @@ function resolveSpellCreatedHeldObject(
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applySpellCreatedHeldObjectEffect({
+  const effectOwner = resourced.state.combatants.get(input.actorId);
+  if (effectOwner === undefined) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Held-object effect owner is no longer in the battle.",
+    );
+  }
+  const allocation = allocateBattleActiveEffectRef({
     state: resourced.state,
+    owner: effectOwner,
+  });
+  const effected = applySpellCreatedHeldObjectEffect({
+    state: allocation.state,
     actorId: input.actorId,
-    activeEffect: input.invocation.activeEffect,
+    activeEffect: {
+      ...input.invocation.activeEffect,
+      sourceProcedureRef: input.input.subject.procedureRef,
+      effectRef: allocation.effectRef,
+    },
   });
   if (effected.tag === "invalid") {
     return invalidResult(input.input.state, "staleSubject", effected.message);
@@ -635,10 +664,12 @@ function resolveSpellCreatedHeldObjectReEvoke(
     );
   }
   const actor = input.input.state.combatants.get(input.actorId);
-  const activeEffect = spellCreatedHeldObjectEffectForSource(
-    actor,
-    input.invocation.activeEffect.sourceCombatantId,
-    input.invocation.spell.id,
+  const activeEffect = actor?.activeEffects.find(
+    (effect): effect is SpellCreatedHeldObjectActiveEffect =>
+      effect.kind === "spellCreatedHeldObject" &&
+      effect.effectRef === input.invocation.activeEffect.effectRef &&
+      effect.sourceCombatantId ===
+        input.invocation.activeEffect.sourceCombatantId,
   );
   if (
     activeEffect === undefined ||

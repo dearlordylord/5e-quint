@@ -19,12 +19,14 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type LevitatedCreatureSpellInvocation,
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
+import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -165,7 +167,6 @@ function levitatedCreatureSpellProjection(
     maxInitialRiseFeet: LEVITATE_INITIAL_RISE_FEET,
     activeEffect: {
       kind: "spellLevitatedCreature",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       maxAltitudeChangeFeet: LEVITATE_ALTITUDE_CONTROL_FEET,
       rangeFeet: movementFeet(60),
@@ -181,7 +182,7 @@ function levitatedCreatureSpellProjection(
 function discoverLevitatedCreatureCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: LevitatedCreatureInvocation,
+  invocation: BattleExecutableSpellInvocation<LevitatedCreatureInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const castActs =
@@ -192,6 +193,7 @@ function discoverLevitatedCreatureCastAct(
             subject: {
               tag: "actionSpell" as const,
               actorId,
+              procedureRef: invocation.sourceProcedureRef,
               invocation: levitatedCreatureInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
@@ -401,6 +403,7 @@ function resolveLevitatedCreature(
     [target.combatantId],
     input.invocation,
     input.fillSet.levitateInitialRiseFeet,
+    input.input.subject.procedureRef,
   );
   if (input.spendsCastResources === false) {
     return {
@@ -433,30 +436,38 @@ function applyLevitatedCreatureSpellEffect(
   targetIds: readonly CombatantId[],
   invocation: LevitatedCreatureInvocation,
   initialRiseFeet: MovementFeet,
+  procedureRef: ActionSpellBattleResolutionInput["subject"]["procedureRef"],
 ): BattleState {
   return targetIds.reduce<BattleState>((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       return nextState;
     }
+    const allocation = allocateBattleActiveEffectRef({
+      state: nextState,
+      owner: target,
+    });
+    const allocatedTarget = allocation.owner;
     const nextEffect = {
       ...invocation.activeEffect,
+      sourceProcedureRef: procedureRef,
       sourceCombatantId: actorId,
+      effectRef: allocation.effectRef,
       altitudeFeet: initialRiseFeet,
     };
-    const displacedEffects = target.activeEffects.filter(
+    const displacedEffects = allocatedTarget.activeEffects.filter(
       (effect) => effect.kind === "spellLevitatedCreature",
     );
     const activeEffects = [
-      ...target.activeEffects.filter(
+      ...allocatedTarget.activeEffects.filter(
         (effect) => effect.kind !== "spellLevitatedCreature",
       ),
       nextEffect,
     ];
     const withReplacement = {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
+      ...allocation.state,
+      combatants: new Map(allocation.state.combatants).set(targetId, {
+        ...allocatedTarget,
         activeEffects,
       }),
     };
@@ -468,7 +479,7 @@ function applyLevitatedCreatureSpellEffect(
           nextCombatants,
           {
             sourceCombatantId: effect.sourceCombatantId,
-            sourceSpellId: effect.sourceSpellId,
+            sourceProcedureRef: effect.sourceProcedureRef,
           },
         ),
       withReplacement.combatants,

@@ -98,7 +98,6 @@ function admitWeaponAttackOverride(
       attachedWeapon: { itemId, attack },
       activeEffect: {
         kind: "spellWeaponAttackOverride",
-        sourceSpellId: spell.id,
         sourceCombatantId: ctx.actor.combatantId,
         weaponItemId: itemId,
         spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
@@ -275,13 +274,14 @@ function isDamageDieSize(value: number): value is DamageDieSize {
 function discoverWeaponAttackOverrideCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: WeaponAttackOverrideInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<WeaponAttackOverrideInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "bonusActionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: weaponAttackOverrideInvocationRef(invocation),
         mode: { tag: "cast" },
         componentWeaponItemId: invocation.attachedWeapon.itemId,
@@ -363,11 +363,14 @@ function resolveWeaponAttackOverride(
       (effect) =>
         !(
           effect.kind === "spellWeaponAttackOverride" &&
-          effect.sourceSpellId === input.invocation.spell.id &&
+          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
           effect.sourceCombatantId === input.actorId
         ),
     ),
-    input.invocation.activeEffect,
+    {
+      ...input.invocation.activeEffect,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+    },
   ];
   const effected = {
     ...input.input.state,

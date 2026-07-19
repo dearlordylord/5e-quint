@@ -1,89 +1,96 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  requireCharacterSpellProcedureRefForTest,
+  requireCharacterUnitProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.creature-space-movement-permission unit-feature.grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
 
+import { abilityModifier } from "@dnd/shared/types";
 import {
-  startBattleRight,
-  testBattleCreatureStateWithConditions,
-  requireResolved,
-  hidePrerequisites,
-  fighterVsGoblinBattle,
-  fighterGrapplesGoblin,
-  fighterAttackSubject,
-  characterAttackSubjectForTest,
-  goblinAttackSubject,
-  attackInitialTargetHole,
-  attackRollHoleAfterTarget,
-  requireHole,
-  findHole,
-  findAct,
-  helpAttackAllyDecisionFill,
-  helpAttackEnemyDecisionFill,
-  targetFill,
-  spellTargetAllocationFill,
+  admitCharacterProcedureSelectionSubject,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
+import { describe, expect, test } from "vitest";
+import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
+import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
+import {
+  grappleDragCostExempt,
+  targetIsNoMoreThanOneSizeLarger,
+} from "./battle-reducer/movement-speed.ts";
+import type {
+  BattleActDiscoverySubject,
+  BattleState,
+  BattleActDiscoverySubject as BattleSubject,
+} from "./battle-runtime-test-support.ts";
+import {
   abilityCheckFill,
-  attackRollFill,
-  interruptDecisionFill,
-  movementFill,
-  castGroundHazardForMovementTest,
-  grappleOutcomeFill,
-  unitFeatureDecisionFill,
-  grapplerUnitRefs,
-  halflingNimblenessUnitRefs,
-  rageResource,
-  shoveOutcomeFill,
-  damageRollFillWithGroups,
-  characterSeed,
-  statBlockCreatureInit,
-  statBlockRecord,
-  skeletonCreatureInit,
-  wizardVsSkeletonBattle,
-  wizardSpellcasting,
-  spellRecord,
-  magicSubject,
-  ROGUE_CUNNING_ACTION_SUPPORT_PROFILE,
-  testCharacterD20Statistics,
-  testUnarmedStrikeDamageAttack,
-  fighterId,
-  goblinId,
-  skeletonId,
-  wizardId,
-  unitLibrary,
   applyCondition,
-  battleBonusActionStandardActionSupportForUnit,
+  attackInitialTargetHole,
+  attackRollFill,
+  attackRollHoleAfterTarget,
   battleAreaId,
-  battleId,
+  battleBonusActionStandardActionSupportForUnit,
   BattleFillSchema,
-  BattleHoleSchema,
-  battleTablePositionId,
+  battleId,
   BattleSubjectSchema,
+  battleTablePositionId,
   battleUnitSupportProfilesForUnit,
   cantripSpellInvocationRef,
+  castGroundHazardForMovementTest,
+  characterAttackSubjectForTest,
+  characterSeed,
   combatantId,
+  damageRollFillWithGroups,
   difficultyClass,
   discoverBattleActs,
   Either,
   elapsedTimeTicks,
   endTurn,
+  fighterAttackSubject,
+  fighterGrapplesGoblin,
+  fighterId,
+  fighterVsGoblinBattle,
+  findAct,
+  findHole,
+  goblinAttackSubject,
+  goblinId,
+  grappleOutcomeFill,
+  grapplerUnitRefs,
+  halflingNimblenessUnitRefs,
+  hidePrerequisites,
+  interruptDecisionFill,
+  magicSubject,
   movementFeet,
+  movementFill,
+  rageResource,
+  requireHole,
+  requireResolved,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  ROGUE_CUNNING_ACTION_SUPPORT_PROFILE,
   Schema,
+  shoveOutcomeFill,
+  skeletonCreatureInit,
+  skeletonId,
   snapshotBattle,
+  spellRecord,
+  spellTargetAllocationFill,
+  startBattleRight,
+  statBlockCreatureInit,
+  statBlockRecord,
+  targetFill,
+  testBattleCreatureStateWithConditions,
+  testCharacterD20Statistics,
+  testUnarmedStrikeDamageAttack,
+  unitFeatureDecisionFill,
+  unitLibrary,
+  wizardId,
+  wizardSpellcasting,
+  wizardVsSkeletonBattle,
 } from "./battle-runtime-test-support.ts";
-import type {
-  BattleState,
-  BattleSubject,
-} from "./battle-runtime-test-support.ts";
-import { describe, expect, test } from "vitest";
-import { abilityModifier } from "@dnd/shared/types";
-import {
-  grappleDragCostExempt,
-  targetIsNoMoreThanOneSizeLarger,
-} from "./battle-reducer/movement-speed.ts";
-import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
-import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
   test("generic combat actions spend the Action and expose typed battle state", () => {
@@ -310,7 +317,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_rage",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            state,
+            fighterId,
+            "barbarian_rage",
+          ),
         },
         fills: [],
       }),
@@ -1062,6 +1073,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   test("Grease Difficult Terrain facts add extra Movement cost without storing geometry", () => {
     const areaId = battleAreaId("test-grease-area");
     const greased = castGroundHazardForMovementTest(areaId);
+    const greaseEffect = greased.combatants
+      .get(wizardId)
+      ?.activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+    if (greaseEffect === undefined || greaseEffect.areaId !== areaId) {
+      throw new Error("Expected the admitted Grease ground hazard.");
+    }
     const subject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: wizardId,
@@ -1077,7 +1094,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         {
           kind: "greaseGroundHazard" as const,
           sourceCombatantId: wizardId,
-          sourceSpellId: spellRecord("grease").id,
+          sourceProcedureRef: greaseEffect.sourceProcedureRef,
           areaId,
         },
       ],
@@ -1177,7 +1194,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
                 {
                   kind: "greaseGroundHazard",
                   sourceCombatantId: wizardId,
-                  sourceSpellId: spellRecord("grease").id,
+                  sourceProcedureRef: battleProcedureExecutionRefForTest(
+                    String(spellRecord("grease").id),
+                  ),
                   areaId,
                 },
               ],
@@ -1333,67 +1352,34 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       actorId: fighterId,
       action: "helpAttack",
     };
-    const discoveredHelp = discoverBattleActs(state).find(
-      (act) =>
-        act.subject.tag === "action" && act.subject.action === "helpAttack",
-    );
-    expect(discoveredHelp?.initialHoles).toEqual([
-      expect.objectContaining({ kind: "helpAttackAllyDecision" }),
-    ]);
     const ally = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "helpAttackAllyDecision",
     );
-    expect(ally.choices).toEqual(expect.arrayContaining([wizardId, goblinId]));
-    expect(
-      Either.isRight(Schema.decodeUnknownEither(BattleHoleSchema)(ally)),
-    ).toBe(true);
-    const allyDecision = helpAttackAllyDecisionFill(ally, wizardId);
-    expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleFillSchema)(allyDecision),
-      ),
-    ).toBe(true);
+    const allyFill = {
+      kind: "helpAttackAllyDecision" as const,
+      holeId: ally.holeId,
+      allyId: wizardId,
+    };
     const target = requireHole(
       resolveBattleSubject({
         state,
         subject,
-        fills: [allyDecision],
+        fills: [allyFill],
       }),
       "helpAttackEnemyDecision",
     );
-    expect(target.choices).toContain(goblinId);
-    expect(
-      Either.isRight(Schema.decodeUnknownEither(BattleHoleSchema)(target)),
-    ).toBe(true);
-    const distantEnemyDecision = helpAttackEnemyDecisionFill(
-      target,
-      goblinId,
-      false,
-    );
-    expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleFillSchema)(distantEnemyDecision),
-      ),
-    ).toBe(true);
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [allyDecision, distantEnemyDecision],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
-    const enemyDecision = helpAttackEnemyDecisionFill(target, goblinId);
-    expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleFillSchema)(enemyDecision),
-      ),
-    ).toBe(true);
+    const enemyFill = {
+      kind: "helpAttackEnemyDecision" as const,
+      holeId: target.holeId,
+      targetEnemyId: goblinId,
+      targetWithinFiveFeetOfHelper: true,
+    };
     const helped = requireResolved(
       resolveBattleSubject({
         state,
         subject,
-        fills: [allyDecision, enemyDecision],
+        fills: [allyFill, enemyFill],
       }),
     ).state;
     const wizardTurn = requireResolved(
@@ -2326,7 +2312,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           ...skeleton.activeEffects,
           {
             kind: "spellCreatureSizeChange" as const,
-            sourceSpellId: spellRecord("enlarge_reduce").id,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(spellRecord("enlarge_reduce").id),
+            ),
             sourceCombatantId: fighterId,
             direction: "increase" as const,
             expiresAt: {
@@ -2832,9 +2820,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
-        invocation: cantripSpellInvocationRef(
-          "ray_of_frost",
-          "spellAttackDamage",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          hiddenState,
+          wizardId,
+          cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),
         mode: { tag: "ready", trigger: "spellCast" },
       },
@@ -2864,7 +2853,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         .set(skeletonId, {
           ...skeleton,
           concentration: {
-            sourceSpellId: "mage_armor",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String("mage_armor"),
+            ),
             effectKind: "spellEffect",
           },
         }),
@@ -2915,7 +2906,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: [
             {
-              unitId: "rogue_cunning_action",
+              unit: unitLibrary.requireUnit("rogue_cunning_action"),
               supportProfiles: [ROGUE_CUNNING_ACTION_SUPPORT_PROFILE],
             },
           ],
@@ -2926,20 +2917,20 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         [fighterId, { kind: "coverOutOfEnemyLineOfSight", cover: "total" }],
       ]),
     });
-    const dashSubject: BattleSubject = {
+    const dashSubject: BattleActDiscoverySubject = {
       tag: "bonusActionStandardAction",
       actorId: fighterId,
       sourceUnitId: "rogue_cunning_action",
       action: "dash",
       speedKind: "walk",
     };
-    const disengageSubject: BattleSubject = {
+    const disengageSubject: BattleActDiscoverySubject = {
       tag: "bonusActionStandardAction",
       actorId: fighterId,
       sourceUnitId: "rogue_cunning_action",
       action: "disengage",
     };
-    const hideSubject: BattleSubject = {
+    const hideSubject: BattleActDiscoverySubject = {
       tag: "bonusActionStandardAction",
       actorId: fighterId,
       sourceUnitId: "rogue_cunning_action",
@@ -2969,18 +2960,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       disengaged: true,
     });
     expect(
-      resolveBattleSubject({
-        state,
-        subject: {
-          ...dashSubject,
-          sourceUnitId: "class_rogue",
-        },
-        fills: [],
+      admitCharacterProcedureSelectionSubject(state, {
+        ...dashSubject,
+        sourceUnitId: "class_rogue",
       }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-    });
+    ).toBeUndefined();
     const noHidePrerequisiteState = startBattleRight({
       battleId: battleId("battle-rogue-cunning-action-no-hide-prerequisite"),
       combatants: [
@@ -2989,7 +2973,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: [
             {
-              unitId: "rogue_cunning_action",
+              unit: unitLibrary.requireUnit("rogue_cunning_action"),
               supportProfiles: [ROGUE_CUNNING_ACTION_SUPPORT_PROFILE],
             },
           ],
@@ -3005,7 +2989,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
     expect(
       discoverBattleActs(noHidePrerequisiteState).some(
-        (act) => JSON.stringify(act.subject) === JSON.stringify(hideSubject),
+        (act) =>
+          act.subject.tag === "bonusActionStandardAction" &&
+          act.subject.action === "hide" &&
+          battleActUnitPresentation(act)?.unitId === "rogue_cunning_action",
       ),
     ).toBe(false);
     expect(

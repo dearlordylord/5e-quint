@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 // RAW trace:
@@ -37,7 +39,6 @@ import {
   activeSelfTransformationModeEffect,
   battleCreatureCanBreatheUnderwater,
   discoverBattleActs,
-  resolveBattleSubject,
   SELF_TRANSFORMATION_MODE_KINDS,
   snapshotBattle,
   type BattleResolutionResult,
@@ -257,8 +258,7 @@ describe("Self-transformation mode lifecycle MBT parity", () => {
       effect: {
         kind: "damage",
         damage: {
-          kind: "authoredReplacement",
-          sourceUnitId: alterSelfUnitId,
+          kind: "procedureReplacement",
           dice: 1,
           dieSize: 6,
           damageType: "slashing",
@@ -319,7 +319,7 @@ function castSelfTransformationMode(
     spellId: alterSelfUnitId,
     slotLevel: 2,
   });
-  expect(act.subject.invocation).toMatchObject({
+  expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
     spellId: alterSelfUnitId,
     slotLevel: 2,
@@ -481,8 +481,9 @@ function selfTransformationProjection(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
     casterConcentrating:
-      caster.concentration?.effectKind === "spellEffect" &&
-      caster.concentration.sourceSpellId === alterSelfUnitId,
+      activeEffect !== undefined &&
+      caster.concentration?.sourceProcedureRef ===
+        activeEffect.sourceProcedureRef,
     activeMode: activeEffect?.mode ?? "none",
     waterBreathing: battleCreatureCanBreatheUnderwater(caster),
     walkSpeedFeet: Number(casterSnapshot.movement.speedFeet),

@@ -25,6 +25,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -183,7 +184,6 @@ function dragonsBreathInitialSpellProjection(
         damageTypeChoices: damageTypeChoice.options,
         activeEffect: {
           kind: "dragonsBreath",
-          sourceSpellId: spell.id,
           sourceCombatantId: actorId,
           originalSlotLevel: slotLevel,
           expiresAt: {
@@ -198,7 +198,7 @@ function dragonsBreathInitialSpellProjection(
 function discoverDragonsBreathInitialCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DragonsBreathInitialInvocation,
+  invocation: BattleExecutableSpellInvocation<DragonsBreathInitialInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -208,6 +208,7 @@ function discoverDragonsBreathInitialCastAct(
           subject: {
             tag: "bonusActionSpell" as const,
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: dragonsBreathInitialInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
@@ -348,6 +349,7 @@ function resolveDragonsBreathInitial(
     input.fillSet.damageTypeChoice.value,
     spellSaveDc,
     input.invocation,
+    input.input.subject.procedureRef,
   );
   return spendSpellCastResources({
     state: effected,

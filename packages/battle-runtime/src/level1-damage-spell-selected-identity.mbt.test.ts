@@ -1,3 +1,5 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity chromatic_orb doResolveChromaticOrbDuplicateDamageLeap
@@ -22,12 +24,18 @@ import {
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
+import {
+  CHROMATIC_ORB_DAMAGE_TYPES,
+  CHROMATIC_ORB_LEAP_RANGE_FEET,
+} from "./battle-reducer/domain-constants.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleId,
   battleObjectId,
@@ -36,7 +44,6 @@ import {
   discoverBattleActs,
   initiativeScore,
   objectInvisibleBenefitDenied,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -44,19 +51,15 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleObjectDamageDisposition,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type SpellInvocationRef,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import {
-  CHROMATIC_ORB_DAMAGE_TYPES,
-  CHROMATIC_ORB_LEAP_RANGE_FEET,
-} from "./battle-reducer/domain-constants.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
@@ -688,7 +691,7 @@ function resolveChromaticOrbDuplicateDamageLeap(
   assertSinglePrimaryTargetChoiceProfile(primaryTarget, "Chromatic Orb");
   const primaryTargetChoice = spellTargetFill(
     primaryTarget,
-    "chromatic_orb",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const primaryAttack = requireResultHole(
@@ -731,7 +734,7 @@ function resolveChromaticOrbDuplicateDamageLeap(
   assertChromaticOrbLeapTargetProfile(leapTarget);
   const leapTargetChoice = spellLeapTargetFill(
     leapTarget,
-    "chromatic_orb",
+    act.subject.procedureRef,
     primaryTargetId,
     secondaryTargetId,
   );
@@ -796,7 +799,11 @@ function resolvePoisonSpraySpellAttackDamage(
   const act = actionSpellAct(state, "poison_spray");
   const target = requireHole(act.initialHoles, "targetChoice");
   assertSinglePrimaryTargetChoiceProfile(target, "Poison Spray");
-  const targetChoice = spellTargetFill(target, "poison_spray", primaryTargetId);
+  const targetChoice = spellTargetFill(
+    target,
+    act.subject.procedureRef,
+    primaryTargetId,
+  );
   const attack = requireResultHole(
     resolveBattleSubject({
       state,
@@ -834,7 +841,7 @@ function resolveRayOfSicknessSpellAttackDamageAndPoisoned(
   assertSinglePrimaryTargetChoiceProfile(target, "Ray of Sickness");
   const targetChoice = spellTargetFill(
     target,
-    "ray_of_sickness",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const attack = requireResultHole(
@@ -872,7 +879,11 @@ function resolveSacredFlameDexteritySavingThrowRadiantDamage(
   const act = actionSpellAct(state, "sacred_flame");
   const target = requireHole(act.initialHoles, "targetChoice");
   assertSinglePrimaryTargetChoiceProfile(target, "Sacred Flame");
-  const targetChoice = spellTargetFill(target, "sacred_flame", primaryTargetId);
+  const targetChoice = spellTargetFill(
+    target,
+    act.subject.procedureRef,
+    primaryTargetId,
+  );
   const savingThrow = requireResultHole(
     resolveBattleSubject({
       state,
@@ -913,7 +924,7 @@ function resolveSorcerousBurstSpellAttackDamage(
   const damageTypeChoice = damageTypeChoiceFill(damageType, "thunder");
   const targetChoice = spellTargetFill(
     target,
-    "sorcerous_burst",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const attack = requireResultHole(
@@ -958,6 +969,7 @@ function resolveStarryWispObjectSpellAttackDamageAndDimLight(
   assertStarryWispObjectTargetProfile(objectTarget);
   const objectChoice = starryWispObjectTargetFill(
     objectTarget,
+    act.subject.procedureRef,
     starryWispObjectId,
     { kind: "hitPoints", hitPoints: starryWispObjectHitPoints },
   );
@@ -1004,7 +1016,7 @@ function resolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadva
   assertSinglePrimaryTargetChoiceProfile(target, "Vicious Mockery");
   const targetChoice = spellTargetFill(
     target,
-    "vicious_mockery",
+    act.subject.procedureRef,
     primaryTargetId,
   );
   const savingThrow = requireResultHole(
@@ -1043,7 +1055,11 @@ function resolveIceKnifeAttackAndBurstSavingThrows(
   const act = actionSpellAct(state, "ice_knife");
   const target = requireHole(act.initialHoles, "targetChoice");
   assertSinglePrimaryTargetChoiceProfile(target, "Ice Knife");
-  const targetChoice = spellTargetFill(target, "ice_knife", primaryTargetId);
+  const targetChoice = spellTargetFill(
+    target,
+    act.subject.procedureRef,
+    primaryTargetId,
+  );
   const attack = requireResultHole(
     resolveBattleSubject({
       state,
@@ -1229,7 +1245,7 @@ function actionSpellAct(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       isExpectedLevel1DamageSpellInvocation(
-        candidate.subject.invocation,
+        battleActSpellPresentation(candidate)?.invocation,
         spellId,
       ),
   );
@@ -1240,11 +1256,11 @@ function actionSpellAct(
 }
 
 function isExpectedLevel1DamageSpellInvocation(
-  invocation: ActionSpellAct["subject"]["invocation"],
+  invocation: SpellInvocationRef | undefined,
   spellId: Level1DamageSpellUnitId,
 ): boolean {
   const profile = level1DamageSpellInvocationProfiles[spellId];
-  if (invocation.spellId !== spellId) {
+  if (invocation === undefined || invocation.spellId !== spellId) {
     return false;
   }
   if (
@@ -1264,7 +1280,7 @@ function isExpectedLevel1DamageSpellInvocation(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Level1DamageSpellUnitId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -1276,7 +1292,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ],
   };
@@ -1284,7 +1300,7 @@ function spellTargetFill(
 
 function spellLeapTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: Level1DamageSpellUnitId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   previousTargetId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -1297,7 +1313,7 @@ function spellLeapTargetFill(
         kind: "spellLeapTargetWithinRange",
         previousTargetId,
         targetId,
-        spellId,
+        sourceProcedureRef,
         rangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
       },
     ],
@@ -1306,6 +1322,7 @@ function spellLeapTargetFill(
 
 function starryWispObjectTargetFill(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   objectId: ObjectTargetChoiceFill["value"],
   damageDisposition: BattleObjectDamageDisposition,
 ): ObjectTargetChoiceFill {
@@ -1318,7 +1335,7 @@ function starryWispObjectTargetFill(
         kind: "spellObjectTarget",
         casterId,
         objectId,
-        spellId: "starry_wisp",
+        sourceProcedureRef,
         rangeFeet: movementFeet(starryWispRangeFeet),
         armorClass: starryWispObjectArmorClass,
         damageDisposition,
@@ -2023,7 +2040,7 @@ function assertStarryWispObjectResolution(
     result.state.lightEmitters.length !== 1 ||
     emitter === undefined ||
     emitter.kind !== "objectInvisibleRevealLightEmitter" ||
-    emitter.sourceSpellId !== "starry_wisp" ||
+    emitter.sourceProcedureRef !== "starry_wisp" ||
     emitter.sourceCombatantId !== casterId ||
     emitter.objectId !== starryWispObjectId ||
     emitter.emission.kind !== "dim" ||
@@ -2091,8 +2108,6 @@ function primaryTargetHasViciousMockeryNextAttackRollDisadvantage(
       ?.activeEffects.some(
         (effect) =>
           effect.kind === "nextAttackRollBySelf" &&
-          "sourceSpellId" in effect &&
-          effect.sourceSpellId === "vicious_mockery" &&
           effect.sourceCombatantId === casterId &&
           effect.mode === "disadvantage",
       ) === true

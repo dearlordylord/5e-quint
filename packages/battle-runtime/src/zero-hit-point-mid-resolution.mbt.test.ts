@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points:
@@ -38,6 +40,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
+  resolveBattleSubject,
   attackRollFill,
   cantripSpellInvocationRef,
   characterSeed,
@@ -57,7 +60,6 @@ import {
   battleId,
   battleReducerStartRouteEvent,
   discoverBattleActs,
-  resolveBattleSubject,
   spellId,
   type AvailableBattleAct,
   type BattleActiveEffect,
@@ -600,7 +602,9 @@ function battleWithConcentratingShieldOfFaithSource(): BattleState {
   const protectedTarget = requireCombatant(base, secondSkeletonId);
   const shieldOfFaithEffect = {
     kind: "spellArmorClassBonus",
-    sourceSpellId: spellId(shieldOfFaithUnitId),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spellId(shieldOfFaithUnitId)),
+    ),
     sourceCombatantId: skeletonId,
     bonus: 2,
     negatedSpellIds: [],
@@ -618,7 +622,9 @@ function battleWithConcentratingShieldOfFaithSource(): BattleState {
       .set(skeletonId, {
         ...source,
         concentration: {
-          sourceSpellId: spellId(shieldOfFaithUnitId),
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(spellId(shieldOfFaithUnitId)),
+          ),
           effectKind: "spellEffect",
         },
       })
@@ -639,7 +645,9 @@ function battleWithReadiedSpellConcentrationSource(): BattleState {
       .set(skeletonId, {
         ...source,
         concentration: {
-          sourceSpellId: spellId(shieldOfFaithUnitId),
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(spellId(shieldOfFaithUnitId)),
+          ),
           effectKind: "readiedSpell",
         },
       })
@@ -649,7 +657,10 @@ function battleWithReadiedSpellConcentrationSource(): BattleState {
           (effect) =>
             !(
               effect.kind === "spellArmorClassBonus" &&
-              effect.sourceSpellId === spellId(shieldOfFaithUnitId) &&
+              effect.sourceProcedureRef ===
+                battleProcedureExecutionRefForTest(
+                  String(shieldOfFaithUnitId),
+                ) &&
               effect.sourceCombatantId === skeletonId
             ),
         ),
@@ -720,7 +731,8 @@ function shieldOfFaithPresentOnProtectedTarget(state: BattleState): boolean {
   return requireCombatant(state, secondSkeletonId).activeEffects.some(
     (effect) =>
       effect.kind === "spellArmorClassBonus" &&
-      effect.sourceSpellId === spellId(shieldOfFaithUnitId) &&
+      effect.sourceProcedureRef ===
+        battleProcedureExecutionRefForTest(String(shieldOfFaithUnitId)) &&
       effect.sourceCombatantId === skeletonId,
   );
 }
@@ -732,8 +744,10 @@ function requireZeroHitPointSpellAttackAct(
     (candidate): candidate is ZeroHitPointSpellAttackAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === wizardId &&
-      candidate.subject.invocation.spellId === spellId(eldritchBlastUnitId) &&
-      candidate.subject.invocation.procedure === "spellAttackSequence",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        spellId(eldritchBlastUnitId) &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spellAttackSequence",
   );
   if (act === undefined) {
     throw new Error("Expected Eldritch Blast spell attack sequence act.");

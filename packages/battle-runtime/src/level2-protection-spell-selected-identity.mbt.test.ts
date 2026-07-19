@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH aid barkskin blur continual_flame enhance_ability enlarge_reduce magic_weapon mirror_image pass_without_trace warding_bond
 // UNIT-IDENTITY-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH aid doDiscoverAidHitPointBuff
 // UNIT-IDENTITY-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH barkskin doDiscoverBarkskinArmorClassFloor
@@ -268,7 +271,10 @@ function recordDiscoveredInvocation(
           slotLevel: 2,
         });
 
-  expect(act.subject).toMatchObject({
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject({
     tag: input.actionTag,
     actorId: spellCasterId,
     invocation: spellSlotInvocationRef(input.spellId, 2, input.procedure),
@@ -289,10 +295,17 @@ function resolveEnhanceAbilityHigherSlotPerTarget(): Level2ProtectionSpellSelect
     spellId: enhanceAbilityUnitId,
     slotLevel: 3,
   });
-  expect(act.subject).toMatchObject({
+  expect({
+    ...act.subject,
+    invocation: battleActSpellPresentation(act)?.invocation,
+  }).toMatchObject({
     tag: "actionSpell",
     actorId: spellCasterId,
-    invocation: spellSlotInvocationRef(enhanceAbilityUnitId, 3, "rollModifier"),
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      state,
+      spellCasterId,
+      spellSlotInvocationRef(enhanceAbilityUnitId, 3, "rollModifier"),
+    ),
     mode: { tag: "cast" },
   });
   const targetList = requireHole(act.initialHoles, "spellTargetList");
@@ -320,7 +333,9 @@ function resolveEnhanceAbilityHigherSlotPerTarget(): Level2ProtectionSpellSelect
   ).toContainEqual(
     expect.objectContaining({
       kind: "abilityCheckRollMode",
-      sourceSpellId: enhanceAbilityUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(enhanceAbilityUnitId),
+      ),
       ability: "dex",
     }),
   );
@@ -329,7 +344,9 @@ function resolveEnhanceAbilityHigherSlotPerTarget(): Level2ProtectionSpellSelect
   ).toContainEqual(
     expect.objectContaining({
       kind: "abilityCheckRollMode",
-      sourceSpellId: enhanceAbilityUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(enhanceAbilityUnitId),
+      ),
       ability: "wis",
     }),
   );

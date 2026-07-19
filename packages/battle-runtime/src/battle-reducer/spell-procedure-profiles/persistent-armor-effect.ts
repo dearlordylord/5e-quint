@@ -37,6 +37,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { armorOfShadowsSpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -122,7 +123,6 @@ function persistentArmorEffectShape(
     rangeFeet: movementFeet(5),
     activeEffect: {
       kind: "spellBaseArmorClass",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       base: operation.effect.formula.base,
       ability: "dex",
@@ -180,7 +180,7 @@ export function admitPersistentArmorEffectInvocationSpellAccess(
 function discoverPersistentArmorEffectCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: PersistentArmorInvocation,
+  invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
@@ -191,6 +191,7 @@ function discoverPersistentArmorEffectCastAct(
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: persistentArmorEffectInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -202,7 +203,7 @@ function discoverPersistentArmorEffectCastAct(
 }
 
 function persistentArmorEffectInvocationRef(
-  invocation: PersistentArmorInvocation,
+  invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
 ): SpellInvocationRef {
   return invocation.resource.tag === "none"
     ? armorOfShadowsSpellInvocationRef(invocation.spell.id)
@@ -215,7 +216,7 @@ function persistentArmorEffectInvocationRef(
 }
 
 function persistentArmorEffectCastSummary(
-  invocation: PersistentArmorInvocation,
+  invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
 ): string {
   return invocation.resource.tag === "none"
     ? `Cast ${invocation.spell.name} using Armor of Shadows.`
@@ -226,7 +227,7 @@ function applyPersistentArmorEffect(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  invocation: PersistentArmorInvocation,
+  invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null || combatantWearingArmor(target)) {
@@ -242,10 +243,14 @@ function applyPersistentArmorEffect(
           (effect) =>
             !(
               effect.kind === invocation.activeEffect.kind &&
-              effect.sourceSpellId === invocation.spell.id
+              effect.sourceProcedureRef === invocation.sourceProcedureRef
             ),
         ),
-        { ...invocation.activeEffect, sourceCombatantId: actorId },
+        {
+          ...invocation.activeEffect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        },
       ],
     }),
   };

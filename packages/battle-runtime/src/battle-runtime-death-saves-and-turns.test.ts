@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   startBattleRight,
   requireResolved,
@@ -170,7 +171,9 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: targetCharacterId,
-              spellId: "spare_the_dying",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("spare_the_dying"),
+              ),
             },
           ]),
         ],
@@ -256,7 +259,9 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: deadCharacterId,
-              spellId: "spare_the_dying",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("spare_the_dying"),
+              ),
             },
           ]),
         ],
@@ -389,7 +394,8 @@ describe("battle runtime: death saves and turns", () => {
     const healingWordAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "healing_word",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "healing_word",
     );
     if (healingWordAct === undefined) {
       throw new Error("Expected Healing Word bonus action spell act.");
@@ -412,7 +418,9 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
         ],
@@ -430,7 +438,9 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              spellId: "healing_word",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("healing_word"),
+              ),
             },
           ]),
           damageRollFillWithGroups(healingWordRoll, [[1, 1]]),
@@ -1284,3 +1294,4 @@ describe("battle runtime: death saves and turns", () => {
     });
   });
 });
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

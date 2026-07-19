@@ -35,7 +35,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: defenseUnitId,
+        unit: unitLibrary.requireUnit(defenseUnitId),
         supportProfiles: [PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE],
       }),
     );
@@ -62,7 +62,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: archeryUnitId,
+        unit: unitLibrary.requireUnit(archeryUnitId),
         supportProfiles: [archerySupportProfile],
       }),
     );

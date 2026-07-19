@@ -29,7 +29,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
   battleLightExtraAttackDamageAbilityModifierSupportForUnit,
@@ -54,7 +54,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: twoWeaponFightingUnitId,
+        unit: unitLibrary.requireUnit(twoWeaponFightingUnitId),
         supportProfiles: [twoWeaponFightingSupportProfile()],
       }),
     );
@@ -532,7 +532,7 @@ function twoWeaponFightingBattleUnitRef(): BattleUnitRef {
   });
   expect(unitRef).toEqual(
     Either.right({
-      unitId: twoWeaponFightingUnitId,
+      unit: unitLibrary.requireUnit(twoWeaponFightingUnitId),
       supportProfiles: [twoWeaponFightingSupportProfile()],
     }),
   );

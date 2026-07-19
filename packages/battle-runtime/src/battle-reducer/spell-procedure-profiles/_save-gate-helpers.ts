@@ -393,14 +393,12 @@ function calmEmotionsSaveGateConditionImmunitySpell(
     activeEffects: [
       {
         kind: "conditionImmunity",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         condition: CALM_EMOTIONS_CONDITION_IMMUNITIES[0],
         expiresAt: { kind: "concentration", combatantId: actorId },
       },
       {
         kind: "conditionImmunity",
-        sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         condition: CALM_EMOTIONS_CONDITION_IMMUNITIES[1],
         expiresAt: { kind: "concentration", combatantId: actorId },
@@ -509,14 +507,12 @@ function abilityD20TestRollModeSaveGateSpell(
     rangeFeet: movementFeet(RAY_OF_ENFEEBLEMENT_RANGE_FEET),
     successEffect: {
       kind: "nextAttackRollBySelf",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       mode: "disadvantage",
       expiresAt: { kind: "startOfTurn", combatantId: actorId },
     },
     failedSaveEffect: {
       kind: "abilityD20TestRollModeEndTurnSave",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       ability: "str",
       mode: "disadvantage",
@@ -529,7 +525,6 @@ function abilityD20TestRollModeSaveGateSpell(
     },
     failedSaveDamagePenaltyEffect: {
       kind: "sourceDamageRollPenalty",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       amount: { dice: 1, dieSize: 8 },
       expiresAt: {
@@ -659,7 +654,6 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
     },
     effect: {
       kind: "faerieFireOutline",
-      sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       expiresAt: { kind: "concentration", combatantId: actorId },
     },
@@ -868,7 +862,10 @@ function paralyzedTargetListSaveGateConditionSpell(input: {
     targetSelection === null ||
     targetSelection.mode !== "choose_up_to" ||
     targetSelection.count === undefined ||
-    !matchesOptionalCreatureTypeFilter(targetSelection, input.targetCreatureTypes) ||
+    !matchesOptionalCreatureTypeFilter(
+      targetSelection,
+      input.targetCreatureTypes,
+    ) ||
     failedEffect?.kind !== "apply_condition" ||
     failedEffect.condition !== HOLD_PERSON_FAILED_SAVE_CONDITION ||
     repeatSave === undefined ||
@@ -1488,7 +1485,9 @@ export function supportedSaveGateFailedSaveEffects(
     return null;
   }
   const additionalDamageComponents = remainingEffects.filter(
-    (component): component is Extract<
+    (
+      component,
+    ): component is Extract<
       SaveGateFailureEffect,
       { readonly kind: "damage" }
     > => component.kind === "damage",
@@ -1671,10 +1670,7 @@ function chosenAbilitySaveDisadvantageChoices(
     return null;
   }
   const choices = filter.value.options;
-  if (
-    choices.length === 0 ||
-    choices.some((choice) => !isAbility(choice))
-  ) {
+  if (choices.length === 0 || choices.some((choice) => !isAbility(choice))) {
     return null;
   }
   return choices as readonly [Ability, ...Ability[]];

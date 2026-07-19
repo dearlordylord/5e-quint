@@ -1,4 +1,8 @@
 import {
+  admitCharacterProcedureSelectionSubject,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
+import {
   startBattleRight,
   requireResolved,
   sneakAttackUnitRefs,
@@ -762,22 +766,20 @@ describe("battle runtime: Sneak Attack", () => {
     });
 
     const discoveredUnitIds = discoverBattleActs(state).flatMap((act) =>
-      act.subject.tag === "unitFeature" ? [act.subject.unitId] : [],
+      act.subject.tag === "unitFeature"
+        ? [battleActUnitPresentation(act)?.unitId]
+        : [],
     );
     expect(discoveredUnitIds).toEqual([]);
 
     for (const [unitId] of oldClassRiders) {
       expect(
-        resolveBattleSubject({
-          state,
-          subject: {
-            tag: "unitFeature",
-            actorId: fighterId,
-            unitId,
-          },
-          fills: [],
+        admitCharacterProcedureSelectionSubject(state, {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId,
         }),
-      ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+      ).toBeUndefined();
     }
   });
 });

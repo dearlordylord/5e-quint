@@ -1,3 +1,5 @@
+
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT see_invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-see-invisible-observer-sight
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
@@ -50,7 +52,11 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
     });
 
     expect(act.initialHoles).toEqual([]);
-    expect(act.subject.invocation).toMatchObject({
+    const presentation = battleActSpellPresentation(act);
+    if (presentation === undefined) {
+      throw new Error("Expected See Invisibility spell presentation.");
+    }
+    expect(presentation.invocation).toMatchObject({
       tag: "spellSlot",
       spellId: seeInvisibilityUnitId,
       slotLevel: 2,
@@ -71,7 +77,7 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
         activeEffects: [
           expect.objectContaining({
             kind: "seeInvisibleAndEthereal",
-            sourceSpellId: seeInvisibilityUnitId,
+            sourceProcedureRef: presentation.procedureRef,
             sourceCombatantId: spellCasterId,
             expiresAt: {
               kind: "duration",

@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay attack-spell-shape fire_bolt chill_touch guiding_bolt inflict_wounds shocking_grasp
 // UNIT-IDENTITY-REPLAY: attack-spell-shape fire_bolt doFireBoltHit
 // UNIT-IDENTITY-REPLAY: attack-spell-shape chill_touch doChillTouchHitPointRegainPrevention
@@ -29,7 +31,6 @@ import {
   battleReducerStartRouteEvent,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -41,7 +42,8 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleSubject,
+  type BattleProcedureExecutionRef,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -89,7 +91,10 @@ const ATTACK_SPELL_SHAPE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 } as const;
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 
 const casterId = combatantId("attack-spell-shape-caster");
@@ -369,7 +374,7 @@ function resolveSpellAttackHitRoute(input: {
 }): readonly BattleReducerRouteEvent[] {
   const act = actionSpellAct(input.state, input.spellId);
   const target = requireTypedHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const awaitingAttack = requireNeedsHoles(
     resolveBattleSubject({
       state: input.state,
@@ -418,7 +423,7 @@ function resolveSaveDamageRoute(input: {
 }): readonly BattleReducerRouteEvent[] {
   const act = actionSpellAct(input.state, input.spellId);
   const target = requireTypedHole(act.initialHoles, "targetChoice");
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const awaitingSave = requireNeedsHoles(
     resolveBattleSubject({
       state: input.state,
@@ -652,7 +657,7 @@ function resolveSpellAttackHit(input: {
     }),
     "targetChoice",
   );
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const attack = requireResultHole(
     resolveBattleSubject({
       state: input.state,
@@ -699,7 +704,7 @@ function resolveSaveDamageSpell(input: {
     }),
     "targetChoice",
   );
-  const targetFill = spellTargetFill(target, input.spellId);
+  const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const save = requireResultHole(
     resolveBattleSubject({
       state: input.state,
@@ -834,7 +839,7 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === spellId,
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -844,7 +849,7 @@ function actionSpellAct(
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: AttackSpellShapeSpellId,
+  procedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -855,7 +860,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef: procedureRef,
       },
     ],
   };
@@ -978,7 +983,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "hitPointRegainPrevented" &&
-        effect.sourceSpellId === "chill_touch",
+        effect.sourceCombatantId === casterId,
     )
   ) {
     return "hitPointRegainPrevented";
@@ -987,8 +992,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "nextAttackRollAgainstSelf" &&
-        "sourceSpellId" in effect &&
-        effect.sourceSpellId === "guiding_bolt",
+        effect.sourceCombatantId === casterId,
     )
   ) {
     return "nextAttackRollAgainstSelf";
@@ -997,8 +1001,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "opportunityAttackDenied" &&
-        "sourceSpellId" in effect &&
-        effect.sourceSpellId === "shocking_grasp",
+        effect.sourceCombatantId === casterId,
     )
   ) {
     return "opportunityAttackDenied";
@@ -1018,18 +1021,10 @@ function activeEffectCount(
     target?.activeEffects.filter(
       (effect): effect is BattleActiveEffect & { readonly kind: typeof kind } =>
         effect.kind === kind &&
-        "sourceSpellId" in effect &&
-        effect.sourceSpellId === spellIdForEffectKind(kind),
+        "sourceProcedureRef" in effect &&
+        effect.sourceCombatantId === casterId,
     ).length ?? 0
   );
-}
-
-function spellIdForEffectKind(
-  kind: Exclude<AttackSpellShapeActiveEffectKind, "none">,
-): AttackSpellShapeSpellId {
-  if (kind === "hitPointRegainPrevented") return "chill_touch";
-  if (kind === "nextAttackRollAgainstSelf") return "guiding_bolt";
-  return "shocking_grasp";
 }
 
 function level1SlotsRemaining(

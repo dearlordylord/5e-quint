@@ -74,7 +74,7 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unitId: speciesHalflingNaturallyStealthyUnitId,
+        unit: unitLibrary.requireUnit(speciesHalflingNaturallyStealthyUnitId),
         supportProfiles: [expectedSupport],
       }),
     );

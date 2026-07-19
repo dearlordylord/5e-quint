@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode
@@ -36,11 +38,10 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
-  resolveBattleSubject,
   startBattle,
   type BattleActiveEffect,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
@@ -52,6 +53,7 @@ import {
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission-test-support.ts";
 import {
+  resolveBattleSubject,
   attackRollFill,
   characterSeed,
   damageRollFillWithGroups,
@@ -352,7 +354,9 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
   }
   const poisonedEffect = {
     kind: "spellConditionEndTurnSave",
-    sourceSpellId: "synthetic_poison_condition_save",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("synthetic_poison_condition_save"),
+    ),
     sourceCombatantId: wizardId,
     condition: "poisoned",
     conditionHadNonSpellSource: false,
@@ -755,7 +759,8 @@ function requirePassiveDamageAdjustmentRoute(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === wizardId &&
-      candidate.subject.invocation.spellId === "ray_of_sickness",
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "ray_of_sickness",
   );
   if (act === undefined || act.subject.tag !== "actionSpell") {
     throw new Error("Expected public Ray of Sickness act for damage route.");

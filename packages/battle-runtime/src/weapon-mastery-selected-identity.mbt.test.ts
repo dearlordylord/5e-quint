@@ -14,7 +14,10 @@
 // - UBIQUITOUS_LANGUAGE.md: Mastery Property, Weapon Mastery, Attack Roll,
 //   Saving Throw, Condition, Rider, and Hit Points.
 import { it } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  characterAttackSubjectForTest,
+} from "./battle-runtime-test-support.ts";
 
 import {
   defineDriver,
@@ -49,7 +52,6 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -58,7 +60,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -766,7 +768,7 @@ function weaponMasteryAttackerInit(
       characterId: characterId(`character:${unitId}`),
       characterUnitRefs: [
         {
-          unitId,
+          unit: unitLibrary.requireUnit(unitId),
           supportProfiles: [scenario.supportProfile],
         },
       ],

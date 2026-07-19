@@ -1,3 +1,5 @@
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
+import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT47 orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT53 orc_adrenaline_rush
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.zero-hit-point-replacement
@@ -37,6 +39,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
   bonusActionDashTemporaryHitPointsProfileForUnit,
@@ -47,7 +50,6 @@ import {
   resolveBattleSubject,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
-import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
 describe("QMBT47 deterministic Relentless Endurance admission", () => {
   test("orc_relentless_endurance is admitted as zero-Hit-Point replacement", () => {
@@ -61,7 +63,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: orcRelentlessEnduranceUnitId,
+        unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
         supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
       }),
     );
@@ -139,7 +141,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       targetResources: [{ unit }],
       targetUnitRefs: [
         {
-          unitId: orcRelentlessEnduranceUnitId,
+          unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
           supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
         },
       ],
@@ -216,7 +218,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       targetResources: [{ unit }],
       targetUnitRefs: [
         {
-          unitId: orcRelentlessEnduranceUnitId,
+          unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
           supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
         },
       ],
@@ -414,7 +416,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
               tag: "battleUnitSupportProfileIssue",
               message: `Unsupported battle zero-Hit-Point replacement Unit hook: ${unit.id}.`,
             })
-          : Either.right({ unitId: unit.id, supportProfiles: [] }),
+          : Either.right({ unit, supportProfiles: [] }),
       );
     }
   });
@@ -432,7 +434,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unitId: orcAdrenalineRushUnitId,
+        unit: unitLibrary.requireUnit(orcAdrenalineRushUnitId),
         supportProfiles: [adrenalineRushSupportProfile()],
       }),
     );
@@ -514,18 +516,24 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
       discoverBattleActs(state).some(
         (act) =>
           act.subject.tag === "bonusActionStandardAction" &&
-          act.subject.sourceUnitId === orcAdrenalineRushUnitId,
+          battleActUnitPresentation(act)?.unitId === orcAdrenalineRushUnitId,
       ),
     ).toBe(false);
     expect(
       resolveBattleSubject({
         state,
-        subject: adrenalineRushDashSubject(),
+        subject: adrenalineRushDashSubject(
+          requireCharacterUnitProcedureRefForTest(
+            state,
+            spellCasterId,
+            orcAdrenalineRushUnitId,
+          ),
+        ),
         fills: [],
       }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "unsupportedActOption",
+      reason: "staleSubject",
     });
   });
 

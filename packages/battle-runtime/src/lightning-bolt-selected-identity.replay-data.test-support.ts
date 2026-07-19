@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 
 import {
   lightningBoltUnitId,
@@ -36,7 +37,10 @@ export const lightningBoltSelectedIdentityReplay = {
               spellId: lightningBoltUnitId,
               slotLevel: 3,
             });
-            expect(act.subject).toMatchObject({
+            expect({
+              ...act.subject,
+              invocation: battleActSpellPresentation(act)?.invocation,
+            }).toMatchObject({
               tag: "actionSpell",
               actorId: spellCasterId,
               invocation: spellSlotInvocationRef(

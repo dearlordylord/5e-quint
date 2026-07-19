@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   requireResolved,
@@ -42,7 +43,7 @@ import {
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import type {
   BattleState,
-  BattleSubject,
+  BattleActDiscoverySubject as BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -280,7 +281,9 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
     const penalty = requireHole(penaltyRequest, "rolledDice");
     const stalePenalty = sourceDamageRollPenaltyRollHole({
-      sourceSpellId: "ray_of_enfeeblement",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("ray_of_enfeeblement"),
+      ),
       sourceCombatantId: goblinId,
       affectedCombatantId: fighterId,
       damageRollHoleId: holeId("battle:test:offhand-stale-source-penalty"),
@@ -1299,7 +1302,9 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
     const penalty = requireHole(penaltyRequest, "rolledDice");
     const stalePenalty = sourceDamageRollPenaltyRollHole({
-      sourceSpellId: "ray_of_enfeeblement",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("ray_of_enfeeblement"),
+      ),
       sourceCombatantId: fighterId,
       affectedCombatantId: goblinId,
       damageRollHoleId: holeId("battle:test:oa-stale-source-penalty"),
@@ -1901,7 +1906,9 @@ function combatantWithSourceDamagePenalty(
         ...affected.activeEffects,
         {
           kind: "sourceDamageRollPenalty" as const,
-          sourceSpellId: "ray_of_enfeeblement",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("ray_of_enfeeblement"),
+          ),
           sourceCombatantId: sourceId,
           amount: { dice: 1 as const, dieSize: 8 as const },
           expiresAt: {

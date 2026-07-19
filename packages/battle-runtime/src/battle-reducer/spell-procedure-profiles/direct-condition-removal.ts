@@ -11,6 +11,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
@@ -138,7 +139,7 @@ function directConditionRemovalProjection(
 function discoverDirectConditionRemovalCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DirectConditionRemovalSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<DirectConditionRemovalSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
@@ -148,6 +149,7 @@ function discoverDirectConditionRemovalCastAct(
           subject: {
             tag: "bonusActionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: directConditionRemovalInvocationRef(invocation),
             mode: { tag: "cast" },
           },
@@ -279,7 +281,7 @@ function resolveDirectConditionRemoval(
 function directConditionRemovalSpellTargetSelection(input: {
   readonly input: BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: DirectConditionRemovalSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation<DirectConditionRemovalSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): DirectConditionRemovalSpellTargetSelection {
   if (input.fillSet.targetList !== undefined) {

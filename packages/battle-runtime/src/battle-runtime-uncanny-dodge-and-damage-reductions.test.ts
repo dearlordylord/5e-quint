@@ -1,3 +1,4 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   startBattleRight,
   testBattleCreatureStateWithConditions,
@@ -513,7 +514,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       combatants: new Map(base.combatants).set(fighterId, {
         ...fighter,
         concentration: {
-          sourceSpellId: "readied_acid_splash",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("readied_acid_splash"),
+          ),
           effectKind: "readiedSpell",
         },
       }),
@@ -558,7 +561,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       combatants: new Map(base.combatants).set(fighterId, {
         ...fighter,
         concentration: {
-          sourceSpellId: "readied_acid_splash",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String("readied_acid_splash"),
+          ),
           effectKind: "readiedSpell",
         },
       }),

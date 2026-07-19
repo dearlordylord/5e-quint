@@ -1,3 +1,4 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -44,7 +45,6 @@ import {
   battleObjectId,
   breakBattleConcentration,
   endTurn,
-  resolveBattleSubject,
   type BattleResolutionResult,
   type BattleState,
 } from "./index.ts";
@@ -177,8 +177,7 @@ describe("Heat Metal object-contact MBT parity", () => {
     expect(heatMetalProjection(repeated)).toMatchObject({
       bonusActionAvailable: false,
       repeatAvailable: false,
-      targetHp:
-        initialTargetHp - heatMetalCastDamage - heatMetalRepeatDamage,
+      targetHp: initialTargetHp - heatMetalCastDamage - heatMetalRepeatDamage,
     });
   });
 
@@ -194,21 +193,25 @@ describe("Heat Metal object-contact MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-heat-metal-object-contact.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createHeatMetalObjectContactDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: heatMetalStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-heat-metal-object-contact.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createHeatMetalObjectContactDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: heatMetalStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): HeatMetalRuntimeState {
@@ -351,10 +354,7 @@ function repeatHeatMetalDamage(
     resolveBattleSubject({
       state: state.battle,
       subject: act.subject,
-      fills: [
-        contactFill,
-        damageRollFillWithGroups(damageHole, [[2, 3]]),
-      ],
+      fills: [contactFill, damageRollFillWithGroups(damageHole, [[2, 3]])],
     }),
     "Expected Heat Metal repeat damage to resolve.",
   );
@@ -383,7 +383,6 @@ function heatMetalProjection(
   const effect = caster.activeEffects.find(
     (candidate): candidate is SpellObjectContactDamageActiveEffect =>
       candidate.kind === "spellObjectContactDamage" &&
-      candidate.sourceSpellId === heatMetalUnitId &&
       candidate.sourceCombatantId === spellCasterId &&
       candidate.objectId === heatMetalObjectId,
   );
@@ -405,7 +404,8 @@ function heatMetalProjection(
       }) !== undefined,
     objectContactEffectActive: effect !== undefined,
     casterConcentrating:
-      caster.concentration?.sourceSpellId === heatMetalUnitId &&
+      effect !== undefined &&
+      caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
     targetHp: Number(target.hp),
     lastResult: state.lastResult,
@@ -488,8 +488,7 @@ function heatMetalTurnRole(raw: unknown): HeatMetalTurnRole {
 
 function heatMetalLastResult(raw: unknown): HeatMetalLastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    HEAT_METAL_OBJECT_CONTACT_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = HEAT_METAL_OBJECT_CONTACT_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

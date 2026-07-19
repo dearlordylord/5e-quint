@@ -1,3 +1,5 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import type { BattleProcedureExecutionRef } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-03-INSECT-PLAGUE-AREA-HAZARD insect_plague
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-insect-plague-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
@@ -71,14 +73,16 @@ function insectPlagueSpellRecord(): SpellRecord {
   return unit as SpellRecord;
 }
 
-function insectPlagueDifficultTerrainFact(spell: SpellRecord) {
+function insectPlagueDifficultTerrainFact(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+) {
   return {
     kind: "areaDifficultTerrain" as const,
     sources: [
       {
         kind: "insectPlagueHazard" as const,
         sourceCombatantId: spellCasterId,
-        sourceSpellId: spell.id,
+        sourceProcedureRef,
         areaId: insectPlagueAreaId,
       },
     ],
@@ -136,7 +140,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("insect plague is admitted as a ten-minute point-origin Sphere hazard", () => {
     const { spell, act } = castInsectPlague();
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
@@ -171,17 +178,17 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   });
 
   test("cast records the active hazard and projects Lightly Obscured and Difficult Terrain facts", () => {
-    const { spell, cast, targetTurn } = castInsectPlague();
+    const { act, cast, targetTurn } = castInsectPlague();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
       concentration: {
-        sourceSpellId: insectPlagueUnitId,
+        sourceProcedureRef: act.subject.procedureRef,
         effectKind: "spellEffect",
       },
       activeEffects: [
         expect.objectContaining({
           kind: "insectPlagueAreaHazard",
-          sourceSpellId: insectPlagueUnitId,
+          sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: insectPlagueAreaId,
           radiusFeet: movementFeet(20),
@@ -199,7 +206,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     expect(battleObscurementZones(cast)).toEqual([
       expect.objectContaining({
         kind: "spellObscurementZone",
-        sourceSpellId: spell.id,
+        sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         obscurement: "lightlyObscured",
         area: {
@@ -233,7 +240,9 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         movementFill(moveHole, {
           movementCostFeet: 15,
           provokedOpportunityAttacks: [],
-          areaDifficultTerrain: insectPlagueDifficultTerrainFact(spell),
+          areaDifficultTerrain: insectPlagueDifficultTerrainFact(
+            act.subject.procedureRef,
+          ),
         }),
       ],
     });

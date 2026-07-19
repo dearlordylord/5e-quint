@@ -5,6 +5,7 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  battleActSpellPresentation,
   battleId,
   characterId,
   combatantId,
@@ -2621,14 +2622,21 @@ describe("MCP server route", () => {
       (act: {
         readonly subject: {
           readonly tag: string;
+          readonly procedureRef?: string;
+        };
+        readonly presentation: {
+          readonly kind: string;
           readonly invocation?: { readonly spellId?: string };
         };
       }) =>
         act.subject.tag === "findFamiliarTouchSpell" &&
-        act.subject.invocation?.spellId === "cure_wounds",
+        act.presentation.kind === "spell" &&
+        act.presentation.invocation?.spellId === "cure_wounds",
     );
     expect(deliveryAct).toBeDefined();
     if (deliveryAct === undefined) return;
+    expect(deliveryAct.subject.procedureRef).toEqual(expect.any(String));
+    if (deliveryAct.subject.procedureRef === undefined) return;
     const connectionHole = deliveryAct.initialHoles.find(
       (hole: { readonly kind: string }) =>
         hole.kind === "findFamiliarConnection",
@@ -2678,7 +2686,7 @@ describe("MCP server route", () => {
               ownerId: "wizard",
               familiarId: "wizard-familiar",
               targetId: "goblin",
-              spellId: "cure_wounds",
+              sourceProcedureRef: deliveryAct.subject.procedureRef,
             },
           ],
         },
@@ -4733,10 +4741,13 @@ describe("MCP server route", () => {
     );
     const act = discovered.snapshot.acts.find(
       (candidate: {
-        readonly subject?: {
+        readonly presentation?: {
+          readonly kind?: string;
           readonly invocation?: { readonly spellId?: string };
         };
-      }) => candidate.subject?.invocation?.spellId === "acid_splash",
+      }) =>
+        candidate.presentation?.kind === "spell" &&
+        candidate.presentation.invocation?.spellId === "acid_splash",
     );
     if (act === undefined) {
       throw new Error("Expected Acid Splash battle act.");
@@ -4846,10 +4857,13 @@ describe("MCP server route", () => {
     );
     const act = discovered.snapshot.acts.find(
       (candidate: {
-        readonly subject?: {
+        readonly presentation?: {
+          readonly kind?: string;
           readonly invocation?: { readonly spellId?: string };
         };
-      }) => candidate.subject?.invocation?.spellId === "fire_bolt",
+      }) =>
+        candidate.presentation?.kind === "spell" &&
+        candidate.presentation.invocation?.spellId === "fire_bolt",
     );
     if (act === undefined) {
       throw new Error("Expected Fire Bolt battle act.");
@@ -4873,7 +4887,7 @@ describe("MCP server route", () => {
               kind: "spellObjectTarget",
               casterId: "fighter",
               objectId: "dry-training-dummy",
-              spellId: "fire_bolt",
+              sourceProcedureRef: act.subject.procedureRef,
               rangeFeet: 120,
               armorClass: 13,
               damageDisposition: { kind: "hitPoints", hitPoints: 8 },
@@ -4882,7 +4896,7 @@ describe("MCP server route", () => {
               kind: "spellObjectIgnition",
               casterId: "fighter",
               objectId: "dry-training-dummy",
-              spellId: "fire_bolt",
+              sourceProcedureRef: act.subject.procedureRef,
               disposition: { kind: "flammableUnattended" },
             },
           ],
@@ -4943,7 +4957,7 @@ describe("MCP server route", () => {
           kind: "startsBurning",
           objectId: "dry-training-dummy",
           sourceCombatantId: "fighter",
-          sourceSpellId: "fire_bolt",
+          sourceProcedureRef: "fire_bolt",
         },
       ],
     });
@@ -5027,10 +5041,13 @@ describe("MCP server route", () => {
     );
     const act = discovered.snapshot.acts.find(
       (candidate: {
-        readonly subject?: {
+        readonly presentation?: {
+          readonly kind?: string;
           readonly invocation?: { readonly spellId?: string };
         };
-      }) => candidate.subject?.invocation?.spellId === "sorcerous_burst",
+      }) =>
+        candidate.presentation?.kind === "spell" &&
+        candidate.presentation.invocation?.spellId === "sorcerous_burst",
     );
     if (act === undefined) {
       throw new Error("Expected Sorcerous Burst battle act.");
@@ -5088,7 +5105,7 @@ describe("MCP server route", () => {
               kind: "spellTarget",
               casterId: "fighter",
               targetId: "goblin",
-              spellId: "sorcerous_burst",
+              sourceProcedureRef: act.subject.procedureRef,
             },
           ],
         },
@@ -5240,10 +5257,13 @@ describe("MCP server route", () => {
     );
     const act = discovered.snapshot.acts.find(
       (candidate: {
-        readonly subject?: {
+        readonly presentation?: {
+          readonly kind?: string;
           readonly invocation?: { readonly spellId?: string };
         };
-      }) => candidate.subject?.invocation?.spellId === "spare_the_dying",
+      }) =>
+        candidate.presentation?.kind === "spell" &&
+        candidate.presentation.invocation?.spellId === "spare_the_dying",
     );
     if (act === undefined) {
       throw new Error("Expected Spare the Dying battle act.");
@@ -5268,7 +5288,7 @@ describe("MCP server route", () => {
               kind: "spellTarget",
               casterId: "fighter",
               targetId: "dying-ally",
-              spellId: "spare_the_dying",
+              sourceProcedureRef: act.subject.procedureRef,
             },
           ],
         },
@@ -5343,10 +5363,13 @@ describe("MCP server route", () => {
     );
     const act = discovered.snapshot.acts.find(
       (candidate: {
-        readonly subject?: {
+        readonly presentation?: {
+          readonly kind?: string;
           readonly invocation?: { readonly spellId?: string };
         };
-      }) => candidate.subject?.invocation?.spellId === "starry_wisp",
+      }) =>
+        candidate.presentation?.kind === "spell" &&
+        candidate.presentation.invocation?.spellId === "starry_wisp",
     );
     if (act === undefined) {
       throw new Error("Expected Starry Wisp battle act.");
@@ -5370,7 +5393,7 @@ describe("MCP server route", () => {
               kind: "spellObjectTarget",
               casterId: "fighter",
               objectId: "training-crystal",
-              spellId: "starry_wisp",
+              sourceProcedureRef: act.subject.procedureRef,
               rangeFeet: 60,
               armorClass: 13,
               damageDisposition: { kind: "hitPoints", hitPoints: 5 },
@@ -5477,7 +5500,7 @@ describe("MCP server route", () => {
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.actorId === fighterId &&
-        act.subject.invocation.spellId === "ray_of_frost",
+        battleActSpellPresentation(act)?.invocation.spellId === "ray_of_frost",
     );
     if (rayOfFrostAct?.subject.tag !== "actionSpell") {
       throw new Error("Expected Fighter Ray of Frost act.");
@@ -5606,7 +5629,7 @@ describe("MCP server route", () => {
               kind: "spellTarget",
               casterId: "fighter",
               targetId: "goblin",
-              spellId: "ray_of_frost",
+              sourceProcedureRef: releaseChoice.subject.procedureRef,
             },
           ],
         },
@@ -5808,7 +5831,7 @@ function characterUnitRef(
     throw new Error(`Expected character combatant: ${combatantId}`);
   }
   return combatant.origin.characterUnitRefs.find(
-    (ref) => ref.unitId === unitId,
+    (ref) => ref.unit.id === unitId,
   );
 }
 

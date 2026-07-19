@@ -39,6 +39,7 @@ import {
   maybeOpenInterruptWindow,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -58,7 +59,7 @@ import {
   validateSpellHealingFill,
 } from "../spells-damage-fills.ts";
 import {
-  spellSubjectTagForInvocation,
+  spellCastSelectionSubject,
   targetListSpellUsesTargetListHole,
 } from "../spells-discovery.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -264,7 +265,7 @@ function supportedHitPointRestorationAmountExpr(
 function discoverDirectHitPointRestorationCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DirectHitPointRestorationInvocation,
+  invocation: BattleExecutableSpellInvocation<DirectHitPointRestorationInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
@@ -274,12 +275,11 @@ function discoverDirectHitPointRestorationCastAct(
       ? []
       : [
           {
-            subject: {
-              tag: spellSubjectTagForInvocation(invocation),
+            subject: spellCastSelectionSubject(
               actorId,
-              invocation: directHitPointRestorationInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
+              invocation,
+              directHitPointRestorationInvocationRef(invocation),
+            ),
             label: invocation.spell.name,
             summary: directHitPointRestorationCastSummary(invocation),
             initialHoles: [targetHole],

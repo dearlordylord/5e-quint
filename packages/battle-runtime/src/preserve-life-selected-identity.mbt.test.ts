@@ -1,3 +1,5 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-healing-pool
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-04 cleric_preserve_life
@@ -325,7 +327,7 @@ function preserveLifeAct(state: BattleState): AvailableBattleAct {
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&
-      candidate.subject.unitId === clericPreserveLifeUnitId,
+      battleActUnitPresentation(candidate)?.unitId === clericPreserveLifeUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Preserve Life act.");
@@ -379,7 +381,9 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: spellCasterId,
         targetId: allocation.targetId,
-        unitId: clericPreserveLifeUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(clericPreserveLifeUnitId),
+        ),
         rangeFeet: movementFeet(30),
       })),
   };

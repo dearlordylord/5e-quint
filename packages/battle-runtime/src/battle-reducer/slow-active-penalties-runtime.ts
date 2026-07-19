@@ -12,6 +12,7 @@ import type {
   ActionSpellBattleResolutionInput,
   BattleActiveEffect,
   BattleCreatureState,
+  BattleExecutableSpellInvocation,
   BattleFill,
   BattleResolutionResult,
   BattleSlowSomaticSpellFailureOutcomeHole,
@@ -19,7 +20,6 @@ import type {
   BattleTurnResources,
   BonusActionDashSpellBattleResolutionInput,
   BonusActionSpellBattleResolutionInput,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { spellId, type CombatantId } from "../identity.ts";
 import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./domain-constants.ts";
@@ -62,10 +62,12 @@ export function slowActionOrBonusActionTurnResources(
 export function slowSomaticSpellFailureOutcomeHole(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleSlowSomaticSpellFailureOutcomeHole | null {
-  const effects = slowActivePenaltiesEffects(input.state.combatants.get(input.actorId));
+  const effects = slowActivePenaltiesEffects(
+    input.state.combatants.get(input.actorId),
+  );
   if (
     effects.length === 0 ||
     !spellInvocationRequiresEffectiveSomaticComponent(
@@ -82,7 +84,7 @@ export function slowSomaticSpellFailureOutcomeHole(input: {
   const key = [
     "battle:slow-somatic-spell-failure",
     input.actorId,
-    input.invocation.spell.id,
+    input.invocation.sourceProcedureRef,
   ]
     .map(String)
     .join(":");
@@ -95,7 +97,7 @@ export function slowSomaticSpellFailureOutcomeHole(input: {
     spellId: spellId(input.invocation.spell.id),
     failurePercent: SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
     activeEffectSources: effects.map((effect) => ({
-      sourceSpellId: effect.sourceSpellId,
+      sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
     })),
   };
@@ -106,7 +108,7 @@ export function resolveSlowSomaticSpellFailure(input: {
   readonly castingState: BattleState;
   readonly subject: SlowSomaticSpellFailureSubject;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly fills: readonly BattleFill[];
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -176,7 +178,7 @@ function slowActivePenaltiesEffects(
 }
 
 function spellInvocationRequiresEffectiveSomaticComponent(input: {
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): boolean {
   if (

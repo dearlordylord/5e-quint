@@ -1,55 +1,60 @@
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
-import {
-  startBattleRight,
-  requireResolved,
-  fighterAttackSubject,
-  attackInitialTargetHole,
-  attackRollHoleAfterTarget,
-  attackDamageHoleAfterHit,
-  requireHole,
-  findHole,
-  findAct,
-  targetFill,
-  attackRollFill,
-  damageRollFillWithGroups,
-  attackDamageDispositionFill,
-  characterSeed,
-  statBlockCreatureInit,
-  skeletonCreatureInit,
-  rageResource,
-  wizardSpellcasting,
-  spellRecord,
-  fighterId,
-  goblinId,
-  skeletonId,
-  applyBattleHitPointDamage,
-  BattleHoleSchema,
-  battleId,
-  breakBattleConcentration,
-  cantripSpellInvocationRef,
-  difficultyClass,
-  discoverBattleActs,
-  Either,
-  elapsedTimeTicks,
-  endTurn,
-  holeId,
-  holeInstanceKey,
-  Hp,
-  movementFeet,
-  requiredAbilityCheckRollMode,
-  resolveBattleSubject,
-  Schema,
-  spellSlotInvocationRef,
-  tickDurationEffects,
-} from "./battle-runtime-test-support.ts";
+import { describe, expect, test } from "vitest";
 import type {
   ActiveOngoingFeatureOccurrence,
   BattleFill,
   BattleState,
   OngoingFeatureSourceKey,
 } from "./battle-runtime-test-support.ts";
-import { describe, expect, test } from "vitest";
+import {
+  applyBattleHitPointDamage,
+  attackDamageDispositionFill,
+  attackDamageHoleAfterHit,
+  attackInitialTargetHole,
+  attackRollFill,
+  attackRollHoleAfterTarget,
+  BattleHoleSchema,
+  battleId,
+  breakBattleConcentration,
+  cantripSpellInvocationRef,
+  characterSeed,
+  damageRollFillWithGroups,
+  difficultyClass,
+  discoverBattleActs,
+  Either,
+  elapsedTimeTicks,
+  endTurn,
+  fighterAttackSubject,
+  fighterId,
+  findAct,
+  findHole,
+  goblinId,
+  holeId,
+  holeInstanceKey,
+  Hp,
+  movementFeet,
+  rageResource,
+  requiredAbilityCheckRollMode,
+  requireHole,
+  requireResolved,
+  resolveBattleSubject,
+  Schema,
+  skeletonCreatureInit,
+  skeletonId,
+  spellRecord,
+  spellSlotInvocationRef,
+  startBattleRight,
+  statBlockCreatureInit,
+  targetFill,
+  tickDurationEffects,
+  wizardSpellcasting,
+} from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Hunter's Mark and Hex", () => {
   test("Hunter's Mark adds Force damage to attack-roll hits against the mark and transfers after the mark drops", () => {
@@ -80,7 +85,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const markAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hunters_mark",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
     );
     if (markAct === undefined) {
       throw new Error("Expected Hunter's Mark Bonus Action spell act.");
@@ -90,21 +96,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state,
         subject: markAct.subject,
-        fills: [
-          targetFill(markTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "hunters_mark",
-            },
-          ]),
-        ],
+        fills: [targetFill(markTarget, goblinId)],
       }),
     );
 
     expect(marked.state.combatants.get(fighterId)?.concentration).toEqual({
-      sourceSpellId: "hunters_mark",
+      sourceProcedureRef: battleActSpellPresentation(markAct)?.procedureRef,
       effectKind: "spellEffect",
     });
     expect(marked.state.combatants.get(fighterId)?.activeEffects).toEqual([
@@ -154,7 +151,9 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           kind: "spellTarget",
           casterId: fighterId,
           targetId: goblinId,
-          spellId: "magic_missile",
+          sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+            magicMissileTargetAllocation,
+          ),
         },
       ],
     };
@@ -202,16 +201,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: marked.state,
         subject: spellSubject,
-        fills: [
-          targetFill(spellTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "ray_of_frost",
-            },
-          ]),
-        ],
+        fills: [targetFill(spellTarget, goblinId)],
       }),
       "attackRoll",
     );
@@ -220,14 +210,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state: marked.state,
         subject: spellSubject,
         fills: [
-          targetFill(spellTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "ray_of_frost",
-            },
-          ]),
+          targetFill(spellTarget, goblinId),
           attackRollFill(spellAttack, { total: 15, naturalD20: 10 }),
         ],
       }),
@@ -320,8 +303,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const transferAct = discoverBattleActs(nextFighterTurn).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.tag === "spellEffect" &&
-        candidate.subject.invocation.spellId === "hunters_mark",
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
     );
     if (transferAct === undefined) {
       throw new Error("Expected Hunter's Mark transfer act.");
@@ -335,16 +320,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: nextFighterTurn,
         subject: transferAct.subject,
-        fills: [
-          targetFill(transferTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "hunters_mark",
-            },
-          ]),
-        ],
+        fills: [targetFill(transferTarget, goblinId)],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -382,8 +358,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.tag === "spellEffect" &&
-        candidate.subject.invocation.spellId === "hunters_mark",
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
     );
     if (restrictedTransferAct === undefined) {
       throw new Error(
@@ -398,16 +376,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: restrictedHiddenTransferState,
         subject: restrictedTransferAct.subject,
-        fills: [
-          targetFill(restrictedTransferTarget, skeletonId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: skeletonId,
-              spellId: "hunters_mark",
-            },
-          ]),
-        ],
+        fills: [targetFill(restrictedTransferTarget, skeletonId)],
       }),
     );
     expect(
@@ -418,21 +387,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state: nextFighterTurn,
         subject: transferAct.subject,
-        fills: [
-          targetFill(transferTarget, skeletonId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: skeletonId,
-              spellId: "hunters_mark",
-            },
-          ]),
-        ],
+        fills: [targetFill(transferTarget, skeletonId)],
       }),
     );
 
     expect(transferred.state.combatants.get(fighterId)?.concentration).toEqual({
-      sourceSpellId: "hunters_mark",
+      sourceProcedureRef: battleActSpellPresentation(markAct)?.procedureRef,
       effectKind: "spellEffect",
     });
     expect(transferred.state.combatants.get(fighterId)?.activeEffects).toEqual([
@@ -464,7 +424,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const markAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hunters_mark",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
     );
     if (markAct === undefined) {
       throw new Error("Expected Hunter's Mark Bonus Action spell act.");
@@ -474,14 +435,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: markAct.subject,
         fills: [
-          targetFill(findHole(markAct.initialHoles, "targetChoice"), goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "hunters_mark",
-            },
-          ]),
+          targetFill(findHole(markAct.initialHoles, "targetChoice"), goblinId),
         ],
       }),
     ).state;
@@ -572,7 +526,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const transferAct = discoverBattleActs(nextFighterTurn).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hunters_mark",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
     );
     if (transferAct === undefined) {
       throw new Error("Expected Hunter's Mark transfer act.");
@@ -585,14 +540,6 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           targetFill(
             findHole(transferAct.initialHoles, "targetChoice"),
             skeletonId,
-            [
-              {
-                kind: "spellTarget",
-                casterId: fighterId,
-                targetId: skeletonId,
-                spellId: "hunters_mark",
-              },
-            ],
           ),
         ],
       }),
@@ -636,7 +583,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const markAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hunters_mark",
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
     );
     if (markAct === undefined) {
       throw new Error("Expected Hunter's Mark Bonus Action spell act.");
@@ -646,16 +594,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state,
         subject: markAct.subject,
-        fills: [
-          targetFill(markTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "hunters_mark",
-            },
-          ]),
-        ],
+        fills: [targetFill(markTarget, goblinId)],
       }),
     );
 
@@ -704,16 +643,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         resolveBattleSubject({
           state,
           subject,
-          fills: [
-            targetFill(markTarget, goblinId, [
-              {
-                kind: "spellTarget",
-                casterId: fighterId,
-                targetId: goblinId,
-                spellId: "hunters_mark",
-              },
-            ]),
-          ],
+          fills: [targetFill(markTarget, goblinId)],
         }),
       );
 
@@ -748,7 +678,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const hexAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hex",
+        battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
     );
     if (hexAct === undefined) {
       throw new Error("Expected Hex Bonus Action spell act.");
@@ -771,14 +701,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: hexAct.subject,
         fills: [
-          targetFill(hexTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "hex",
-            },
-          ]),
+          targetFill(hexTarget, goblinId),
           { kind: "abilityChoice", holeId: hexAbility.holeId, value: "wis" },
         ],
       }),
@@ -875,7 +798,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const hexAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hex",
+        battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
     );
     if (hexAct === undefined) {
       throw new Error("Expected Hex cast act.");
@@ -885,14 +808,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         state,
         subject: hexAct.subject,
         fills: [
-          targetFill(findHole(hexAct.initialHoles, "targetChoice"), goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "hex",
-            },
-          ]),
+          targetFill(findHole(hexAct.initialHoles, "targetChoice"), goblinId),
           {
             kind: "abilityChoice",
             holeId: findHole(hexAct.initialHoles, "abilityChoice").holeId,
@@ -939,7 +855,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       discoverBattleActs(dropped).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
-          candidate.subject.invocation.spellId === "hex",
+          battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
       ),
     ).toBe(false);
 
@@ -959,7 +875,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const transferAct = discoverBattleActs(laterTurn).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.invocation.spellId === "hex",
+        battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
     );
     if (transferAct === undefined) {
       throw new Error("Expected later-turn Hex transfer act.");
@@ -972,14 +888,6 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           targetFill(
             findHole(transferAct.initialHoles, "targetChoice"),
             skeletonId,
-            [
-              {
-                kind: "spellTarget",
-                casterId: fighterId,
-                targetId: skeletonId,
-                spellId: "hex",
-              },
-            ],
           ),
         ],
       }),
@@ -1028,16 +936,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [
-          targetFill(markTarget, goblinId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: goblinId,
-              spellId: "hunters_mark",
-            },
-          ]),
-        ],
+        fills: [targetFill(markTarget, goblinId)],
       }),
     );
     const caster = marked.state.combatants.get(fighterId);
@@ -1142,7 +1041,9 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
             activeEffect: {
               kind: "spellMarkedDamageRider",
               sourceCombatantId: fighterId,
-              sourceSpellId: "hunters_mark",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String("hunters_mark"),
+              ),
               targetCombatantId: goblinId,
               transfer: { kind: "available", retargetTiming: "sameTurn" },
               damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },

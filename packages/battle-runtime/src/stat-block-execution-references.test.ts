@@ -1,3 +1,4 @@
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { NonNegativeInteger } from "@dnd/shared/types";
@@ -11,11 +12,11 @@ import {
   addBattleCombatant,
   discoverBattleActs,
   removeBattleCombatants,
-  resolveBattleSubject,
   snapshotBattle,
   type BattleState,
 } from "./index.ts";
 import {
+  resolveBattleSubject,
   battleId,
   characterSeed,
   fighterId,
@@ -29,10 +30,13 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   BattleCharacterExecutionScopeRef,
+  BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
   battleCharacterExecutionScopeRef,
+  battleActiveEffectExecutionRef,
+  battleSpellDamageDieExecutionRef,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
@@ -85,6 +89,48 @@ function executionReferenceView(
 }
 
 describe("Stat Block execution references", () => {
+  test("rejects noncanonical replay occurrence references", () => {
+    const activeEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        battleId: "battle-reference-codec",
+        kind: "activeEffectOccurrence",
+        ownerId: "character-a",
+        ordinal: 0,
+      }),
+    );
+    expect(BattleActiveEffectExecutionRef.make(activeEffectRef)).toBe(
+      activeEffectRef,
+    );
+    expect(() =>
+      BattleActiveEffectExecutionRef.make("active-effect-0"),
+    ).toThrow();
+    expect(() =>
+      BattleActiveEffectExecutionRef.make(
+        JSON.stringify({
+          kind: "activeEffectOccurrence",
+          battleId: "battle-reference-codec",
+          ownerId: "character-a",
+          ordinal: 0,
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      BattleActiveEffectExecutionRef.make(
+        JSON.stringify({
+          battleId: "battle-reference-codec",
+          kind: "activeEffectOccurrence",
+          ownerId: "character-a",
+          ordinal: 0,
+          authoredId: "synthetic-effect",
+        }),
+      ),
+    ).toThrow();
+
+    expect(() =>
+      battleSpellDamageDieExecutionRef("damage-hole", -1, 0),
+    ).toThrow();
+  });
+
   test("allocates exact character procedure references without authored identity", () => {
     const scopeRef = battleCharacterExecutionScopeRef(
       battleId("battle-character-execution"),
@@ -103,9 +149,9 @@ describe("Stat Block execution references", () => {
       kind: "resourcePool",
       ordinal: 0,
     });
-    expect(() =>
-      BattleResourcePoolExecutionRef.make(characterResourcePoolRef),
-    ).toThrow();
+    expect(BattleResourcePoolExecutionRef.make(characterResourcePoolRef)).toBe(
+      characterResourcePoolRef,
+    );
     expect(JSON.parse(first)).toEqual({
       scopeRef,
       kind: "procedure",
@@ -134,12 +180,12 @@ describe("Stat Block execution references", () => {
     const magicMissileActs = spellActs.filter(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "magic_missile",
+        battleActSpellPresentation(act)?.invocation.spellId === "magic_missile",
     );
     const rayOfFrostActs = spellActs.filter(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        act.subject.invocation.spellId === "ray_of_frost",
+        battleActSpellPresentation(act)?.invocation.spellId === "ray_of_frost",
     );
     const magicMissileRef = magicMissileActs[0]?.subject.procedureRef;
     const rayOfFrostRef = rayOfFrostActs[0]?.subject.procedureRef;
@@ -177,7 +223,7 @@ describe("Stat Block execution references", () => {
     const forgedAuthoredIdentity = {
       ...castAct.subject,
       invocation: {
-        ...castAct.subject.invocation,
+        ...battleActSpellPresentation(castAct)?.invocation,
         spellId: spellId("synthetic-lookalike"),
       },
     };

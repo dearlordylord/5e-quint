@@ -1,3 +1,5 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-MYCELIUM-STEP mycelium_step
 // UNIT-IDENTITY-REPLAY: L1D2-MYCELIUM-STEP mycelium_step doDiscoverMyceliumStepDash doDashAsBonusAction
 import { Either } from "effect";
@@ -18,13 +20,12 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleSubject,
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -90,7 +91,9 @@ defineSelectedIdentityReplayAndQntReplay({
           discover: () => {
             const state = myceliumStepBattle();
             const act = myceliumStepDashAct(state);
-            assertMyceliumStepSourceUnitId(act.subject.sourceUnitId);
+            assertMyceliumStepSourceUnitId(
+              battleActUnitPresentation(act)?.unitId,
+            );
             return projectBattleState(state, "discovered");
           },
         },
@@ -99,7 +102,9 @@ defineSelectedIdentityReplayAndQntReplay({
           discover: () => {
             const state = myceliumStepBattle();
             const act = myceliumStepDashAct(state);
-            assertMyceliumStepSourceUnitId(act.subject.sourceUnitId);
+            assertMyceliumStepSourceUnitId(
+              battleActUnitPresentation(act)?.unitId,
+            );
             return projectBattleState(
               requireResolved(
                 resolveBattleSubject({
@@ -138,7 +143,7 @@ function myceliumStepBattle(): BattleState {
         initiative: 20,
         characterUnitRefs: [
           {
-            unitId: myceliumStepUnitId,
+            unit: myceliumStepUnit,
             supportProfiles: [myceliumStepSupportProfile],
           },
         ],
@@ -205,7 +210,7 @@ function myceliumStepDashAct(state: BattleState): MyceliumStepDashAct {
     (candidate): candidate is MyceliumStepDashAct =>
       candidate.subject.tag === "bonusActionStandardAction" &&
       candidate.subject.action === "dash" &&
-      candidate.subject.sourceUnitId === myceliumStepUnitId,
+      battleActUnitPresentation(candidate)?.unitId === myceliumStepUnitId,
   );
   if (act === undefined) {
     throw new Error("Expected Mycelium Step Bonus Action Dash act.");

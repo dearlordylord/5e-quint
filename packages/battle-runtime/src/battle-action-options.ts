@@ -17,6 +17,7 @@ import type {
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 import type {
   BattleAttackProcedureExecutionRef,
+  BattleProcedureExecutionRef,
   BattleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
 
@@ -61,6 +62,13 @@ export type UnarmedStrikeDamageProfile =
   | {
       readonly kind: "authoredReplacement";
       readonly sourceUnitId: UnitRecord["id"];
+      readonly dice: 1;
+      readonly dieSize: DamageDieSize;
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly kind: "procedureReplacement";
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly dice: 1;
       readonly dieSize: DamageDieSize;
       readonly damageType: DamageType;

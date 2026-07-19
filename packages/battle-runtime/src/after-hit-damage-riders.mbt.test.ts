@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-after-hit-damage-illumination
 
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, it } from "vitest";
 
 import type { BattleActiveEffect } from "./battle-reducer.ts";
@@ -59,6 +60,7 @@ import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill-supp
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  resolveBattleSubject,
   paladinsSmiteResource,
   characterSpellInvocationForProcedureRefForTest,
   startBattleRight,
@@ -69,14 +71,14 @@ import {
   discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   snapshotBattle,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleProcedureExecutionRef,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type SupportedSpellInvocation,
 } from "./index.ts";
 
@@ -699,7 +701,7 @@ function afterHitSearingAfterDamage(): AfterHitRuntimeState {
   return fillAttackDamage(
     chooseAfterHitDamageSpell(
       afterHitChoiceReady("searingSmiteHit"),
-      searingSmiteUnitId,
+      battleProcedureExecutionRefForTest(String(searingSmiteUnitId)),
       3,
     ),
     4,
@@ -711,7 +713,7 @@ function afterHitShiningAfterDamage(): AfterHitRuntimeState {
   return fillAttackDamage(
     chooseAfterHitDamageSpell(
       afterHitChoiceReady("shiningSmiteHit"),
-      shiningSmiteUnitId,
+      battleProcedureExecutionRefForTest(String(shiningSmiteUnitId)),
       3,
     ),
     4,
@@ -1741,12 +1743,12 @@ function afterHitProjection(
     searingBurning: hasActiveEffect(
       target.activeEffects,
       "spellTurnStartDamageAndSave",
-      searingSmiteUnitId,
+      battleProcedureExecutionRefForTest(String(searingSmiteUnitId)),
     ),
     shiningIlluminated: hasActiveEffect(
       target.activeEffects,
       "shiningSmiteIllumination",
-      shiningSmiteUnitId,
+      battleProcedureExecutionRefForTest(String(shiningSmiteUnitId)),
     ),
     holes: battleHolesToAfterHitHoles(state.holes, state.pending),
     lastResult: state.lastResult,
@@ -1779,13 +1781,13 @@ function paladinsSmiteUsesRemaining(state: BattleState): number {
 function hasActiveEffect(
   effects: readonly BattleActiveEffect[],
   kind: BattleActiveEffect["kind"],
-  sourceSpellId: string,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): boolean {
   return effects.some(
     (effect) =>
       effect.kind === kind &&
-      "sourceSpellId" in effect &&
-      effect.sourceSpellId === sourceSpellId,
+      "sourceProcedureRef" in effect &&
+      effect.sourceProcedureRef === sourceProcedureRef,
   );
 }
 

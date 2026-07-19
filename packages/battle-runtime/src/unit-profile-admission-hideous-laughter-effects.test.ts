@@ -1,3 +1,6 @@
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
 import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
@@ -72,7 +75,8 @@ function castHeightenedHideousLaughter() {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "hideousLaughter" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "hideousLaughter" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -141,13 +145,16 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       slotLevel: 2,
     });
 
-    expect(act.subject).toMatchObject({
+    expect({
+      ...act.subject,
+      invocation: battleActSpellPresentation(act)?.invocation,
+    }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        hideousLaughterUnitId,
-        2,
-        "hideousLaughter",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        state,
+        spellCasterId,
+        spellSlotInvocationRef(hideousLaughterUnitId, 2, "hideousLaughter"),
       ),
       mode: { tag: "cast" },
     });
@@ -189,7 +196,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(laughed.activeEffects).toEqual([
       expect.objectContaining({
         kind: "hideousLaughter",
-        sourceSpellId: hideousLaughterUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(hideousLaughterUnitId),
+        ),
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "concentration",
@@ -301,7 +310,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         .set(spellCasterId, {
           ...requireCombatant(cast.state, spellCasterId),
           concentration: {
-            sourceSpellId: hideousLaughterUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(hideousLaughterUnitId),
+            ),
             effectKind: "spellEffect",
           },
         })
@@ -638,7 +649,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
             ...baseTarget.activeEffects,
             {
               kind: "conditionImmunity",
-              sourceSpellId: heroismUnitId,
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(heroismUnitId),
+              ),
               sourceCombatantId: spellCasterId,
               condition: immuneCondition,
               conditionHadNonSpellSource: false,
@@ -717,7 +730,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const target = requireCombatant(baseState, spellTargetId);
     const firstEffect = {
       kind: "hideousLaughter",
-      sourceSpellId: hideousLaughterUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hideousLaughterUnitId),
+      ),
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
@@ -860,7 +875,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const baseState = spellBattle({ preparedSpells: [spell] });
     const target = requireCombatant(baseState, spellTargetId);
     const targetConcentration = {
-      sourceSpellId: heroismUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(heroismUnitId),
+      ),
       effectKind: "spellEffect" as const,
     };
     const state: BattleState = {
@@ -872,7 +889,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
           ...target.activeEffects,
           {
             kind: "conditionImmunity",
-            sourceSpellId: heroismUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(heroismUnitId),
+            ),
             sourceCombatantId: spellTargetId,
             condition: "incapacitated",
             conditionHadNonSpellSource: false,
@@ -883,7 +902,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
           },
           {
             kind: "turnStartTemporaryHitPoints",
-            sourceSpellId: heroismUnitId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(heroismUnitId),
+            ),
             sourceCombatantId: spellTargetId,
             amount: 3,
             expiresAt: {

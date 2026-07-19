@@ -1,5 +1,6 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { DieRollResult, resourceCount } from "@dnd/shared/types";
+import { battleSpellDamageDieExecutionRef } from "./identity.ts";
 
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
@@ -25,6 +26,7 @@ import {
 } from "./index.ts";
 import {
   attackRollFill,
+  battleProcedureExecutionRefForSpellHoleForTest,
   battleAreaId,
   battleId,
   characterSeed,
@@ -43,6 +45,22 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
+import type { SupportedSpellInvocation } from "./battle-reducer.ts";
+
+function spellInvocationForAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): SupportedSpellInvocation | undefined {
+  const subject = act.subject;
+  if (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") {
+    return undefined;
+  }
+  const actor = state.combatants.get(subject.actorId);
+  return actor?.origin.kind === "character"
+    ? characterSpellProcedure(actor.origin.execution, subject.procedureRef)
+    : undefined;
+}
 
 export type SorcererMetamagicProjection = {
   readonly magicActionAvailable: boolean;
@@ -353,8 +371,11 @@ function resolveEmpoweredRayOfFrostSubject(state: BattleState) {
             effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
             dice: [
               {
-                groupIndex: 0,
-                resultIndex: 0,
+                dieRef: battleSpellDamageDieExecutionRef(
+                  damageHole.holeId,
+                  0,
+                  0,
+                ),
                 original: DieRollResult(8),
                 replacement: DieRollResult(1),
               },
@@ -944,7 +965,8 @@ export function resolveHeightenedSaveGatedConditionEndTurnSave(
       kind: "spellTarget" as const,
       casterId: wizardId,
       targetId,
-      spellId: "blindness_deafness",
+      sourceProcedureRef:
+        battleProcedureExecutionRefForSpellHoleForTest(targetHole),
     })),
   };
   const condition = {
@@ -1369,7 +1391,8 @@ function quickenedBurningHandsAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.procedure === "saveGatedDamage" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "saveGatedDamage" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1386,7 +1409,8 @@ function quickenedRayOfFrostAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.procedure === "spellAttackDamage" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "spellAttackDamage" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1403,7 +1427,8 @@ function quickenedEldritchBlastAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.procedure === "spellAttackSequence" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "spellAttackSequence" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1438,14 +1463,7 @@ function nextSpellHole(
 }
 
 function eldritchBlastTargetFill(hole: BattleHole): BattleFill {
-  return targetFill(hole, skeletonId, [
-    {
-      kind: "spellTarget",
-      casterId: wizardId,
-      targetId: skeletonId,
-      spellId: "eldritch_blast",
-    },
-  ]);
+  return targetFill(hole, skeletonId);
 }
 
 type ActionSpellAct = AvailableBattleAct & {
@@ -1459,7 +1477,8 @@ function actionRayOfFrostAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "spellAttackDamage",
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "spellAttackDamage",
   );
   if (act === undefined) {
     throw new Error("Expected Ray of Frost action spell act.");
@@ -1471,7 +1490,8 @@ function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "saveGatedDamage" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "saveGatedDamage" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1486,7 +1506,7 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "command" &&
+      spellInvocationForAct(state, candidate)?.procedure === "command" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1501,7 +1521,8 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "saveGatedDamage" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "saveGatedDamage" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1517,7 +1538,8 @@ function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "hideousLaughter" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "hideousLaughter" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1533,7 +1555,8 @@ function heightenedGreaseAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "greaseGroundHazard" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "greaseGroundHazard" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1549,7 +1572,7 @@ function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "gustOfWindLine" &&
+      spellInvocationForAct(state, candidate)?.procedure === "gustOfWindLine" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1563,16 +1586,22 @@ function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
 
 function heightenedSaveGatedConditionAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
-    (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "saveGatedCondition" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      Number(candidate.subject.invocation.slotLevel) === 3 &&
-      candidate.initialHoles.some((hole) => hole.kind === "conditionChoice") &&
-      candidate.subject.metamagic?.some(
-        (selection) =>
-          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-      ) === true,
+    (candidate): candidate is ActionSpellAct => {
+      const invocation = spellInvocationForAct(state, candidate);
+      return (
+        candidate.subject.tag === "actionSpell" &&
+        invocation?.procedure === "saveGatedCondition" &&
+        invocation.resource.tag === "spellSlot" &&
+        Number(invocation.resource.slotLevel) === 3 &&
+        candidate.initialHoles.some(
+          (hole) => hole.kind === "conditionChoice",
+        ) &&
+        candidate.subject.metamagic?.some(
+          (selection) =>
+            selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+        ) === true
+      );
+    },
   );
   if (act === undefined) {
     throw new Error("Expected Heightened Blindness/Deafness act.");
@@ -1584,7 +1613,8 @@ function transmutedBurningHandsToPoisonAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "saveGatedDamage" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "saveGatedDamage" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND &&
@@ -1601,7 +1631,8 @@ function transmutedRayOfFrostToPoisonAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "spellAttackDamage" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "spellAttackDamage" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND &&
@@ -1618,7 +1649,7 @@ function twinnedBlessAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.procedure === "rollModifier" &&
+      spellInvocationForAct(state, candidate)?.procedure === "rollModifier" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1691,7 +1722,7 @@ function carefulBurningHandsMixedSaveFill(
 function targetListFill(
   holes: readonly BattleHole[],
   label: string,
-  spellId: "bless" | "burning_hands" | "command" | "hideous_laughter",
+  _spellId: "bless" | "burning_hands" | "command" | "hideous_laughter",
   targetIds: readonly (typeof wizardId)[] = [skeletonId],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const hole = holes.find(
@@ -1709,7 +1740,7 @@ function targetListFill(
       kind: "spellTarget",
       casterId: wizardId,
       targetId,
-      spellId,
+      sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
     })),
   };
 }

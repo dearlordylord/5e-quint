@@ -1,12 +1,24 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING dispel_magic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
-import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Round } from "@dnd/shared/types";
+import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { battleSpellEffectOccurrenceId } from "./identity.ts";
+import type {
+  BattleActiveEffect,
+  BattleStoredLightEmitter,
+  BattleTrackedOngoingSpellLightEmitter,
+} from "./index.ts";
+import { BattleHoleSchema, BattleSnapshotSchema } from "./index.ts";
 import {
   antimagicFieldUnitId,
   continualFlameUnitId,
@@ -27,27 +39,18 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  attackBonus,
   battleAreaId,
   battleObjectId,
+  battleTablePositionId,
   canSpendAction,
   movementFeet,
   resolveBattleSubject,
   snapshotBattle,
-  spellSlotInvocationRef,
   type BattleFill,
   type BattleHole,
   type BattleState,
-  attackBonus,
-  battleTablePositionId,
 } from "./unit-profile-admission-test-support.ts";
-import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { battleSpellEffectOccurrenceId } from "./identity.ts";
-import { BattleHoleSchema, BattleSnapshotSchema } from "./index.ts";
-import type {
-  BattleActiveEffect,
-  BattleStoredLightEmitter,
-  BattleTrackedOngoingSpellLightEmitter,
-} from "./index.ts";
 
 type OngoingSpellTargetChoiceFill = Extract<
   BattleFill,
@@ -85,11 +88,6 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           procedureRef: expect.any(String),
           tag: "actionSpell",
           actorId: spellCasterId,
-          invocation: spellSlotInvocationRef(
-            dispelMagicUnitId,
-            3,
-            "ongoingSpellEnd",
-          ),
           mode: { tag: "cast" },
         },
         initialHoles: [
@@ -148,7 +146,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithLightEmitters([
       objectSpellEmitter({
         objectId,
-        sourceSpellId: continualFlameUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(continualFlameUnitId),
+        ),
         sourceSpellLevel: 2,
       }),
     ]);
@@ -198,7 +198,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithLightEmitters([
       objectSpellEmitter({
         objectId,
-        sourceSpellId: continualFlameUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(continualFlameUnitId),
+        ),
         sourceSpellLevel: 2,
       }),
     ]);
@@ -226,6 +228,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           target,
           facts: [
             ongoingSpellTargetWithinRangeFact({
+              sourceProcedureRef: targetHole.procedureRef,
               target: { kind: "object", objectId: otherObjectId },
             }),
           ],
@@ -241,6 +244,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           target,
           facts: [
             ongoingSpellTargetWithinRangeFact({
+              sourceProcedureRef: targetHole.procedureRef,
               target,
               rangeFeet: movementFeet(121),
             }),
@@ -263,7 +267,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const objectId = battleObjectId("dispel-higher-level-object");
     const emitter = objectSpellEmitter({
       objectId,
-      sourceSpellId: "synthetic_blue_flame",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_blue_flame"),
+      ),
       sourceSpellLevel: 4,
     });
     const state = stateWithLightEmitters([emitter]);
@@ -292,7 +298,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         dc: 14,
         spellcastingAbilityCheck: expect.objectContaining({
           casterId: spellCasterId,
-          sourceSpellId: dispelMagicUnitId,
+          sourceProcedureRef: targetHole.procedureRef,
           contestedSpellLevel: 4,
         }),
       }),
@@ -336,7 +342,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const objectId = battleObjectId("dispel-duplicate-check-object");
     const emitter = objectSpellEmitter({
       objectId,
-      sourceSpellId: "synthetic_violet_flame",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_violet_flame"),
+      ),
       sourceSpellLevel: 4,
     });
     const state = stateWithLightEmitters([emitter]);
@@ -378,7 +386,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithLightEmitters([
       objectSpellEmitter({
         objectId,
-        sourceSpellId: "synthetic_green_flame",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("synthetic_green_flame"),
+        ),
         sourceSpellLevel: 4,
       }),
     ]);
@@ -453,7 +463,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithCombatantActiveEffects({
       caster: {
         concentration: {
-          sourceSpellId: heatMetalUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(heatMetalUnitId),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [
@@ -465,7 +477,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       },
       target: {
         concentration: {
-          sourceSpellId: heatMetalUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(heatMetalUnitId),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [
@@ -599,13 +613,17 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const objectId = battleObjectId("dispel-magical-effect-object");
     const selectedEmitter = objectSpellEmitter({
       objectId,
-      sourceSpellId: "synthetic_silver_glow",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_silver_glow"),
+      ),
       sourceEffectId: "synthetic_silver_glow:selected",
       sourceSpellLevel: 2,
     });
     const retainedEmitter = objectSpellEmitter({
       objectId,
-      sourceSpellId: "synthetic_silver_glow",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("synthetic_silver_glow"),
+      ),
       sourceEffectId: "synthetic_silver_glow:retained",
       sourceSpellLevel: 2,
     });
@@ -638,7 +656,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       state: {
         lightEmitters: [
           expect.objectContaining({
-            sourceSpellId: retainedEmitter.sourceSpellId,
+            sourceProcedureRef: retainedEmitter.sourceProcedureRef,
           }),
         ],
       },
@@ -665,14 +683,18 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithCombatantActiveEffects({
       caster: {
         concentration: {
-          sourceSpellId: heatMetalUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(heatMetalUnitId),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [selectedEffect],
       },
       target: {
         concentration: {
-          sourceSpellId: heatMetalUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(heatMetalUnitId),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [retainedEffect],
@@ -695,9 +717,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             effect: {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
-              sourceEffectId: battleSpellEffectOccurrenceId(
-                selectedEffect.effectId,
-              ),
+              effectRef: selectedEffect.effectRef,
             },
           },
         }),
@@ -714,7 +734,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const target = resolved.state.combatants.get(spellTargetId);
     expect(caster?.concentration).toBeNull();
     expect(target?.concentration).toEqual({
-      sourceSpellId: heatMetalUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(heatMetalUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(
@@ -728,7 +750,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     expect(remaining).toHaveLength(1);
     expect(remaining?.[0]).toMatchObject({
       kind: "spellObjectContactDamage",
-      effectId: retainedEffect.effectId,
+      effectRef: retainedEffect.effectRef,
     });
   });
 
@@ -739,7 +761,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
     const state = stateWithActiveEffects([effect], {
       concentration: {
-        sourceSpellId: spiritualWeaponUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spiritualWeaponUnitId),
+        ),
         effectKind: "spellEffect",
       },
     });
@@ -753,7 +777,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       effect: {
         kind: "spellActiveEffect" as const,
         activeEffectKind: "spiritualWeapon" as const,
-        sourceEffectId: effect.sourceEffectId,
+        effectRef: effect.effectRef,
       },
     };
 
@@ -789,7 +813,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithCombatantActiveEffects({
       target: {
         concentration: {
-          sourceSpellId: antimagicFieldUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(antimagicFieldUnitId),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [aura],
@@ -830,7 +856,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     }
     const antimagicCaster = resolved.state.combatants.get(spellTargetId);
     expect(antimagicCaster?.concentration).toEqual({
-      sourceSpellId: antimagicFieldUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(antimagicFieldUnitId),
+      ),
       effectKind: "spellEffect",
     });
     expect(antimagicCaster?.activeEffects).toContainEqual(aura);
@@ -845,7 +873,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithCombatantActiveEffects({
       target: {
         concentration: {
-          sourceSpellId: antimagicFieldUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(antimagicFieldUnitId),
+          ),
           effectKind: "spellEffect",
         },
         activeEffects: [antimagicFieldAuraEffect(activeAreaId)],
@@ -891,7 +921,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
     const state = stateWithActiveEffects([effect], {
       concentration: {
-        sourceSpellId: spiritualWeaponUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spiritualWeaponUnitId),
+        ),
         effectKind: "spellEffect",
       },
     });
@@ -905,7 +937,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       effect: {
         kind: "spellActiveEffect" as const,
         activeEffectKind: "spiritualWeapon" as const,
-        sourceEffectId: effect.sourceEffectId,
+        effectRef: effect.effectRef,
       },
     };
     const targetFill = ongoingSpellTargetFill({
@@ -966,7 +998,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const state = stateWithLightEmitters([
       objectSpellEmitter({
         objectId,
-        sourceSpellId: continualFlameUnitId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(continualFlameUnitId),
+        ),
         sourceSpellLevel: 2,
       }),
     ]);
@@ -1008,12 +1042,16 @@ function stateWithActiveEffects(
   activeEffects: readonly BattleActiveEffect[],
   input: {
     readonly concentration?: {
-      readonly sourceSpellId: string;
+      readonly sourceProcedureRef: ReturnType<
+        typeof battleProcedureExecutionRefForTest
+      >;
       readonly effectKind: "spellEffect";
     } | null;
   } = {
     concentration: {
-      sourceSpellId: heatMetalUnitId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(heatMetalUnitId),
+      ),
       effectKind: "spellEffect",
     },
   },
@@ -1037,14 +1075,18 @@ function stateWithCombatantActiveEffects(input: {
   readonly caster?: {
     readonly activeEffects: readonly BattleActiveEffect[];
     readonly concentration?: {
-      readonly sourceSpellId: string;
+      readonly sourceProcedureRef: ReturnType<
+        typeof battleProcedureExecutionRefForTest
+      >;
       readonly effectKind: "spellEffect";
     } | null;
   };
   readonly target?: {
     readonly activeEffects: readonly BattleActiveEffect[];
     readonly concentration?: {
-      readonly sourceSpellId: string;
+      readonly sourceProcedureRef: ReturnType<
+        typeof battleProcedureExecutionRefForTest
+      >;
       readonly effectKind: "spellEffect";
     } | null;
   };
@@ -1078,17 +1120,21 @@ function stateWithCombatantActiveEffects(input: {
 
 function objectSpellEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
-  readonly sourceSpellId: string;
+  readonly sourceProcedureRef: ReturnType<
+    typeof battleProcedureExecutionRefForTest
+  >;
   readonly sourceEffectId?: string;
   readonly sourceSpellLevel: number;
 }): BattleTrackedOngoingSpellLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceSpellId: input.sourceSpellId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(input.sourceProcedureRef),
+    ),
     sourceCombatantId: spellTargetId,
     sourceEffectId: battleSpellEffectOccurrenceId(
       input.sourceEffectId ??
-        `${spellTargetId}:${input.sourceSpellId}:${input.objectId}:test-effect`,
+        `${spellTargetId}:${input.sourceProcedureRef}:${input.objectId}:test-effect`,
     ),
     sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     attachment: { kind: "object", objectId: input.objectId },
@@ -1111,11 +1157,13 @@ function heatMetalObjectContactDamageEffect(input: {
   const sourceCombatantId = input.sourceCombatantId ?? spellCasterId;
   return {
     kind: "spellObjectContactDamage",
-    effectId: battleSpellEffectOccurrenceId(
+    effectRef: battleActiveEffectExecutionRefForTest(
       input.effectId ??
         `${sourceCombatantId}:${heatMetalUnitId}:${input.objectId}`,
     ),
-    sourceSpellId: heatMetalUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(heatMetalUnitId),
+    ),
     sourceCombatantId,
     sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     objectId: input.objectId,
@@ -1139,9 +1187,11 @@ function spiritualWeaponEffect(input: {
 }): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
   return {
     kind: "spiritualWeapon",
-    sourceSpellId: spiritualWeaponUnitId,
+    effectRef: battleActiveEffectExecutionRefForTest(input.sourceEffectId),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(spiritualWeaponUnitId),
+    ),
     sourceCombatantId: spellCasterId,
-    sourceEffectId: battleSpellEffectOccurrenceId(input.sourceEffectId),
     sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     forcePositionId: battleTablePositionId("dispel-spiritual-weapon-force"),
     forceReachFeet: movementFeet(5),
@@ -1171,7 +1221,9 @@ function antimagicFieldAuraEffect(
 > {
   return {
     kind: "antimagicFieldOngoingSpellSuppression",
-    sourceSpellId: antimagicFieldUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
     sourceCombatantId: spellTargetId,
     areaId,
     auraMembership: {
@@ -1382,19 +1434,23 @@ function ongoingSpellTargetFill(input: {
     holeId: input.hole.holeId,
     value: input.target,
     spatialFacts: input.facts ?? [
-      ongoingSpellTargetWithinRangeFact({ target: input.target }),
+      ongoingSpellTargetWithinRangeFact({
+        sourceProcedureRef: input.hole.procedureRef,
+        target: input.target,
+      }),
     ],
   };
 }
 
 function ongoingSpellTargetWithinRangeFact(input: {
+  readonly sourceProcedureRef: OngoingSpellTargetWithinRangeFact["sourceProcedureRef"];
   readonly target: OngoingSpellTarget;
   readonly rangeFeet?: ReturnType<typeof movementFeet>;
 }): OngoingSpellTargetWithinRangeFact {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    spellId: dispelMagicUnitId,
+    sourceProcedureRef: input.sourceProcedureRef,
     target: input.target,
     rangeFeet: input.rangeFeet ?? movementFeet(120),
   };

@@ -1,3 +1,8 @@
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import {
+  battleActSpellSlotPresentation,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_monster hold_person hypnotic_pattern sleep
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
@@ -37,7 +42,6 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
@@ -47,7 +51,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
+  type BattleActDiscoverySubject as BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -87,7 +91,10 @@ type ConditionSavingThrowSpellUnitId =
   (typeof conditionSavingThrowSpellUnitIds)[number];
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell"; readonly invocation: unknown }
+  >;
 };
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
@@ -1254,9 +1261,12 @@ function spellAct(input: {
   const act = discoverBattleActs(input.state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === input.spellId &&
-      Number(candidate.subject.invocation.slotLevel) === input.slotLevel,
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        input.spellId &&
+      Number(
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
+      ) === input.slotLevel,
   );
   if (act === undefined) {
     throw new Error(`Expected ${input.spellId} spell act.`);
@@ -1277,7 +1287,7 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId,
       targetId: selectedTargetId,
-      spellId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
     })),
   };
 }
@@ -1464,3 +1474,4 @@ function expendedSlotsForSpellLevel(
     )?.expended ?? 0
   );
 }
+import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

@@ -27,10 +27,12 @@ import {
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
+import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
@@ -38,7 +40,11 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import {
+  BattleActiveEffectExecutionRef,
+  spellId,
+  type CombatantId,
+} from "../../identity.ts";
 import {
   DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
   dancingLightsFromEffect,
@@ -136,23 +142,37 @@ function admitDancingLightsCombinedCast(
 
 function admitDancingLightsReposition(
   spell: SpellRecord,
-  _ctx: SpellAdmissionContext,
+  ctx: SpellAdmissionContext,
 ): readonly DancingLightsRepositionInvocation[] {
   const profile = dancingLightsSpell(spell);
-  return profile === null
-    ? []
-    : [
-        {
-          access: { tag: "classCantrip" },
-          resource: { tag: "none" },
-          procedure: "dancingLightsReposition",
-          spell,
-          actionCost: "bonusAction",
-          maxMoveFeet: profile.maxMoveFeet,
-          rangeFeet: profile.rangeFeet,
-          spacingFeet: profile.spacingFeet,
-        },
-      ];
+  if (profile === null) {
+    return [];
+  }
+  const selectedExecutionRefs = new Set(
+    characterSpellProcedureRefsForAdmissionContent(
+      ctx.actor.origin.execution,
+      spell,
+    ),
+  );
+  return ctx.actor.activeEffects.flatMap((activeEffect) =>
+    activeEffect.kind === "dancingLights" &&
+    activeEffect.sourceCombatantId === ctx.actor.combatantId &&
+    selectedExecutionRefs.has(activeEffect.sourceProcedureRef)
+      ? [
+          {
+            access: { tag: "classCantrip" },
+            resource: { tag: "none" },
+            procedure: "dancingLightsReposition",
+            spell,
+            actionCost: "bonusAction",
+            activeEffectRef: activeEffect.effectRef,
+            maxMoveFeet: profile.maxMoveFeet,
+            rangeFeet: profile.rangeFeet,
+            spacingFeet: profile.spacingFeet,
+          },
+        ]
+      : [],
+  );
 }
 
 function dancingLightsCantripBase(
@@ -232,13 +252,14 @@ function dancingLightsSpell(
 function discoverDancingLightsCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: DancingLightsCastInvocation,
+  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<DancingLightsCastInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
       subject: {
         tag: "actionSpell",
         actorId,
+        procedureRef: invocation.sourceProcedureRef,
         invocation: dancingLightsCastInvocationRef(invocation),
         mode: { tag: "cast" },
       },
@@ -254,7 +275,7 @@ function discoverDancingLightsCastAct(
 function discoverDancingLightsRepositionAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const activeEffect = activeDancingLightsEffect(state, actorId, invocation);
   return activeEffect === undefined
@@ -264,6 +285,7 @@ function discoverDancingLightsRepositionAct(
           subject: {
             tag: "bonusActionSpell",
             actorId,
+            procedureRef: invocation.sourceProcedureRef,
             invocation: dancingLightsRepositionInvocationRef(invocation),
             mode: { tag: "cast" },
           },
@@ -285,7 +307,7 @@ function discoverDancingLightsRepositionAct(
 function activeDancingLightsEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ): Extract<BattleActiveEffect, { readonly kind: "dancingLights" }> | undefined {
   return state.combatants
     .get(actorId)
@@ -297,7 +319,7 @@ function activeDancingLightsEffect(
         { readonly kind: "dancingLights" }
       > =>
         effect.kind === "dancingLights" &&
-        effect.sourceSpellId === invocation.spell.id &&
+        effect.effectRef === invocation.activeEffectRef &&
         effect.sourceCombatantId === actorId,
     );
 }
@@ -313,7 +335,7 @@ function dancingLightsCastInvocationRef(
 }
 
 function dancingLightsRepositionInvocationRef(
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ): SpellInvocationRef {
   return {
     tag: "cantrip",
@@ -327,7 +349,7 @@ function dancingLightsCastSummary(invocation: DancingLightsCastInvocation) {
 }
 
 function dancingLightsRepositionCastSummary(
-  invocation: DancingLightsRepositionInvocation,
+  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
 ) {
   return `Move ${invocation.spell.name} with a Bonus Action.`;
 }
@@ -400,6 +422,7 @@ const DancingLightsRepositionInvocationSchema = spellProcedureInvocationSchema<
     procedure: Schema.Literal("dancingLightsReposition"),
     spell: BattleRuntimeObjectSchema,
     actionCost: Schema.Literal("bonusAction"),
+    activeEffectRef: BattleActiveEffectExecutionRef,
     maxMoveFeet: MovementFeet,
     rangeFeet: MovementFeet,
     spacingFeet: MovementFeet,

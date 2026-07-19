@@ -1,3 +1,9 @@
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  characterSpellProcedureRefMatchesSpellForTest,
+} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration protection_from_poison
 // UNIT-IDENTITY-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration doResolveLesserRestorationChoice doResolveLesserRestorationConcentrationCleanup
@@ -5,7 +11,7 @@
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import type { BattleActiveEffect } from "./index.ts";
-import { resolveBattleSubject, snapshotBattle } from "./index.ts";
+import { snapshotBattle } from "./index.ts";
 import {
   holdPersonDurationTicks,
   holdPersonUnitId,
@@ -161,7 +167,9 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
   const target = requireCombatant(baseState, spellTargetId);
   const paralyzedEffect = {
     kind: "spellConditionEndTurnSave" as const,
-    sourceSpellId: holdPersonUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(holdPersonUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     condition: "paralyzed" as const,
     conditionHadNonSpellSource: false,
@@ -177,7 +185,9 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
   };
   const poisonedEffect = {
     kind: "spellConditionEndTurnSave" as const,
-    sourceSpellId: "synthetic_poison_spell",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String("synthetic_poison_spell"),
+    ),
     sourceCombatantId: spellCasterId,
     condition: "poisoned" as const,
     conditionHadNonSpellSource: false,
@@ -245,7 +255,9 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
   const target = requireCombatant(baseState, spellTargetId);
   const paralyzedEffect = {
     kind: "spellConditionEndTurnSave" as const,
-    sourceSpellId: holdPersonUnitId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(holdPersonUnitId),
+    ),
     sourceCombatantId: spellCasterId,
     condition: "paralyzed" as const,
     conditionHadNonSpellSource: false,
@@ -266,7 +278,9 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
       .set(spellCasterId, {
         ...caster,
         concentration: {
-          sourceSpellId: holdPersonUnitId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(holdPersonUnitId),
+          ),
           effectKind: "spellEffect" as const,
         },
       })
@@ -323,7 +337,11 @@ function resolveProtectionFromPoisonBattle(): BattleState {
             ...target.activeEffects,
             {
               kind: "spellCondition" as const,
-              sourceSpellId: poisonSprayUnitId,
+              effectRef:
+                battleActiveEffectExecutionRefForTest("poison-condition"),
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(poisonSprayUnitId),
+              ),
               sourceCombatantId: spellCasterId,
               condition: "poisoned" as const,
               conditionHadNonSpellSource: true,
@@ -378,11 +396,11 @@ function projectConditionRemovalProtectionSelectedIdentityState(
     targetPoisoned: hasCondition(target.conditions, "poisoned"),
     targetEffectCount: target.activeEffects.length,
     casterConcentrating: caster.concentration !== null,
-    targetHasPoisonResistance: target.activeEffects.some(
-      isProtectionFromPoisonResistance,
+    targetHasPoisonResistance: target.activeEffects.some((effect) =>
+      isProtectionFromPoisonResistance(state, effect),
     ),
-    targetHasPoisonSaveAdvantage: target.activeEffects.some(
-      isProtectionFromPoisonSaveAdvantage,
+    targetHasPoisonSaveAdvantage: target.activeEffects.some((effect) =>
+      isProtectionFromPoisonSaveAdvantage(state, effect),
     ),
     secondLevelSlotsExpended: secondLevelSlotsExpended(caster),
     actionAvailable: snapshot.turn.actionResources.some(
@@ -409,21 +427,33 @@ function secondLevelSlotsExpended(
 }
 
 function isProtectionFromPoisonResistance(
+  state: BattleState,
   effect: BattleActiveEffect,
 ): effect is DamageResistanceEffect {
   return (
     effect.kind === "damageResistance" &&
-    effect.sourceSpellId === protectionFromPoisonUnitId &&
+    characterSpellProcedureRefMatchesSpellForTest(
+      state,
+      effect.sourceCombatantId,
+      effect.sourceProcedureRef,
+      protectionFromPoisonUnitId,
+    ) &&
     effect.damageType === "poison"
   );
 }
 
 function isProtectionFromPoisonSaveAdvantage(
+  state: BattleState,
   effect: BattleActiveEffect,
 ): effect is ConditionSavingThrowRollModeEffect {
   return (
     effect.kind === "conditionSavingThrowRollMode" &&
-    effect.sourceSpellId === protectionFromPoisonUnitId &&
+    characterSpellProcedureRefMatchesSpellForTest(
+      state,
+      effect.sourceCombatantId,
+      effect.sourceProcedureRef,
+      protectionFromPoisonUnitId,
+    ) &&
     effect.condition === "poisoned" &&
     effect.mode === "advantage"
   );

@@ -17,6 +17,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -25,7 +26,7 @@ import {
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
-import { spellSubjectTagForInvocation } from "../spells-discovery.ts";
+import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import { spellAttackSequencePartName } from "../spells-profile-shared.ts";
 import {
   supportedCantripSpellAttackSequenceProfile,
@@ -90,7 +91,7 @@ function admitSpellAttackSequence(
 function discoverSpellAttackSequenceCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SpellAttackSequenceInvocation,
+  invocation: BattleExecutableSpellInvocation<SpellAttackSequenceInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const initialHoles = Array.from(
     { length: invocation.targeting.attackCount },
@@ -101,12 +102,11 @@ function discoverSpellAttackSequenceCastAct(
   ).flat();
   return [
     {
-      subject: {
-        tag: spellSubjectTagForInvocation(invocation),
+      subject: spellCastSelectionSubject(
         actorId,
-        invocation: spellAttackSequenceInvocationRef(invocation),
-        mode: { tag: "cast" as const },
-      },
+        invocation,
+        spellAttackSequenceInvocationRef(invocation),
+      ),
       label: invocation.spell.name,
       summary: spellAttackSequenceCastSummary(invocation),
       initialHoles,

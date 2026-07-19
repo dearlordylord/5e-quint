@@ -5,123 +5,303 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84D hex
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84E fog_cloud
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87C ranger_favored_enemy
-import { Schema } from "effect";
-import * as Either from "effect/Either";
-import * as Option from "effect/Option";
-import {
-  statBlockAttackActionOptions,
-  statBlockProcedurePresentations,
-} from "./stat-block-execution.ts";
-import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
-import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import {
   findFamiliarFormEligibilityForSpell,
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
 } from "@dnd/surface/surface/find-familiar-forms";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
+import * as Option from "effect/Option";
+import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
+import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
+import {
+  statBlockAttackActionOptions,
+  statBlockProcedurePresentations,
+} from "./stat-block-execution.ts";
 
 import {
-  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  abilityModifier,
+  armorClass,
+  defaultArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
+import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  applyCondition,
+  hasCondition,
+  removeCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
+import {
+  elapsedTimeTicks,
+  elapsedTimeTicksFromHours,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+  type AttackRollMode,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  attackBonus,
+  abilityModifier as battleAbilityModifier,
+  damageAmount,
+  DieRollResult,
+  difficultyClass,
+  Hp,
+  NonNegativeInteger,
+  movementDeltaFeet,
+  movementFeet,
+  proficiencyBonus,
+  resourceCount,
+  type Condition,
+} from "@dnd/shared/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import type {
+  AreaDirectEffectAtom,
+  DamageType,
+  EffectAtom,
+  Size,
+  SpellRecord,
+  StatBlockRecord,
+  UnitRecord,
+  WeaponRecord,
+} from "@dnd/surface/surface/types";
+import { isEffectAtom } from "@dnd/surface/surface/types";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
+import acidSplashInput from "../../surface/content/acid_splash.json";
+import burningHandsInput from "../../surface/content/burning_hands.json";
+import chainLightningInput from "../../surface/content/chain_lightning.json";
+import chillTouchInput from "../../surface/content/chill_touch.json";
+import colorSprayInput from "../../surface/content/color_spray.json";
+import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
+import findFamiliarInput from "../../surface/content/find_familiar.json";
+import fireBoltInput from "../../surface/content/fire_bolt.json";
+import fogCloudInput from "../../surface/content/fog_cloud.json";
+import greaseInput from "../../surface/content/grease.json";
+import guidingBoltInput from "../../surface/content/guiding_bolt.json";
+import healingWordInput from "../../surface/content/healing_word.json";
+import hexInput from "../../surface/content/hex.json";
+import huntersMarkInput from "../../surface/content/hunters_mark.json";
+import iceKnifeInput from "../../surface/content/ice_knife.json";
+import inflictWoundsInput from "../../surface/content/inflict_wounds.json";
+import mageArmorInput from "../../surface/content/mage_armor.json";
+import magicMissileInput from "../../surface/content/magic_missile.json";
+import poisonSprayInput from "../../surface/content/poison_spray.json";
+import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
+import rayOfSicknessInput from "../../surface/content/ray_of_sickness.json";
+import sacredFlameInput from "../../surface/content/sacred_flame.json";
+import shockingGraspInput from "../../surface/content/shocking_grasp.json";
+import spareTheDyingInput from "../../surface/content/spare_the_dying.json";
+import starryWispInput from "../../surface/content/starry_wisp.json";
+import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
+import weaponLongbowInput from "../../surface/content/weapon_longbow.json";
+import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
+import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import {
+  supportedSpellInvocationMatchesRef,
+  supportedSpellInvocationRef,
+} from "./battle-reducer/spells-invocation-ref.ts";
+import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
+import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import type {
+  BattleInterruptAttackExecutionSelection,
+  CharacterProcedureSelectionSubject,
+} from "./battle-subjects.ts";
+import type { BattleExecutableSpellInvocation } from "./battle-reducer.ts";
+import {
+  battleCharacterExecutionScopeRef,
+  battleActiveEffectExecutionRef,
+  battleExecutionScopeOrdinal,
+  battleProcedureExecutionRef,
+  BattleProcedureExecutionRef,
+} from "./identity.ts";
+import type { BattleActiveEffectExecutionRef } from "./identity.ts";
+import { isCharacterProcedureSelectionSubject } from "./battle-subjects.ts";
+import {
+  characterBattleResourceIsUnlimited,
+  characterBattleResourceIsUseCount,
+  parseCharacterBattleClassLevels,
+} from "./character-battle-resources.ts";
+import {
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterExecutionWithSpellInvocations,
+  characterSpellProcedure,
+  characterSpellProcedureRefForInvocationRef,
+  characterStoredSpellProcedureRefForInvocationRef,
+  characterUnitProcedureRef,
+  type CharacterUnitProcedureQuery,
+} from "./character-execution.ts";
+import {
+  addBattleCombatant,
+  admitCharacterProcedureSelectionSubject,
+  armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
-  PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
+  BATTLE_READIED_SPELL_TRIGGERS,
+  battleAreaId,
+  battleAvailableDruidWildShapeKnownForms,
   battleBonusActionStandardActionSupportForUnit,
-  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
-  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
-  WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
-  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
-  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
-  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
-  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
-  TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
-  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
   BattleHoleSchema,
-  BattleSnapshotSchema,
-  BattleSubjectSchema,
-  BATTLE_READIED_SPELL_TRIGGERS,
-  addBattleCombatant,
-  battleAreaId,
-  battleTablePositionId,
-  battleObscurementZones,
-  battleAvailableDruidWildShapeKnownForms,
-  battleReactionRollOrDamageReductionSupportForUnit,
-  battleUnitSupportProfilesForUnit,
   battleId,
   battleObjectId,
-  armorOfShadowsSpellInvocationRef,
-  cantripSpellInvocationRef,
-  classFeatureFreeCastSpellInvocationRef,
+  battleObscurementZones,
+  battleReactionRollOrDamageReductionSupportForUnit,
+  BattleSnapshotSchema,
+  BattleSubjectSchema,
+  battleTablePositionId,
+  battleUnitSupportProfilesForUnit,
   breakBattleConcentration,
-  characterBattleResourceUsage,
+  cantripSpellInvocationRef,
   characterBattleResourceSupportedForUnit,
+  characterBattleResourceUsage,
   characterId,
-  concentrationSavingThrowDc,
+  classFeatureFreeCastSpellInvocationRef,
   combatantId,
+  concentrationSavingThrowDc,
   discoverBattleActs,
   endTurn,
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
   objectInvisibleBenefitDenied,
+  PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   parseSupportedUnitFeatureProfile,
-  resolveBattleSubject as resolveBattleSubjectRuntime,
-  resolveBardicInspirationFailedD20Test,
-  resolveBattleInterrupt,
-  resolveBattleConcentrationDamage,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   removeBattleCombatants,
+  resolveBardicInspirationFailedD20Test,
+  resolveBattleConcentrationDamage,
+  resolveBattleInterrupt,
+  resolveBattleSubject as resolveBattleSubjectRuntime,
+  resolveFailedAbilityCheckResourceBoost,
+  resolveSuccessfulAbilityCheckReactionReduction,
   sameBattleSubject,
+  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   snapshotBattle,
   spellSaveDcForCaster,
   spellSlotInvocationRef,
   startBattle,
-  resolveFailedAbilityCheckResourceBoost,
-  resolveSuccessfulAbilityCheckReactionReduction,
+  TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+  WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+  type ActiveOngoingFeatureOccurrence,
+  type BattleActDiscoverySubject,
   type BattleAreaId,
   type BattleAttackExecutionSelection,
   type BattleAttackProcedureExecutionRef,
-  type BattleProcedureExecutionRef,
+  type BattleCreatureInit,
+  type BattleCreatureState,
   type BattleFill,
-  type BattleHole,
   type BattleHidePrerequisite,
+  type BattleHole,
   type BattleInterruptCheckpoint,
   type BattleInterruptProcedureSelection,
   type BattleReadiedSpellTrigger,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleSubject,
-  type BattleCreatureState,
-  type CombatantId,
-  type BattleCreatureInit,
   type BattleUnitRef,
-  type ActiveOngoingFeatureOccurrence,
+  type CombatantId,
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
-  type SupportedSpellInvocation,
 } from "./index.ts";
-import type { BattleInterruptAttackExecutionSelection } from "./battle-subjects.ts";
-import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import {
-  BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
-  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-  MONK_FOCUS_PROCEDURE_QUERY,
-  characterExecutionWithSpellInvocations,
-  characterSpellProcedure,
-  characterSpellProcedureRefForInvocationRef,
-  characterUnitProcedureRef,
-} from "./character-execution.ts";
-import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
-import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import { battleCunningStrikeSupportForUnit } from "./unit-feature-support.ts";
 export { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+
+export function battleProcedureExecutionRefForTest(
+  discriminator: string,
+): BattleProcedureExecutionRef {
+  let ordinal = 0;
+  for (const codePoint of discriminator) {
+    ordinal = (Math.imul(ordinal, 31) + codePoint.codePointAt(0)!) >>> 0;
+  }
+  return battleProcedureExecutionRef(
+    battleCharacterExecutionScopeRef(
+      battleId("battle-test-procedure-reference"),
+      combatantId("test-procedure-owner"),
+      battleExecutionScopeOrdinal(ordinal),
+    ),
+    NonNegativeInteger(0),
+  );
+}
+
+export function battleProcedureExecutionRefForSpellHoleForTest(
+  hole: BattleHole,
+): BattleProcedureExecutionRef {
+  if (
+    "sourceProcedureRef" in hole &&
+    typeof hole.sourceProcedureRef === "string"
+  ) {
+    return BattleProcedureExecutionRef.make(hole.sourceProcedureRef);
+  }
+  if ("procedureRef" in hole && typeof hole.procedureRef === "string") {
+    return BattleProcedureExecutionRef.make(hole.procedureRef);
+  }
+  if (
+    "objectContact" in hole &&
+    typeof hole.objectContact.sourceProcedureRef === "string"
+  ) {
+    return BattleProcedureExecutionRef.make(
+      hole.objectContact.sourceProcedureRef,
+    );
+  }
+  if (
+    hole.kind === "targetChoice" &&
+    hole.spellTargetSpatialFactRequest !== undefined
+  ) {
+    return hole.spellTargetSpatialFactRequest.sourceProcedureRef;
+  }
+  if (!("spell" in hole) || !("sourceProcedureRef" in hole.spell)) {
+    throw new Error("Expected an execution-bound spell hole.");
+  }
+  if (typeof hole.spell.sourceProcedureRef !== "string") {
+    throw new Error("Expected a string spell procedure execution ref.");
+  }
+  return BattleProcedureExecutionRef.make(hole.spell.sourceProcedureRef);
+}
+
+export function battleActiveEffectExecutionRefForTest(
+  discriminator: string,
+): BattleActiveEffectExecutionRef {
+  let ordinal = 2_166_136_261;
+  for (const character of discriminator) {
+    ordinal = Math.imul(ordinal ^ character.charCodeAt(0), 16_777_619) >>> 0;
+  }
+  return battleActiveEffectExecutionRef(
+    JSON.stringify({
+      battleId: "test-battle",
+      kind: "activeEffectOccurrence",
+      ownerId: "test-active-effect-owner",
+      ordinal,
+    }),
+  );
+}
 
 export function characterSpellInvocationForProcedureRefForTest(
   state: BattleState,
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
-): SupportedSpellInvocation {
+): BattleExecutableSpellInvocation {
   const actor = state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     throw new Error(`Expected character combatant ${actorId}.`);
@@ -149,104 +329,69 @@ export function characterSpellInvocationRefForProcedureRefForTest(
     ),
   );
 }
-import {
-  characterBattleResourceIsUseCount,
-  characterBattleResourceIsUnlimited,
-  parseCharacterBattleClassLevels,
-} from "./character-battle-resources.ts";
-import {
-  supportedSpellInvocationMatchesRef,
-  supportedSpellInvocationRef,
-} from "./battle-reducer/spells-invocation-ref.ts";
-import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
-import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
-import weaponLongbowInput from "../../surface/content/weapon_longbow.json";
-import {
-  abilityModifier,
-  armorClass,
-  defaultArmorClassState,
-} from "@dnd/shared-algebras/armor-class-algebra";
-import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
-import {
-  applyCondition,
-  hasCondition,
-  removeCondition,
-} from "@dnd/shared-algebras/conditions-algebra";
-import {
-  elapsedTimeTicks,
-  elapsedTimeTicksFromHours,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
-import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
-import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
-import { battleCunningStrikeSupportForUnit } from "./unit-feature-support.ts";
-import {
-  holeId,
-  holeInstanceKey,
-  type AttackRollMode,
-} from "@dnd/shared-algebras/runtime-hole-algebra";
-import {
-  attackBonus,
-  abilityModifier as battleAbilityModifier,
-  damageAmount,
-  difficultyClass,
-  DieRollResult,
-  Hp,
-  movementDeltaFeet,
-  movementFeet,
-  proficiencyBonus,
-  resourceCount,
-  type Condition,
-} from "@dnd/shared/types";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
-import {
-  buildUnitCatalog,
-  srdUnitCollection,
-} from "@dnd/surface/surface/unit-catalog";
-import { isEffectAtom } from "@dnd/surface/surface/types";
-import magicMissileInput from "../../surface/content/magic_missile.json";
-import mageArmorInput from "../../surface/content/mage_armor.json";
-import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
-import acidSplashInput from "../../surface/content/acid_splash.json";
-import chillTouchInput from "../../surface/content/chill_touch.json";
-import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
-import poisonSprayInput from "../../surface/content/poison_spray.json";
-import sacredFlameInput from "../../surface/content/sacred_flame.json";
-import inflictWoundsInput from "../../surface/content/inflict_wounds.json";
-import shockingGraspInput from "../../surface/content/shocking_grasp.json";
-import guidingBoltInput from "../../surface/content/guiding_bolt.json";
-import rayOfSicknessInput from "../../surface/content/ray_of_sickness.json";
-import fireBoltInput from "../../surface/content/fire_bolt.json";
-import starryWispInput from "../../surface/content/starry_wisp.json";
-import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
-import burningHandsInput from "../../surface/content/burning_hands.json";
-import chainLightningInput from "../../surface/content/chain_lightning.json";
-import colorSprayInput from "../../surface/content/color_spray.json";
-import iceKnifeInput from "../../surface/content/ice_knife.json";
-import greaseInput from "../../surface/content/grease.json";
-import fogCloudInput from "../../surface/content/fog_cloud.json";
-import huntersMarkInput from "../../surface/content/hunters_mark.json";
-import hexInput from "../../surface/content/hex.json";
-import findFamiliarInput from "../../surface/content/find_familiar.json";
-import healingWordInput from "../../surface/content/healing_word.json";
-import spareTheDyingInput from "../../surface/content/spare_the_dying.json";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type {
-  AreaDirectEffectAtom,
-  DamageType,
-  EffectAtom,
-  SpellRecord,
-  StatBlockRecord,
-  Size,
-  UnitRecord,
-  WeaponRecord,
-} from "@dnd/surface/surface/types";
+
+export function characterSpellProcedureRefMatchesSpellForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+  spellId: string,
+): boolean {
+  return (
+    characterSpellInvocationRefForProcedureRefForTest(
+      state,
+      actorId,
+      procedureRef,
+    ).spellId === spellId
+  );
+}
+
+export function requireCharacterSpellProcedureRefForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  invocationRef: SpellInvocationRef,
+): BattleProcedureExecutionRef {
+  const actor = state.combatants.get(actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  const execution = characterExecutionWithSpellInvocations(
+    actor.origin.execution,
+    supportedSpellActs(actor, state),
+  );
+  const procedureRef = characterSpellProcedureRefForInvocationRef(
+    execution,
+    invocationRef,
+  );
+  if (procedureRef === undefined) {
+    throw new Error(
+      `Expected selected spell procedure for ${actorId}: ${JSON.stringify(invocationRef)}.`,
+    );
+  }
+  return procedureRef;
+}
+
+export function requireCharacterUnitProcedureRefForTest(
+  state: BattleState,
+  actorId: CombatantId,
+  unitId: string,
+  query: CharacterUnitProcedureQuery = CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+): BattleProcedureExecutionRef {
+  const actor = state.combatants.get(actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    throw new Error(`Expected character combatant ${actorId}.`);
+  }
+  const procedureRef = characterUnitProcedureRef(
+    actor.origin.execution,
+    unitId,
+    query,
+  );
+  if (procedureRef === undefined) {
+    throw new Error(
+      `Expected selected Unit procedure for ${actorId}: ${unitId}.`,
+    );
+  }
+  return procedureRef;
+}
 
 export function startBattleRight(
   input: Parameters<typeof startBattle>[0],
@@ -392,7 +537,10 @@ export function requireResolved(
   { readonly tag: "resolved" }
 > {
   if (result.tag !== "resolved") {
-    throw new Error(`Expected resolved battle result, got ${result.tag}.`);
+    const detail = "message" in result ? `: ${result.message}` : "";
+    throw new Error(
+      `Expected resolved battle result, got ${result.tag}${detail}.`,
+    );
   }
 
   return result;
@@ -597,7 +745,7 @@ export function criticalRange19UnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "fighter_improved_critical",
+      unit: unitLibrary.requireUnit("fighter_improved_critical"),
       supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
     },
   ];
@@ -609,7 +757,7 @@ export function sneakAttackUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "rogue_sneak_attack",
+      unit: unitLibrary.requireUnit("rogue_sneak_attack"),
       supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
     },
   ];
@@ -627,7 +775,7 @@ export function cunningStrikeUnitRefs(): Extract<
   return [
     ...sneakAttackUnitRefs(),
     {
-      unitId: unit.id,
+      unit: unitLibrary.requireUnit(unit.id),
       supportProfiles: [support],
     },
   ];
@@ -639,7 +787,7 @@ export function masterySapUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "mastery_sap",
+      unit: unitLibrary.requireUnit("mastery_sap"),
       supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
     },
   ];
@@ -651,7 +799,7 @@ export function masteryToppleUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "mastery_topple",
+      unit: unitLibrary.requireUnit("mastery_topple"),
       supportProfiles: [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE],
     },
   ];
@@ -663,7 +811,7 @@ export function masteryCleaveUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "mastery_cleave",
+      unit: unitLibrary.requireUnit("mastery_cleave"),
       supportProfiles: [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE],
     },
   ];
@@ -675,7 +823,7 @@ export function tacticalMasterReplacementUnitRefs(): Extract<
 >["characterUnitRefs"] {
   return [
     {
-      unitId: "fighter_tactical_master",
+      unit: unitLibrary.requireUnit("fighter_tactical_master"),
       supportProfiles: [
         {
           kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
@@ -684,15 +832,15 @@ export function tacticalMasterReplacementUnitRefs(): Extract<
       ],
     },
     {
-      unitId: "mastery_push",
+      unit: unitLibrary.requireUnit("mastery_push"),
       supportProfiles: [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE],
     },
     {
-      unitId: "mastery_sap",
+      unit: unitLibrary.requireUnit("mastery_sap"),
       supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
     },
     {
-      unitId: "mastery_slow",
+      unit: unitLibrary.requireUnit("mastery_slow"),
       supportProfiles: [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE],
     },
   ];
@@ -711,7 +859,7 @@ export function grapplerUnitRefs(): Extract<
   }
   return [
     {
-      unitId: "feat_grappler",
+      unit: unitLibrary.requireUnit("feat_grappler"),
       supportProfiles: supportProfiles.right,
     },
   ];
@@ -730,7 +878,7 @@ export function halflingNimblenessUnitRefs(): Extract<
   }
   return [
     {
-      unitId: "species_halfling_nimbleness",
+      unit: unitLibrary.requireUnit("species_halfling_nimbleness"),
       supportProfiles: supportProfiles.right,
     },
   ];
@@ -833,9 +981,23 @@ export function fighterTurnWithReadiedRay(
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        startBattleRight({
+          battleId: battleId(`battle-readied-${trigger}`),
+          combatants: [
+            characterSeed({
+              combatantId: wizardId,
+              displayName: "Wizard",
+              initiative: 30,
+              attack: null,
+              spellcasting: wizardSpellcasting(),
+            }),
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({ initiative: 10 }),
+          ],
+        }),
+        wizardId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "ready", trigger },
     },
@@ -882,9 +1044,30 @@ export function fighterTurnWithReadiedRayAndHealer(
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        startBattleRight({
+          battleId: battleId(`battle-readied-${trigger}-healing-word`),
+          combatants: [
+            characterSeed({
+              combatantId: wizardId,
+              displayName: "Wizard",
+              initiative: 30,
+              attack: null,
+              spellcasting: wizardSpellcasting(),
+            }),
+            characterSeed({
+              initiative: 20,
+              currentHp: 4,
+              attack: null,
+              spellcasting: wizardSpellcasting({
+                preparedSpells: [spellRecord("healing_word")],
+              }),
+            }),
+            statBlockCreatureInit({ initiative: 10 }),
+          ],
+        }),
+        wizardId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "ready", trigger },
     },
@@ -927,7 +1110,31 @@ export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
-        invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          startBattleRight({
+            battleId: battleId("battle-nested-readied-reactions"),
+            combatants: [
+              characterSeed({
+                combatantId: wizardId,
+                displayName: "Wizard",
+                initiative: 40,
+                attack: null,
+                spellcasting: wizardSpellcasting(),
+              }),
+              characterSeed({
+                combatantId: secondWizardId,
+                displayName: "Second Wizard",
+                initiative: 30,
+                attack: null,
+                spellcasting: wizardSpellcasting(),
+              }),
+              characterSeed({ initiative: 20 }),
+              statBlockCreatureInit({ initiative: 10 }),
+            ],
+          }),
+          wizardId,
+          cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+        ),
         mode: { tag: "ready", trigger: "attackHit" },
       },
       fills: [],
@@ -942,9 +1149,10 @@ export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
       subject: {
         tag: "actionSpell",
         actorId: secondWizardId,
-        invocation: cantripSpellInvocationRef(
-          "ray_of_frost",
-          "spellAttackDamage",
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          secondWizardTurn,
+          secondWizardId,
+          cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),
         mode: { tag: "ready", trigger: "saveFailed" },
       },
@@ -965,9 +1173,10 @@ export function wizardTurnWithReadiedRay(
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        base,
+        wizardId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "ready", trigger },
     },
@@ -1384,10 +1593,10 @@ export function characterWithDeathSaveCounters(input: {
   };
 }
 
-export function requireHole<K extends BattleHole["kind"]>(
+export function requireHole(
   result: ReturnType<typeof resolveBattleSubject>,
-  kind: K,
-): Extract<BattleHole, { readonly kind: K }> {
+  kind: BattleHole["kind"],
+): BattleHole {
   if (result.tag !== "needsHoles") {
     throw new Error(
       `Expected needsHoles, got ${result.tag}${
@@ -1395,39 +1604,102 @@ export function requireHole<K extends BattleHole["kind"]>(
       }.`,
     );
   }
-  const hole = result.holes.find(
-    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
-      candidate.kind === kind,
-  );
+  const hole = result.holes.find((candidate) => candidate.kind === kind);
   if (hole == null) {
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
 }
 
-export function findHole<K extends BattleHole["kind"]>(
+export function findHole(
   holes: readonly BattleHole[],
-  kind: K,
-): Extract<BattleHole, { readonly kind: K }> {
-  const hole = holes.find(
-    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
-      candidate.kind === kind,
-  );
+  kind: BattleHole["kind"],
+): BattleHole {
+  const hole = holes.find((candidate) => candidate.kind === kind);
   if (hole == null) {
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
+}
+
+type SpellProcedureSelectionSubjectForTest = Extract<
+  CharacterProcedureSelectionSubject,
+  {
+    readonly tag:
+      | "actionSpell"
+      | "bonusActionSpell"
+      | "bonusActionDashSpell"
+      | "findFamiliarTouchSpell";
+  }
+>;
+
+function isSpellProcedureSelectionSubjectForTest(
+  subject: BattleActDiscoverySubject,
+): subject is SpellProcedureSelectionSubjectForTest {
+  return (
+    isCharacterProcedureSelectionSubject(subject) &&
+    (subject.tag === "actionSpell" ||
+      subject.tag === "bonusActionSpell" ||
+      subject.tag === "bonusActionDashSpell" ||
+      subject.tag === "findFamiliarTouchSpell")
+  );
+}
+
+function boundCharacterProcedureSelectionForTest(
+  state: BattleState,
+  selection: BattleActDiscoverySubject,
+): BattleActDiscoverySubject {
+  if (
+    !isSpellProcedureSelectionSubjectForTest(selection) ||
+    selection.procedureRef !== undefined
+  ) {
+    return selection;
+  }
+  const selectedSpellAct = discoverBattleActs(state).find((candidate) => {
+    const presentation = battleActSpellPresentation(candidate);
+    return (
+      candidate.subject.actorId === selection.actorId &&
+      candidate.subject.tag === selection.tag &&
+      presentation !== undefined &&
+      presentation.invocation.tag === selection.invocation.tag &&
+      presentation.invocation.spellId === selection.invocation.spellId &&
+      presentation.invocation.procedure === selection.invocation.procedure &&
+      (presentation.invocation.tag !== "spellSlot" ||
+        (selection.invocation.tag === "spellSlot" &&
+          presentation.invocation.slotLevel === selection.invocation.slotLevel))
+    );
+  });
+  const actor = state.combatants.get(selection.actorId);
+  const procedureRef =
+    selectedSpellAct === undefined
+      ? actor?.origin.kind === "character"
+        ? characterStoredSpellProcedureRefForInvocationRef(
+            actor.origin.execution,
+            selection.invocation,
+          )
+        : undefined
+      : battleActSpellPresentation(selectedSpellAct)?.procedureRef;
+  return procedureRef === undefined
+    ? selection
+    : { ...selection, procedureRef };
 }
 
 export function findAct(
   state: BattleState,
-  subject: BattleSubject,
+  subject: BattleActDiscoverySubject,
 ): ReturnType<typeof discoverBattleActs>[number] {
+  const boundSelection = boundCharacterProcedureSelectionForTest(
+    state,
+    subject,
+  );
+  const admittedSubject = isCharacterProcedureSelectionSubject(boundSelection)
+    ? admitCharacterProcedureSelectionSubject(state, boundSelection)
+    : boundSelection;
+  if (admittedSubject === undefined) {
+    throw new Error(`Expected subject admission ${JSON.stringify(subject)}.`);
+  }
   const act = discoverBattleActs(state).find((candidate) => {
-    return (
-      JSON.stringify(battleSubjectSelection(candidate.subject)) ===
-      JSON.stringify(battleSubjectSelection(subject))
-    );
+    return sameBattleSubject(candidate.subject, admittedSubject);
   });
   if (act === undefined) {
     throw new Error(`Expected discovered act ${JSON.stringify(subject)}.`);
@@ -1436,86 +1708,33 @@ export function findAct(
 }
 
 function resolveBattleSubject(
-  input: Parameters<typeof resolveBattleSubjectRuntime>[0],
+  input: Omit<Parameters<typeof resolveBattleSubjectRuntime>[0], "subject"> & {
+    readonly subject: BattleActDiscoverySubject;
+  },
 ): ReturnType<typeof resolveBattleSubjectRuntime> {
-  const subject = boundCharacterProcedureTestSubject(
+  const boundSelection = boundCharacterProcedureSelectionForTest(
     input.state,
     input.subject,
   );
-  return resolveBattleSubjectRuntime({ ...input, subject });
-}
-
-function boundCharacterProcedureTestSubject(
-  state: BattleState,
-  subject: BattleSubject,
-): BattleSubject {
-  if (!isUnboundCharacterProcedureTestSubject(subject)) return subject;
-  const discovered = discoverBattleActs(state).find(
-    (candidate) =>
-      JSON.stringify(battleSubjectSelection(candidate.subject)) ===
-      JSON.stringify(battleSubjectSelection(subject)),
-  );
-  if (discovered !== undefined) return discovered.subject;
-  const actor = state.combatants.get(subject.actorId);
-  if (!isCharacterBattleCreatureState(actor)) return subject;
-  if (
-    subject.tag === "actionSpell" ||
-    subject.tag === "bonusActionSpell" ||
-    subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell"
-  ) {
-    const execution = characterExecutionWithSpellInvocations(
-      actor.origin.execution,
-      supportedSpellActs(actor, state),
+  const subject =
+    isSpellProcedureSelectionSubjectForTest(boundSelection) &&
+    boundSelection.procedureRef !== undefined
+      ? (() => {
+          const { invocation: _invocation, ...replaySubject } = boundSelection;
+          return {
+            ...replaySubject,
+            procedureRef: boundSelection.procedureRef,
+          };
+        })()
+      : isCharacterProcedureSelectionSubject(boundSelection)
+        ? admitCharacterProcedureSelectionSubject(input.state, boundSelection)
+        : boundSelection;
+  if (subject === undefined) {
+    throw new Error(
+      `Expected character procedure selection to be admitted: ${JSON.stringify(input.subject)}.`,
     );
-    const procedureRef = characterSpellProcedureRefForInvocationRef(
-      execution,
-      subject.invocation,
-    );
-    return procedureRef === undefined ? subject : { ...subject, procedureRef };
   }
-  const unitSelection =
-    subject.tag === "bonusActionStandardAction"
-      ? {
-          unitId: subject.sourceUnitId,
-          query: BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
-        }
-      : subject.tag === "monkFocusOption"
-        ? { unitId: subject.resourceUnitId, query: MONK_FOCUS_PROCEDURE_QUERY }
-        : subject.tag === "druidWildShape"
-          ? { unitId: subject.unitId, query: DRUID_WILD_SHAPE_PROCEDURE_QUERY }
-          : "unitId" in subject
-            ? {
-                unitId: subject.unitId,
-                query: CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-              }
-            : undefined;
-  if (unitSelection === undefined) return subject;
-  const procedureRef = characterUnitProcedureRef(
-    actor.origin.execution,
-    unitSelection.unitId,
-    unitSelection.query,
-  );
-  return procedureRef === undefined ? subject : { ...subject, procedureRef };
-}
-
-function isUnboundCharacterProcedureTestSubject(
-  subject: BattleSubject,
-): subject is CharacterProcedureBattleSubject & {
-  readonly procedureRef?: undefined;
-} {
-  return (
-    (subject.tag === "actionSpell" ||
-      subject.tag === "bonusActionSpell" ||
-      subject.tag === "bonusActionDashSpell" ||
-      subject.tag === "findFamiliarTouchSpell" ||
-      subject.tag === "unitFeature" ||
-      subject.tag === "unitFeatureHeldWeaponActivation" ||
-      subject.tag === "druidWildShape" ||
-      subject.tag === "bonusActionStandardAction" ||
-      subject.tag === "monkFocusOption") &&
-    subject.procedureRef === undefined
-  );
+  return resolveBattleSubjectRuntime({ ...input, subject });
 }
 
 export function battleSubjectSelection(subject: BattleSubject) {
@@ -1684,12 +1903,22 @@ export function targetFill(
                     : undefined,
                 ),
               ]),
-          ...[wizardId, fighterId].map((casterId) => ({
-            kind: "spellTarget" as const,
-            casterId,
-            targetId,
-            spellId: spellIdFromTargetHoleLabel(hole.label),
-          })),
+          ...(hole.spellTargetSpatialFactRequest === undefined
+            ? []
+            : [
+                {
+                  kind: "spellTarget" as const,
+                  casterId: hole.spellTargetSpatialFactRequest.casterId,
+                  targetId,
+                  sourceProcedureRef:
+                    hole.spellTargetSpatialFactRequest.sourceProcedureRef,
+                },
+              ]),
+          {
+            kind: "helpAttackTargetWithin5Feet" as const,
+            helperId: fighterId,
+            targetEnemyId: targetId,
+          },
           {
             kind: "grappleTargetWithinReach" as const,
             grapplerId: fighterId,
@@ -1727,36 +1956,6 @@ export function targetFill(
   };
 }
 
-export function helpAttackAllyDecisionFill(
-  hole: BattleHole,
-  allyId: CombatantId,
-): Extract<BattleFill, { readonly kind: "helpAttackAllyDecision" }> {
-  if (hole.kind !== "helpAttackAllyDecision") {
-    throw new Error("Expected helpAttackAllyDecision hole.");
-  }
-  return {
-    kind: "helpAttackAllyDecision",
-    holeId: hole.holeId,
-    allyId,
-  };
-}
-
-export function helpAttackEnemyDecisionFill(
-  hole: BattleHole,
-  targetEnemyId: CombatantId,
-  targetWithinFiveFeetOfHelper = true,
-): Extract<BattleFill, { readonly kind: "helpAttackEnemyDecision" }> {
-  if (hole.kind !== "helpAttackEnemyDecision") {
-    throw new Error("Expected helpAttackEnemyDecision hole.");
-  }
-  return {
-    kind: "helpAttackEnemyDecision",
-    holeId: hole.holeId,
-    targetEnemyId,
-    targetWithinFiveFeetOfHelper,
-  };
-}
-
 type ObjectTargetChoiceFill = Extract<
   BattleFill,
   { readonly kind: "objectTargetChoice" }
@@ -1789,7 +1988,9 @@ export function objectTargetFill(input: {
         kind: "spellObjectTarget",
         casterId: input.casterId ?? wizardId,
         objectId,
-        spellId: input.spellId,
+        sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+          input.hole,
+        ),
         rangeFeet: input.rangeFeet ?? movementFeet(60),
         armorClass: input.armorClass ?? armorClass(13),
         damageDisposition: input.damageDisposition ?? {
@@ -1820,7 +2021,7 @@ export function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId,
       targetId: allocation.targetId,
-      spellId: hole.spell.spell.id,
+      sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
     })),
   };
 }
@@ -1899,25 +2100,6 @@ function commonAdjacentAllySpatialFacts(
     targetId,
     allyId,
   }));
-}
-
-function spellIdFromTargetHoleLabel(label: string | undefined): string {
-  if (label?.startsWith("Magic Missile") === true) return "magic_missile";
-  if (label?.startsWith("Ray of Frost") === true) return "ray_of_frost";
-  if (label?.startsWith("Mage Armor") === true) return "mage_armor";
-  if (label?.startsWith("Poison Spray") === true) return "poison_spray";
-  if (label?.startsWith("Chill Touch") === true) return "chill_touch";
-  if (label?.startsWith("Eldritch Blast") === true) return "eldritch_blast";
-  if (label?.startsWith("Fire Bolt") === true) return "fire_bolt";
-  if (label?.startsWith("Starry Wisp") === true) return "starry_wisp";
-  if (label?.startsWith("Sacred Flame") === true) return "sacred_flame";
-  if (label?.startsWith("Inflict Wounds") === true) return "inflict_wounds";
-  if (label?.startsWith("Shocking Grasp") === true) return "shocking_grasp";
-  if (label?.startsWith("Guiding Bolt") === true) return "guiding_bolt";
-  if (label?.startsWith("Ray of Sickness") === true) return "ray_of_sickness";
-  if (label?.startsWith("Vicious Mockery") === true) return "vicious_mockery";
-  if (label?.startsWith("Ice Knife") === true) return "ice_knife";
-  return "";
 }
 
 type TestD20RolledD20s = {
@@ -2737,6 +2919,24 @@ export function characterSeed(input: {
     druidWildShapeAvailableForms === undefined
       ? undefined
       : druidWildShapeAvailableForms.right;
+  const resourceUnitRefs = (input.resources ?? []).map((resource) => {
+    const supportProfiles = battleUnitSupportProfilesForUnit({
+      unit: resource.unit,
+      classLevels: parseCharacterBattleClassLevels(classLevels),
+    });
+    if (Either.isLeft(supportProfiles)) {
+      throw new Error(supportProfiles.left.message);
+    }
+    return { unit: resource.unit, supportProfiles: supportProfiles.right };
+  });
+  const characterUnitRefs = [
+    ...new Map(
+      [...resourceUnitRefs, ...(input.characterUnitRefs ?? [])].map((ref) => [
+        ref.unit.id,
+        ref,
+      ]),
+    ).values(),
+  ];
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
@@ -2744,7 +2944,7 @@ export function characterSeed(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
-      characterUnitRefs: input.characterUnitRefs ?? [],
+      characterUnitRefs,
       classLevels,
       knownLanguages: input.knownLanguages ?? ["Common"],
       d20Statistics:
@@ -3266,7 +3466,7 @@ export function supportedBattleUnitRef(unit: UnitRecord): BattleUnitRef {
     throw new Error(profiles.left.message);
   }
   return {
-    unitId: unit.id,
+    unit,
     supportProfiles: profiles.right,
   };
 }
@@ -3417,7 +3617,7 @@ export function reactionModifierUnitRef(
   >["characterUnitRefs"]
 >[number] {
   return {
-    unitId,
+    unit: unitLibrary.requireUnit(unitId),
     supportProfiles: [REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE],
   };
 }
@@ -3434,7 +3634,7 @@ export function reactionModifierUnitRefWithProfile(
   >["characterUnitRefs"]
 >[number] {
   return {
-    unitId,
+    unit: unitLibrary.requireUnit(unitId),
     supportProfiles: [profile],
   };
 }
@@ -3492,7 +3692,9 @@ export function bardicInspirationUnit(): Extract<
   return unit;
 }
 
-export function bardicInspirationSubject(unitId: string): BattleSubject {
+export function bardicInspirationSubject(
+  unitId: string,
+): BattleActDiscoverySubject {
   return { tag: "unitFeature", actorId: fighterId, unitId };
 }
 
@@ -3536,7 +3738,7 @@ export function bardicInspirationBattle(input: {
         ],
         characterUnitRefs: [
           {
-            unitId: bardicInspirationUnit().id,
+            unit: unitLibrary.requireUnit(bardicInspirationUnit().id),
             supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
           },
         ],
@@ -3581,12 +3783,14 @@ export function bardicInspirationTargetFill(
   targetId: CombatantId,
   input?: { readonly canHear?: boolean },
 ): BattleFill {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
   return targetFill(hole, targetId, [
     {
       kind: "bardicInspirationTargetWithinRange",
       bardId: fighterId,
       targetId,
-      unitId: bardicInspirationUnit().id,
+      sourceProcedureRef,
       rangeFeet: movementFeet(60),
     },
     ...(input?.canHear === true
@@ -3595,7 +3799,7 @@ export function bardicInspirationTargetFill(
             kind: "bardicInspirationTargetCanHear" as const,
             bardId: fighterId,
             targetId,
-            unitId: bardicInspirationUnit().id,
+            sourceProcedureRef,
           },
         ]
       : []),
@@ -3629,7 +3833,9 @@ export function combatantHasBardicInspirationDie(
   );
 }
 
-export function bardicInspirationStaleTargetHole(): BattleHole {
+export function bardicInspirationStaleTargetHole(
+  state: BattleState,
+): BattleHole {
   const unit = bardicInspirationUnit();
   const protocolId = `battle:unit-feature:${unit.id}:target`;
   return {
@@ -3637,6 +3843,11 @@ export function bardicInspirationStaleTargetHole(): BattleHole {
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${unit.name} target`,
+    procedureRef: requireCharacterUnitProcedureRefForTest(
+      state,
+      fighterId,
+      unit.id,
+    ),
     requiresTableSpatialFact: true,
     choices: [goblinId],
   };
@@ -4496,7 +4707,7 @@ export function wizardVsRogueBattle(input: {
         characterUnitRefs: supportEvasion
           ? [
               {
-                unitId: "rogue_evasion",
+                unit: unitLibrary.requireUnit("rogue_evasion"),
                 supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
               },
             ]
@@ -4708,7 +4919,7 @@ export function spellRecord(spellId: SpellRecord["id"]): SpellRecord {
 
 export function magicSubject(
   spellId: SpellRecord["id"] | "dex_half_cantrip",
-): BattleSubject {
+): BattleActDiscoverySubject {
   const spell =
     spellId === "dex_half_cantrip"
       ? dexHalfDamageCantrip()
@@ -4812,15 +5023,15 @@ export {
   battleId,
   battleObjectId,
   battleObscurementZones,
-  battleTablePositionId,
   battleReactionRollOrDamageReductionSupportForUnit,
   BattleSnapshotSchema,
   BattleSubjectSchema,
+  battleTablePositionId,
   battleUnitSupportProfilesForUnit,
   breakBattleConcentration,
   cantripSpellInvocationRef,
-  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
+  characterBattleResourceIsUseCount,
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
   classFeatureFreeCastSpellInvocationRef,
@@ -4875,6 +5086,7 @@ export {
 
 export type {
   ActiveOngoingFeatureOccurrence,
+  BattleActDiscoverySubject,
   BattleFill,
   BattleHole,
   BattleInterruptCheckpoint,
