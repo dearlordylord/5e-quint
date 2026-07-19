@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 //
 // The Counterspell Spell Procedure Profile: a prepared Reaction spell that
 // interrupts a visible spell cast within range, optionally asks for the

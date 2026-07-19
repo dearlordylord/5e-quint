@@ -160,6 +160,7 @@ function extendedCreatureSizeAct(
 
 function quickenedCreatureSizeAct(input?: {
   readonly targetCanCounterspell?: true;
+  readonly castSlotLevel?: 2 | 4;
 }): {
   readonly state: ReturnType<typeof spellBattle>;
   readonly act: BonusActionSpellAct;
@@ -167,7 +168,7 @@ function quickenedCreatureSizeAct(input?: {
   const spell = spellRecord(enlargeReduceUnitId);
   const state = spellBattle({
     preparedSpells: [spell],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
+    spellSlots: [{ spellLevel: input?.castSlotLevel ?? 2, count: 1 }],
     casterClassLevels: [{ className: "sorcerer", level: 2 }],
     casterResources: [
       {
@@ -192,7 +193,7 @@ function quickenedCreatureSizeAct(input?: {
             featurePreparedSpells: [],
             spellbookRitualSpellAccesses: [],
             invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 3 as const, count: 1 }],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
           },
         }
       : {}),
@@ -260,9 +261,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const { state, act } = quickenedCreatureSizeAct({
       targetCanCounterspell: true,
     });
+    const castingState = withExistingCreatureSizeConcentration(state);
     const target = requireHole(act.initialHoles, "targetChoice");
     const awaitingCounterspell = resolveBattleSubject({
-      state,
+      state: castingState,
       subject: act.subject,
       fills: [
         knownWillingSpellTargetFill(
@@ -272,7 +274,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         spellCastReactionFactsFill([
-          counterspellTriggerFact(state, spellTargetId, spellCasterId),
+          counterspellTriggerFact(castingState, spellTargetId, spellCasterId),
         ]),
       ],
     });
@@ -280,6 +282,12 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (awaitingCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Quickened Enlarge Counterspell window.");
     }
+    expect(
+      requireCombatant(awaitingCounterspell.state, spellCasterId).concentration,
+    ).toBeNull();
+    expect(
+      sizeChangeEffects(awaitingCounterspell.state, spellCasterId),
+    ).toEqual([]);
     const choice = requireCounterspellChoice(awaitingCounterspell);
     const countered = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
@@ -321,6 +329,129 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     expect(
       combatantEffectiveSize(requireCombatant(countered.state, spellTargetId)),
     ).toBe("medium");
+  });
+
+  test("declining Counterspell replays Quickened Enlarge and commits its resources once", () => {
+    const { state, act } = quickenedCreatureSizeAct({
+      targetCanCounterspell: true,
+    });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const awaitingCounterspell = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        spellCastReactionFactsFill([
+          counterspellTriggerFact(state, spellTargetId, spellCasterId),
+        ]),
+      ],
+    });
+    if (awaitingCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected Quickened Enlarge Counterspell window.");
+    }
+    const resolved = resolveBattleInterrupt({
+      state: awaitingCounterspell.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        { kind: "decline", responderId: spellTargetId },
+      ),
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected declined Counterspell replay to resolve.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual({ kind: "committed", combatantId: spellCasterId });
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toEqual([spellCasterId]);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(0);
+    expect(
+      combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
+    ).toBe("large");
+  });
+
+  test("a failed lower-level Counterspell replays Quickened Enlarge with its rewrite and Metamagic commitment", () => {
+    const { state, act } = quickenedCreatureSizeAct({
+      targetCanCounterspell: true,
+      castSlotLevel: 4,
+    });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const awaitingCounterspell = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        spellCastReactionFactsFill([
+          counterspellTriggerFact(state, spellTargetId, spellCasterId),
+        ]),
+      ],
+    });
+    if (awaitingCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected Quickened Enlarge Counterspell window.");
+    }
+    const choice = requireCounterspellChoice(awaitingCounterspell);
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const resolved = resolveBattleInterrupt({
+      state: awaitingCounterspell.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: spellTargetId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: choice.subject.procedureRef,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellCasterId, succeeded: true },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected failed Counterspell replay to resolve.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual({ kind: "committed", combatantId: spellCasterId });
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toEqual([spellCasterId]);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(0);
+    expect(
+      combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
+    ).toBe("large");
   });
 
   test("admits only creature size increase and decrease spell-slot acts from the creature-or-object Surface target", () => {
@@ -1229,6 +1360,38 @@ function quickenedMetamagicOption(): CharacterBattleMetamagicOptionFact {
     effectKind: QUICKENED_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(2),
+  };
+}
+
+function withExistingCreatureSizeConcentration(
+  state: BattleState,
+): BattleState {
+  const { state: priorState, act } = creatureSizeAct("creatureSizeIncrease");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const priorCast = resolveBattleSubject({
+    state: priorState,
+    subject: act.subject,
+    fills: [
+      knownWillingSpellTargetFill(
+        target,
+        enlargeReduceUnitId,
+        spellCasterId,
+        spellCasterId,
+      ),
+    ],
+  });
+  if (priorCast.tag !== "resolved") {
+    throw new Error("Expected prior Enlarge concentration fixture to resolve.");
+  }
+  const caster = requireCombatant(state, spellCasterId);
+  const priorCaster = requireCombatant(priorCast.state, spellCasterId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...caster,
+      concentration: priorCaster.concentration,
+      activeEffects: priorCaster.activeEffects,
+    }),
   };
 }
 

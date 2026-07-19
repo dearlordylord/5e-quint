@@ -271,7 +271,10 @@ import {
   sanctuaryTargetingInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "./spell-cast-interrupt-frame.ts";
 import { resolveSlowSomaticSpellFailure } from "./slow-active-penalties-runtime.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
@@ -1258,6 +1261,9 @@ function resolveSpellActInternal(
               ? {}
               : { actionCostOverride: options.actionCostOverride }),
           }),
+          ...spellCastMetamagicApplicationsInput(
+            metamagicApplicationsForResolution,
+          ),
           continuation: {
             kind: "replay",
             subject: input.subject,
@@ -2653,6 +2659,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
           ? {}
           : { actionCostOverride: input.actionCostOverride }),
       }),
+      ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
       continuation: {
         kind: "replay",
         subject: input.input.subject,

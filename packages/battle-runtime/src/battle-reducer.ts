@@ -1414,6 +1414,7 @@ export type BattleInterruptCheckpoint =
       readonly castingResource: BattleSpellCastingTimeResource;
       readonly spellSlotCommitment: BattleSpellCastSlotCommitment;
       readonly metamagicCommitment: BattleSpellCastMetamagicCommitment;
+      readonly concentrationCommitment: BattleSpellCastConcentrationCommitment;
       readonly targetIds: readonly CombatantId[];
       readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
     })
@@ -1490,6 +1491,9 @@ export type BattleSpellCastMetamagicCommitment =
         ...CharacterBattleMetamagicOptionFact[],
       ];
     };
+export type BattleSpellCastConcentrationCommitment =
+  | { readonly kind: "none" }
+  | { readonly kind: "breakExisting" };
 export type BattleReplayContinuationFrame = {
   readonly kind: "replayContinuation";
   readonly continuation: Extract<

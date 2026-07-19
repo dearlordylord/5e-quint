@@ -47,10 +47,15 @@ module battleRuntimeMetamagicTests {
   }
 
   run test_interrupted_quickened_action_spell_commits_metamagic_without_spell_slot = {
-    val result = interruptedQuickenedActionSpellResult(initialState, 2, 4)
+    val concentrating = {
+      ...initialState,
+      fighter: { ...initialState.fighter, concentrating: true },
+    }
+    val result = interruptedQuickenedActionSpellResult(concentrating, 2, 4)
     all {
       assert(result.state.actionAvailable),
       assert(not(result.state.bonusActionAvailable)),
+      assert(not(result.state.fighter.concentrating)),
       assert(not(battleActorHasCommittedSpellSlotUse(result.state, Fighter))),
       assert(not(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter))),
       assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),

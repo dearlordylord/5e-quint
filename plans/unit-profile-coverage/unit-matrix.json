@@ -4416,6 +4416,8 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
@@ -27099,6 +27101,8 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",

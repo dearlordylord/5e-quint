@@ -78,7 +78,10 @@ import {
   effectiveD20TestNaturalOneRerollAttackRoll,
 } from "./d20-test-natural-one-reroll.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "./spell-cast-interrupt-frame.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -187,6 +190,7 @@ export function resolveSpellAttackSequenceAct(input: {
         invocation: input.invocation,
         actionCostOverride: input.actionCostOverride,
       }),
+      ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
       continuation: {
         kind: "replay",
         subject: input.input.subject,

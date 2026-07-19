@@ -1,4 +1,5 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 import type {
   BattleSpellCastReactionFactsHole,
   BattleSpellCastReactionFact,
@@ -97,6 +98,10 @@ export function spellCastInterruptFrame(
             kind: "applications",
             applications: input.metamagicApplications,
           },
+    concentrationCommitment:
+      input.invocation.spell.mechanics.duration.kind === "concentration"
+        ? { kind: "breakExisting" }
+        : { kind: "none" },
     targetIds: input.targetIds,
     reactionSpellTargetFacts: input.reactionSpellTargetFacts,
     continuation: input.continuation,

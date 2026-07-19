@@ -1131,6 +1131,7 @@ module battleRuntimeMetamagic {
   ): BattleRuntimeQuickenedMetamagicResult = {
     state: commitActorQuickenedLevelOnePlusSpellCast({
       ...before,
+      fighter: { ...before.fighter, concentrating: false },
       bonusActionAvailable: false,
     }, Fighter),
     sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,

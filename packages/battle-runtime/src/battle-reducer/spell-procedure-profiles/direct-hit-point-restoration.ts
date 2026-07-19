@@ -52,7 +52,10 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import { applyHpHealing } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "../spell-cast-interrupt-frame.ts";
 import { spellHealingAmount } from "../spell-effects.ts";
 import {
   spellHealingRollHole,
@@ -348,6 +351,7 @@ function resolveDirectHitPointRestoration(
         input.input.subject.tag === "bonusActionSpell"
           ? { kind: "bonusAction" }
           : { kind: "magicAction" },
+      ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
       continuation: {
         kind: "replay",
         subject: input.input.subject,
