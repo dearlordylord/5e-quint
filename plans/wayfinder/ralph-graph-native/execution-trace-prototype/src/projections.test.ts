@@ -31,7 +31,7 @@ describe("trace projections", () => {
   const rewriteOccurrence = (
     run: ValidatedTraceRun,
     occurrenceId: string,
-    rewrite: (occurrence: OperationOccurrence) => OperationOccurrence,
+    rewrite: (occurrence: OperationOccurrence) => unknown,
   ): TraceRun => {
     const [first, ...remaining] = run.items;
     return {
@@ -41,7 +41,12 @@ describe("trace projections", () => {
         ...remaining.map((item) =>
           item.tag === "OperationOccurred" &&
           item.occurrence.id === occurrenceId
-            ? { ...item, occurrence: rewrite(item.occurrence) }
+            ? {
+                ...item,
+                // Invalid-wire tests deliberately violate narrowed occurrence
+                // invariants before exercising the runtime trace validator.
+                occurrence: rewrite(item.occurrence) as OperationOccurrence,
+              }
             : item,
         ),
       ],
@@ -313,6 +318,35 @@ describe("trace projections", () => {
     expect(validationIssues(invalid)).toContainEqual({
       tag: "InvalidSessionLineage",
       actorInvocationId: "actor:gh-170-implementer-round-2",
+    });
+  });
+
+  it("rejects resuming a stale invocation in a session lineage", () => {
+    const invalid = rewriteOccurrence(
+      makeTrackerDagRun("resume-bound-session"),
+      "occurrence:gh-99-integration",
+      (occurrence) =>
+        occurrence.operation.tag === "ActorInvocationStarted"
+          ? {
+              ...occurrence,
+              operation: {
+                ...occurrence.operation,
+                actor: {
+                  ...occurrence.operation.actor,
+                  sessionBinding: {
+                    tag: "ResumedSession",
+                    sessionId: "session:integration-main",
+                    previousInvocationId: "actor:gh-46-integrator",
+                  },
+                },
+              },
+            }
+          : occurrence,
+    );
+
+    expect(validationIssues(invalid)).toContainEqual({
+      tag: "InvalidSessionLineage",
+      actorInvocationId: "actor:gh-99-integrator",
     });
   });
 

@@ -86,7 +86,7 @@ export interface RunProjection {
   readonly actors: ReadonlyArray<ActorProjection>;
   readonly actorSpans: ReadonlyArray<ActorSpan>;
   readonly taskExecutions: ReadonlyArray<TaskExecutionProjection>;
-  readonly selectedItem: SemanticTraceItem;
+  readonly selectedItem: ValidatedTraceRun["items"][number];
 }
 
 const operationActor = (
