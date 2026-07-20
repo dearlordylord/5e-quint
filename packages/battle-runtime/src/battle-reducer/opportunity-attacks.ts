@@ -90,8 +90,8 @@ import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-fa
 import {
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
-  eligibleAttackDamageDieFloorUnitIds,
-  eligibleWeaponDamageDiceRollChoiceUnitIds,
+  eligibleAttackDamageDieFloorProcedureRefs,
+  eligibleWeaponDamageDiceRollChoiceProcedureRefs,
   selectedAttackDamageRiders,
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
@@ -332,17 +332,18 @@ export function resolveOpportunityAttackCommand(
       )
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
-    ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+    ? eligibleWeaponDamageDiceRollChoiceProcedureRefs(
         attackRolledState,
         subject.reactorId,
         attack,
       )
     : [];
   const eligibleDamageDieFloorChoiceUnitIds = hit
-    ? eligibleAttackDamageDieFloorUnitIds(
+    ? eligibleAttackDamageDieFloorProcedureRefs(
         attackRolledState,
         subject.reactorId,
         attack,
+        attack.procedureRef,
       )
     : [];
   const spellWeaponDamageRiders = hit
@@ -362,7 +363,7 @@ export function resolveOpportunityAttackCommand(
       ? []
       : (selectedAttackDamageRiders(
           eligibleDamageRiders,
-          fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
+          fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
         ) ?? []);
   const eligibleCunningStrikeDamageOptions = hit
     ? eligibleCunningStrikeContexts({
@@ -755,6 +756,7 @@ export function resolveOpportunityAttackCommand(
   const damageRollByType = attackDamageByTypeEntries(
     damageSource,
     attack,
+    attack.procedureRef,
     fillSet.damageRoll,
     critical,
     effectiveAttackRoll,

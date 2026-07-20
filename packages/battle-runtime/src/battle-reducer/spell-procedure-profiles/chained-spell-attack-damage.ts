@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chained-attack-damage
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
 // The chainedSpellAttackDamage Spell Procedure Profile: a Spell Slot action
@@ -25,8 +26,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   readiedSpellAct,
@@ -43,10 +43,9 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   AttackBonus,
-  BattleRuntimeObjectSchema,
   DamageTypeSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -96,7 +95,6 @@ function discoverChainedSpellAttackDamageCastAct(
       subject: spellCastSelectionSubject(
         actorId,
         invocation,
-        chainedSpellAttackDamageInvocationRef(invocation),
       ),
       initialHoles: [spellDamageTypeChoiceHole(invocation)],
     },
@@ -104,22 +102,6 @@ function discoverChainedSpellAttackDamageCastAct(
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
 }
 
-function chainedSpellAttackDamageInvocationRef(
-  invocation: ChainedSpellAttackDamageInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "chainedSpellAttackDamage",
-  };
-}
-
-function chainedSpellAttackDamageCastSummary(
-  invocation: ChainedSpellAttackDamageInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveChainedSpellAttackDamage(
   input: ChainedSpellAttackDamageResolveInput,
@@ -139,22 +121,17 @@ function resolveChainedSpellAttackDamage(
 }
 
 export const ChainedSpellAttackDamageInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "chainedSpellAttackDamage" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("chainedSpellAttackDamage"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({
         kind: Schema.Literal("singleCombatant"),
       }),
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
       }),
       damageTypeChoices: Schema.Array(DamageTypeSchema),
       rangeFeet: MovementFeet,
@@ -170,14 +147,11 @@ export const chainedSpellAttackDamageProfile: SpellProcedureProfile<
   ChainedSpellFillSet
 > = {
   procedure: "chainedSpellAttackDamage",
-  invocationSchema: ChainedSpellAttackDamageInvocationSchema,
+  executionSchema: ChainedSpellAttackDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
-  knownWillingTargetSpellIds: [],
   admit: admitChainedSpellAttackDamage,
   discoverCastAct: discoverChainedSpellAttackDamageCastAct,
-  castSummary: chainedSpellAttackDamageCastSummary,
-  invocationRef: chainedSpellAttackDamageInvocationRef,
   resolve: resolveChainedSpellAttackDamage,
 };

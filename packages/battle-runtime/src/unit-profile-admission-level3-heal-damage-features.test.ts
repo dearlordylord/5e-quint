@@ -80,7 +80,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(clericDiscipleOfLifeUnitId),
+        unit,
         supportProfiles: [supportProfile],
       }),
     );
@@ -130,6 +130,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     const unit = unitLibrary.requireUnit(clericPreserveLifeUnitId);
     const supportProfile = {
       kind: MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+      className: "cleric",
       healingPool: {
         activationCost: { kind: "standardAction", action: "magic" },
         spends: { resourceUnitId: "cleric_channel_divinity", amount: 1 },
@@ -149,7 +150,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(clericPreserveLifeUnitId),
+        unit,
         supportProfiles: [supportProfile],
       }),
     );
@@ -237,7 +238,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(druidLandsAidUnitId),
+        unit,
         supportProfiles: [supportProfile],
       }),
     );
@@ -358,6 +359,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     const unit = unitLibrary.requireUnit(warlockDarkOnesBlessingUnitId);
     const supportProfile = {
       kind: ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+      className: "warlock",
       temporaryHitPoints: {
         trigger: {
           kind: "enemyReducedToZeroHitPoints",
@@ -376,7 +378,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(warlockDarkOnesBlessingUnitId),
+        unit,
         supportProfiles: [supportProfile],
       }),
     );

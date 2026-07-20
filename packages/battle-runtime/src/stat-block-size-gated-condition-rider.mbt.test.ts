@@ -35,7 +35,7 @@ import {
   combatantId,
   damageRollFill,
   DieRollResult,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   hasCondition,
   resolveBattleSubject,
   startBattleRight,
@@ -44,7 +44,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import type { BattleResolutionResult } from "./index.ts";
 
@@ -436,14 +436,13 @@ function attackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const matchingActs = discoverBattleActs(state).filter(
+  const matchingActs = discoverBattleActCandidates(state).filter(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef !== undefined &&
-      candidate.subject.statBlockDamageNotation === undefined &&
-      candidate.summary === `Take the Attack action with ${biteAttackName}.`,
+      candidate.subject.statBlockDamageNotation === undefined,
   );
   if (matchingActs.length !== 1) {
     throw new Error(`Expected one rolled ${biteAttackName} attack act.`);

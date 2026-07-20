@@ -46,8 +46,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeContext,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 
 const targetFullHp = 20;
@@ -97,6 +98,7 @@ type SpikeGrowthMovementHazardState = {
 
 type SpikeGrowthRuntimeState = {
   readonly battle: BattleState;
+  readonly context: BattleRuntimeContext;
   readonly currentTurnRole: SpikeGrowthTurnRole;
   readonly holes: readonly BattleHole[];
   readonly pendingMovement: {
@@ -248,17 +250,18 @@ function initialRuntimeState(): SpikeGrowthRuntimeState {
     preparedSpells: [spellRecord(spikeGrowthUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
-  const target = requireCombatant(battle, spellTargetId);
+  const target = requireCombatant(battle.state, spellTargetId);
   return {
     battle: {
-      ...battle,
-      combatants: new Map(battle.combatants).set(spellTargetId, {
+      ...battle.state,
+      combatants: new Map(battle.state.combatants).set(spellTargetId, {
         ...target,
         hp: Hp(targetFullHp),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
     },
+    context: battle.context,
     currentTurnRole: "caster",
     holes: [],
     pendingMovement: null,
@@ -270,7 +273,7 @@ function castSpikeGrowth(
   state: SpikeGrowthRuntimeState,
 ): SpikeGrowthRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: { state: state.battle, context: state.context },
     spellId: spikeGrowthUnitId,
     slotLevel: 2,
   });
@@ -447,7 +450,7 @@ function spikeGrowthProjection(
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: { state: state.battle, context: state.context },
         spellId: spikeGrowthUnitId,
         slotLevel: 2,
       }) !== undefined,

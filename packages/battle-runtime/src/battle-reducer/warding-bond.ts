@@ -11,10 +11,7 @@ import type {
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
-import {
-  type BattleProcedureExecutionRef,
-  type CombatantId,
-} from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import {
   WARDING_BOND_CONNECTION_RANGE_FEET,
   WARDING_BOND_SEPARATION_FACTS_HOLE_ID,
@@ -158,11 +155,9 @@ export function applyWardingBondSpellEffect(
   state: BattleState,
   casterId: CombatantId,
   targetId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "wardingBond" }
+  invocation: BattleExecutableSpellInvocation<
+    Extract<SupportedSpellInvocation, { readonly procedure: "wardingBond" }>
   >,
-  procedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   const withoutPriorBonds = battleStateWithoutWardingBondConnectedToCombatants(
     state,
@@ -186,7 +181,7 @@ export function applyWardingBondSpellEffect(
         ...allocatedTarget.activeEffects,
         {
           ...invocation.activeEffect,
-          sourceProcedureRef: procedureRef,
+    sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: casterId,
           effectRef: allocation.effectRef,
         },

@@ -24,8 +24,9 @@ import {
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -81,7 +82,7 @@ defineSelectedIdentityReplayAndQntReplay({
     dashBonusFeet: "int",
     lastResult: "variant",
   },
-  initialProjection: projectBattleState(myceliumStepBattle(), "init"),
+  initialProjection: projectBattleState(myceliumStepBattle().state, "init"),
   units: [
     {
       unitId: myceliumStepUnitId,
@@ -89,8 +90,9 @@ defineSelectedIdentityReplayAndQntReplay({
         {
           actionName: "doDiscoverMyceliumStepDash",
           discover: () => {
-            const state = myceliumStepBattle();
-            const act = myceliumStepDashAct(state);
+            const session = myceliumStepBattle();
+            const state = session.state;
+            const act = myceliumStepDashAct(session);
             assertMyceliumStepSourceUnitId(
               battleActUnitPresentation(act)?.unitId,
             );
@@ -100,8 +102,9 @@ defineSelectedIdentityReplayAndQntReplay({
         {
           actionName: "doDashAsBonusAction",
           discover: () => {
-            const state = myceliumStepBattle();
-            const act = myceliumStepDashAct(state);
+            const session = myceliumStepBattle();
+            const state = session.state;
+            const act = myceliumStepDashAct(session);
             assertMyceliumStepSourceUnitId(
               battleActUnitPresentation(act)?.unitId,
             );
@@ -133,7 +136,7 @@ function projectBattleState(
   };
 }
 
-function myceliumStepBattle(): BattleState {
+function myceliumStepBattle(): BattleRuntimeSession {
   return startBattleRight({
     battleId: battleId("mycelium-step-selected-identity"),
     combatants: [
@@ -154,7 +157,7 @@ function myceliumStepBattle(): BattleState {
 
 function startBattleRight(
   input: Parameters<typeof startBattle>[0],
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
@@ -205,8 +208,10 @@ function characterCombatant(input: {
   };
 }
 
-function myceliumStepDashAct(state: BattleState): MyceliumStepDashAct {
-  const act = discoverBattleActs(state).find(
+function myceliumStepDashAct(
+  session: BattleRuntimeSession,
+): MyceliumStepDashAct {
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is MyceliumStepDashAct =>
       candidate.subject.tag === "bonusActionStandardAction" &&
       candidate.subject.action === "dash" &&

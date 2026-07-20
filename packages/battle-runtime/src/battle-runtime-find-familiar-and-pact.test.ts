@@ -1,5 +1,5 @@
 import {
-  startBattleRight,
+  startBattleSessionRight,
   characterSeed,
   wizardSpellcasting,
   spellRecord,
@@ -30,7 +30,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
       throw new Error("Expected Pact of the Chain familiar form catalog.");
     }
 
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-pact-chain-find-familiar-access"),
       combatants: [
         characterSeed({
@@ -51,13 +51,15 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
         }),
       ],
     });
-    const warlock = state.combatants.get(wizardId);
+    const warlock = session.state.combatants.get(wizardId);
+    const spellcasting =
+      session.context.characters.get(wizardId)?.spellcastingPresentationSource;
 
     expect(warlock?.origin.kind).toBe("character");
     if (warlock?.origin.kind !== "character") {
       throw new Error("Expected Warlock caster.");
     }
-    expect(warlock.origin.spellcasting?.invocationSpellAccesses).toEqual([
+    expect(spellcasting?.invocationSpellAccesses).toEqual([
       {
         tag: "pactOfTheChainFindFamiliar",
         spell: findFamiliar,
@@ -65,7 +67,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
         eligibleForms,
       },
     ]);
-    expect(discoverBattleActs(state)).not.toEqual(
+    expect(discoverBattleActs(session)).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           summary: expect.stringContaining("Find Familiar"),
@@ -386,10 +388,16 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     );
   });
 
-  test("Pact of the Chain Spell Access rejects non-Find-Familiar spell records", () => {
-    const findFamiliarWithWrongRuntimeId = {
+  test("Pact of the Chain Spell Access rejects spells without its familiar-casting mechanics", () => {
+    const findFamiliarWithWrongMaterialCost = {
       ...spellRecord("find_familiar"),
-      id: "misidentified_find_familiar",
+      mechanics: {
+        ...spellRecord("find_familiar").mechanics,
+        components: {
+          ...spellRecord("find_familiar").mechanics.components,
+          materialCostGp: 5,
+        },
+      },
     };
 
     expect(
@@ -407,7 +415,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
               invocationSpellAccesses: [
                 {
                   tag: "pactOfTheChainFindFamiliar",
-                  spell: findFamiliarWithWrongRuntimeId,
+                  spell: findFamiliarWithWrongMaterialCost,
                 },
               ],
             }),

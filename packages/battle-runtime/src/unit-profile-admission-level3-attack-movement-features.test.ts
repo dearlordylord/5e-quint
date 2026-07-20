@@ -1,12 +1,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A18 fighter_remarkable_athlete monk_open_hand_technique paladin_sacred_weapon ranger_hunters_prey rogue_steady_aim wizard_potent_cantrip
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.remarkable-athlete unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.hunters-prey unit-feature.rogue-steady-aim unit-feature.potent-cantrip
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   classRogueUnitId,
   fighterRemarkableAthleteUnitId,
   fighterSecondWindUnitId,
-  flyUnitId,
   monkOpenHandTechniqueUnitId,
   paladinSacredWeaponUnitId,
   produceFlameUnitId,
@@ -63,13 +61,21 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
+  characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
+  requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
 const remarkableAthleteTargetId = combatantId("remarkable-athlete-target");
 
 function remarkableAthleteRuntimeBattle(input: { readonly selected: boolean }) {
+  return remarkableAthleteRuntimeSession(input).state;
+}
+
+function remarkableAthleteRuntimeSession(input: {
+  readonly selected: boolean;
+}) {
   const { unit, unitRef } = remarkableAthleteSelectedUnit();
   const state = startBattle({
     battleId: battleId(
@@ -84,7 +90,13 @@ function remarkableAthleteRuntimeBattle(input: { readonly selected: boolean }) {
         initiative: 18,
         characterUnitRefs: input.selected ? [unitRef] : [],
         classLevels: [{ className: "fighter", level: 3 }],
-        unitFeatures: [{ unit }],
+        unitFeatures: input.selected
+          ? [
+              characterBattleFeatureInitForTest(unit, [
+                { className: "fighter", level: classLevel(3) },
+              ]),
+            ]
+          : [],
       }),
       characterCreature({
         combatantId: remarkableAthleteTargetId,
@@ -101,14 +113,19 @@ function remarkableAthleteRuntimeBattle(input: { readonly selected: boolean }) {
 }
 
 function remarkableAthleteRuntimeBattleWithFlySpeed() {
-  const state = remarkableAthleteRuntimeBattle({ selected: true });
+  const session = remarkableAthleteRuntimeSession({ selected: true });
+  const state = session.state;
   const actor = state.combatants.get(remarkableAthleteActorId);
   if (actor === undefined) {
     throw new Error("Expected Remarkable Athlete actor in fixture.");
   }
   const flySpeedGrant = {
     kind: "specialSpeedGrant",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(String(flyUnitId)),
+    sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+      session,
+      remarkableAthleteActorId,
+      fighterRemarkableAthleteUnitId,
+    ),
     sourceCombatantId: remarkableAthleteActorId,
     speedKind: "fly",
     speed: { kind: "fixed", speedFeet: movementFeet(40) },
@@ -472,7 +489,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         }),
       ).toEqual(
         Either.right({
-          unitId,
+          unit,
           supportProfiles: [support],
         }),
       );
@@ -510,7 +527,11 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           initiative: 18,
           characterUnitRefs: [unitRef.right],
           classLevels: [{ className: "fighter", level: 3 }],
-          unitFeatures: [{ unit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "fighter", level: classLevel(3) },
+            ]),
+          ],
         }),
         characterCreature({
           combatantId: remarkableAthleteTargetId,
@@ -526,13 +547,13 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
 
     expect(
       requiredInitiativeRollModeForCombatant(
-        state.right,
+        state.right.state,
         remarkableAthleteActorId,
       ),
     ).toBe("advantage");
     expect(
       requiredAbilityCheckRollMode(
-        state.right,
+        state.right.state,
         remarkableAthleteActorId,
         "str",
         { skill: "athletics" },
@@ -540,14 +561,14 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ).toBe("advantage");
     expect(
       requiredAbilityCheckRollMode(
-        state.right,
+        state.right.state,
         remarkableAthleteActorId,
         "str",
       ),
     ).toBeUndefined();
     expect(
       requiredAbilityCheckRollMode(
-        state.right,
+        state.right.state,
         remarkableAthleteActorId,
         "str",
         { skill: "acrobatics" },
@@ -555,7 +576,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ).toBeUndefined();
     expect(
       requiredAbilityCheckRollMode(
-        state.right,
+        state.right.state,
         remarkableAthleteActorId,
         "dex",
         { skill: "athletics" },
@@ -563,14 +584,13 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ).toBeUndefined();
     expect(
       requiredInitiativeRollModeForCombatant(
-        state.right,
+        state.right.state,
         remarkableAthleteTargetId,
       ),
     ).toBeUndefined();
   });
 
   test("Remarkable Athlete profile is not executable without the selected support-profile Unit ref", () => {
-    const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
     const state = startBattle({
       battleId: battleId("remarkable-athlete-unselected"),
       combatants: [
@@ -579,7 +599,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           displayName: "Unselected Remarkable Athlete Actor",
           initiative: 18,
           classLevels: [{ className: "fighter", level: 3 }],
-          unitFeatures: [{ unit }],
+          unitFeatures: [],
         }),
       ],
     });
@@ -590,13 +610,13 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
 
     expect(
       requiredInitiativeRollModeForCombatant(
-        state.right,
+        state.right.state,
         remarkableAthleteActorId,
       ),
     ).toBeUndefined();
     expect(
       requiredAbilityCheckRollMode(
-        state.right,
+        state.right.state,
         remarkableAthleteActorId,
         "str",
         { skill: "athletics" },
@@ -622,10 +642,6 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     expect(decision).toMatchObject({
       label: "Use Remarkable Athlete movement",
       choices: ["use", "decline"],
-      unitFeature: {
-        unitId: fighterRemarkableAthleteUnitId,
-        label: "Remarkable Athlete",
-      },
     });
 
     const movement = requireResultHole(
@@ -731,17 +747,22 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
   test("Remarkable Athlete offers immediate movement after a selected-profile spell attack Critical Hit", () => {
     const { unit, unitRef } = remarkableAthleteSelectedUnit();
     const spell = spellRecord(produceFlameUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       cantrips: [spell],
       casterClassLevels: [{ className: "fighter", level: classLevel(3) }],
       casterUnitRefs: [unitRef],
-      casterUnitFeatures: [{ unit }],
+      casterUnitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          { className: "fighter", level: classLevel(3) },
+        ]),
+      ],
       targetHp: 20,
       targetMaxHp: 20,
     });
+    const state = session.state;
     const lit = resolveBattleSubject({
       state,
-      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      subject: bonusSpellAct({ session, spellId: produceFlameUnitId }).subject,
       fills: [],
     });
     expect(lit).toMatchObject({ tag: "resolved" });
@@ -749,7 +770,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       throw new Error("Expected Produce Flame held light to resolve.");
     }
     const hurl = spellAct({
-      state: lit.state,
+      session: { state: lit.state, context: session.context },
       spellId: produceFlameUnitId,
     });
     const target = requireResultHole(
@@ -788,10 +809,6 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     );
     expect(decision).toMatchObject({
       label: "Use Remarkable Athlete movement",
-      unitFeature: {
-        unitId: fighterRemarkableAthleteUnitId,
-        label: "Remarkable Athlete",
-      },
     });
 
     const movement = requireResultHole(

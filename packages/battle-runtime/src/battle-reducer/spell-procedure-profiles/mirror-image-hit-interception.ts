@@ -12,7 +12,6 @@
 //                         spells-discovery.ts
 //   - castSummary()     - was the mirrorImageHitInterception branch in
 //                         spells-discovery.ts
-//   - invocationRef()   - was the mirrorImageHitInterception branch in
 //                         spells-invocation-ref.ts
 //   - resolve()         - was resolveMirrorImageHitInterceptionSpellAct in
 //                         spells-resolve-support-effects.ts
@@ -25,11 +24,11 @@
 //   - Timed duration expiry stays in the shared active-effect lifecycle.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -39,7 +38,7 @@ import {
   type BattleState,
   type MirrorImageHitInterceptionSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import {
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
@@ -56,10 +55,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -151,7 +148,6 @@ function discoverMirrorImageHitInterceptionCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: mirrorImageHitInterceptionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [],
@@ -159,22 +155,6 @@ function discoverMirrorImageHitInterceptionCastAct(
   ];
 }
 
-function mirrorImageHitInterceptionInvocationRef(
-  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "mirrorImageHitInterception",
-  };
-}
-
-function mirrorImageHitInterceptionCastSummary(
-  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function applyMirrorImageHitInterceptionEffect(
   state: BattleState,
@@ -289,19 +269,19 @@ function resolveMirrorImageHitInterception(
 }
 
 const MirrorImageHitInterceptionInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "mirrorImageHitInterception" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("mirrorImageHitInterception"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
-      activeEffect: BattleRuntimeObjectSchema,
+      activeEffect: Schema.Struct({
+        kind: Schema.Literal("mirrorImageDuplicates"),
+        sourceCombatantId: CombatantId,
+        remainingDuplicates: Schema.Literal(MIRROR_IMAGE_INITIAL_DUPLICATES),
+        expiresAt: DurationBattleActiveEffectExpirationSchema,
+      }),
     }),
   );
 export const mirrorImageHitInterceptionProfile: SpellProcedureProfile<
@@ -309,14 +289,11 @@ export const mirrorImageHitInterceptionProfile: SpellProcedureProfile<
   MirrorImageHitInterceptionSpellInvocation
 > = {
   procedure: "mirrorImageHitInterception",
-  invocationSchema: MirrorImageHitInterceptionInvocationSchema,
+  executionSchema: MirrorImageHitInterceptionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitMirrorImageHitInterception,
   discoverCastAct: discoverMirrorImageHitInterceptionCastAct,
-  castSummary: mirrorImageHitInterceptionCastSummary,
-  invocationRef: mirrorImageHitInterceptionInvocationRef,
   resolve: resolveMirrorImageHitInterception,
 };

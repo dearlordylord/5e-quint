@@ -11,8 +11,8 @@ import {
   spendCharacterPointPoolResource,
   startBattle,
   type BattleCreatureState,
+  type BattleRuntimeSession,
   type BattleState,
-  type CharacterBattleSpellcastingState,
   type OngoingFeatureSourceKey,
 } from "@dnd/battle-runtime";
 import {
@@ -107,7 +107,7 @@ type CharacterBattleCombatant = BattleCreatureState & {
 };
 
 type CharacterBattleSession = {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly combatant: CharacterBattleCombatant;
 };
 
@@ -254,7 +254,8 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.state, settledCombatant),
+      state: battleStateWithCombatant(battle.session.state, settledCombatant),
+      context: battle.session.context,
       sheet,
       unitLibrary,
       combatant: settledCombatant,
@@ -300,7 +301,8 @@ function settlePurePactMagicSlotExpenditure(): BattleSettlementProjection {
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.state, settledCombatant),
+      state: battleStateWithCombatant(battle.session.state, settledCombatant),
+      context: battle.session.context,
       sheet,
       unitLibrary,
       combatant: settledCombatant,
@@ -334,7 +336,8 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
     }),
   });
   const result = settleCharacterSheetFromBattle({
-    state: battle.state,
+    state: battle.session.state,
+    context: battle.session.context,
     sheet: mixedSheet,
     unitLibrary,
     combatant: battle.combatant,
@@ -389,7 +392,7 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
     origin: {
       ...combatant.origin,
       resources: combatant.origin.resources.map((resource) =>
-        resource.unit.id === spentSorceryPoints.unit.id
+        resource.resourcePoolRef === spentSorceryPoints.resourcePoolRef
           ? spentSorceryPoints
           : resource,
       ),
@@ -397,7 +400,8 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.state, settledCombatant),
+      state: battleStateWithCombatant(battle.session.state, settledCombatant),
+      context: battle.session.context,
       sheet,
       unitLibrary,
       combatant: settledCombatant,
@@ -449,7 +453,8 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.state, ambiguousCombatant),
+    state: battleStateWithCombatant(battle.session.state, ambiguousCombatant),
+    context: battle.session.context,
     sheet: withCreatedSlot,
     unitLibrary,
     combatant: ambiguousCombatant,
@@ -487,7 +492,8 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.state, mismatchedCombatant),
+    state: battleStateWithCombatant(battle.session.state, mismatchedCombatant),
+    context: battle.session.context,
     sheet,
     unitLibrary,
     combatant: mismatchedCombatant,
@@ -520,7 +526,8 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     maxHp: Hp(wizardBattleFixtureMaximumHp + 1),
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.state, driftedCombatant),
+    state: battleStateWithCombatant(battle.session.state, driftedCombatant),
+    context: battle.session.context,
     sheet,
     unitLibrary,
     combatant: driftedCombatant,
@@ -571,7 +578,11 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     ],
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.state, activeWildShapeCombatant),
+    state: battleStateWithCombatant(
+      battle.session.state,
+      activeWildShapeCombatant,
+    ),
+    context: battle.session.context,
     sheet,
     unitLibrary,
     combatant: activeWildShapeCombatant,
@@ -622,7 +633,8 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
     ]),
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.state, activeStateCombatant),
+    state: battleStateWithCombatant(battle.session.state, activeStateCombatant),
+    context: battle.session.context,
     sheet,
     unitLibrary,
     combatant: activeStateCombatant,
@@ -681,7 +693,11 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.state, stableRecoveryCombatant),
+    state: battleStateWithCombatant(
+      battle.session.state,
+      stableRecoveryCombatant,
+    ),
+    context: battle.session.context,
     sheet: stableSheet,
     unitLibrary,
     combatant: stableRecoveryCombatant,
@@ -743,7 +759,8 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.state, stableCombatant),
+      state: battleStateWithCombatant(battle.session.state, stableCombatant),
+      context: battle.session.context,
       sheet: stableSheet,
       unitLibrary,
       combatant: stableCombatant,
@@ -774,7 +791,7 @@ function startCharacterBattle(input: {
       initiative: initiativeScore(20),
     }),
   );
-  const state = requireRight(
+  const session = requireRight(
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [
@@ -787,11 +804,11 @@ function startCharacterBattle(input: {
       ],
     }),
   );
-  const combatant = state.combatants.get(input.combatantId);
+  const combatant = session.state.combatants.get(input.combatantId);
   if (!isCharacterBattleCombatant(combatant)) {
     throw new Error("Expected character-origin battle combatant.");
   }
-  return { state, combatant };
+  return { session, combatant };
 }
 
 function battleStateWithCombatant(
@@ -812,7 +829,7 @@ function isCharacterBattleCombatant(
 
 function requireCharacterSpellcasting(
   combatant: CharacterBattleCombatant,
-): CharacterBattleSpellcastingState {
+): NonNullable<CharacterBattleCombatant["origin"]["spellcasting"]> {
   const spellcasting = combatant.origin.spellcasting;
   if (spellcasting === undefined) {
     throw new Error("Expected character battle spellcasting state.");

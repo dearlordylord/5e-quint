@@ -1,4 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-save
+import {
+  AbilitySchema,
+  CreatureTypeSchema,
+  DcSourceSchema,
+} from "@dnd/surface/surface/schema";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -14,7 +19,6 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition, Magic Action, and Spell
 //     Invocation.
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   isTargetListSpellInvocation,
   type ActionSpellBattleResolutionInput,
@@ -27,7 +31,12 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
+import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  DamageTypeSchema,
+  DiceExprSchema,
+} from "@dnd/surface/surface/schema";
 import { supportedPreparedSaveGateConditionProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -36,15 +45,74 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
+  BattleConditionSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellFailedSaveConditionEffectSchema,
+  SpellConditionCountedRepeatSaveSchema,
+  SpellConditionEscapeSchema,
+  SpellConditionRepeatSaveSchema,
   SpellSavingThrowRollModeRuleSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+
+const SpellFailedSaveConditionExpirationExecutionSchema = Schema.Union(
+  Schema.Literal("endOfCasterNextTurn", "concentration"),
+  Schema.Struct({
+    kind: Schema.Literal("concentration"),
+    durationTicks: ElapsedTimeTicksSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("duration"),
+    durationTicks: ElapsedTimeTicksSchema,
+  }),
+);
+
+const SpellTurnStartDamageExecutionSchema = Schema.Struct({
+  expr: DiceExprSchema,
+  damageType: DamageTypeSchema,
+});
+
+const SpellFailedSaveConditionNoRepeatFields = {
+  expiresAt: SpellFailedSaveConditionExpirationExecutionSchema,
+  escape: Schema.NullOr(SpellConditionEscapeSchema),
+  turnStartDamage: Schema.NullOr(SpellTurnStartDamageExecutionSchema),
+  repeatSave: Schema.Null,
+};
+
+const SpellFailedSaveConditionRepeatFields = {
+  expiresAt: SpellFailedSaveConditionExpirationExecutionSchema,
+  escape: Schema.Null,
+  turnStartDamage: Schema.Null,
+  repeatSave: Schema.Union(
+    SpellConditionRepeatSaveSchema,
+    SpellConditionCountedRepeatSaveSchema,
+  ),
+};
+
+export const SpellFailedSaveConditionEffectExecutionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    condition: BattleConditionSchema,
+    ...SpellFailedSaveConditionNoRepeatFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    condition: BattleConditionSchema,
+    ...SpellFailedSaveConditionRepeatFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("choice"),
+    choices: Schema.NonEmptyArray(BattleConditionSchema),
+    ...SpellFailedSaveConditionNoRepeatFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("choice"),
+    choices: Schema.NonEmptyArray(BattleConditionSchema),
+    ...SpellFailedSaveConditionRepeatFields,
+  }),
+);
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
@@ -237,7 +305,6 @@ function saveGatedConditionCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: saveGatedConditionInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -272,23 +339,6 @@ function saveGatedConditionMetamagicInitialHoles(
   return holes;
 }
 
-function saveGatedConditionInvocationRef(
-  invocation: SaveGatedConditionSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "saveGatedCondition",
-  };
-}
-
-function saveGatedConditionCastSummary(
-  invocation: SaveGatedConditionSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
 function resolveSaveGatedCondition(
   input: SaveGatedConditionResolveInput,
 ): BattleResolutionResult {
@@ -306,19 +356,14 @@ function resolveSaveGatedCondition(
   });
 }
 
-const SaveGatedConditionInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "saveGatedCondition" }
-  >
->(
+const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("saveGatedCondition"),
-    spell: BattleRuntimeObjectSchema,
-    ability: Schema.String,
-    dc: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
     targeting: Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("singleCombatant"),
@@ -345,26 +390,23 @@ const SaveGatedConditionInvocationSchema = spellProcedureInvocationSchema<
         lengthFeet: MovementFeet,
       }),
     ),
-    targetCreatureTypes: Schema.NullOr(Schema.Array(Schema.String)),
-    effect: SpellFailedSaveConditionEffectSchema,
+    targetCreatureTypes: Schema.NullOr(Schema.Array(CreatureTypeSchema)),
+    effect: SpellFailedSaveConditionEffectExecutionSchema,
     saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
     rangeFeet: MovementFeet,
   }),
 );
 export const saveGatedConditionProfile = {
   procedure: "saveGatedCondition",
-  invocationSchema: SaveGatedConditionInvocationSchema,
+  executionSchema: SaveGatedConditionInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: {
     kind: "byTargetingKind",
     targetingKind: "targetList",
   },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSaveGatedCondition,
   discoverCastAct: discoverSaveGatedConditionCastAct,
-  castSummary: saveGatedConditionCastSummary,
-  invocationRef: saveGatedConditionInvocationRef,
   resolve: resolveSaveGatedCondition,
 } satisfies SpellProcedureProfile<
   "saveGatedCondition",

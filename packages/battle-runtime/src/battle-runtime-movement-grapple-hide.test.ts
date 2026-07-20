@@ -3,21 +3,16 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
 import { abilityModifier } from "@dnd/shared/types";
-import {
-  admitCharacterProcedureSelectionSubject,
-  battleActUnitPresentation,
-} from "./battle-act-composition.ts";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
-import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 import {
   grappleDragCostExempt,
   targetIsNoMoreThanOneSizeLarger,
 } from "./battle-reducer/movement-speed.ts";
 import type {
-  BattleActDiscoverySubject,
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
   abilityCheckFill,
@@ -39,6 +34,7 @@ import {
   combatantId,
   damageRollFillWithGroups,
   difficultyClass,
+  discoverBattleActCandidates,
   discoverBattleActs,
   Either,
   elapsedTimeTicks,
@@ -73,6 +69,7 @@ import {
   spellRecord,
   spellTargetAllocationFill,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   statBlockRecord,
   targetFill,
@@ -200,12 +197,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
     expect(decision).toMatchObject({
       label: "Use Punch and Grab",
-      unitFeature: {
-        unitId: "feat_grappler",
-        label: "Punch and Grab",
-      },
       choices: ["use", "decline"],
     });
+    expect(decision).not.toHaveProperty("unitFeature");
     const declined = requireResolved(
       resolveBattleSubject({
         state,
@@ -297,8 +291,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("Grappler Punch and Grab extends enemy-saving-throw ongoing features through the Grapple lifecycle", () => {
-    const rageFeatureKey = ongoingFeatureSourceKeyForUnit("barbarian_rage");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-grappler-punch-and-grab-save-lifecycle"),
       combatants: [
         characterSeed({
@@ -310,17 +303,19 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
+    const rageProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      "barbarian_rage",
+    );
     const raging = requireResolved(
       resolveBattleSubject({
         state,
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
-            fighterId,
-            "barbarian_rage",
-          ),
+          procedureRef: rageProcedureRef,
         },
         fills: [],
       }),
@@ -333,7 +328,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).state;
     const beforePunch = fighterRoundTwo.combatants
       .get(fighterId)
-      ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+      ?.activeOngoingFeatureOccurrences.get(rageProcedureRef);
     if (beforePunch?.kind !== "roundExtended") {
       throw new Error("Expected Rage to be active before Punch and Grab.");
     }
@@ -396,7 +391,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     const afterPunch = result.state.combatants
       .get(fighterId)
-      ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+      ?.activeOngoingFeatureOccurrences.get(rageProcedureRef);
     if (afterPunch?.kind !== "roundExtended") {
       throw new Error("Expected Rage to remain active after Punch and Grab.");
     }
@@ -1227,7 +1222,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const goblinTurn = requireResolved(
       endTurn({ state: readied, actorId: fighterId }),
     ).state;
-    expect(discoverBattleActs(goblinTurn)).not.toEqual(
+    expect(discoverBattleActCandidates(goblinTurn)).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: expect.objectContaining({
@@ -1539,7 +1534,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("discoverBattleActs omits attack when the current character is Unconscious at 0 HP", () => {
-    const acts = discoverBattleActs(
+    const acts = discoverBattleActCandidates(
       startBattleRight({
         battleId: battleId("battle-unconscious-actor"),
         combatants: [
@@ -2111,7 +2106,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       endTurn({ state: grappled.state, actorId: fighterId }),
     ).state;
     expect(
-      discoverBattleActs(goblinTurn).map((act) => act.subject),
+      discoverBattleActCandidates(goblinTurn).map((act) => act.subject),
     ).toContainEqual({
       tag: "runtimeCommand",
       actorId: fighterId,
@@ -2520,7 +2515,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("Grappled spell attack rolls have disadvantage against targets other than the grappler", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-grappled-spell-attack-disadvantage"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -2534,6 +2529,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         skeletonCreatureInit({ initiative: 5 }),
       ],
     });
+    const state = session.state;
     const subject: BattleSubject = {
       tag: "action",
       actorId: fighterId,
@@ -2564,7 +2560,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const wizardTurn = requireResolved(
       endTurn({ state: grappled, actorId: fighterId }),
     ).state;
-    const spellSubject = magicSubject("ray_of_frost");
+    const spellSubject = findAct(
+      { ...session, state: wizardTurn },
+      magicSubject("ray_of_frost"),
+    ).subject;
     const spellTarget = requireHole(
       resolveBattleSubject({
         state: wizardTurn,
@@ -2610,7 +2609,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const hidden = requireResolved(
       resolveBattleSubject({
         state,
-        subject: hideSubject,
+        subject: hide.subject,
         fills: [
           abilityCheckFill(findHole(hide.initialHoles, "abilityCheck"), 18),
         ],
@@ -2690,7 +2689,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     };
 
     expect(
-      discoverBattleActs(state).map((act) => act.subject),
+      discoverBattleActCandidates(state).map((act) => act.subject),
     ).not.toContainEqual(subject);
     expect(resolveBattleSubject({ state, subject, fills: [] })).toMatchObject({
       tag: "invalid",
@@ -2755,7 +2754,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("hidden verbal spell attackers reveal through staged no-reaction spell-attack holes", () => {
-    const state = wizardVsSkeletonBattle();
+    const session = wizardVsSkeletonBattle();
+    const state = session.state;
     const wizard = state.combatants.get(wizardId)!;
     const hiddenState: BattleState = {
       ...state,
@@ -2764,7 +2764,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         hidden: { discoveryDc: difficultyClass(17) },
       }),
     };
-    const subject = magicSubject("ray_of_frost");
+    const subject = findAct(session, magicSubject("ray_of_frost")).subject;
     const targetHole = requireHole(
       resolveBattleSubject({ state: hiddenState, subject, fills: [] }),
       "targetChoice",
@@ -2802,7 +2802,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("readied verbal spells reveal hidden casters when the spell is cast into readiness", () => {
-    const state = wizardVsSkeletonBattle();
+    const session = wizardVsSkeletonBattle();
+    const state = session.state;
     const wizard = state.combatants.get(wizardId)!;
     const hiddenState: BattleState = {
       ...state,
@@ -2818,7 +2819,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         tag: "actionSpell",
         actorId: wizardId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          hiddenState,
+          { ...session, state: hiddenState },
           wizardId,
           cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),
@@ -2837,7 +2838,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("staged verbal spell damage keeps the caster revealed while requesting Concentration saves", () => {
-    const state = wizardVsSkeletonBattle();
+    const session = wizardVsSkeletonBattle();
+    const state = session.state;
     const wizard = state.combatants.get(wizardId)!;
     const skeleton = state.combatants.get(skeletonId)!;
     const hiddenState: BattleState = {
@@ -2857,7 +2859,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           },
         }),
     };
-    const subject = magicSubject("magic_missile");
+    const subject = findAct(session, magicSubject("magic_missile")).subject;
     const target = requireHole(
       resolveBattleSubject({ state: hiddenState, subject, fills: [] }),
       "spellTargetAllocation",
@@ -2895,7 +2897,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("Rogue Cunning Action exposes Dash, Disengage, and Hide as Bonus Actions", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rogue-cunning-action-hide"),
       combatants: [
         characterSeed({
@@ -2914,33 +2916,37 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         [fighterId, { kind: "coverOutOfEnemyLineOfSight", cover: "total" }],
       ]),
     });
-    const dashSubject: BattleActDiscoverySubject = {
-      tag: "bonusActionStandardAction",
-      actorId: fighterId,
-      sourceUnitId: "rogue_cunning_action",
-      action: "dash",
-      speedKind: "walk",
-    };
-    const disengageSubject: BattleActDiscoverySubject = {
-      tag: "bonusActionStandardAction",
-      actorId: fighterId,
-      sourceUnitId: "rogue_cunning_action",
-      action: "disengage",
-    };
-    const hideSubject: BattleActDiscoverySubject = {
-      tag: "bonusActionStandardAction",
-      actorId: fighterId,
-      sourceUnitId: "rogue_cunning_action",
-      action: "hide",
-    };
-    expect(findAct(state, dashSubject).summary).toBe("Dash as a Bonus Action.");
-    expect(findAct(state, disengageSubject).summary).toBe(
-      "Disengage as a Bonus Action.",
+    const state = session.state;
+    const cunningActs = discoverBattleActs(session).filter(
+      (act) =>
+        battleActUnitPresentation(act)?.unitId === "rogue_cunning_action",
     );
-    const hideAct = findAct(state, hideSubject);
+    const dashAct = cunningActs.find(
+      (act) =>
+        act.subject.tag === "bonusActionStandardAction" &&
+        act.subject.action === "dash",
+    );
+    const disengageAct = cunningActs.find(
+      (act) =>
+        act.subject.tag === "bonusActionStandardAction" &&
+        act.subject.action === "disengage",
+    );
+    const hideAct = cunningActs.find(
+      (act) =>
+        act.subject.tag === "bonusActionStandardAction" &&
+        act.subject.action === "hide",
+    );
+    if (
+      dashAct === undefined ||
+      disengageAct === undefined ||
+      hideAct === undefined
+    )
+      throw new Error("Expected Cunning Action acts.");
+    expect(dashAct.summary).toBe("Dash as a Bonus Action.");
+    expect(disengageAct.summary).toBe("Disengage as a Bonus Action.");
 
     const dashed = requireResolved(
-      resolveBattleSubject({ state, subject: dashSubject, fills: [] }),
+      resolveBattleSubject({ state, subject: dashAct.subject, fills: [] }),
     );
     expect(dashed.snapshot.turn).toMatchObject({
       bonusActionAvailable: false,
@@ -2949,20 +2955,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
 
     const disengaged = requireResolved(
-      resolveBattleSubject({ state, subject: disengageSubject, fills: [] }),
+      resolveBattleSubject({ state, subject: disengageAct.subject, fills: [] }),
     );
     expect(disengaged.snapshot.turn).toMatchObject({
       bonusActionAvailable: false,
       actionResources: [{ kind: "action", source: "turn" }],
       disengaged: true,
     });
-    expect(
-      admitCharacterProcedureSelectionSubject(state, {
-        ...dashSubject,
-        sourceUnitId: "class_rogue",
-      }),
-    ).toBeUndefined();
-    const noHidePrerequisiteState = startBattleRight({
+    const noHidePrerequisiteSession = startBattleSessionRight({
       battleId: battleId("battle-rogue-cunning-action-no-hide-prerequisite"),
       combatants: [
         characterSeed({
@@ -2978,14 +2978,23 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(findAct(noHidePrerequisiteState, dashSubject).summary).toBe(
-      "Dash as a Bonus Action.",
-    );
-    expect(findAct(noHidePrerequisiteState, disengageSubject).summary).toBe(
-      "Disengage as a Bonus Action.",
-    );
+    const noHidePrerequisiteState = noHidePrerequisiteSession.state;
     expect(
-      discoverBattleActs(noHidePrerequisiteState).some(
+      discoverBattleActs(noHidePrerequisiteSession).find(
+        (act) =>
+          act.subject.tag === "bonusActionStandardAction" &&
+          act.subject.action === "dash",
+      )?.summary,
+    ).toBe("Dash as a Bonus Action.");
+    expect(
+      discoverBattleActs(noHidePrerequisiteSession).find(
+        (act) =>
+          act.subject.tag === "bonusActionStandardAction" &&
+          act.subject.action === "disengage",
+      )?.summary,
+    ).toBe("Disengage as a Bonus Action.");
+    expect(
+      discoverBattleActs(noHidePrerequisiteSession).some(
         (act) =>
           act.subject.tag === "bonusActionStandardAction" &&
           act.subject.action === "hide" &&
@@ -2995,18 +3004,18 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(
       resolveBattleSubject({
         state: noHidePrerequisiteState,
-        subject: hideSubject,
+        subject: hideAct.subject,
         fills: [],
       }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "unsupportedActOption",
+      reason: "staleSubject",
     });
 
     const hidden = requireResolved(
       resolveBattleSubject({
         state,
-        subject: hideSubject,
+        subject: hideAct.subject,
         fills: [
           abilityCheckFill(findHole(hideAct.initialHoles, "abilityCheck"), 16),
         ],

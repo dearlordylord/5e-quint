@@ -4,4 +4,6 @@ import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness
 
 import { sorcererMetamagicSpellAttackSequenceSelectedIdentityReplay } from "./sorcerer-metamagic-spell-attack-sequence-selected-identity.replay-data.test-support.ts";
 
-defineSelectedIdentityReplayWitness(sorcererMetamagicSpellAttackSequenceSelectedIdentityReplay);
+defineSelectedIdentityReplayWitness(
+  sorcererMetamagicSpellAttackSequenceSelectedIdentityReplay,
+);

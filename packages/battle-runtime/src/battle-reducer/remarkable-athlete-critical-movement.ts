@@ -7,6 +7,7 @@ import type {
   BattleSubject,
 } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
 import type {
   BattleCreatureState,
   BattleFill,
@@ -40,10 +41,10 @@ export type RemarkableAthleteCriticalHitMovementFills = {
     | undefined;
 };
 
-type RemarkableAthleteCriticalHitMovementProfile = {
-  readonly unitId: string;
-  readonly label: string;
-};
+type RemarkableAthleteCriticalHitMovementExecution = Extract<
+  UnitFeatureProcedureExecution,
+  { readonly kind: "remarkableAthlete" }
+>;
 
 type RemarkableAthleteCriticalHitMovementBudget = {
   readonly movementBudgetFeet: MovementFeet;
@@ -93,8 +94,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
     return { tag: "ok", state: input.state };
   }
 
-  const decisionHole =
-    remarkableAthleteCriticalHitMovementDecisionHole(profile);
+  const decisionHole = remarkableAthleteCriticalHitMovementDecisionHole();
   const decision = input.fills.remarkableAthleteCriticalHitMovementDecision;
   const movementFill = input.fills.remarkableAthleteCriticalHitMovement;
   if (decision === undefined) {
@@ -183,22 +183,25 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
 
 function remarkableAthleteCriticalHitMovementProfileForActor(
   actor: BattleCreatureState | undefined,
-): RemarkableAthleteCriticalHitMovementProfile | null {
+): RemarkableAthleteCriticalHitMovementExecution | null {
   if (!isCharacterBattleCreatureState(actor)) {
     return null;
   }
-  for (const profile of actor.origin.remarkableAthleteProfiles.values()) {
+  for (const binding of actor.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
     if (
-      profile.remarkableAthlete.criticalHitMovement.trigger ===
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "remarkableAthlete" &&
+      procedure.execution.remarkableAthlete.criticalHitMovement.trigger ===
         "scoreCriticalHit" &&
-      profile.remarkableAthlete.criticalHitMovement.timing ===
+      procedure.execution.remarkableAthlete.criticalHitMovement.timing ===
         "immediatelyAfterTrigger" &&
-      profile.remarkableAthlete.criticalHitMovement.distance.kind ===
+      procedure.execution.remarkableAthlete.criticalHitMovement.distance.kind ===
         "halfSpeed" &&
-      profile.remarkableAthlete.criticalHitMovement.opportunityAttacks ===
+      procedure.execution.remarkableAthlete.criticalHitMovement.opportunityAttacks ===
         "doesNotProvoke"
     ) {
-      return { unitId: profile.unit.id, label: profile.unit.name };
+      return procedure.execution;
     }
   }
   return null;
@@ -246,9 +249,7 @@ function maxMovementBudgetFeet(
   );
 }
 
-function remarkableAthleteCriticalHitMovementDecisionHole(
-  _profile: RemarkableAthleteCriticalHitMovementProfile,
-): BattleUnitFeatureDecisionHole {
+function remarkableAthleteCriticalHitMovementDecisionHole(): BattleUnitFeatureDecisionHole {
   return {
     kind: "unitFeatureDecision",
     holeId: REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,

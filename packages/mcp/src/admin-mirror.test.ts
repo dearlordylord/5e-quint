@@ -6,32 +6,20 @@ import {
   battleId,
   battleProcedureExecutionRef,
   combatantId,
-  spellSlotInvocationRef,
 } from "@dnd/battle-runtime";
 import { NonNegativeInteger } from "@dnd/shared/types";
-import {
-  buildUnitCatalog,
-  srdUnitCollection,
-} from "@dnd/surface/surface/unit-catalog";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { createHttpAdminMirrorPublisher } from "./admin-mirror.ts";
 import {
   adminMirrorPublisherInstanceId,
-  AdminMirrorProjectionEnvelopeSchema,
   adminMirrorSequence,
   adminMirrorSessionId,
   type AdminMirrorProjectionEnvelope,
 } from "./admin-mirror-contract.ts";
 import { createAdminMirrorPresentationTimelineEntry } from "./admin-mirror-presentation-timeline.ts";
 
-const unitCatalogResult = buildUnitCatalog({
-  collections: [srdUnitCollection],
-});
-if (unitCatalogResult.tag !== "ok") {
-  throw new Error("Admin Mirror presentation test Unit catalog must build.");
-}
 describe("Admin Mirror publisher", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -75,7 +63,7 @@ describe("Admin Mirror publisher", () => {
     await first;
   });
 
-  test("joins pending and resolved timeline text from selected presentation content without session display strings", () => {
+  test("keeps authored presentation out of pending and resolved timeline state", () => {
     const actorId = combatantId("presentation-actor");
     const procedureRef = battleProcedureExecutionRef(
       battleCharacterExecutionScopeRef(
@@ -87,15 +75,6 @@ describe("Admin Mirror publisher", () => {
     );
     const pendingProjection = projectionWithTransientBattleFills({
       fills: [],
-      presentation: {
-        kind: "spell",
-        procedureRef,
-        invocation: spellSlotInvocationRef(
-          "hunters_mark",
-          1,
-          "markedDamageRider",
-        ),
-      },
       subject: {
         tag: "bonusActionSpell",
         actorId,
@@ -114,18 +93,8 @@ describe("Admin Mirror publisher", () => {
       JSON.stringify(pendingProjection.session.transientBattleFills),
     ).not.toContain("Hunter's Mark");
 
-    expect(
-      Schema.decodeUnknownEither(AdminMirrorProjectionEnvelopeSchema)(
-        envelope({ sequence: 3, projection: pendingProjection }),
-      )._tag,
-    ).toBe("Left");
-
     const pendingEntry = createAdminMirrorPresentationTimelineEntry(
-      envelope({
-        sequence: 3,
-        projection: pendingProjection,
-        selectedContent: unitCatalogResult.catalog.requireUnit("hunters_mark"),
-      }),
+      envelope({ sequence: 3, projection: pendingProjection }),
       100,
       envelope({
         sequence: 2,
@@ -138,22 +107,14 @@ describe("Admin Mirror publisher", () => {
         projection: projectionWithTransientBattleFills(null),
       }),
       101,
-      envelope({
-        sequence: 3,
-        projection: pendingProjection,
-        selectedContent: unitCatalogResult.catalog.requireUnit("hunters_mark"),
-      }),
+      envelope({ sequence: 3, projection: pendingProjection }),
     );
 
-    expect(pendingEntry.actionSummary).toBe(
-      "presentation-actor casts Hunter's Mark",
-    );
-    expect(resolvedEntry.actionSummary).toBe(
-      "presentation-actor casts Hunter's Mark",
-    );
+    expect(pendingEntry.actionSummary).toBe("Battle action pending");
+    expect(resolvedEntry.actionSummary).toBe("Battle action resolved");
   });
 
-  test("joins attack timeline text from outer presentation without authored execution selectors", () => {
+  test("does not reconstruct authored attack names from mechanical execution selectors", () => {
     const actorId = combatantId("presentation-attacker");
     const procedureRef = battleAttackProcedureExecutionRef(
       battleAttackExecutionScopeRef(
@@ -165,7 +126,6 @@ describe("Admin Mirror publisher", () => {
     );
     const pendingProjection = projectionWithTransientBattleFills({
       fills: [],
-      presentation: { kind: "attack", name: "Synthetic Arc" },
       subject: {
         tag: "action",
         action: "attack",
@@ -196,12 +156,8 @@ describe("Admin Mirror publisher", () => {
       envelope({ sequence: 5, projection: pendingProjection }),
     );
 
-    expect(pendingEntry.actionSummary).toBe(
-      "presentation-attacker attacks with Synthetic Arc",
-    );
-    expect(resolvedEntry.actionSummary).toBe(
-      "presentation-attacker resolves Synthetic Arc",
-    );
+    expect(pendingEntry.actionSummary).toBe("Battle action pending");
+    expect(resolvedEntry.actionSummary).toBe("Battle action resolved");
     expect(pendingEntry.actionSummary).not.toContain("undefined");
     expect(resolvedEntry.actionSummary).not.toContain("undefined");
   });
@@ -210,7 +166,6 @@ describe("Admin Mirror publisher", () => {
 function envelope(input: {
   readonly sequence: number;
   readonly projection?: AdminMirrorProjectionEnvelope["projection"];
-  readonly selectedContent?: AdminMirrorProjectionEnvelope["selectedContent"];
 }): AdminMirrorProjectionEnvelope {
   return {
     mirrorSessionId: adminMirrorSessionId("demo"),
@@ -225,7 +180,6 @@ function envelope(input: {
       },
     },
     publisherInstanceId: adminMirrorPublisherInstanceId("publisher-a"),
-    selectedContent: input.selectedContent ?? null,
     sequence: adminMirrorSequence(input.sequence),
     sourceProcessId: 1,
   };

@@ -24,7 +24,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   breakBattleConcentration,
   DieRollResult,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -63,13 +63,13 @@ function spikeGrowthTargetTurnState(): {
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
   const act = spellAct({
-    state,
+    session: state,
     spellId: spikeGrowthUnitId,
     slotLevel: 2,
   });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [spikeGrowthAreaFill(area)],
   });
@@ -152,7 +152,7 @@ function withSpikeGrowthAreaDifficultTerrain(
 
 function resolveSpikeGrowthMovementDamage(input: {
   readonly state: BattleState;
-  readonly subject: Parameters<typeof resolveBattleSubject>[0]["subject"];
+  readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
 }): ReturnType<typeof resolveBattleSubject> {
   const pendingDamage = resolveBattleSubject(input);
@@ -232,7 +232,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
@@ -257,7 +257,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     expect(area).toEqual(
       expect.objectContaining({
-        label: "Spike Growth area",
+        label: "Spell area",
         area: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
       }),
     );
@@ -303,7 +303,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
@@ -322,14 +322,14 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [spikeGrowthAreaFill(area)],
     });
@@ -375,13 +375,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [spikeGrowthAreaFill(area)],
     });
@@ -573,13 +573,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [spikeGrowthAreaFill(area)],
     });
@@ -646,13 +646,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const spikeAct = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
     const spikeArea = requireHole(spikeAct.initialHoles, "spellAreaChoice");
     const spikeCast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: spikeAct.subject,
       fills: [spikeGrowthAreaFill(spikeArea)],
     });
@@ -753,7 +753,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
   test("Command Approach movement through spike growth applies movement damage", () => {
     const { sourceProcedureRef, state } = spikeGrowthTargetTurnState();
     const commandState = stateWithCommandPending(state, "approach");
-    const subject = discoverBattleActs(commandState).find(
+    const subject = discoverBattleActCandidates(commandState).find(
       (act) =>
         act.subject.tag === "runtimeCommand" &&
         act.subject.command === "commandApproach",
@@ -803,7 +803,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
   test("Command Flee movement through spike growth applies movement damage before ending turn", () => {
     const { sourceProcedureRef, state } = spikeGrowthTargetTurnState();
     const commandState = stateWithCommandPending(state, "flee");
-    const subject = discoverBattleActs(commandState).find(
+    const subject = discoverBattleActCandidates(commandState).find(
       (act) =>
         act.subject.tag === "runtimeCommand" &&
         act.subject.command === "commandFlee",
@@ -999,13 +999,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [spikeGrowthAreaFill(area)],
     });
@@ -1024,13 +1024,13 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spikeGrowthUnitId,
       slotLevel: 2,
     });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [spikeGrowthAreaFill(area)],
     });

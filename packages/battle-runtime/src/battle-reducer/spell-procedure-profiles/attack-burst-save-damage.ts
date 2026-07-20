@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
 //
 // The attackBurstSaveDamage Spell Procedure Profile: a Spell Slot action
@@ -32,8 +33,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
   readiedSpellAct,
   spellCastSelectionSubject,
@@ -50,12 +50,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   AbilitySchema,
   AttackBonus,
-  BattleRuntimeObjectSchema,
   DamageTypeSchema,
   DcSourceSchema,
   MovementFeet,
@@ -98,7 +96,6 @@ function discoverAttackBurstSaveDamageCastAct(
             subject: spellCastSelectionSubject(
               actorId,
               invocation,
-              attackBurstSaveDamageInvocationRef(invocation),
             ),
             initialHoles: [targetHole],
           },
@@ -106,22 +103,6 @@ function discoverAttackBurstSaveDamageCastAct(
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
 }
 
-function attackBurstSaveDamageInvocationRef(
-  invocation: AttackBurstSaveDamageInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "attackBurstSaveDamage",
-  };
-}
-
-function attackBurstSaveDamageCastSummary(
-  invocation: AttackBurstSaveDamageInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveAttackBurstSaveDamage(
   input: AttackBurstSaveDamageResolveInput,
@@ -140,24 +121,19 @@ function resolveAttackBurstSaveDamage(
   });
 }
 
-const AttackBurstSaveDamageInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "attackBurstSaveDamage" }
-  >
->(
+const AttackBurstSaveDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("attackBurstSaveDamage"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("singleCombatant"),
     }),
     attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
     attackBonus: AttackBonus,
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
+      expr: DiceExprSchema,
       damageType: DamageTypeSchema,
     }),
     burst: Schema.Struct({
@@ -168,7 +144,7 @@ const AttackBurstSaveDamageInvocationSchema = spellProcedureInvocationSchema<
         radiusFeet: MovementFeet,
       }),
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
       successDamage: Schema.Literal("none"),
@@ -181,14 +157,11 @@ export const attackBurstSaveDamageProfile: SpellProcedureProfile<
   AttackBurstSaveDamageInvocation
 > = {
   procedure: "attackBurstSaveDamage",
-  invocationSchema: AttackBurstSaveDamageInvocationSchema,
+  executionSchema: AttackBurstSaveDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitAttackBurstSaveDamage,
   discoverCastAct: discoverAttackBurstSaveDamageCastAct,
-  castSummary: attackBurstSaveDamageCastSummary,
-  invocationRef: attackBurstSaveDamageInvocationRef,
   resolve: resolveAttackBurstSaveDamage,
 };

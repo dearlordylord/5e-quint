@@ -37,21 +37,14 @@ import type {
 } from "../battle-reducer.ts";
 import { SIZES } from "@dnd/shared/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
-import {
-  MONK_FOCUS_PROCEDURE_QUERY,
-  characterUnitProcedureRef,
-} from "../character-execution.ts";
+import type { UnitSupportProcedureExecution } from "../character-execution.ts";
 import type { CharacterBattleUseCountResourceState } from "../character-battle-resources.ts";
 import {
   characterBattleResourceIsUseCount,
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
 } from "../character-battle-resources.ts";
-import {
-  battleMonkFocusBattleOptionsSupportForUnit,
-  martialArtsSrdDieSizeAtClassLevel,
-  type BattleMonkFocusBattleOptionsSupportProfile,
-} from "../unit-feature-support.ts";
+import { martialArtsSrdDieSizeAtClassLevel } from "../unit-feature-support.ts";
 
 import type { MonkFocusFlurryOfBlowsActionResource } from "./battle-runtime-protocol.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
@@ -76,7 +69,11 @@ import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock
 export type MonkFocusResourceFact = {
   readonly actor: CharacterBattleCreatureState;
   readonly resource: CharacterBattleUseCountResourceState;
-  readonly profile: BattleMonkFocusBattleOptionsSupportProfile;
+  readonly execution: Extract<
+    UnitSupportProcedureExecution,
+    { readonly kind: "monkFocusBattleOptions" }
+  >;
+  readonly procedureRef: BattleProcedureExecutionRef;
 };
 
 const HEIGHTENED_FOCUS_MONK_LEVEL = 10;
@@ -114,7 +111,7 @@ function monkFocusOptionActs(
       subject: {
         tag: "monkFocusOption",
         actorId: actor.combatantId,
-        resourceUnitId: focus.resource.unit.id,
+        procedureRef: focus.procedureRef,
         option: "flurryOfBlows",
       },
       initialHoles: [],
@@ -125,7 +122,7 @@ function monkFocusOptionActs(
     subject: {
       tag: "monkFocusOption",
       actorId: actor.combatantId,
-      resourceUnitId: focus.resource.unit.id,
+      procedureRef: focus.procedureRef,
       option: "patientDefense",
       mode: "freeDisengage",
     },
@@ -136,7 +133,7 @@ function monkFocusOptionActs(
       subject: {
         tag: "monkFocusOption",
         actorId: actor.combatantId,
-        resourceUnitId: focus.resource.unit.id,
+        procedureRef: focus.procedureRef,
         option: "patientDefense",
         mode: "focusDisengageDodge",
       },
@@ -151,7 +148,7 @@ function monkFocusOptionActs(
       subject: {
         tag: "monkFocusOption",
         actorId: actor.combatantId,
-        resourceUnitId: focus.resource.unit.id,
+        procedureRef: focus.procedureRef,
         option: "stepOfTheWind",
         mode: "freeDash",
         speedKind,
@@ -163,7 +160,7 @@ function monkFocusOptionActs(
         subject: {
           tag: "monkFocusOption",
           actorId: actor.combatantId,
-          resourceUnitId: focus.resource.unit.id,
+          procedureRef: focus.procedureRef,
           option: "stepOfTheWind",
           mode: "focusDisengageDash",
           speedKind,
@@ -215,15 +212,12 @@ function monkFocusFlurryOfBlowsStrikeActs(
 export function resolveMonkFocusOption(
   input: AdmittedMonkFocusOptionBattleResolutionInput,
 ): BattleResolutionResult {
-  const focus = monkFocusResourceForActor(input.state, input.subject.actorId);
-  if (
-    focus === null ||
-    characterUnitProcedureRef(
-      focus.actor.origin.execution,
-      focus.resource.unit.id,
-      MONK_FOCUS_PROCEDURE_QUERY,
-    ) !== input.subject.procedureRef
-  ) {
+  const focus = monkFocusResourceForActor(
+    input.state,
+    input.subject.actorId,
+    input.subject.procedureRef,
+  );
+  if (focus === null) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
@@ -497,7 +491,7 @@ function heightenedPatientDefenseTemporaryHitPointsRollRequest(
     };
   }
   if (
-    roll.selectedAttackDamageRiderUnitIds !== undefined ||
+    roll.selectedAttackDamageRiderProcedureRefs !== undefined ||
     roll.cunningStrikeOption !== undefined ||
     roll.weaponDamageDiceRollChoice !== undefined ||
     roll.attackDamageDieFloorChoice !== undefined ||
@@ -532,12 +526,12 @@ function heightenedPatientDefenseTemporaryHitPointsRollHole(
   focus: MonkFocusResourceFact,
 ): BattleUnitFeatureRollHole {
   const expr = heightenedPatientDefenseTemporaryHitPointsDiceExpr(focus);
-  const protocolId = `battle:monk-focus:heightened-patient-defense-temporary-hit-points:${focus.resource.unit.id}:${diceExprLabel(expr)}`;
+  const protocolId = `battle:monk-focus:heightened-patient-defense-temporary-hit-points:${focus.procedureRef}:${diceExprLabel(expr)}`;
   return {
     kind: "rolledDice",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${focus.profile.patientDefense.displayName} Temporary Hit Points (${diceExprLabel(expr)})`,
+    label: `Patient Defense Temporary Hit Points (${diceExprLabel(expr)})`,
   };
 }
 
@@ -567,12 +561,10 @@ function heightenedPatientDefenseTemporaryHitPointsDiceExpr(
 
 function monkFocusFlurryOfBlowsStrikeCount(
   focus: MonkFocusResourceFact,
-):
-  | BattleMonkFocusBattleOptionsSupportProfile["flurryOfBlows"]["strikeCount"]
-  | 3 {
+): 2 | 3 {
   return monkHasHeightenedFocus(focus.actor)
     ? 3
-    : focus.profile.flurryOfBlows.strikeCount;
+    : focus.execution.flurryOfBlows.strikeCount;
 }
 
 function monkHasHeightenedFocus(actor: CharacterBattleCreatureState): boolean {
@@ -742,12 +734,12 @@ function heightenedStepOfTheWindCarryHole(
   state: BattleState,
   focus: MonkFocusResourceFact,
 ): BattleTargetChoiceHole {
-  const protocolId = `battle:monk-focus:heightened-step-of-the-wind-carry:${focus.resource.unit.id}:${focus.actor.combatantId}`;
+  const protocolId = `battle:monk-focus:heightened-step-of-the-wind-carry:${focus.procedureRef}:${focus.actor.combatantId}`;
   return {
     kind: "targetChoice",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${focus.profile.stepOfTheWind.displayName} carried creature`,
+    label: "Step of the Wind carried creature",
     requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter(
       (combatantId) => combatantId !== focus.actor.combatantId,
@@ -796,7 +788,7 @@ function applyStepOfTheWindJumpDistanceMultiplier(
       ...state.currentTurnResources,
       jumpDistanceMultiplier: {
         multiplier:
-          focus.profile.stepOfTheWind.jumpDistanceMultiplier.multiplier,
+          focus.execution.stepOfTheWind.jumpDistanceMultiplier.multiplier,
       },
     },
   };
@@ -920,17 +912,36 @@ export function isMonkFocusFlurryOfBlowsActionResource(
 export function monkFocusResourceForActor(
   state: BattleState,
   actorId: CombatantId,
+  procedureRef?: BattleProcedureExecutionRef,
 ): MonkFocusResourceFact | null {
   const actor = state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) return null;
-  for (const resource of actor.origin.resources) {
-    const support = battleMonkFocusBattleOptionsSupportForUnit(resource.unit);
+  for (const binding of actor.origin.execution.procedureBindings) {
+    if (procedureRef !== undefined && binding.procedureRef !== procedureRef) {
+      continue;
+    }
+    const procedure = binding.procedure;
     if (
-      support !== null &&
-      support !== "unsupported" &&
-      characterBattleResourceIsUseCount(resource)
+      procedure.kind !== "unitSupportProfile" ||
+      typeof procedure.execution !== "object" ||
+      procedure.execution.kind !== "monkFocusBattleOptions" ||
+      procedure.source.kind !== "resourcePool"
     ) {
-      return { actor, resource, profile: support };
+      continue;
+    }
+    const resourcePoolRef = procedure.source.resourcePoolRef;
+    const resource = actor.origin.resources.find(
+      (candidate) =>
+        candidate.resourcePoolRef === resourcePoolRef &&
+        characterBattleResourceIsUseCount(candidate),
+    );
+    if (resource !== undefined && characterBattleResourceIsUseCount(resource)) {
+      return {
+        actor,
+        resource,
+        execution: procedure.execution,
+        procedureRef: binding.procedureRef,
+      };
     }
   }
   return null;
@@ -972,7 +983,9 @@ export function stateWithMonkFocusResource(
     origin: {
       ...currentActor.origin,
       resources: currentActor.origin.resources.map((candidate) =>
-        candidate.unit.id === resource.unit.id ? resource : candidate,
+        candidate.resourcePoolRef === resource.resourcePoolRef
+          ? resource
+          : candidate,
       ),
     },
   };

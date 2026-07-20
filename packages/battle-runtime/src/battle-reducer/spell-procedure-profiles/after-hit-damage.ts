@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage
+import { CreatureTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 //
 // The afterHitDamage Spell Procedure Profile: a Bonus Action spell cast
@@ -33,8 +34,6 @@ import { Either } from "effect";
 
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
-  classFeatureFreeCastSpellInvocationRef,
-  type SpellInvocationRef,
   type BattleSubject,
 } from "../../battle-subjects.ts";
 import {
@@ -49,7 +48,10 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import {
+  type BattleResourcePoolExecutionRef,
+  type CombatantId,
+} from "../../identity.ts";
 import {
   characterResourceIsClassFeatureFreeCastForSpell,
   resourceHasUsesRemaining,
@@ -79,11 +81,9 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
-  ClassFeatureFreeCastInvocationResourceSchema,
+  ClassFeatureFreeCastExecutionResourceSchema,
   DamageTypeSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -137,10 +137,15 @@ function admitAfterHitDamage(
   const freeCastInvocations: readonly AfterHitDamageInvocation[] =
     freeCastDamageExpr === null
       ? []
-      : ctx.actor.origin.resources.flatMap(
-          (resource): readonly AfterHitDamageInvocation[] =>
+      : ctx.resourceOwnership.flatMap(
+          (owner): readonly AfterHitDamageInvocation[] => {
+            const resource = ctx.actor.origin.resources.find(
+              (candidate) =>
+                candidate.resourcePoolRef === owner.resourcePoolRef,
+            );
+            return resource !== undefined &&
             characterResourceIsClassFeatureFreeCastForSpell(
-              resource,
+              owner,
               spell.id,
             ) && resourceHasUsesRemaining(resource)
               ? [
@@ -148,7 +153,7 @@ function admitAfterHitDamage(
                     access: { tag: "prepared" },
                     resource: {
                       tag: "classFeatureFreeCast",
-                      resourceUnitId: resource.unit.id,
+                      resourcePoolRef: resource.resourcePoolRef,
                     },
                     procedure: "afterHitDamage",
                     spell,
@@ -165,7 +170,8 @@ function admitAfterHitDamage(
                     },
                   },
                 ]
-              : [],
+              : [];
+          },
         );
   const slotInvocations = ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly AfterHitDamageInvocation[] => {
@@ -266,31 +272,6 @@ function discoverAfterHitDamageCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
 
-function afterHitDamageInvocationRef(
-  invocation: AfterHitDamageInvocation,
-): SpellInvocationRef {
-  if (invocation.resource.tag === "classFeatureFreeCast") {
-    return classFeatureFreeCastSpellInvocationRef(
-      invocation.spell.id,
-      invocation.resource.resourceUnitId,
-      "afterHitDamage",
-    );
-  }
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "afterHitDamage",
-  };
-}
-
-function afterHitDamageCastSummary(
-  invocation: AfterHitDamageInvocation,
-): string {
-  return invocation.resource.tag === "classFeatureFreeCast"
-    ? `Cast ${invocation.spell.name} using a class feature free cast after a qualifying hit.`
-    : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
-}
 
 function resolveAfterHitDamage(
   input: AfterHitDamageResolveInput,
@@ -330,7 +311,7 @@ function resolveAfterHitDamage(
       ? spendAfterHitDamageFreeCastResource(
           input.input.state,
           input.input.subject.casterId,
-          input.invocation.resource.resourceUnitId,
+          input.invocation.resource.resourcePoolRef,
           input.invocation,
         )
       : spendSpellCastResources({
@@ -387,7 +368,8 @@ function resolveAfterHitDamage(
     state: nextState,
     subject: input.input.subject,
     casterId: input.input.subject.casterId,
-    spellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellProcedure: input.invocation.procedure,
     targetIds: [input.input.target.combatantId],
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
@@ -404,8 +386,8 @@ function resolveAfterHitDamage(
 function spendAfterHitDamageFreeCastResource(
   state: BattleState,
   casterId: CombatantId,
-  resourceUnitId: string,
-  invocation: AfterHitDamageInvocation,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+  invocation: AfterHitDamageResolveInput["invocation"],
 ): SpellCastResourceSpendResult {
   const spentBonusAction = spendActivationResource(state.currentTurnResources, {
     kind: "bonusAction",
@@ -423,46 +405,41 @@ function spendAfterHitDamageFreeCastResource(
       currentTurnResources: spentBonusAction.right,
     },
     casterId,
-    resourceUnitId,
+    resourcePoolRef,
     invocation,
     state,
   );
 }
 
-const AfterHitDamageInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "afterHitDamage" }>
->(
+const AfterHitDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: Schema.Union(
       SpellSlotInvocationResourceSchema,
-      ClassFeatureFreeCastInvocationResourceSchema,
+      ClassFeatureFreeCastExecutionResourceSchema,
     ),
     procedure: Schema.Literal("afterHitDamage"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
+      expr: DiceExprSchema,
       damageType: DamageTypeSchema,
     }),
     conditionalBonusDamage: Schema.Struct({
-      targetCreatureTypes: Schema.Array(Schema.String),
-      expr: BattleRuntimeObjectSchema,
+      targetCreatureTypes: Schema.Array(CreatureTypeSchema),
+      expr: DiceExprSchema,
       damageType: DamageTypeSchema,
     }),
   }),
 );
 export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
-  invocationSchema: AfterHitDamageInvocationSchema,
+  executionSchema: AfterHitDamageInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitAfterHitDamage,
   discoverCastAct: discoverAfterHitDamageCastAct,
-  castSummary: afterHitDamageCastSummary,
-  invocationRef: afterHitDamageInvocationRef,
   resolve: resolveAfterHitDamage,
 } satisfies SpellProcedureProfile<
   "afterHitDamage",

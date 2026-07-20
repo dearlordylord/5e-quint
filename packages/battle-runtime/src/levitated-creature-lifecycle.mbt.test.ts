@@ -59,15 +59,16 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   breakBattleConcentration,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
-  type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 
 const noAltitude = -1;
 
@@ -129,12 +130,12 @@ type LevitateCreatureProjection = {
 };
 
 type LevitateCreatureRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly holes: readonly BattleHole[];
   readonly lastResult: LastResult;
 };
 
-type LevitateAltitudeControlAct = AvailableBattleAct & {
+type LevitateAltitudeControlAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -144,7 +145,7 @@ type LevitateAltitudeControlAct = AvailableBattleAct & {
   >;
 };
 
-type MoveAct = AvailableBattleAct & {
+type MoveAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -369,7 +370,7 @@ function discoverUnwillingSave(
   const act = levitateActInState(state.battle);
   const target = requireHole(act.initialHoles, "targetChoice");
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [
       spellTargetFill(target, levitateUnitId, spellCasterId, spellTargetId),
@@ -410,14 +411,14 @@ function castUnwillingLevitate(
   const resolved = saveSucceeded
     ? requireResolved(
         resolveBattleSubject({
-          state: state.battle,
+          state: state.battle.state,
           subject: act.subject,
           fills: [targetFill, saveFill],
         }),
         "Expected successful Levitate save to resolve without suspension.",
       )
     : resolveUnwillingFailedSaveWithInitialRise(
-        state.battle,
+        state.battle.state,
         act,
         targetFill,
         saveFill,
@@ -425,7 +426,7 @@ function castUnwillingLevitate(
       );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     holes: [],
     lastResult,
   };
@@ -471,7 +472,7 @@ function discoverWillingInitialRise(
   const act = levitateActInState(state.battle);
   const target = requireHole(act.initialHoles, "targetChoice");
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [
       knownWillingSpellTargetFill(
@@ -502,7 +503,7 @@ function castWillingLevitate(
   const initialRise = requireHole(state.holes, "levitateInitialRise");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         knownWillingSpellTargetFill(
@@ -518,7 +519,7 @@ function castWillingLevitate(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     holes: [],
     lastResult: "willingLevitated",
   };
@@ -527,11 +528,11 @@ function castWillingLevitate(
 function discoverTargetMovement(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
-  const battle = advanceToTargetTurnForLevitate(state.battle);
+  const battle = advanceToTargetTurnForLevitate(state.battle.state);
   const act = moveActInState(battle);
   return {
     ...state,
-    battle,
+    battle: { ...state.battle, state: battle },
     holes: act.initialHoles,
     lastResult: "needsTargetMovement",
   };
@@ -542,8 +543,8 @@ function rejectTargetMovementWithoutWitness(
 ): LevitateCreatureRuntimeState {
   const movement = requireHole(state.holes, "movement");
   const result = resolveBattleSubject({
-    state: state.battle,
-    subject: moveActInState(state.battle).subject,
+    state: state.battle.state,
+    subject: moveActInState(state.battle.state).subject,
     fills: [
       movementFill(movement, {
         movementCostFeet: 5,
@@ -565,8 +566,8 @@ function moveTargetWithWitnessUp5Feet(
   const movement = requireHole(state.holes, "movement");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
-      subject: moveActInState(state.battle).subject,
+      state: state.battle.state,
+      subject: moveActInState(state.battle.state).subject,
       fills: [
         movementFill(movement, {
           movementCostFeet: 10,
@@ -590,7 +591,7 @@ function moveTargetWithWitnessUp5Feet(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     holes: [],
     lastResult: "targetMoved",
   };
@@ -599,11 +600,11 @@ function moveTargetWithWitnessUp5Feet(
 function discoverCasterControl(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
-  const battle = advanceToCasterControlTurn(state.battle);
+  const battle = advanceToCasterControlTurn(state.battle.state);
   const act = levitateAltitudeControlActInState(battle);
   return {
     ...state,
-    battle,
+    battle: { ...state.battle, state: battle },
     holes: act.initialHoles,
     lastResult: "needsCasterControl",
   };
@@ -614,8 +615,8 @@ function rejectOutOfRangeCasterControl(
 ): LevitateCreatureRuntimeState {
   const hole = requireHole(state.holes, "levitateAltitudeChange");
   const result = resolveBattleSubject({
-    state: state.battle,
-    subject: levitateAltitudeControlActInState(state.battle).subject,
+    state: state.battle.state,
+    subject: levitateAltitudeControlActInState(state.battle.state).subject,
     fills: [levitateAltitudeChangeFill(hole, "up", 10, [])],
   });
   expect(result).toMatchObject({ tag: "invalid" });
@@ -632,8 +633,8 @@ function controlAltitudeDown10Feet(
   const hole = requireHole(state.holes, "levitateAltitudeChange");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
-      subject: levitateAltitudeControlActInState(state.battle).subject,
+      state: state.battle.state,
+      subject: levitateAltitudeControlActInState(state.battle.state).subject,
       fills: [
         levitateAltitudeChangeFill(hole, "down", 10, [
           {
@@ -652,7 +653,7 @@ function controlAltitudeDown10Feet(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     holes: [],
     lastResult: "casterControlled",
   };
@@ -663,7 +664,10 @@ function breakLevitateConcentration(
 ): LevitateCreatureRuntimeState {
   return {
     ...state,
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    battle: {
+      ...state.battle,
+      state: breakBattleConcentration(state.battle.state, spellCasterId),
+    },
     holes: [],
     lastResult: "concentrationBroken",
   };
@@ -672,10 +676,10 @@ function breakLevitateConcentration(
 function expireLevitateDuration(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
-  const target = requireCombatant(state.battle, spellTargetId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
   const nearlyExpired: BattleState = {
-    ...state.battle,
-    combatants: new Map(state.battle.combatants).set(spellTargetId, {
+    ...state.battle.state,
+    combatants: new Map(state.battle.state.combatants).set(spellTargetId, {
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
         effect.kind === "spellLevitatedCreature" &&
@@ -693,15 +697,18 @@ function expireLevitateDuration(
   };
   return {
     ...state,
-    battle: advanceToNextCasterTurn(nearlyExpired),
+    battle: {
+      ...state.battle,
+      state: advanceToNextCasterTurn(nearlyExpired),
+    },
     holes: [],
     lastResult: "durationExpired",
   };
 }
 
-function levitateActInState(state: BattleState): ActionSpellAct {
+function levitateActInState(session: BattleRuntimeSession): ActionSpellAct {
   const act = maybeSpellAct({
-    state,
+    session,
     spellId: levitateUnitId,
     slotLevel: 2,
   });
@@ -713,7 +720,7 @@ function levitateActInState(state: BattleState): ActionSpellAct {
 }
 
 function moveActInState(state: BattleState): MoveAct {
-  const act = discoverBattleActs(state).find(isTargetMoveAct);
+  const act = discoverBattleActCandidates(state).find(isTargetMoveAct);
   expect(act).toBeDefined();
   if (act === undefined) {
     throw new Error("Expected movement act.");
@@ -724,7 +731,9 @@ function moveActInState(state: BattleState): MoveAct {
 function levitateAltitudeControlActInState(
   state: BattleState,
 ): LevitateAltitudeControlAct {
-  const act = discoverBattleActs(state).find(isLevitateAltitudeControlAct);
+  const act = discoverBattleActCandidates(state).find(
+    isLevitateAltitudeControlAct,
+  );
   expect(act).toBeDefined();
   if (act === undefined) {
     throw new Error("Expected Levitate altitude-control act.");
@@ -732,7 +741,9 @@ function levitateAltitudeControlActInState(
   return act;
 }
 
-function isTargetMoveAct(candidate: AvailableBattleAct): candidate is MoveAct {
+function isTargetMoveAct(
+  candidate: BattleActDiscoveryCandidate,
+): candidate is MoveAct {
   return (
     candidate.subject.tag === "runtimeCommand" &&
     candidate.subject.command === "move" &&
@@ -741,7 +752,7 @@ function isTargetMoveAct(candidate: AvailableBattleAct): candidate is MoveAct {
 }
 
 function isLevitateAltitudeControlAct(
-  candidate: AvailableBattleAct,
+  candidate: BattleActDiscoveryCandidate,
 ): candidate is LevitateAltitudeControlAct {
   return (
     candidate.subject.tag === "runtimeCommand" &&
@@ -778,7 +789,7 @@ function levitateInitialRiseFill(
 }
 
 function advanceToTargetTurnForLevitate(state: BattleState): BattleState {
-  if (discoverBattleActs(state).some(isTargetMoveAct)) {
+  if (discoverBattleActCandidates(state).some(isTargetMoveAct)) {
     return state;
   }
   return requireResolved(
@@ -788,10 +799,10 @@ function advanceToTargetTurnForLevitate(state: BattleState): BattleState {
 }
 
 function advanceToCasterControlTurn(state: BattleState): BattleState {
-  if (discoverBattleActs(state).some(isLevitateAltitudeControlAct)) {
+  if (discoverBattleActCandidates(state).some(isLevitateAltitudeControlAct)) {
     return state;
   }
-  if (discoverBattleActs(state).some(isTargetMoveAct)) {
+  if (discoverBattleActCandidates(state).some(isTargetMoveAct)) {
     return requireResolved(
       endTurn({ state, actorId: spellTargetId }),
       "Expected target turn to end before caster control.",
@@ -814,21 +825,25 @@ function advanceToNextCasterTurn(state: BattleState): BattleState {
 function levitateCreatureProjection(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureProjection {
-  const target = requireCombatant(state.battle, spellTargetId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
   const effect = target.activeEffects.find(
     (candidate) => candidate.kind === "spellLevitatedCreature",
   );
   return {
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: levitateUnitId,
         slotLevel: 2,
       }) !== undefined,
     effectActive: effect !== undefined,
     casterConcentrating:
-      requireCombatant(state.battle, spellCasterId).concentration !== null,
+      requireCombatant(state.battle.state, spellCasterId).concentration !==
+      null,
     altitudeFeet:
       effect === undefined ? noAltitude : Number(effect.altitudeFeet),
     holes: battleHolesToLevitateCreatureHoles(state.holes),

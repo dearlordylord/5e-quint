@@ -1,7 +1,6 @@
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-  characterSpellProcedureRefMatchesSpellForTest,
 } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -10,7 +9,10 @@ import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import type { BattleActiveEffect } from "./index.ts";
+import type {
+  BattleActiveEffect,
+  BattleProcedureExecutionRef,
+} from "./index.ts";
 import { snapshotBattle } from "./index.ts";
 import {
   holdPersonDurationTicks,
@@ -160,10 +162,11 @@ function expectedProjection(
 
 function resolveLesserRestorationChoiceBattle(): BattleState {
   const spell = spellRecord(lesserRestorationUnitId);
-  const baseState = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
+  const baseState = session.state;
   const target = requireCombatant(baseState, spellTargetId);
   const paralyzedEffect = {
     kind: "spellConditionEndTurnSave" as const,
@@ -221,7 +224,10 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
       ),
     ),
   };
-  const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
+  const act = bonusSpellAct({
+    session: { ...session, state },
+    spellId: lesserRestorationUnitId,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const conditionHole = requireHole(act.initialHoles, "conditionChoice");
   const resolved = resolveBattleSubject({
@@ -247,10 +253,11 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
 
 function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
   const spell = spellRecord(lesserRestorationUnitId);
-  const baseState = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
+  const baseState = session.state;
   const caster = requireCombatant(baseState, spellCasterId);
   const target = requireCombatant(baseState, spellTargetId);
   const paralyzedEffect = {
@@ -295,7 +302,10 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
         ),
       ),
   };
-  const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
+  const act = bonusSpellAct({
+    session: { ...session, state },
+    spellId: lesserRestorationUnitId,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const conditionHole = requireHole(act.initialHoles, "conditionChoice");
   const resolved = resolveBattleSubject({
@@ -321,10 +331,11 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
 
 function resolveProtectionFromPoisonBattle(): BattleState {
   const spell = spellRecord(protectionFromPoisonUnitId);
-  const baseState = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
+  const baseState = session.state;
   const target = requireCombatant(baseState, spellTargetId);
   const state: BattleState = {
     ...baseState,
@@ -359,7 +370,7 @@ function resolveProtectionFromPoisonBattle(): BattleState {
     ),
   };
   const act = spellAct({
-    state,
+    session: { ...session, state },
     spellId: protectionFromPoisonUnitId,
     slotLevel: 2,
   });
@@ -390,6 +401,7 @@ function projectConditionRemovalProtectionSelectedIdentityState(
 ): ConditionRemovalProtectionSelectedIdentityProjection {
   const target = requireCombatant(state, spellTargetId);
   const caster = requireCombatant(state, spellCasterId);
+  const protectionProcedureRef = protectionFromPoisonProcedureRef(state);
   const snapshot = snapshotBattle(state);
   return {
     targetParalyzed: hasCondition(target.conditions, "paralyzed"),
@@ -397,10 +409,10 @@ function projectConditionRemovalProtectionSelectedIdentityState(
     targetEffectCount: target.activeEffects.length,
     casterConcentrating: caster.concentration !== null,
     targetHasPoisonResistance: target.activeEffects.some((effect) =>
-      isProtectionFromPoisonResistance(state, effect),
+      isProtectionFromPoisonResistance(protectionProcedureRef, effect),
     ),
     targetHasPoisonSaveAdvantage: target.activeEffects.some((effect) =>
-      isProtectionFromPoisonSaveAdvantage(state, effect),
+      isProtectionFromPoisonSaveAdvantage(protectionProcedureRef, effect),
     ),
     secondLevelSlotsExpended: secondLevelSlotsExpended(caster),
     actionAvailable: snapshot.turn.actionResources.some(
@@ -427,34 +439,42 @@ function secondLevelSlotsExpended(
 }
 
 function isProtectionFromPoisonResistance(
-  state: BattleState,
+  procedureRef: BattleProcedureExecutionRef,
   effect: BattleActiveEffect,
 ): effect is DamageResistanceEffect {
   return (
     effect.kind === "damageResistance" &&
-    characterSpellProcedureRefMatchesSpellForTest(
-      state,
-      effect.sourceCombatantId,
-      effect.sourceProcedureRef,
-      protectionFromPoisonUnitId,
-    ) &&
+    effect.sourceProcedureRef === procedureRef &&
     effect.damageType === "poison"
   );
 }
 
 function isProtectionFromPoisonSaveAdvantage(
-  state: BattleState,
+  procedureRef: BattleProcedureExecutionRef,
   effect: BattleActiveEffect,
 ): effect is ConditionSavingThrowRollModeEffect {
   return (
     effect.kind === "conditionSavingThrowRollMode" &&
-    characterSpellProcedureRefMatchesSpellForTest(
-      state,
-      effect.sourceCombatantId,
-      effect.sourceProcedureRef,
-      protectionFromPoisonUnitId,
-    ) &&
+    effect.sourceProcedureRef === procedureRef &&
     effect.condition === "poisoned" &&
     effect.mode === "advantage"
   );
+}
+
+function protectionFromPoisonProcedureRef(
+  state: BattleState,
+): BattleProcedureExecutionRef {
+  const caster = state.combatants.get(spellCasterId);
+  if (caster?.origin.kind !== "character") {
+    throw new Error("Expected Protection from Poison caster.");
+  }
+  const binding = caster.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "spellInvocation" &&
+      candidate.procedure.execution.procedure === "conditionRemovalProtection",
+  );
+  if (binding === undefined) {
+    throw new Error("Expected Protection from Poison mechanical procedure.");
+  }
+  return binding.procedureRef;
 }

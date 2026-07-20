@@ -358,7 +358,7 @@ const agentConversationScenarios = [
     name: "Navigate result payloads without repository context",
     userSays: "Use whatever the MCP returns to decide the next step.",
     agentReads:
-      "Tool results arrive as JSON text content. Creation state is under holes/finalization/draft, battle options are under snapshot.acts, follow-up battle holes are under result.holes, and pending fills are under session.transientBattleFills.",
+      "Tool results arrive as JSON text content. Creation state is under holes/finalization/draft, battle options are under availableActs, follow-up battle holes are under result.holes, and pending fills are under session.transientBattleFills.",
     agentDecision:
       "It must parse the text payload as JSON, learn the response shape by inspection, and keep using returned holeIds, optionIds, subjects, revisions, actorIds, and result tags instead of inventing them.",
     executableCoverage:
@@ -441,7 +441,7 @@ export async function verifyToolContract(client: Client) {
 
   const workflow = await callTool(client, "describe_mcp_workflow", {});
   assert.ok((get(workflow, "lifecycle") as string[]).length > 0);
-  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
 
   const units = await callTool(client, "list_catalog_units", {});
   assert.ok(
@@ -1284,7 +1284,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
   client: Client,
 ) {
   const workflow = await callTool(client, "describe_mcp_workflow", {});
-  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
   assert.equal(
     get(workflow, "resultPaths.battleCombatants"),
     "snapshot.combatants",
@@ -1389,7 +1389,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
 
 export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
   const workflow = await callTool(client, "describe_mcp_workflow", {});
-  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
 
   const units = await callTool(client, "list_catalog_units", {});
   assert.ok(
@@ -1612,7 +1612,7 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
   client: Client,
 ) {
   const workflow = await callTool(client, "describe_mcp_workflow", {});
-  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
   assert.equal(
     get(workflow, "resultPaths.battleCombatants"),
     "snapshot.combatants",
@@ -3399,7 +3399,7 @@ function attackSubjectFromActs(
   actorId: string,
   attackName: string,
 ): JsonObject {
-  const acts = jsonObjectArrayAt(payload, "snapshot.acts");
+  const acts = jsonObjectArrayAt(payload, "availableActs");
   const matchingActs = acts.filter((candidate) => {
     const subject = candidate.subject;
     if (!isJsonObject(subject)) return false;
@@ -3430,7 +3430,7 @@ function actionSubjectFromActs(
   actorId: string,
   label: string,
 ): JsonObject {
-  const matchingActs = jsonObjectArrayAt(payload, "snapshot.acts").filter(
+  const matchingActs = jsonObjectArrayAt(payload, "availableActs").filter(
     (candidate) =>
       candidate.label === label &&
       isJsonObject(candidate.subject) &&
@@ -3610,7 +3610,7 @@ function holeIds(payload: JsonObject) {
 
 function actionLabels(payload: JsonObject) {
   return (
-    get(payload, "snapshot.acts") as ReadonlyArray<{ readonly label: string }>
+    get(payload, "availableActs") as ReadonlyArray<{ readonly label: string }>
   ).map((act) => act.label);
 }
 
@@ -3667,7 +3667,7 @@ function wizardSpellSlotsFor(payload: JsonObject, combatantId: string) {
 
 function battleActByLabel(payload: JsonObject, label: string) {
   return (
-    get(payload, "snapshot.acts") as ReadonlyArray<{
+    get(payload, "availableActs") as ReadonlyArray<{
       readonly label: string;
       readonly subject: JsonObject;
       readonly initialHoles: readonly JsonObject[];

@@ -114,12 +114,26 @@ export type BattleCompanionState =
   | BattleCompanionAbsentState
   | BattleCompanionDismissedForeverState;
 
+type BattleCompanionPresentSnapshotFields = {
+  readonly companionId: CombatantId;
+  readonly resolvedStatBlockId: StatBlockRecord["id"];
+  readonly initiative: InitiativeScore;
+};
+
 export type BattleCompanionSnapshot =
-  | (Omit<BattleCompanionPresentState, "combatantId"> & {
-      readonly companionId: CombatantId;
-      readonly resolvedStatBlockId: StatBlockRecord["id"];
-      readonly initiative: InitiativeScore;
-    })
+  | (Omit<
+      Extract<BattleCompanionPresentState, { readonly formAccess: "findFamiliar" }>,
+      "combatantId"
+    > &
+      BattleCompanionPresentSnapshotFields)
+  | (Omit<
+      Extract<
+        BattleCompanionPresentState,
+        { readonly formAccess: "pactOfTheChain" }
+      >,
+      "combatantId"
+    > &
+      BattleCompanionPresentSnapshotFields)
   | BattleCompanionAbsentState;
 
 // Battle companions are filed one-per-owner: the map is keyed by the owner's

@@ -34,6 +34,7 @@ import type {
   Round as RoundType,
   SpellSlotLevel,
 } from "@dnd/shared/types";
+import type { SpellProcedureExecution } from "../character-execution.ts";
 import type {
   Ability,
   ActionRestriction,
@@ -562,7 +563,7 @@ export type GlyphDurableOccurrenceRelease =
     }
   | {
       readonly kind: "spellGlyph";
-      readonly storedInvocation: GlyphStoredSpellInvocation;
+      readonly storedProcedure: SpellProcedureExecution<GlyphStoredSpellInvocation>;
     };
 export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
   readonly kind: "glyphDurableOccurrence";
@@ -697,7 +698,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "spellArmorClassBonus";
       readonly bonus: number;
-      readonly negatedSpellIds: readonly SpellRecord["id"][];
+      readonly negatesRepeatedDamageAllocation: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {

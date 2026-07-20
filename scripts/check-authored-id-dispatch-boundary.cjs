@@ -48,10 +48,6 @@ const ALLOWLIST_PATH_RULES = [
     pattern: /^packages\/character-sheet-runtime\/src\/companions\.ts$/,
   },
   {
-    reason: "battle-runtime-spell-access-boundary",
-    pattern: /^packages\/battle-runtime\/src\/character-battle-resources\.ts$/,
-  },
-  {
     reason: "battle-runtime-unit-profile-admission-test-support-boundary",
     pattern:
       /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
@@ -80,16 +76,22 @@ const INLINE_ALLOWLIST_PATH_RULES = [
 
 const INLINE_ALLOWLIST_COMMENT = /\bauthored-id-dispatch-allow:\s*([a-z0-9-]+)/;
 const IDENTIFIER_EXPRESSION_PATTERN = String.raw`[A-Za-z_$][\w$]*(?:(?:\.|\?\.)[A-Za-z_$][\w$]*)*`;
-const AUTHORED_SPELL_RUNTIME_KEY_PATTERN = /invocation\.spell\.id/;
+const AUTHORED_SPELL_RUNTIME_KEY_PATTERN =
+  /\b[A-Za-z_$][\w$]*\.spell\.id\b/;
+const SPELL_INVOCATION_PRESENTATION_REF_PROJECTION =
+  "packages/battle-runtime/src/battle-reducer/spells-invocation-ref.ts";
 const POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN =
   /BattleSpellDamageDieExecutionRef|groupOrdinal|dieOrdinal|selectedDieOrdinal/;
 const EXECUTION_SUBJECT_ATTACK_PRESENTATION_PATTERN = /subject\.attackName/;
 const REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN =
-  /kind:\s*Schema\.Literal\("spellTargetList"\)[\s\S]{0,160}procedure:/;
+  /kind:\s*Schema\.Literal\("spellTargetList"\)[\s\S]{0,160}procedure:(?!\s*Schema\.optionalWith\(Schema\.Never)/;
 const REDUNDANT_SPELL_TARGET_LIST_TYPE_PROCEDURE_PATTERN =
   /type BattleSpellTargetListHole[\s\S]{0,500}\bprocedure:/;
 const POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN =
   /type BattleSpellDamageDieReroll[\s\S]{0,300}\b(?:dieRef|groupOrdinal|dieOrdinal):/;
+const GENERIC_SPELL_EXECUTION_PROJECTION_PATTERN = /\b(?:Omit|Pick)</;
+const SHALLOW_UNIT_EXECUTION_PROJECTION_PATTERN =
+  /([A-Za-z_$][\w$]*) extends SupportedUnitFeatureProfile\s*\?\s*Omit<\1,\s*"unit">/;
 
 function escapeForRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -227,6 +229,33 @@ function lineNumberForIndex(content, index) {
 
 function assertBattleReplayExecutionBoundary() {
   const checks = [
+    ...listFiles(
+      path.join(PACKAGES_ROOT, "battle-runtime", "src", "battle-reducer"),
+    )
+      .map((filePath) => path.relative(REPO_ROOT, filePath))
+      .filter(
+        (relativePath) =>
+          relativePath.endsWith(".ts") &&
+          !relativePath.endsWith(".test.ts") &&
+          relativePath !== SPELL_INVOCATION_PRESENTATION_REF_PROJECTION,
+      )
+      .map((relativePath) => ({
+        relativePath,
+        patterns: [AUTHORED_SPELL_RUNTIME_KEY_PATTERN],
+      })),
+    ...listFiles(
+      path.join(PACKAGES_ROOT, "battle-runtime", "src", "battle-reducer"),
+    )
+      .map((filePath) => path.relative(REPO_ROOT, filePath))
+      .filter(
+        (relativePath) =>
+          relativePath !==
+          "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+      )
+      .map((relativePath) => ({
+        relativePath,
+        patterns: [/origin\.characterUnitRefs/],
+      })),
     {
       relativePath: "packages/battle-runtime/src/battle-subjects.ts",
       patterns: [
@@ -234,6 +263,7 @@ function assertBattleReplayExecutionBoundary() {
         /unitId:\s*BattleSubjectTextSchema/,
         /sourceUnitId:\s*BattleSubjectTextSchema/,
         /resourceUnitId:\s*BattleSubjectTextSchema/,
+        /componentWeaponItemId:\s*BattleSubjectTextSchema/,
         /sourceSpellId:\s*SpellId/,
         /formStatBlockId:\s*BattleSubjectTextSchema/,
         /(?:subject|command)\.sourceSpellId/,
@@ -333,6 +363,33 @@ function assertBattleReplayExecutionBoundary() {
       sliceEnd: "type CharacterExecutionStateData =",
     },
     {
+      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      patterns: [
+        GENERIC_SPELL_EXECUTION_PROJECTION_PATTERN,
+        SHALLOW_UNIT_EXECUTION_PROJECTION_PATTERN,
+      ],
+      sliceStart: "export type SpellProcedureExecution",
+      sliceEnd: "export type UnitSupportProcedureExecutionContext",
+    },
+    {
+      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      patterns: [
+        /readonly unitId:/,
+        /readonly unit:/,
+        /readonly execution:\s*(?:BattleUnitSupportProfile|SupportedUnitFeatureProfile)/,
+        /readonly invocation:\s*SupportedSpellInvocation/,
+        /readonly spell:\s*SpellRecord/,
+        /readonly occurrence:/,
+      ],
+      sliceStart: "export type CharacterProcedureBinding =",
+      sliceEnd: "export type CharacterUnitProcedureBinding =",
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/profile.ts",
+      patterns: [/knownWillingTargetSpellIds/],
+    },
+    {
       relativePath:
         "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       patterns: [/BattleActDiscoverySubject as BattleSubject/],
@@ -425,13 +482,43 @@ function assertBattleReplayExecutionBoundary() {
     {
       relativePath:
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
-      patterns: [REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN],
+      patterns: [
+        REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN,
+        /executionReferenceFieldName/,
+        /battleExecutionReferencesIn/,
+        /serializedSourceProcedureRefsAreOwned/,
+        /EXECUTION_REFERENCE_COLLECTION_FIELD_NAMES/,
+        /\/Ref\(\?:s\)\?\$\//,
+      ],
       sliceStart: "const BattleHolePayloadSchema",
       sliceEnd: "export const BattleHoleSchema",
     },
     {
       relativePath: "packages/mcp/src/admin-mirror-presentation-timeline.ts",
       patterns: [EXECUTION_SUBJECT_ATTACK_PRESENTATION_PATTERN],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/profile.ts",
+      patterns: [
+        /invocationSchema:/,
+        /readonly invocationRef:/,
+        /castSummary:/,
+        /as unknown as/,
+      ],
+    },
+    {
+      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      patterns: [
+        /export type AttackDamageRider[\s\S]{0,90}readonly unitId:/,
+        /export type BattleCunningStrikeSelectedOption[\s\S]{0,500}readonly unitId:/,
+        /export type BattleCunningStrikeOptionSelection[\s\S]{0,180}readonly unitId:/,
+      ],
+    },
+    {
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+      patterns: [/as unknown as/, /new Proxy\(/],
     },
   ];
   const failures = [];
@@ -650,6 +737,23 @@ function assertActPresentationGateSelfTests() {
 }
 
 function assertBattleReplayPatternSelfTests() {
+  const authoredSpellIdOwners = listFiles(
+    path.join(PACKAGES_ROOT, "battle-runtime", "src", "battle-reducer"),
+  )
+    .map((filePath) => path.relative(REPO_ROOT, filePath))
+    .filter(
+      (relativePath) =>
+        relativePath.endsWith(".ts") &&
+        !relativePath.endsWith(".test.ts") &&
+        AUTHORED_SPELL_RUNTIME_KEY_PATTERN.test(
+          fs.readFileSync(path.join(REPO_ROOT, relativePath), "utf8"),
+        ),
+    );
+  assert.deepEqual(
+    authoredSpellIdOwners,
+    [SPELL_INVOCATION_PRESENTATION_REF_PROJECTION],
+    "Self-test failed: authored spell identity must be owned only by the explicit invocation presentation-ref projection.",
+  );
   assert.match(
     "battleDancingLightId(`${invocation.spell.id}:1`)",
     AUTHORED_SPELL_RUNTIME_KEY_PATTERN,
@@ -673,6 +777,18 @@ function assertBattleReplayPatternSelfTests() {
   assert.match(
     "type BattleSpellDamageDieReroll = { dieRef: Ref }",
     POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN,
+  );
+  assert.match(
+    'type SpellExecution<I> = Pick<I["spell"], "mechanics">',
+    GENERIC_SPELL_EXECUTION_PROJECTION_PATTERN,
+  );
+  assert.match(
+    'type SpellExecution<I> = Omit<I, "spell">',
+    GENERIC_SPELL_EXECUTION_PROJECTION_PATTERN,
+  );
+  assert.match(
+    'type UnitExecution<P> = P extends SupportedUnitFeatureProfile ? Omit<P, "unit"> : never',
+    SHALLOW_UNIT_EXECUTION_PROJECTION_PATTERN,
   );
 }
 
@@ -718,33 +834,113 @@ function nodeHasAncestor(node, predicate) {
   return false;
 }
 
-function objectLiteralHasProperty(object, propertyName) {
-  return object.properties.some(
-    (property) =>
-      (ts.isPropertyAssignment(property) ||
-        ts.isShorthandPropertyAssignment(property)) &&
-      propertyNameText(property.name) === propertyName,
+const CHARACTER_EXECUTION_AUTHORED_ID_KEYS = new Set([
+  "optionId",
+  "resourceUnitId",
+  "sourceUnitId",
+  "spellId",
+  "unitId",
+]);
+
+function unwrapExpression(node) {
+  let current = node;
+  while (
+    ts.isAsExpression(current) ||
+    ts.isSatisfiesExpression(current) ||
+    ts.isParenthesizedExpression(current) ||
+    ts.isNonNullExpression(current) ||
+    ts.isTypeAssertionExpression(current)
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
+function schemaNeverRejectsExpression(node) {
+  return /^Schema\.optionalWith\(Schema\.Never,\s*\{\s*exact:\s*true\s*\}\)$/.test(
+    node.getText(),
   );
 }
 
-function objectLiteralIsSpellTargetListSchema(object) {
-  return object.properties.some((property) => {
-    if (
-      !ts.isPropertyAssignment(property) ||
-      propertyNameText(property.name) !== "kind" ||
-      !ts.isCallExpression(property.initializer)
-    ) {
-      return false;
-    }
-    const call = property.initializer;
-    return (
-      call.expression.getText() === "Schema.Literal" &&
-      call.arguments.some(
-        (argument) =>
-          ts.isStringLiteral(argument) && argument.text === "spellTargetList",
-      )
-    );
-  });
+function schemaLiteralIncludes(node, literal) {
+  const expression = unwrapExpression(node);
+  return (
+    ts.isCallExpression(expression) &&
+    expression.expression.getText() === "Schema.Literal" &&
+    expression.arguments.some(
+      (argument) => ts.isStringLiteral(argument) && argument.text === literal,
+    )
+  );
+}
+
+function authoredIdentityPathKind(pathSegments) {
+  if (pathSegments === null || pathSegments.length === 0) return null;
+  const last = pathSegments.at(-1);
+  const owner = pathSegments.at(-2);
+  if (last === "id" && owner === "spell") return "spell";
+  if (last === "id" && owner === "unit") return "unit";
+  if (last === "spellId") return "spell";
+  if (
+    last === "unitId" ||
+    last === "resourceUnitId" ||
+    last === "sourceUnitId"
+  ) {
+    return "unit";
+  }
+  return null;
+}
+
+function pathComesFromReducerExecution(pathSegments) {
+  return pathSegments.some((segment) =>
+    ["execution", "invocation", "procedure", "subject"].includes(segment),
+  );
+}
+
+function isOutermostPropertyPath(node) {
+  return !(
+    (ts.isPropertyAccessExpression(node.parent) &&
+      node.parent.expression === node) ||
+    (ts.isElementAccessExpression(node.parent) &&
+      node.parent.expression === node)
+  );
+}
+
+function nodeConstructsRuntimeKey(node) {
+  return nodeHasAncestor(
+    node,
+    (ancestor) =>
+      ts.isTemplateExpression(ancestor) ||
+      ts.isNoSubstitutionTemplateLiteral(ancestor) ||
+      (ts.isBinaryExpression(ancestor) &&
+        ancestor.operatorToken.kind === ts.SyntaxKind.PlusToken) ||
+      (ts.isVariableDeclaration(ancestor) &&
+        ts.isIdentifier(ancestor.name) &&
+        /(?:id|key|prefix|ref)$/i.test(ancestor.name.text)) ||
+      (ts.isCallExpression(ancestor) &&
+        /(?:holeId|holeInstanceKey|battle[A-Za-z]+(?:Id|Ref))$/.test(
+          ancestor.expression.getText(),
+        )),
+  );
+}
+
+function nodeDispatchesOnIdentity(node) {
+  return nodeHasAncestor(
+    node,
+    (ancestor) =>
+      (ts.isBinaryExpression(ancestor) &&
+        [
+          ts.SyntaxKind.EqualsEqualsEqualsToken,
+          ts.SyntaxKind.ExclamationEqualsEqualsToken,
+          ts.SyntaxKind.EqualsEqualsToken,
+          ts.SyntaxKind.ExclamationEqualsToken,
+        ].includes(ancestor.operatorToken.kind)) ||
+      (ts.isSwitchStatement(ancestor) && ancestor.expression === node) ||
+      (ts.isElementAccessExpression(ancestor) &&
+        ancestor.argumentExpression === node) ||
+      (ts.isCallExpression(ancestor) &&
+        /\.(?:get|has)$/.test(ancestor.expression.getText()) &&
+        ancestor.arguments.includes(node)),
+  );
 }
 
 function battleReplayAstViolations(sourceText, relativePath) {
@@ -757,6 +953,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
   );
   const violations = [];
   const aliasScopes = [new Map()];
+  const valueDeclarations = new Map();
   const positionalIdentityNames = new Set([
     "BattleSpellDamageDieExecutionRef",
     "battleSpellDamageDieExecutionRef",
@@ -764,6 +961,96 @@ function battleReplayAstViolations(sourceText, relativePath) {
     "dieOrdinal",
     "selectedDieOrdinal",
   ]);
+
+  function collectValueDeclarations(node) {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer !== undefined
+    ) {
+      const declarations = valueDeclarations.get(node.name.text) ?? [];
+      declarations.push(node.initializer);
+      valueDeclarations.set(node.name.text, declarations);
+    }
+    ts.forEachChild(node, collectValueDeclarations);
+  }
+  collectValueDeclarations(source);
+
+  function uniqueDeclaredValue(identifier) {
+    const declarations = valueDeclarations.get(identifier.text);
+    return declarations?.length === 1 ? declarations[0] : undefined;
+  }
+
+  function topLevelSchemaProperties(node, visited = new Set()) {
+    const expression = unwrapExpression(node);
+    if (visited.has(expression)) return [];
+    visited.add(expression);
+    if (ts.isIdentifier(expression)) {
+      const declaration = uniqueDeclaredValue(expression);
+      return declaration === undefined
+        ? []
+        : topLevelSchemaProperties(declaration, visited);
+    }
+    if (!ts.isObjectLiteralExpression(expression)) return [];
+    return expression.properties.flatMap((property) => {
+      if (ts.isSpreadAssignment(property)) {
+        return topLevelSchemaProperties(property.expression, visited);
+      }
+      if (ts.isShorthandPropertyAssignment(property)) {
+        const declaration = uniqueDeclaredValue(property.name);
+        return declaration === undefined
+          ? []
+          : [{ name: property.name.text, value: declaration, node: property }];
+      }
+      if (ts.isPropertyAssignment(property)) {
+        const name = propertyNameText(property.name);
+        return name === undefined
+          ? []
+          : [{ name, value: property.initializer, node: property }];
+      }
+      return [];
+    });
+  }
+
+  function reachableSchemaAcceptsProperty(
+    node,
+    propertyName,
+    visited = new Set(),
+  ) {
+    const expression = unwrapExpression(node);
+    if (visited.has(expression)) return false;
+    visited.add(expression);
+    if (ts.isIdentifier(expression)) {
+      const declaration = uniqueDeclaredValue(expression);
+      return (
+        declaration !== undefined &&
+        reachableSchemaAcceptsProperty(declaration, propertyName, visited)
+      );
+    }
+    if (ts.isPropertyAssignment(expression)) {
+      if (
+        propertyNameText(expression.name) === propertyName &&
+        !schemaNeverRejectsExpression(expression.initializer)
+      ) {
+        return true;
+      }
+      return reachableSchemaAcceptsProperty(
+        expression.initializer,
+        propertyName,
+        visited,
+      );
+    }
+    let accepts = false;
+    ts.forEachChild(expression, (child) => {
+      if (
+        !accepts &&
+        reachableSchemaAcceptsProperty(child, propertyName, visited)
+      ) {
+        accepts = true;
+      }
+    });
+    return accepts;
+  }
 
   function add(node, message) {
     const position = source.getLineAndCharacterOfPosition(
@@ -898,26 +1185,24 @@ function battleReplayAstViolations(sourceText, relativePath) {
     ) {
       add(node, "execution subject destructures attack presentation");
     }
+    const authoredIdentityKind = authoredIdentityPathKind(pathSegments);
+    const checksReducerAuthoredIdentity =
+      relativePath.includes("/battle-reducer/") &&
+      pathComesFromReducerExecution(pathSegments ?? []) &&
+      isOutermostPropertyPath(node);
     if (
-      pathSegments !== null &&
-      pathSegments.slice(-3).join(".") === "invocation.spell.id"
+      authoredIdentityKind !== null &&
+      checksReducerAuthoredIdentity &&
+      nodeConstructsRuntimeKey(node)
     ) {
-      const constructsRuntimeKey = nodeHasAncestor(
-        node,
-        (ancestor) =>
-          ts.isTemplateExpression(ancestor) ||
-          ts.isNoSubstitutionTemplateLiteral(ancestor) ||
-          (ts.isVariableDeclaration(ancestor) &&
-            ts.isIdentifier(ancestor.name) &&
-            /(?:id|key|prefix)$/i.test(ancestor.name.text)) ||
-          (ts.isCallExpression(ancestor) &&
-            /(?:holeId|holeInstanceKey|battle[A-Za-z]+(?:Id|Ref))$/.test(
-              ancestor.expression.getText(),
-            )),
-      );
-      if (constructsRuntimeKey) {
-        add(node, "authored spell id constructs a runtime key");
-      }
+      add(node, `authored ${authoredIdentityKind} id constructs a runtime key`);
+    }
+    if (
+      authoredIdentityKind !== null &&
+      checksReducerAuthoredIdentity &&
+      nodeDispatchesOnIdentity(node)
+    ) {
+      add(node, `reducer dispatches on authored ${authoredIdentityKind} id`);
     }
     if (
       ts.isTypeAliasDeclaration(node) &&
@@ -933,11 +1218,57 @@ function battleReplayAstViolations(sourceText, relativePath) {
       add(node, "spellTargetList type retains redundant procedure");
     }
     if (
-      ts.isObjectLiteralExpression(node) &&
-      objectLiteralIsSpellTargetListSchema(node) &&
-      objectLiteralHasProperty(node, "procedure")
+      ts.isCallExpression(node) &&
+      node.expression.getText() === "Schema.Struct" &&
+      node.arguments[0] !== undefined
     ) {
-      add(node, "spellTargetList codec retains redundant procedure");
+      const properties = topLevelSchemaProperties(node.arguments[0]);
+      const isSpellTargetList = properties.some(
+        (property) =>
+          property.name === "kind" &&
+          schemaLiteralIncludes(property.value, "spellTargetList"),
+      );
+      const procedure = properties.find(
+        (property) => property.name === "procedure",
+      );
+      if (
+        isSpellTargetList &&
+        procedure !== undefined &&
+        !schemaNeverRejectsExpression(procedure.value)
+      ) {
+        add(procedure.node, "spellTargetList codec retains redundant procedure");
+      }
+    }
+    if (
+      (ts.isPropertyAssignment(node) ||
+        ts.isShorthandPropertyAssignment(node)) &&
+      propertyNameText(node.name) === "spellDamageReroll"
+    ) {
+      const value = ts.isPropertyAssignment(node)
+        ? node.initializer
+        : uniqueDeclaredValue(node.name);
+      if (
+        value !== undefined &&
+        reachableSchemaAcceptsProperty(value, "dieRef")
+      ) {
+        add(node, "Empowered Spell codec accepts removed dieRef");
+      }
+    }
+    if (
+      ts.isPropertySignature(node) &&
+      node.name !== undefined &&
+      CHARACTER_EXECUTION_AUTHORED_ID_KEYS.has(propertyNameText(node.name)) &&
+      nodeHasAncestor(
+        node,
+        (ancestor) =>
+          ts.isTypeAliasDeclaration(ancestor) &&
+          ancestor.name.text === "CharacterProcedureBinding",
+      )
+    ) {
+      add(
+        node,
+        `CharacterProcedureBinding execution retains authored id ${propertyNameText(node.name)}`,
+      );
     }
     if (ts.isIdentifier(node) && positionalIdentityNames.has(node.text)) {
       add(node, "damage-die replay identity is positional");
@@ -952,6 +1283,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
 function assertBattleReplayAstBoundary() {
   const roots = [
     "packages/battle-runtime/src/identity.ts",
+    "packages/battle-runtime/src/character-execution.ts",
     "packages/battle-runtime/src/battle-reducer.ts",
     "packages/battle-runtime/src/battle-reducer",
     "packages/mcp/src/admin-mirror-presentation-timeline.ts",
@@ -987,6 +1319,11 @@ function assertBattleReplayAstSelfTests() {
       padding: "${"x".repeat(240)}",
       procedure: Procedure,
     })
+    const rerollCodec = Schema.Struct({
+      spellDamageReroll: Schema.optionalWith(Schema.Struct({
+        dice: Schema.Array(Schema.Struct({ dieRef: Ref })),
+      })),
+    })
     const key = \`${'${invocation["spell"].id}'}:effect\`
     const { attackName } = pending.subject
     type Die = { groupOrdinal: number }
@@ -994,6 +1331,54 @@ function assertBattleReplayAstSelfTests() {
     const aliasedAttackName = s.attackName
     const spell = invocation.spell
     const aliasedKey = \`${"${spell.id}"}:effect\`
+  `;
+  const strictRemovedFieldFixture = `
+    const codec = Schema.Struct({
+      kind: Schema.Literal("spellTargetList"),
+      sourceProcedureRef: Ref,
+      procedure: Schema.optionalWith(Schema.Never, { exact: true }),
+    })
+    const rerollCodec = Schema.Struct({
+      spellDamageReroll: Schema.optionalWith(Schema.Struct({
+        dice: Schema.Array(Schema.Struct({
+          dieRef: Schema.optionalWith(Schema.Never, { exact: true }),
+        })),
+      })),
+    })
+  `;
+  const extractedSchemaFixture = `
+    const legacyTargetFields = { procedure: Procedure }
+    const targetListFields = {
+      kind: Schema.Literal("spellTargetList"),
+      sourceProcedureRef: Ref,
+      ...legacyTargetFields,
+    }
+    const targetListCodec = Schema.Struct(targetListFields)
+    const legacyDieFields = { dieRef: Ref }
+    const rerollDieCodec = Schema.Struct({ ...legacyDieFields })
+    const rerollPayloadCodec = Schema.Struct({
+      dice: Schema.Array(rerollDieCodec),
+    })
+    const spellDamageReroll = Schema.optionalWith(rerollPayloadCodec)
+    const fillCodec = Schema.Struct({ spellDamageReroll })
+  `;
+  const strictExtractedSchemaFixture = `
+    const removedTargetFields = {
+      procedure: Schema.optionalWith(Schema.Never, { exact: true }),
+    }
+    const targetListFields = {
+      kind: Schema.Literal("spellTargetList"),
+      ...removedTargetFields,
+    }
+    const targetListCodec = Schema.Struct(targetListFields)
+    const removedDieFields = {
+      dieRef: Schema.optionalWith(Schema.Never, { exact: true }),
+    }
+    const rerollDieCodec = Schema.Struct({ ...removedDieFields })
+    const spellDamageReroll = Schema.optionalWith(
+      Schema.Struct({ dice: Schema.Array(rerollDieCodec) }),
+    )
+    const fillCodec = Schema.Struct({ spellDamageReroll })
   `;
   const violations = battleReplayAstViolations(
     fixture,
@@ -1004,6 +1389,7 @@ function assertBattleReplayAstSelfTests() {
     "execution subject destructures attack presentation",
     "spellTargetList type retains redundant procedure",
     "spellTargetList codec retains redundant procedure",
+    "Empowered Spell codec accepts removed dieRef",
     "damage-die replay identity is positional",
   ]) {
     assert.ok(
@@ -1016,6 +1402,37 @@ function assertBattleReplayAstSelfTests() {
       violation.endsWith("execution subject owns attack presentation"),
     ).length >= 1,
     "Battle replay AST self-test missed aliased subject presentation.",
+  );
+  assert.deepEqual(
+    battleReplayAstViolations(
+      strictRemovedFieldFixture,
+      "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+    ),
+    [],
+    "Battle replay AST gate must allow explicit strict rejection of a removed field.",
+  );
+  const extractedSchemaViolations = battleReplayAstViolations(
+    extractedSchemaFixture,
+    "packages/battle-runtime/src/battle-reducer/extracted-codecs.ts",
+  );
+  for (const expected of [
+    "spellTargetList codec retains redundant procedure",
+    "Empowered Spell codec accepts removed dieRef",
+  ]) {
+    assert.ok(
+      extractedSchemaViolations.some((violation) =>
+        violation.endsWith(expected),
+      ),
+      `Battle replay AST self-test missed extracted schema violation ${expected}.`,
+    );
+  }
+  assert.deepEqual(
+    battleReplayAstViolations(
+      strictExtractedSchemaFixture,
+      "packages/battle-runtime/src/battle-reducer/extracted-strict-codecs.ts",
+    ),
+    [],
+    "Battle replay AST gate must follow extracted strict-rejection schemas.",
   );
   assert.ok(
     violations.filter((violation) =>
@@ -1067,6 +1484,39 @@ function assertBattleReplayAstSelfTests() {
     0,
     "Battle replay AST aliases must invalidate on reassignment.",
   );
+  const authoredRuntimeIdentityFixture = `
+    type CharacterProcedureBinding = {
+      readonly procedure: {
+        readonly execution: {
+          readonly resourceUnitId: string
+          readonly sourceUnitId: string
+        }
+      }
+    }
+    function resolve(binding: Binding, resource: Resource, table: Map<string, unknown>) {
+      const key = \`${"${binding.procedure.execution.spellId}"}:effect\`
+      const source = binding.procedure.execution.sourceUnitId
+      if (binding.procedure.execution.resourceUnitId === resource.unit.id) return key
+      return table.get(source)
+    }
+  `;
+  const authoredRuntimeIdentityViolations = battleReplayAstViolations(
+    authoredRuntimeIdentityFixture,
+    "packages/battle-runtime/src/battle-reducer/authored-runtime-identity.ts",
+  );
+  for (const expected of [
+    "authored spell id constructs a runtime key",
+    "reducer dispatches on authored unit id",
+    "CharacterProcedureBinding execution retains authored id resourceUnitId",
+    "CharacterProcedureBinding execution retains authored id sourceUnitId",
+  ]) {
+    assert.ok(
+      authoredRuntimeIdentityViolations.some((violation) =>
+        violation.includes(expected),
+      ),
+      `Battle replay AST self-test missed authored runtime identity violation ${expected}.`,
+    );
+  }
 }
 
 function countChar(text, char) {

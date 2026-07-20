@@ -224,7 +224,7 @@ function workflowGuide() {
       draftRevision: "draft.revision or storedDraft.revision",
       finalization: "finalization",
       characters: "characters",
-      battleActs: "snapshot.acts",
+      battleActs: "availableActs",
       followUpBattleHoles: "result.holes",
       pendingBattleFills: "session.transientBattleFills",
       battleCombatants: "snapshot.combatants",

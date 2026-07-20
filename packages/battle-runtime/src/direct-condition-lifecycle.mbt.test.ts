@@ -56,6 +56,8 @@ import type {
   BattleState,
   SupportedSpellInvocation,
 } from "./index.ts";
+import type { BattleExecutableSpellInvocation } from "./battle-reducer.ts";
+import { spellProcedureExecution } from "./character-execution.ts";
 
 type DirectConditionSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -117,8 +119,8 @@ function initialRuntimeState(
   return {
     battle:
       input.hasNonSpellSource === true
-        ? battleWithTargetNonSpellCondition(battle)
-        : battle,
+        ? battleWithTargetNonSpellCondition(battle.state)
+        : battle.state,
     compact: initialState(input),
     lastResult: "init",
   };
@@ -380,15 +382,11 @@ function battleWithDirectConditionDuration(
 
 function directConditionInvocation(
   slotLevel: number,
-): DirectConditionSpellInvocation & {
-  readonly sourceProcedureRef: ReturnType<
-    typeof battleProcedureExecutionRefForTest
-  >;
-} {
-  return {
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(invisibilityUnitId),
-    ),
+): Extract<
+  BattleExecutableSpellInvocation,
+  { readonly procedure: "directCondition" }
+> {
+  const invocation: DirectConditionSpellInvocation = {
     access: { tag: "prepared" },
     resource: {
       tag: "spellSlot",
@@ -409,6 +407,12 @@ function directConditionInvocation(
       },
     },
     rangeFeet: movementFeet(5),
+  };
+  return {
+    ...spellProcedureExecution(invocation),
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(invisibilityUnitId),
+    ),
   };
 }
 

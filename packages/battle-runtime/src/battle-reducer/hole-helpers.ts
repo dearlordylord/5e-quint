@@ -22,7 +22,7 @@ import {
   type Condition,
   type DifficultyClass,
 } from "@dnd/shared/types";
-import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
+import type { Ability, Skill } from "@dnd/surface/surface/types";
 import type {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -32,8 +32,12 @@ import {
   battleSubjectForReplay,
   type BattleMovementSpeedKind,
   type BattleSubject,
-  type CharacterProcedureSelectionSubject,
 } from "../battle-subjects.ts";
+import {
+  characterUnitProcedureBindings,
+  type UnitFeatureProcedureExecution,
+  type UnitSupportProcedureExecution,
+} from "../character-execution.ts";
 import {
   attackExecutionSelectionForOption,
   type BoundSupportedAttackActionOption,
@@ -51,9 +55,6 @@ import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   type AlternateActionCostAction,
-  type BattleBonusActionDashTemporaryHitPointsSupportProfile,
-  type BattleHideActionObscurementPermissionSupportProfile,
-  type BattleUnitSupportProfile,
   type HideActionObscurementPermissionProfile,
 } from "../unit-feature-support.ts";
 import {
@@ -109,7 +110,10 @@ import {
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
-import { combatantCanTakeActions } from "./creature-state.ts";
+import {
+  combatantCanTakeActions,
+  isCharacterBattleCreatureState,
+} from "./creature-state.ts";
 import {
   hypnoticPatternShakeAwakeTargetChoices,
   sleepShakeAwakeTargetChoices,
@@ -296,16 +300,13 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
 
 export function bonusActionDashSubjectForSpeedKind(
   actorId: CombatantId,
-  sourceUnitId: string,
+  procedureRef: BattleProcedureExecutionRef,
   speedKind: BattleMovementSpeedKind,
-): Extract<
-  CharacterProcedureSelectionSubject,
-  { readonly tag: "bonusActionStandardAction" }
-> {
+): Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> {
   return {
     tag: "bonusActionStandardAction",
     actorId,
-    sourceUnitId,
+    procedureRef,
     action: "dash",
     speedKind,
   };
@@ -592,11 +593,13 @@ function passiveConditionEndAbilityCheckRollModeMatches(
   if (actor?.origin.kind !== "character") {
     return false;
   }
-  return [...actor.origin.passiveAbilityCheckRollModeProfiles.values()].some(
-    (profile) =>
-      profile.abilityCheck.mode === mode &&
-      profile.abilityCheck.scope.kind === "endingCondition" &&
-      profile.abilityCheck.scope.condition === condition,
+  return characterUnitProcedureBindings(actor.origin.execution).some(
+    ({ procedure }) =>
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "passiveAbilityCheckRollMode" &&
+      procedure.execution.abilityCheck.mode === mode &&
+      procedure.execution.abilityCheck.scope.kind === "endingCondition" &&
+      procedure.execution.abilityCheck.scope.condition === condition,
   );
 }
 
@@ -652,11 +655,14 @@ function activeRemarkableAthleteAbilityCheckAdvantageMatches(
   if (actor?.origin.kind !== "character") {
     return false;
   }
-  return [...actor.origin.remarkableAthleteProfiles.values()].some(
-    (profile) =>
-      profile.remarkableAthlete.abilityCheck.kind === "rollAdvantage" &&
-      profile.remarkableAthlete.abilityCheck.ability === ability &&
-      profile.remarkableAthlete.abilityCheck.skill === skill,
+  return characterUnitProcedureBindings(actor.origin.execution).some(
+    ({ procedure }) =>
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "remarkableAthlete" &&
+      procedure.execution.remarkableAthlete.abilityCheck.kind ===
+        "rollAdvantage" &&
+      procedure.execution.remarkableAthlete.abilityCheck.ability === ability &&
+      procedure.execution.remarkableAthlete.abilityCheck.skill === skill,
   );
 }
 
@@ -936,7 +942,7 @@ export function bonusActionStandardActionActs(
               subject: {
                 tag: "bonusActionStandardAction",
                 actorId,
-                sourceProcedureRef: entry.source.procedureRef,
+                procedureRef: entry.source.procedureRef,
                 sourceEffectRef: entry.source.effectRef,
                 action: "dash",
                 speedKind,
@@ -949,7 +955,7 @@ export function bonusActionStandardActionActs(
               subject: {
                 tag: "bonusActionStandardAction",
                 actorId,
-                sourceUnitId: entry.source.unitId,
+                procedureRef: entry.source.procedureRef,
                 action,
                 speedKind,
               },
@@ -960,7 +966,7 @@ export function bonusActionStandardActionActs(
             subject: {
               tag: "bonusActionStandardAction",
               actorId,
-              sourceUnitId: entry.source.unitId,
+              procedureRef: entry.source.procedureRef,
               action,
             },
           };
@@ -976,7 +982,7 @@ export function bonusActionStandardActionActs(
         return representedMovementSpeedKinds(actor).map((speedKind) => ({
           subject: bonusActionDashSubjectForSpeedKind(
             actorId,
-            entry.unitId,
+            entry.procedureRef,
             speedKind,
           ),
           initialHoles: [],
@@ -990,33 +996,40 @@ export function alternateActionCostProfilesForActor(
   combatant: BattleCreatureState | undefined,
 ): readonly {
   readonly source:
-    | { readonly kind: "unit"; readonly unitId: UnitRecord["id"] }
+    | {
+        readonly kind: "procedure";
+        readonly procedureRef: BattleProcedureExecutionRef;
+      }
     | {
         readonly kind: "spellEffect";
         readonly procedureRef: BattleProcedureExecutionRef;
         readonly effectRef: BattleActiveEffectExecutionRef;
       };
   readonly profile: Extract<
-    BattleUnitSupportProfile,
+    UnitSupportProcedureExecution,
     { readonly kind: "alternateActionCost" }
   >;
 }[] {
-  if (combatant?.origin.kind !== "character") {
+  if (!isCharacterBattleCreatureState(combatant)) {
     return [];
   }
-  const characterProfiles = combatant.origin.characterUnitRefs.flatMap(
-    (unitRef) =>
-      unitRef.supportProfiles.flatMap((profile) =>
-        typeof profile === "object" && profile.kind === "alternateActionCost"
-          ? [
-              {
-                source: { kind: "unit" as const, unitId: unitRef.unit.id },
-                profile,
+  const characterProfiles =
+    combatant.origin.execution.procedureBindings.flatMap((binding) => {
+      const procedure = binding.procedure;
+      return procedure.kind === "unitSupportProfile" &&
+        typeof procedure.execution === "object" &&
+        procedure.execution.kind === "alternateActionCost"
+        ? [
+            {
+              source: {
+                kind: "procedure" as const,
+                procedureRef: binding.procedureRef,
               },
-            ]
-          : [],
-      ),
-  );
+              profile: procedure.execution,
+            },
+          ]
+        : [];
+    });
   const spellEffectProfiles = combatant.activeEffects.flatMap((effect) =>
     effect.kind === "spellDashBonusAction"
       ? [
@@ -1044,30 +1057,44 @@ export function alternateActionCostProfilesForActor(
 export function bonusActionDashTemporaryHitPointsProfilesForActor(
   combatant: BattleCreatureState | undefined,
 ): readonly {
-  readonly unitId: UnitRecord["id"];
-  readonly profile: BattleBonusActionDashTemporaryHitPointsSupportProfile;
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly profile: Extract<
+    UnitFeatureProcedureExecution | UnitSupportProcedureExecution,
+    { readonly kind: "bonusActionDashTemporaryHitPoints" }
+  >;
   readonly resource: CharacterBattleResourceState;
 }[] {
   if (combatant?.origin.kind !== "character") {
     return [];
   }
   const origin = combatant.origin;
-  return origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.flatMap((profile) => {
-      if (
-        typeof profile !== "object" ||
-        profile.kind !== BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE
-      ) {
-        return [];
-      }
-      const resource = origin.resources.find(
-        (candidate) => candidate.unit.id === unitRef.unit.id,
-      );
-      return resource !== undefined && resourceHasUsesRemaining(resource)
-        ? [{ unitId: unitRef.unit.id, profile, resource }]
-        : [];
-    }),
-  );
+  return origin.execution.procedureBindings.flatMap((binding) => {
+    const procedure = binding.procedure;
+    if (
+      (procedure.kind !== "unitFeature" &&
+        procedure.kind !== "unitSupportProfile") ||
+      typeof procedure.execution !== "object" ||
+      procedure.execution.kind !==
+        BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE ||
+      procedure.source.kind !== "resourcePool"
+    ) {
+      return [];
+    }
+    const resourcePoolRef = procedure.source.resourcePoolRef;
+    const resource = origin.resources.find(
+      (candidate) =>
+        candidate.resourcePoolRef === resourcePoolRef,
+    );
+    return resource !== undefined && resourceHasUsesRemaining(resource)
+      ? [
+          {
+            procedureRef: binding.procedureRef,
+            profile: procedure.execution,
+            resource,
+          },
+        ]
+      : [];
+  });
 }
 
 export function alternateActionCostActionAvailable(
@@ -1085,13 +1112,13 @@ export function alternateActionCostActionAvailable(
 
 export function actorHasAlternateActionCost(
   combatant: BattleCreatureState | undefined,
-  sourceUnitId: string | undefined,
+  sourceProcedureRef: BattleProcedureExecutionRef | undefined,
   action: AlternateActionCostAction,
 ): boolean {
   return alternateActionCostProfilesForActor(combatant).some(
     (entry) =>
-      entry.source.kind === "unit" &&
-      entry.source.unitId === sourceUnitId &&
+      entry.source.kind === "procedure" &&
+      entry.source.procedureRef === sourceProcedureRef &&
       entry.profile.to.kind === "bonusAction" &&
       entry.profile.from.actions.some((candidate) => candidate === action),
   );
@@ -1099,14 +1126,17 @@ export function actorHasAlternateActionCost(
 
 export function bonusActionDashTemporaryHitPointsForActor(
   combatant: BattleCreatureState | undefined,
-  sourceUnitId: string,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): {
-  readonly profile: BattleBonusActionDashTemporaryHitPointsSupportProfile;
+  readonly profile: Extract<
+    UnitSupportProcedureExecution,
+    { readonly kind: "bonusActionDashTemporaryHitPoints" }
+  >;
   readonly resource: CharacterBattleResourceState;
 } | null {
   return (
     bonusActionDashTemporaryHitPointsProfilesForActor(combatant).find(
-      (entry) => entry.unitId === sourceUnitId,
+      (entry) => entry.procedureRef === sourceProcedureRef,
     ) ?? null
   );
 }
@@ -1165,33 +1195,31 @@ function canHideWhenObscuredOnlyByCreature(
 
 function obscuredOnlyByLargerCreatureHidePermissionForCombatant(
   combatant: BattleCreatureState,
-): BattleHideActionObscurementPermissionSupportProfile | null {
+):
+  | Extract<
+      UnitFeatureProcedureExecution | UnitSupportProcedureExecution,
+      { readonly kind: "hideActionObscurementPermission" }
+    >
+  | null {
   if (combatant.origin.kind !== "character") {
     return null;
   }
-  for (const unitRef of combatant.origin.characterUnitRefs) {
-    const profile = unitRef.supportProfiles.find(
-      isBattleHideActionObscurementPermissionSupportProfile,
-    );
+  for (const binding of combatant.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
     if (
-      profile !== undefined &&
+      (procedure.kind === "unitFeature" ||
+        procedure.kind === "unitSupportProfile") &&
+      typeof procedure.execution === "object" &&
+      procedure.execution.kind ===
+        HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE &&
       hideActionObscurementPermissionAllowsLargerCreatureObscurement(
-        profile.permission,
+        procedure.execution.permission,
       )
     ) {
-      return profile;
+      return procedure.execution;
     }
   }
   return null;
-}
-
-function isBattleHideActionObscurementPermissionSupportProfile(
-  profile: BattleUnitSupportProfile,
-): profile is BattleHideActionObscurementPermissionSupportProfile {
-  return (
-    typeof profile === "object" &&
-    profile.kind === HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE
-  );
 }
 
 function hideActionObscurementPermissionAllowsLargerCreatureObscurement(

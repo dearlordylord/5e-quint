@@ -13,7 +13,6 @@
 
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type ActionSpellBattleResolutionInput,
@@ -25,7 +24,7 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { resolveSleepTargetAdmissionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -34,9 +33,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -226,28 +224,10 @@ function sleepTargetAdmissionCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: sleepTargetAdmissionInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
   };
-}
-
-function sleepTargetAdmissionInvocationRef(
-  invocation: SleepTargetAdmissionSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "sleepTargetAdmission",
-  };
-}
-
-function sleepTargetAdmissionCastSummary(
-  invocation: SleepTargetAdmissionSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveSleepTargetAdmission(
@@ -261,17 +241,12 @@ function resolveSleepTargetAdmission(
   });
 }
 
-const SleepTargetAdmissionInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "sleepTargetAdmission" }
-  >
->(
+const SleepTargetAdmissionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("sleepTargetAdmission"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
@@ -283,15 +258,12 @@ const SleepTargetAdmissionInvocationSchema = spellProcedureInvocationSchema<
 );
 export const sleepTargetAdmissionProfile = {
   procedure: "sleepTargetAdmission",
-  invocationSchema: SleepTargetAdmissionInvocationSchema,
+  executionSchema: SleepTargetAdmissionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSleepTargetAdmission,
   discoverCastAct: discoverSleepTargetAdmissionCastAct,
-  castSummary: sleepTargetAdmissionCastSummary,
-  invocationRef: sleepTargetAdmissionInvocationRef,
   resolve: resolveSleepTargetAdmission,
 } satisfies SpellProcedureProfile<
   "sleepTargetAdmission",

@@ -63,7 +63,7 @@ import {
   resolveBattleSubject,
   paladinsSmiteResource,
   characterSpellInvocationForProcedureRefForTest,
-  startBattleRight,
+  startBattleSessionRight,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 import {
@@ -76,9 +76,10 @@ import {
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleProcedureExecutionRef,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type SupportedSpellInvocation,
 } from "./index.ts";
 
@@ -218,7 +219,7 @@ type PendingInvocation =
     };
 
 type AfterHitRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly scenario: AfterHitScenario;
   readonly phase: AfterHitPhase;
   readonly holes: readonly BattleHole[];
@@ -746,25 +747,31 @@ function observeAfterHitSaveGatedInterruptDecisionRoute(): AfterHitRuntimeState 
 
 function observeAfterHitSlotSpendRoute(): AfterHitRuntimeState {
   const state = afterHitDivineSlotDamageReady();
-  expect(casterSlotExpended(state.battle)).toBe(true);
-  expect(state.battle.currentTurnResources.currentHasBonusAction).toBe(false);
+  expect(casterSlotExpended(state.battle.state)).toBe(true);
+  expect(state.battle.state.currentTurnResources.currentHasBonusAction).toBe(
+    false,
+  );
   expectObservedHoleKinds(state, ["rolledDice"]);
   return state;
 }
 
 function observeAfterHitFreeCastSpendRoute(): AfterHitRuntimeState {
   const state = afterHitDivineFreeCastDamageReady();
-  expect(casterSlotExpended(state.battle)).toBe(false);
+  expect(casterSlotExpended(state.battle.state)).toBe(false);
   expect(paladinsSmiteUsesRemaining(state.battle)).toBe(0);
-  expect(state.battle.currentTurnResources.currentHasBonusAction).toBe(false);
+  expect(state.battle.state.currentTurnResources.currentHasBonusAction).toBe(
+    false,
+  );
   expectObservedHoleKinds(state, ["rolledDice"]);
   return state;
 }
 
 function observeAfterHitSaveGatedSlotAndActionEconomySpendRoute(): AfterHitRuntimeState {
   const state = afterHitEnsnaringDamageReady();
-  expect(casterSlotExpended(state.battle)).toBe(true);
-  expect(state.battle.currentTurnResources.currentHasBonusAction).toBe(false);
+  expect(casterSlotExpended(state.battle.state)).toBe(true);
+  expect(state.battle.state.currentTurnResources.currentHasBonusAction).toBe(
+    false,
+  );
   expectObservedHoleKinds(state, ["rolledDice"]);
   return state;
 }
@@ -1266,9 +1273,9 @@ function initialRuntimeState(
   };
 }
 
-function paladinFreeCastBattle(): BattleState {
+function paladinFreeCastBattle(): BattleRuntimeSession {
   const resource = paladinsSmiteResource();
-  return startBattleRight({
+  return startBattleSessionRight({
     battleId: battleId("after-hit-damage-riders-paladin-free-cast"),
     combatants: [
       characterCreature({
@@ -1307,7 +1314,7 @@ function paladinFreeCastBattle(): BattleState {
 function discoverWeaponHit(state: AfterHitRuntimeState): AfterHitRuntimeState {
   const subject = weaponAttackSubject(state.battle, "Longsword");
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject,
     fills: [],
   });
@@ -1333,7 +1340,7 @@ function fillTargetChoice(state: AfterHitRuntimeState): AfterHitRuntimeState {
     "Longsword",
   );
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: state.pending.subject,
     fills: [targetFill],
   });
@@ -1362,7 +1369,7 @@ function fillHitAttackRoll(state: AfterHitRuntimeState): AfterHitRuntimeState {
   });
   const awaitingInterrupt = requireNeedsHoles(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [state.pending.targetFill, attackFill],
     }),
@@ -1374,7 +1381,7 @@ function fillHitAttackRoll(state: AfterHitRuntimeState): AfterHitRuntimeState {
   );
   return {
     ...state,
-    battle: awaitingInterrupt.state,
+    battle: { ...state.battle, state: awaitingInterrupt.state },
     phase: "afterHitChoiceNeeded",
     holes: [interruptHole],
     pending: {
@@ -1404,7 +1411,7 @@ function chooseAfterHitDamageSpell(
   const choice = requireAfterHitChoice(state.battle, spellId, options);
   const afterChoice = requireNeedsHoles(
     resolveBattleInterrupt({
-      state: state.battle,
+      state: state.battle.state,
       fill: interruptDecisionFill(state.pending.interruptHole, {
         kind: "resolve",
         responderId: spellCasterId,
@@ -1420,7 +1427,7 @@ function chooseAfterHitDamageSpell(
   const damageHole = requireHole(afterChoice.holes, "rolledDice");
   return {
     ...state,
-    battle: afterChoice.state,
+    battle: { ...state.battle, state: afterChoice.state },
     phase: "attackDamageNeeded",
     holes: [damageHole],
     pending: {
@@ -1472,7 +1479,7 @@ function fillEnsnaringSave(
   );
   const afterChoice = requireNeedsHoles(
     resolveBattleInterrupt({
-      state: state.battle,
+      state: state.battle.state,
       fill: interruptDecisionFill(state.pending.interruptHole, {
         kind: "resolve",
         responderId: spellCasterId,
@@ -1488,7 +1495,7 @@ function fillEnsnaringSave(
   const damageHole = requireHole(afterChoice.holes, "rolledDice");
   return {
     ...state,
-    battle: afterChoice.state,
+    battle: { ...state.battle, state: afterChoice.state },
     phase: "attackDamageNeeded",
     holes: [damageHole],
     pending: {
@@ -1523,7 +1530,7 @@ function fillAttackDamage(
         ];
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [
         state.pending.targetFill,
@@ -1535,7 +1542,7 @@ function fillAttackDamage(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     phase: "afterDamage",
     holes: [],
     pending: { tag: "none" },
@@ -1548,7 +1555,7 @@ function breakConcentration(state: AfterHitRuntimeState): AfterHitRuntimeState {
   const act = endConcentrationAct(state.battle);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
@@ -1556,7 +1563,7 @@ function breakConcentration(state: AfterHitRuntimeState): AfterHitRuntimeState {
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1573,7 +1580,7 @@ function discoverTurnStartDamage(
 ): AfterHitRuntimeState {
   const awaitingTurnStartDamage = requireNeedsHoles(
     endTurn({
-      state: state.battle,
+      state: state.battle.state,
       actorId: spellCasterId,
     }),
     "Expected after-hit timed damage to request turn-start damage.",
@@ -1581,12 +1588,12 @@ function discoverTurnStartDamage(
   const damageHole = requireHole(awaitingTurnStartDamage.holes, "rolledDice");
   return {
     ...state,
-    battle: awaitingTurnStartDamage.state,
+    battle: { ...state.battle, state: awaitingTurnStartDamage.state },
     phase: "turnStartDamageNeeded",
     holes: [damageHole],
     pending: {
       tag: "turnStartDamage",
-      sourceBattle: state.battle,
+      sourceBattle: state.battle.state,
     },
     lastResult: "needsHoles",
     route: appendObservedRouteEvents(
@@ -1615,11 +1622,12 @@ function fillEnsnaringStartTurnDamage(
     }),
     "Expected Ensnaring Strike turn-start damage to resolve.",
   );
-  const escapeAct = requireSpellRestraintEscapeAct(targetTurn.state);
+  const targetTurnSession = { ...state.battle, state: targetTurn.state };
+  const escapeAct = requireSpellRestraintEscapeAct(targetTurnSession);
   const escapeCheck = requireHole(escapeAct.initialHoles, "abilityCheck");
   return {
     ...state,
-    battle: targetTurn.state,
+    battle: targetTurnSession,
     phase: "escapeCheckNeeded",
     holes: [escapeCheck],
     pending: {
@@ -1642,7 +1650,7 @@ function fillEnsnaringEscapeCheck(
   }
   const escaped = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [abilityCheckFill(requireHole(state.holes, "abilityCheck"), 13)],
     }),
@@ -1650,7 +1658,7 @@ function fillEnsnaringEscapeCheck(
   );
   return {
     ...state,
-    battle: escaped.state,
+    battle: { ...state.battle, state: escaped.state },
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1664,7 +1672,7 @@ function discoverTurnStartDamageAndSave(
 ): AfterHitRuntimeState {
   const awaitingTurnStart = requireNeedsHoles(
     endTurn({
-      state: state.battle,
+      state: state.battle.state,
       actorId: spellCasterId,
     }),
     "Expected Searing Smite to request turn-start damage and save.",
@@ -1673,12 +1681,12 @@ function discoverTurnStartDamageAndSave(
   const saveHole = requireHole(awaitingTurnStart.holes, "savingThrowOutcome");
   return {
     ...state,
-    battle: awaitingTurnStart.state,
+    battle: { ...state.battle, state: awaitingTurnStart.state },
     phase: "turnStartDamageSaveNeeded",
     holes: [damageHole, saveHole],
     pending: {
       tag: "turnStartDamageAndSave",
-      sourceBattle: state.battle,
+      sourceBattle: state.battle.state,
     },
     lastResult: "needsHoles",
     route: appendObservedRouteEvents(
@@ -1712,7 +1720,7 @@ function fillSearingStartTurnDamageAndSave(
   );
   return {
     ...state,
-    battle: targetTurn.state,
+    battle: { ...state.battle, state: targetTurn.state },
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1724,18 +1732,18 @@ function fillSearingStartTurnDamageAndSave(
 function afterHitProjection(
   state: AfterHitRuntimeState,
 ): AfterHitDamageRidersState {
-  const target = requireCombatant(state.battle, spellTargetId);
-  const caster = requireCombatant(state.battle, spellCasterId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
   return {
     scenario: state.scenario,
     phase: state.phase,
     targetHp: Number(target.hp),
     bonusActionAvailable:
-      state.battle.currentTurnResources.currentHasBonusAction,
-    slotExpended: casterSlotExpended(state.battle),
+      state.battle.state.currentTurnResources.currentHasBonusAction,
+    slotExpended: casterSlotExpended(state.battle.state),
     freeCastUsesRemaining: paladinsSmiteUsesRemaining(state.battle),
     levelOnePlusCastCommitted:
-      state.battle.currentTurnResources.levelOnePlusSpellCastsThisTurn.includes(
+      state.battle.state.currentTurnResources.levelOnePlusSpellCastsThisTurn.includes(
         spellCasterId,
       ),
     concentrationActive: caster.concentration !== null,
@@ -1767,13 +1775,19 @@ function casterSlotExpended(state: BattleState): boolean {
   );
 }
 
-function paladinsSmiteUsesRemaining(state: BattleState): number {
-  const caster = requireCombatant(state, spellCasterId);
+function paladinsSmiteUsesRemaining(session: BattleRuntimeSession): number {
+  const caster = requireCombatant(session.state, spellCasterId);
   if (caster.origin.kind !== "character") {
     throw new Error("Expected after-hit caster to be a character.");
   }
+  const ownership = session.context.characters
+    .get(spellCasterId)
+    ?.resourceOwnership.find(
+      (candidate) => candidate.unit.id === "paladin_paladins_smite",
+    );
+  if (ownership === undefined) return 0;
   const resource = caster.origin.resources.find(
-    (candidate) => candidate.unit.id === "paladin_paladins_smite",
+    (candidate) => candidate.resourcePoolRef === ownership.resourcePoolRef,
   );
   return resource === undefined ? 0 : Number(resource.usesRemaining ?? 0);
 }
@@ -1918,15 +1932,15 @@ function compareAfterHitStates(
 }
 
 function requireAfterHitChoice(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: string,
   options: { readonly invocationTag?: string } = {},
 ): PendingAfterHitChoice {
-  const choice = snapshotBattle(state).pendingInterrupt?.choices.find(
+  const choice = snapshotBattle(session.state).pendingInterrupt?.choices.find(
     (candidate) => {
       if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
       const invocation = characterSpellInvocationForProcedureRefForTest(
-        state,
+        session,
         candidate.reactorId,
         candidate.subject.procedureRef,
       );
@@ -1944,7 +1958,7 @@ function requireAfterHitChoice(
   return {
     procedureRef: choice.subject.procedureRef,
     invocation: characterSpellInvocationForProcedureRefForTest(
-      state,
+      session,
       choice.reactorId,
       choice.subject.procedureRef,
     ),
@@ -1952,7 +1966,7 @@ function requireAfterHitChoice(
   };
 }
 
-function requireSpellRestraintEscapeAct(state: BattleState): ReturnType<
+function requireSpellRestraintEscapeAct(session: BattleRuntimeSession): ReturnType<
   typeof discoverBattleActs
 >[number] & {
   readonly subject: Extract<
@@ -1960,7 +1974,7 @@ function requireSpellRestraintEscapeAct(state: BattleState): ReturnType<
     { readonly tag: "action"; readonly action: "escapeSpellRestraint" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
@@ -1980,7 +1994,7 @@ function requireSpellRestraintEscapeAct(state: BattleState): ReturnType<
   return act;
 }
 
-function endConcentrationAct(state: BattleState): ReturnType<
+function endConcentrationAct(session: BattleRuntimeSession): ReturnType<
   typeof discoverBattleActs
 >[number] & {
   readonly subject: Extract<
@@ -1988,7 +2002,7 @@ function endConcentrationAct(state: BattleState): ReturnType<
     { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {

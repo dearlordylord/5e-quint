@@ -19,14 +19,14 @@ import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type { DamageType, UnitRecord } from "@dnd/surface/surface/types";
-import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
+import type { DamageType } from "@dnd/surface/surface/types";
 import {
   BattleAreaId,
   BattleActiveEffectExecutionRef,
   BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
   BattleProcedureExecutionRef,
+  BattleResourcePoolExecutionRef,
   CombatantId,
   BattleStatBlockProcedureExecutionRef,
   BattleStatBlockExecutionScopeRef,
@@ -129,6 +129,13 @@ export const BATTLE_MOVEMENT_SPEED_KINDS = [
 ] as const;
 export type BattleMovementSpeedKind =
   (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
+export const BATTLE_SPECIAL_SPEED_KINDS = [
+  "climb",
+  "swim",
+  "fly",
+] as const satisfies ReadonlyArray<Exclude<BattleMovementSpeedKind, "walk">>;
+export type BattleSpecialSpeedKind =
+  (typeof BATTLE_SPECIAL_SPEED_KINDS)[number];
 export const MONK_FOCUS_PATIENT_DEFENSE_MODES = [
   "freeDisengage",
   "focusDisengageDodge",
@@ -320,7 +327,7 @@ export const SpellInvocationRefSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("classFeatureFreeCast"),
     spellId: SpellId,
-    resourceUnitId: Schema.String,
+    resourcePoolRef: BattleResourcePoolExecutionRef,
     procedure: Schema.Literal("afterHitDamage", "markedDamageRider"),
   }),
   Schema.Struct({
@@ -388,13 +395,13 @@ export function spellEffectInvocationRef(
 
 export function classFeatureFreeCastSpellInvocationRef(
   rawSpellId: string,
-  resourceUnitId: string,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
   procedure: "afterHitDamage" | "markedDamageRider",
 ): SpellInvocationRef {
   return {
     tag: "classFeatureFreeCast",
     spellId: makeSpellId(rawSpellId),
-    resourceUnitId,
+    resourcePoolRef,
     procedure,
   };
 }
@@ -694,9 +701,7 @@ export const BattleSubjectSchema = Schema.Union(
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
     }),
-    componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
-      exact: true,
-    }),
+    componentWeaponItemId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionSpell"),
@@ -709,9 +714,7 @@ export const BattleSubjectSchema = Schema.Union(
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
     }),
-    componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
-      exact: true,
-    }),
+    componentWeaponItemId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionDashSpell"),
@@ -777,9 +780,7 @@ export const BattleSubjectSchema = Schema.Union(
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
     }),
-    componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
-      exact: true,
-    }),
+    componentWeaponItemId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1081,19 +1082,281 @@ export const BattleSubjectSchema = Schema.Union(
   }),
 );
 type BattleSubjectWireValue = typeof BattleSubjectSchema.Type;
-type WithoutAuthoredProcedureSelectors<TSubject> = TSubject extends unknown
-  ? Omit<
-      TSubject,
-      | "invocation"
-      | "unitId"
-      | "sourceUnitId"
-      | "resourceUnitId"
-      | "sourceProcedureRef"
-      | "formStatBlockId"
-    >
-  : never;
-export type BattleSubject =
-  WithoutAuthoredProcedureSelectors<BattleSubjectWireValue>;
+export type BattleSubject = BattleSubjectWireValue;
+
+function battleActionSubjectProcedureRefs(
+  subject: Extract<BattleSubject, { readonly tag: "action" }>,
+): readonly BattleProcedureExecutionRef[] {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("action")({
+      attack: (value) => [value.procedureRef],
+      dash: () => [],
+      disengage: () => [],
+      dodge: () => [],
+      helpAttack: () => [],
+      hide: () => [],
+      multiattack: (value) => [value.procedureRef],
+      ready: () => [],
+      search: () => [],
+      grapple: () => [],
+      shove: () => [],
+      escapeGrapple: () => [],
+      escapeSpellRestraint: () => [],
+      shakeAwakeFromSleep: () => [],
+      shakeAwakeFromHypnoticPattern: () => [],
+    }),
+  );
+}
+
+function battleRuntimeCommandProcedureRefs(
+  subject: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+): readonly BattleProcedureExecutionRef[] {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      endTurn: () => [],
+      endConcentration: () => [],
+      move: () => [],
+      standFromProne: () => [],
+      releaseReadiedSpell: (value) => [value.procedureRef],
+      releaseReadiedMovement: () => [],
+      castTriggeredReactionSpell: (value) => [value.procedureRef],
+      castAttackHitBonusActionSpell: (value) => [value.procedureRef],
+      releaseGrapple: () => [],
+      opportunityAttack: (value) => [value.procedureRef],
+      retaliationAttack: (value) => [value.procedureRef],
+      greaseGroundHazardSave: () => [],
+      webRestraintSave: () => [],
+      sleetStormAreaHazardSave: () => [],
+      insectPlagueAreaHazardSave: () => [],
+      cloudkillAreaHazardSave: () => [],
+      disperseCloudkill: () => [],
+      webRestrainedNoLongerInArea: () => [],
+      webAreaRemoved: () => [],
+      gustOfWindLineSave: () => [],
+      gustOfWindLineDirectionChange: () => [],
+      movableZoneSave: () => [],
+      moonbeamCylinderExit: () => [],
+      movableZoneReposition: () => [],
+      movableZoneRam: () => [],
+      releaseSpellCreatedHeldObject: () => [],
+      protectionRelevantEffectSave: () => [],
+      creatureTypeProtectionConditionAttempt: () => [],
+      creatureTypeProtectionPossessionAttempt: () => [],
+      disperseFogCloud: () => [],
+      wardingBondSeparation: () => [],
+      jumpMovementReplacement: () => [],
+      dragonsBreathExhale: () => [],
+      replaceSelfTransformationMode: () => [],
+      commandGrovel: () => [],
+      commandDrop: () => [],
+      commandApproach: () => [],
+      commandFlee: () => [],
+      levitateAltitudeControl: () => [],
+      creatureFalls: () => [],
+    }),
+  );
+}
+
+export function battleSubjectProcedureRefs(
+  subject: BattleSubject,
+): readonly BattleProcedureExecutionRef[] {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      action: battleActionSubjectProcedureRefs,
+      pactOfTheChainFamiliarAttack: (value) => [value.procedureRef],
+      creatureAttack: () => [],
+      bonusAction: (value) => [value.procedureRef],
+      bonusActionStandardAction: (value) => [value.procedureRef],
+      monkFocusOption: (value) => [value.procedureRef],
+      monkFocusFlurryOfBlowsStrike: (value) => [
+        value.focusProcedureRef,
+        value.procedureRef,
+      ],
+      actionSpell: (value) => [value.procedureRef],
+      bonusActionSpell: (value) => [value.procedureRef],
+      bonusActionDashSpell: (value) => [value.procedureRef],
+      unitFeature: (value) => [value.procedureRef],
+      unitFeatureHeldWeaponActivation: (value) => [value.procedureRef],
+      druidWildShape: (value) => [value.procedureRef],
+      companionLifecycle: () => [],
+      findFamiliarSharedSenses: () => [],
+      findFamiliarTouchSpell: (value) => [value.procedureRef],
+      runtimeCommand: battleRuntimeCommandProcedureRefs,
+    }),
+  );
+}
+
+export type BattleSubjectBoundExecutionReference =
+  | {
+      readonly kind: "activeEffect";
+      readonly ownerId: CombatantId;
+      readonly effectRef: BattleActiveEffectExecutionRef;
+    }
+  | {
+      readonly kind: "statBlockScope";
+      readonly ownerId: CombatantId;
+      readonly scopeRef: BattleStatBlockExecutionScopeRef;
+    };
+
+function battleActionSubjectBoundExecutionReferences(
+  subject: Extract<BattleSubject, { readonly tag: "action" }>,
+): readonly BattleSubjectBoundExecutionReference[] {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("action")({
+      attack: () => [],
+      dash: () => [],
+      disengage: () => [],
+      dodge: () => [],
+      helpAttack: () => [],
+      hide: () => [],
+      multiattack: () => [],
+      ready: () => [],
+      search: () => [],
+      grapple: () => [],
+      shove: () => [],
+      escapeGrapple: () => [],
+      escapeSpellRestraint: (value) => [
+        {
+          kind: "activeEffect" as const,
+          ownerId: value.targetId,
+          effectRef: value.effectRef,
+        },
+      ],
+      shakeAwakeFromSleep: () => [],
+      shakeAwakeFromHypnoticPattern: () => [],
+    }),
+  );
+}
+
+function battleBonusActionStandardActionBoundExecutionReferences(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >,
+): readonly BattleSubjectBoundExecutionReference[] {
+  return subject.sourceEffectRef === undefined
+    ? []
+    : [
+        {
+          kind: "activeEffect",
+          ownerId: subject.actorId,
+          effectRef: subject.sourceEffectRef,
+        },
+      ];
+}
+
+function battleDruidWildShapeBoundExecutionReferences(
+  subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
+): readonly BattleSubjectBoundExecutionReference[] {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("action")({
+      assumeForm: (value) => [
+        {
+          kind: "statBlockScope" as const,
+          ownerId: value.actorId,
+          scopeRef: value.formExecutionRef,
+        },
+      ],
+      dismiss: () => [],
+    }),
+  );
+}
+
+function battleRuntimeCommandBoundExecutionReferences(
+  subject: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+): readonly BattleSubjectBoundExecutionReference[] {
+  const actorEffect = (value: {
+    readonly actorId: CombatantId;
+    readonly effectRef: BattleActiveEffectExecutionRef;
+  }): readonly BattleSubjectBoundExecutionReference[] => [
+    {
+      kind: "activeEffect",
+      ownerId: value.actorId,
+      effectRef: value.effectRef,
+    },
+  ];
+  const targetEffect = (value: {
+    readonly targetId: CombatantId;
+    readonly effectRef: BattleActiveEffectExecutionRef;
+  }): readonly BattleSubjectBoundExecutionReference[] => [
+    {
+      kind: "activeEffect",
+      ownerId: value.targetId,
+      effectRef: value.effectRef,
+    },
+  ];
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      endTurn: () => [],
+      endConcentration: () => [],
+      move: () => [],
+      standFromProne: () => [],
+      releaseReadiedSpell: () => [],
+      releaseReadiedMovement: () => [],
+      castTriggeredReactionSpell: () => [],
+      castAttackHitBonusActionSpell: () => [],
+      releaseGrapple: () => [],
+      opportunityAttack: () => [],
+      retaliationAttack: () => [],
+      greaseGroundHazardSave: () => [],
+      webRestraintSave: () => [],
+      sleetStormAreaHazardSave: () => [],
+      insectPlagueAreaHazardSave: () => [],
+      cloudkillAreaHazardSave: () => [],
+      disperseCloudkill: () => [],
+      webRestrainedNoLongerInArea: () => [],
+      webAreaRemoved: () => [],
+      gustOfWindLineSave: () => [],
+      gustOfWindLineDirectionChange: () => [],
+      movableZoneSave: () => [],
+      moonbeamCylinderExit: () => [],
+      movableZoneReposition: () => [],
+      movableZoneRam: () => [],
+      releaseSpellCreatedHeldObject: actorEffect,
+      protectionRelevantEffectSave: actorEffect,
+      creatureTypeProtectionConditionAttempt: () => [],
+      creatureTypeProtectionPossessionAttempt: () => [],
+      disperseFogCloud: () => [],
+      wardingBondSeparation: targetEffect,
+      jumpMovementReplacement: actorEffect,
+      dragonsBreathExhale: actorEffect,
+      replaceSelfTransformationMode: actorEffect,
+      commandGrovel: actorEffect,
+      commandDrop: actorEffect,
+      commandApproach: actorEffect,
+      commandFlee: actorEffect,
+      levitateAltitudeControl: targetEffect,
+      creatureFalls: () => [],
+    }),
+  );
+}
+
+export function battleSubjectBoundExecutionReferences(
+  subject: BattleSubject,
+): readonly BattleSubjectBoundExecutionReference[] {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      action: battleActionSubjectBoundExecutionReferences,
+      pactOfTheChainFamiliarAttack: () => [],
+      creatureAttack: () => [],
+      bonusAction: () => [],
+      bonusActionStandardAction:
+        battleBonusActionStandardActionBoundExecutionReferences,
+      monkFocusOption: () => [],
+      monkFocusFlurryOfBlowsStrike: () => [],
+      actionSpell: () => [],
+      bonusActionSpell: () => [],
+      bonusActionDashSpell: () => [],
+      unitFeature: () => [],
+      unitFeatureHeldWeaponActivation: () => [],
+      druidWildShape: battleDruidWildShapeBoundExecutionReferences,
+      companionLifecycle: () => [],
+      findFamiliarSharedSenses: () => [],
+      findFamiliarTouchSpell: () => [],
+      runtimeCommand: battleRuntimeCommandBoundExecutionReferences,
+    }),
+  );
+}
 
 export type CharacterProcedureBattleSubject = Extract<
   BattleSubject,
@@ -1124,120 +1387,6 @@ export function isCharacterProcedureBattleSubject(
     subject.tag === "druidWildShape" ||
     subject.tag === "bonusActionStandardAction" ||
     subject.tag === "monkFocusOption"
-  );
-}
-
-type DistributiveOmit<T, TKey extends PropertyKey> = T extends unknown
-  ? Omit<T, TKey>
-  : never;
-
-type SpellProcedureSelectionBase = DistributiveOmit<
-  Extract<
-    CharacterProcedureBattleSubject,
-    {
-      readonly tag:
-        | "actionSpell"
-        | "bonusActionSpell"
-        | "bonusActionDashSpell"
-        | "findFamiliarTouchSpell";
-    }
-  >,
-  "procedureRef" | "invocation"
->;
-type SpellProcedureSelectionSubject =
-  | (Exclude<
-      SpellProcedureSelectionBase,
-      { readonly tag: "findFamiliarTouchSpell" }
-    > & {
-      readonly procedureRef?: BattleProcedureExecutionRef;
-      readonly invocation: SpellInvocationRef;
-    })
-  | (Extract<
-      SpellProcedureSelectionBase,
-      { readonly tag: "findFamiliarTouchSpell" }
-    > & {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly invocation: SpellInvocationRef;
-    });
-
-type UnitFeatureProcedureSelectionSubject = DistributiveOmit<
-  Extract<
-    CharacterProcedureBattleSubject,
-    { readonly tag: "unitFeature" | "unitFeatureHeldWeaponActivation" }
-  >,
-  "procedureRef" | "unitId"
-> & { readonly unitId: UnitRecord["id"] };
-
-type DruidWildShapeProcedureSelectionBase = DistributiveOmit<
-  Extract<CharacterProcedureBattleSubject, { readonly tag: "druidWildShape" }>,
-  "procedureRef" | "unitId" | "formExecutionRef" | "formStatBlockId"
->;
-type DruidWildShapeProcedureSelectionSubject =
-  | (Extract<
-      DruidWildShapeProcedureSelectionBase,
-      { readonly action: "assumeForm" }
-    > & {
-      readonly unitId: UnitRecord["id"];
-      readonly formStatBlockId: StatBlockId;
-    })
-  | (Extract<
-      DruidWildShapeProcedureSelectionBase,
-      { readonly action: "dismiss" }
-    > & { readonly unitId: UnitRecord["id"] });
-
-type BonusActionStandardActionProcedureSelectionBase = DistributiveOmit<
-  Extract<
-    CharacterProcedureBattleSubject,
-    { readonly tag: "bonusActionStandardAction" }
-  >,
-  "procedureRef" | "sourceUnitId" | "sourceEffectRef"
->;
-type BonusActionStandardActionProcedureSelectionSubject =
-  | (BonusActionStandardActionProcedureSelectionBase & {
-      readonly sourceUnitId: UnitRecord["id"];
-    })
-  | (Extract<
-      BonusActionStandardActionProcedureSelectionBase,
-      { readonly action: "dash" }
-    > & {
-      readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
-    });
-
-type MonkFocusProcedureSelectionSubject = DistributiveOmit<
-  Extract<CharacterProcedureBattleSubject, { readonly tag: "monkFocusOption" }>,
-  "procedureRef" | "resourceUnitId"
-> & { readonly resourceUnitId: UnitRecord["id"] };
-
-export type CharacterProcedureSelectionSubject =
-  | SpellProcedureSelectionSubject
-  | UnitFeatureProcedureSelectionSubject
-  | DruidWildShapeProcedureSelectionSubject
-  | BonusActionStandardActionProcedureSelectionSubject
-  | MonkFocusProcedureSelectionSubject;
-
-export type BattleActDiscoverySubject =
-  | BattleSubject
-  | CharacterProcedureSelectionSubject;
-
-export function isCharacterProcedureSelectionSubject(
-  subject: BattleActDiscoverySubject,
-): subject is CharacterProcedureSelectionSubject {
-  if (
-    subject.tag === "actionSpell" ||
-    subject.tag === "bonusActionSpell" ||
-    subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell"
-  ) {
-    return "invocation" in subject;
-  }
-  return (
-    !("procedureRef" in subject) &&
-    (subject.tag === "unitFeature" ||
-      subject.tag === "unitFeatureHeldWeaponActivation" ||
-      subject.tag === "druidWildShape" ||
-      subject.tag === "bonusActionStandardAction" ||
-      subject.tag === "monkFocusOption")
   );
 }
 
@@ -1385,7 +1534,6 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.spellAction,
       spellSubjectModeKey(subject.mode),
       spellMetamagicSelectionKey(subject.metamagic),
-      subject.componentWeaponItemId ?? null,
     ]);
   }
   if (subject.tag === "unitFeatureHeldWeaponActivation") {
@@ -1501,7 +1649,6 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.procedureRef,
         spellSubjectModeKey(spell.mode),
         spellMetamagicSelectionKey(spell.metamagic),
-        spell.componentWeaponItemId ?? null,
       ]),
     ),
     Match.when({ tag: "bonusActionSpell" }, (spell) =>
@@ -1511,7 +1658,6 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.procedureRef,
         spellSubjectModeKey(spell.mode),
         spellMetamagicSelectionKey(spell.metamagic),
-        spell.componentWeaponItemId ?? null,
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>

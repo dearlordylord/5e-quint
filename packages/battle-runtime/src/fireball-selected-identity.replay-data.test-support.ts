@@ -33,7 +33,7 @@ export const fireballSelectedIdentityReplay = {
               spellSlots: [{ spellLevel: 3, count: 1 }],
             });
             const act = spellAct({
-              state,
+              session: state,
               spellId: fireballUnitId,
               slotLevel: 3,
             });
@@ -56,7 +56,7 @@ export const fireballSelectedIdentityReplay = {
             );
             expect(savingThrow).toEqual(
               expect.objectContaining({
-                label: "Fireball point-origin Sphere Saving Throw outcomes",
+                label: "Spell point-origin Sphere Saving Throw outcomes",
                 ability: "dex",
                 dc: { kind: "caster_spell_save_dc" },
               }),

@@ -3,15 +3,12 @@ import {
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
 import {
-  startBattleRight,
+  startBattleSessionRight,
   requireElapsedHours,
   requireResolved,
   goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
-  requireHole,
-  fogCloudBattle,
-  castFogCloud,
   fogCloudAreaFill,
   characterSeed,
   statBlockCreatureInit,
@@ -29,12 +26,13 @@ import {
   movementFeet,
   resolveBattleSubject,
   supportedSpellActs,
+  requireHole,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Fog Cloud", () => {
   test("Fog Cloud admits caller-supplied fog area and slot-scaled radius", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-fog-cloud-admission"),
       combatants: [
         characterSeed({
@@ -53,7 +51,7 @@ describe("battle runtime: Fog Cloud", () => {
       ],
     });
 
-    const levelOneAct = discoverBattleActs(state).find(
+    const levelOneAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
@@ -73,7 +71,7 @@ describe("battle runtime: Fog Cloud", () => {
       }),
     ]);
 
-    const wizard = state.combatants.get(wizardId);
+    const wizard = session.state.combatants.get(wizardId);
     if (wizard === undefined) {
       throw new Error("Expected Wizard.");
     }
@@ -90,20 +88,11 @@ describe("battle runtime: Fog Cloud", () => {
   });
 
   test("Fog Cloud creates a Concentration-owned Heavily Obscured area", () => {
-    const state = fogCloudBattle("battle-fog-cloud-cast");
-    const subject = magicSubject("fog_cloud");
-    const area = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
-      "spellAreaChoice",
+    const cast = castFogCloudSession(
+      "battle-fog-cloud-cast",
+      battleAreaId("fog-1"),
     );
-    const resolved = requireResolved(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [fogCloudAreaFill(area, battleAreaId("fog-1"))],
-      }),
-    );
-    const caster = resolved.state.combatants.get(wizardId);
+    const caster = cast.session.state.combatants.get(wizardId);
 
     expect(caster?.activeEffects).toEqual([
       expect.objectContaining({
@@ -122,7 +111,7 @@ describe("battle runtime: Fog Cloud", () => {
     expect(caster?.concentration).toMatchObject({
       sourceProcedureRef: expect.any(String),
     });
-    expect(resolved.snapshot.obscurementZones).toEqual([
+    expect(cast.result.snapshot.obscurementZones).toEqual([
       {
         kind: "spellObscurementZone",
         sourceProcedureRef: expect.any(String),
@@ -140,18 +129,21 @@ describe("battle runtime: Fog Cloud", () => {
         },
       },
     ]);
-    expect(expendedLevelOneSlots(resolved, wizardId)).toBe(1);
+    expect(expendedLevelOneSlots(cast.result, wizardId)).toBe(1);
   });
 
   test("Fog Cloud ends when Concentration breaks or strong wind disperses it", () => {
-    const cast = castFogCloud("battle-fog-cloud-ends", battleAreaId("fog-1"));
-    const broken = breakBattleConcentration(cast.state, wizardId);
+    const cast = castFogCloudSession(
+      "battle-fog-cloud-ends",
+      battleAreaId("fog-1"),
+    );
+    const broken = breakBattleConcentration(cast.session.state, wizardId);
 
     expect(broken.combatants.get(wizardId)?.activeEffects).toEqual([]);
     expect(broken.combatants.get(wizardId)?.concentration).toBeNull();
     expect(battleObscurementZones(broken)).toEqual([]);
 
-    const command = discoverBattleActs(cast.state).find(
+    const command = discoverBattleActs(cast.session).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "disperseFogCloud" &&
@@ -162,7 +154,7 @@ describe("battle runtime: Fog Cloud", () => {
     }
     const dispersed = requireResolved(
       resolveBattleSubject({
-        state: cast.state,
+        state: cast.session.state,
         subject: command.subject,
         fills: [],
       }),
@@ -174,12 +166,12 @@ describe("battle runtime: Fog Cloud", () => {
   });
 
   test("Fog Cloud source zone does not impose attack-roll Disadvantage without a sight witness", () => {
-    const cast = castFogCloud(
+    const cast = castFogCloudSession(
       "battle-fog-cloud-no-implicit-sight",
       battleAreaId("fog-1"),
     );
     const goblinTurn = requireResolved(
-      endTurn({ state: cast.state, actorId: wizardId }),
+      endTurn({ state: cast.session.state, actorId: wizardId }),
     ).state;
     const subject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = attackInitialTargetHole(goblinTurn, subject);
@@ -190,7 +182,41 @@ describe("battle runtime: Fog Cloud", () => {
       wizardId,
     );
 
-    expect(cast.snapshot.obscurementZones).toHaveLength(1);
+    expect(cast.result.snapshot.obscurementZones).toHaveLength(1);
     expect(roll).not.toHaveProperty("rollMode");
   });
 });
+
+function castFogCloudSession(
+  battleIdValue: string,
+  areaId: ReturnType<typeof battleAreaId>,
+) {
+  const session = startBattleSessionRight({
+    battleId: battleId(battleIdValue),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 20,
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [spellRecord("fog_cloud")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  const subject = magicSubject("fog_cloud");
+  const area = requireHole(
+    resolveBattleSubject({ session, subject, fills: [] }),
+    "spellAreaChoice",
+  );
+  const result = requireResolved(
+    resolveBattleSubject({
+      session,
+      subject,
+      fills: [fogCloudAreaFill(area, areaId)],
+    }),
+  );
+  return { result, session: { ...session, state: result.state } };
+}

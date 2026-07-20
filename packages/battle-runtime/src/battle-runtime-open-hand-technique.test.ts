@@ -8,7 +8,7 @@ import {
   battleId,
   characterSeed,
   damageRollFill,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   fighterAttackSubject,
   fighterId,
   goblinId,
@@ -20,7 +20,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   savingThrowOutcomeFill,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   testCharacterD20Statistics,
@@ -29,8 +29,9 @@ import {
   unitLibrary,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { battleOpenHandTechniqueSupportForUnit } from "./unit-feature-support.ts";
 
@@ -54,7 +55,7 @@ describe("battle runtime: Open Hand Technique", () => {
         expect.objectContaining({
           kind: "opportunityAttackDenied",
           sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-            window.state,
+            window.session,
             fighterId,
             "monk_open_hand_technique",
           ),
@@ -199,7 +200,7 @@ describe("battle runtime: Open Hand Technique", () => {
 
   test("Open Hand Technique rejects non-Flurry and stale hit windows", () => {
     const flurry = openHandTechniqueHitWindow();
-    const genericState = openHandTechniqueBattle();
+    const genericState = openHandTechniqueBattle().state;
     const genericSubject: BattleSubject = fighterAttackSubject(
       genericState,
       "Longsword",
@@ -324,12 +325,14 @@ function resolveOpenHandSave(
   return { resolved, target };
 }
 
-function openHandTechniqueHitWindow(state = openHandTechniqueBattle()): {
+function openHandTechniqueHitWindow(session = openHandTechniqueBattle()): {
+  readonly session: BattleRuntimeSession;
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly hitFills: readonly BattleFill[];
   readonly decision: BattleHole;
 } {
+  const state = session.state;
   const activated = activateFlurryOfBlows(state);
   const subject = openHandSubject(
     activated.state,
@@ -359,7 +362,13 @@ function openHandTechniqueHitWindow(state = openHandTechniqueBattle()): {
     }),
     "unitFeatureDecision",
   );
-  return { state: activated.state, subject, hitFills, decision };
+  return {
+    session: { ...session, state: activated.state },
+    state: activated.state,
+    subject,
+    hitFills,
+    decision,
+  };
 }
 
 function activateFlurryOfBlows(state: BattleState) {
@@ -376,8 +385,8 @@ function openHandTechniqueBattle(
   input: {
     readonly unarmedStrike?: ReturnType<typeof testUnarmedStrikeDieAttack>;
   } = {},
-): BattleState {
-  return startBattleRight({
+): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-open-hand-technique"),
     combatants: [
       characterSeed({
@@ -410,7 +419,7 @@ function openHandSubject(
   state: BattleState,
   predicate: (subject: BattleSubject) => boolean,
 ): BattleSubject {
-  const act = discoverBattleActs(state).find((candidate) =>
+  const act = discoverBattleActCandidates(state).find((candidate) =>
     predicate(candidate.subject),
   );
   if (act === undefined) {

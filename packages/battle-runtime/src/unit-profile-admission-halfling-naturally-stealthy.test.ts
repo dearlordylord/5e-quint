@@ -5,7 +5,7 @@
 
 import type { Size, UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
-import type { BattleHidePrerequisite, BattleState } from "./battle-reducer.ts";
+import type { BattleHidePrerequisite } from "./battle-reducer.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
@@ -18,7 +18,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   startBattle,
-  startBattleRight,
+  startBattleSessionRight,
 } from "./battle-runtime-test-support.ts";
 import {
   battleHideActionObscurementPermissionSupportForUnit,
@@ -110,7 +110,7 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
     const hide = findAct(state, hideSubject);
     const hidden = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: hideSubject,
         fills: [
           abilityCheckFill(findHole(hide.initialHoles, "abilityCheck"), 18),
@@ -142,7 +142,11 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
       discoverBattleActs(state).map((act) => act.subject),
     ).not.toContainEqual(hideSubject);
     expect(
-      resolveBattleSubject({ state, subject: hideSubject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: hideSubject,
+        fills: [],
+      }),
     ).toMatchObject({
       tag: "invalid",
       reason: "unsupportedActOption",
@@ -163,7 +167,11 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
       discoverBattleActs(state).map((act) => act.subject),
     ).not.toContainEqual(hideSubject);
     expect(
-      resolveBattleSubject({ state, subject: hideSubject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: hideSubject,
+        fills: [],
+      }),
     ).toMatchObject({
       tag: "invalid",
       reason: "unsupportedActOption",
@@ -251,8 +259,8 @@ function naturallyStealthyBattle(input: {
   readonly obscuringCreatureSize: Size;
   readonly unitRef: BattleUnitRef | null;
   readonly prerequisite?: BattleHidePrerequisite;
-}): BattleState {
-  return startBattleRight({
+}) {
+  return startBattleSessionRight({
     battleId: battleId("naturally-stealthy-creature-obscurement"),
     combatants: [
       hiderSeed({
@@ -325,7 +333,7 @@ defineSelectedIdentityReplayWitness({
             const hide = findAct(state, hideSubject);
             const hidden = requireResolved(
               resolveBattleSubject({
-                state,
+                state: state.state,
                 subject: hideSubject,
                 fills: [
                   abilityCheckFill(

@@ -11,13 +11,28 @@ import {
   type BattleFill,
   type BattleState,
   type SpellMarkedDamageRider,
+  type ResolvedSpellAttackDamagePayload,
   type SupportedDamageSpellInvocation,
-  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type {
+  SpellExecutableExecutionOf,
+  SpellProcedureExecution,
+} from "../character-execution.ts";
 import {
   signedModifier,
   type AttackDamageComponent,
 } from "./statblock-attacks.ts";
+
+type DamageSpellExecutionBase =
+  SpellExecutableExecutionOf<
+    SpellProcedureExecution<SupportedDamageSpellInvocation>
+  >;
+type DamageSpellExecution =
+  | Exclude<DamageSpellExecutionBase, { readonly procedure: "spellAttackDamage" }>
+  | (Extract<
+      DamageSpellExecutionBase,
+      { readonly procedure: "spellAttackDamage" }
+    > & { readonly damage: ResolvedSpellAttackDamagePayload });
 
 export function expendSpellSlot(
   state: BattleState,
@@ -50,7 +65,7 @@ export function expendSpellSlot(
 }
 
 export function spellDamageExpression(
-  invocation: SupportedDamageSpellInvocation,
+  invocation: DamageSpellExecution,
   critical = false,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string {
@@ -63,14 +78,18 @@ export function spellDamageExpression(
 }
 
 export function spellDamageComponents(
-  invocation: SupportedDamageSpellInvocation,
+  invocation: DamageSpellExecution,
   critical = false,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly (AttackDamageComponent & { readonly flat: number })[] {
+  const primaryDamage =
+    invocation.procedure === "objectContactDamageRepeat"
+      ? invocation.activeEffect.damage
+      : invocation.damage;
   const damageComponents =
     invocation.procedure === "saveGatedDamage"
-      ? [invocation.damage, ...invocation.additionalDamageComponents]
-      : [invocation.damage];
+      ? [primaryDamage, ...invocation.additionalDamageComponents]
+      : [primaryDamage];
   return [
     ...damageComponents.map((damage, index) => {
       const repeatedEffectCount =
@@ -110,7 +129,7 @@ export function spellDamageComponents(
 
 export function spellBurstDamageExpression(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SpellProcedureExecution,
     { readonly procedure: "attackBurstSaveDamage" }
   >,
 ): string {
@@ -119,7 +138,7 @@ export function spellBurstDamageExpression(
 
 export function spellHealingExpression(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SpellProcedureExecution,
     { readonly procedure: "directHitPointRestoration" }
   >,
 ): string {
@@ -128,7 +147,7 @@ export function spellHealingExpression(
 
 export function scalarBuffTemporaryHitPointsExpression(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SpellProcedureExecution,
     { readonly procedure: "scalarBuff" }
   >,
 ): string {
@@ -139,7 +158,7 @@ export function scalarBuffTemporaryHitPointsExpression(
 
 export function spellHealingAmount(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SpellProcedureExecution,
     { readonly procedure: "directHitPointRestoration" }
   >,
   healingRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
@@ -158,7 +177,7 @@ export function spellHealingAmount(
 
 export function scalarBuffTemporaryHitPointsAmount(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SpellProcedureExecution,
     { readonly procedure: "scalarBuff" }
   >,
   temporaryHitPointsRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,

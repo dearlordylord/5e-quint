@@ -1,5 +1,5 @@
 import {
-  startBattleRight,
+  startBattleSessionRight,
   characterSeed,
   skeletonCreatureInit,
   wizardSpellcasting,
@@ -12,7 +12,7 @@ import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Book of Shadows", () => {
   test("Book of Shadows Spell Access derives effective Warlock cantrip and Ritual access", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-book-of-shadows-access"),
       combatants: [
         characterSeed({
@@ -45,15 +45,17 @@ describe("battle runtime: Book of Shadows", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const warlock = state.combatants.get(wizardId);
+    const warlock = session.state.combatants.get(wizardId);
+    const spellcasting =
+      session.context.characters.get(wizardId)?.spellcastingPresentationSource;
 
     expect(warlock?.origin.kind).toBe("character");
     if (warlock?.origin.kind !== "character") {
       throw new Error("Expected Warlock caster.");
     }
-    expect(warlock.origin.spellcasting?.cantrips).toEqual([]);
-    expect(warlock.origin.spellcasting?.preparedSpells).toEqual([]);
-    expect(warlock.origin.spellcasting?.bookOfShadowsSpellAccesses).toEqual([
+    expect(spellcasting?.cantrips).toEqual([]);
+    expect(spellcasting?.preparedSpells).toEqual([]);
+    expect(spellcasting?.bookOfShadowsSpellAccesses).toEqual([
       {
         tag: "bookOfShadows",
         bookPresence: { tag: "onPerson" },
@@ -69,7 +71,7 @@ describe("battle runtime: Book of Shadows", () => {
         spellcastingFocus: "book_of_shadows",
       },
     ]);
-    expect(discoverBattleActs(state)).toEqual(
+    expect(discoverBattleActs(session)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           summary: expect.stringContaining("Poison Spray"),
@@ -79,7 +81,7 @@ describe("battle runtime: Book of Shadows", () => {
   });
 
   test("Book of Shadows Spell Access is stored but ineffective when the book is not on person", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-book-of-shadows-not-on-person"),
       combatants: [
         characterSeed({
@@ -112,16 +114,16 @@ describe("battle runtime: Book of Shadows", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const warlock = state.combatants.get(wizardId);
+    const warlock = session.state.combatants.get(wizardId);
+    const spellcasting =
+      session.context.characters.get(wizardId)?.spellcastingPresentationSource;
 
     expect(warlock?.origin.kind).toBe("character");
     if (warlock?.origin.kind !== "character") {
       throw new Error("Expected Warlock caster.");
     }
-    expect(
-      warlock.origin.spellcasting?.bookOfShadowsSpellAccesses,
-    ).toHaveLength(1);
-    expect(discoverBattleActs(state)).not.toEqual(
+    expect(spellcasting?.bookOfShadowsSpellAccesses).toHaveLength(1);
+    expect(discoverBattleActs(session)).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           summary: expect.stringContaining("Poison Spray"),

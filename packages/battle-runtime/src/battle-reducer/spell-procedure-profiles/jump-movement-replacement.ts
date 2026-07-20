@@ -14,12 +14,13 @@
 //     failed DC 10 Dexterity (Acrobatics) check.
 //   - UBIQUITOUS_LANGUAGE.md: Speed is capacity; Movement is consumption.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
@@ -29,7 +30,8 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
@@ -49,9 +51,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -206,7 +207,6 @@ function discoverJumpMovementReplacementCastAct(
             tag: "bonusActionSpell" as const,
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: jumpMovementReplacementInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
           initialHoles: [targetHole],
@@ -214,22 +214,6 @@ function discoverJumpMovementReplacementCastAct(
       ];
 }
 
-function jumpMovementReplacementInvocationRef(
-  invocation: JumpMovementReplacementInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "jumpMovementReplacement",
-  };
-}
-
-function jumpMovementReplacementCastSummary(
-  invocation: JumpMovementReplacementInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveJumpMovementReplacement(
   input: JumpMovementReplacementResolveInput,
@@ -310,7 +294,7 @@ function applyJumpMovementReplacementSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: JumpMovementReplacementInvocation,
+  invocation: JumpMovementReplacementResolveInput["invocation"],
   procedureRef: BonusActionSpellBattleResolutionInput["subject"]["procedureRef"],
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
@@ -351,38 +335,37 @@ function applyJumpMovementReplacementSpellEffect(
   }, state);
 }
 
-const JumpMovementReplacementInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "jumpMovementReplacement" }
-  >
->(
+const JumpMovementReplacementInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("jumpMovementReplacement"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Number,
     }),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: Schema.Struct({
+      kind: Schema.Literal("jumpMovementReplacement"),
+      sourceCombatantId: CombatantId,
+      movementCostFeet: MovementFeet,
+      maxJumpDistanceFeet: MovementFeet,
+      usedThisTurn: Schema.Literal(false),
+      expiresAt: DurationBattleActiveEffectExpirationSchema,
+    }),
     rangeFeet: MovementFeet,
   }),
 );
 export const jumpMovementReplacementProfile = {
   procedure: "jumpMovementReplacement",
-  invocationSchema: JumpMovementReplacementInvocationSchema,
+  executionSchema: JumpMovementReplacementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitJumpMovementReplacement,
   discoverCastAct: discoverJumpMovementReplacementCastAct,
-  castSummary: jumpMovementReplacementCastSummary,
-  invocationRef: jumpMovementReplacementInvocationRef,
   resolve: resolveJumpMovementReplacement,
 } satisfies SpellProcedureProfile<
   "jumpMovementReplacement",

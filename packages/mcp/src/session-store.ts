@@ -5,7 +5,7 @@ import type {
 import type {
   BattleFill,
   BattleId,
-  BattleActPresentation,
+  BattleRuntimeSession,
   BattleState,
   BattleSubject,
   CharacterId,
@@ -64,12 +64,11 @@ export type CharacterSessionRegistry = {
 
 export type BattleFillSession = {
   readonly subject: BattleSubject;
-  readonly presentation: BattleActPresentation;
   readonly fills: readonly BattleFill[];
 };
 
 export type PendingBattleFillSession = BattleFillSession & {
-  readonly baseState: BattleState;
+  readonly baseSession: BattleRuntimeSession;
 };
 
 export type McpSessionSnapshot = {
@@ -88,7 +87,7 @@ export type McpBattleSessionSnapshot = {
 export type McpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
   readonly characters: CharacterSessionRegistry;
-  battleState: BattleState | null;
+  battleSession: BattleRuntimeSession | null;
   pendingBattleFills: PendingBattleFillSession | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
@@ -143,7 +142,7 @@ export function createMcpSessionStore(
   const store: McpSessionStore = {
     drafts,
     characters,
-    battleState: null,
+    battleSession: null,
     pendingBattleFills: null,
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
@@ -168,15 +167,14 @@ export function createMcpSessionStore(
         characterIds,
         selectedStatBlockId,
         activeBattle:
-          store.battleState === null
+          store.battleSession === null
             ? null
-            : battleSessionSnapshot(store.battleState),
+            : battleSessionSnapshot(store.battleSession.state),
         transientBattleFills:
           store.pendingBattleFills === null
             ? null
             : {
                 subject: store.pendingBattleFills.subject,
-                presentation: store.pendingBattleFills.presentation,
                 fills: store.pendingBattleFills.fills,
               },
       };

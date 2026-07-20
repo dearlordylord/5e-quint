@@ -277,7 +277,7 @@ function validateMirrorImageDuplicateRoll(
     return "Mirror Image duplicate roll uses the wrong hole.";
   }
   if (
-    fill.selectedAttackDamageRiderUnitIds !== undefined ||
+    fill.selectedAttackDamageRiderProcedureRefs !== undefined ||
     fill.weaponDamageDiceRollChoice !== undefined ||
     fill.attackDamageDieFloorChoice !== undefined
   ) {

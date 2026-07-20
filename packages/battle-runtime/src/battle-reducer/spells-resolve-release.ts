@@ -88,13 +88,13 @@ import {
   spellAttackRollHole,
   spellDamageByTypeForTarget,
   spellDamageHole,
+  selectedSpellAttackDamageProcedure,
   spellTargetHole,
   spellTargetIsLegal,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 import { applySpiritualWeaponAttackProxyEffect } from "./spells-active-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
-import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
   clearPendingAttackRollMissToHitReplacementSelection,
   recordAttackRollMissToHitReplacementUsed,
@@ -296,6 +296,8 @@ export function resolveDancingLightsRepositionSpellAct(input: {
         > =>
           candidate.kind === "dancingLights" &&
           candidate.effectRef === input.invocation.activeEffectRef &&
+          candidate.sourceProcedureRef ===
+            input.invocation.sourceDancingLightsProcedureRef &&
           candidate.sourceCombatantId === input.actorId,
       );
     if (activeEffect === undefined) {
@@ -405,6 +407,8 @@ function dancingLightsRepositionPlacementError(
       > =>
         candidate.kind === "dancingLights" &&
         candidate.effectRef === invocation.activeEffectRef &&
+        candidate.sourceProcedureRef ===
+          invocation.sourceDancingLightsProcedureRef &&
         candidate.sourceCombatantId === actorId,
     );
   if (effect === undefined) {
@@ -522,7 +526,7 @@ function dancingLightsSeparatePlacementError(
 
 export function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
-  invocation: ReadiedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation<ReadiedSpellInvocation>,
 ): BattleResolutionResult {
   const fillSet = spellFillSet(
     input.fills,
@@ -556,7 +560,7 @@ export function resolveReadySpellAct(
     );
   }
 
-  const castingState = spellRequiresVerbal(invocation.spell)
+  const castingState = invocation.spellRuleFacts.components.verbal
     ? revealHidden(input.state, input.subject.actorId)
     : input.state;
   const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
@@ -662,32 +666,49 @@ export function resolveReadySpellAct(
 
 export function resolveSpellRelease(
   input: ActionSpellBattleResolutionInput,
-  invocation: ReleasableSpellInvocation,
+  candidateInvocation: ReleasableSpellInvocation,
   options: {
     readonly selfOriginAreaAnchorId?: CombatantId;
     readonly opensSpellCastReactionWindow?: boolean;
     readonly storedGlyphTriggeringCreatureTargetId?: CombatantId;
   } = {},
 ): BattleResolutionResult {
-  if (invocation.procedure === "chainedSpellAttackDamage") {
+  if (candidateInvocation.procedure === "chainedSpellAttackDamage") {
     return resolveChainedSpellAttackDamageAct({
       input,
       actorId: input.subject.actorId,
-      invocation,
+      invocation: candidateInvocation,
       opensSpellCastReactionWindow: false,
       spendsCastResources: false,
     });
   }
   const fillSet = spellFillSet(
     input.fills,
-    invocation,
-    invocation.sourceProcedureRef,
+    candidateInvocation,
+    candidateInvocation.sourceProcedureRef,
     input.subject.actorId,
     input.state,
   );
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  const selectedInvocation = selectedSpellAttackDamageProcedure(
+    candidateInvocation,
+    fillSet.damageTypeChoice,
+  );
+  if (selectedInvocation.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [
+      selectedInvocation.hole,
+    ]);
+  }
+  if (selectedInvocation.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      selectedInvocation.message,
+    );
+  }
+  const invocation = selectedInvocation.invocation;
   if (invocation.procedure === "spiritualWeaponAttackProxy") {
     if (fillSet.spiritualWeaponForcePosition === undefined) {
       return needsHolesResult(input.state, input.subject, [
@@ -856,7 +877,7 @@ export function resolveSpellRelease(
       ordinaryHit,
     });
     if (
-      fillSet.attackRoll.missToHitReplacementUnitId !== undefined &&
+      fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
       missToHitReplacement === null
     ) {
       return invalidResult(

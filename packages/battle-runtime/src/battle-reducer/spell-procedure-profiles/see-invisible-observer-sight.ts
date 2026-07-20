@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-see-invisible-observer-sight
+import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
 //
 // The seeInvisibleObserverSight Spell Procedure Profile: a prepared action
@@ -12,8 +13,6 @@
 //                         spells-discovery.ts
 //   - castSummary()     - was the seeInvisibleObserverSight branch in
 //                         spells-discovery.ts
-//   - invocationRef()   - was the seeInvisibleObserverSight branch in
-//                         spells-invocation-ref.ts
 //   - resolve()         - was resolveSeeInvisibleObserverSightSpellAct in
 //                         spells-resolve-support-effects.ts
 //   - applyEffect()     - was applySeeInvisibleObserverSightSpellEffect in
@@ -29,7 +28,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -39,7 +37,7 @@ import {
   type BattleState,
   type SeeInvisibleObserverSightSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -49,10 +47,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -100,6 +96,12 @@ function seeInvisibleObserverSightShape(
   };
 }
 
+const SeeInvisibleAndEtherealEffectSchema = Schema.Struct({
+  kind: Schema.Literal("seeInvisibleAndEthereal"),
+  sourceCombatantId: CombatantId,
+  expiresAt: DurationBattleActiveEffectExpirationSchema,
+});
+
 function admitSeeInvisibleObserverSight(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
@@ -136,29 +138,11 @@ function discoverSeeInvisibleObserverSightCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: seeInvisibleObserverSightInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [],
     },
   ];
-}
-
-function seeInvisibleObserverSightInvocationRef(
-  invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "seeInvisibleObserverSight",
-  };
-}
-
-function seeInvisibleObserverSightCastSummary(
-  invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function applySeeInvisibleObserverSightEffect(
@@ -273,19 +257,14 @@ function resolveSeeInvisibleObserverSight(
 }
 
 const SeeInvisibleObserverSightInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "seeInvisibleObserverSight" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("seeInvisibleObserverSight"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
-      activeEffect: BattleRuntimeObjectSchema,
+      activeEffect: SeeInvisibleAndEtherealEffectSchema,
     }),
   );
 export const seeInvisibleObserverSightProfile: SpellProcedureProfile<
@@ -293,14 +272,11 @@ export const seeInvisibleObserverSightProfile: SpellProcedureProfile<
   SeeInvisibleObserverSightSpellInvocation
 > = {
   procedure: "seeInvisibleObserverSight",
-  invocationSchema: SeeInvisibleObserverSightInvocationSchema,
+  executionSchema: SeeInvisibleObserverSightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSeeInvisibleObserverSight,
   discoverCastAct: discoverSeeInvisibleObserverSightCastAct,
-  castSummary: seeInvisibleObserverSightCastSummary,
-  invocationRef: seeInvisibleObserverSightInvocationRef,
   resolve: resolveSeeInvisibleObserverSight,
 };

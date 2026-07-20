@@ -20,6 +20,7 @@ import {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -167,6 +168,16 @@ export function battleFromSheets(input: {
     typeof battleCreatureInitFromStatBlock
   >[0][];
 }): BattleState {
+  return battleSessionFromSheets(input).state;
+}
+
+export function battleSessionFromSheets(input: {
+  readonly battleIdText: string;
+  readonly characters: readonly SheetFixture[];
+  readonly monsters: readonly Parameters<
+    typeof battleCreatureInitFromStatBlock
+  >[0][];
+}): BattleRuntimeSession {
   const characterInits = input.characters.map((character) =>
     requireRight(
       characterSheetBattleInit({
@@ -1110,20 +1121,21 @@ export function srdStatBlock(id: StatBlockRecord["id"]): StatBlockRecord {
 }
 
 export function attackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   attackName: string,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const matchingActs = discoverBattleActs(state).filter(
+  const matchingActs = discoverBattleActs(session).filter(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.statBlockDamageNotation === undefined &&
-      candidate.summary === `Take the Attack action with ${attackName}.`,
+      candidate.presentation.kind === "attack" &&
+      candidate.presentation.name === attackName,
   );
   const [act] = matchingActs;
   if (
@@ -1132,13 +1144,23 @@ export function attackSubject(
     act.subject.tag !== "action" ||
     act.subject.action !== "attack"
   ) {
-    throw new Error(`Expected ${attackName} Attack action.`);
+    const discoveredNames = discoverBattleActs(session).flatMap((candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.actorId === actorId &&
+      candidate.presentation.kind === "attack"
+        ? [candidate.presentation.name]
+        : [],
+    );
+    throw new Error(
+      `Expected one ${attackName} Attack action; discovered ${JSON.stringify(discoveredNames)}.`,
+    );
   }
   return act.subject;
 }
 
 export function spellSlotActForProcedure(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: string,
   slotLevel: number,
   procedure: SpellSlotProcedure,
@@ -1151,7 +1173,7 @@ export function spellSlotActForProcedure(
   if (expectedInvocation.tag !== "spellSlot") {
     throw new Error(`Expected ${spellId} spell-slot invocation.`);
   }
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.mode.tag === "cast" &&
@@ -1279,7 +1301,7 @@ export function damageRollFillWithGroups(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
   groups: readonly (readonly number[])[],
   input: {
-    readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+    readonly selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[];
     readonly cunningStrikeOption?: Extract<
       BattleFill,
       { readonly kind: "rolledDice" }
@@ -1297,11 +1319,11 @@ export function damageRollFillWithGroups(
       rolledDiceGroup(firstGroup),
       ...restGroups.map((group) => rolledDiceGroup(group)),
     ],
-    ...(input.selectedAttackDamageRiderUnitIds === undefined
+    ...(input.selectedAttackDamageRiderProcedureRefs === undefined
       ? {}
       : {
-          selectedAttackDamageRiderUnitIds:
-            input.selectedAttackDamageRiderUnitIds,
+          selectedAttackDamageRiderProcedureRefs:
+            input.selectedAttackDamageRiderProcedureRefs,
         }),
     ...(input.cunningStrikeOption === undefined
       ? {}
@@ -1315,7 +1337,7 @@ export function ordinaryAttackDamageFills(input: {
   readonly prefixFills: readonly BattleFill[];
   readonly damage: Extract<BattleHole, { readonly kind: "rolledDice" }>;
   readonly damageDice: readonly (readonly number[])[];
-  readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+  readonly selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[];
   readonly cunningStrikeOption?: Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
@@ -1324,11 +1346,11 @@ export function ordinaryAttackDamageFills(input: {
   const throughDamage = [
     ...input.prefixFills,
     damageRollFillWithGroups(input.damage, input.damageDice, {
-      ...(input.selectedAttackDamageRiderUnitIds === undefined
+      ...(input.selectedAttackDamageRiderProcedureRefs === undefined
         ? {}
         : {
-            selectedAttackDamageRiderUnitIds:
-              input.selectedAttackDamageRiderUnitIds,
+            selectedAttackDamageRiderProcedureRefs:
+              input.selectedAttackDamageRiderProcedureRefs,
           }),
       ...(input.cunningStrikeOption === undefined
         ? {}

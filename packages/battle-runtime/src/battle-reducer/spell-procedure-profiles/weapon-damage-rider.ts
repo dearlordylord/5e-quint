@@ -23,8 +23,8 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { SpellWeaponDamageRiderTemplateSchema } from "../../active-effect/codecs.ts";
+import { type CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
@@ -37,9 +37,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -155,29 +154,11 @@ function discoverWeaponDamageRiderCastAct(
         tag: "bonusActionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: weaponDamageRiderInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [],
     },
   ];
-}
-
-function weaponDamageRiderInvocationRef(
-  invocation: WeaponDamageRiderInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "weaponDamageRider",
-  };
-}
-
-function weaponDamageRiderCastSummary(
-  invocation: WeaponDamageRiderInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveWeaponDamageRider(
@@ -274,16 +255,14 @@ function weaponDamageRiderFillSetHasDisallowedFills(
   );
 }
 
-const WeaponDamageRiderInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "weaponDamageRider" }>
->(
+const WeaponDamageRiderInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("weaponDamageRider"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: SpellWeaponDamageRiderTemplateSchema,
   }),
 );
 export const weaponDamageRiderProfile: SpellProcedureProfile<
@@ -292,14 +271,11 @@ export const weaponDamageRiderProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "weaponDamageRider",
-  invocationSchema: WeaponDamageRiderInvocationSchema,
+  executionSchema: WeaponDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitWeaponDamageRider,
   discoverCastAct: discoverWeaponDamageRiderCastAct,
-  castSummary: weaponDamageRiderCastSummary,
-  invocationRef: weaponDamageRiderInvocationRef,
   resolve: resolveWeaponDamageRider,
 };

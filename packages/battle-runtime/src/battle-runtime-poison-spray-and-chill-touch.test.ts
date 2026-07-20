@@ -24,7 +24,7 @@ import {
   skeletonCreatureInit,
   skeletonId,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   targetFill,
   wizardId,
   wizardSpellcasting,
@@ -32,7 +32,7 @@ import {
 
 describe("battle runtime: Poison Spray and Chill Touch", () => {
   test("Poison Spray uses creature target spell attack damage and cantrip scaling", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-poison-spray"),
       combatants: [
         characterSeed({
@@ -54,14 +54,14 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         }),
       ],
     });
-    const subject = magicSubject("poison_spray");
+    const subject = findAct(state, magicSubject("poison_spray")).subject;
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, fighterId)],
       }),
@@ -69,7 +69,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, fighterId),
@@ -79,11 +79,11 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Poison Spray damage (2d12-poison)",
+      label: "Spell damage (2d12-poison)",
     });
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFill(target, fighterId),
@@ -105,7 +105,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
   });
 
   test("Chill Touch uses melee spell attack damage and prevents Hit Point regain on hit", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-chill-touch"),
       combatants: [
         characterSeed({
@@ -122,26 +122,26 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("chill_touch");
+    const subject = findAct(state, magicSubject("chill_touch")).subject;
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, skeletonId)],
       }),
       "attackRoll",
     );
     expect(attackRoll).toMatchObject({
-      label: "Chill Touch spell attack roll",
+      label: "Spell spell attack roll",
       attackBonus: 5,
     });
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -151,12 +151,12 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Chill Touch damage (2d10-necrotic)",
+      label: "Spell damage (2d10-necrotic)",
     });
 
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -188,7 +188,10 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       },
     });
 
-    const healingWordAct = discoverBattleActs(result.state).find(
+    const healingWordAct = discoverBattleActs({
+      state: result.state,
+      context: state.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -270,7 +273,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
   });
 
   test("Chill Touch miss applies no Hit Point regain prevention rider", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-chill-touch-miss"),
       combatants: [
         characterSeed({
@@ -287,14 +290,14 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("chill_touch");
+    const subject = findAct(state, magicSubject("chill_touch")).subject;
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -303,7 +306,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
 
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -321,7 +324,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
   });
 
   test("Chill Touch expired rider allows later Hit Point regain", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-chill-touch-heal-after-expiry"),
       combatants: [
         characterSeed({
@@ -338,14 +341,14 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("chill_touch");
+    const subject = findAct(state, magicSubject("chill_touch")).subject;
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -353,7 +356,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -364,7 +367,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     );
     const hit = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -385,7 +388,10 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     const wizardThirdTurn = requireResolved(
       endTurn({ state: expired.state, actorId: skeletonId }),
     );
-    const healingWordAct = discoverBattleActs(wizardThirdTurn.state).find(
+    const healingWordAct = discoverBattleActs({
+      state: wizardThirdTurn.state,
+      context: state.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -449,7 +455,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
   });
 
   test("Chill Touch old damage path still spends no Spell Slot", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-chill-touch-slot"),
       combatants: [
         characterSeed({
@@ -466,14 +472,14 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("chill_touch");
+    const subject = findAct(state, magicSubject("chill_touch")).subject;
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -481,7 +487,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -492,7 +498,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     );
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -515,7 +521,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
   });
 
   test("Chill Touch admits caller-supplied object targets for melee spell attack damage", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-chill-touch-object-hit"),
       combatants: [
         characterSeed({
@@ -532,7 +538,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("chill_touch");
+    const subject = findAct(state, magicSubject("chill_touch")).subject;
     const act = findAct(state, subject);
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
@@ -546,24 +552,23 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     const objectTarget = objectTargetFill({
       hole: findHole(act.initialHoles, "objectTargetChoice"),
       objectId,
-      spellId: "chill_touch",
       rangeFeet: movementFeet(5),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(12) },
     });
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [objectTarget],
       }),
       "attackRoll",
     );
     expect(attackRoll).toMatchObject({
-      label: "Chill Touch spell attack roll",
+      label: "Spell spell attack roll",
     });
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           objectTarget,
@@ -573,11 +578,11 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Chill Touch damage (2d10-necrotic)",
+      label: "Spell damage (2d10-necrotic)",
     });
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         objectTarget,
@@ -615,7 +620,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
   });
 
   test("Chill Touch object targeting rejects missing matching object facts", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-chill-touch-object-reject"),
       combatants: [
         characterSeed({
@@ -632,19 +637,18 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("chill_touch");
+    const subject = findAct(state, magicSubject("chill_touch")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         objectTargetFill({
           hole: objectTarget,
-          spellId: "chill_touch",
           rangeFeet: movementFeet(30),
         }),
       ],

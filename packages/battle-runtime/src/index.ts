@@ -38,9 +38,19 @@ export {
 } from "./identity.ts";
 
 export type {
+  CharacterExecutionAdmission,
   CharacterExecutionState,
   CharacterProcedureBinding,
+  CharacterUnitProcedureOwnership,
 } from "./character-execution.ts";
+
+export {
+  emptyBattleRuntimeContext,
+  type BattleRuntimeContext,
+  type BattleRuntimeSession,
+  type CharacterBattleRuntimeContext,
+  type CharacterSpellPresentationSource,
+} from "./battle-runtime-context.ts";
 
 export {
   characterProcedureBinding,
@@ -82,6 +92,9 @@ export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 
 export {
   BattleActPresentationSchema,
+  BattleInterruptProcedureChoiceSchema,
+  BattleSpellPresentationSchema,
+  battleActPresentationMatchesSubject,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
 
@@ -91,11 +104,13 @@ export {
 } from "./active-effect/execution-ref.ts";
 
 export {
-  admitCharacterProcedureSelectionSubject,
   battleActSpellPresentation,
   battleActDruidWildShapePresentation,
   battleActSpellSlotPresentation,
   battleActUnitPresentation,
+  battleAdmittedSpellPresentations,
+  battleSelectedSpellInvocationForProcedure,
+  battleSubjectPresentation,
 } from "./battle-act-composition.ts";
 
 export {
@@ -132,6 +147,7 @@ export {
   CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   characterBattleResourceSupportedForUnit,
+  admitCharacterBattleResources,
   characterBattleResourceUsage,
   characterBattleResourceForUnit,
   characterBattleResourceMaxUses,
@@ -154,11 +170,15 @@ export {
   type CharacterBattleInvocationSpellAccessInit,
   type CharacterBattleInvocationSpellAccessState,
   type CharacterBattleMetamagicEffectKind,
+  type CharacterBattleMetamagicInit,
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattleMetamagicState,
   type CharacterBattlePointPoolResourceState,
   type CharacterBattlePointPoolSpendIssue,
   type CharacterBattleResourceInit,
+  type CharacterBattleResourceAdmission,
+  type CharacterBattleResourceExecutionFacts,
+  type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleUseCountResourceState,
   type CharacterBattleSpellSlotInit,
@@ -166,6 +186,7 @@ export {
   type CharacterBattleSpellSlotState,
   type CharacterBattleSpellbookRitualSpellAccessInit,
   type CharacterBattleSpellcastingInit,
+  type CharacterBattleSpellcastingExecutionState,
   type CharacterBattleSpellcastingState,
   type PactOfTheChainFindFamiliarInvocationMode,
 } from "./character-battle-resources.ts";
@@ -253,14 +274,11 @@ export {
   cantripSpellInvocationRef,
   classFeatureFreeCastSpellInvocationRef,
   isCharacterProcedureBattleSubject,
-  isCharacterProcedureSelectionSubject,
   sameBattleSubject,
   spellSlotInvocationRef,
   type BattleRuntimeCommand,
   type BattleMovementSpeedKind,
   type BattleSubject,
-  type BattleActDiscoverySubject,
-  type CharacterProcedureSelectionSubject,
   type BattleSubjectAction,
   type BattleSubjectBonusAction,
   type CantripSpellProcedure,
@@ -345,6 +363,7 @@ export {
   breakBattleConcentration,
   combatantKnockedOutUnconscious,
   concentrationSavingThrowDc,
+  discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
@@ -359,10 +378,12 @@ export {
   requiredInitiativeRollModeForCombatant,
   resolveSuccessfulAbilityCheckReactionReduction,
   resolveBattleInterrupt,
+  resolveBattleRuntimeSubject,
   resolveBattleSubject,
   resolveBardicInspirationFailedD20Test,
   scoreModifier,
   SELF_TRANSFORMATION_MODE_KINDS,
+  battleSnapshotProjection,
   snapshotBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   spellSaveDcForCaster,
@@ -381,7 +402,7 @@ export {
   type AttackDamageAbilityModifierChoice,
   type AttackDamageAbilityModifierChoiceFill,
   type AttackDamageAbilityModifierChoiceSelection,
-  type AttackDamageAbilityModifierChoiceUnitIds,
+  type AttackDamageAbilityModifierChoiceProcedureRefs,
   type AvailableBattleAct,
   type BattleActPresentation,
   type BattleAbilityCheckHole,
@@ -469,6 +490,8 @@ export {
   type BattleResolutionCandidateInput,
   type BattleResolutionInput,
   type BattleResolutionResult,
+  type BattleRuntimeResolutionInput,
+  type BattleRuntimeResolutionResult,
   type BattleRolledDiceFill,
   type BattleSavingThrowOutcome,
   type BattleSavingThrowRollModeProjection,
@@ -495,6 +518,7 @@ export {
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
   type BattleAttackExecutionSelection,
+  type BattleSelectedSpellInvocation,
   type BattleThaumaturgyActiveOneMinuteEffectCountHole,
   type BattleTrackedOngoingSpellLightEmitter,
   type BattleTurnResources,
@@ -510,7 +534,6 @@ export {
   type FailedAbilityCheckResourceBoostResolutionResult,
   type LegendaryActionWindow,
   type OngoingFeatureExpiration,
-  type OngoingFeatureSource,
   type OngoingFeatureSourceKey,
   type SelfTransformationModeKind,
   type SelfTransformationModeSpellInvocation,

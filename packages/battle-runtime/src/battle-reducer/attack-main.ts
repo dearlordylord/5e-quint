@@ -168,14 +168,14 @@ import {
   selectedCunningStrikeContext,
 } from "./cunning-strike.ts";
 import { applyStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-riders.ts";
-import { grapplerSupportProfileRefForCombatant } from "./grappler-support-profile.ts";
+import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 
 import {
   attackCanCarryKnockOutChoice,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
-  eligibleAttackDamageDieFloorUnitIds,
-  eligibleWeaponDamageDiceRollChoiceUnitIds,
+  eligibleAttackDamageDieFloorProcedureRefs,
+  eligibleWeaponDamageDiceRollChoiceProcedureRefs,
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackDamageRiders,
   selectedAttackRollMissToHitReplacement,
@@ -218,7 +218,6 @@ import type {
 } from "../battle-action-options.ts";
 import { battleTablePositionId, type CombatantId } from "../identity.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
-import { characterUnitProcedureRef } from "../character-execution.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -278,7 +277,7 @@ function grapplerPunchAndGrabEligibilityForHit(input: {
 }): GrapplerPunchAndGrabEligibility | null {
   const attacker = input.state.combatants.get(input.attackerId);
   const supportsPunchAndGrab =
-    grapplerSupportProfileRefForCombatant(attacker) !== null;
+    combatantHasGrapplerSupportProfile(attacker);
   if (
     input.subject.tag !== "action" ||
     input.subject.action !== "attack" ||
@@ -352,7 +351,6 @@ function brutalStrikeSelection(
   attackerId: CombatantId,
   attack: SupportedAttackActionOption,
 ): {
-  readonly unitId: string;
   readonly procedureRef: BattleProcedureExecutionRef;
 } | null {
   if (
@@ -365,25 +363,18 @@ function brutalStrikeSelection(
   if (attacker?.origin.kind !== "character") {
     return null;
   }
-  const unitRef = attacker.origin.characterUnitRefs.find((candidate) =>
-    candidate.supportProfiles.some(
-      (profile) =>
-        typeof profile === "object" &&
-        profile.kind === BRUTAL_STRIKE_SUPPORT_PROFILE,
-    ),
-  );
-  if (unitRef === undefined) return null;
-  const procedureRef = characterUnitProcedureRef(
-    attacker.origin.execution,
-    unitRef.unit.id,
-    {
-      kind: "unitSupportProfile",
-      supportKinds: new Set([BRUTAL_STRIKE_SUPPORT_PROFILE]),
+  const binding = attacker.origin.execution.procedureBindings.find(
+    (candidate) => {
+      const procedure = candidate.procedure;
+      return (
+        (procedure.kind === "unitFeature" ||
+          procedure.kind === "unitSupportProfile") &&
+        typeof procedure.execution === "object" &&
+        procedure.execution.kind === BRUTAL_STRIKE_SUPPORT_PROFILE
+      );
     },
   );
-  return procedureRef === undefined
-    ? null
-    : { unitId: unitRef.unit.id, procedureRef };
+  return binding === undefined ? null : { procedureRef: binding.procedureRef };
 }
 
 function isBrutalStrikeDecisionChoice(
@@ -399,19 +390,18 @@ function brutalStrikeDamageRiders(input: {
   readonly choice: BrutalStrikeDecisionChoice | null;
 }): readonly AttackDamageRider[] {
   if (input.choice === null) return [];
-  const unitId = brutalStrikeSelection(
+  const procedureRef = brutalStrikeSelection(
     input.state,
     input.attackerId,
     input.attack,
-  )?.unitId;
+  )?.procedureRef;
   const damageType = attackDamageTypeForBrutalStrike(input.attack);
-  return unitId === undefined || damageType === null
+  return procedureRef === undefined || damageType === null
     ? []
     : [
         {
           attackerId: input.attackerId,
-          unitId,
-          label: "Brutal Strike",
+          procedureRef,
           optional: false,
           damage: { dice: 1, dieSize: 10, damageType },
         },
@@ -987,12 +977,12 @@ export function resolveSelectedAttackProcedure(
       input.state,
       attackerId,
       attack,
-      fillSet.attackRoll.activatedOngoingFeatureUnitId,
+      fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
       input.replayingInterruptedProcedure === true ||
         fillSet.damageRoll != null,
     );
   if (
-    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
     activatedOngoingFeatureProfile === null
   ) {
     return invalidResult(
@@ -1007,7 +997,7 @@ export function resolveSelectedAttackProcedure(
     target.combatantId,
     attack,
     fillSet.targetSpatialFacts,
-    fillSet.attackRoll.activatedOngoingFeatureUnitId,
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
   );
   const baselineRequiredRollMode = requiredAttackRollMode(
     input.state,
@@ -1023,7 +1013,7 @@ export function resolveSelectedAttackProcedure(
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
     brutalStrikeChoice === null &&
-    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
     fillSet.attackRoll.rollMode !== requiredRollMode
   ) {
     return invalidResult(
@@ -1035,7 +1025,7 @@ export function resolveSelectedAttackProcedure(
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
     brutalStrikeChoice !== null &&
-    fillSet.attackRoll.activatedOngoingFeatureUnitId === undefined &&
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef === undefined &&
     !recklessAttackIsAvailableOrActiveForBrutalStrike(
       input.state,
       attackerId,
@@ -1128,7 +1118,7 @@ export function resolveSelectedAttackProcedure(
     ordinaryHit,
   });
   if (
-    fillSet.attackRoll.missToHitReplacementUnitId !== undefined &&
+    fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
     missToHitReplacement === null
   ) {
     return invalidResult(
@@ -1243,14 +1233,19 @@ export function resolveSelectedAttackProcedure(
       ]
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
-    ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+    ? eligibleWeaponDamageDiceRollChoiceProcedureRefs(
         attackRolledState,
         attackerId,
         attack,
       )
     : [];
   const eligibleDamageDieFloorChoiceUnitIds = hit
-    ? eligibleAttackDamageDieFloorUnitIds(attackRolledState, attackerId, attack)
+    ? eligibleAttackDamageDieFloorProcedureRefs(
+        attackRolledState,
+        attackerId,
+        attack,
+        attack.procedureRef,
+      )
     : [];
   const spellWeaponDamageRiders = hit
     ? [
@@ -1272,7 +1267,7 @@ export function resolveSelectedAttackProcedure(
       ? []
       : (selectedAttackDamageRiders(
           eligibleDamageRiders,
-          fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
+          fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
         ) ?? []);
   const eligibleCunningStrikeDamageOptions = hit
     ? eligibleCunningStrikeContexts({
@@ -1902,6 +1897,7 @@ export function resolveSelectedAttackProcedure(
     const damageRollByType = attackDamageByTypeEntries(
       damageSource,
       attack,
+      attack.procedureRef,
       fillSet.damageRoll,
       critical,
       effectiveAttackRoll,
@@ -2712,7 +2708,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   });
   if (
     input.fillSet.weaponMasteryCleaveAttackRoll.value
-      .missToHitReplacementUnitId !== undefined &&
+      .missToHitReplacementProcedureRef !== undefined &&
     cleaveMissToHitReplacement === null
   ) {
     return {
@@ -2802,10 +2798,11 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     return { tag: "result", result: remarkableAthleteMovement.result };
   }
   cleaveAttackRolledState = remarkableAthleteMovement.state;
-  const cleaveDamageDieFloorChoiceUnitIds = eligibleAttackDamageDieFloorUnitIds(
+  const cleaveDamageDieFloorChoiceUnitIds = eligibleAttackDamageDieFloorProcedureRefs(
     cleaveAttackRolledState,
     input.subject.actorId,
     cleaveAttack,
+    input.subject.procedureRef,
   );
   if (!cleaveHit) {
     return input.fillSet.weaponMasteryCleaveDamageRoll === undefined
@@ -2879,6 +2876,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   const damageByType = attackDamageByTypeEntries(
     cleaveAttackRolledState.combatants.get(input.subject.actorId),
     cleaveAttack,
+    input.subject.procedureRef,
     input.fillSet.weaponMasteryCleaveDamageRoll,
     cleaveCritical,
     effectiveCleaveAttackRoll,
@@ -3256,7 +3254,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
-  const { unitId } = selection;
+  const { procedureRef } = selection;
   if (input.fillSet.huntersPreyHordeBreakerDecision === undefined) {
     return {
       tag: "result",
@@ -3555,7 +3553,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           state: recordHuntersPreyHordeBreakerUsed(
             rolledState,
             input.subject.actorId,
-            unitId,
+            procedureRef,
           ),
         }
       : {
@@ -3568,10 +3566,11 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         };
   }
   const hordeBreakerDamageDieFloorChoiceUnitIds =
-    eligibleAttackDamageDieFloorUnitIds(
+    eligibleAttackDamageDieFloorProcedureRefs(
       rolledState,
       input.subject.actorId,
       input.attack,
+      input.subject.procedureRef,
     );
   if (input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined) {
     return {
@@ -3607,7 +3606,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const hordeBreakerSelectedDamageRiders = selectedAttackDamageRiders(
     hordeBreakerEligibleDamageRiders,
     input.fillSet.huntersPreyHordeBreakerDamageRoll
-      .selectedAttackDamageRiderUnitIds,
+      .selectedAttackDamageRiderProcedureRefs,
   );
   if (hordeBreakerSelectedDamageRiders === null) {
     return {
@@ -3646,6 +3645,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const damageByType = attackDamageByTypeEntries(
     rolledState.combatants.get(input.subject.actorId),
     input.attack,
+    input.subject.procedureRef,
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
     critical,
     effectiveHordeBreakerAttackRoll,
@@ -3737,7 +3737,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const usedState = recordHuntersPreyHordeBreakerUsed(
     rolledState,
     input.subject.actorId,
-    unitId,
+    procedureRef,
   );
   const continuation = attackDamageInterruptionFrame({
     participant: input.subject,

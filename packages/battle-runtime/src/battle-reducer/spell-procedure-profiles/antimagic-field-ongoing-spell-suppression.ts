@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 //
@@ -31,7 +32,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -43,7 +43,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
-  spellId,
   type BattleAreaId,
   type CombatantId,
 } from "../../identity.ts";
@@ -66,9 +65,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -184,8 +182,6 @@ function discoverAntimagicFieldOngoingSpellSuppressionCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation:
-          antimagicFieldOngoingSpellSuppressionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
@@ -193,22 +189,6 @@ function discoverAntimagicFieldOngoingSpellSuppressionCastAct(
   ];
 }
 
-function antimagicFieldOngoingSpellSuppressionInvocationRef(
-  invocation: AntimagicFieldOngoingSpellSuppressionInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "antimagicFieldOngoingSpellSuppression",
-  };
-}
-
-function antimagicFieldOngoingSpellSuppressionCastSummary(
-  invocation: AntimagicFieldOngoingSpellSuppressionInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveAntimagicFieldOngoingSpellSuppression(
   input: AntimagicFieldOngoingSpellSuppressionResolveInput,
@@ -388,36 +368,28 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
 }
 
 const AntimagicFieldOngoingSpellSuppressionInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("antimagicFieldOngoingSpellSuppression"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({
         kind: Schema.Literal("selfOriginEmanation"),
         radiusFeet: MovementFeet,
       }),
-      durationTicks: BattleRuntimeObjectSchema,
+      durationTicks: ElapsedTimeTicksSchema,
       rangeFeet: MovementFeet,
     }),
   );
 export const antimagicFieldOngoingSpellSuppressionProfile = {
   procedure: "antimagicFieldOngoingSpellSuppression",
-  invocationSchema: AntimagicFieldOngoingSpellSuppressionInvocationSchema,
+  executionSchema: AntimagicFieldOngoingSpellSuppressionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitAntimagicFieldOngoingSpellSuppression,
   discoverCastAct: discoverAntimagicFieldOngoingSpellSuppressionCastAct,
-  castSummary: antimagicFieldOngoingSpellSuppressionCastSummary,
-  invocationRef: antimagicFieldOngoingSpellSuppressionInvocationRef,
   resolve: resolveAntimagicFieldOngoingSpellSuppression,
 } satisfies SpellProcedureProfile<
   "antimagicFieldOngoingSpellSuppression",

@@ -1,10 +1,3 @@
-import {
-  topLevelSpellCastingTime,
-  type SpellMechanicsWithTopLevelCastingTime,
-  type SpellRecord,
-  type TopLevelSpellCastingTime,
-} from "@dnd/surface/surface/types";
-
 export const TRIGGERED_REACTION_SPELL_PROCEDURE_CANDIDATES = [
   "shieldReaction",
   "saveGatedDamage",
@@ -13,16 +6,6 @@ export const TRIGGERED_REACTION_SPELL_PROCEDURE_CANDIDATES = [
 ] as const;
 export type TriggeredReactionSpellProcedureCandidate =
   (typeof TRIGGERED_REACTION_SPELL_PROCEDURE_CANDIDATES)[number];
-type ReactionCastingTime = Extract<
-  TopLevelSpellCastingTime,
-  { readonly kind: "reaction" }
->;
-type ReactionCastingSpell = SpellRecord & {
-  readonly mechanics: SpellMechanicsWithTopLevelCastingTime & {
-    readonly castingTime: ReactionCastingTime;
-  };
-};
-
 export const ATTACK_HIT_BONUS_ACTION_SPELL_PROCEDURES = [
   "afterHitDamage",
   "afterHitSaveGatedCondition",
@@ -35,18 +18,21 @@ export type AttackHitBonusActionSpellProcedure =
 export function isTriggeredReactionSpellInvocation<
   TInvocation extends {
     readonly procedure: string;
-    readonly spell: SpellRecord;
+    readonly castingTime?: { readonly kind: string };
   },
 >(
   invocation: TInvocation,
 ): invocation is Extract<
   TInvocation,
   { readonly procedure: TriggeredReactionSpellProcedureCandidate }
-> & { readonly spell: ReactionCastingSpell } {
+> {
+  if (invocation.procedure === "saveGatedDamage") {
+    return invocation.castingTime?.kind === "reaction";
+  }
   return (
-    TRIGGERED_REACTION_SPELL_PROCEDURE_CANDIDATES.some(
-      (procedure) => procedure === invocation.procedure,
-    ) && topLevelSpellCastingTime(invocation.spell.mechanics)?.kind === "reaction"
+    invocation.procedure === "shieldReaction" ||
+    invocation.procedure === "featherFallMitigation" ||
+    invocation.procedure === "counterspell"
   );
 }
 

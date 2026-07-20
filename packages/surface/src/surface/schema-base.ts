@@ -9,6 +9,7 @@ import {
   SURFACE_SKILLS,
   type ClassName,
 } from "@dnd/shared/game-facts";
+import { DAMAGE_TYPES } from "@dnd/shared/types";
 
 import { exactOptional } from "./schema-helpers.ts";
 
@@ -281,21 +282,7 @@ export const SavingThrowSourceFilterSchema = Schema.Struct({
 
 export const AbilitySchema = Schema.Literal(...ABILITIES);
 
-export const DamageTypeSchema = Schema.Literal(
-  "acid",
-  "bludgeoning",
-  "cold",
-  "fire",
-  "force",
-  "lightning",
-  "necrotic",
-  "piercing",
-  "poison",
-  "psychic",
-  "radiant",
-  "slashing",
-  "thunder",
-);
+export const DamageTypeSchema = Schema.Literal(...DAMAGE_TYPES);
 
 export const AttackKindSchema = Schema.Literal(
   "ranged_spell_attack",

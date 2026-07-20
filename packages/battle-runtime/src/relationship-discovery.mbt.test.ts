@@ -6,7 +6,7 @@ import {
   battleId,
   characterSeed,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   fighterId,
   goblinId,
   startBattleRight,
@@ -182,7 +182,7 @@ function helpProjection(state: BattleState): RelationshipDiscoveryProjection {
       }),
     ],
   });
-  const helpActDiscovered = discoverBattleActs(state).some(
+  const helpActDiscovered = discoverBattleActCandidates(state).some(
     (act) =>
       act.subject.tag === "action" && act.subject.action === "helpAttack",
   );
@@ -199,7 +199,7 @@ function helpProjection(state: BattleState): RelationshipDiscoveryProjection {
     helpInsufficientParticipantsRejected:
       helpAttackAllyChoices(insufficientParticipantsState, fighterId).length ===
         0 &&
-      !discoverBattleActs(insufficientParticipantsState).some(
+      !discoverBattleActCandidates(insufficientParticipantsState).some(
         (act) =>
           act.subject.tag === "action" && act.subject.action === "helpAttack",
       ),

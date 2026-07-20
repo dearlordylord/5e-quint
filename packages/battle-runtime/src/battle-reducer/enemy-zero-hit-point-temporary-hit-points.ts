@@ -1,7 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
 
 import type { MovementFeet } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
 import type {
   BattleCreatureState,
   BattleDamageRelationshipDecision,
@@ -10,11 +9,7 @@ import type {
 } from "../battle-reducer.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
-import {
-  characterUnitProcedureRef,
-  type CharacterExecutionState,
-} from "../character-execution.ts";
-import { ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE } from "../unit-feature-support.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 
 export type EnemyZeroHitPointTemporaryHitPointsAward = {
@@ -93,11 +88,8 @@ function enemyZeroHitPointTemporaryHitPointsAward(
   relationshipDecisions: readonly BattleDamageRelationshipDecision[],
 ): number | null {
   let highestAward: number | null = null;
-  for (const profile of beneficiary.origin.enemyZeroHitPointTemporaryHitPointsProfiles.values()) {
-    const procedureRef = enemyZeroHitPointTemporaryHitPointsProcedureRef(
-      beneficiary.origin.execution,
-      profile.unit.id,
-    );
+  for (const procedure of enemyZeroHitPointTemporaryHitPointsProcedures(beneficiary)) {
+    const { execution, procedureRef } = procedure;
     if (
       procedureRef === undefined ||
       !relationshipDecisions.some(
@@ -113,17 +105,20 @@ function enemyZeroHitPointTemporaryHitPointsAward(
         beneficiaryId: beneficiary.combatantId,
         damageSourceId,
         targetId,
-        selfTrigger: profile.temporaryHitPoints.trigger.bySelf,
-        otherWithinFeet: profile.temporaryHitPoints.trigger.byOtherWithinFeet,
+        selfTrigger: execution.temporaryHitPoints.trigger.bySelf,
+        otherWithinFeet: execution.temporaryHitPoints.trigger.byOtherWithinFeet,
         spatialFacts,
       })
     ) {
       continue;
     }
     const award = Math.max(
-      profile.temporaryHitPoints.amount.minimum,
+      execution.temporaryHitPoints.amount.minimum,
       scoreModifier(beneficiary.origin.d20Statistics.abilityScores.cha) +
-        classLevelForUnit(beneficiary.origin.classLevels, profile.unit),
+        classLevelForClassName(
+          beneficiary.origin.classLevels,
+          execution.className,
+        ),
     );
     highestAward =
       highestAward === null ? award : Math.max(highestAward, award);
@@ -158,26 +153,33 @@ export function enemyZeroHitPointTemporaryHitPointsTriggerApplies(input: {
   );
 }
 
-export function enemyZeroHitPointTemporaryHitPointsProcedureRef(
-  execution: CharacterExecutionState,
-  unitId: UnitRecord["id"],
-): BattleProcedureExecutionRef | undefined {
-  return characterUnitProcedureRef(execution, unitId, {
-    kind: "unitSupportProfile",
-    supportKinds: new Set([
-      ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-    ]),
-  });
+export type EnemyZeroHitPointTemporaryHitPointsProcedure = {
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly execution: Extract<
+    UnitFeatureProcedureExecution,
+    { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
+  >;
+};
+
+export function enemyZeroHitPointTemporaryHitPointsProcedures(
+  actor: CharacterBattleCreatureState,
+): readonly EnemyZeroHitPointTemporaryHitPointsProcedure[] {
+  return actor.origin.execution.procedureBindings.flatMap((binding) =>
+    binding.procedure.kind === "unitFeature" &&
+    binding.procedure.execution.kind === "enemyZeroHitPointTemporaryHitPoints"
+      ? [{
+          procedureRef: binding.procedureRef,
+          execution: binding.procedure.execution,
+        }]
+      : [],
+  );
 }
 
-function classLevelForUnit(
+function classLevelForClassName(
   classLevels: readonly CharacterBattleClassLevel[],
-  unit: UnitRecord,
+  className: CharacterBattleClassLevel["className"],
 ): number {
-  return unit.kind === "class_feature"
-    ? Number(
-        classLevels.find((level) => level.className === unit.className)
-          ?.level ?? 0,
-      )
-    : 0;
+  return Number(
+    classLevels.find((level) => level.className === className)?.level ?? 0,
+  );
 }

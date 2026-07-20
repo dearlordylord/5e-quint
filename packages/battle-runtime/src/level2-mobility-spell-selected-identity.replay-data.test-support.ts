@@ -32,12 +32,12 @@ function discoverInvocation(input: {
   const act =
     input.actionTag === "bonusActionSpell"
       ? bonusSpellAct({
-          state,
+          session: state,
           spellId: input.spellId,
           slotLevel: input.slotLevel,
         })
       : spellAct({
-          state,
+          session: state,
           spellId: input.spellId,
           slotLevel: input.slotLevel,
         });

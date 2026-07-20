@@ -33,7 +33,7 @@ export const lightningBoltSelectedIdentityReplay = {
               spellSlots: [{ spellLevel: 3, count: 1 }],
             });
             const act = spellAct({
-              state,
+              session: state,
               spellId: lightningBoltUnitId,
               slotLevel: 3,
             });
@@ -56,7 +56,7 @@ export const lightningBoltSelectedIdentityReplay = {
             );
             expect(savingThrow).toEqual(
               expect.objectContaining({
-                label: "Lightning Bolt self-origin Line Saving Throw outcomes",
+                label: "Spell self-origin Line Saving Throw outcomes",
                 ability: "dex",
                 dc: { kind: "caster_spell_save_dc" },
               }),

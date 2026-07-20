@@ -1,6 +1,6 @@
 import type {
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -18,9 +18,10 @@ import {
   concentrationSavingThrowFill,
   damageRollFill,
   damageRollFillWithGroups,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   expendedLevelOneSlots,
+  findAct,
   fighterId,
   goblinAttackSubject,
   goblinId,
@@ -37,7 +38,7 @@ import {
   spellRecord,
   spellSlotInvocationRef,
   spellTargetAllocationFill,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   wizardId,
@@ -55,7 +56,7 @@ function readiedSpellProcedureRef(state: BattleState) {
 
 describe("battle runtime: Concentration and readied spells", () => {
   test("readied spell attack misses consume next-attack spell riders", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-readied-spell-miss-consumes-rider"),
       combatants: [
         characterSeed({
@@ -83,11 +84,12 @@ describe("battle runtime: Concentration and readied spells", () => {
         }),
       ],
     });
+    const state = session.state;
     const guidingSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         fighterId,
         spellSlotInvocationRef("guiding_bolt", 1, "spellAttackDamage"),
       ),
@@ -137,7 +139,7 @@ describe("battle runtime: Concentration and readied spells", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            wizardTurn,
+            { state: wizardTurn, context: session.context },
             wizardId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -192,7 +194,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("breaking concentration clears concentration-owned spell effects", () => {
-    const state = wizardVsSkeletonBattle();
+    const state = wizardVsSkeletonBattle().state;
     const wizard = state.combatants.get(wizardId)!;
     const skeleton = state.combatants.get(skeletonId)!;
     const concentrating = {
@@ -239,7 +241,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("breaking ordinary concentration does not clear a non-owned readied spell entry", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-ordinary-concentration-preserves-readied"),
       combatants: [
         characterSeed({
@@ -252,6 +254,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const readied = requireResolved(
       resolveBattleSubject({
         state,
@@ -259,7 +262,7 @@ describe("battle runtime: Concentration and readied spells", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            state,
+            session,
             wizardId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -289,7 +292,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("failed concentration damage save uses the same concentration lifecycle", () => {
-    const state = wizardVsSkeletonBattle();
+    const state = wizardVsSkeletonBattle().state;
     const wizard = state.combatants.get(wizardId)!;
     const concentrating = {
       ...state,
@@ -328,7 +331,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("attack damage requests and consumes a Concentration save for a readied spell", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-readied-concentration-damage"),
       combatants: [
         characterSeed({
@@ -341,12 +344,14 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const readySubject = {
       tag: "actionSpell" as const,
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        session,
+        wizardId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "ready" as const, trigger: "spellCast" as const },
     };
@@ -425,7 +430,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("Eldritch Mind gives Advantage only to damage-triggered Concentration saves", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-mind-concentration-save"),
       combatants: [
         characterSeed({
@@ -439,15 +444,17 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const readied = requireResolved(
       resolveBattleSubject({
         state,
         subject: {
           tag: "actionSpell" as const,
           actorId: wizardId,
-          invocation: cantripSpellInvocationRef(
-            "ray_of_frost",
-            "spellAttackDamage",
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
           mode: { tag: "ready" as const, trigger: "spellCast" as const },
         },
@@ -515,7 +522,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("Eldritch Mind does not affect ordinary Constitution spell saves", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-mind-ordinary-con-save"),
       combatants: [
         characterSeed({
@@ -532,10 +539,12 @@ describe("battle runtime: Concentration and readied spells", () => {
       ],
     });
 
+    const state = session.state;
+    const subject = findAct(session, magicSubject("inflict_wounds")).subject;
     const target = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("inflict_wounds"),
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -543,7 +552,7 @@ describe("battle runtime: Concentration and readied spells", () => {
     const savingThrow = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("inflict_wounds"),
+        subject,
         fills: [targetFill(target, goblinId)],
       }),
       "savingThrowOutcome",
@@ -556,7 +565,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("attack damage disposition replay accepts the following Concentration save", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-knock-out-concentration-damage"),
       combatants: [
         characterSeed({
@@ -570,12 +579,14 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const readySubject = {
       tag: "actionSpell" as const,
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        session,
+        wizardId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "ready" as const, trigger: "spellCast" as const },
     };
@@ -662,7 +673,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("readied spell release uses the held spell and ends Concentration", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-readied-release"),
       combatants: [
         characterSeed({
@@ -675,13 +686,14 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const readied = resolveBattleSubject({
       state,
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          state,
+          session,
           wizardId,
           cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),
@@ -762,7 +774,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("readied prepared slot spell releases without spending another Spell Slot", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-readied-slot-spell-release"),
       combatants: [
         characterSeed({
@@ -775,6 +787,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const readied = requireResolved(
       resolveBattleSubject({
         state,
@@ -782,7 +795,7 @@ describe("battle runtime: Concentration and readied spells", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            state,
+            session,
             wizardId,
             spellSlotInvocationRef(
               "magic_missile",
@@ -806,7 +819,7 @@ describe("battle runtime: Concentration and readied spells", () => {
       readiedSpellCasterId: wizardId,
       procedureRef: readiedSpellProcedureRef(goblinTurn.state),
     };
-    const releaseAct = discoverBattleActs(goblinTurn.state).find(
+    const releaseAct = discoverBattleActCandidates(goblinTurn.state).find(
       (act) =>
         act.subject.tag === "runtimeCommand" &&
         act.subject.command === "releaseReadiedSpell" &&
@@ -815,7 +828,7 @@ describe("battle runtime: Concentration and readied spells", () => {
     expect(releaseAct?.initialHoles).toMatchObject([
       {
         kind: "spellTargetAllocation",
-        label: "Magic Missile target allocation",
+        label: "Spell target allocation",
         allocationCount: 3,
       },
     ]);
@@ -852,7 +865,7 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("readied spells are held per caster", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-readied-per-caster"),
       combatants: [
         characterSeed({
@@ -872,6 +885,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const firstReadied = requireResolved(
       resolveBattleSubject({
         state,
@@ -879,7 +893,7 @@ describe("battle runtime: Concentration and readied spells", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            state,
+            session,
             wizardId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -898,7 +912,7 @@ describe("battle runtime: Concentration and readied spells", () => {
           tag: "actionSpell",
           actorId: secondWizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            secondWizardTurn,
+            { state: secondWizardTurn, context: session.context },
             secondWizardId,
             cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),

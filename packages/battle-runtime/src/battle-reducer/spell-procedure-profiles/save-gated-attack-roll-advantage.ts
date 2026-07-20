@@ -11,7 +11,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Attack Roll, Advantage, Magic
 //     Action, and Spell Invocation.
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -22,7 +22,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { supportedPreparedSaveGateAttackRollAdvantageProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateAttackRollAdvantageSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -31,15 +31,20 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   AbilitySchema,
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+
+const FailedSaveAttackRollAdvantageEffectSchema = Schema.Struct({
+  sourceCombatantId: CombatantId,
+  kind: Schema.Literal("faerieFireOutline"),
+  expiresAt: BattleActiveEffectExpirationSchema,
+});
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
@@ -159,7 +164,6 @@ function saveGatedAttackRollAdvantageCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: saveGatedAttackRollAdvantageInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -194,23 +198,6 @@ function saveGatedAttackRollAdvantageMetamagicInitialHoles(
   return holes;
 }
 
-function saveGatedAttackRollAdvantageInvocationRef(
-  invocation: SaveGatedAttackRollAdvantageSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "saveGatedAttackRollAdvantage",
-  };
-}
-
-function saveGatedAttackRollAdvantageCastSummary(
-  invocation: SaveGatedAttackRollAdvantageSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
 function resolveSaveGatedAttackRollAdvantage(
   input: SaveGatedAttackRollAdvantageResolveInput,
 ): BattleResolutionResult {
@@ -226,17 +213,12 @@ function resolveSaveGatedAttackRollAdvantage(
 }
 
 const SaveGatedAttackRollAdvantageInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "saveGatedAttackRollAdvantage" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedAttackRollAdvantage"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       ability: AbilitySchema,
       dc: DcSourceSchema,
       targeting: Schema.Union(
@@ -245,21 +227,18 @@ const SaveGatedAttackRollAdvantageInvocationSchema =
           sideFeet: MovementFeet,
         }),
       ),
-      effect: BattleRuntimeObjectSchema,
+      effect: FailedSaveAttackRollAdvantageEffectSchema,
       rangeFeet: MovementFeet,
     }),
   );
 export const saveGatedAttackRollAdvantageProfile = {
   procedure: "saveGatedAttackRollAdvantage",
-  invocationSchema: SaveGatedAttackRollAdvantageInvocationSchema,
+  executionSchema: SaveGatedAttackRollAdvantageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSaveGatedAttackRollAdvantage,
   discoverCastAct: discoverSaveGatedAttackRollAdvantageCastAct,
-  castSummary: saveGatedAttackRollAdvantageCastSummary,
-  invocationRef: saveGatedAttackRollAdvantageInvocationRef,
   resolve: resolveSaveGatedAttackRollAdvantage,
 } satisfies SpellProcedureProfile<
   "saveGatedAttackRollAdvantage",

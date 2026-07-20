@@ -1,11 +1,13 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.retaliation-reaction-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-01-BARBARIAN-RETALIATION barbarian_retaliation
 import { describe, expect, test } from "vitest";
+import { classLevel } from "@dnd/shared/types";
 import {
   Either,
   attackRollFill,
   battleId,
   battleUnitSupportProfilesForUnit,
+  characterBattleFeatureInitForTest,
   characterSeed,
   fighterId,
   fighterAttackSubject,
@@ -139,7 +141,13 @@ function barbarianRetaliationBattle(input?: {
         displayName: "Berserker",
         initiative: 10,
         classLevels: [{ className: "barbarian", level: 10 }],
-        unitFeatures: includeRetaliationUnit ? [{ unit: retaliationUnit }] : [],
+        unitFeatures: includeRetaliationUnit
+          ? [
+              characterBattleFeatureInitForTest(retaliationUnit, [
+                { className: "barbarian", level: classLevel(10) },
+              ]),
+            ]
+          : [],
         characterUnitRefs: includeRetaliationUnit
           ? [
               {

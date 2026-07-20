@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 
 import type { AbilityModifier } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 export const ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS = [
   "apply",
@@ -12,25 +12,25 @@ export type AttackDamageAbilityModifierChoiceSelection =
   (typeof ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS)[number];
 
 export type AttackDamageAbilityModifierChoiceFill = {
-  readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly selection: AttackDamageAbilityModifierChoiceSelection;
 };
 
-export type AttackDamageAbilityModifierChoiceUnitIds = readonly [
-  UnitRecord["id"],
-  ...UnitRecord["id"][],
+export type AttackDamageAbilityModifierChoiceProcedureRefs = readonly [
+  BattleProcedureExecutionRef,
+  ...BattleProcedureExecutionRef[],
 ];
 
 export type AttackDamageAbilityModifierChoice = {
-  readonly unitIds: AttackDamageAbilityModifierChoiceUnitIds;
+  readonly procedureRefs: AttackDamageAbilityModifierChoiceProcedureRefs;
   readonly appliedDamageAbilityModifier: AbilityModifier;
   readonly declinedDamageAbilityModifier: AbilityModifier;
 };
 
-export function attackDamageAbilityModifierChoiceUnitIds(
-  unitIds: readonly UnitRecord["id"][],
-): AttackDamageAbilityModifierChoiceUnitIds | null {
-  const [first, ...rest] = unitIds;
+export function attackDamageAbilityModifierChoiceProcedureRefs(
+  procedureRefs: readonly BattleProcedureExecutionRef[],
+): AttackDamageAbilityModifierChoiceProcedureRefs | null {
+  const [first, ...rest] = procedureRefs;
   return first === undefined ? null : [first, ...rest];
 }
 
@@ -41,5 +41,5 @@ export function selectedAttackDamageAbilityModifierChoice(
   if (fill === undefined || choice === undefined) {
     return null;
   }
-  return choice.unitIds.includes(fill.unitId) ? fill : null;
+  return choice.procedureRefs.includes(fill.procedureRef) ? fill : null;
 }

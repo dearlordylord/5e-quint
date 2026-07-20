@@ -1,9 +1,8 @@
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import {
-  admitCharacterProcedureSelectionSubject,
-  battleActUnitPresentation,
-} from "./battle-act-composition.ts";
-import {
+  battleProcedureExecutionRefForTest,
   startBattleRight,
+  startBattleSessionRight,
   requireResolved,
   sneakAttackUnitRefs,
   fighterAttackSubject,
@@ -34,7 +33,32 @@ import {
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
 import type { BattleState } from "./battle-runtime-test-support.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "./index.ts";
 import { describe, expect, test } from "vitest";
+
+function mechanicalSneakAttackProcedureRef(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleProcedureExecutionRef {
+  const actor = state.combatants.get(actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    throw new Error(
+      "Expected a character with an optional attack damage rider.",
+    );
+  }
+  const matches = actor.origin.execution.procedureBindings.filter(
+    (binding) =>
+      binding.procedure.kind === "unitFeature" &&
+      binding.procedure.execution.kind === "attackDamageRider" &&
+      binding.procedure.execution.optional,
+  );
+  const [match] = matches;
+  if (matches.length !== 1 || match === undefined) {
+    throw new Error("Expected exactly one optional attack damage rider.");
+  }
+  return match.procedureRef;
+}
 
 describe("battle runtime: Sneak Attack", () => {
   test("Sneak Attack is exposed as an optional attack damage rider on eligible hits", () => {
@@ -63,6 +87,10 @@ describe("battle runtime: Sneak Attack", () => {
       }),
     };
     const attackSubject = fighterAttackSubject(state, "Dagger");
+    const sneakAttackProcedureRef = mechanicalSneakAttackProcedureRef(
+      state,
+      fighterId,
+    );
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
     const damage = attackDamageHoleAfterHit(
@@ -77,8 +105,7 @@ describe("battle runtime: Sneak Attack", () => {
       attackDamageRiders: [
         {
           attackerId: fighterId,
-          unitId: "rogue_sneak_attack",
-          label: "Sneak Attack",
+          procedureRef: sneakAttackProcedureRef,
           damage: { dice: 1, dieSize: 6, damageType: "piercing" },
         },
       ],
@@ -93,7 +120,7 @@ describe("battle runtime: Sneak Attack", () => {
           naturalD20: 10,
           rollMode: "advantage",
         }),
-        damageRollFillWithGroups(damage, [[4], [6]], ["rogue_sneak_attack"]),
+        damageRollFillWithGroups(damage, [[4], [6]], [sneakAttackProcedureRef]),
       ],
     );
 
@@ -108,7 +135,11 @@ describe("battle runtime: Sneak Attack", () => {
             naturalD20: 10,
             rollMode: "advantage",
           }),
-          damageRollFillWithGroups(damage, [[4], [6]], ["rogue_sneak_attack"]),
+          damageRollFillWithGroups(
+            damage,
+            [[4], [6]],
+            [sneakAttackProcedureRef],
+          ),
           attackDamageDispositionFill(disposition, {
             kind: "ordinaryDamage",
           }),
@@ -122,7 +153,9 @@ describe("battle runtime: Sneak Attack", () => {
     );
     expect(
       hit.state.currentTurnResources.attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "rogue_sneak_attack" }]);
+    ).toEqual([
+      { attackerId: fighterId, procedureRef: sneakAttackProcedureRef },
+    ]);
   });
 
   test("Sneak Attack accepts caller-supplied Advantage as attack-roll Advantage", () => {
@@ -140,6 +173,10 @@ describe("battle runtime: Sneak Attack", () => {
       ],
     });
     const attackSubject = fighterAttackSubject(state, "Dagger");
+    const sneakAttackProcedureRef = mechanicalSneakAttackProcedureRef(
+      state,
+      fighterId,
+    );
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
     const damage = attackDamageHoleAfterHit(
@@ -152,7 +189,7 @@ describe("battle runtime: Sneak Attack", () => {
 
     expect(damage).toMatchObject({
       attackDamageRiders: [
-        expect.objectContaining({ unitId: "rogue_sneak_attack" }),
+        expect.objectContaining({ procedureRef: sneakAttackProcedureRef }),
       ],
     });
   });
@@ -164,8 +201,8 @@ describe("battle runtime: Sneak Attack", () => {
         characterSeed({
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
-          unitFeatures: [sneakAttackFeature({ acquiredAtLevel: 2 })],
-          characterUnitRefs: sneakAttackUnitRefs(),
+          unitFeatures: [],
+          characterUnitRefs: [],
           attack: testDaggerAttack(),
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -242,7 +279,13 @@ describe("battle runtime: Sneak Attack", () => {
       currentTurnResources: {
         ...admittedFinesseState.currentTurnResources,
         attackDamageRidersUsedThisTurn: [
-          { attackerId: fighterId, unitId: "rogue_sneak_attack" },
+          {
+            attackerId: fighterId,
+            procedureRef: mechanicalSneakAttackProcedureRef(
+              admittedFinesseState,
+              fighterId,
+            ),
+          },
         ],
       },
     } satisfies BattleState;
@@ -285,6 +328,10 @@ describe("battle runtime: Sneak Attack", () => {
       ],
     });
     const subject = fighterAttackSubject(state, "Dagger");
+    const sneakAttackProcedureRef = mechanicalSneakAttackProcedureRef(
+      state,
+      fighterId,
+    );
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
     const damage = attackDamageHoleAfterHit(
@@ -298,7 +345,7 @@ describe("battle runtime: Sneak Attack", () => {
 
     expect(damage).toMatchObject({
       attackDamageRiders: [
-        expect.objectContaining({ unitId: "rogue_sneak_attack" }),
+        expect.objectContaining({ procedureRef: sneakAttackProcedureRef }),
       ],
     });
   });
@@ -342,6 +389,10 @@ describe("battle runtime: Sneak Attack", () => {
         }),
     };
     const subject = fighterAttackSubject(state, "Dagger");
+    const sneakAttackProcedureRef = mechanicalSneakAttackProcedureRef(
+      state,
+      fighterId,
+    );
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
     expect(roll).not.toHaveProperty("rollMode");
@@ -356,7 +407,7 @@ describe("battle runtime: Sneak Attack", () => {
 
     expect(damage).toMatchObject({
       attackDamageRiders: [
-        expect.objectContaining({ unitId: "rogue_sneak_attack" }),
+        expect.objectContaining({ procedureRef: sneakAttackProcedureRef }),
       ],
     });
   });
@@ -385,7 +436,6 @@ describe("battle runtime: Sneak Attack", () => {
       { total: 15, naturalD20: 10, rollMode: "advantage" },
       subject,
     );
-
     expect(
       resolveBattleSubject({
         state,
@@ -405,7 +455,7 @@ describe("battle runtime: Sneak Attack", () => {
           damageRollFillWithGroups(
             damage,
             [[4], [6]],
-            ["rogue_sneak_attack_typo"],
+            [battleProcedureExecutionRefForTest("missing-procedure")],
           ),
         ],
       }),
@@ -443,6 +493,10 @@ describe("battle runtime: Sneak Attack", () => {
       { total: 20, naturalD20: 20 },
       subject,
     );
+    const sneakAttackProcedureRef = mechanicalSneakAttackProcedureRef(
+      state,
+      fighterId,
+    );
 
     const hit = requireResolved(
       resolveBattleSubject({
@@ -473,7 +527,7 @@ describe("battle runtime: Sneak Attack", () => {
               [1, 1],
               [2, 2],
             ],
-            ["rogue_sneak_attack"],
+            [sneakAttackProcedureRef],
           ),
         ],
       }),
@@ -599,6 +653,10 @@ describe("battle runtime: Sneak Attack", () => {
       ],
     });
     const subject = fighterAttackSubject(state, "Dagger");
+    const sneakAttackProcedureRef = mechanicalSneakAttackProcedureRef(
+      state,
+      fighterId,
+    );
     const target = attackInitialTargetHole(state, subject);
     const targetFillWithSight = attackTargetFill(
       target,
@@ -648,7 +706,7 @@ describe("battle runtime: Sneak Attack", () => {
     const damageFills = [
       targetFillWithSight,
       attackRollFill(roll, { total: 20, naturalD20: 15 }),
-      damageRollFillWithGroups(damage, [[4], [4]], ["rogue_sneak_attack"]),
+      damageRollFillWithGroups(damage, [[4], [4]], [sneakAttackProcedureRef]),
     ];
     const disposition = requireHole(
       resolveBattleSubject({
@@ -674,7 +732,7 @@ describe("battle runtime: Sneak Attack", () => {
     ).toEqual([
       {
         attackerId: fighterId,
-        unitId: "rogue_sneak_attack",
+        procedureRef: sneakAttackProcedureRef,
       },
     ]);
   });
@@ -708,12 +766,17 @@ describe("battle runtime: Sneak Attack", () => {
       secondRogueId,
       "Dagger",
     );
+    const secondRogueSneakAttackProcedureRef =
+      mechanicalSneakAttackProcedureRef(state, secondRogueId);
     const usedByDifferentRogue = {
       ...state,
       currentTurnResources: {
         ...state.currentTurnResources,
         attackDamageRidersUsedThisTurn: [
-          { attackerId: fighterId, unitId: "rogue_sneak_attack" },
+          {
+            attackerId: fighterId,
+            procedureRef: secondRogueSneakAttackProcedureRef,
+          },
         ],
       },
     } satisfies BattleState;
@@ -740,7 +803,7 @@ describe("battle runtime: Sneak Attack", () => {
       attackDamageRiders: [
         expect.objectContaining({
           attackerId: secondRogueId,
-          unitId: "rogue_sneak_attack",
+          procedureRef: secondRogueSneakAttackProcedureRef,
         }),
       ],
     });
@@ -752,7 +815,7 @@ describe("battle runtime: Sneak Attack", () => {
       ["rogue_uncanny_dodge", "Uncanny Dodge"],
       ["bard_cutting_words", "Cutting Words"],
     ] as const;
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-old-class-riders-support-gated"),
       combatants: [
         characterSeed({
@@ -765,21 +828,11 @@ describe("battle runtime: Sneak Attack", () => {
       ],
     });
 
-    const discoveredUnitIds = discoverBattleActs(state).flatMap((act) =>
+    const discoveredUnitIds = discoverBattleActs(session).flatMap((act) =>
       act.subject.tag === "unitFeature"
         ? [battleActUnitPresentation(act)?.unitId]
         : [],
     );
     expect(discoveredUnitIds).toEqual([]);
-
-    for (const [unitId] of oldClassRiders) {
-      expect(
-        admitCharacterProcedureSelectionSubject(state, {
-          tag: "unitFeature",
-          actorId: fighterId,
-          unitId,
-        }),
-      ).toBeUndefined();
-    }
   });
 });

@@ -9,12 +9,11 @@ import {
   discoverBattleActs,
   resolveBattleSubject,
   startBattle,
-  statBlockProcedurePresentations,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
-  type BattleState,
+  type BattleRuntimeSession,
   type BattleSubject,
 } from "@dnd/battle-runtime";
 import {
@@ -111,7 +110,7 @@ type LifecycleSession = {
   readonly build?: CharacterBuild;
   readonly buildSignature?: string;
   readonly sheet?: CharacterSheet;
-  readonly battleState?: BattleState;
+  readonly battleSession?: BattleRuntimeSession;
   readonly characterCombatant?: CharacterBattleCombatant;
   readonly battleRuntimeCharacterHp?: number;
 };
@@ -244,7 +243,7 @@ function createLifecycleDriver() {
           const battle = startLifecycleBattle(requireSessionSheet(session));
           session = {
             ...session,
-            battleState: battle.state,
+            battleSession: battle.session,
             characterCombatant: battle.combatant,
           };
           projection = {
@@ -257,11 +256,11 @@ function createLifecycleDriver() {
       },
       doResolveSkeletonShortswordAttack: () => {
         runLifecycleAction("resolve Skeleton Shortsword attack", () => {
-          const battleState = resolveSkeletonShortswordAttack(
-            requireSessionBattleState(session),
+          const battleSession = resolveSkeletonShortswordAttack(
+            requireSessionBattle(session),
           );
           const combatant = requireCharacterCombatant(
-            battleState.combatants.get(lifecycleCharacterCombatantId),
+            battleSession.state.combatants.get(lifecycleCharacterCombatantId),
           );
           const battleRuntimeCharacterHp = Number(combatant.hp);
           if (battleRuntimeCharacterHp !== lifecycleSettledHp) {
@@ -269,7 +268,7 @@ function createLifecycleDriver() {
           }
           session = {
             ...session,
-            battleState,
+            battleSession,
             characterCombatant: combatant,
             battleRuntimeCharacterHp,
           };
@@ -287,10 +286,12 @@ function createLifecycleDriver() {
         runLifecycleAction("settle Battle back to Sheet", () => {
           const sheet = requireSessionSheet(session);
           const combatant = requireSessionCombatant(session);
+          const battleSession = requireSessionBattle(session);
           const settled = requireRight(
             settleCharacterSheetFromBattle({
               sheet,
-              state: requireSessionBattleState(session),
+              state: battleSession.state,
+              context: battleSession.context,
               combatant,
               unitLibrary,
             }),
@@ -477,7 +478,7 @@ function initialManifestFills(): readonly CreationFill[] {
 }
 
 function startLifecycleBattle(sheet: CharacterSheet): {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly combatant: CharacterBattleCombatant;
 } {
   const characterInit = requireRight(
@@ -490,7 +491,7 @@ function startLifecycleBattle(sheet: CharacterSheet): {
       initiative: initiativeScore(10),
     }),
   );
-  const state = requireRight(
+  const session = requireRight(
     startBattle({
       battleId: battleId("battle:layer-projection-lifecycle"),
       combatants: [
@@ -504,18 +505,20 @@ function startLifecycleBattle(sheet: CharacterSheet): {
     }),
   );
   const combatant = requireCharacterCombatant(
-    state.combatants.get(lifecycleCharacterCombatantId),
+    session.state.combatants.get(lifecycleCharacterCombatantId),
   );
-  return { state, combatant };
+  return { session, combatant };
 }
 
-function resolveSkeletonShortswordAttack(state: BattleState): BattleState {
-  const act = requireSkeletonShortswordAct(state);
+function resolveSkeletonShortswordAttack(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  const act = requireSkeletonShortswordAct(session);
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const targetFillValue = targetChoiceFill(target, act.subject);
   const attackRoll = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFillValue],
     }),
@@ -527,14 +530,14 @@ function resolveSkeletonShortswordAttack(state: BattleState): BattleState {
   });
   const damage = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFillValue, attackRollFillValue],
     }),
     "rolledDice",
   );
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       targetFillValue,
@@ -547,27 +550,19 @@ function resolveSkeletonShortswordAttack(state: BattleState): BattleState {
       `Expected resolved Shortsword attack, got ${resolved.tag}.`,
     );
   }
-  return resolved.state;
+  return { ...session, state: resolved.state };
 }
 
-function requireSkeletonShortswordAct(state: BattleState): AttackBattleAct {
-  const skeleton = state.combatants.get(lifecycleSkeletonCombatantId);
-  if (skeleton?.origin.kind !== "statBlock") {
-    throw new Error("Expected committed Skeleton Stat Block admission.");
-  }
-  const procedureRef = statBlockProcedurePresentations(skeleton.origin).find(
-    (presentation) =>
-      presentation.kind === "attack" && presentation.name === "Shortsword",
-  )?.procedureRef;
-  if (procedureRef === undefined) {
-    throw new Error("Expected admitted Skeleton Shortsword procedure.");
-  }
-  const acts = discoverBattleActs(state).filter(
+function requireSkeletonShortswordAct(
+  session: BattleRuntimeSession,
+): AttackBattleAct {
+  const acts = discoverBattleActs(session).filter(
     (act): act is AttackBattleAct =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === lifecycleSkeletonCombatantId &&
-      act.subject.procedureRef === procedureRef &&
+      act.presentation.kind === "attack" &&
+      act.presentation.name === "Shortsword" &&
       act.subject.statBlockDamageNotation === undefined,
   );
   if (acts.length !== 1) {
@@ -803,11 +798,11 @@ function requireSessionSheet(session: LifecycleSession): CharacterSheet {
   return session.sheet;
 }
 
-function requireSessionBattleState(session: LifecycleSession): BattleState {
-  if (session.battleState === undefined) {
-    throw new Error("Expected lifecycle battle state.");
+function requireSessionBattle(session: LifecycleSession): BattleRuntimeSession {
+  if (session.battleSession === undefined) {
+    throw new Error("Expected lifecycle battle session.");
   }
-  return session.battleState;
+  return session.battleSession;
 }
 
 function requireSessionCombatant(

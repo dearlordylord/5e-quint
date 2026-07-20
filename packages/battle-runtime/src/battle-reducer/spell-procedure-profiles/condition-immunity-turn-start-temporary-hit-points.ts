@@ -14,7 +14,6 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -26,7 +25,8 @@ import {
   type BattleState,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { targetListSpellUsesTargetListHole } from "../spells-discovery.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -50,10 +50,8 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -208,10 +206,6 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
             tag: "actionSpell",
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation:
-              conditionImmunityAndTurnStartTemporaryHitPointsInvocationRef(
-                invocation,
-              ),
             mode: { tag: "cast" },
           },
           initialHoles: [targetHole],
@@ -219,22 +213,6 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
       ];
 }
 
-function conditionImmunityAndTurnStartTemporaryHitPointsInvocationRef(
-  invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
-  };
-}
-
-function conditionImmunityAndTurnStartTemporaryHitPointsCastSummary(
-  invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
   input: SpellProcedureProfileResolveInput<
@@ -465,19 +443,14 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
 }
 
 const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal(
         "conditionImmunityAndTurnStartTemporaryHitPoints",
       ),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
@@ -485,8 +458,18 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
         maxTargets: Schema.Number,
       }),
       activeEffects: Schema.Tuple(
-        BattleRuntimeObjectSchema,
-        BattleRuntimeObjectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("conditionImmunity"),
+          sourceCombatantId: CombatantId,
+          condition: Schema.Literal("frightened"),
+          expiresAt: BattleActiveEffectExpirationSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("turnStartTemporaryHitPoints"),
+          sourceCombatantId: CombatantId,
+          amount: Schema.Number,
+          expiresAt: BattleActiveEffectExpirationSchema,
+        }),
       ),
       rangeFeet: MovementFeet,
     }),
@@ -496,16 +479,13 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProced
   ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
 > = {
   procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
-  invocationSchema:
+  executionSchema:
     ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitConditionImmunityAndTurnStartTemporaryHitPoints,
   discoverCastAct:
     discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct,
-  castSummary: conditionImmunityAndTurnStartTemporaryHitPointsCastSummary,
-  invocationRef: conditionImmunityAndTurnStartTemporaryHitPointsInvocationRef,
   resolve: resolveConditionImmunityAndTurnStartTemporaryHitPoints,
 };

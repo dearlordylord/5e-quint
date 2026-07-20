@@ -1,5 +1,4 @@
 import {
-  BattleActPresentationSchema,
   BattleFillSchema,
   BattleSubjectSchema,
 } from "@dnd/battle-runtime";
@@ -22,14 +21,16 @@ const McpSessionSummaryFields = {
 
 export const McpSessionSummarySchema = Schema.Struct(McpSessionSummaryFields);
 
+const McpTransientBattleFillsSchema = Schema.Struct({
+  subject: BattleSubjectSchema,
+  fills: Schema.Array(BattleFillSchema),
+  presentation: Schema.optionalWith(Schema.Never, { exact: true }),
+});
+
 export const McpSessionSnapshotSchema = Schema.Struct({
   ...McpSessionSummaryFields,
   transientBattleFills: Schema.Union(
-    Schema.Struct({
-      subject: BattleSubjectSchema,
-      presentation: BattleActPresentationSchema,
-      fills: Schema.Array(BattleFillSchema),
-    }),
+    McpTransientBattleFillsSchema,
     Schema.Null,
   ),
 });

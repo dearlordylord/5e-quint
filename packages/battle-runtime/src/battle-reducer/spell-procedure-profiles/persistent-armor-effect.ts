@@ -1,4 +1,8 @@
 // The persistentArmorEffect Spell Procedure Profile: a touch spell that
+import {
+  ConcentrationBattleActiveEffectExpirationSchema,
+  DurationBattleActiveEffectExpirationSchema,
+} from "../../active-effect/codecs.ts";
 // creates a timed Spell Effect setting the willing unarmored target's base
 // Armor Class to a fixed base plus Dexterity modifier.
 //
@@ -12,8 +16,6 @@
 //                         in spells-discovery.ts
 //   - castSummary()     - was the persistentArmorEffect branch in
 //                         spells-discovery.ts
-//   - invocationRef()   - was the persistentArmorEffect branch in
-//                         spells-invocation-ref.ts
 //   - resolve()         - was the persistentArmorEffect branch in
 //                         spells-resolve.ts
 //   - applyEffect()     - was applyPersistentSpellActiveEffect in
@@ -25,16 +27,10 @@
 //   - The Armor of Shadows Spell Access parser stays in
 //     character-battle-resources.ts.
 
-import {
-  elapsedTimeTicksFromHours,
-  elapsedTimeTicksFromTimeSpanDuration,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Match } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { armorOfShadowsSpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -43,8 +39,11 @@ import {
   type SupportedSpellInvocation,
   type ActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
+import {
+  persistentArmorEffectSpellProfileForSpell,
+} from "./persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -56,10 +55,9 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   ArmorOfShadowsSpellAccessSchema,
-  BattleRuntimeObjectSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
@@ -70,6 +68,27 @@ type PersistentArmorInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "persistentArmorEffect" }
 >;
+
+const PersistentArmorEffectSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("spellBaseArmorClass"),
+    sourceCombatantId: CombatantId,
+    base: Schema.Number,
+    ability: Schema.Literal("dex"),
+    earlyEnds: Schema.Tuple(Schema.Struct({ kind: Schema.Literal("targetDonsArmor") })),
+    expiresAt: DurationBattleActiveEffectExpirationSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellBaseArmorClass"),
+    sourceCombatantId: CombatantId,
+    base: Schema.Number,
+    ability: Schema.Literal("dex"),
+    earlyEnds: Schema.Tuple(
+      Schema.Struct({ kind: Schema.Literal("concentrationBroken") }),
+    ),
+    expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
+  }),
+);
 type PersistentArmorEffectResolutionInput = ActionSpellBattleResolutionInput & {
   readonly castingState: BattleState;
 };
@@ -93,29 +112,8 @@ function persistentArmorEffectShape(
   actorId: CombatantId,
   spell: SpellRecord,
 ): Pick<PersistentArmorInvocation, "rangeFeet" | "activeEffect"> | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.duration.kind !== "timed"
-  ) {
-    return null;
-  }
-  const operation = spell.mechanics.operations[0];
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  const requiredDurationTicks = elapsedTimeTicksFromHours(8);
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    Either.isLeft(durationTicks) ||
-    Either.isLeft(requiredDurationTicks) ||
-    Number(durationTicks.right) !== Number(requiredDurationTicks.right) ||
-    spell.mechanics.operations.length !== 1 ||
-    operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "modify_ac_set_base" ||
-    operation.effect.formula.kind !== "base_plus_dex"
-  ) {
+  const profile = persistentArmorEffectSpellProfileForSpell(spell);
+  if (profile === null) {
     return null;
   }
 
@@ -124,9 +122,9 @@ function persistentArmorEffectShape(
     activeEffect: {
       kind: "spellBaseArmorClass",
       sourceCombatantId: actorId,
-      base: operation.effect.formula.base,
+      base: profile.baseArmorClass,
       ability: "dex",
-      expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      expiresAt: { kind: "duration", durationTicks: profile.durationTicks },
       earlyEnds: [{ kind: "targetDonsArmor" }],
     },
   };
@@ -192,33 +190,11 @@ function discoverPersistentArmorEffectCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: persistentArmorEffectInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [targetHole],
     },
   ];
-}
-
-function persistentArmorEffectInvocationRef(
-  invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
-): SpellInvocationRef {
-  return invocation.resource.tag === "none"
-    ? armorOfShadowsSpellInvocationRef(invocation.spell.id)
-    : {
-        tag: "spellSlot",
-        spellId: spellId(invocation.spell.id),
-        slotLevel: invocation.resource.slotLevel,
-        procedure: "persistentArmorEffect",
-      };
-}
-
-function persistentArmorEffectCastSummary(
-  invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
-): string {
-  return invocation.resource.tag === "none"
-    ? `Cast ${invocation.spell.name} using Armor of Shadows.`
-    : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function applyPersistentArmorEffect(
@@ -340,28 +316,23 @@ function resolvePersistentArmorEffect(
   });
 }
 
-const PersistentArmorEffectInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "persistentArmorEffect" }
-  >
->(
+const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       rangeFeet: MovementFeet,
-      activeEffect: BattleRuntimeObjectSchema,
+      activeEffect: PersistentArmorEffectSchema,
     }),
     Schema.Struct({
       access: ArmorOfShadowsSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       rangeFeet: MovementFeet,
-      activeEffect: BattleRuntimeObjectSchema,
+      activeEffect: PersistentArmorEffectSchema,
     }),
   ),
 );
@@ -371,14 +342,11 @@ export const persistentArmorEffectProfile: SpellProcedureProfile<
   PersistentArmorEffectResolutionInput
 > = {
   procedure: "persistentArmorEffect",
-  invocationSchema: PersistentArmorEffectInvocationSchema,
+  executionSchema: PersistentArmorEffectInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitPersistentArmorEffect,
   discoverCastAct: discoverPersistentArmorEffectCastAct,
-  castSummary: persistentArmorEffectCastSummary,
-  invocationRef: persistentArmorEffectInvocationRef,
   resolve: resolvePersistentArmorEffect,
 };

@@ -59,13 +59,14 @@ import {
 } from "./rule-core-component-route.ts";
 import {
   discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   snapshotBattle,
   type BattleActiveEffect,
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -360,7 +361,7 @@ function expectGuidanceReplaySkillsMatchRuntimeChoices(): void {
     cantrips: [spellRecord(guidanceUnitId)],
     spellSlots: [],
   });
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const act = spellAct({ session: state, spellId: guidanceUnitId });
   const skill = requireHole(act.initialHoles, "skillChoice");
   expect(skill.choices).toEqual(replaySkills);
 }
@@ -463,12 +464,12 @@ function guidanceScenario(
     cantrips: [spellRecord(guidanceUnitId)],
     spellSlots: [],
   });
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const act = spellAct({ session: state, spellId: guidanceUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const skill = requireHole(act.initialHoles, "skillChoice");
   const guided = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(target, guidanceUnitId, spellCasterId, spellCasterId),
@@ -489,12 +490,12 @@ function enhanceAbilityScenario(): Projection {
     preparedSpells: [spellRecord(enhanceAbilityUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
-  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const act = spellAct({ session: state, spellId: enhanceAbilityUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const ability = requireHole(act.initialHoles, "abilityChoice");
   const enhanced = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -773,7 +774,11 @@ function castCommand(
     preparedSpells: [spellRecord(commandUnitId)],
     spellSlots: [{ spellLevel: 1, count: 1 }],
   });
-  const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+  const act = spellAct({
+    session: state,
+    spellId: commandUnitId,
+    slotLevel: 1,
+  });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
   const targetSelection = spellTargetListFill(
@@ -792,7 +797,7 @@ function castCommand(
   };
   const savingThrow = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetSelection, optionSelection],
     }),
@@ -800,7 +805,7 @@ function castCommand(
   );
   return requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetSelection,
@@ -832,7 +837,7 @@ function requireRuntimeCommand(
   state: BattleState,
   command: RuntimeCommandSubject["command"],
 ): RuntimeCommandAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is RuntimeCommandAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === command,

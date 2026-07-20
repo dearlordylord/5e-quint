@@ -10,7 +10,7 @@ import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts"
 import {
   requireCharacterSpellProcedureRefForTest,
   characterSeed,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -32,6 +32,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleId,
   breakBattleConcentration,
+  discoverBattleActCandidates,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -39,6 +40,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
   type AvailableBattleAct,
+  type BattleRuntimeSession,
   type BattleState,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -61,7 +63,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: gustOfWindUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: gustOfWindUnitId,
+      slotLevel: 2,
+    });
 
     expect({
       ...act.subject,
@@ -79,7 +85,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Gust of Wind self-origin Line Saving Throw outcomes",
+        label: "Spell self-origin Line Saving Throw outcomes",
         ability: "str",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -148,7 +154,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: gustOfWindUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: gustOfWindUnitId,
+      slotLevel: 2,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
@@ -208,12 +218,16 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: gustOfWindUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: gustOfWindUnitId,
+      slotLevel: 2,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           gustOfWindLineSavingThrowOutcomeFill(
@@ -269,6 +283,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
+    const lineEffect = gustOfWindLineEffect(targetTurn.state);
     const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
     const resolved = resolveBattleSubject({
@@ -281,9 +296,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           gustOfWindLineMovement: {
             kind: "gustOfWindLineMovement",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(gustOfWindUnitId),
-            ),
+            sourceProcedureRef: lineEffect.sourceProcedureRef,
             areaId: gustOfWindAreaId,
             directionId: gustOfWindNorthDirectionId,
             totalDistanceFeet: movementFeet(5),
@@ -315,6 +328,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
+    const lineEffect = gustOfWindLineEffect(targetTurn.state);
     const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
 
@@ -329,7 +343,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             gustOfWindLineMovement: {
               kind: "gustOfWindLineMovement",
               sourceCombatantId: spellCasterId,
-              sourceProcedureRef: expect.any(String),
+              sourceProcedureRef: lineEffect.sourceProcedureRef,
               areaId: gustOfWindAreaId,
               directionId: gustOfWindNorthDirectionId,
               totalDistanceFeet: movementFeet(5),
@@ -355,6 +369,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
+    const lineEffect = gustOfWindLineEffect(targetTurn.state);
     const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
     const resolved = resolveBattleSubject({
@@ -382,9 +397,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           gustOfWindLineMovement: {
             kind: "gustOfWindLineMovement",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(gustOfWindUnitId),
-            ),
+            sourceProcedureRef: lineEffect.sourceProcedureRef,
             areaId: gustOfWindAreaId,
             directionId: gustOfWindNorthDirectionId,
             totalDistanceFeet: movementFeet(5),
@@ -410,7 +423,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
   test("caster can spend a Bonus Action to replace the active Line direction", () => {
     const cast = castGustOfWind([]);
     expect(
-      discoverBattleActs(cast.state).some(
+      discoverBattleActCandidates(cast.state).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
           act.subject.command === "gustOfWindLineDirectionChange",
@@ -587,10 +600,14 @@ function castGustOfWind(
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
-  const act = spellAct({ state, spellId: gustOfWindUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session: state,
+    spellId: gustOfWindUnitId,
+    slotLevel: 2,
+  });
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [gustOfWindLineSavingThrowOutcomeFill(savingThrow, outcomes)],
   });
@@ -602,7 +619,7 @@ function castGustOfWind(
 
 function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
   const spell = spellRecord(gustOfWindUnitId);
-  const state = startBattleRight({
+  const state = startBattleSessionRight({
     battleId: battleId("heightened-gust-of-wind-line"),
     combatants: [
       characterSeed({
@@ -656,7 +673,7 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
     value: spellTargetId,
   };
   const awaitingSave = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [heightenedTargetFill],
   });
@@ -665,7 +682,7 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
   }
   const savingThrow = requireHole(awaitingSave.holes, "savingThrowOutcome");
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [
       heightenedTargetFill,
@@ -688,7 +705,7 @@ type ActionSpellAct = AvailableBattleAct & {
   >;
 };
 
-function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
+function heightenedGustOfWindAct(state: BattleRuntimeSession): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
@@ -780,7 +797,7 @@ function withGreaseGroundHazard(state: BattleState): BattleState {
 }
 
 function moveAct(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "move",

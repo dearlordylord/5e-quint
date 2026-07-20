@@ -12,7 +12,6 @@ import type {
   Ability,
   DamageType,
   DiceExpr,
-  UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -22,9 +21,8 @@ import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
-  type BattleHuntersPreySupportProfile,
-  type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
 import type {
   BoundSupportedAttackActionOption,
   BattleWeaponDamage,
@@ -39,7 +37,10 @@ import type {
   SupportedCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
 import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import {
   type AttackDamageRider,
@@ -59,7 +60,10 @@ import {
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
-import { isCharacterBattleCreatureState } from "./creature-state.ts";
+import {
+  isCharacterBattleCreatureState,
+  ongoingFeatureProfileForSourceKey,
+} from "./creature-state.ts";
 import {
   activeRageDamageBonusForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
@@ -319,7 +323,7 @@ export function unarmedStrikeAttackDamage(
       flat: damage.flat,
       damageType: damage.damageType,
     })),
-    Match.when({ kind: "authoredReplacement" }, (damage) => ({
+    Match.when({ kind: "mechanicalReplacement" }, (damage) => ({
       dice: damage.dice,
       dieSize: damage.dieSize,
       damageType: damage.damageType,
@@ -339,7 +343,7 @@ export function unarmedStrikeDamageDiceExpr(
 ): DiceExpr | null {
   return Match.value(attack.effect.damage).pipe(
     Match.when({ kind: "base" }, () => null),
-    Match.when({ kind: "authoredReplacement" }, (damage) => ({
+    Match.when({ kind: "mechanicalReplacement" }, (damage) => ({
       dice: critical ? damage.dice * 2 : damage.dice,
       dieSize: damage.dieSize,
     })),
@@ -360,7 +364,7 @@ export type AttackDamageComponent = {
 
 export function attackDamageRiderDiceCount(
   profile: Extract<
-    SupportedUnitFeatureProfile,
+    UnitFeatureProcedureExecution,
     { readonly kind: "attackDamageRider" }
   >,
   rageDamageBonus: number,
@@ -378,9 +382,10 @@ export function attackDamageRiderDiceCount(
 
 export function attackDamageRiderForProfile(
   profile: Extract<
-    SupportedUnitFeatureProfile,
+    UnitFeatureProcedureExecution,
     { readonly kind: "attackDamageRider" }
   >,
+  procedureRef: BattleProcedureExecutionRef,
   attackerId: CombatantId,
   damageType: DamageType,
   rageDamageBonus: number,
@@ -389,8 +394,7 @@ export function attackDamageRiderForProfile(
   return dice > 0
     ? {
         attackerId,
-        unitId: profile.unit.id,
-        label: profile.unit.name,
+        procedureRef,
         optional: profile.optional,
         damage: {
           dice,
@@ -470,13 +474,20 @@ export function eligibleAttackDamageRiders(
   if (!isCharacterBattleCreatureState(attacker)) {
     return [];
   }
-  const profileRiders = [
-    ...attacker.origin.attackDamageRiderProfiles.values(),
-  ].flatMap((profile): readonly AttackDamageRider[] => {
+  const profileRiders = attacker.origin.execution.procedureBindings.flatMap(
+    (binding): readonly AttackDamageRider[] => {
+      if (
+        binding.procedure.kind !== "unitFeature" ||
+        binding.procedure.execution.kind !== "attackDamageRider"
+      ) {
+        return [];
+      }
+      const profile = binding.procedure.execution;
     if (
       state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
         (usage) =>
-          usage.attackerId === attackerId && usage.unitId === profile.unit.id,
+          usage.attackerId === attackerId &&
+          usage.procedureRef === binding.procedureRef,
       )
     ) {
       return [];
@@ -496,6 +507,7 @@ export function eligibleAttackDamageRiders(
     }
     const rider = attackDamageRiderForProfile(
       profile,
+      binding.procedureRef,
       attackerId,
       damageType,
       profile.trigger ===
@@ -504,8 +516,9 @@ export function eligibleAttackDamageRiders(
         ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
         : 0,
     );
-    return rider === null ? [] : [rider];
-  });
+      return rider === null ? [] : [rider];
+    },
+  );
   return [
     ...profileRiders,
     ...huntersPreyColossusSlayerRiders({
@@ -533,25 +546,24 @@ function huntersPreyColossusSlayerRiders(input: {
   if (target === undefined || target.hp >= target.maxHp) {
     return [];
   }
-  return input.attacker.origin.characterUnitRefs.flatMap((unitRef) => {
+  return input.attacker.origin.execution.procedureBindings.flatMap((binding) => {
+    if (
+      binding.procedure.kind !== "unitSupportProfile" ||
+      typeof binding.procedure.execution !== "object" ||
+      binding.procedure.execution.kind !== HUNTERS_PREY_SUPPORT_PROFILE
+    ) {
+      return [];
+    }
     if (
       input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
         (usage) =>
           usage.attackerId === input.attackerId &&
-          usage.unitId === unitRef.unit.id,
+          usage.procedureRef === binding.procedureRef,
       )
     ) {
       return [];
     }
-    const supportProfile = unitRef.supportProfiles.find(
-      (profile): profile is BattleHuntersPreySupportProfile =>
-        typeof profile === "object" &&
-        profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
-    );
-    if (supportProfile === undefined) {
-      return [];
-    }
-    const huntersPrey = supportProfile.huntersPrey;
+    const huntersPrey = binding.procedure.execution.huntersPrey;
     if (
       huntersPrey.kind !== "woundedTargetWeaponDamage" ||
       huntersPrey.damage.kind !== "addAttackDamageDice"
@@ -561,8 +573,7 @@ function huntersPreyColossusSlayerRiders(input: {
     return [
       {
         attackerId: input.attackerId,
-        unitId: unitRef.unit.id,
-        label: "Colossus Slayer",
+        procedureRef: binding.procedureRef,
         optional: true,
         damage: {
           dice: huntersPrey.damage.dice.dice,
@@ -583,7 +594,7 @@ function selectedAttackDamageTypeForProfile(input: {
   readonly attackRoll: AttackRollResult;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
   readonly profile: Extract<
-    SupportedUnitFeatureProfile,
+    UnitFeatureProcedureExecution,
     { readonly kind: "attackDamageRider" }
   >;
 }): DamageType | null {
@@ -647,7 +658,7 @@ function frenzyRecklessAttackWhileRagingUsedThisTurn(input: {
   }
   return [...input.attacker.activeOngoingFeatureOccurrences.keys()].some(
     (key) => {
-      const profile = input.attacker.origin.ongoingFeatureProfiles.get(key);
+      const profile = ongoingFeatureProfileForSourceKey(input.attacker, key);
       return (
         profile?.kind === "ongoingFeature" &&
         ongoingFeatureProfileIsRecklessAttackForFrenzy(profile) &&
@@ -664,19 +675,23 @@ function frenzyRecklessAttackWhileRagingUsedThisTurn(input: {
 
 export function selectedAttackDamageRiders(
   eligibleRiders: readonly AttackDamageRider[],
-  selectedUnitIds: readonly UnitRecord["id"][] | undefined,
+  selectedProcedureRefs: readonly BattleProcedureExecutionRef[] | undefined,
 ): readonly AttackDamageRider[] | null {
   const mandatoryRiders = eligibleRiders.filter((rider) => !rider.optional);
-  if (selectedUnitIds === undefined || selectedUnitIds.length === 0) {
+  if (
+    selectedProcedureRefs === undefined ||
+    selectedProcedureRefs.length === 0
+  ) {
     return mandatoryRiders;
   }
-  if (new Set(selectedUnitIds).size !== selectedUnitIds.length) {
+  if (new Set(selectedProcedureRefs).size !== selectedProcedureRefs.length) {
     return null;
   }
   const selected: AttackDamageRider[] = [...mandatoryRiders];
-  for (const unitId of selectedUnitIds) {
+  for (const procedureRef of selectedProcedureRefs) {
     const rider = eligibleRiders.find(
-      (candidate) => candidate.unitId === unitId && candidate.optional,
+      (candidate) =>
+        candidate.procedureRef === procedureRef && candidate.optional,
     );
     if (rider === undefined) {
       return null;
@@ -895,58 +910,65 @@ export function passiveRangedAttackRollBonus(
   ) {
     return 0;
   }
-  for (const unitRef of attacker.origin.characterUnitRefs) {
-    for (const profile of unitRef.supportProfiles) {
-      if (
-        typeof profile === "object" &&
-        profile.kind === PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE &&
-        profile.attackRoll.weaponFilter.kind === "weaponCategory" &&
-        profile.attackRoll.weaponFilter.category === attack.weapon.usage
-      ) {
-        return profile.attackRoll.bonus;
-      }
+  for (const binding of attacker.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      (procedure.kind === "unitFeature" ||
+        procedure.kind === "unitSupportProfile") &&
+      typeof procedure.execution === "object" &&
+      procedure.execution.kind ===
+        PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE &&
+      procedure.execution.attackRoll.weaponFilter.kind === "weaponCategory" &&
+      procedure.execution.attackRoll.weaponFilter.category ===
+        attack.weapon.usage
+    ) {
+      return procedure.execution.attackRoll.bonus;
     }
   }
   return 0;
 }
 
-export function eligibleWeaponDamageDiceRollChoiceUnitIds(
+export function eligibleWeaponDamageDiceRollChoiceProcedureRefs(
   state: BattleState,
   attackerId: CombatantId,
   attack: SupportedAttackActionOption,
-): readonly UnitRecord["id"][] {
+): readonly BattleProcedureExecutionRef[] {
   const attacker = state.combatants.get(attackerId);
   if (attacker?.origin.kind !== "character" || attack.kind !== "weapon") {
     return [];
   }
-  return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.includes(
-      WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
-    ) &&
+  return attacker.origin.execution.procedureBindings.flatMap((binding) =>
+    binding.procedure.kind === "unitSupportProfile" &&
+    binding.procedure.execution ===
+      WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE &&
     !state.currentTurnResources.weaponDamageDiceRollChoicesUsedThisTurn.some(
       (usage) =>
-        usage.attackerId === attackerId && usage.unitId === unitRef.unit.id,
+        usage.attackerId === attackerId &&
+        usage.procedureRef === binding.procedureRef,
     )
-      ? [unitRef.unit.id]
+      ? [binding.procedureRef]
       : [],
   );
 }
 
-export function eligibleAttackDamageDieFloorUnitIds(
+export function eligibleAttackDamageDieFloorProcedureRefs(
   state: BattleState,
   attackerId: CombatantId,
   attack: SupportedAttackActionOption,
-): readonly UnitRecord["id"][] {
-  return eligibleAttackDamageDieFloorUnitIdsForAttacker(
+  attackProcedureRef: BattleProcedureExecutionRef,
+): readonly BattleProcedureExecutionRef[] {
+  return eligibleAttackDamageDieFloorProcedureRefsForAttacker(
     state.combatants.get(attackerId),
     attack,
+    attackProcedureRef,
   );
 }
 
-export function eligibleAttackDamageDieFloorUnitIdsForAttacker(
+export function eligibleAttackDamageDieFloorProcedureRefsForAttacker(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
-): readonly UnitRecord["id"][] {
+  attackProcedureRef: BattleProcedureExecutionRef,
+): readonly BattleProcedureExecutionRef[] {
   if (
     attacker?.origin.kind !== "character" ||
     attack.kind !== "weapon" ||
@@ -958,14 +980,15 @@ export function eligibleAttackDamageDieFloorUnitIdsForAttacker(
   const mainWeapon = attacker.origin.selectedLoadout.weapon;
   if (
     mainWeapon === undefined ||
-    mainWeapon.unitId !== attack.weapon.id ||
+    attacker.origin.attack?.procedureRef !== attackProcedureRef ||
     mainWeapon.grip !== "two_handed"
   ) {
     return [];
   }
-  return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.includes(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE)
-      ? [unitRef.unit.id]
+  return attacker.origin.execution.procedureBindings.flatMap((binding) =>
+    binding.procedure.kind === "unitSupportProfile" &&
+    binding.procedure.execution === ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE
+      ? [binding.procedureRef]
       : [],
   );
 }
@@ -1003,16 +1026,15 @@ export function eligibleAttackRollMissToHitReplacements(
   if (attacker?.origin.kind !== "character") {
     return [];
   }
-  return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.some(
-      (profile) =>
-        typeof profile === "object" &&
-        profile.kind === ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
-    ) &&
+  return attacker.origin.execution.procedureBindings.flatMap((binding) =>
+    binding.procedure.kind === "unitSupportProfile" &&
+    typeof binding.procedure.execution === "object" &&
+    binding.procedure.execution.kind ===
+      ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE &&
     !attacker.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
-      (usage) => usage.unitId === unitRef.unit.id,
+      (usage) => usage.procedureRef === binding.procedureRef,
     )
-      ? [{ unitId: unitRef.unit.id, label: unitRef.unit.id }]
+      ? [{ procedureRef: binding.procedureRef }]
       : [],
   );
 }
@@ -1025,16 +1047,16 @@ export function selectedAttackRollMissToHitReplacement(input: {
   readonly attackRoll: BattleAttackRollResult;
   readonly ordinaryHit: boolean;
 }): AttackRollMissToHitReplacement | null {
-  if (input.attackRoll.missToHitReplacementUnitId === undefined) {
+  if (input.attackRoll.missToHitReplacementProcedureRef === undefined) {
     return null;
   }
   if (input.ordinaryHit) {
     return null;
   }
-  return attackRollMissToHitReplacementForUnit(
+  return attackRollMissToHitReplacementForProcedure(
     input.state,
     input.attackerId,
-    input.attackRoll.missToHitReplacementUnitId,
+    input.attackRoll.missToHitReplacementProcedureRef,
     {
       subject: input.subject,
       targetId: input.targetId,
@@ -1043,24 +1065,23 @@ export function selectedAttackRollMissToHitReplacement(input: {
   );
 }
 
-export function attackRollMissToHitReplacementForUnit(
+export function attackRollMissToHitReplacementForProcedure(
   state: BattleState,
   attackerId: CombatantId,
-  unitId: UnitRecord["id"],
+  procedureRef: BattleProcedureExecutionRef,
   context: PendingAttackRollMissToHitReplacementContext,
 ): AttackRollMissToHitReplacement | null {
   const attacker = state.combatants.get(attackerId);
   if (attacker?.origin.kind !== "character") {
     return null;
   }
-  const hasReplacementProfile = attacker.origin.characterUnitRefs.some(
-    (unitRef) =>
-      unitRef.unit.id === unitId &&
-      unitRef.supportProfiles.some(
-        (profile) =>
-          typeof profile === "object" &&
-          profile.kind === ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
-      ),
+  const hasReplacementProfile = attacker.origin.execution.procedureBindings.some(
+    (binding) =>
+      binding.procedureRef === procedureRef &&
+      binding.procedure.kind === "unitSupportProfile" &&
+      typeof binding.procedure.execution === "object" &&
+      binding.procedure.execution.kind ===
+        ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   );
   if (!hasReplacementProfile) {
     return null;
@@ -1068,15 +1089,15 @@ export function attackRollMissToHitReplacementForUnit(
   const pendingSelection =
     state.currentTurnResources.pendingAttackRollMissToHitReplacementSelection;
   return (pendingSelection?.attackerId === attackerId &&
-    pendingSelection.unitId === unitId &&
+    pendingSelection.procedureRef === procedureRef &&
     samePendingAttackRollMissToHitReplacementContext(
       pendingSelection.context,
       context,
     )) ||
     eligibleAttackRollMissToHitReplacements(attacker).some(
-      (replacement) => replacement.unitId === unitId,
+      (replacement) => replacement.procedureRef === procedureRef,
     )
-    ? { unitId, label: unitId }
+    ? { procedureRef }
     : null;
 }
 
@@ -1095,7 +1116,7 @@ export function recordAttackRollMissToHitReplacementUsed(
   }
   const alreadyUsed =
     attacker.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
-      (usage) => usage.unitId === replacement.unitId,
+      (usage) => usage.procedureRef === replacement.procedureRef,
     );
   return {
     ...state,
@@ -1105,14 +1126,14 @@ export function recordAttackRollMissToHitReplacementUsed(
         ? attacker.attackRollMissToHitReplacementsUsedSinceTurnStart
         : [
             ...attacker.attackRollMissToHitReplacementsUsedSinceTurnStart,
-            { unitId: replacement.unitId },
+            { procedureRef: replacement.procedureRef },
           ],
     }),
     currentTurnResources: {
       ...state.currentTurnResources,
       pendingAttackRollMissToHitReplacementSelection: {
         attackerId,
-        unitId: replacement.unitId,
+        procedureRef: replacement.procedureRef,
         context,
       },
     },
@@ -1138,9 +1159,10 @@ export function sameAttackRollMissToHitReplacementRoll(
     left.total === right.total &&
     left.naturalD20 === right.naturalD20 &&
     left.rollMode === right.rollMode &&
-    left.activatedOngoingFeatureUnitId ===
-      right.activatedOngoingFeatureUnitId &&
-    left.missToHitReplacementUnitId === right.missToHitReplacementUnitId
+    left.activatedOngoingFeatureProcedureRef ===
+      right.activatedOngoingFeatureProcedureRef &&
+    left.missToHitReplacementProcedureRef ===
+      right.missToHitReplacementProcedureRef
   );
 }
 
@@ -1160,23 +1182,23 @@ export function clearPendingAttackRollMissToHitReplacementSelection(
 }
 
 export function selectedWeaponDamageDiceRollChoice(
-  eligibleUnitIds: readonly UnitRecord["id"][],
+  eligibleProcedureRefs: readonly BattleProcedureExecutionRef[],
   choice: WeaponDamageDiceRollChoiceFill | undefined,
 ): WeaponDamageDiceRollChoiceFill | null {
   if (choice === undefined) {
     return null;
   }
-  return eligibleUnitIds.includes(choice.unitId) ? choice : null;
+  return eligibleProcedureRefs.includes(choice.procedureRef) ? choice : null;
 }
 
 export function selectedAttackDamageDieFloorChoice(
-  eligibleUnitIds: readonly UnitRecord["id"][],
+  eligibleProcedureRefs: readonly BattleProcedureExecutionRef[],
   choice: AttackDamageDieFloorChoiceFill | undefined,
 ): AttackDamageDieFloorChoiceFill | null {
   if (choice === undefined) {
     return null;
   }
-  return eligibleUnitIds.includes(choice.unitId) ? choice : null;
+  return eligibleProcedureRefs.includes(choice.procedureRef) ? choice : null;
 }
 
 export function weaponAttackDamageExpression(

@@ -56,7 +56,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -164,7 +164,7 @@ function createRuleCoreReactionDriver() {
     }
 
     function resolveSubject(
-      subject: Parameters<typeof resolveBattleSubject>[0]["subject"],
+      subject: BattleSubject,
       fills: readonly BattleFill[] = [],
     ): BattleResolutionResult {
       const result = resolveBattleSubject({ state, subject, fills });
@@ -434,7 +434,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function reactionCreature(input: {

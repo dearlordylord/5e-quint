@@ -19,6 +19,7 @@ import weaponClubInput from "../../surface/content/weapon_club.json";
 import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
 import {
   characterId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   initiativeScore,
   resolveBattleSubject,
@@ -26,11 +27,15 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
   type BattleState,
+  type BattleRuntimeSession,
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import { attackActionOptionPresentationName } from "./battle-reducer/statblock.ts";
 import {
   spellCasterId,
   spellTargetId,
@@ -261,7 +266,7 @@ export function statBlockLiteralNumber(
 }
 
 export function statBlockAttackAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   attackName: string,
 ): AvailableBattleAct & {
@@ -270,7 +275,7 @@ export function statBlockAttackAct(
     { readonly tag: "action"; readonly action: "attack" }
   >;
 } {
-  const matchingActs = discoverBattleActs(state).filter(
+  const matchingActs = discoverBattleActs(session).filter(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -283,9 +288,10 @@ export function statBlockAttackAct(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
       candidate.subject.statBlockDamageNotation === undefined &&
-      candidate.summary === `Take the Attack action with ${attackName}.`,
+      candidate.presentation.kind === "attack" &&
+      candidate.presentation.name === attackName,
   );
-  expect(matchingActs).toHaveLength(1);
+  expect(matchingActs.length).toBeGreaterThan(0);
   const [act] = matchingActs;
   if (act === undefined) {
     throw new Error(`Expected one rolled ${attackName} Stat Block attack act.`);
@@ -333,18 +339,19 @@ export function sameClubMainAndOffHandLoadout(): NonNullable<
 }
 
 export function weaponAttackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   attackName: string,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === spellCasterId &&
-      act.summary === `Take the Attack action with ${attackName}.`,
+      act.presentation.kind === "attack" &&
+      act.presentation.name === attackName,
   )?.subject;
   if (subject?.tag !== "action" || subject.action !== "attack") {
     throw new Error(`Expected discovered ${attackName} attack.`);
@@ -395,28 +402,29 @@ export function requireCombatant(
 }
 
 export function weaponAttackRollHole(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly attackName: "Longsword" | "Shortbow";
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
 }): Extract<BattleHole, { readonly kind: "attackRoll" }> {
-  const subject = discoverBattleActs(input.state).find(
+  const subject = discoverBattleActs(input.session).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.actorId === input.actorId &&
-      act.summary === `Take the Attack action with ${input.attackName}.`,
+      act.presentation.kind === "attack" &&
+      act.presentation.name === input.attackName,
   )?.subject;
   if (subject?.tag !== "action" || subject.action !== "attack") {
     throw new Error(`Expected discovered ${input.attackName} attack.`);
   }
   const targetHole = requireResultHole(
-    resolveBattleSubject({ state: input.state, subject, fills: [] }),
+    resolveBattleSubject({ state: input.session.state, subject, fills: [] }),
     "targetChoice",
   );
   return requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject,
       fills: [
         attackTargetFill(
@@ -472,11 +480,44 @@ export function abilityCheckFill(
   };
 }
 
+export function singleCharacterWeaponAttackSubject(
+  state: BattleState,
+  attackName: "Longsword" | "Shortbow",
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const attackSubjects = discoverBattleActCandidates(state).flatMap(
+    (candidate) => {
+      const subject = candidate.subject;
+      if (
+        subject.tag !== "action" ||
+        subject.action !== "attack" ||
+        subject.actorId !== spellCasterId
+      ) {
+        return [];
+      }
+      const attack = attackActionOptionForSubject(state, subject);
+      return attack !== undefined &&
+        attackActionOptionPresentationName(state, subject.actorId, attack) ===
+          attackName
+        ? [subject]
+        : [];
+    },
+  );
+  if (attackSubjects.length !== 1 || attackSubjects[0] === undefined) {
+    throw new Error(
+      `Expected one admitted mechanical ${attackName} character weapon attack.`,
+    );
+  }
+  return attackSubjects[0];
+}
+
 export function resolveWeaponAttack(
   state: BattleState,
   attackName: "Longsword" | "Shortbow",
 ): ReturnType<typeof resolveBattleSubject> {
-  const subject = weaponAttackSubject(state, attackName);
+  const subject = singleCharacterWeaponAttackSubject(state, attackName);
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -517,7 +558,7 @@ export function completedWeaponDamageInput(state: BattleState): {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
 } {
-  const subject = weaponAttackSubject(state, "Longsword");
+  const subject = singleCharacterWeaponAttackSubject(state, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -605,7 +646,7 @@ export function attackRollFill(
     readonly total: number;
     readonly naturalD20: number;
     readonly rollMode?: "advantage" | "disadvantage" | "normal";
-    readonly missToHitReplacementUnitId?: string;
+    readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
     readonly d20TestNaturalOneReroll?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
@@ -619,9 +660,12 @@ export function attackRollFill(
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
       ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
-      ...(value.missToHitReplacementUnitId === undefined
+      ...(value.missToHitReplacementProcedureRef === undefined
         ? {}
-        : { missToHitReplacementUnitId: value.missToHitReplacementUnitId }),
+        : {
+            missToHitReplacementProcedureRef:
+              value.missToHitReplacementProcedureRef,
+          }),
       ...(value.d20TestNaturalOneReroll === undefined
         ? {}
         : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
@@ -692,7 +736,7 @@ export function movementFill(
 export function damageRollFillWithGroups(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
   groups: readonly (readonly number[])[],
-  selectedAttackDamageRiderUnitIds?: readonly string[],
+  selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[],
   weaponDamageDiceRollChoice?: Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
@@ -713,9 +757,9 @@ export function damageRollFillWithGroups(
   return {
     kind: "rolledDice",
     holeId: hole.holeId,
-    ...(selectedAttackDamageRiderUnitIds === undefined
+    ...(selectedAttackDamageRiderProcedureRefs === undefined
       ? {}
-      : { selectedAttackDamageRiderUnitIds }),
+      : { selectedAttackDamageRiderProcedureRefs }),
     ...(weaponDamageDiceRollChoice === undefined
       ? {}
       : { weaponDamageDiceRollChoice }),

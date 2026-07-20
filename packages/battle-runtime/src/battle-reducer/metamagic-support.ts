@@ -23,17 +23,12 @@ import {
   type MovementFeet,
   type ResourceCount,
 } from "@dnd/shared/types";
-import type {
-  Attachment,
-  SpellRecord,
-  TargetSelection,
-} from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   isTargetListSpellInvocation,
   type BattleCreatureState,
-  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
   BattleSubject,
   SpellMetamagicSelection,
@@ -49,7 +44,6 @@ import {
   TRANSMUTED_SPELL_DAMAGE_TYPES,
   type TransmutedSpellDamageType,
 } from "./metamagic-transmuted-facts.ts";
-import { targetCountBySlot } from "./spells-profile-shared.ts";
 
 export const QUICKENED_METAMAGIC_EFFECT_KIND =
   "action_casting_time_to_bonus_action_with_spell_turn_limit" satisfies CharacterBattleMetamagicEffectKind;
@@ -146,11 +140,6 @@ export type ExtendedSpellApplicationFact = Omit<
   readonly durationModifier: ExtendedSpellDurationModifierFact;
 };
 
-type SpellComponents = SpellRecord["mechanics"]["components"];
-type StructuredMaterialComponent = Exclude<
-  SpellComponents["m"],
-  boolean | string
->;
 type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
 
 export type SubtleSpellSuppressedComponentFact =
@@ -158,28 +147,9 @@ export type SubtleSpellSuppressedComponentFact =
   | { readonly kind: "somatic" }
   | { readonly kind: "material" };
 
-export type SubtleSpellPreservedMaterialComponentFact =
-  | {
-      readonly kind: "genericMaterial";
-      readonly material: string;
-      readonly preservation:
-        | {
-            readonly kind: "consumed";
-            readonly costGp: number | null;
-          }
-        | {
-            readonly kind: "priced";
-            readonly costGp: number;
-          };
-    }
-  | {
-      readonly kind: "structuredMaterial";
-      readonly material: StructuredMaterialComponent;
-    };
-
 export type SubtleSpellPreservedComponentFact = {
   readonly kind: "material";
-  readonly material: SubtleSpellPreservedMaterialComponentFact;
+  readonly preservation: "pricedOrConsumed";
 };
 
 export type SubtleSpellComponentProjectionFact =
@@ -223,6 +193,8 @@ type SpellMetamagicSubject = Extract<
   { readonly tag: "actionSpell" | "bonusActionSpell" }
 >;
 
+type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
+
 export function metamagicApplicationsIncludeQuickened(
   applications: readonly CharacterBattleMetamagicOptionFact[],
 ): boolean {
@@ -232,7 +204,7 @@ export function metamagicApplicationsIncludeQuickened(
 }
 
 export function transmutedSpellDamageTypeChoices(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): readonly TransmutedSpellDamageType[] {
   const sourceDamageType = transmutableSpellInvocationDamageType(invocation);
   return sourceDamageType === null
@@ -244,7 +216,7 @@ export function transmutedSpellDamageTypeChoices(
 
 export function discoverTransmutedSpellMetamagicSelections(input: {
   readonly actor: BattleCreatureState;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
 }): readonly (readonly [SpellMetamagicSelection])[] {
   if (
     input.actor.origin.kind !== "character" ||
@@ -280,7 +252,7 @@ export function discoverTransmutedSpellMetamagicSelections(input: {
 
 export function discoverTwinnedSpellMetamagicSelections(input: {
   readonly actor: BattleCreatureState;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
 }): readonly (readonly [SpellMetamagicSelection])[] {
   if (
     input.actor.origin.kind !== "character" ||
@@ -310,7 +282,7 @@ export function discoverTwinnedSpellMetamagicSelections(input: {
 
 export function discoverDistantSpellMetamagicSelections(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
 }): readonly (readonly [SpellMetamagicSelection])[] {
   if (
     input.actor?.origin.kind !== "character" ||
@@ -339,7 +311,7 @@ export function discoverDistantSpellMetamagicSelections(input: {
 
 export function discoverExtendedSpellMetamagicSelections(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
 }): readonly (readonly [SpellMetamagicSelection])[] {
   if (
     input.actor?.origin.kind !== "character" ||
@@ -368,7 +340,7 @@ export function discoverExtendedSpellMetamagicSelections(input: {
 
 export function discoverSubtleSpellMetamagicSelections(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): readonly (readonly [SpellMetamagicSelection])[] {
   if (
@@ -409,7 +381,7 @@ export function metamagicActionCostOverride(
 
 export function discoverSpellMetamagicSelections(input: {
   readonly actor: BattleCreatureState;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
 }): readonly (readonly [SpellMetamagicSelection])[] {
   if (
     input.actor.origin.kind !== "character" ||
@@ -503,7 +475,7 @@ export function transmutedSpellSelectionTargetDamageType(
 
 export function saveMetamagicSupportIssue(input: {
   readonly effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
   const saveMetamagicOnly =
@@ -544,7 +516,7 @@ export function metamagicSorceryPointSpendIssue(input: {
   }
   const resource = input.actor.origin.resources.find(
     (candidate): candidate is CharacterBattlePointPoolResourceState =>
-      candidate.unit.id === metamagic.sorceryPointResourceUnitId &&
+      candidate.resourcePoolRef === metamagic.sorceryPointResourcePoolRef &&
       characterBattleResourceIsPointPool(candidate),
   );
   if (resource === undefined) {
@@ -568,7 +540,7 @@ export function metamagicSorceryPointCost(
 }
 
 function spellInvocationSupportsSaveMetamagic(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return (
     invocation.procedure === "saveGatedDamage" ||
@@ -584,7 +556,7 @@ function spellInvocationSupportsSaveMetamagic(
 
 export function transmutedSpellDamageTypeSubstitutionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
   if (
@@ -620,7 +592,7 @@ export function transmutedSpellDamageTypeSubstitutionIssue(input: {
 
 export function distantSpellRangeProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
   if (
@@ -645,9 +617,9 @@ export function distantSpellRangeProjectionIssue(input: {
 }
 
 export function distantSpellRangeModifierFact(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): DistantSpellRangeModifierFact | null {
-  const range = invocation.spell.mechanics.range;
+  const range = invocation.spellRuleFacts.range;
   if (range.kind === "touch") {
     return {
       kind: "touchToDistanceRange",
@@ -679,14 +651,14 @@ export function distantSpellRangeModifierForApplications(
 }
 
 function distantSpellProcedureSupportsRangeProjection(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return invocation.procedure === "objectLight";
 }
 
 export function extendedSpellDurationProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
   if (
@@ -712,9 +684,9 @@ export function extendedSpellDurationProjectionIssue(input: {
 }
 
 export function extendedSpellDurationModifierFact(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): ExtendedSpellDurationModifierFact | null {
-  const duration = invocation.spell.mechanics.duration;
+  const duration = invocation.spellRuleFacts.duration;
   const baseDuration =
     duration.kind === "timed"
       ? elapsedTimeTicksFromTimeSpanDuration(duration.value)
@@ -758,7 +730,7 @@ export function subtleSpellComponentProjectionIssue(input: {
     SpellMetamagicApplicationFact,
     "effectKind"
   >[];
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
   if (
@@ -780,36 +752,28 @@ export function subtleSpellComponentProjectionIssue(input: {
 }
 
 export function subtleSpellComponentProjectionFact(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): SubtleSpellComponentProjectionFact | null {
-  const components = invocation.spell.mechanics.components;
+  const components = invocation.spellRuleFacts.components;
   const suppressedComponents: SubtleSpellSuppressedComponentFact[] = [
-    ...(components.v ? ([{ kind: "verbal" }] as const) : []),
-    ...(components.s ? ([{ kind: "somatic" }] as const) : []),
+    ...(components.verbal ? ([{ kind: "verbal" }] as const) : []),
+    ...(components.somatic ? ([{ kind: "somatic" }] as const) : []),
+    ...(components.hasMaterial && !components.hasPricedOrConsumedMaterial
+      ? ([{ kind: "material" }] as const)
+      : []),
   ];
-  const preservedMaterial =
-    subtleSpellPreservedMaterialComponentFact(components);
-  if (components.m !== false && preservedMaterial === null) {
-    suppressedComponents.push({ kind: "material" });
-  }
-  const preservedComponents =
-    preservedMaterial === null
-      ? []
-      : ([{ kind: "material", material: preservedMaterial }] as const);
+  const preservedComponents: readonly SubtleSpellPreservedComponentFact[] =
+    components.hasMaterial && components.hasPricedOrConsumedMaterial
+      ? [{ kind: "material", preservation: "pricedOrConsumed" }]
+      : [];
   const nonEmptySuppressed = readonlyNonEmptyArray(suppressedComponents);
   if (nonEmptySuppressed !== null) {
-    return {
-      suppressedComponents: nonEmptySuppressed,
-      preservedComponents,
-    };
+    return { suppressedComponents: nonEmptySuppressed, preservedComponents };
   }
   const nonEmptyPreserved = readonlyNonEmptyArray(preservedComponents);
   return nonEmptyPreserved === null
     ? null
-    : {
-        suppressedComponents: [],
-        preservedComponents: nonEmptyPreserved,
-      };
+    : { suppressedComponents: [], preservedComponents: nonEmptyPreserved };
 }
 
 export function subtleSpellComponentProjectionForApplications(
@@ -823,44 +787,6 @@ export function subtleSpellComponentProjectionForApplications(
   );
 }
 
-function subtleSpellPreservedMaterialComponentFact(
-  components: SpellComponents,
-): SubtleSpellPreservedMaterialComponentFact | null {
-  if (components.m === false) {
-    return null;
-  }
-  if (typeof components.m !== "string") {
-    return {
-      kind: "structuredMaterial",
-      material: components.m,
-    };
-  }
-  const costGp =
-    "materialCostGp" in components ? (components.materialCostGp ?? null) : null;
-  const materialConsumed =
-    "materialConsumed" in components && components.materialConsumed === true;
-  if (materialConsumed) {
-    return {
-      kind: "genericMaterial",
-      material: components.m,
-      preservation: {
-        kind: "consumed",
-        costGp,
-      },
-    };
-  }
-  return costGp === null
-    ? null
-    : {
-        kind: "genericMaterial",
-        material: components.m,
-        preservation: {
-          kind: "priced",
-          costGp,
-        },
-      };
-}
-
 function readonlyNonEmptyArray<T>(
   values: readonly T[],
 ): ReadonlyNonEmptyArray<T> | null {
@@ -869,7 +795,7 @@ function readonlyNonEmptyArray<T>(
 }
 
 function extendedSpellProcedureSupportsDurationProjection(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return (
     invocation.procedure === "creatureSizeIncrease" ||
@@ -879,7 +805,7 @@ function extendedSpellProcedureSupportsDurationProjection(
 
 export function twinnedSpellTargetCountProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "mode">;
 }): string | null {
   if (
@@ -901,7 +827,7 @@ export function twinnedSpellTargetCountProjectionIssue(input: {
 }
 
 export function twinnedSpellTargetCountInvocation<
-  I extends SupportedSpellInvocation,
+  I extends RuntimeSpellProcedure,
 >(
   invocation: I,
   applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
@@ -935,7 +861,7 @@ export function twinnedSpellTargetCountInvocation<
 }
 
 export function transmutedSpellDamageInvocation<
-  I extends SupportedSpellInvocation,
+  I extends RuntimeSpellProcedure,
 >(
   invocation: I,
   applications: readonly SpellMetamagicApplicationFact[] | undefined,
@@ -976,7 +902,7 @@ export function transmutedSpellDamageInvocation<
 }
 
 function transmutableSpellInvocationDamageType(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): TransmutedSpellDamageType | null {
   if (
     invocation.procedure === "saveGatedDamage" ||
@@ -1030,7 +956,7 @@ function isTransmutedSpellDamageType(
 }
 
 function twinnedSpellEffectiveTargetCount(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): number | null {
   if (
     invocation.resource.tag !== "spellSlot" ||
@@ -1041,17 +967,10 @@ function twinnedSpellEffectiveTargetCount(
   ) {
     return null;
   }
-  const selection = spellTwinnedTargetSelection(invocation.spell);
-  if (selection === null) {
-    return null;
-  }
-  const countByEffectiveLevel = targetCountBySlot(
-    selection,
-    invocation.spell.mechanics.level,
+  const countByEffectiveLevel = twinnedTargetCountFromExecutionFacts(
+    invocation.spellRuleFacts.twinnedTargetCount,
   );
-  if (countByEffectiveLevel === null) {
-    return null;
-  }
+  if (countByEffectiveLevel === null) return null;
   const currentCount = countByEffectiveLevel(invocation.resource.slotLevel);
   const nextEffectiveLevel = spellSlotLevel(
     Number(invocation.resource.slotLevel) + 1,
@@ -1063,71 +982,13 @@ function twinnedSpellEffectiveTargetCount(
     : null;
 }
 
-function spellTwinnedTargetSelection(
-  spell: SupportedSpellInvocation["spell"],
-): TargetSelection | null {
-  const selections = spellTargetSelections(spell).filter((selection) => {
-    if (!("count" in selection)) {
-      return false;
-    }
-    const count = selection.count;
-    const baseLevel =
-      typeof count === "object" && count !== null && "baseLevel" in count
-        ? (count.baseLevel ?? spell.mechanics.level)
-        : undefined;
-    return (
-      selection.mode === "choose_up_to" &&
-      !targetSelectionAllowsRepeatedTargets(selection) &&
-      targetSelectionTargetsOnlyCreatures(selection) &&
-      typeof count === "object" &&
-      count !== null &&
-      count.kind === "linear" &&
-      count.perSlotAboveBase === 1 &&
-      baseLevel === spell.mechanics.level
-    );
-  });
-  return selections.length === 1 ? selections[0]! : null;
-}
-
-function spellTargetSelections(
-  spell: SupportedSpellInvocation["spell"],
-): readonly TargetSelection[] {
-  if (spell.mechanics.family === "ongoing_effect") {
-    const selection = targetSelectionFromAttachment(spell.mechanics.attachment);
-    return selection === null ? [] : [selection];
-  }
-  if (spell.mechanics.family !== "activation") {
-    return [];
-  }
-  return spell.mechanics.phases.flatMap((phase) => {
-    if (!("attachment" in phase)) {
-      return [];
-    }
-    const selection = targetSelectionFromAttachment(phase.attachment);
-    return selection === null ? [] : [selection];
-  });
-}
-
-function targetSelectionFromAttachment(
-  attachment: Attachment,
-): TargetSelection | null {
-  return attachment.kind === "hole" && attachment.value.kind === "target"
-    ? attachment.value.selection
-    : null;
-}
-
-function targetSelectionAllowsRepeatedTargets(
-  selection: TargetSelection,
-): boolean {
-  return "repeatsAllowed" in selection && selection.repeatsAllowed === true;
-}
-
-function targetSelectionTargetsOnlyCreatures(
-  selection: TargetSelection,
-): boolean {
-  return (
-    selection.targetKinds !== undefined &&
-    selection.targetKinds.length === 1 &&
-    selection.targetKinds[0] === "creature"
-  );
+function twinnedTargetCountFromExecutionFacts(
+  facts: NonNullable<
+    Extract<RuntimeSpellProcedure, { readonly spellRuleFacts: unknown }>["spellRuleFacts"]
+  >["twinnedTargetCount"],
+): ((slotLevel: ReturnType<typeof spellSlotLevel>) => number) | null {
+  return facts === null
+    ? null
+    : (slotLevel) =>
+        facts.base + Math.max(0, Number(slotLevel) - facts.baseLevel);
 }

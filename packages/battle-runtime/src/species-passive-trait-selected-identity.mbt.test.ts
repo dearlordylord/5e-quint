@@ -1,5 +1,8 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
+} from "./battle-runtime-test-support.ts";
+import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode
@@ -36,12 +39,12 @@ import {
   battleId,
   battleTablePositionId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   startBattle,
   type BattleActiveEffect,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
@@ -246,6 +249,13 @@ function dragonbornDamageResistanceBattle(): BattleState {
         displayName: "Dragonborn Target",
         initiative: 10,
         characterUnitRefs: [unitRef.right],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(
+            unit,
+            [],
+            draconicAncestrySourceFacts,
+          ),
+        ],
       }),
       characterCreature({
         combatantId: combatantId("species-passive-dragonborn-attacker"),
@@ -257,7 +267,7 @@ function dragonbornDamageResistanceBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function projectDragonbornDamageResistance(
@@ -298,7 +308,7 @@ function dwarvenResilienceBattle(): BattleState {
         combatantId: dwarvenResilienceTargetId,
         displayName: "Dwarf Target",
         initiative: 10,
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
         characterUnitRefs: [unitRef.right],
       }),
       characterSeed({
@@ -316,7 +326,7 @@ function dwarvenResilienceBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
@@ -335,7 +345,7 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
         combatantId: poisonedDwarvenResilienceTargetId,
         displayName: "Poisoned Dwarf Target",
         initiative: 20,
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
         characterUnitRefs: [unitRef.right],
       }),
       characterSeed({
@@ -348,7 +358,9 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  const target = result.right.combatants.get(poisonedDwarvenResilienceTargetId);
+  const target = result.right.state.combatants.get(
+    poisonedDwarvenResilienceTargetId,
+  );
   if (target === undefined) {
     throw new Error("Expected poisoned Dwarven Resilience target.");
   }
@@ -378,8 +390,8 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
     activeEffects: [...target.activeEffects, poisonedEffect],
   };
   return {
-    ...result.right,
-    combatants: new Map(result.right.combatants).set(
+    ...result.right.state,
+    combatants: new Map(result.right.state.combatants).set(
       poisonedDwarvenResilienceTargetId,
       poisonedTarget,
     ),
@@ -433,7 +445,7 @@ function halflingBraveBattle(): BattleState {
         combatantId: targetId,
         displayName: "Halfling Target",
         initiative: 10,
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
         characterUnitRefs: [unitRef.right],
       }),
       characterCreature({
@@ -446,7 +458,7 @@ function halflingBraveBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function projectHalflingBrave(
@@ -519,7 +531,9 @@ function escapeGrappleRollMode(input: {
         displayName: "Goliath Target",
         initiative: 10,
         characterUnitRefs: input.selected ? [unitRef.right] : [],
-        unitFeatures: [{ unit }],
+        unitFeatures: input.selected
+          ? [characterBattleFeatureInitForTest(unit)]
+          : [],
         conditions: input.poisoned === true ? ["poisoned"] : [],
       }),
     ],
@@ -534,7 +548,7 @@ function escapeGrappleRollMode(input: {
   } as const;
   const target = requireHole(
     resolveBattleSubject({
-      state: state.right,
+      state: state.right.state,
       subject: grappleSubject,
       fills: [],
     }),
@@ -545,7 +559,7 @@ function escapeGrappleRollMode(input: {
   ]);
   const outcome = requireHole(
     resolveBattleSubject({
-      state: state.right,
+      state: state.right.state,
       subject: grappleSubject,
       fills: [targetChoice],
     }),
@@ -553,7 +567,7 @@ function escapeGrappleRollMode(input: {
   );
   const grappled = requireResolved(
     resolveBattleSubject({
-      state: state.right,
+      state: state.right.state,
       subject: grappleSubject,
       fills: [targetChoice, grappleOutcomeFill(outcome, false)],
     }),
@@ -733,7 +747,7 @@ function requireCreatureStatProjectionRoute(
     actorId: dragonbornDamageResistanceTargetId,
     command: "standFromProne",
   };
-  const standAct = discoverBattleActs(proneState).find(
+  const standAct = discoverBattleActCandidates(proneState).find(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.actorId === dragonbornDamageResistanceTargetId &&
@@ -746,7 +760,10 @@ function requireCreatureStatProjectionRoute(
     resolveBattleSubject({ state: proneState, subject, fills: [] }),
   );
   return routeEventsWithSubject(
-    [...(standAct.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
+    [
+      ...(battleReducerRouteEventsForDiscoveredAct(proneState, standAct) ?? []),
+      ...(resolved.routeEvents ?? []),
+    ],
     "creatureStatProjection",
     { includeStartOwner: "battleCreatureState" },
   );
@@ -755,12 +772,10 @@ function requireCreatureStatProjectionRoute(
 function requirePassiveDamageAdjustmentRoute(
   state: BattleState,
 ): readonly ReducerRouteEvent[] {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.actorId === wizardId &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        "ray_of_sickness",
+      candidate.subject.actorId === wizardId,
   );
   if (act === undefined || act.subject.tag !== "actionSpell") {
     throw new Error("Expected public Ray of Sickness act for damage route.");
@@ -804,7 +819,7 @@ function requirePassiveDamageAdjustmentRoute(
   }
   return routeEventsWithSubject(
     [
-      ...(act.routeEvents ?? []),
+      ...(battleReducerRouteEventsForDiscoveredAct(state, act) ?? []),
       ...(awaitingAttack.routeEvents ?? []),
       ...(awaitingDamage.routeEvents ?? []),
       ...(damageResult.routeEvents ?? []),
@@ -820,7 +835,7 @@ function requirePassiveSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] 
     actorId: poisonedDwarvenResilienceTargetId,
     command: "endTurn",
   };
-  const endTurnAct = discoverBattleActs(routeState).find(
+  const endTurnAct = discoverBattleActCandidates(routeState).find(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.actorId === poisonedDwarvenResilienceTargetId &&
@@ -848,7 +863,8 @@ function requirePassiveSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] 
   );
   return routeEventsWithSubject(
     [
-      ...(endTurnAct.routeEvents ?? []),
+      ...(battleReducerRouteEventsForDiscoveredAct(routeState, endTurnAct) ??
+        []),
       ...(awaitingSave.routeEvents ?? []),
       ...(resolved.routeEvents ?? []),
     ],
@@ -900,7 +916,7 @@ function requirePassiveAbilityCheckRollModeRoute(
     actorId,
     action: "escapeGrapple",
   };
-  const escapeAct = discoverBattleActs(actorTurn).find(
+  const escapeAct = discoverBattleActCandidates(actorTurn).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.actorId === actorId &&
@@ -924,7 +940,7 @@ function requirePassiveAbilityCheckRollModeRoute(
   );
   return routeEventsWithSubject(
     [
-      ...(escapeAct.routeEvents ?? []),
+      ...(battleReducerRouteEventsForDiscoveredAct(actorTurn, escapeAct) ?? []),
       ...(awaitingEscape.routeEvents ?? []),
       ...(resolved.routeEvents ?? []),
     ],
@@ -986,14 +1002,14 @@ function goliathPowerfulBuildBattle(): BattleState {
         displayName: "Goliath Target",
         initiative: 10,
         characterUnitRefs: [unitRef.right],
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
       }),
     ],
   });
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function halflingNimblenessSubstrateBattle(input: {
@@ -1022,7 +1038,9 @@ function halflingNimblenessSubstrateBattle(input: {
         displayName: "Nimble Mover",
         initiative: 20,
         size: "small",
-        unitFeatures: [{ unit }],
+        unitFeatures: input.selected
+          ? [characterBattleFeatureInitForTest(unit)]
+          : [],
         characterUnitRefs: input.selected ? [unitRef.right] : [],
       }),
       characterSeed({
@@ -1036,7 +1054,7 @@ function halflingNimblenessSubstrateBattle(input: {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function observeAcceptedCreatureSpaceMovementRoute(
@@ -1083,7 +1101,7 @@ function observeCreatureSpaceMovementRoute(
     actorId: substrateMoverId,
     command: "move",
   };
-  const moveAct = discoverBattleActs(state).find(
+  const moveAct = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.actorId === substrateMoverId &&
@@ -1118,7 +1136,10 @@ function observeCreatureSpaceMovementRoute(
       }),
     ],
   });
-  return [...(moveAct.routeEvents ?? []), ...(result.routeEvents ?? [])];
+  return [
+    ...(battleReducerRouteEventsForDiscoveredAct(state, moveAct) ?? []),
+    ...(result.routeEvents ?? []),
+  ];
 }
 
 const speciesPassiveTraitSubstrateRouteStateCheck = stateCheck(

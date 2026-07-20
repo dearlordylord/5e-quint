@@ -29,10 +29,10 @@ import type {
   DiceAmount as SurfaceDiceAmount,
   SpellRecord,
 } from "@dnd/surface/surface/types";
+import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import { type Size } from "@dnd/shared/types";
 
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AfterHitSaveGatedConditionSpellInvocation,
@@ -47,7 +47,7 @@ import {
   type BattleState,
 } from "../../battle-reducer.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { combatantEffectiveSize } from "../druid-wild-shape.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
@@ -72,11 +72,9 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   AbilitySchema,
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -214,22 +212,6 @@ function discoverAfterHitSaveGatedConditionCastAct(): readonly AvailableBattleAc
   return [];
 }
 
-function afterHitSaveGatedConditionInvocationRef(
-  invocation: AfterHitSaveGatedConditionInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "afterHitSaveGatedCondition",
-  };
-}
-
-function afterHitSaveGatedConditionCastSummary(
-  invocation: AfterHitSaveGatedConditionInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
-}
 
 function resolveAfterHitSaveGatedCondition(
   input: AfterHitSaveGatedConditionResolveInput,
@@ -347,7 +329,8 @@ function resolveAfterHitSaveGatedCondition(
     state: effected,
     subject: input.input.subject,
     casterId: input.input.subject.casterId,
-    spellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellProcedure: input.invocation.procedure,
     targetIds: [input.input.target.combatantId],
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
@@ -363,7 +346,7 @@ function resolveAfterHitSaveGatedCondition(
 
 function afterHitSaveGatedConditionFillSet(
   input: AfterHitSaveGatedConditionBattleResolutionInput,
-  invocation: AfterHitSaveGatedConditionInvocation,
+  invocation: AfterHitSaveGatedConditionResolveInput["invocation"],
   target: BattleCreatureState,
   fills: readonly BattleFill[],
 ):
@@ -436,7 +419,7 @@ export function afterHitSaveGatedConditionSavingThrowOutcomeHole(
   const base = spellSavingThrowOutcomeHole(state, casterId, invocation);
   return {
     ...base,
-    label: `${invocation.spell.name} Saving Throw outcome`,
+    label: "Spell Saving Throw outcome",
     targetRollModes: [
       ...base.targetRollModes,
       ...(creatureSizeIsLargeOrLarger(combatantEffectiveSize(target))
@@ -463,45 +446,43 @@ function creatureSizeIsLargeOrLarger(size: Size): boolean {
 }
 
 const AfterHitSaveGatedConditionInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "afterHitSaveGatedCondition" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("afterHitSaveGatedCondition"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       ability: AbilitySchema,
       dc: DcSourceSchema,
       targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
       effect: Schema.Struct({
+        kind: Schema.Literal("fixed"),
         condition: Schema.Literal(...ALL_CONDITIONS),
         expiresAt: Schema.Literal("concentration"),
         escape: Schema.Struct({
           kind: Schema.Literal("abilityCheck"),
           ability: Schema.Literal("str"),
           skill: Schema.Literal("athletics"),
+          allowedActor: Schema.Literal("targetOrCreatureWithinReach"),
           successEnds: Schema.Literal("spell"),
         }),
-        turnStartDamage: BattleRuntimeObjectSchema,
+        turnStartDamage: Schema.Struct({
+          expr: DiceExprSchema,
+          damageType: DamageTypeSchema,
+        }),
+        repeatSave: Schema.Null,
       }),
     }),
   );
 export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
-  invocationSchema: AfterHitSaveGatedConditionInvocationSchema,
+  executionSchema: AfterHitSaveGatedConditionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitAfterHitSaveGatedCondition,
   discoverCastAct: discoverAfterHitSaveGatedConditionCastAct,
-  castSummary: afterHitSaveGatedConditionCastSummary,
-  invocationRef: afterHitSaveGatedConditionInvocationRef,
   resolve: resolveAfterHitSaveGatedCondition,
 } satisfies SpellProcedureProfile<
   "afterHitSaveGatedCondition",

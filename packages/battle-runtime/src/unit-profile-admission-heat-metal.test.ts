@@ -54,14 +54,19 @@ type LinearPerLevelDiceAmount = Extract<
 describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("heat_metal is admitted as manufactured metal object-contact slot damage", () => {
     const spell = spellRecord(heatMetalUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 2, count: 1 },
         { spellLevel: 3, count: 1 },
       ],
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 3 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 3,
+    });
 
     expect({
       ...act.subject,
@@ -70,7 +75,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(heatMetalUnitId, 3, "objectContactDamage"),
       ),
@@ -79,7 +84,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "objectTargetChoice",
-        label: "Heat Metal object target",
+        label: "Spell object target",
         requiresTableSpatialFact: true,
       }),
     ]);
@@ -112,7 +117,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Heat Metal damage (3d8-fire)",
+      label: "Spell damage (3d8-fire)",
     });
   });
 
@@ -121,12 +126,13 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       spellRecord(heatMetalUnitId),
       "synthetic_heat_metal_second_object",
     );
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-
-    expect(maybeSpellAct({ state, spellId: heatMetalUnitId })).toBeUndefined();
+    expect(
+      maybeSpellAct({ session, spellId: heatMetalUnitId }),
+    ).toBeUndefined();
   });
 
   test("support admission rejects Heat Metal damage amount fields outside the runtime projection", () => {
@@ -156,13 +162,12 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     ] as const satisfies readonly SpellRecord[];
 
     for (const unsupportedSpell of unsupportedSpells) {
-      const state = spellBattle({
+      const session = spellBattle({
         preparedSpells: [unsupportedSpell],
         spellSlots: [{ spellLevel: 2, count: 1 }],
       });
-
       expect(
-        maybeSpellAct({ state, spellId: heatMetalUnitId }),
+        maybeSpellAct({ session, spellId: heatMetalUnitId }),
       ).toBeUndefined();
     }
   });
@@ -188,13 +193,12 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     ] as const satisfies readonly SpellRecord[];
 
     for (const unsupportedSpell of unsupportedSpells) {
-      const state = spellBattle({
+      const session = spellBattle({
         preparedSpells: [unsupportedSpell],
         spellSlots: [{ spellLevel: 2, count: 1 }],
       });
-
       expect(
-        maybeSpellAct({ state, spellId: heatMetalUnitId }),
+        maybeSpellAct({ session, spellId: heatMetalUnitId }),
       ).toBeUndefined();
     }
   });
@@ -202,13 +206,18 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("initial cast damages creatures in physical contact and starts the durable object effect", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-chain");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
     const objectTarget = requireHole(act.initialHoles, "objectTargetChoice");
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: objectTarget,
@@ -250,7 +259,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       holes: [
         expect.objectContaining({
           kind: "rolledDice",
-          label: "Heat Metal damage (2d8-fire)",
+          label: "Spell damage (2d8-fire)",
         }),
       ],
     });
@@ -315,18 +324,26 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       ]),
     );
     expect(
-      maybeBonusSpellAct({ state: resolved.state, spellId: heatMetalUnitId }),
+      maybeBonusSpellAct({
+        session: { state: resolved.state, context: session.context },
+        spellId: heatMetalUnitId,
+      }),
     ).toBeUndefined();
   });
 
   test("initial self-contact damage can break the newly started concentration", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-caster-gauntlet");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId,
@@ -420,11 +437,16 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("self-contact failed no-drop save does not apply the penalty after same-occurrence Concentration breaks", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-worn-gauntlet");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId,
@@ -530,13 +552,18 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("initial cast can select no contact creatures without requesting damage", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-empty-contact");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId,
@@ -580,13 +607,18 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("later-turn Bonus Action repeat requires object range witness and deals stored slot damage", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-armor");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       targetHp: 40,
       targetMaxHp: 40,
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 3 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 3,
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId,
@@ -642,8 +674,12 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const repeat = bonusSpellAct({
+    const repeatSession = {
       state: casterTurn.state,
+      context: session.context,
+    };
+    const repeat = bonusSpellAct({
+      session: repeatSession,
       spellId: heatMetalUnitId,
     });
     const repeatPresentation = battleActSpellPresentation(repeat);
@@ -657,7 +693,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        casterTurn.state,
+        repeatSession,
         spellCasterId,
         repeatPresentation.invocation,
       ),
@@ -691,7 +727,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       "rolledDice",
     );
     expect(repeatDamage).toMatchObject({
-      label: "Heat Metal damage (3d8-fire)",
+      label: "Spell damage (3d8-fire)",
     });
 
     const repeated = resolveBattleSubject({
@@ -719,13 +755,18 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("damaged wearing target that fails the save and cannot drop takes the attack and ability-check penalty until the caster turn starts", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-worn-breastplate");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId,
@@ -903,13 +944,18 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("damaged holding target that fails the save and can drop emits the dropped-object outcome without the penalty", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-held-sword");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId,
@@ -1019,13 +1065,18 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
   test("damaged holding-or-wearing target that succeeds the save does not need a drop witness", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-saved-helmet");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId,

@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
 // UNIT-IDENTITY-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
@@ -33,8 +32,9 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
@@ -98,37 +98,41 @@ function initialProjection(): BardicInspirationProjection {
 }
 
 function grantBardicInspirationD12(): BardicInspirationProjection {
-  const state = bardicInspirationBattle();
-  const subject = bardicInspirationSubject("bard_bardic_inspiration");
+  const session = bardicInspirationBattle();
+  const act = findAct(session);
+  const subject = act.subject;
   if (subject.tag !== "unitFeature") {
     throw new Error("Bardic Inspiration subject must be a unit feature.");
   }
   expect(
-    battleActUnitPresentation(findAct(state, subject))?.unitId,
+    battleActUnitPresentation(act)?.unitId,
     "Bardic Inspiration presentation must bind unit id",
   ).toBe("bard_bardic_inspiration");
-  const target = findHole(findAct(state, subject).initialHoles, "targetChoice");
+  const target = findHole(act.initialHoles, "targetChoice");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
-    fills: [bardicInspirationTargetFill(target)],
+    fills: [bardicInspirationTargetFill(target, subject.procedureRef)],
   });
   if (result.tag !== "resolved") {
     return { ...initialProjection(), lastResult: "invalid" };
   }
+  const resolvedSession = { ...session, state: result.state };
   return {
     bonusActionAvailable:
-      result.state.currentTurnResources.currentHasBonusAction,
+      resolvedSession.state.currentTurnResources.currentHasBonusAction,
     featureUsesRemaining: resourceUsesRemaining(
-      result.state,
+      resolvedSession,
       "bard_bardic_inspiration",
     ),
-    targetBardicInspirationDieSize: bardicInspirationDieSize(result.state),
+    targetBardicInspirationDieSize: bardicInspirationDieSize(
+      resolvedSession.state,
+    ),
     lastResult: "resolved",
   };
 }
 
-function bardicInspirationBattle(): BattleState {
+function bardicInspirationBattle(): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("bardic-inspiration-selected-identity"),
     combatants: [bardicInspirationBard(), targetCreature()],
@@ -229,12 +233,9 @@ function bardicInspirationUnit(): Extract<
   return unit;
 }
 
-function bardicInspirationSubject(unitId: string): BattleSubject {
-  return { tag: "unitFeature", actorId: bardId, unitId };
-}
-
 function bardicInspirationTargetFill(
   hole: BattleHole,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -245,9 +246,7 @@ function bardicInspirationTargetFill(
         kind: "bardicInspirationTargetWithinRange",
         bardId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("bard_bardic_inspiration"),
-        ),
+        sourceProcedureRef,
         rangeFeet: movementFeet(60),
       },
     ],
@@ -262,24 +261,32 @@ function bardicInspirationDieSize(state: BattleState): DamageDieSize | 0 {
   return effect?.kind === "bardicInspirationDie" ? effect.dieSize : 0;
 }
 
-function resourceUsesRemaining(state: BattleState, unitId: string): number {
-  const bard = state.combatants.get(bardId);
+function resourceUsesRemaining(
+  session: BattleRuntimeSession,
+  unitId: string,
+): number {
+  const bard = session.state.combatants.get(bardId);
   if (bard?.origin.kind !== "character") {
     throw new Error("Expected Bardic Inspiration selected identity Bard.");
   }
+  const resourcePoolRef = session.context.characters
+    .get(bardId)
+    ?.resourceOwnership.find(
+      (candidate) => candidate.unit.id === unitId,
+    )?.resourcePoolRef;
   const resource = bard.origin.resources.find(
-    (candidate) => candidate.unit.id === unitId,
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
   return Number(resource?.usesRemaining ?? 0);
 }
 
-function findAct(state: BattleState, subject: BattleSubject) {
-  const act = discoverBattleActs(state).find(
+function findAct(session: BattleRuntimeSession) {
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
-      subject.tag === "unitFeature" &&
-      "unitId" in subject &&
-      battleActUnitPresentation(candidate)?.unitId === subject.unitId,
+      candidate.subject.actorId === bardId &&
+      battleActUnitPresentation(candidate)?.unitId ===
+        "bard_bardic_inspiration",
   );
   if (act === undefined) {
     throw new Error("Expected Bardic Inspiration selected identity act.");

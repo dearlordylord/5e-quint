@@ -13,8 +13,9 @@ import {
   battleShapeShiftedRuntimeState,
   battleSpellEffectOccurrenceId,
   combatantShapeShiftingSuppressed,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type BattleActiveEffect,
   type SpellShapeShiftedFormActiveEffect,
 } from "./index.ts";
@@ -25,7 +26,7 @@ import {
   characterSeed,
   Either,
   Schema,
-  startBattleRight,
+  startBattleSessionRight,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 import {
@@ -50,6 +51,7 @@ import {
   battleId,
   breakBattleConcentration,
   DieRollResult,
+  discoverBattleActCandidates,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -79,12 +81,12 @@ describe("L12G deterministic Moonbeam admission", () => {
       ],
     });
     const secondLevelAct = spellAct({
-      state,
+      session: state,
       spellId: moonbeamUnitId,
       slotLevel: 2,
     });
     const thirdLevelAct = spellAct({
-      state,
+      session: state,
       spellId: moonbeamUnitId,
       slotLevel: 3,
     });
@@ -105,7 +107,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     const area = requireHole(secondLevelAct.initialHoles, "spellAreaChoice");
     expect(area).toEqual(
       expect.objectContaining({
-        label: "Moonbeam area",
+        label: "Spell area",
         area: {
           kind: "pointOriginCylinder",
           radiusFeet: movementFeet(5),
@@ -145,7 +147,11 @@ describe("L12G deterministic Moonbeam admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
 
     const encodedHole = Schema.encodeSync(BattleHoleSchema)(area);
@@ -168,7 +174,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(decodedHole.right).not.toHaveProperty("spell");
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -191,11 +197,15 @@ describe("L12G deterministic Moonbeam admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -234,10 +244,14 @@ describe("L12G deterministic Moonbeam admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -249,7 +263,9 @@ describe("L12G deterministic Moonbeam admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
 
-    const endTurnSave = moonbeamEndTurnSaveAct(targetTurn.state);
+    const endTurnSave = moonbeamEndTurnSaveAct(
+      battleSessionWithState(state, targetTurn.state),
+    );
     const save = requireHole(endTurnSave.initialHoles, "savingThrowOutcome");
     expect(save).toMatchObject({
       ability: "con",
@@ -287,10 +303,14 @@ describe("L12G deterministic Moonbeam admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -302,7 +322,9 @@ describe("L12G deterministic Moonbeam admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
 
-    const endTurnSave = moonbeamEndTurnSaveAct(targetTurn.state);
+    const endTurnSave = moonbeamEndTurnSaveAct(
+      battleSessionWithState(state, targetTurn.state),
+    );
     const save = requireHole(endTurnSave.initialHoles, "savingThrowOutcome");
     const failedSave = singleTargetSavingThrowOutcomeFill(
       save,
@@ -352,10 +374,14 @@ describe("L12G deterministic Moonbeam admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -367,7 +393,9 @@ describe("L12G deterministic Moonbeam admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
 
-    const endTurnSave = moonbeamEndTurnSaveAct(targetTurn.state);
+    const endTurnSave = moonbeamEndTurnSaveAct(
+      battleSessionWithState(state, targetTurn.state),
+    );
     const save = requireHole(endTurnSave.initialHoles, "savingThrowOutcome");
     const succeededSave = singleTargetSavingThrowOutcomeFill(
       save,
@@ -404,10 +432,14 @@ describe("L12G deterministic Moonbeam admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -473,7 +505,9 @@ describe("L12G deterministic Moonbeam admission", () => {
       Hp(17),
     );
 
-    const endTurnSave = moonbeamEndTurnSaveAct(duplicateSave.state);
+    const endTurnSave = moonbeamEndTurnSaveAct(
+      battleSessionWithState(state, duplicateSave.state),
+    );
     const nextTurn = resolveBattleSubject({
       state: duplicateSave.state,
       subject: endTurnSave.subject,
@@ -678,7 +712,7 @@ describe("L12G deterministic Moonbeam admission", () => {
       ),
     ).toEqual(expect.objectContaining({ shapeShiftSuppressed: [] }));
     expect(
-      discoverBattleActs(exited.state).some(
+      discoverBattleActCandidates(exited.state).some(
         (act) =>
           act.subject.tag === "druidWildShape" &&
           act.subject.action === "assumeForm",
@@ -712,10 +746,14 @@ describe("L12G deterministic Moonbeam admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -734,7 +772,9 @@ describe("L12G deterministic Moonbeam admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const repositionAct = moonbeamRepositionAct(casterTurn.state);
+    const repositionAct = moonbeamRepositionAct(
+      battleSessionWithState(state, casterTurn.state),
+    );
     expect({
       ...repositionAct.subject,
       invocation: battleActSpellPresentation(repositionAct)?.invocation,
@@ -762,10 +802,14 @@ describe("L12G deterministic Moonbeam admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [moonbeamAreaFill(area)],
     });
@@ -814,7 +858,7 @@ const syntheticDruidWildShapeEffect: Extract<
 
 function moonbeamCastOverWildShapedTarget(): BattleState {
   const spell = spellRecord(moonbeamUnitId);
-  const initial = startBattleRight({
+  const initial = startBattleSessionRight({
     battleId: battleId("battle-moonbeam-shape-shift-rider"),
     combatants: [
       characterSeed({
@@ -858,7 +902,7 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
     throw new Error("Expected Druid Wild Shape assume-form act.");
   }
   const initialAssume = resolveBattleSubject({
-    state: initial,
+    state: initial.state,
     subject: wildShape,
     fills: [],
   });
@@ -872,7 +916,7 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
     equipmentDispositionHole === undefined
       ? initialAssume
       : resolveBattleSubject({
-          state: initial,
+          state: initial.state,
           subject: wildShape,
           fills: [
             {
@@ -896,7 +940,7 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
     throw new Error("Expected shape-shifted target End Turn to resolve.");
   }
   const act = spellAct({
-    state: casterTurn.state,
+    session: battleSessionWithState(initial, casterTurn.state),
     spellId: moonbeamUnitId,
     slotLevel: 2,
   });
@@ -923,7 +967,7 @@ function moonbeamCastOverSpellShapeShiftedTarget(
   } = {},
 ): BattleState {
   const spell = spellRecord(moonbeamUnitId);
-  const initial = startBattleRight({
+  const initial = startBattleSessionRight({
     battleId: battleId("battle-moonbeam-spell-shape-shift-rider"),
     combatants: [
       characterCreature({
@@ -948,8 +992,8 @@ function moonbeamCastOverSpellShapeShiftedTarget(
       }),
     ],
   });
-  const target = requireCombatant(initial, spellTargetId);
-  const combatants = new Map(initial.combatants);
+  const target = requireCombatant(initial.state, spellTargetId);
+  const combatants = new Map(initial.state.combatants);
   const activeEffects = [
     ...target.activeEffects,
     ...(input.activeShapeShiftOwners ?? [syntheticSpellShapeShiftEffect]),
@@ -960,13 +1004,13 @@ function moonbeamCastOverSpellShapeShiftedTarget(
       ? { ...target, activeEffects }
       : battleCreatureWithSpellActiveEffects(target, activeEffects),
   );
-  const shaped = { ...initial, combatants };
+  const shaped: BattleState = { ...initial.state, combatants };
   const casterTurn = endTurn({ state: shaped, actorId: spellTargetId });
   if (casterTurn.tag !== "resolved") {
     throw new Error("Expected shape-shifted target End Turn to resolve.");
   }
   const act = spellAct({
-    state: casterTurn.state,
+    session: battleSessionWithState(initial, casterTurn.state),
     spellId: moonbeamUnitId,
     slotLevel: 2,
   });
@@ -1027,6 +1071,13 @@ function resolveMoonbeamSaveForShapeShiftedTarget(input: {
     throw new Error("Expected Moonbeam shape-shift rider save to resolve.");
   }
   return resolved.state;
+}
+
+function battleSessionWithState(
+  session: BattleRuntimeSession,
+  state: BattleState,
+): BattleRuntimeSession {
+  return { ...session, state };
 }
 
 function moonbeamSaveSubject(

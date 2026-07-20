@@ -10,7 +10,6 @@ import type {
   DamageType,
   DiceExpr,
   StatBlockValue,
-  UnitRecord,
   WeaponDamage,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -60,8 +59,7 @@ export type UnarmedStrikeDamageProfile =
       readonly flat: 1;
     }
   | {
-      readonly kind: "authoredReplacement";
-      readonly sourceUnitId: UnitRecord["id"];
+      readonly kind: "mechanicalReplacement";
       readonly dice: 1;
       readonly dieSize: DamageDieSize;
       readonly damageType: DamageType;

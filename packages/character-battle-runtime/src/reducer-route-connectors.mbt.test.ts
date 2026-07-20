@@ -6,6 +6,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   battleCreatureInitFromStatBlock,
   battleId,
   combatantId,
@@ -14,7 +15,6 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
-  type BattleState,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
@@ -993,7 +993,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
     targetCombatantId,
   );
   const awaitingSave = resolveBattleSubject({
-    state: battle,
+    state: battle.state,
     subject: act.subject,
     fills: [heightenedTarget],
   });
@@ -1002,14 +1002,14 @@ function metamagicBridgeUsesSharedPointPoolRoute(
     { targetId: targetCombatantId, succeeded: false },
   ]);
   const awaitingDamage = resolveBattleSubject({
-    state: battle,
+    state: battle.state,
     subject: act.subject,
     fills: [heightenedTarget, failedSave],
   });
   const damageHole = requireBattleHole(awaitingDamage, "rolledDice");
   const resolved = requireBattleResolved(
     resolveBattleSubject({
-      state: battle,
+      state: battle.state,
       subject: act.subject,
       fills: [
         heightenedTarget,
@@ -1025,6 +1025,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
   const result = settleCharacterSheetFromBattle({
     sheet,
     state: resolved.state,
+    context: battle.context,
     unitLibrary,
     combatant: settledCombatant,
   });
@@ -1043,7 +1044,7 @@ function appendObservedFeatureResourceRoute(
 }
 
 function requireHeightenedBurningHandsAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: ReturnType<typeof combatantId>,
 ): AvailableBattleAct & {
   readonly subject: Extract<
@@ -1056,7 +1057,7 @@ function requireHeightenedBurningHandsAct(
     1,
     "saveGatedDamage",
   );
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {

@@ -1,5 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActUnitPresentation } from "./battle-act-composition.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
+} from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-healing-pool
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-04 cleric_preserve_life
@@ -8,7 +10,6 @@ import { Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
 import {
-  type AvailableBattleAct,
   type BattleFill,
   type BattleHitPointHealingPoolDistributionHole,
   type BattleResolutionResult,
@@ -34,7 +35,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
@@ -203,7 +204,7 @@ defineSelectedIdentityReplayAndQntReplay({
             recordInvalidResult(
               resolveBattleSubject({
                 state,
-                subject: preserveLifeSubject(),
+                subject: preserveLifeAct(state).subject,
                 fills: [],
               }),
             );
@@ -229,7 +230,7 @@ defineSelectedIdentityReplayAndQntReplay({
             recordInvalidResult(
               resolveBattleSubject({
                 state,
-                subject: preserveLifeSubject(),
+                subject: preserveLifeAct(state).subject,
                 fills: [
                   preserveLifeDistributionFill(hole, [
                     { targetId: spellTargetId, hitPoints: 8 },
@@ -292,7 +293,11 @@ function preserveLifeBattle(
         currentHp: input.casterHp ?? 20,
         maxHp: 20,
         characterUnitRefs: [preserveLifeUnitRef],
-        unitFeatures: [{ unit: preserveLifeUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(preserveLifeUnit, [
+            { className: "cleric", level: classLevel(3) },
+          ]),
+        ],
         resources: [
           {
             unit: channelDivinityUnit,
@@ -319,28 +324,21 @@ function preserveLifeBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
-function preserveLifeAct(state: BattleState): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+function preserveLifeAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActCandidates>[number] {
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
-      candidate.subject.actorId === spellCasterId &&
-      battleActUnitPresentation(candidate)?.unitId === clericPreserveLifeUnitId,
+      candidate.subject.actorId === spellCasterId,
   );
   if (act === undefined) {
     throw new Error("Expected Preserve Life act.");
   }
   return act;
-}
-
-function preserveLifeSubject() {
-  return {
-    tag: "unitFeature" as const,
-    actorId: spellCasterId,
-    unitId: clericPreserveLifeUnitId,
-  };
 }
 
 function resolvePreserveLife(
@@ -416,7 +414,7 @@ function channelDivinityUsesRemaining(state: BattleState): number {
     throw new Error("Expected Cleric actor.");
   }
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === clericChannelDivinityUnitId,
+    (candidate) => "usesRemaining" in candidate,
   );
   if (resource === undefined || !("usesRemaining" in resource)) {
     throw new Error("Expected Cleric Channel Divinity use-count resource.");

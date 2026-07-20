@@ -1,5 +1,4 @@
 import { sameBattleSubject } from "./battle-subjects.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleep-repeat-save-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 import { Either } from "effect";
@@ -43,22 +42,21 @@ import {
   battleReducerStartRouteEvent,
   breakBattleConcentration,
   characterId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
-  spellSlotInvocationRef,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
-// Production path: Sleep is admitted through the spell support profile selected
-// by `spellSlotInvocationRef`; initial holes are discovered with
+// Production path: Sleep is admitted through the spell support profile; the
+// outer presentation join selects its replay-safe procedure subject and initial holes are discovered with
 // `discoverBattleActs` from `./index.ts`; saving throw fills and end-turn
 // commands are submitted through `resolveBattleSubject`; concentration cleanup
 // uses `breakBattleConcentration`; the resulting `BattleState` mutation is
@@ -149,7 +147,7 @@ const sleepRepeatSaveDriverSchema = {
 function createSleepRepeatSaveDriver() {
   return defineDriver(sleepRepeatSaveDriverSchema, () => {
     let state = sleepRepeatSaveBattle();
-    let subject: BattleSubject = sleepSubject();
+    let subject: BattleSubject = sleepSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverSleepHoles(state, subject);
     let lastResult: SleepRepeatSaveMbtProjection["lastResult"] = "init";
@@ -158,7 +156,7 @@ function createSleepRepeatSaveDriver() {
 
     function reset(): void {
       state = sleepRepeatSaveBattle();
-      subject = sleepSubject();
+      subject = sleepSubject(state);
       fills = [];
       holes = discoverSleepHoles(state, subject);
       lastResult = "init";
@@ -241,14 +239,14 @@ function createSleepRepeatSaveDriver() {
 function createSleepRepeatSavePublicRouteDriver() {
   return defineDriver(sleepRepeatSaveDriverSchema, () => {
     let state = sleepRepeatSaveBattle();
-    let subject: BattleSubject = sleepSubject();
+    let subject: BattleSubject = sleepSubject(state);
     let holes: readonly BattleHole[] = [];
     let surface: SleepRepeatSaveRouteSurface = "fresh";
     let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
 
     function reset(): void {
       state = sleepRepeatSaveBattle();
-      subject = sleepSubject();
+      subject = sleepSubject(state);
       holes = [];
       surface = "fresh";
       route = [battleReducerStartRouteEvent()];
@@ -305,7 +303,7 @@ function createSleepRepeatSavePublicRouteDriver() {
     return {
       init: reset,
       doFillInitialSaveFailure: () => {
-        const act = discoverSleepAct(state, sleepSubject());
+        const act = discoverSleepAct(state, sleepSubject(state));
         appendRouteEvents(act.routeEvents);
         subject = act.subject;
         holes = act.initialHoles;
@@ -429,7 +427,7 @@ describe("Sleep repeat-save MBT parity", () => {
 
   it("does not route repeat-save turn-boundary events after repeat-save failure consumes the frontier", () => {
     const initialState = sleepRepeatSaveBattle();
-    const act = discoverSleepAct(initialState, sleepSubject());
+    const act = discoverSleepAct(initialState, sleepSubject(initialState));
     const initialSave = findSleepRepeatSaveSavingThrowHole(act.initialHoles);
     const initialFailure = requireResolved(
       resolveBattleSubject({
@@ -648,30 +646,29 @@ function sleepTargetCreatureInit(input: {
   };
 }
 
-function sleepSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: fighterId,
-    invocation: spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
-    mode: { tag: "cast" },
-  };
+function sleepSubject(
+  state: BattleState,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const act = discoverBattleActCandidates(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === fighterId,
+  );
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected Sleep spell act.");
+  }
+  return act.subject;
 }
 
 function discoverSleepHoles(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): readonly BattleHole[] {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      ("invocation" in subject
-        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
-          subject.invocation.spellId
-        : sameBattleSubject(candidate.subject, subject)),
+      sameBattleSubject(candidate.subject, subject),
   );
   if (act == null) {
     throw new Error("Expected Sleep spell act.");
@@ -683,15 +680,12 @@ function discoverSleepHoles(
 function discoverSleepAct(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
-): ReturnType<typeof discoverBattleActs>[number] {
-  const act = discoverBattleActs(state).find(
+): ReturnType<typeof discoverBattleActCandidates>[number] {
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      ("invocation" in subject
-        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
-          subject.invocation.spellId
-        : sameBattleSubject(candidate.subject, subject)),
+      sameBattleSubject(candidate.subject, subject),
   );
   if (act == null) {
     throw new Error("Expected Sleep spell act.");
@@ -725,7 +719,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function requireResolved(

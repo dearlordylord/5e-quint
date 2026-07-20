@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
+import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 //
@@ -14,8 +16,6 @@
 //                         spells-discovery.ts
 //   - castSummary()     - was the scalarBuff branch in
 //                         spellInvocationCastSummary
-//   - invocationRef()   - was the scalarBuff Match case in
-//                         supportedSpellInvocationRef
 //   - resolve()         - was resolveScalarBuffSpellAct in
 //                         spells-resolve-support-effects.ts
 //   - applyEffect()     - was applyScalarBuffSpellEffect in
@@ -40,7 +40,9 @@ import type {
   OngoingEffect,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import {
+  BATTLE_SPECIAL_SPEED_KINDS,
+} from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -56,7 +58,8 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
   applyHitPointMaximumIncrease,
@@ -100,9 +103,9 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
+  MovementDeltaFeet,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -113,6 +116,57 @@ type ScalarBuffInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "scalarBuff" }
 >;
+
+const ScalarBuffActiveEffectTemplateSchema = Schema.Union(
+  Schema.Struct({
+    sourceCombatantId: CombatantId,
+    kind: Schema.Literal("speedDelta"),
+    deltaFeet: MovementDeltaFeet,
+    expiresAt: BattleActiveEffectExpirationSchema,
+  }),
+  Schema.Struct({
+    sourceCombatantId: CombatantId,
+    kind: Schema.Literal("specialSpeedGrant"),
+    speedKind: Schema.Literal(
+      BATTLE_SPECIAL_SPEED_KINDS[0],
+      BATTLE_SPECIAL_SPEED_KINDS[1],
+    ),
+    speed: Schema.Struct({ kind: Schema.Literal("equalToSpeed") }),
+    hover: Schema.Literal(false),
+    expiresAt: BattleActiveEffectExpirationSchema,
+  }),
+  Schema.Struct({
+    sourceCombatantId: CombatantId,
+    kind: Schema.Literal("specialSpeedGrant"),
+    speedKind: Schema.Literal(BATTLE_SPECIAL_SPEED_KINDS[2]),
+    speed: Schema.Struct({
+      kind: Schema.Literal("fixed"),
+      speedFeet: MovementFeet,
+    }),
+    hover: Schema.Literal(true),
+    expiresAt: BattleActiveEffectExpirationSchema,
+  }),
+  Schema.Struct({
+    sourceCombatantId: CombatantId,
+    kind: Schema.Literal("spellArmorClassBonus"),
+    bonus: Schema.Number,
+    negatesRepeatedDamageAllocation: Schema.Boolean,
+    expiresAt: BattleActiveEffectExpirationSchema,
+  }),
+  Schema.Struct({
+    sourceCombatantId: CombatantId,
+    kind: Schema.Literal("spellArmorClassFloor"),
+    floor: ArmorClassSchema,
+    expiresAt: BattleActiveEffectExpirationSchema,
+  }),
+);
+
+const HitPointMaximumIncreaseTemplateSchema = Schema.Struct({
+  sourceCombatantId: CombatantId,
+  kind: Schema.Literal("hitPointMaximumIncrease"),
+  amount: Schema.Number,
+  expiresAt: BattleActiveEffectExpirationSchema,
+});
 type ScalarBuffResolveInput = SpellProcedureProfileResolveInput<
   ScalarBuffInvocation,
   ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
@@ -233,7 +287,6 @@ function discoverScalarBuffCastAct(
         subject: spellCastSelectionSubject(
           actorId,
           invocation,
-          scalarBuffInvocationRef(invocation),
         ),
         initialHoles,
       },
@@ -260,7 +313,6 @@ function discoverScalarBuffCastAct(
             subject: spellCastSelectionSubject(
               actorId,
               invocation,
-              scalarBuffInvocationRef(invocation),
             ),
             initialHoles: [targetHole],
           },
@@ -285,7 +337,6 @@ function scalarBuffSubtleMetamagicCastActs(input: {
   const subject = spellCastSelectionSubject(
     input.actorId,
     input.invocation,
-    scalarBuffInvocationRef(input.invocation),
   );
   return discoverSubtleSpellMetamagicSelections({
     actor: input.state.combatants.get(input.actorId),
@@ -308,21 +359,6 @@ function scalarBuffInitialHoles(
   return invocation.effect.kind === "temporaryHitPoints"
     ? [spellScalarBuffRollHole(invocation)]
     : [];
-}
-
-function scalarBuffInvocationRef(
-  invocation: ScalarBuffInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "scalarBuff",
-  };
-}
-
-function scalarBuffCastSummary(invocation: ScalarBuffInvocation): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function applyScalarBuffEffect(
@@ -515,14 +551,12 @@ function resolveScalarBuff(
       };
 }
 
-const ScalarBuffInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "scalarBuff" }>
->(
+const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("scalarBuff"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction", "bonusAction"),
     targeting: Schema.Union(
       Schema.Struct({
@@ -539,16 +573,16 @@ const ScalarBuffInvocationSchema = spellProcedureInvocationSchema<
       Schema.Struct({
         kind: Schema.Literal("temporaryHitPoints"),
         amount: Schema.Struct({
-          expr: BattleRuntimeObjectSchema,
+          expr: DiceExprSchema,
         }),
       }),
       Schema.Struct({
         kind: Schema.Literal("activeEffect"),
-        activeEffect: BattleRuntimeObjectSchema,
+        activeEffect: ScalarBuffActiveEffectTemplateSchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("hitPointMaximumIncrease"),
-        activeEffect: BattleRuntimeObjectSchema,
+        activeEffect: HitPointMaximumIncreaseTemplateSchema,
       }),
     ),
     rangeFeet: MovementFeet,
@@ -556,18 +590,15 @@ const ScalarBuffInvocationSchema = spellProcedureInvocationSchema<
 );
 export const scalarBuffProfile = {
   procedure: "scalarBuff",
-  invocationSchema: ScalarBuffInvocationSchema,
+  executionSchema: ScalarBuffInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: {
     kind: "byTargetingKind",
     targetingKind: "targetList",
   },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitScalarBuff,
   discoverCastAct: discoverScalarBuffCastAct,
-  castSummary: scalarBuffCastSummary,
-  invocationRef: scalarBuffInvocationRef,
   resolve: resolveScalarBuff,
 } satisfies SpellProcedureProfile<
   "scalarBuff",

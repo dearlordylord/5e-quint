@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
+import { DcSourceSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME
 //
 // The Counterspell Spell Procedure Profile: a prepared Reaction spell that
@@ -37,7 +38,6 @@ import {
   type BattleTurnResources,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -54,17 +54,16 @@ import {
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { Schema } from "effect";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type {
   BattleSubject,
-  SpellInvocationRef,
 } from "../../battle-subjects.ts";
 import {
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
   type SpellAdmissionContext,
   type SpellProcedureProfile,
   type SpellProcedureProfileResolveInput,
@@ -118,7 +117,7 @@ function counterspellSpellProjection(
   spell: SpellRecord,
 ): Pick<
   CounterspellInvocation,
-  "ability" | "dc" | "targeting" | "rangeFeet"
+  "ability" | "dc" | "targeting" | "rangeFeet" | "triggerComponents"
 > | null {
   if (
     spell.mechanics.family !== "triggered_reaction" ||
@@ -157,6 +156,7 @@ function counterspellSpellProjection(
     return null;
   }
   return {
+    triggerComponents: ["V", "S", "M"],
     ability: phase.ability,
     dc: phase.dc,
     targeting: { kind: "singleCombatant" },
@@ -168,20 +168,6 @@ function discoverCounterspellCastAct(): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
 
-function counterspellInvocationRef(
-  invocation: CounterspellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "counterspell",
-  };
-}
-
-function counterspellCastSummary(invocation: CounterspellInvocation): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveCounterspell(
   input: CounterspellResolveInput,
@@ -395,31 +381,27 @@ function counterspellReactionInterruptFrame(
   return { kind: "interruptCheckpoint", frame };
 }
 
-const CounterspellInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "counterspell" }>
->(
+const CounterspellInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("counterspell"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    triggerComponents: Schema.Array(Schema.Literal("V", "S", "M")),
     ability: Schema.Literal("con"),
-    dc: BattleRuntimeObjectSchema,
+    dc: DcSourceSchema,
     targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
     rangeFeet: MovementFeet,
   }),
 );
 export const counterspellProfile = {
   procedure: "counterspell",
-  invocationSchema: CounterspellInvocationSchema,
+  executionSchema: CounterspellInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitCounterspell,
   discoverCastAct: discoverCounterspellCastAct,
-  castSummary: counterspellCastSummary,
-  invocationRef: counterspellInvocationRef,
   resolve: resolveCounterspell,
 } satisfies SpellProcedureProfile<
   "counterspell",

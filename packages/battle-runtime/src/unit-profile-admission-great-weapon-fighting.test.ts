@@ -2,7 +2,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting doReplayGreatWeaponFightingAttackDamageDieFloor
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-die-floor
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterUnitProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   greatWeaponFightingUnitId,
@@ -33,7 +36,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureInit,
   BattleFill,
-  BattleState,
+  BattleRuntimeSession,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
 
@@ -314,7 +317,7 @@ function mainWeaponLoadout(
 }
 
 function resolveWeaponHit(input: {
-  readonly state: BattleState;
+  readonly state: BattleRuntimeSession;
   readonly attackName: string;
   readonly damageGroups: readonly (readonly number[])[];
   readonly expectsAttackDamageDieFloorChoice?: true;
@@ -327,12 +330,12 @@ function resolveWeaponHit(input: {
 }) {
   const subject = weaponAttackSubject(input.state, input.attackName);
   const target = requireResultHole(
-    resolveBattleSubject({ state: input.state, subject, fills: [] }),
+    resolveBattleSubject({ state: input.state.state, subject, fills: [] }),
     "targetChoice",
   );
   const roll = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.state.state,
       subject,
       fills: [
         attackTargetFill(
@@ -347,7 +350,7 @@ function resolveWeaponHit(input: {
   );
   const damage = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.state.state,
       subject,
       fills: [
         attackTargetFill(
@@ -366,13 +369,21 @@ function resolveWeaponHit(input: {
     input.attackDamageDieFloorSelection !== undefined
   ) {
     expect(damage).toMatchObject({
-      attackDamageDieFloorChoiceUnitIds: [greatWeaponFightingUnitId],
+      attackDamageDieFloorChoiceProcedureRefs: [
+        requireCharacterUnitProcedureRefForTest(
+          input.state,
+          spellCasterId,
+          greatWeaponFightingUnitId,
+        ),
+      ],
     });
   } else {
-    expect(damage).not.toHaveProperty("attackDamageDieFloorChoiceUnitIds");
+    expect(damage).not.toHaveProperty(
+      "attackDamageDieFloorChoiceProcedureRefs",
+    );
   }
   return resolveBattleSubject({
-    state: input.state,
+    state: input.state.state,
     subject,
     fills: [
       attackTargetFill(target, spellCasterId, spellTargetId, input.attackName),
@@ -385,7 +396,11 @@ function resolveWeaponHit(input: {
         input.attackDamageDieFloorSelection === undefined
           ? undefined
           : {
-              unitId: greatWeaponFightingUnitId,
+              procedureRef: requireCharacterUnitProcedureRefForTest(
+                input.state,
+                spellCasterId,
+                greatWeaponFightingUnitId,
+              ),
               selection: input.attackDamageDieFloorSelection,
             },
       ),
@@ -393,8 +408,10 @@ function resolveWeaponHit(input: {
   });
 }
 
-function withTargetSlashingResistance(state: BattleState): BattleState {
-  const target = state.combatants.get(spellTargetId);
+function withTargetSlashingResistance(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  const target = session.state.combatants.get(spellTargetId);
   if (target === undefined) {
     throw new Error("Expected target combatant.");
   }
@@ -408,11 +425,14 @@ function withTargetSlashingResistance(state: BattleState): BattleState {
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
   } as const satisfies BattleActiveEffect;
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellTargetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, resistance],
-    }),
+    ...session,
+    state: {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [...target.activeEffects, resistance],
+      }),
+    },
   };
 }
 

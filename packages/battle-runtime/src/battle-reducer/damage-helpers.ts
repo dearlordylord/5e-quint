@@ -26,6 +26,7 @@ import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { Match } from "effect";
 import type {
   BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
 import type {
@@ -35,7 +36,6 @@ import type {
 } from "../battle-action-options.ts";
 import {
   ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT,
-  PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   type OngoingFeatureDamageModifier,
 } from "../unit-feature-support.ts";
 import {
@@ -62,7 +62,7 @@ import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
-  eligibleAttackDamageDieFloorUnitIdsForAttacker,
+  eligibleAttackDamageDieFloorProcedureRefsForAttacker,
   selectedAttackDamageDieFloorChoice,
   statBlockAttackDamage,
 } from "./statblock-attacks.ts";
@@ -168,6 +168,7 @@ function addDamageModifierToFirstEntry(
 export function attackDamageByTypeEntries(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
+  attackProcedureRef: BattleProcedureExecutionRef,
   damageRoll: BattleRolledDiceFill,
   critical: boolean,
   attackRoll?: AttackRollResult,
@@ -179,6 +180,7 @@ export function attackDamageByTypeEntries(
     ...attackDamageByType(
       attacker,
       attack,
+      attackProcedureRef,
       damageRoll,
       critical,
       attackRoll,
@@ -192,6 +194,7 @@ export function attackDamageByTypeEntries(
 export function attackDamageByType(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
+  attackProcedureRef: BattleProcedureExecutionRef,
   damageRoll: BattleRolledDiceFill,
   critical: boolean,
   attackRoll?: AttackRollResult,
@@ -215,6 +218,7 @@ export function attackDamageByType(
   const damageDieFloorMinimum = attackDamageDieFloorMinimum(
     attacker,
     attack,
+    attackProcedureRef,
     damageRoll.attackDamageDieFloorChoice,
   );
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
@@ -290,10 +294,15 @@ function selectedAttackDamageAbilityModifier(
 function attackDamageDieFloorMinimum(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
+  attackProcedureRef: BattleProcedureExecutionRef,
   choice: BattleRolledDiceFill["attackDamageDieFloorChoice"],
 ): typeof ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT | null {
   const selectedChoice = selectedAttackDamageDieFloorChoice(
-    eligibleAttackDamageDieFloorUnitIdsForAttacker(attacker, attack),
+    eligibleAttackDamageDieFloorProcedureRefsForAttacker(
+      attacker,
+      attack,
+      attackProcedureRef,
+    ),
     choice,
   );
   if (selectedChoice?.selection !== "apply") {
@@ -901,7 +910,7 @@ function targetHasRuntimeDamageResistance(
         effect.kind === "damageResistance" && effect.damageType === damageType,
     ) ||
     combatantHasWardingBondResistance(target) ||
-    characterUnitRefsGrantPassiveDamageResistance(target, damageType) ||
+    characterExecutionGrantsPassiveDamageResistance(target, damageType) ||
     [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
       ([key]) =>
         ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
@@ -911,19 +920,20 @@ function targetHasRuntimeDamageResistance(
   );
 }
 
-function characterUnitRefsGrantPassiveDamageResistance(
+function characterExecutionGrantsPassiveDamageResistance(
   target: BattleCreatureState,
   damageType: DamageType,
 ): boolean {
   return (
     target.origin.kind === "character" &&
-    target.origin.characterUnitRefs.some((unitRef) =>
-      unitRef.supportProfiles.some(
-        (profile) =>
-          typeof profile === "object" &&
-          profile.kind === PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE &&
-          profile.resistance.damageType.value === damageType,
-      ),
-    )
+    target.origin.execution.procedureBindings.some((binding) => {
+      const procedure = binding.procedure;
+      return (
+        procedure.kind === "unitSupportProfile" &&
+        typeof procedure.execution === "object" &&
+        procedure.execution.kind === "passiveDamageResistance" &&
+        procedure.execution.resistance.damageType.value === damageType
+      );
+    })
   );
 }

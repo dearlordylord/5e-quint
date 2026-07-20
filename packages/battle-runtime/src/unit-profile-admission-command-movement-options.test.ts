@@ -25,7 +25,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   difficultyClass,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   movementFeet,
   resolveBattleSubject,
@@ -38,11 +38,15 @@ import type {
 describe("QMBT14 deterministic Command movement option admission", () => {
   test("command Approach consumes supplied route movement and continues when not within five feet", () => {
     const spell = spellRecord(commandUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
     const targetFill = spellTargetListFill(
@@ -61,14 +65,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     };
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, optionFill],
       }),
       "savingThrowOutcome",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -85,7 +89,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const approachAct = discoverBattleActs(targetTurn.state)[0];
+    const approachAct = discoverBattleActCandidates(targetTurn.state)[0];
     expect(approachAct).toEqual(
       expect.objectContaining({
         subject: expect.objectContaining({
@@ -131,11 +135,15 @@ describe("QMBT14 deterministic Command movement option admission", () => {
   });
   test("command Approach ends the target turn when supplied proximity reaches the caster", () => {
     const spell = spellRecord(commandUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
     const targetFill = spellTargetListFill(
@@ -154,14 +162,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     };
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, optionFill],
       }),
       "savingThrowOutcome",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -178,7 +186,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const approachAct = discoverBattleActs(targetTurn.state)[0];
+    const approachAct = discoverBattleActCandidates(targetTurn.state)[0];
     if (
       approachAct === undefined ||
       approachAct.subject.tag !== "runtimeCommand" ||
@@ -211,11 +219,15 @@ describe("QMBT14 deterministic Command movement option admission", () => {
   });
   test("command Approach clears the pending effect without a Movement fill when no movement is available", () => {
     const spell = spellRecord(commandUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
     const targetFill = spellTargetListFill(
@@ -234,14 +246,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     };
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, optionFill],
       }),
       "savingThrowOutcome",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -270,7 +282,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         },
       ],
     };
-    const approachAct = discoverBattleActs(grappledTargetTurn)[0];
+    const approachAct = discoverBattleActCandidates(grappledTargetTurn)[0];
     expect(approachAct).toEqual(
       expect.objectContaining({
         subject: expect.objectContaining({
@@ -305,7 +317,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       activeEffects: [],
     });
     expect(
-      discoverBattleActs(approached.state).some(
+      discoverBattleActCandidates(approached.state).some(
         (candidate) =>
           candidate.subject.actorId === spellTargetId &&
           candidate.subject.tag === "runtimeCommand" &&
@@ -315,11 +327,15 @@ describe("QMBT14 deterministic Command movement option admission", () => {
   });
   test("command Flee consumes supplied full movement budget and ends the target turn", () => {
     const spell = spellRecord(commandUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
     const targetFill = spellTargetListFill(
@@ -338,14 +354,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     };
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, optionFill],
       }),
       "savingThrowOutcome",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -362,7 +378,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const fleeAct = discoverBattleActs(targetTurn.state)[0];
+    const fleeAct = discoverBattleActCandidates(targetTurn.state)[0];
     expect(fleeAct).toEqual(
       expect.objectContaining({
         subject: expect.objectContaining({
@@ -405,11 +421,15 @@ describe("QMBT14 deterministic Command movement option admission", () => {
   });
   test("command Flee rejects partial movement when movement is available", () => {
     const spell = spellRecord(commandUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
     const targetFill = spellTargetListFill(
@@ -428,14 +448,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     };
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, optionFill],
       }),
       "savingThrowOutcome",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -452,7 +472,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const fleeAct = discoverBattleActs(targetTurn.state)[0];
+    const fleeAct = discoverBattleActCandidates(targetTurn.state)[0];
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||
@@ -479,11 +499,15 @@ describe("QMBT14 deterministic Command movement option admission", () => {
   });
   test("command Flee clears the pending effect and ends turn when no movement is available", () => {
     const spell = spellRecord(commandUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
     const targetFill = spellTargetListFill(
@@ -502,14 +526,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     };
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, optionFill],
       }),
       "savingThrowOutcome",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -538,7 +562,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         },
       ],
     };
-    const fleeAct = discoverBattleActs(grappledTargetTurn)[0];
+    const fleeAct = discoverBattleActCandidates(grappledTargetTurn)[0];
     expect(fleeAct).toEqual(
       expect.objectContaining({
         subject: expect.objectContaining({
@@ -575,11 +599,15 @@ describe("QMBT14 deterministic Command movement option admission", () => {
   });
   test("command Flee Opportunity Attack eligibility comes from actual movement", () => {
     const spell = spellRecord(commandUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
     const targetFill = spellTargetListFill(
@@ -598,14 +626,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     };
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, optionFill],
       }),
       "savingThrowOutcome",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -622,7 +650,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const fleeAct = discoverBattleActs(targetTurn.state)[0];
+    const fleeAct = discoverBattleActCandidates(targetTurn.state)[0];
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||

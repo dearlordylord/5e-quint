@@ -12,7 +12,6 @@
 //                            discovery path in spells-discovery.ts
 //   - castSummary()        - was the makeStable branch in
 //                            spells-discovery.ts:spellInvocationCastSummary
-//   - invocationRef()      - was the makeStable branch in
 //                            spells-invocation-ref.ts
 //   - resolve()            - was resolveMakeStableSpellAct in
 //                            spells-resolve-support-effects.ts
@@ -24,7 +23,6 @@
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
   maybeOpenInterruptWindow,
@@ -40,7 +38,6 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -48,13 +45,13 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
-  BattleRuntimeObjectSchema,
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 type MakeStableInvocation = Extract<
@@ -153,7 +150,6 @@ function discoverMakeStableCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: makeStableInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [targetHole],
@@ -161,19 +157,6 @@ function discoverMakeStableCastAct(
   ];
 }
 
-function makeStableInvocationRef(
-  invocation: MakeStableInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "makeStable",
-  };
-}
-
-function makeStableCastSummary(invocation: MakeStableInvocation): string {
-  return `Cast ${invocation.spell.name} as a cantrip.`;
-}
 
 function resolveMakeStable(
   input: SpellProcedureProfileResolveInput<MakeStableInvocation>,
@@ -278,14 +261,12 @@ function resolveMakeStable(
   });
 }
 
-const MakeStableInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "makeStable" }>
->(
+const MakeStableInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: ClassCantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("makeStable"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     rangeFeet: MovementFeet,
   }),
@@ -295,14 +276,11 @@ export const makeStableProfile: SpellProcedureProfile<
   MakeStableInvocation
 > = {
   procedure: "makeStable",
-  invocationSchema: MakeStableInvocationSchema,
+  executionSchema: MakeStableInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitMakeStable,
   discoverCastAct: discoverMakeStableCastAct,
-  castSummary: makeStableCastSummary,
-  invocationRef: makeStableInvocationRef,
   resolve: resolveMakeStable,
 };

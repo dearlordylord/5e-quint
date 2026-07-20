@@ -7,6 +7,7 @@ import {
   breakBattleConcentration,
   cantripSpellInvocationRef,
   combatantId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
   resolveBattleSubject,
@@ -19,11 +20,13 @@ import {
   type BattleHole,
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSubject,
   type CantripSpellProcedure,
+  type CharacterProcedureBinding,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import {
@@ -82,7 +85,7 @@ import {
   attackSubject,
   attackTargetFill,
   areaSavingThrowOutcomeFill,
-  battleFromSheets,
+  battleSessionFromSheets,
   battleProcedureExecutionRefForHole,
   characterResources,
   characterSheet,
@@ -253,7 +256,6 @@ const fighterSecondWindUnitId = "fighter_second_wind";
 const barbarianRageUnitId = "barbarian_rage";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
-const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const dissonantWhispersSpellId = "dissonant_whispers";
@@ -303,7 +305,7 @@ const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-second-wind",
       characters: [
         characterSheet({
@@ -321,8 +323,9 @@ describe("level 1 SDK RAW integration", () => {
         monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
       ],
     });
+    const state = session.state;
     const act = unitFeatureActForUnitId(
-      state,
+      session,
       fighterId,
       fighterSecondWindUnitId,
     );
@@ -336,6 +339,11 @@ describe("level 1 SDK RAW integration", () => {
       }),
     );
     const fighter = requireCharacterCombatant(resolved.state, fighterId);
+    const secondWindOwnership = requireCharacterResourceOwnershipForUnit(
+      session,
+      fighterId,
+      fighterSecondWindUnitId,
+    );
 
     expect(requireCombatant(resolved.state, fighterId).hp).toBe(Hp(8));
     expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
@@ -344,24 +352,23 @@ describe("level 1 SDK RAW integration", () => {
     expect(characterResources(fighter)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unit: expect.objectContaining({ id: fighterSecondWindUnitId }),
+          resourcePoolRef: secondWindOwnership.resourcePoolRef,
           usesRemaining: 1,
         }),
       ]),
     );
+    expect(secondWindOwnership.unit.id).toBe(fighterSecondWindUnitId);
     expect(
-      discoverBattleActs(resolved.state).some(
+      discoverBattleActCandidates(resolved.state).some(
         (candidate) =>
           candidate.subject.tag === "unitFeature" &&
-          candidate.subject.actorId === fighterId &&
-          battleActUnitPresentation(candidate)?.unitId ===
-            fighterSecondWindUnitId,
+          candidate.subject.actorId === fighterId,
       ),
     ).toBe(false);
   });
 
   test("Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-rage",
       characters: [
         characterSheet({
@@ -386,8 +393,9 @@ describe("level 1 SDK RAW integration", () => {
         monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
       ],
     });
+    const state = session.state;
     const act = unitFeatureActForUnitId(
-      state,
+      session,
       barbarianId,
       barbarianRageUnitId,
     );
@@ -395,20 +403,26 @@ describe("level 1 SDK RAW integration", () => {
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
     );
     const barbarian = requireCharacterCombatant(raging.state, barbarianId);
+    const rageOwnership = requireCharacterResourceOwnershipForUnit(
+      session,
+      barbarianId,
+      barbarianRageUnitId,
+    );
 
     expect(snapshotBattle(raging.state).turn.bonusActionAvailable).toBe(false);
     expect(characterResources(barbarian)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unit: expect.objectContaining({ id: barbarianRageUnitId }),
+          resourcePoolRef: rageOwnership.resourcePoolRef,
           usesRemaining: 1,
         }),
       ]),
     );
+    expect(rageOwnership.unit.id).toBe(barbarianRageUnitId);
     expect([...barbarian.activeOngoingFeatureOccurrences]).toEqual(
       expect.arrayContaining([
         [
-          barbarianRageUnitId,
+          act.subject.procedureRef,
           expect.objectContaining({ kind: "roundExtended" }),
         ],
       ]),
@@ -416,7 +430,11 @@ describe("level 1 SDK RAW integration", () => {
 
     const rageHit = resolveOrdinaryAttackDamage({
       state: raging.state,
-      subject: attackSubject(raging.state, barbarianId, "Longsword"),
+      subject: attackSubject(
+        { state: raging.state, context: session.context },
+        barbarianId,
+        "Longsword",
+      ),
       targetId: monsterId,
       attackRoll: { total: 18, naturalD20: 13 },
       damageDice: [[4]],
@@ -430,7 +448,11 @@ describe("level 1 SDK RAW integration", () => {
     const beforeDamageHp = requireCombatant(monsterTurn, barbarianId).hp;
     const resisted = resolveOrdinaryAttackDamage({
       state: monsterTurn,
-      subject: attackSubject(monsterTurn, monsterId, "Shortsword"),
+      subject: attackSubject(
+        { state: monsterTurn, context: session.context },
+        monsterId,
+        "Shortsword",
+      ),
       targetId: barbarianId,
       attackRoll: { total: 18, naturalD20: 13 },
       damageDice: [[4]],
@@ -442,7 +464,7 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-sneak-attack",
       characters: [
         characterSheet({
@@ -476,7 +498,8 @@ describe("level 1 SDK RAW integration", () => {
         monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
       ],
     });
-    const subject = attackSubject(state, rogueId, rogueSneakAttackName);
+    const state = session.state;
+    const subject = attackSubject(session, rogueId, rogueSneakAttackName);
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -517,12 +540,18 @@ describe("level 1 SDK RAW integration", () => {
       attackDamageRiders: [
         {
           attackerId: rogueId,
-          unitId: rogueSneakAttackUnitId,
-          label: "Sneak Attack",
           damage: { dice: 1, dieSize: 6, damageType: "piercing" },
         },
       ],
     });
+    if (!("attackDamageRiders" in damage)) {
+      throw new Error("Expected an attack damage roll hole.");
+    }
+    const sneakAttackProcedureRef =
+      damage.attackDamageRiders?.[0]?.procedureRef;
+    if (sneakAttackProcedureRef === undefined) {
+      throw new Error("Expected Sneak Attack mechanical procedure reference.");
+    }
 
     const resolved = requireResolved(
       resolveBattleSubject({
@@ -534,7 +563,7 @@ describe("level 1 SDK RAW integration", () => {
           prefixFills: [targetSelection, attackRoll],
           damage,
           damageDice: [[4], [6]],
-          selectedAttackDamageRiderUnitIds: [rogueSneakAttackUnitId],
+          selectedAttackDamageRiderProcedureRefs: [sneakAttackProcedureRef],
         }),
       }),
     );
@@ -542,11 +571,11 @@ describe("level 1 SDK RAW integration", () => {
     expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: rogueId, unitId: rogueSneakAttackUnitId }]);
+    ).toEqual([{ attackerId: rogueId, procedureRef: sneakAttackProcedureRef }]);
   });
 
   test("Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-bardic-inspiration",
       characters: [
         characterSheet({
@@ -579,8 +608,9 @@ describe("level 1 SDK RAW integration", () => {
         monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
       ],
     });
+    const state = session.state;
     const act = unitFeatureActForUnitId(
-      state,
+      session,
       bardId,
       bardBardicInspirationUnitId,
     );
@@ -589,11 +619,22 @@ describe("level 1 SDK RAW integration", () => {
       resolveBattleSubject({
         state,
         subject: act.subject,
-        fills: [bardicInspirationTargetFill(target, inspiredAllyId)],
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            act.subject.procedureRef,
+            inspiredAllyId,
+          ),
+        ],
       }),
     );
     const bard = requireCharacterCombatant(resolved.state, bardId);
     const inspiredAlly = requireCombatant(resolved.state, inspiredAllyId);
+    const bardicInspirationOwnership = requireCharacterResourceOwnershipForUnit(
+      session,
+      bardId,
+      bardBardicInspirationUnitId,
+    );
 
     expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
       false,
@@ -601,10 +642,13 @@ describe("level 1 SDK RAW integration", () => {
     expect(characterResources(bard)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unit: expect.objectContaining({ id: bardBardicInspirationUnitId }),
+          resourcePoolRef: bardicInspirationOwnership.resourcePoolRef,
           usesRemaining: 2,
         }),
       ]),
+    );
+    expect(bardicInspirationOwnership.unit.id).toBe(
+      bardBardicInspirationUnitId,
     );
     expect(inspiredAlly.activeEffects).toEqual(
       expect.arrayContaining([
@@ -663,7 +707,7 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-innate-sorcery",
       characters: [
         characterSheet({
@@ -710,14 +754,22 @@ describe("level 1 SDK RAW integration", () => {
         monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
       ],
     });
+    const state = session.state;
     const act = unitFeatureActForUnitId(
-      state,
+      session,
       sorcererId,
       sorcererInnateSorceryUnitId,
     );
     const preActivationSorcerer = requireCharacterCombatant(state, sorcererId);
+    const innateSorceryOwnership = requireCharacterResourceOwnershipForUnit(
+      session,
+      sorcererId,
+      sorcererInnateSorceryUnitId,
+    );
 
-    expect(preActivationSorcerer.origin.characterUnitRefs).toEqual(
+    expect(
+      session.context.characters.get(sorcererId)?.unitPresentationSources,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           unit: expect.objectContaining({ id: sorcererInnateSorceryUnitId }),
@@ -727,11 +779,12 @@ describe("level 1 SDK RAW integration", () => {
     expect(characterResources(preActivationSorcerer)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unit: expect.objectContaining({ id: sorcererInnateSorceryUnitId }),
+          resourcePoolRef: innateSorceryOwnership.resourcePoolRef,
           usesRemaining: 2,
         }),
       ]),
     );
+    expect(innateSorceryOwnership.unit.id).toBe(sorcererInnateSorceryUnitId);
     expect(spellSaveDcForCaster(state, sorcererId)).toBe(13);
 
     const activated = requireResolved(
@@ -743,14 +796,14 @@ describe("level 1 SDK RAW integration", () => {
     expect(characterResources(sorcerer)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unit: expect.objectContaining({ id: sorcererInnateSorceryUnitId }),
+          resourcePoolRef: innateSorceryOwnership.resourcePoolRef,
           usesRemaining: 1,
         }),
       ]),
     );
     expect([...sorcerer.activeOngoingFeatureOccurrences]).toEqual([
       [
-        sorcererInnateSorceryUnitId,
+        act.subject.procedureRef,
         {
           kind: "fixedDuration",
           expiresAt: {
@@ -763,8 +816,9 @@ describe("level 1 SDK RAW integration", () => {
     ]);
     expect(spellSaveDcForCaster(activated, sorcererId)).toBe(14);
 
+    const activatedSession = { state: activated, context: session.context };
     const spellAct = cantripCastActionSpellAct(
-      activated,
+      activatedSession,
       sorcererId,
       sorcerousBurstSpellId,
     );
@@ -1551,14 +1605,15 @@ describe("level 1 SDK RAW integration", () => {
       combatantId: hexWarlockId,
       initiative: 20,
     });
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-hex-warlock",
       characters: [hexSheet],
       monsters: [
         monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
       ],
     });
-    const act = hexBonusActionSpellSlotAct(state, hexWarlockId);
+    const state = session.state;
+    const act = hexBonusActionSpellSlotAct(session, hexWarlockId);
     const target = requireHoleFromList(act.initialHoles, "targetChoice");
     const ability = requireHoleFromList(act.initialHoles, "abilityChoice");
 
@@ -1618,6 +1673,7 @@ describe("level 1 SDK RAW integration", () => {
       settleCharacterSheetFromBattle({
         sheet: hexSheet.sheet,
         state: resolved.state,
+        context: session.context,
         combatant: caster,
         unitLibrary,
       }),
@@ -1643,6 +1699,7 @@ describe("level 1 SDK RAW integration", () => {
       settleCharacterSheetFromBattle({
         sheet: hexSheet.sheet,
         state: concentrationEnded,
+        context: session.context,
         combatant: cleanedCaster,
         unitLibrary,
       }),
@@ -2014,7 +2071,7 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-martial-arts",
       characters: [
         characterSheet({
@@ -2042,8 +2099,9 @@ describe("level 1 SDK RAW integration", () => {
         ),
       ],
     });
+    const state = session.state;
     expect(
-      requireCharacterCombatant(state, monkId).origin.characterUnitRefs,
+      session.context.characters.get(monkId)?.unitPresentationSources,
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -2074,7 +2132,7 @@ function assertLevelOneBurningHands(input: {
   readonly casterId: CombatantId;
   readonly spellId: typeof burningHandsSpellId;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -2093,8 +2151,9 @@ function assertLevelOneBurningHands(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     input.spellId,
     1,
     "saveGatedDamage",
@@ -2102,16 +2161,23 @@ function assertLevelOneBurningHands(input: {
   const save = requireHoleFromList(act.initialHoles, "savingThrowOutcome");
 
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(13);
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "saveGatedDamage",
+    targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+    damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
+    successDamage: "half",
+    rangeFeet: 0,
+  });
   expect(save).toMatchObject({
-    label: "Burning Hands self-origin Cone Saving Throw outcomes",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "dex",
     dc: { kind: "caster_spell_save_dc" },
-    spell: {
-      targeting: { kind: "selfOriginCone", lengthFeet: 15 },
-      damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
-      successDamage: "half",
-      rangeFeet: 0,
-    },
   });
 
   const saveFill = areaSavingThrowOutcomeFill(save, input.casterId, [
@@ -2128,11 +2194,7 @@ function assertLevelOneBurningHands(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Burning Hands damage (3d6-fire)",
-    spell: {
-      damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
-      successDamage: "half",
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -2160,7 +2222,7 @@ function assertLevelOneThunderwave(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellSaveDc: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -2179,8 +2241,9 @@ function assertLevelOneThunderwave(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     thunderwaveSpellId,
     1,
     "saveGatedDamage",
@@ -2192,8 +2255,20 @@ function assertLevelOneThunderwave(input: {
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(
     input.expectedSpellSaveDc,
   );
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "saveGatedDamage",
+    targeting: { kind: "selfOriginCube", sideFeet: 15 },
+    damage: { expr: { dice: 2, dieSize: 8 }, damageType: "thunder" },
+    successDamage: "half",
+  });
   expect(save).toMatchObject({
-    label: "Thunderwave self-origin Cube Saving Throw outcomes",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "con",
     dc: { kind: "caster_spell_save_dc" },
     outcomeTargeting: "area",
@@ -2254,11 +2329,7 @@ function assertLevelOneThunderwave(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Thunderwave damage (2d8-thunder)",
-    spell: {
-      damage: { expr: { dice: 2, dieSize: 8 }, damageType: "thunder" },
-      successDamage: "half",
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -2286,7 +2357,7 @@ function assertLevelOneDissonantWhispers(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellSaveDc: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -2300,8 +2371,9 @@ function assertLevelOneDissonantWhispers(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     dissonantWhispersSpellId,
     1,
     "saveGatedDamage",
@@ -2328,26 +2400,33 @@ function assertLevelOneDissonantWhispers(input: {
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(
     input.expectedSpellSaveDc,
   );
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "saveGatedDamage",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    targeting: { kind: "singleCombatant" },
+    damage: { expr: { dice: 3, dieSize: 6 }, damageType: "psychic" },
+    successDamage: "half",
+    rangeFeet: 60,
+    failedSavePostDamageRiders: [
+      {
+        kind: "forcedReactionMovement",
+        direction: "awayFromCaster",
+        route: "safest",
+        distance: "asFarAsPossible",
+        cost: "targetReactionIfAvailable",
+      },
+    ],
+  });
   expect(save).toMatchObject({
-    label: "Dissonant Whispers Saving Throw outcome",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "wis",
     dc: { kind: "caster_spell_save_dc" },
-    spell: {
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      targeting: { kind: "singleCombatant" },
-      damage: { expr: { dice: 3, dieSize: 6 }, damageType: "psychic" },
-      successDamage: "half",
-      rangeFeet: 60,
-      failedSavePostDamageRiders: [
-        {
-          kind: "forcedReactionMovement",
-          direction: "awayFromCaster",
-          route: "safest",
-          distance: "asFarAsPossible",
-          cost: "targetReactionIfAvailable",
-        },
-      ],
-    },
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
@@ -2363,21 +2442,7 @@ function assertLevelOneDissonantWhispers(input: {
   );
 
   expect(failedDamage).toMatchObject({
-    label: "Dissonant Whispers damage (3d6-psychic)",
-    spell: {
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      damage: { expr: { dice: 3, dieSize: 6 }, damageType: "psychic" },
-      successDamage: "half",
-      failedSavePostDamageRiders: [
-        {
-          kind: "forcedReactionMovement",
-          direction: "awayFromCaster",
-          route: "safest",
-          distance: "asFarAsPossible",
-          cost: "targetReactionIfAvailable",
-        },
-      ],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -2478,7 +2543,7 @@ function assertLevelOneViciousMockery(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellSaveDc: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -2492,8 +2557,9 @@ function assertLevelOneViciousMockery(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     viciousMockerySpellId,
     "saveGatedDamage",
@@ -2520,24 +2586,31 @@ function assertLevelOneViciousMockery(input: {
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(
     input.expectedSpellSaveDc,
   );
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "saveGatedDamage",
+    resource: { tag: "none" },
+    targeting: { kind: "singleCombatant" },
+    damage: { expr: { dice: 1, dieSize: 6 }, damageType: "psychic" },
+    successDamage: "none",
+    rangeFeet: 60,
+    failedSavePostDamageRiders: [
+      {
+        kind: "nextAttackRollByTarget",
+        mode: "disadvantage",
+        expiresAt: "endOfTargetNextTurn",
+      },
+    ],
+  });
   expect(save).toMatchObject({
-    label: "Vicious Mockery Saving Throw outcome",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "wis",
     dc: { kind: "caster_spell_save_dc" },
-    spell: {
-      resource: { tag: "none" },
-      targeting: { kind: "singleCombatant" },
-      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "psychic" },
-      successDamage: "none",
-      rangeFeet: 60,
-      failedSavePostDamageRiders: [
-        {
-          kind: "nextAttackRollByTarget",
-          mode: "disadvantage",
-          expiresAt: "endOfTargetNextTurn",
-        },
-      ],
-    },
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
@@ -2553,19 +2626,7 @@ function assertLevelOneViciousMockery(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Vicious Mockery damage (1d6-psychic)",
-    spell: {
-      resource: { tag: "none" },
-      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "psychic" },
-      successDamage: "none",
-      failedSavePostDamageRiders: [
-        {
-          kind: "nextAttackRollByTarget",
-          mode: "disadvantage",
-          expiresAt: "endOfTargetNextTurn",
-        },
-      ],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -2605,7 +2666,11 @@ function assertLevelOneViciousMockery(input: {
   const monsterTurn = requireResolved(
     endTurn({ state: failedSave.state, actorId: input.casterId }),
   ).state;
-  const monsterAttack = attackSubject(monsterTurn, monsterId, "Shortsword");
+  const monsterAttack = attackSubject(
+    { state: monsterTurn, context: session.context },
+    monsterId,
+    "Shortsword",
+  );
   const attackTarget = requireHole(
     resolveBattleSubject({
       state: monsterTurn,
@@ -2678,7 +2743,7 @@ function assertLevelOneAcidSplash(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellSaveDc: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -2697,8 +2762,9 @@ function assertLevelOneAcidSplash(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     acidSplashSpellId,
     "saveGatedDamage",
@@ -2708,17 +2774,24 @@ function assertLevelOneAcidSplash(input: {
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(
     input.expectedSpellSaveDc,
   );
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "saveGatedDamage",
+    targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
+    damage: { expr: { dice: 1, dieSize: 6 }, damageType: "acid" },
+    successDamage: "none",
+    rangeFeet: 60,
+  });
   expect(save).toMatchObject({
-    label: "Acid Splash point-origin Sphere Saving Throw outcomes",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "dex",
     dc: { kind: "caster_spell_save_dc" },
     areaChoices: [],
-    spell: {
-      targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
-      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "acid" },
-      successDamage: "none",
-      rangeFeet: 60,
-    },
   });
 
   const saveFill = areaSavingThrowOutcomeFill(save, input.casterId, [
@@ -2735,11 +2808,7 @@ function assertLevelOneAcidSplash(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Acid Splash damage (1d6-acid)",
-    spell: {
-      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "acid" },
-      successDamage: "none",
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -2767,7 +2836,7 @@ function assertLevelOneSorcerousBurst(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -2781,8 +2850,9 @@ function assertLevelOneSorcerousBurst(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     sorcerousBurstSpellId,
   );
@@ -2823,21 +2893,29 @@ function assertLevelOneSorcerousBurst(input: {
   expect(objectTarget).toMatchObject({
     requiresTableSpatialFact: true,
   });
-  expect(attackRoll).toMatchObject({
-    attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      resource: { tag: "none" },
-      attackKind: "ranged_spell_attack",
-      targeting: { kind: "singleCreatureOrObject" },
-      rangeFeet: 120,
-      damage: {
-        kind: "selectedSorcerousBurstDamage",
-        expr: { dice: 1, dieSize: 8 },
-        damageType: "thunder",
-        maxDieAdditionalDiceLimit: 2,
-      },
-      postDamageRiders: [],
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    resource: { tag: "none" },
+    attackKind: "ranged_spell_attack",
+    targeting: { kind: "singleCreatureOrObject" },
+    rangeFeet: 120,
+    damage: {
+      kind: "sorcerousBurstDamageTypeChoice",
+      expr: { dice: 1, dieSize: 8 },
+      damageTypeChoices: expect.arrayContaining(["thunder"]),
+      maxDieAdditionalDiceLimit: 2,
     },
+    postDamageRiders: [],
+  });
+  expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -2854,17 +2932,7 @@ function assertLevelOneSorcerousBurst(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Sorcerous Burst damage (1d8-thunder)",
-    spell: {
-      resource: { tag: "none" },
-      damage: {
-        kind: "selectedSorcerousBurstDamage",
-        expr: { dice: 1, dieSize: 8 },
-        damageType: "thunder",
-        maxDieAdditionalDiceLimit: 2,
-      },
-      postDamageRiders: [],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -2902,7 +2970,7 @@ function assertLevelOnePoisonSpray(input: {
     readonly expended: number;
   }[];
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -2920,8 +2988,9 @@ function assertLevelOnePoisonSpray(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     poisonSpraySpellId,
   );
@@ -2944,20 +3013,28 @@ function assertLevelOnePoisonSpray(input: {
   expect(target).toMatchObject({
     choices: expect.arrayContaining([monsterId]),
   });
-  expect(attackRoll).toMatchObject({
-    attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      resource: { tag: "none" },
-      attackKind: "ranged_spell_attack",
-      targeting: { kind: "singleCombatant" },
-      rangeFeet: 30,
-      damage: {
-        kind: "fixedSpellAttackDamage",
-        expr: { dice: 1, dieSize: 12 },
-        damageType: "poison",
-      },
-      postDamageRiders: [],
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    resource: { tag: "none" },
+    attackKind: "ranged_spell_attack",
+    targeting: { kind: "singleCombatant" },
+    rangeFeet: 30,
+    damage: {
+      kind: "fixedSpellAttackDamage",
+      expr: { dice: 1, dieSize: 12 },
+      damageType: "poison",
     },
+    postDamageRiders: [],
+  });
+  expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -2974,16 +3051,7 @@ function assertLevelOnePoisonSpray(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Poison Spray damage (1d12-poison)",
-    spell: {
-      resource: { tag: "none" },
-      damage: {
-        kind: "fixedSpellAttackDamage",
-        expr: { dice: 1, dieSize: 12 },
-        damageType: "poison",
-      },
-      postDamageRiders: [],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -3021,7 +3089,7 @@ function assertLevelOneProduceFlame(input: {
     readonly expended: number;
   }[];
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3039,16 +3107,17 @@ function assertLevelOneProduceFlame(input: {
       ),
     ],
   });
+  const state = session.state;
   expect(
     hasCantripSpellInvocationAct(
-      state,
+      session,
       input.casterId,
       produceFlameSpellId,
       "heldLightHurl",
     ),
   ).toBe(false);
   const heldLightAct = cantripCastHeldLightBonusActionSpellAct(
-    state,
+    session,
     input.casterId,
     produceFlameSpellId,
   );
@@ -3093,8 +3162,9 @@ function assertLevelOneProduceFlame(input: {
     input.expectedSpellSlots,
   );
 
+  const litSession = { state: lit.state, context: session.context };
   const hurlAct = cantripCastActionSpellAct(
-    lit.state,
+    litSession,
     input.casterId,
     produceFlameSpellId,
     "heldLightHurl",
@@ -3124,21 +3194,25 @@ function assertLevelOneProduceFlame(input: {
     choices: expect.arrayContaining([monsterId]),
   });
   expect(objectTarget).toMatchObject({
-    label: "Produce Flame object target",
     requiresTableSpatialFact: true,
   });
+  expect(
+    requireSpellProcedureExecution(
+      lit.state,
+      input.casterId,
+      hurlAct.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "heldLightHurl",
+    resource: { tag: "none" },
+    attackKind: "ranged_spell_attack",
+    targeting: { kind: "singleCreatureOrObject" },
+    rangeFeet: 60,
+    damage: { expr: { dice: 1, dieSize: 8 }, damageType: "fire" },
+  });
   expect(attackRoll).toMatchObject({
+    sourceProcedureRef: hurlAct.subject.procedureRef,
     attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      resource: { tag: "none" },
-      attackKind: "ranged_spell_attack",
-      targeting: { kind: "singleCreatureOrObject" },
-      rangeFeet: 60,
-      damage: {
-        expr: { dice: 1, dieSize: 8 },
-        damageType: "fire",
-      },
-    },
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -3155,14 +3229,7 @@ function assertLevelOneProduceFlame(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Produce Flame damage (1d8-fire)",
-    spell: {
-      resource: { tag: "none" },
-      damage: {
-        expr: { dice: 1, dieSize: 8 },
-        damageType: "fire",
-      },
-    },
+    sourceProcedureRef: hurlAct.subject.procedureRef,
     critical: false,
   });
 
@@ -3204,7 +3271,7 @@ function assertLevelOneShillelagh(input: {
     readonly expended: number;
   }[];
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3218,27 +3285,33 @@ function assertLevelOneShillelagh(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
-  const act = shillelaghBonusActionSpellAct(state, input.casterId);
+  const state = session.state;
+  const act = shillelaghBonusActionSpellAct(session, input.casterId);
 
-  expect({
-    ...act,
-    subject: {
-      ...act.subject,
-      invocation: battleActSpellPresentation(act)?.invocation,
-    },
-  }).toMatchObject({
+  expect(act).toMatchObject({
     subject: {
       tag: "bonusActionSpell",
       actorId: input.casterId,
-      invocation: {
-        tag: "cantrip",
-        spellId: shillelaghSpellId,
-        procedure: "weaponAttackOverride",
-      },
       mode: { tag: "cast" },
-      componentWeaponItemId: shillelaghQuarterstaffItemId,
     },
     initialHoles: [],
+  });
+  expect(battleActSpellPresentation(act)).toMatchObject({
+    invocation: {
+      tag: "cantrip",
+      spellId: shillelaghSpellId,
+      procedure: "weaponAttackOverride",
+    },
+  });
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "weaponAttackOverride",
+    attachedWeaponItemId: shillelaghQuarterstaffItemId,
   });
 
   const resolved = requireResolved(
@@ -3272,7 +3345,7 @@ function assertLevelOneShillelagh(input: {
   );
 
   const forceAttack = attackSubject(
-    resolved.state,
+    { state: resolved.state, context: session.context },
     input.casterId,
     "Quarterstaff (force)",
   );
@@ -3314,18 +3387,13 @@ function assertLevelOneShillelagh(input: {
     "rolledDice",
   );
 
-  expect(damage).toMatchObject({
-    label: "Quarterstaff (force) damage (1d8+2-force)",
-  });
-  const ordinaryAttackName = "Quarterstaff (bludgeoning)";
+  expect(damage).toMatchObject({ critical: false });
   expect(
-    discoverBattleActs(resolved.state).some(
+    discoverBattleActCandidates(resolved.state).some(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.subject.actorId === input.casterId &&
-        candidate.summary ===
-          `Take the Attack action with ${ordinaryAttackName}.`,
+        candidate.subject.actorId === input.casterId,
     ),
   ).toBe(true);
 
@@ -3353,7 +3421,7 @@ function assertLevelOneSacredFlame(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellSaveDc: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3367,8 +3435,9 @@ function assertLevelOneSacredFlame(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     sacredFlameSpellId,
     "saveGatedDamage",
@@ -3395,18 +3464,25 @@ function assertLevelOneSacredFlame(input: {
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(
     input.expectedSpellSaveDc,
   );
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "saveGatedDamage",
+    resource: { tag: "none" },
+    targeting: { kind: "singleCombatant" },
+    damage: { expr: { dice: 1, dieSize: 8 }, damageType: "radiant" },
+    successDamage: "none",
+    rangeFeet: 60,
+    failedSavePostDamageRiders: [],
+  });
   expect(save).toMatchObject({
-    label: "Sacred Flame Saving Throw outcome",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "dex",
     dc: { kind: "caster_spell_save_dc" },
-    spell: {
-      resource: { tag: "none" },
-      targeting: { kind: "singleCombatant" },
-      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "radiant" },
-      successDamage: "none",
-      rangeFeet: 60,
-      failedSavePostDamageRiders: [],
-    },
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
@@ -3422,13 +3498,7 @@ function assertLevelOneSacredFlame(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Sacred Flame damage (1d8-radiant)",
-    spell: {
-      resource: { tag: "none" },
-      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "radiant" },
-      successDamage: "none",
-      failedSavePostDamageRiders: [],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -3489,7 +3559,7 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
     readonly expended: number;
   }[];
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3503,8 +3573,9 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     thaumaturgySpellId,
     "thaumaturgyBoomingVoice",
@@ -3516,7 +3587,7 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
 
   expect(act.initialHoles).toHaveLength(1);
   expect(countHole).toMatchObject({
-    label: "Thaumaturgy total active 1-minute effects",
+    sourceProcedureRef: act.subject.procedureRef,
     maximumActiveOneMinuteEffects: 3,
     requiresTableSpellEffectCount: true,
   });
@@ -3570,7 +3641,7 @@ function assertLevelOneInflictWounds(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellSaveDc: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3584,8 +3655,9 @@ function assertLevelOneInflictWounds(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     inflictWoundsSpellId,
     1,
     "saveGatedDamage",
@@ -3612,18 +3684,25 @@ function assertLevelOneInflictWounds(input: {
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(
     input.expectedSpellSaveDc,
   );
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "saveGatedDamage",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    targeting: { kind: "singleCombatant" },
+    damage: { expr: { dice: 2, dieSize: 10 }, damageType: "necrotic" },
+    successDamage: "half",
+    rangeFeet: 5,
+    failedSavePostDamageRiders: [],
+  });
   expect(save).toMatchObject({
-    label: "Inflict Wounds Saving Throw outcome",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "con",
     dc: { kind: "caster_spell_save_dc" },
-    spell: {
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      targeting: { kind: "singleCombatant" },
-      damage: { expr: { dice: 2, dieSize: 10 }, damageType: "necrotic" },
-      successDamage: "half",
-      rangeFeet: 5,
-      failedSavePostDamageRiders: [],
-    },
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
@@ -3639,13 +3718,7 @@ function assertLevelOneInflictWounds(input: {
   );
 
   expect(failedDamage).toMatchObject({
-    label: "Inflict Wounds damage (2d10-necrotic)",
-    spell: {
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      damage: { expr: { dice: 2, dieSize: 10 }, damageType: "necrotic" },
-      successDamage: "half",
-      failedSavePostDamageRiders: [],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -3712,7 +3785,7 @@ function assertLevelOneSanctuary(input: {
   readonly casterId: CombatantId;
   readonly wardedId: CombatantId;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3735,32 +3808,36 @@ function assertLevelOneSanctuary(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
-  const act = sanctuaryBonusActionSpellSlotAct(state, input.casterId);
+  const state = session.state;
+  const act = sanctuaryBonusActionSpellSlotAct(session, input.casterId);
   const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
 
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    access: { tag: "prepared" },
+    procedure: "sanctuaryTargetingInterdiction",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    actionCost: "bonusAction",
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    rangeFeet: movementFeet(30),
+    activeEffect: {
+      kind: "sanctuaryWard",
+      sourceCombatantId: input.casterId,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: { kind: "duration", durationTicks: sanctuaryDurationTicks },
+    },
+  });
   expect(targetList).toMatchObject({
-    label: "Sanctuary targets",
+    sourceProcedureRef: act.subject.procedureRef,
     minTargets: 1,
     maxTargets: 1,
     requiresTableSpatialFact: true,
     choices: expect.arrayContaining([input.wardedId]),
-    spell: {
-      access: { tag: "prepared" },
-      procedure: "sanctuaryTargetingInterdiction",
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      actionCost: "bonusAction",
-      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-      rangeFeet: movementFeet(30),
-      activeEffect: {
-        kind: "sanctuaryWard",
-        sourceCombatantId: input.casterId,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-        expiresAt: {
-          kind: "duration",
-          durationTicks: sanctuaryDurationTicks,
-        },
-      },
-    },
   });
 
   const resolved = requireResolved(
@@ -3807,7 +3884,7 @@ function assertLevelOneBless(input: {
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3830,7 +3907,13 @@ function assertLevelOneBless(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
-  const act = spellSlotActForProcedure(state, blessSpellId, 1, "rollModifier");
+  const state = session.state;
+  const act = spellSlotActForProcedure(
+    session,
+    blessSpellId,
+    1,
+    "rollModifier",
+  );
   const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
   const expectedEffect = expectedLevelOneBlessEffect(
     input.casterId,
@@ -3839,35 +3922,40 @@ function assertLevelOneBless(input: {
   const { sourceProcedureRef: _sourceProcedureRef, ...discoveryEffect } =
     expectedEffect;
 
-  expect({
-    ...act.subject,
-    invocation: battleActSpellPresentation(act)?.invocation,
-  }).toMatchObject({
+  expect(act.subject).toMatchObject({
     tag: "actionSpell",
     actorId: input.casterId,
+    mode: { tag: "cast" },
+  });
+  expect(battleActSpellPresentation(act)).toMatchObject({
     invocation: {
       tag: "spellSlot",
       spellId: blessSpellId,
       slotLevel: 1,
       procedure: "rollModifier",
     },
-    mode: { tag: "cast" },
+  });
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    access: { tag: "prepared" },
+    procedure: "rollModifier",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    actionCost: "magicAction",
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 3 },
+    rangeFeet: movementFeet(30),
+    effect: discoveryEffect,
   });
   expect(targetList).toMatchObject({
-    label: "Bless targets",
+    sourceProcedureRef: act.subject.procedureRef,
     minTargets: 1,
     maxTargets: 3,
     requiresTableSpatialFact: true,
     choices: expect.arrayContaining([input.casterId, input.targetId]),
-    spell: {
-      access: { tag: "prepared" },
-      procedure: "rollModifier",
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      actionCost: "magicAction",
-      targeting: { kind: "targetList", minTargets: 1, maxTargets: 3 },
-      rangeFeet: movementFeet(30),
-      effect: discoveryEffect,
-    },
   });
 
   const resolved = requireResolved(
@@ -3924,7 +4012,7 @@ function assertLevelOneShieldOfFaith(input: {
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3945,7 +4033,8 @@ function assertLevelOneShieldOfFaith(input: {
     ],
     monsters: [],
   });
-  const act = shieldOfFaithBonusActionSpellSlotAct(state, input.casterId);
+  const state = session.state;
+  const act = shieldOfFaithBonusActionSpellSlotAct(session, input.casterId);
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const initialActionResources = snapshotBattle(state).turn.actionResources;
   const expectedPreservedActionResources = [{ kind: "action", source: "turn" }];
@@ -3959,19 +4048,18 @@ function assertLevelOneShieldOfFaith(input: {
   );
 
   expect(initialActionResources).toEqual(expectedPreservedActionResources);
-  expect({
-    ...act.subject,
-    invocation: battleActSpellPresentation(act)?.invocation,
-  }).toMatchObject({
+  expect(act.subject).toMatchObject({
     tag: "bonusActionSpell",
     actorId: input.casterId,
+    mode: { tag: "cast" },
+  });
+  expect(battleActSpellPresentation(act)).toMatchObject({
     invocation: {
       tag: "spellSlot",
       spellId: shieldOfFaithSpellId,
       slotLevel: 1,
       procedure: "scalarBuff",
     },
-    mode: { tag: "cast" },
   });
   expect(target).toMatchObject({
     requiresTableSpatialFact: true,
@@ -4027,7 +4115,7 @@ function expectedLevelOneShieldOfFaithEffect(
     sourceProcedureRef,
     sourceCombatantId: casterId,
     bonus: 2,
-    negatedSpellIds: [],
+    negatesRepeatedDamageAllocation: false,
     expiresAt: {
       kind: "concentration",
       combatantId: casterId,
@@ -4042,7 +4130,7 @@ function assertLevelOneHealingWord(input: {
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -4064,22 +4152,22 @@ function assertLevelOneHealingWord(input: {
     ],
     monsters: [],
   });
-  const act = healingWordBonusActionSpellSlotAct(state, input.casterId);
+  const state = session.state;
+  const act = healingWordBonusActionSpellSlotAct(session, input.casterId);
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
 
-  expect({
-    ...act.subject,
-    invocation: battleActSpellPresentation(act)?.invocation,
-  }).toMatchObject({
+  expect(act.subject).toMatchObject({
     tag: "bonusActionSpell",
     actorId: input.casterId,
+    mode: { tag: "cast" },
+  });
+  expect(battleActSpellPresentation(act)).toMatchObject({
     invocation: {
       tag: "spellSlot",
       spellId: healingWordSpellId,
       slotLevel: 1,
       procedure: "directHitPointRestoration",
     },
-    mode: { tag: "cast" },
   });
   expect(target).toMatchObject({
     requiresTableSpatialFact: true,
@@ -4101,16 +4189,22 @@ function assertLevelOneHealingWord(input: {
     "rolledDice",
   );
 
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "directHitPointRestoration",
+    actionCost: "bonusAction",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    healing: { expr: { dice: 2, dieSize: 4, flat: 2 } },
+    rangeFeet: 60,
+  });
   expect(healingRoll).toMatchObject({
-    label: "Healing Word healing (2d4+2)",
-    spell: {
-      procedure: "directHitPointRestoration",
-      actionCost: "bonusAction",
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-      healing: { expr: { dice: 2, dieSize: 4, flat: 2 } },
-      rangeFeet: 60,
-    },
+    sourceProcedureRef: act.subject.procedureRef,
   });
 
   const resolved = requireResolved(
@@ -4144,7 +4238,7 @@ function assertLevelOneCureWounds(input: {
   readonly targetCurrentHp: number;
   readonly expectedResolvedHp: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -4166,27 +4260,27 @@ function assertLevelOneCureWounds(input: {
     ],
     monsters: [],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     cureWoundsSpellId,
     1,
     "directHitPointRestoration",
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
 
-  expect({
-    ...act.subject,
-    invocation: battleActSpellPresentation(act)?.invocation,
-  }).toMatchObject({
+  expect(act.subject).toMatchObject({
     tag: "actionSpell",
     actorId: input.casterId,
+    mode: { tag: "cast" },
+  });
+  expect(battleActSpellPresentation(act)).toMatchObject({
     invocation: {
       tag: "spellSlot",
       spellId: cureWoundsSpellId,
       slotLevel: 1,
       procedure: "directHitPointRestoration",
     },
-    mode: { tag: "cast" },
   });
   expect(target).toMatchObject({
     requiresTableSpatialFact: true,
@@ -4208,22 +4302,28 @@ function assertLevelOneCureWounds(input: {
     "rolledDice",
   );
 
-  expect(healingRoll).toMatchObject({
-    label: `Cure Wounds healing (2d8+${input.expectedSpellcastingAbilityModifier})`,
-    spell: {
-      procedure: "directHitPointRestoration",
-      actionCost: "magicAction",
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-      healing: {
-        expr: {
-          dice: 2,
-          dieSize: 8,
-          flat: input.expectedSpellcastingAbilityModifier,
-        },
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "directHitPointRestoration",
+    actionCost: "magicAction",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    healing: {
+      expr: {
+        dice: 2,
+        dieSize: 8,
+        flat: input.expectedSpellcastingAbilityModifier,
       },
-      rangeFeet: 5,
     },
+    rangeFeet: 5,
+  });
+  expect(healingRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
   });
 
   const resolved = requireResolved(
@@ -4257,7 +4357,7 @@ function assertLevelOneAnimalFriendship(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellSaveDc: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -4280,58 +4380,64 @@ function assertLevelOneAnimalFriendship(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     animalFriendshipSpellId,
     1,
     "saveGatedCondition",
   );
   const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
 
-  expect({
-    ...act.subject,
-    invocation: battleActSpellPresentation(act)?.invocation,
-  }).toMatchObject({
+  expect(act.subject).toMatchObject({
     tag: "actionSpell",
     actorId: input.casterId,
+    mode: { tag: "cast" },
+  });
+  expect(battleActSpellPresentation(act)).toMatchObject({
     invocation: {
       tag: "spellSlot",
       spellId: animalFriendshipSpellId,
       slotLevel: 1,
       procedure: "saveGatedCondition",
     },
-    mode: { tag: "cast" },
   });
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(
     input.expectedSpellSaveDc,
   );
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    access: { tag: "prepared" },
+    procedure: "saveGatedCondition",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    ability: "wis",
+    dc: { kind: "caster_spell_save_dc" },
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    targetCreatureTypes: ["beast"],
+    effect: {
+      kind: "fixed",
+      condition: "charmed",
+      expiresAt: {
+        kind: "duration",
+        durationTicks: animalFriendshipDurationTicks,
+      },
+      escape: { kind: "targetDamagedByCasterOrAlly" },
+      turnStartDamage: null,
+      repeatSave: null,
+    },
+    rangeFeet: movementFeet(30),
+  });
   expect(targetList).toMatchObject({
-    label: "Animal Friendship targets",
+    sourceProcedureRef: act.subject.procedureRef,
     minTargets: 1,
     maxTargets: 1,
     requiresTableSpatialFact: true,
     choices: expect.arrayContaining([animalFriendshipBeastId]),
-    spell: {
-      access: { tag: "prepared" },
-      procedure: "saveGatedCondition",
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      ability: "wis",
-      dc: { kind: "caster_spell_save_dc" },
-      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-      targetCreatureTypes: ["beast"],
-      effect: {
-        kind: "fixed",
-        condition: "charmed",
-        expiresAt: {
-          kind: "duration",
-          durationTicks: animalFriendshipDurationTicks,
-        },
-        escape: { kind: "targetDamagedByCasterOrAlly" },
-        turnStartDamage: null,
-        repeatSave: null,
-      },
-      rangeFeet: movementFeet(30),
-    },
   });
   expect(targetList.choices).not.toContain(animalFriendshipNonBeastId);
 
@@ -4350,16 +4456,9 @@ function assertLevelOneAnimalFriendship(input: {
   );
 
   expect(save).toMatchObject({
-    label: "Animal Friendship target-list Saving Throw outcomes",
+    sourceProcedureRef: act.subject.procedureRef,
     ability: "wis",
     dc: { kind: "caster_spell_save_dc" },
-    spell: {
-      procedure: "saveGatedCondition",
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-      targetCreatureTypes: ["beast"],
-      rangeFeet: movementFeet(30),
-    },
   });
 
   const resolved = requireResolved(
@@ -4422,16 +4521,25 @@ function assertLevelOneHuntersMark(input: {
     combatantId: input.casterId,
     initiative: 20,
   });
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [rangerSheet],
     monsters: [
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const rangerBefore = requireCharacterCombatant(state, input.casterId);
-  const act = huntersMarkFavoredEnemyBonusActionSpellAct(state, input.casterId);
+  const act = huntersMarkFavoredEnemyBonusActionSpellAct(
+    session,
+    input.casterId,
+  );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const favoredEnemyOwnership = requireCharacterResourceOwnershipForUnit(
+    session,
+    input.casterId,
+    rangerFavoredEnemyUnitId,
+  );
 
   expect(rangerBefore.origin.spellcasting).toMatchObject({
     spellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
@@ -4439,11 +4547,12 @@ function assertLevelOneHuntersMark(input: {
   expect(characterResources(rangerBefore)).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        resourcePoolRef: favoredEnemyOwnership.resourcePoolRef,
         usesRemaining: 2,
       }),
     ]),
   );
+  expect(favoredEnemyOwnership.unit.id).toBe(rangerFavoredEnemyUnitId);
   expect({
     ...act.subject,
     invocation: battleActSpellPresentation(act)?.invocation,
@@ -4453,7 +4562,6 @@ function assertLevelOneHuntersMark(input: {
     invocation: {
       tag: "classFeatureFreeCast",
       spellId: huntersMarkSpellId,
-      resourceUnitId: rangerFavoredEnemyUnitId,
       procedure: "markedDamageRider",
     },
     mode: { tag: "cast" },
@@ -4482,7 +4590,7 @@ function assertLevelOneHuntersMark(input: {
   expect(characterResources(ranger)).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        resourcePoolRef: favoredEnemyOwnership.resourcePoolRef,
         usesRemaining: 1,
       }),
     ]),
@@ -4500,6 +4608,7 @@ function assertLevelOneHuntersMark(input: {
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
       state: resolved.state,
+      context: session.context,
       combatant: ranger,
       unitLibrary,
     }),
@@ -4526,6 +4635,7 @@ function assertLevelOneHuntersMark(input: {
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
       state: concentrationEnded,
+      context: session.context,
       combatant: cleanedRanger,
       unitLibrary,
     }),
@@ -4596,16 +4706,22 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
       },
     ],
   });
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [rangerSheet],
     monsters: [
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const rangerBefore = requireCharacterCombatant(state, input.casterId);
-  const act = huntersMarkSpellSlotBonusActionSpellAct(state, input.casterId);
+  const act = huntersMarkSpellSlotBonusActionSpellAct(session, input.casterId);
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const favoredEnemyOwnership = requireCharacterResourceOwnershipForUnit(
+    session,
+    input.casterId,
+    rangerFavoredEnemyUnitId,
+  );
 
   expect(rangerBefore.origin.spellcasting).toMatchObject({
     spellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
@@ -4613,11 +4729,12 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
   expect(characterResources(rangerBefore)).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        resourcePoolRef: favoredEnemyOwnership.resourcePoolRef,
         usesRemaining: 0,
       }),
     ]),
   );
+  expect(favoredEnemyOwnership.unit.id).toBe(rangerFavoredEnemyUnitId);
   expect({
     ...act.subject,
     invocation: battleActSpellPresentation(act)?.invocation,
@@ -4658,7 +4775,7 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
   expect(characterResources(ranger)).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        resourcePoolRef: favoredEnemyOwnership.resourcePoolRef,
         usesRemaining: 0,
       }),
     ]),
@@ -4688,6 +4805,7 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
       state: concentrationEnded,
+      context: session.context,
       combatant: cleanedRanger,
       unitLibrary,
     }),
@@ -4741,7 +4859,7 @@ function assertLevelOneGuidingBolt(input: {
   readonly allyId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -4764,8 +4882,9 @@ function assertLevelOneGuidingBolt(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     guidingBoltSpellId,
     1,
     "spellAttackDamage",
@@ -4789,26 +4908,34 @@ function assertLevelOneGuidingBolt(input: {
   expect(target).toMatchObject({
     choices: expect.arrayContaining([monsterId]),
   });
-  expect(attackRoll).toMatchObject({
-    attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      attackKind: "ranged_spell_attack",
-      targeting: { kind: "singleCombatant" },
-      rangeFeet: 120,
-      damage: {
-        kind: "fixedSpellAttackDamage",
-        expr: { dice: 4, dieSize: 6 },
-        damageType: "radiant",
-      },
-      postDamageRiders: [
-        {
-          kind: "nextAttackRollAgainstTarget",
-          mode: "advantage",
-          expiresAt: "endOfCasterNextTurn",
-        },
-      ],
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    attackKind: "ranged_spell_attack",
+    targeting: { kind: "singleCombatant" },
+    rangeFeet: 120,
+    damage: {
+      kind: "fixedSpellAttackDamage",
+      expr: { dice: 4, dieSize: 6 },
+      damageType: "radiant",
     },
+    postDamageRiders: [
+      {
+        kind: "nextAttackRollAgainstTarget",
+        mode: "advantage",
+        expiresAt: "endOfCasterNextTurn",
+      },
+    ],
+  });
+  expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -4825,22 +4952,7 @@ function assertLevelOneGuidingBolt(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Guiding Bolt damage (4d6-radiant)",
-    spell: {
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      damage: {
-        kind: "fixedSpellAttackDamage",
-        expr: { dice: 4, dieSize: 6 },
-        damageType: "radiant",
-      },
-      postDamageRiders: [
-        {
-          kind: "nextAttackRollAgainstTarget",
-          mode: "advantage",
-          expiresAt: "endOfCasterNextTurn",
-        },
-      ],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -4881,7 +4993,11 @@ function assertLevelOneGuidingBolt(input: {
   const allyTurn = requireResolved(
     endTurn({ state: guided.state, actorId: input.casterId }),
   ).state;
-  const allyAttack = attackSubject(allyTurn, input.allyId, "Longsword");
+  const allyAttack = attackSubject(
+    { state: allyTurn, context: session.context },
+    input.allyId,
+    "Longsword",
+  );
   const allyTarget = requireHole(
     resolveBattleSubject({
       state: allyTurn,
@@ -4937,7 +5053,7 @@ function assertLevelOneChillTouch(input: {
     readonly expended: number;
   }[];
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -4955,8 +5071,9 @@ function assertLevelOneChillTouch(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     chillTouchSpellId,
   );
@@ -4986,25 +5103,33 @@ function assertLevelOneChillTouch(input: {
   expect(objectTarget).toMatchObject({
     requiresTableSpatialFact: true,
   });
-  expect(attackRoll).toMatchObject({
-    attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      resource: { tag: "none" },
-      attackKind: "melee_spell_attack",
-      targeting: { kind: "singleCreatureOrObject" },
-      rangeFeet: 5,
-      damage: {
-        kind: "fixedSpellAttackDamage",
-        expr: { dice: 1, dieSize: 10 },
-        damageType: "necrotic",
-      },
-      postDamageRiders: [
-        {
-          kind: "hitPointRegainPrevented",
-          expiresAt: "endOfCasterNextTurn",
-        },
-      ],
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    resource: { tag: "none" },
+    attackKind: "melee_spell_attack",
+    targeting: { kind: "singleCreatureOrObject" },
+    rangeFeet: 5,
+    damage: {
+      kind: "fixedSpellAttackDamage",
+      expr: { dice: 1, dieSize: 10 },
+      damageType: "necrotic",
     },
+    postDamageRiders: [
+      {
+        kind: "hitPointRegainPrevented",
+        expiresAt: "endOfCasterNextTurn",
+      },
+    ],
+  });
+  expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -5021,21 +5146,7 @@ function assertLevelOneChillTouch(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Chill Touch damage (1d10-necrotic)",
-    spell: {
-      resource: { tag: "none" },
-      damage: {
-        kind: "fixedSpellAttackDamage",
-        expr: { dice: 1, dieSize: 10 },
-        damageType: "necrotic",
-      },
-      postDamageRiders: [
-        {
-          kind: "hitPointRegainPrevented",
-          expiresAt: "endOfCasterNextTurn",
-        },
-      ],
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -5082,7 +5193,7 @@ function assertLevelOneEldritchBlast(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5100,8 +5211,9 @@ function assertLevelOneEldritchBlast(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     eldritchBlastSpellId,
     "spellAttackSequence",
@@ -5128,30 +5240,35 @@ function assertLevelOneEldritchBlast(input: {
 
   expect(act.initialHoles).toHaveLength(2);
   expect(target).toMatchObject({
-    label: "Eldritch Blast attack 1 target",
     choices: expect.arrayContaining([monsterId]),
   });
   expect(objectTarget).toMatchObject({
-    label: "Eldritch Blast attack 1 object target",
     requiresTableSpatialFact: true,
   });
-  expect(attackRoll).toMatchObject({
-    label: "Eldritch Blast attack 1 spell attack roll",
-    attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      resource: { tag: "none" },
-      attackKind: "ranged_spell_attack",
-      targeting: {
-        kind: "spellAttackSequenceCreatureOrObject",
-        countSource: "characterLevel",
-        attackCount: 1,
-      },
-      rangeFeet: 120,
-      damage: {
-        expr: { dice: 1, dieSize: 10 },
-        damageType: "force",
-      },
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackSequence",
+    resource: { tag: "none" },
+    attackKind: "ranged_spell_attack",
+    targeting: {
+      kind: "spellAttackSequenceCreatureOrObject",
+      countSource: "characterLevel",
+      attackCount: 1,
     },
+    rangeFeet: 120,
+    damage: {
+      expr: { dice: 1, dieSize: 10 },
+      damageType: "force",
+    },
+  });
+  expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -5168,14 +5285,7 @@ function assertLevelOneEldritchBlast(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Eldritch Blast attack 1 damage (1d10-force)",
-    spell: {
-      resource: { tag: "none" },
-      damage: {
-        expr: { dice: 1, dieSize: 10 },
-        damageType: "force",
-      },
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -5202,7 +5312,7 @@ function assertLevelOneFireBolt(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5216,7 +5326,12 @@ function assertLevelOneFireBolt(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
-  const act = cantripCastActionSpellAct(state, input.casterId, fireBoltSpellId);
+  const state = session.state;
+  const act = cantripCastActionSpellAct(
+    session,
+    input.casterId,
+    fireBoltSpellId,
+  );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const objectTarget = requireHoleFromList(
     act.initialHoles,
@@ -5243,18 +5358,26 @@ function assertLevelOneFireBolt(input: {
   expect(objectTarget).toMatchObject({
     requiresTableSpatialFact: true,
   });
-  expect(attackRoll).toMatchObject({
-    attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      targeting: { kind: "singleCreatureOrObject" },
-      attackKind: "ranged_spell_attack",
-      rangeFeet: 120,
-      objectHitEffect: { kind: "igniteFlammableUnattended" },
-      damage: {
-        expr: { dice: 1, dieSize: 10 },
-        damageType: "fire",
-      },
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    attackKind: "ranged_spell_attack",
+    targeting: { kind: "singleCreatureOrObject" },
+    rangeFeet: 120,
+    objectHitEffect: { kind: "igniteFlammableUnattended" },
+    damage: {
+      expr: { dice: 1, dieSize: 10 },
+      damageType: "fire",
     },
+  });
+  expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -5270,13 +5393,7 @@ function assertLevelOneFireBolt(input: {
     "rolledDice",
   );
   expect(damage).toMatchObject({
-    label: "Fire Bolt damage (1d10-fire)",
-    spell: {
-      damage: {
-        expr: { dice: 1, dieSize: 10 },
-        damageType: "fire",
-      },
-    },
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -5309,7 +5426,7 @@ function assertLevelOneRayOfFrost(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5323,8 +5440,9 @@ function assertLevelOneRayOfFrost(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     rayOfFrostSpellId,
   );
@@ -5340,14 +5458,22 @@ function assertLevelOneRayOfFrost(input: {
     "attackRoll",
   );
 
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    attackKind: "ranged_spell_attack",
+    targeting: { kind: "singleCombatant" },
+    damage: { expr: { dice: 1, dieSize: 8 }, damageType: "cold" },
+    rangeFeet: 60,
+  });
   expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
     attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      attackKind: "ranged_spell_attack",
-      targeting: { kind: "singleCombatant" },
-      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "cold" },
-      rangeFeet: 60,
-    },
   });
 
   const damage = requireHole(
@@ -5363,7 +5489,7 @@ function assertLevelOneRayOfFrost(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Ray of Frost damage (1d8-cold)",
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -5443,7 +5569,7 @@ function assertLevelOneShockingGrasp(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5462,8 +5588,9 @@ function assertLevelOneShockingGrasp(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = cantripCastActionSpellAct(
-    state,
+    session,
     input.casterId,
     shockingGraspSpellId,
   );
@@ -5484,14 +5611,22 @@ function assertLevelOneShockingGrasp(input: {
     "attackRoll",
   );
 
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    attackKind: "melee_spell_attack",
+    targeting: { kind: "singleCombatant" },
+    damage: { expr: { dice: 1, dieSize: 8 }, damageType: "lightning" },
+    rangeFeet: 5,
+  });
   expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
     attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      attackKind: "melee_spell_attack",
-      targeting: { kind: "singleCombatant" },
-      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "lightning" },
-      rangeFeet: 5,
-    },
   });
 
   const damage = requireHole(
@@ -5512,7 +5647,7 @@ function assertLevelOneShockingGrasp(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Shocking Grasp damage (1d8-lightning)",
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -5580,7 +5715,7 @@ function assertLevelOneChromaticOrb(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5599,35 +5734,42 @@ function assertLevelOneChromaticOrb(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     chromaticOrbSpellId,
     1,
     "chainedSpellAttackDamage",
   );
   const damageType = requireHoleFromList(act.initialHoles, "damageTypeChoice");
 
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "chainedSpellAttackDamage",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    targeting: { kind: "singleCombatant" },
+    attackKind: "ranged_spell_attack",
+    attackBonus: input.expectedSpellAttackBonus,
+    damage: { expr: { dice: 3, dieSize: 8 } },
+    damageTypeChoices: [
+      "acid",
+      "cold",
+      "fire",
+      "lightning",
+      "poison",
+      "thunder",
+    ],
+    rangeFeet: 90,
+    leapRangeFeet: 30,
+  });
   expect(damageType).toMatchObject({
-    label: "Chromatic Orb damage type",
+    sourceProcedureRef: act.subject.procedureRef,
     choices: ["acid", "cold", "fire", "lightning", "poison", "thunder"],
-    spell: {
-      procedure: "chainedSpellAttackDamage",
-      resource: { tag: "spellSlot", slotLevel: 1 },
-      targeting: { kind: "singleCombatant" },
-      attackKind: "ranged_spell_attack",
-      attackBonus: input.expectedSpellAttackBonus,
-      damage: { expr: { dice: 3, dieSize: 8 } },
-      damageTypeChoices: [
-        "acid",
-        "cold",
-        "fire",
-        "lightning",
-        "poison",
-        "thunder",
-      ],
-      rangeFeet: 90,
-      leapRangeFeet: 30,
-    },
   });
 
   const damageTypeFill = damageTypeChoiceFill(damageType, "poison");
@@ -5655,21 +5797,8 @@ function assertLevelOneChromaticOrb(input: {
   );
 
   expect(primaryAttackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
     attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      attackKind: "ranged_spell_attack",
-      damage: { expr: { dice: 3, dieSize: 8 } },
-      damageTypeChoices: [
-        "acid",
-        "cold",
-        "fire",
-        "lightning",
-        "poison",
-        "thunder",
-      ],
-      rangeFeet: 90,
-      leapRangeFeet: 30,
-    },
   });
 
   const primaryAttackFill = attackRollFill(primaryAttackRoll, {
@@ -5686,7 +5815,7 @@ function assertLevelOneChromaticOrb(input: {
   );
 
   expect(primaryDamage).toMatchObject({
-    label: "Chromatic Orb damage 1 (3d8-poison)",
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -5749,8 +5878,12 @@ function assertLevelOneChromaticOrb(input: {
     "rolledDice",
   );
 
+  expect(leapAttackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
+  });
   expect(leapDamage).toMatchObject({
-    label: "Chromatic Orb damage 2 (3d8-poison)",
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -5786,7 +5919,7 @@ function assertLevelOneMageArmor(input: {
   readonly casterId: CombatantId;
   readonly expectedArmorClass: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5800,8 +5933,9 @@ function assertLevelOneMageArmor(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     mageArmorSpellId,
     1,
     "persistentArmorEffect",
@@ -5859,7 +5993,7 @@ function assertLevelOneFalseLife(input: {
   readonly build: CharacterBuild;
   readonly casterId: CombatantId;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5873,8 +6007,9 @@ function assertLevelOneFalseLife(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     falseLifeSpellId,
     1,
     "scalarBuff",
@@ -5884,16 +6019,22 @@ function assertLevelOneFalseLife(input: {
     "rolledDice",
   );
 
-  expect(temporaryHitPoints).toMatchObject({
-    label: "False Life Temporary Hit Points (2d4+4)",
-    spell: {
-      procedure: "scalarBuff",
-      targeting: { kind: "self" },
-      effect: {
-        kind: "temporaryHitPoints",
-        amount: { expr: { dice: 2, dieSize: 4, flat: 4 } },
-      },
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "scalarBuff",
+    targeting: { kind: "self" },
+    effect: {
+      kind: "temporaryHitPoints",
+      amount: { expr: { dice: 2, dieSize: 4, flat: 4 } },
     },
+  });
+  expect(temporaryHitPoints).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
   });
 
   const resolved = requireResolved(
@@ -5922,7 +6063,7 @@ function assertLevelOneRayOfSickness(input: {
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -5940,8 +6081,9 @@ function assertLevelOneRayOfSickness(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     rayOfSicknessSpellId,
     1,
     "spellAttackDamage",
@@ -5968,30 +6110,33 @@ function assertLevelOneRayOfSickness(input: {
     "attackRoll",
   );
 
-  expect(attackRoll).toMatchObject({
-    attackBonus: input.expectedSpellAttackBonus,
-    spell: {
-      procedure: "spellAttackDamage",
-      spell: {
-        id: rayOfSicknessSpellId,
-        mechanics: { duration: { kind: "instantaneous" } },
-      },
-      attackKind: "ranged_spell_attack",
-      targeting: { kind: "singleCombatant" },
-      rangeFeet: 60,
-      damage: {
-        kind: "fixedSpellAttackDamage",
-        expr: { dice: 2, dieSize: 8 },
-        damageType: "poison",
-      },
-      postDamageRiders: [
-        {
-          kind: "condition",
-          condition: "poisoned",
-          expiresAt: "endOfCasterNextTurn",
-        },
-      ],
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "spellAttackDamage",
+    attackKind: "ranged_spell_attack",
+    targeting: { kind: "singleCombatant" },
+    rangeFeet: 60,
+    damage: {
+      kind: "fixedSpellAttackDamage",
+      expr: { dice: 2, dieSize: 8 },
+      damageType: "poison",
     },
+    postDamageRiders: [
+      {
+        kind: "condition",
+        condition: "poisoned",
+        expiresAt: "endOfCasterNextTurn",
+      },
+    ],
+  });
+  expect(attackRoll).toMatchObject({
+    sourceProcedureRef: act.subject.procedureRef,
+    attackBonus: input.expectedSpellAttackBonus,
   });
 
   const attackFill = attackRollFill(attackRoll, {
@@ -6008,7 +6153,7 @@ function assertLevelOneRayOfSickness(input: {
   );
 
   expect(damage).toMatchObject({
-    label: "Ray of Sickness damage (2d8-poison)",
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -6095,7 +6240,7 @@ function assertLevelOneMagicMissile(input: {
   readonly build: CharacterBuild;
   readonly casterId: CombatantId;
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -6114,8 +6259,9 @@ function assertLevelOneMagicMissile(input: {
       ),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     magicMissileSpellId,
     1,
     "repeatedDamageAllocation",
@@ -6131,33 +6277,30 @@ function assertLevelOneMagicMissile(input: {
     "spellTargetAllocation",
   );
 
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "repeatedDamageAllocation",
+    resource: { tag: "spellSlot", slotLevel: 1 },
+    targeting: {
+      kind: "repeatedEffectTargetAllocation",
+      repeatedEffectCount: 3,
+    },
+    damage: {
+      expr: { dice: 1, dieSize: 4, flat: 1 },
+      damageType: "force",
+    },
+    rangeFeet: 120,
+  });
   expect(allocation).toMatchObject({
-    label: "Magic Missile target allocation",
+    sourceProcedureRef: act.subject.procedureRef,
     allocationCount: 3,
     choices: expect.arrayContaining([monsterId, secondMonsterId]),
     requiresTableSpatialFact: true,
-    spell: {
-      spell: {
-        id: magicMissileSpellId,
-        mechanics: {
-          range: { kind: "point", feet: 120 },
-          phases: [
-            expect.objectContaining({
-              effects: [
-                expect.objectContaining({
-                  kind: "damage",
-                  damageType: "force",
-                  amount: {
-                    expr: { dice: 1, dieSize: 4, flat: 1 },
-                    kind: "fixed",
-                  },
-                }),
-              ],
-            }),
-          ],
-        },
-      },
-    },
   });
 
   const allocationFill = spellTargetAllocationFill(
@@ -6177,7 +6320,7 @@ function assertLevelOneMagicMissile(input: {
     "rolledDice",
   );
   expect(damage).toMatchObject({
-    label: "Magic Missile damage (3d4+3-force)",
+    sourceProcedureRef: act.subject.procedureRef,
     critical: false,
   });
 
@@ -8213,11 +8356,11 @@ function testLoadoutHoleId(
 }
 
 function unitFeatureActForUnitId(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   unitId: UnitRecord["id"],
 ): UnitFeatureAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is UnitFeatureAct =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === actorId &&
@@ -8229,8 +8372,22 @@ function unitFeatureActForUnitId(
   return act;
 }
 
+function requireCharacterResourceOwnershipForUnit(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+  unitId: UnitRecord["id"],
+) {
+  const ownership = session.context.characters
+    .get(actorId)
+    ?.resourceOwnership.find((candidate) => candidate.unit.id === unitId);
+  if (ownership === undefined) {
+    throw new Error(`Expected ${unitId} character resource ownership.`);
+  }
+  return ownership;
+}
+
 function cantripCastActionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   spellId: UnitRecord["id"],
   procedure: CantripSpellProcedure = "spellAttackDamage",
@@ -8239,7 +8396,7 @@ function cantripCastActionSpellAct(
   if (expectedInvocation.tag !== "cantrip") {
     throw new Error(`Expected ${spellId} cantrip invocation.`);
   }
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8257,7 +8414,7 @@ function cantripCastActionSpellAct(
 }
 
 function cantripCastHeldLightBonusActionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   spellId: UnitRecord["id"],
 ): CastBonusActionSpellAct {
@@ -8265,7 +8422,7 @@ function cantripCastHeldLightBonusActionSpellAct(
   if (expectedInvocation.tag !== "cantrip") {
     throw new Error(`Expected ${spellId} cantrip invocation.`);
   }
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8283,7 +8440,7 @@ function cantripCastHeldLightBonusActionSpellAct(
 }
 
 function shillelaghBonusActionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): CastBonusActionSpellAct {
   const expectedInvocation = cantripSpellInvocationRef(
@@ -8293,7 +8450,7 @@ function shillelaghBonusActionSpellAct(
   if (expectedInvocation.tag !== "cantrip") {
     throw new Error("Expected Shillelagh cantrip invocation.");
   }
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8303,7 +8460,8 @@ function shillelaghBonusActionSpellAct(
         expectedInvocation.spellId &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
         expectedInvocation.procedure &&
-      candidate.subject.componentWeaponItemId === shillelaghQuarterstaffItemId,
+      spellProcedureComponentWeaponItemId(session.state, candidate) ===
+        shillelaghQuarterstaffItemId,
   );
   if (act === undefined) {
     throw new Error(
@@ -8313,11 +8471,31 @@ function shillelaghBonusActionSpellAct(
   return act;
 }
 
-function sanctuaryBonusActionSpellSlotAct(
+function spellProcedureComponentWeaponItemId(
   state: BattleState,
+  act: AvailableBattleAct,
+): string | undefined {
+  const subject = act.subject;
+  if (!("procedureRef" in subject)) return undefined;
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === subject.procedureRef,
+  );
+  if (binding?.procedure.kind !== "spellInvocation") return undefined;
+  const execution = binding.procedure.execution;
+  return execution.procedure === "weaponAttackOverride"
+    ? execution.attachedWeaponItemId
+    : execution.procedure === "spellHostedWeaponAttack"
+      ? execution.componentWeaponItemId
+      : undefined;
+}
+
+function sanctuaryBonusActionSpellSlotAct(
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): CastBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8336,10 +8514,10 @@ function sanctuaryBonusActionSpellSlotAct(
 }
 
 function shieldOfFaithBonusActionSpellSlotAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): CastBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8358,10 +8536,10 @@ function shieldOfFaithBonusActionSpellSlotAct(
 }
 
 function healingWordBonusActionSpellSlotAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): CastBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8380,10 +8558,10 @@ function healingWordBonusActionSpellSlotAct(
 }
 
 function hexBonusActionSpellSlotAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): CastBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8402,10 +8580,10 @@ function hexBonusActionSpellSlotAct(
 }
 
 function huntersMarkFavoredEnemyBonusActionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): CastBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct => {
       const invocation = battleActSpellPresentation(candidate)?.invocation;
       return (
@@ -8414,7 +8592,13 @@ function huntersMarkFavoredEnemyBonusActionSpellAct(
         candidate.subject.mode.tag === "cast" &&
         invocation?.tag === "classFeatureFreeCast" &&
         invocation.spellId === huntersMarkSpellId &&
-        invocation.resourceUnitId === rangerFavoredEnemyUnitId &&
+        session.context.characters
+          .get(actorId)
+          ?.resourceOwnership.some(
+            (ownership) =>
+              ownership.resourcePoolRef === invocation.resourcePoolRef &&
+              ownership.unit.id === rangerFavoredEnemyUnitId,
+          ) === true &&
         invocation.procedure === "markedDamageRider"
       );
     },
@@ -8426,10 +8610,10 @@ function huntersMarkFavoredEnemyBonusActionSpellAct(
 }
 
 function huntersMarkSpellSlotBonusActionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): CastBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === actorId &&
@@ -8448,7 +8632,7 @@ function huntersMarkSpellSlotBonusActionSpellAct(
 }
 
 function hasCantripSpellInvocationAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   spellId: UnitRecord["id"],
   procedure: CantripSpellProcedure,
@@ -8457,7 +8641,7 @@ function hasCantripSpellInvocationAct(
   if (expectedInvocation.tag !== "cantrip") {
     throw new Error(`Expected ${spellId} cantrip invocation.`);
   }
-  return discoverBattleActs(state).some(
+  return discoverBattleActs(session).some(
     (candidate) =>
       "actorId" in candidate.subject &&
       candidate.subject.actorId === actorId &&
@@ -8473,7 +8657,7 @@ function martialArtsBonusUnarmedStrikeAct(
   state: BattleState,
   actorId: CombatantId,
 ): MartialArtsBonusUnarmedStrikeAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is MartialArtsBonusUnarmedStrikeAct =>
       candidate.subject.tag === "bonusAction" &&
       candidate.subject.action === "martialArtsUnarmedStrike" &&
@@ -8751,8 +8935,33 @@ function snapshotCombatant(
   return combatant;
 }
 
+type SpellProcedureExecution = Extract<
+  CharacterProcedureBinding,
+  { readonly procedure: { readonly kind: "spellInvocation" } }
+>["procedure"]["execution"];
+
+function requireSpellProcedureExecution(
+  state: BattleState,
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): SpellProcedureExecution {
+  const actor = requireCharacterCombatant(state, actorId);
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  if (
+    binding === undefined ||
+    (binding.procedure.kind !== "spellInvocation" &&
+      binding.procedure.kind !== "unavailableSpellInvocation")
+  ) {
+    throw new Error("Expected mechanical spell procedure execution.");
+  }
+  return binding.procedure.execution;
+}
+
 function bardicInspirationTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -8764,7 +8973,7 @@ function bardicInspirationTargetFill(
         kind: "bardicInspirationTargetWithinRange",
         bardId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+        sourceProcedureRef,
         rangeFeet: movementFeet(60),
       },
     ],

@@ -8,7 +8,6 @@
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -20,7 +19,8 @@ import {
   type BattleState,
   type ConditionRemovalProtectionSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -40,10 +40,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -187,7 +185,6 @@ function discoverConditionRemovalProtectionCastAct(
               tag: "actionSpell" as const,
               actorId,
               procedureRef: invocation.sourceProcedureRef,
-              invocation: conditionRemovalProtectionInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
             initialHoles: [targetHole],
@@ -196,22 +193,6 @@ function discoverConditionRemovalProtectionCastAct(
   return castActs;
 }
 
-function conditionRemovalProtectionInvocationRef(
-  invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "conditionRemovalProtection",
-  };
-}
-
-function conditionRemovalProtectionCastSummary(
-  invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveConditionRemovalProtection(
   input: SpellProcedureProfileResolveInput<
@@ -392,17 +373,12 @@ function applyConditionRemovalProtectionEffect(
 }
 
 const ConditionRemovalProtectionInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "conditionRemovalProtection" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("conditionRemovalProtection"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
@@ -410,8 +386,19 @@ const ConditionRemovalProtectionInvocationSchema =
         maxTargets: Schema.Literal(1),
       }),
       protection: Schema.Struct({
-        conditionSaveRollMode: BattleRuntimeObjectSchema,
-        damageResistance: BattleRuntimeObjectSchema,
+        conditionSaveRollMode: Schema.Struct({
+          kind: Schema.Literal("conditionSavingThrowRollMode"),
+          sourceCombatantId: CombatantId,
+          condition: Schema.Literal("poisoned"),
+          mode: Schema.Literal("advantage"),
+          expiresAt: BattleActiveEffectExpirationSchema,
+        }),
+        damageResistance: Schema.Struct({
+          kind: Schema.Literal("damageResistance"),
+          sourceCombatantId: CombatantId,
+          damageType: Schema.Literal("poison"),
+          expiresAt: BattleActiveEffectExpirationSchema,
+        }),
       }),
       rangeFeet: MovementFeet,
     }),
@@ -421,14 +408,11 @@ export const conditionRemovalProtectionProfile: SpellProcedureProfile<
   ConditionRemovalProtectionSpellInvocation
 > = {
   procedure: "conditionRemovalProtection",
-  invocationSchema: ConditionRemovalProtectionInvocationSchema,
+  executionSchema: ConditionRemovalProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitConditionRemovalProtection,
   discoverCastAct: discoverConditionRemovalProtectionCastAct,
-  castSummary: conditionRemovalProtectionCastSummary,
-  invocationRef: conditionRemovalProtectionInvocationRef,
   resolve: resolveConditionRemovalProtection,
 };

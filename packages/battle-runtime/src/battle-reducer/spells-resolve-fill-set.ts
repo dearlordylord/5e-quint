@@ -40,8 +40,8 @@ import {
   type BattleTargetSpatialFact,
   type BattleState,
   type SpellTargeting,
-  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
   BattleObjectId,
   BattleProcedureExecutionRef,
@@ -58,6 +58,8 @@ import {
 } from "./damage-helpers.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+
+type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import {
   isMirrorImageDuplicateRollFill,
@@ -295,7 +297,7 @@ export type SpellFillSet =
 
 export function spellFillSet(
   fills: readonly BattleFill[],
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   sourceProcedureRef: BattleProcedureExecutionRef,
   actorId: CombatantId,
   state: BattleState,
@@ -1931,7 +1933,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
 
 function spellAttackSequencePartIndexForMirrorImageRoll(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "spellAttackSequence" }
   >,
   holeId: BattleHoleId,
@@ -1985,7 +1987,7 @@ function latestAttackSequencePartIndexForRemarkableAthleteMovement(
 }
 
 function spellInvocationCanUseRemarkableAthleteCriticalMovement(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return (
     invocation.procedure === "spellAttackDamage" ||
@@ -2032,7 +2034,7 @@ function attackSightFactValidation(
 }
 
 export function spellFillSetSavingThrowTargeting(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): SpellTargeting {
   return invocation.procedure === "attackBurstSaveDamage"
     ? invocation.burst.targeting
@@ -2058,11 +2060,11 @@ export function spellFillSetSavingThrowTargeting(
 }
 
 function isTargetAbilityChoicesRollModifierInvocation<
-  I extends SupportedSpellInvocation,
+  I extends RuntimeSpellProcedure,
 >(
   invocation: I,
 ): invocation is I &
-  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }> & {
+  Extract<RuntimeSpellProcedure, { readonly procedure: "rollModifier" }> & {
     readonly abilityChoices: readonly Ability[];
   } {
   return invocation.procedure === "rollModifier"
@@ -2071,16 +2073,16 @@ function isTargetAbilityChoicesRollModifierInvocation<
     : false;
 }
 
-function isRollModifierInvocation<I extends SupportedSpellInvocation>(
+function isRollModifierInvocation<I extends RuntimeSpellProcedure>(
   invocation: I,
 ): invocation is I &
-  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }> {
+  Extract<RuntimeSpellProcedure, { readonly procedure: "rollModifier" }> {
   return invocation.procedure === "rollModifier";
 }
 
 function spellAttackSequencePartIndexForHole(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "spellAttackSequence" }
   >,
   holeId: BattleHoleId,

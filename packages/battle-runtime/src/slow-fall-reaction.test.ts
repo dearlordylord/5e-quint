@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
+import { classLevel } from "@dnd/shared/types";
 
 import {
   type BattleState,
@@ -8,6 +9,7 @@ import {
   resolveFallDamageLanding,
 } from "./index.ts";
 import {
+  characterBattleFeatureInitForTest,
   battleId,
   characterSeed,
   combatantId,
@@ -145,7 +147,11 @@ function battleWithSlowFallMonk(input: {
         initiative: 10,
         classLevels: [{ className: "monk", level: input.level }],
         attack: null,
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "monk", level: classLevel(input.level) },
+          ]),
+        ],
         characterUnitRefs: [
           reactionModifierUnitRefWithProfile(
             unit.id,

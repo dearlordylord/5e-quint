@@ -16,14 +16,17 @@ import type {
   BattleSpellCastingTimeResource,
   BattleState,
   BattleTurnResources,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleMetamagicOptionFact,
 } from "../character-battle-resources.ts";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleResourcePoolExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import { snapshotBattle } from "./dispatcher.ts";
 import {
@@ -45,7 +48,7 @@ export type SpellCastResourceSpendResult =
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
 export function spellCastActionCost(input: {
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedureExecution;
   readonly actionCostOverride?: "magicAction" | "bonusAction" | undefined;
 }): "magicAction" | "bonusAction" {
   return (
@@ -57,7 +60,7 @@ export function spellCastActionCost(input: {
 }
 
 export function spellCastingTimeResourceForSpellCast(input: {
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedureExecution;
   readonly actionCostOverride?: "magicAction" | "bonusAction" | undefined;
 }): BattleSpellCastingTimeResource {
   return { kind: spellCastActionCost(input) };
@@ -215,8 +218,8 @@ function markQuickenedLevelOnePlusSpellCastForApplications(
 export function spendClassFeatureFreeCastResource(
   state: BattleState,
   actorId: CombatantId,
-  resourceUnitId: string,
-  invocation: SupportedSpellInvocation,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+  invocation: RuntimeSpellProcedureExecution,
   errorState: BattleState,
 ): SpellCastResourceSpendResult {
   const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
@@ -233,7 +236,7 @@ export function spendClassFeatureFreeCastResource(
   }
   const resource = actor.origin.resources.find(
     (candidate) =>
-      candidate.unit.id === resourceUnitId &&
+      candidate.resourcePoolRef === resourcePoolRef &&
       resourceHasUsesRemaining(candidate),
   );
   if (resource === undefined) {
@@ -252,7 +255,7 @@ export function spendClassFeatureFreeCastResource(
         origin: {
           ...actor.origin,
           resources: actor.origin.resources.map((candidate) =>
-            candidate.unit.id === resourceUnitId &&
+            candidate.resourcePoolRef === resourcePoolRef &&
             resourceHasUsesRemaining(candidate)
               ? spendCharacterResourceUse(candidate)
               : candidate,
@@ -269,9 +272,9 @@ export function spendClassFeatureFreeCastResource(
 }
 
 export function spellRequiresConcentration(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedureExecution,
 ): boolean {
-  return invocation.spell.mechanics.duration.kind === "concentration";
+  return invocation.spellRuleFacts.duration.kind === "concentration";
 }
 
 export function startSpellEffectConcentration(

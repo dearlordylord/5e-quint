@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
 // The magicWeaponEnhancement Spell Procedure Profile: a Bonus Action spell that
 // attaches a timed magic-weapon enhancement to an exact holder-plus-item weapon
@@ -27,9 +28,7 @@ import {
   type MagicWeaponEnhancementBonus,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type { CombatantId } from "../../identity.ts";
-import { spellId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -45,9 +44,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -206,7 +204,6 @@ function discoverMagicWeaponEnhancementCastAct(
         tag: "bonusActionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: magicWeaponEnhancementInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [magicWeaponTargetItemHole(invocation)],
@@ -214,22 +211,6 @@ function discoverMagicWeaponEnhancementCastAct(
   ];
 }
 
-function magicWeaponEnhancementInvocationRef(
-  invocation: MagicWeaponEnhancementInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "magicWeaponEnhancement",
-  };
-}
-
-function magicWeaponEnhancementCastSummary(
-  invocation: MagicWeaponEnhancementInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot on a nonmagical weapon.`;
-}
 
 function resolveMagicWeaponEnhancement(
   input: SpellProcedureProfileResolveInput<
@@ -431,20 +412,15 @@ function magicWeaponEnhancementFillSetHasDisallowedFills(
 }
 
 export const MagicWeaponEnhancementInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "magicWeaponEnhancement" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("magicWeaponEnhancement"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       bonus: Schema.Literal(1, 2, 3),
-      durationTicks: Schema.Number,
+      durationTicks: ElapsedTimeTicksSchema,
     }),
   );
 export const magicWeaponEnhancementProfile: SpellProcedureProfile<
@@ -453,14 +429,11 @@ export const magicWeaponEnhancementProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "magicWeaponEnhancement",
-  invocationSchema: MagicWeaponEnhancementInvocationSchema,
+  executionSchema: MagicWeaponEnhancementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitMagicWeaponEnhancement,
   discoverCastAct: discoverMagicWeaponEnhancementCastAct,
-  castSummary: magicWeaponEnhancementCastSummary,
-  invocationRef: magicWeaponEnhancementInvocationRef,
   resolve: resolveMagicWeaponEnhancement,
 };

@@ -39,9 +39,11 @@ import {
   activeSelfTransformationModeEffect,
   battleCreatureCanBreatheUnderwater,
   discoverBattleActs,
+  discoverBattleActCandidates,
   SELF_TRANSFORMATION_MODE_KINDS,
   snapshotBattle,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
 } from "./index.ts";
 import {
@@ -122,7 +124,7 @@ type SelfTransformationProjection = {
 };
 
 type SelfTransformationRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly lastResult: LastResult;
 };
 
@@ -315,7 +317,7 @@ function castSelfTransformationMode(
       },
 ): SelfTransformationRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: alterSelfUnitId,
     slotLevel: 2,
   });
@@ -342,7 +344,7 @@ function castSelfTransformationMode(
             kind: "damageTypeChoice" as const,
             holeId: requireResultHole(
               resolveBattleSubject({
-                state: state.battle,
+                state: state.battle.state,
                 subject: act.subject,
                 fills: [modeFill],
               }),
@@ -354,27 +356,33 @@ function castSelfTransformationMode(
       : [modeFill];
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills,
     }),
     "Expected Alter Self self-transformation mode to resolve.",
   );
-  return { battle: resolved.state, lastResult: input.lastResult };
+  return {
+    battle: { ...state.battle, state: resolved.state },
+    lastResult: input.lastResult,
+  };
 }
 
 function startNextCasterTurn(
   state: SelfTransformationRuntimeState,
 ): SelfTransformationRuntimeState {
   const targetTurn = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected caster end turn to resolve.",
   );
   const casterTurn = requireResolved(
     endTurn({ state: targetTurn.state, actorId: spellTargetId }),
     "Expected target end turn to resolve.",
   );
-  return { battle: casterTurn.state, lastResult: "nextCasterTurn" };
+  return {
+    battle: { ...state.battle, state: casterTurn.state },
+    lastResult: "nextCasterTurn",
+  };
 }
 
 function replaceSelfTransformationMode(
@@ -393,16 +401,19 @@ function replaceSelfTransformationMode(
         readonly lastResult: Extract<LastResult, "naturalWeaponsReplacement">;
       },
 ): SelfTransformationRuntimeState {
-  const act = replacementAct(state.battle, input);
+  const act = replacementAct(state.battle.state, input);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
     "Expected Alter Self mode replacement to resolve.",
   );
-  return { battle: resolved.state, lastResult: input.lastResult };
+  return {
+    battle: { ...state.battle, state: resolved.state },
+    lastResult: input.lastResult,
+  };
 }
 
 function replacementAct(
@@ -419,7 +430,7 @@ function replacementAct(
 ) {
   const act =
     input.mode === "naturalWeapons"
-      ? discoverBattleActs(state).find(
+      ? discoverBattleActCandidates(state).find(
           (candidate) =>
             candidate.subject.tag === "runtimeCommand" &&
             candidate.subject.command === "replaceSelfTransformationMode" &&
@@ -427,7 +438,7 @@ function replacementAct(
             candidate.subject.naturalWeaponDamageType ===
               input.naturalWeaponDamageType,
         )
-      : discoverBattleActs(state).find(
+      : discoverBattleActCandidates(state).find(
           (candidate) =>
             candidate.subject.tag === "runtimeCommand" &&
             candidate.subject.command === "replaceSelfTransformationMode" &&
@@ -443,8 +454,8 @@ function replacementAct(
 function selfTransformationProjection(
   state: SelfTransformationRuntimeState,
 ): SelfTransformationProjection {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const casterSnapshot = snapshotBattle(state.battle).combatants.find(
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const casterSnapshot = snapshotBattle(state.battle.state).combatants.find(
     (combatant) => combatant.combatantId === spellCasterId,
   );
   expect(casterSnapshot).toBeDefined();
@@ -461,12 +472,12 @@ function selfTransformationProjection(
       : "none";
   return {
     magicActionAvailable: canSpendAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
       "magic",
     ),
     castSpellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: alterSelfUnitId,
         slotLevel: 2,
       }) !== undefined,
@@ -475,9 +486,9 @@ function selfTransformationProjection(
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "replaceSelfTransformationMode",
     ),
-    spellSlotExpended: casterSpellSlotExpended(state.battle),
+    spellSlotExpended: casterSpellSlotExpended(state.battle.state),
     slotSpellCastThisTurn:
-      state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
+      state.battle.state.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
     casterConcentrating:
@@ -507,7 +518,7 @@ function selfTransformationProjection(
   };
 }
 
-function unarmedStrikeAttackProjection(battle: BattleState) {
+function unarmedStrikeAttackProjection(battle: BattleRuntimeSession) {
   const unarmedStrike = discoverBattleActs(battle).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
@@ -521,7 +532,7 @@ function unarmedStrikeAttackProjection(battle: BattleState) {
   const targetHole = requireHole(unarmedStrike.initialHoles, "targetChoice");
   const attackRoll = requireResultHole(
     resolveBattleSubject({
-      state: battle,
+      state: battle.state,
       subject: unarmedStrike.subject,
       fills: [
         attackTargetFill(

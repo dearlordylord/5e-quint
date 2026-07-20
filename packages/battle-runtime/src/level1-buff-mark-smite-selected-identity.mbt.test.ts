@@ -28,10 +28,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
-import {
-  resolveBattleSubject,
-  characterSpellInvocationRefForProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -64,7 +61,7 @@ import {
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   initiativeScore,
   resolveBattleInterrupt,
@@ -81,9 +78,10 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
+  type BattleRuntimeSession,
   type BattleSpellHealingRollHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -482,11 +480,16 @@ type BonusActionSpellAct = AvailableBattleAct & {
     { readonly tag: "bonusActionSpell" }
   >;
 };
-type ActionSpellAct = AvailableBattleAct & {
+type MechanicalBonusActionSpellAct = ReturnType<
+  typeof discoverBattleActCandidates
+>[number] & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
+    { readonly tag: "bonusActionSpell" }
   >;
+};
+type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole;
 
@@ -1496,7 +1499,7 @@ function withHiddenCasterForSearch(state: BattleState): BattleState {
 }
 
 function searchActForActor(state: BattleState, actorId: CombatantId) {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "search" &&
@@ -1615,7 +1618,8 @@ function replayLevel1BuffMarkSmiteAction(
 }
 
 function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
-  let state = level1BuffMarkSmiteBattle();
+  let session = level1BuffMarkSmiteSession();
+  let state = session.state;
   let route: readonly BattleReducerRouteEvent[] = [
     battleReducerStartRouteEvent(),
   ];
@@ -1668,10 +1672,17 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
   }
 
   function reset(): void {
-    state = level1BuffMarkSmiteBattle();
+    session = level1BuffMarkSmiteSession();
+    state = session.state;
     route = [battleReducerStartRouteEvent()];
     resetProcedureProjections();
     lastResult = "init";
+  }
+
+  function level1BuffMarkSmiteSessionAtState(
+    mechanicalState: BattleState,
+  ): BattleRuntimeSession {
+    return { ...session, state: mechanicalState };
   }
 
   function recordRouteEvents(
@@ -1686,9 +1697,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
   }
 
   function resolveHeroismThroughCasterStartTurn(): void {
-    state = level1BuffMarkSmiteBattle({
+    session = level1BuffMarkSmiteSession({
       preparedSpells: [spellRecord(heroismUnitId)],
     });
+    state = session.state;
     const caster = state.combatants.get(casterId);
     if (caster === undefined) {
       throw new Error("Expected Heroism caster.");
@@ -1732,7 +1744,9 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
     });
     recordRouteEvents(act, cast, targetTurn, refreshed);
     recordResolvedResult(refreshed, "heroism");
-    heroismEffects = heroismEffectsProjection(state);
+    heroismEffects = heroismEffectsProjection(
+      level1BuffMarkSmiteSessionAtState(state),
+    );
   }
 
   function recordResolvedResult(
@@ -1754,9 +1768,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
   return {
     init: reset,
     doDivineFavorWeaponDamageRider: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(divineFavorUnitId)],
       });
+      state = session.state;
       resetProcedureProjections();
 
       const act = bonusActionSpellAct(state, divineFavorUnitId);
@@ -1770,16 +1785,19 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       }
       state = cast.state;
 
-      const attack = resolveLongswordHit({ state });
+      const attack = resolveLongswordHit({
+        session: level1BuffMarkSmiteSessionAtState(state),
+      });
       damageRider = attack.damageRider;
       projectedDamageRiderSourceSpellId = divineFavorUnitId;
       recordRouteEvents(act, cast, attack);
       recordResolvedResult(attack.result, "divineFavor");
     },
     doDivineSmiteAfterHitDamage: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(divineSmiteUnitId)],
       });
+      state = session.state;
       resetProcedureProjections();
 
       const hit = resolveLongswordHitWithAttackRoll({ state });
@@ -1806,7 +1824,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const afterSmiteDamage = requireNeedsHoles(afterSmite);
       const damage = requireDamageRollHole(afterSmiteDamage);
       damageRider = spellWeaponDamageRider(
-        afterSmiteDamage.state,
+        level1BuffMarkSmiteSessionAtState(afterSmiteDamage.state),
         damage,
         divineSmiteUnitId,
       );
@@ -1824,10 +1842,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       recordResolvedResult(resolved, "divineSmite");
     },
     doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(ensnaringStrikeUnitId)],
         sourceClassName: "ranger",
       });
+      state = session.state;
       resetProcedureProjections();
 
       const hit = resolveLongswordHitWithAttackRoll({ state });
@@ -1922,7 +1941,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         ensnaringStrikeSaveAbility: save.ability === "str" ? "str" : "none",
         turnStartDamageSourceSpellId:
           ensnaringStrikeTurnStartDamageSourceSpellId(
-            awaitingTurnStartDamage.state,
+            level1BuffMarkSmiteSessionAtState(awaitingTurnStartDamage.state),
             turnStartDamage,
           ),
         turnStartDamageDamageType:
@@ -1939,10 +1958,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       };
     },
     doFalseLifeTemporaryHitPoints: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(falseLifeUnitId)],
         sourceClassName: "wizard",
       });
+      state = session.state;
       resetProcedureProjections();
 
       const act = actionSpellAct(state, falseLifeUnitId);
@@ -1974,15 +1994,18 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       });
       recordRouteEvents(endConcentration, ended);
       recordResolvedResult(ended, "heroism");
-      heroismEffects = heroismEffectsProjection(state);
+      heroismEffects = heroismEffectsProjection(
+        level1BuffMarkSmiteSessionAtState(state),
+      );
     },
     doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(huntersMarkUnitId)],
         sourceClassName: "ranger",
         targetKind: "statBlock",
         includeMarkedDamageTransferTarget: true,
       });
+      state = session.state;
       resetProcedureProjections();
 
       const castAct = bonusActionSpellAct(state, huntersMarkUnitId);
@@ -2009,7 +2032,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         requireNeedsHoles(hit.afterAttackRoll),
       );
       huntersMarkDamageHoleRider = spellMarkedDamageRider(
-        state,
+        level1BuffMarkSmiteSessionAtState(state),
         damage,
         huntersMarkUnitId,
       );
@@ -2069,12 +2092,13 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       recordResolvedResult(transferred, "huntersMark");
     },
     doHexMarkedDamageRiderAndLaterTurnTransfer: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(hexUnitId)],
         sourceClassName: "warlock",
         targetKind: "statBlock",
         includeMarkedDamageTransferTarget: true,
       });
+      state = session.state;
       resetProcedureProjections();
 
       const castAct = bonusActionSpellAct(state, hexUnitId);
@@ -2102,7 +2126,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const damage = requireDamageRollHole(
         requireNeedsHoles(hit.afterAttackRoll),
       );
-      hexDamageHoleRider = spellMarkedDamageRider(state, damage, hexUnitId);
+      hexDamageHoleRider = spellMarkedDamageRider(
+        level1BuffMarkSmiteSessionAtState(state),
+        damage,
+        hexUnitId,
+      );
       const damaged = resolveBattleSubject({
         state,
         subject: hit.subject,
@@ -2163,10 +2191,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       );
     },
     doLongstriderSpeedIncrease: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(longstriderUnitId)],
         sourceClassName: "ranger",
       });
+      state = session.state;
       resetProcedureProjections();
 
       const act = actionSpellAct(state, longstriderUnitId);
@@ -2182,9 +2211,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       recordResolvedResult(resolved, "longstrider");
     },
     doSearingSmiteAfterHitTimedDamageAndSaveCleanup: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         preparedSpells: [spellRecord(searingSmiteUnitId)],
       });
+      state = session.state;
       resetProcedureProjections();
 
       const hit = resolveLongswordHitWithAttackRoll({ state });
@@ -2211,7 +2241,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const afterSearingSmiteDamage = requireNeedsHoles(afterSearingSmite);
       const weaponDamage = requireDamageRollHole(afterSearingSmiteDamage);
       const immediateDamage = spellWeaponDamageRider(
-        afterSearingSmiteDamage.state,
+        level1BuffMarkSmiteSessionAtState(afterSearingSmiteDamage.state),
         weaponDamage,
         searingSmiteUnitId,
       );
@@ -2267,11 +2297,12 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       });
     },
     doShillelaghWeaponAttackOverride: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         cantrips: [spellRecord(shillelaghUnitId)],
         sourceClassName: "druid",
         attack: zeroAbilityWeaponAttack(shillelaghQuarterstaffUnitId),
       });
+      state = session.state;
       resetProcedureProjections();
 
       const act = bonusActionSpellAct(state, shillelaghUnitId);
@@ -2312,12 +2343,13 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       recordResolvedResult(resolved, "shillelagh");
     },
     doTrueStrikeSpellHostedWeaponAttack: () => {
-      state = level1BuffMarkSmiteBattle({
+      session = level1BuffMarkSmiteSession({
         cantrips: [spellRecord(trueStrikeUnitId)],
         sourceClassName: "wizard",
         attack: zeroAbilityWeaponAttack(trueStrikeDaggerUnitId),
         weaponProficiencies: [{ kind: "weapon_category", category: "simple" }],
       });
+      state = session.state;
       resetProcedureProjections();
 
       const act = actionSpellAct(state, trueStrikeUnitId);
@@ -2378,7 +2410,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
     getRoute: () => route,
     getState: () =>
       projectLevel1BuffMarkSmiteSelectedIdentityState(
-        state,
+        level1BuffMarkSmiteSessionAtState(state),
         damageRider,
         projectedDamageRiderSourceSpellId,
         huntersMarkDamageHoleRider,
@@ -2516,22 +2548,24 @@ function defaultTrueStrikeSpellHostedWeaponAttackProjection(): TrueStrikeSpellHo
   return { tag: "none" };
 }
 
-function level1BuffMarkSmiteBattle(
-  input: {
-    readonly cantrips?: readonly SpellRecord[];
-    readonly preparedSpells?: readonly SpellRecord[];
-    readonly sourceClassName?: CharacterClassName;
-    readonly weaponProficiencies?: readonly WeaponProficiency[];
-    readonly attack?: NonNullable<
-      Extract<
-        BattleCreatureInit["creatureInit"],
-        { readonly kind: "character" }
-      >["attack"]
-    >;
-    readonly targetKind?: "character" | "statBlock";
-    readonly includeMarkedDamageTransferTarget?: boolean;
-  } = {},
-): BattleState {
+type Level1BuffMarkSmiteBattleInput = {
+  readonly cantrips?: readonly SpellRecord[];
+  readonly preparedSpells?: readonly SpellRecord[];
+  readonly sourceClassName?: CharacterClassName;
+  readonly weaponProficiencies?: readonly WeaponProficiency[];
+  readonly attack?: NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["attack"]
+  >;
+  readonly targetKind?: "character" | "statBlock";
+  readonly includeMarkedDamageTransferTarget?: boolean;
+};
+
+function level1BuffMarkSmiteSession(
+  input: Level1BuffMarkSmiteBattleInput = {},
+): BattleRuntimeSession {
   const sourceClassName = input.sourceClassName ?? "paladin";
   const target =
     input.targetKind === "statBlock"
@@ -2587,6 +2621,12 @@ function level1BuffMarkSmiteBattle(
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function level1BuffMarkSmiteBattle(
+  input: Level1BuffMarkSmiteBattleInput = {},
+): BattleState {
+  return level1BuffMarkSmiteSession(input).state;
 }
 
 function level1BuffMarkSmiteCreature(input: {
@@ -2704,10 +2744,9 @@ function bonusActionSpellAct(
   state: BattleState,
   spellId: BonusActionCastSpellId,
 ): BonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+      candidate.subject.tag === "bonusActionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Spell act.`);
@@ -2719,10 +2758,9 @@ function actionSpellAct(
   state: BattleState,
   spellId: ActionCastSpellId,
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+      candidate.subject.tag === "actionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Action Spell act.`);
@@ -2730,22 +2768,24 @@ function actionSpellAct(
   return act;
 }
 
-function resolveLongswordHit(input: { readonly state: BattleState }): {
+function resolveLongswordHit(input: {
+  readonly session: BattleRuntimeSession;
+}): {
   readonly damageRider: NonNullable<
     BattleDamageRollHole["spellWeaponDamageRiders"]
   >[number];
   readonly result: BattleResolutionResult;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const hit = resolveLongswordHitWithAttackRoll(input);
+  const hit = resolveLongswordHitWithAttackRoll({ state: input.session.state });
   const damage = requireDamageRollHole(requireNeedsHoles(hit.afterAttackRoll));
   const damageRider = spellWeaponDamageRider(
-    input.state,
+    input.session,
     damage,
     divineFavorUnitId,
   );
   const result = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: hit.subject,
     fills: [
       hit.targetFill,
@@ -2855,13 +2895,13 @@ function zeroAbilityWeaponAttack(
 function weaponAttackAct(
   state: BattleState,
   attackName: Level1WeaponAttackName,
-): AvailableBattleAct & {
+): ReturnType<typeof discoverBattleActCandidates>[number] & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >;
 } {
-  const act = discoverBattleActs(state).find((candidate) => {
+  const act = discoverBattleActCandidates(state).find((candidate) => {
     if (
       candidate.subject.tag !== "action" ||
       candidate.subject.action !== "attack"
@@ -3021,13 +3061,13 @@ function abilityCheckFill(
 }
 
 function spellWeaponDamageRider(
-  state: BattleState,
+  session: BattleRuntimeSession,
   hole: BattleDamageRollHole,
   spellId: SpellWeaponDamageRiderSourceSpellId,
 ): NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number] {
   const rider = hole.spellWeaponDamageRiders?.find((candidate) =>
     characterSpellProcedureRefMatchesSpellForTest(
-      state,
+      session,
       candidate.sourceCombatantId,
       candidate.sourceProcedureRef,
       spellId,
@@ -3040,13 +3080,13 @@ function spellWeaponDamageRider(
 }
 
 function spellMarkedDamageRider(
-  state: BattleState,
+  session: BattleRuntimeSession,
   hole: BattleDamageRollHole,
   spellId: MarkedDamageRiderSourceSpellId,
 ): NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number] {
   const rider = hole.spellMarkedDamageRiders?.find((candidate) =>
     characterSpellProcedureRefMatchesSpellForTest(
-      state,
+      session,
       candidate.sourceCombatantId,
       candidate.sourceProcedureRef,
       spellId,
@@ -3190,7 +3230,7 @@ function markedDamageTransferActVisible(
   state: BattleState,
   spellId: MarkedDamageRiderSourceSpellId,
 ): boolean {
-  return discoverBattleActs(state).some((candidate) =>
+  return discoverBattleActCandidates(state).some((candidate) =>
     isMarkedDamageTransferAct(candidate, spellId),
   );
 }
@@ -3198,8 +3238,8 @@ function markedDamageTransferActVisible(
 function markedDamageTransferAct(
   state: BattleState,
   spellId: MarkedDamageRiderSourceSpellId,
-): BonusActionSpellAct {
-  const act = discoverBattleActs(state).find((candidate) =>
+): MechanicalBonusActionSpellAct {
+  const act = discoverBattleActCandidates(state).find((candidate) =>
     isMarkedDamageTransferAct(candidate, spellId),
   );
   if (act === undefined) {
@@ -3209,14 +3249,10 @@ function markedDamageTransferAct(
 }
 
 function isMarkedDamageTransferAct(
-  candidate: AvailableBattleAct,
-  spellId: MarkedDamageRiderSourceSpellId,
-): candidate is BonusActionSpellAct {
-  return (
-    candidate.subject.tag === "bonusActionSpell" &&
-    battleActSpellPresentation(candidate)?.invocation.tag === "spellEffect" &&
-    battleActSpellPresentation(candidate)?.invocation.spellId === spellId
-  );
+  candidate: ReturnType<typeof discoverBattleActCandidates>[number],
+  _spellId: MarkedDamageRiderSourceSpellId,
+): candidate is MechanicalBonusActionSpellAct {
+  return candidate.subject.tag === "bonusActionSpell";
 }
 
 function attackHitBonusActionSpellChoice(
@@ -3238,13 +3274,7 @@ function attackHitBonusActionSpellChoice(
         candidate.reactorId !== casterId
       )
         return false;
-      return (
-        characterSpellInvocationRefForProcedureRefForTest(
-          result.state,
-          candidate.reactorId,
-          candidate.subject.procedureRef,
-        ).spellId === spellId
-      );
+      return true;
     },
   );
   if (choice === undefined) {
@@ -3259,7 +3289,7 @@ function spellRestraintEscapeAct(state: BattleState): AvailableBattleAct & {
     { readonly tag: "action"; readonly action: "escapeSpellRestraint" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -3285,7 +3315,7 @@ function endConcentrationAct(state: BattleState): AvailableBattleAct & {
     { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -3333,12 +3363,12 @@ function ensnaringStrikeSaveSourceSpellId(
 }
 
 function ensnaringStrikeTurnStartDamageSourceSpellId(
-  state: BattleState,
+  session: BattleRuntimeSession,
   hole: BattleSpellTurnStartDamageRollHole,
 ): EnsnaringStrikeSourceSpellId {
   if (hole.spellTurnStartDamage.sourceProcedureRef === undefined) return "none";
   return characterSpellProcedureRefMatchesSpellForTest(
-    state,
+    session,
     hole.spellTurnStartDamage.sourceCombatantId,
     hole.spellTurnStartDamage.sourceProcedureRef,
     ensnaringStrikeUnitId,
@@ -3589,7 +3619,10 @@ function trueStrikeSpellHostedWeaponAttackProjection(input: {
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(trueStrikeRequiredSourceSpellId(input.act)),
     ),
-    componentWeaponItemId: trueStrikeComponentWeaponItemId(input.act),
+    componentWeaponItemId: trueStrikeComponentWeaponItemId(
+      input.state,
+      input.act,
+    ),
     weaponUnitId: trueStrikeWeaponUnitId(input.state, input.act),
     ...trueStrikeRadiantAttackProjection(input.attackRoll, input.damage),
   };
@@ -3611,13 +3644,26 @@ function trueStrikeRequiredSourceSpellId(
 }
 
 function trueStrikeComponentWeaponItemId(
+  state: BattleState,
   act: ActionSpellAct,
 ): TrueStrikeDaggerItemId {
-  if (act.subject.componentWeaponItemId === trueStrikeDaggerItemId) {
+  const actor = state.combatants.get(act.subject.actorId);
+  const binding =
+    actor?.origin.kind === "character"
+      ? actor.origin.execution.procedureBindings.find(
+          (candidate) => candidate.procedureRef === act.subject.procedureRef,
+        )
+      : undefined;
+  const componentWeaponItemId =
+    binding?.procedure.kind === "spellInvocation" &&
+    binding.procedure.execution.procedure === "spellHostedWeaponAttack"
+      ? binding.procedure.execution.componentWeaponItemId
+      : undefined;
+  if (componentWeaponItemId === trueStrikeDaggerItemId) {
     return trueStrikeDaggerItemId;
   }
   throw new Error(
-    `Unexpected True Strike component weapon item ${act.subject.componentWeaponItemId}.`,
+    `Unexpected True Strike component weapon item ${componentWeaponItemId}.`,
   );
 }
 
@@ -3627,7 +3673,7 @@ function trueStrikeWeaponUnitId(
 ): TrueStrikeDaggerUnitId {
   const selectedWeaponUnitId = selectedLoadoutWeaponUnitIdForItem({
     state,
-    itemId: trueStrikeComponentWeaponItemId(act),
+    itemId: trueStrikeComponentWeaponItemId(state, act),
     sourceName: "True Strike",
   });
   if (selectedWeaponUnitId === trueStrikeDaggerUnitId) {
@@ -3708,7 +3754,7 @@ function selectedLoadoutWeaponUnitIdForItem(input: {
 }
 
 function projectLevel1BuffMarkSmiteSelectedIdentityState(
-  state: BattleState,
+  session: BattleRuntimeSession,
   damageRider:
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined,
@@ -3732,6 +3778,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   trueStrikeSpellHostedWeaponAttack: TrueStrikeSpellHostedWeaponAttackProjection,
   lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
+  const state = session.state;
   const snapshot = snapshotBattle(state);
   const target = snapshot.combatants.find(
     (combatant) => combatant.combatantId === targetId,
@@ -3748,7 +3795,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   return {
     targetHp: target.hp,
     longstriderTargetSpeedFeet: Number(target.movement.speedFeet),
-    ...longstriderSpeedEffectProjection(state),
+    ...longstriderSpeedEffectProjection(session),
     casterTempHp: caster.tempHp,
     casterFrightened: snapshotHasCondition(caster.conditions, "frightened"),
     spellSlotSpentThisTurn:
@@ -3767,12 +3814,12 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
     casterConcentrating: caster.concentrating,
     ...ensnaringStrikeLifecycle,
-    ...huntersMarkDamageHoleProjection(state, huntersMarkDamageHoleRider),
-    ...huntersMarkActiveMarkProjection(state),
+    ...huntersMarkDamageHoleProjection(session, huntersMarkDamageHoleRider),
+    ...huntersMarkActiveMarkProjection(session),
     huntersMarkTransferKindOnDropTurn,
     huntersMarkTransferVisibleOnDropTurn,
-    ...hexDamageHoleProjection(state, hexDamageHoleRider),
-    ...hexActiveMarkProjection(state),
+    ...hexDamageHoleProjection(session, hexDamageHoleRider),
+    ...hexActiveMarkProjection(session),
     hexTransferKindOnDropTurn,
     hexTransferVisibleOnDropTurn,
     hexAfterCleanupAbilityRollMode,
@@ -3806,8 +3853,9 @@ function temporaryHitPointsSourceSpellId(
 }
 
 function heroismEffectsProjection(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): HeroismEffectsProjection {
+  const state = session.state;
   const caster = state.combatants.get(casterId);
   if (caster === undefined) {
     throw new Error("Expected Heroism caster.");
@@ -3824,13 +3872,13 @@ function heroismEffectsProjection(
   );
   return {
     frightenedImmunitySourceSpellId: heroismSourceSpellId(
-      state,
+      session,
       frightenedImmunity,
     ),
     frightenedImmunityCondition:
       heroismFrightenedImmunityCondition(frightenedImmunity),
     turnStartTemporaryHitPointsSourceSpellId: heroismSourceSpellId(
-      state,
+      session,
       turnStartTemporaryHitPoints,
     ),
     turnStartTemporaryHitPointsAmount: turnStartTemporaryHitPoints?.amount ?? 0,
@@ -3854,7 +3902,7 @@ function heroismFrightenedImmunityCondition(
 }
 
 function heroismSourceSpellId(
-  state: BattleState,
+  session: BattleRuntimeSession,
   effect:
     | { readonly sourceProcedureRef: BattleProcedureExecutionRef }
     | undefined,
@@ -3864,7 +3912,7 @@ function heroismSourceSpellId(
   }
   if (
     characterSpellProcedureRefMatchesSpellForTest(
-      state,
+      session,
       casterId,
       effect.sourceProcedureRef,
       heroismUnitId,
@@ -3878,17 +3926,17 @@ function heroismSourceSpellId(
 }
 
 function longstriderSpeedEffectProjection(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
   | "longstriderSpeedEffectSourceSpellId"
   | "longstriderSpeedEffectTarget"
   | "longstriderSpeedDeltaFeet"
 > {
-  const trackedEffect = longstriderSpeedEffect(state);
+  const trackedEffect = longstriderSpeedEffect(session.state);
   return {
     longstriderSpeedEffectSourceSpellId: longstriderSourceSpellId(
-      state,
+      session,
       trackedEffect?.effect,
     ),
     longstriderSpeedEffectTarget: trackedEffect?.target ?? "none",
@@ -3915,7 +3963,7 @@ function longstriderSpeedEffect(state: BattleState):
 }
 
 function longstriderSourceSpellId(
-  state: BattleState,
+  session: BattleRuntimeSession,
   effect:
     | { readonly sourceProcedureRef: BattleProcedureExecutionRef }
     | undefined,
@@ -3925,7 +3973,7 @@ function longstriderSourceSpellId(
   }
   if (
     characterSpellProcedureRefMatchesSpellForTest(
-      state,
+      session,
       casterId,
       effect.sourceProcedureRef,
       longstriderUnitId,
@@ -3939,13 +3987,16 @@ function longstriderSourceSpellId(
 }
 
 function huntersMarkDamageHoleProjection(
-  state: BattleState,
+  session: BattleRuntimeSession,
   rider:
     | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
     | undefined,
 ): HuntersMarkDamageHoleProjection {
   return {
-    huntersMarkDamageHoleSourceSpellId: huntersMarkSourceSpellId(state, rider),
+    huntersMarkDamageHoleSourceSpellId: huntersMarkSourceSpellId(
+      session,
+      rider,
+    ),
     huntersMarkDamageHoleDamageType:
       rider?.damage.damageType === "force" ? "force" : "none",
     huntersMarkDamageHoleDice: rider?.damage.expr.dice ?? 0,
@@ -3954,16 +4005,19 @@ function huntersMarkDamageHoleProjection(
 }
 
 function huntersMarkActiveMarkProjection(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): HuntersMarkActiveMarkProjection {
-  const effect = huntersMarkActiveMarkEffect(state);
+  const effect = huntersMarkActiveMarkEffect(session.state);
   return {
-    huntersMarkActiveMarkSourceSpellId: huntersMarkSourceSpellId(state, effect),
+    huntersMarkActiveMarkSourceSpellId: huntersMarkSourceSpellId(
+      session,
+      effect,
+    ),
     huntersMarkActiveMarkTarget: huntersMarkActiveMarkTarget(effect),
     huntersMarkConcentrationSourceSpellId:
       effect === undefined
         ? "none"
-        : huntersMarkConcentrationSourceSpellId(state),
+        : huntersMarkConcentrationSourceSpellId(session),
     huntersMarkActiveMarkTransferKind:
       huntersMarkActiveMarkTransferKind(effect),
     huntersMarkActiveMarkRetargetTiming:
@@ -3986,7 +4040,7 @@ function huntersMarkActiveMarkEffect(
 }
 
 function huntersMarkSourceSpellId(
-  state: BattleState,
+  session: BattleRuntimeSession,
   effect:
     | { readonly sourceProcedureRef: BattleProcedureExecutionRef }
     | undefined,
@@ -3996,7 +4050,7 @@ function huntersMarkSourceSpellId(
   }
   if (
     characterSpellProcedureRefMatchesSpellForTest(
-      state,
+      session,
       casterId,
       effect.sourceProcedureRef,
       huntersMarkUnitId,
@@ -4027,8 +4081,9 @@ function huntersMarkActiveMarkTarget(
 }
 
 function huntersMarkConcentrationSourceSpellId(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): HuntersMarkSourceSpellId {
+  const state = session.state;
   const caster = state.combatants.get(casterId);
   if (caster === undefined) {
     throw new Error("Expected Hunter's Mark caster.");
@@ -4038,7 +4093,7 @@ function huntersMarkConcentrationSourceSpellId(
   }
   if (
     characterSpellProcedureRefMatchesSpellForTest(
-      state,
+      session,
       casterId,
       caster.concentration.sourceProcedureRef,
       huntersMarkUnitId,
@@ -4083,13 +4138,13 @@ function huntersMarkActiveMarkRetargetTiming(
 }
 
 function hexDamageHoleProjection(
-  state: BattleState,
+  session: BattleRuntimeSession,
   rider:
     | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
     | undefined,
 ): HexDamageHoleProjection {
   return {
-    hexDamageHoleSourceSpellId: hexSourceSpellId(state, rider),
+    hexDamageHoleSourceSpellId: hexSourceSpellId(session, rider),
     hexDamageHoleDamageType:
       rider?.damage.damageType === "necrotic" ? "necrotic" : "none",
     hexDamageHoleDice: rider?.damage.expr.dice ?? 0,
@@ -4097,7 +4152,10 @@ function hexDamageHoleProjection(
   };
 }
 
-function hexActiveMarkProjection(state: BattleState): HexActiveMarkProjection {
+function hexActiveMarkProjection(
+  session: BattleRuntimeSession,
+): HexActiveMarkProjection {
+  const state = session.state;
   const effect = hexActiveMarkEffect(state);
   if (effect === undefined) {
     return {
@@ -4112,7 +4170,7 @@ function hexActiveMarkProjection(state: BattleState): HexActiveMarkProjection {
     };
   }
   return {
-    hexActiveMarkSourceSpellId: hexSourceSpellId(state, effect),
+    hexActiveMarkSourceSpellId: hexSourceSpellId(session, effect),
     hexActiveMarkTarget: hexActiveMarkTarget(effect),
     hexAbilityCheckAbility: hexAbilityCheckAbility(effect),
     hexMatchingTargetAbilityRollMode: hexAbilityCheckRollModeFor(
@@ -4168,7 +4226,7 @@ function hexActiveMarkEffect(
 }
 
 function hexSourceSpellId(
-  state: BattleState,
+  session: BattleRuntimeSession,
   effect:
     | { readonly sourceProcedureRef: BattleProcedureExecutionRef }
     | undefined,
@@ -4178,7 +4236,7 @@ function hexSourceSpellId(
   }
   if (
     characterSpellProcedureRefMatchesSpellForTest(
-      state,
+      session,
       casterId,
       effect.sourceProcedureRef,
       hexUnitId,

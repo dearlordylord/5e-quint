@@ -26,6 +26,7 @@ import {
   type BattleObjectIgnitionDisposition,
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
   type CombatantId,
@@ -62,6 +63,7 @@ import {
   attackTargetFill,
   areaSavingThrowOutcomeFill,
   battleFromSheets,
+  battleSessionFromSheets,
   battleProcedureExecutionRefForHole,
   battleProcedureExecutionRefForTest,
   characterResources,
@@ -219,14 +221,11 @@ const slowSuccessfulSaveTargetId = combatantId(
 );
 
 const barbarianExtraAttackUnitId = "barbarian_extra_attack";
-const barbarianFastMovementUnitId = "barbarian_fast_movement";
 const fighterExtraAttackUnitId = "fighter_extra_attack";
 const paladinExtraAttackUnitId = "paladin_extra_attack";
 const rangerExtraAttackUnitId = "ranger_extra_attack";
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
-const rogueSneakAttackUnitId = "rogue_sneak_attack";
-const rogueCunningStrikeUnitId = "rogue_cunning_strike";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const sorcererFontOfMagicUnitId = "sorcerer_font_of_magic";
 const hasteSpellId = "haste";
@@ -367,9 +366,7 @@ type ReactionRollOrDamageReductionChoice = Extract<
 
 describe("level 5 SDK tracer bullets", () => {
   test("Barbarian Fast Movement projects through sheet handoff and increases Speed plus Dash without Heavy armor", () => {
-    assertLevelFiveFastMovementHandoff({
-      sourceUnitId: barbarianFastMovementUnitId,
-    });
+    assertLevelFiveFastMovementHandoff();
   });
 
   test("Barbarian Extra Attack projects through sheet handoff and opens exactly one added attack slot", () => {
@@ -486,7 +483,7 @@ describe("level 5 SDK tracer bullets", () => {
   });
 
   test("Stunning Strike projects Monk Focus, spends one Focus Point, and applies the failed-save Stunned result", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l5-tracer-stunning-strike",
       characters: [
         characterSheet({
@@ -511,7 +508,8 @@ describe("level 5 SDK tracer bullets", () => {
         monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
       ],
     });
-    const subject = attackSubject(state, monkId, "Dagger");
+    const state = session.state;
+    const subject = attackSubject(session, monkId, "Dagger");
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -574,12 +572,16 @@ describe("level 5 SDK tracer bullets", () => {
       throw new Error("Expected Stunning Strike active effect.");
     }
     const stunningStrikeProcedureRef =
-      monk.origin.execution.procedureBindings.find(
-        (binding) =>
+      monk.origin.execution.procedureBindings.find((binding) => {
+        const procedure = binding.procedure;
+        return (
           binding.procedureRef === stunningStrikeEffect.sourceProcedureRef &&
-          binding.procedure.kind === "unitSupportProfile" &&
-          binding.procedure.supportKind === "stunningStrike",
-      )?.procedureRef;
+          (procedure.kind === "unitFeature" ||
+            procedure.kind === "unitSupportProfile") &&
+          typeof procedure.execution === "object" &&
+          procedure.execution.kind === "stunningStrike"
+        );
+      })?.procedureRef;
 
     expect(stunningStrikeProcedureRef).toBeDefined();
 
@@ -595,18 +597,24 @@ describe("level 5 SDK tracer bullets", () => {
         }),
       ]),
     );
-    expect(characterResources(monk)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          unit: expect.objectContaining({ id: monkFocusUnitId }),
-          usesRemaining: 4,
-        }),
-      ]),
+    const monkFocusOwnership = session.context.characters
+      .get(monkId)
+      ?.resourceOwnership.find(
+        (ownership) => ownership.unit.id === monkFocusUnitId,
+      );
+    if (monkFocusOwnership === undefined) {
+      throw new Error("Expected Monk Focus resource ownership.");
+    }
+    const monkFocusResource = characterResources(monk).find(
+      (resource) =>
+        resource.resourcePoolRef === monkFocusOwnership.resourcePoolRef,
     );
+
+    expect(monkFocusResource).toMatchObject({ usesRemaining: 4 });
   });
 
   test("Cunning Strike projects Sneak Attack, forgoes one die for Trip, and applies Prone after a failed save", () => {
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l5-tracer-cunning-strike",
       characters: [
         characterSheet({
@@ -642,7 +650,8 @@ describe("level 5 SDK tracer bullets", () => {
         }),
       ],
     });
-    const subject = attackSubject(state, rogueId, "Dagger");
+    const state = session.state;
+    const subject = attackSubject(session, rogueId, "Dagger");
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -682,19 +691,29 @@ describe("level 5 SDK tracer bullets", () => {
     expect(damage).toMatchObject({
       attackDamageRiders: expect.arrayContaining([
         expect.objectContaining({
-          unitId: rogueSneakAttackUnitId,
           damage: { dice: 3, dieSize: 6, damageType: "piercing" },
         }),
       ]),
       cunningStrikeOptions: expect.arrayContaining([
         expect.objectContaining({
-          unitId: rogueCunningStrikeUnitId,
           optionId: "trip",
-          sourceDamageRiderUnitId: rogueSneakAttackUnitId,
           dieCost: { dice: 1, dieSize: 6 },
         }),
       ]),
     });
+    if (!("attackDamageRiders" in damage)) {
+      throw new Error("Expected an attack damage roll hole.");
+    }
+    const sneakAttackProcedureRef =
+      damage.attackDamageRiders?.[0]?.procedureRef;
+    const tripOption = damage.cunningStrikeOptions?.find(
+      (option) => option.optionId === "trip",
+    );
+    if (sneakAttackProcedureRef === undefined || tripOption === undefined) {
+      throw new Error(
+        "Expected Cunning Strike mechanical procedure references.",
+      );
+    }
 
     const damageFills = ordinaryAttackDamageFills({
       state,
@@ -702,9 +721,9 @@ describe("level 5 SDK tracer bullets", () => {
       prefixFills: [targetSelection, attackRoll],
       damage,
       damageDice: [[4], [6, 5]],
-      selectedAttackDamageRiderUnitIds: [rogueSneakAttackUnitId],
+      selectedAttackDamageRiderProcedureRefs: [sneakAttackProcedureRef],
       cunningStrikeOption: {
-        unitId: rogueCunningStrikeUnitId,
+        procedureRef: tripOption.procedureRef,
         optionId: "trip",
       },
     });
@@ -735,13 +754,13 @@ describe("level 5 SDK tracer bullets", () => {
     ).toBe(true);
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: rogueId, unitId: rogueSneakAttackUnitId }]);
+    ).toEqual([{ attackerId: rogueId, procedureRef: sneakAttackProcedureRef }]);
   });
 
   test("Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage", () => {
     const scimitarDamageDieRoll = 6;
     const expectedUncannyDodgeDamage = 4;
-    const state = battleFromSheets({
+    const session = battleSessionFromSheets({
       battleIdText: "battle:l5-tracer-uncanny-dodge",
       characters: [
         characterSheet({
@@ -770,9 +789,10 @@ describe("level 5 SDK tracer bullets", () => {
         ),
       ],
     });
+    const state = session.state;
 
     expect(
-      requireCharacterCombatant(state, rogueId).origin.characterUnitRefs,
+      session.context.characters.get(rogueId)?.unitPresentationSources,
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -785,7 +805,7 @@ describe("level 5 SDK tracer bullets", () => {
     );
 
     const beforeHp = requireCharacterCombatant(state, rogueId).hp;
-    const subject = attackSubject(state, monsterId, "Scimitar");
+    const subject = attackSubject(session, monsterId, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -880,7 +900,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const hasteCase of hasteCases) {
       expectHasteClassAccess(hasteCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-haste-${hasteCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -898,8 +918,9 @@ describe("level 5 SDK tracer bullets", () => {
           ),
         ],
       });
+      const state = session.state;
       const act = spellSlotActForProcedure(
-        state,
+        session,
         hasteSpellId,
         hasteCastLevel,
         "hastePositive",
@@ -1091,34 +1112,37 @@ describe("level 5 SDK tracer bullets", () => {
 
       const druidWildShapeKnownFormStatBlockIds =
         sleetStormCase.druidWildShapeKnownFormStatBlockIds;
-      const state = stateWithSleetStormTargetConcentration(
-        battleFromSheets({
-          battleIdText: `battle:l5-tracer-sleet-storm-${sleetStormCase.sourceUnitId}`,
-          characters: [
-            characterSheet({
-              characterIdText: `character:l5-tracer-sleet-storm-${sleetStormCase.sourceUnitId}`,
-              build: sleetStormCase.build,
-              combatantId: sleetStormCase.casterId,
-              initiative: 20,
-              ...(druidWildShapeKnownFormStatBlockIds === undefined
-                ? {}
-                : {
-                    druidWildShapeKnownFormStatBlockIds:
-                      druidWildShapeKnownFormStatBlockIds,
-                  }),
-            }),
-          ],
-          monsters: [
-            monsterBattleInput(
-              sleetStormTargetId,
-              10,
-              srdStatBlock("stat_block_sphinx_of_wonder"),
-            ),
-          ],
-        }),
-      );
-      const act = spellSlotActForProcedure(
+      const session = battleSessionFromSheets({
+        battleIdText: `battle:l5-tracer-sleet-storm-${sleetStormCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-sleet-storm-${sleetStormCase.sourceUnitId}`,
+            build: sleetStormCase.build,
+            combatantId: sleetStormCase.casterId,
+            initiative: 20,
+            ...(druidWildShapeKnownFormStatBlockIds === undefined
+              ? {}
+              : {
+                  druidWildShapeKnownFormStatBlockIds:
+                    druidWildShapeKnownFormStatBlockIds,
+                }),
+          }),
+        ],
+        monsters: [
+          monsterBattleInput(
+            sleetStormTargetId,
+            10,
+            srdStatBlock("stat_block_sphinx_of_wonder"),
+          ),
+        ],
+      });
+      const state = stateWithSleetStormTargetConcentration(session.state);
+      const sessionWithTargetConcentration: BattleRuntimeSession = {
+        ...session,
         state,
+      };
+      const act = spellSlotActForProcedure(
+        sessionWithTargetConcentration,
         sleetStormSpellId,
         sleetStormCastLevel,
         "sleetStormAreaHazard",
@@ -1140,24 +1164,30 @@ describe("level 5 SDK tracer bullets", () => {
         mode: { tag: "cast" },
       });
       expect(area).toMatchObject({
-        label: "Sleet Storm area",
+        sourceProcedureRef: act.subject.procedureRef,
         area: {
           kind: "pointOriginCylinder",
           radiusFeet: movementFeet(20),
           heightFeet: movementFeet(40),
         },
-        spell: expect.objectContaining({
-          procedure: "sleetStormAreaHazard",
-          resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
-          ability: "dex",
-          dc: { kind: "caster_spell_save_dc" },
-          targeting: {
-            kind: "pointOriginCylinder",
-            radiusFeet: movementFeet(20),
-            heightFeet: movementFeet(40),
-          },
-          rangeFeet: movementFeet(150),
-        }),
+      });
+      expect(
+        requireSpellProcedureExecution(
+          state,
+          sleetStormCase.casterId,
+          act.subject.procedureRef,
+        ),
+      ).toMatchObject({
+        procedure: "sleetStormAreaHazard",
+        resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: {
+          kind: "pointOriginCylinder",
+          radiusFeet: movementFeet(20),
+          heightFeet: movementFeet(40),
+        },
+        rangeFeet: movementFeet(150),
       });
 
       const cast = requireResolved(
@@ -1271,7 +1301,6 @@ describe("level 5 SDK tracer bullets", () => {
       );
 
       expect(entrySave).toMatchObject({
-        label: "Entry DEX save",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
         sleetStormAreaHazard: {
@@ -1352,7 +1381,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const slowCase of slowCases) {
       expectSlowClassAccess(slowCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-slow-${slowCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -1375,6 +1404,7 @@ describe("level 5 SDK tracer bullets", () => {
           ),
         ],
       });
+      const state = session.state;
       const beforeCast = snapshotBattle(state);
       const beforeFailedSaveTarget = requireSnapshotCombatant(
         beforeCast,
@@ -1385,7 +1415,7 @@ describe("level 5 SDK tracer bullets", () => {
         slowSuccessfulSaveTargetId,
       );
       const act = spellSlotActForProcedure(
-        state,
+        session,
         slowSpellId,
         slowCastLevel,
         "slowActivePenalties",
@@ -1410,20 +1440,26 @@ describe("level 5 SDK tracer bullets", () => {
         mode: { tag: "cast" },
       });
       expect(savingThrow).toMatchObject({
-        label: "Slow point-origin Cube Saving Throw outcomes",
+        sourceProcedureRef: act.subject.procedureRef,
         ability: "wis",
         dc: { kind: "caster_spell_save_dc" },
-        spell: expect.objectContaining({
-          procedure: "slowActivePenalties",
-          resource: { tag: "spellSlot", slotLevel: slowCastLevel },
-          targeting: {
-            kind: "pointOriginCube",
-            sideFeet: movementFeet(slowCubeSideFeet),
-          },
-          maxTargets: slowMaxTargets,
-          rangeFeet: movementFeet(120),
-          durationTicks: slowDurationTicks,
-        }),
+      });
+      expect(
+        requireSpellProcedureExecution(
+          state,
+          slowCase.casterId,
+          act.subject.procedureRef,
+        ),
+      ).toMatchObject({
+        procedure: "slowActivePenalties",
+        resource: { tag: "spellSlot", slotLevel: slowCastLevel },
+        targeting: {
+          kind: "pointOriginCube",
+          sideFeet: movementFeet(slowCubeSideFeet),
+        },
+        maxTargets: slowMaxTargets,
+        rangeFeet: movementFeet(120),
+        durationTicks: slowDurationTicks,
       });
 
       const resolved = requireResolved(
@@ -1556,7 +1592,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const counterspellCase of counterspellCases) {
       expectCounterspellClassAccess(counterspellCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-counterspell-${counterspellCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -1577,7 +1613,7 @@ describe("level 5 SDK tracer bullets", () => {
         monsters: [],
       });
       const awaitingCounterspell = startCounterspellableMagicMissile({
-        state,
+        session,
         casterId: counterspellTriggeringWizardId,
         targetId: counterspellCase.reactorId,
         reactorId: counterspellCase.reactorId,
@@ -1680,7 +1716,7 @@ describe("level 5 SDK tracer bullets", () => {
       const objectId = battleObjectId(
         `object:l5-tracer-dispel-${dispelMagicCase.sourceUnitId}`,
       );
-      const baseState = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-dispel-${dispelMagicCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -1699,7 +1735,7 @@ describe("level 5 SDK tracer bullets", () => {
         monsters: [],
       });
       const state: BattleState = {
-        ...baseState,
+        ...session.state,
         lightEmitters: [
           trackedObjectSpellLightEmitter({
             objectId,
@@ -1707,8 +1743,12 @@ describe("level 5 SDK tracer bullets", () => {
           }),
         ],
       };
-      const act = spellSlotActForProcedure(
+      const sessionWithTrackedLightEmitter: BattleRuntimeSession = {
+        ...session,
         state,
+      };
+      const act = spellSlotActForProcedure(
+        sessionWithTrackedLightEmitter,
         dispelMagicSpellId,
         dispelMagicCastLevel,
         "ongoingSpellEnd",
@@ -1775,7 +1815,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const fireballCase of fireballCases) {
       expectFireballClassAccess(fireballCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-fireball-${fireballCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -1793,8 +1833,9 @@ describe("level 5 SDK tracer bullets", () => {
           ),
         ],
       });
+      const state = session.state;
       const act = spellSlotActForProcedure(
-        state,
+        session,
         fireballSpellId,
         fireballCastLevel,
         "saveGatedDamage",
@@ -1804,10 +1845,43 @@ describe("level 5 SDK tracer bullets", () => {
         "savingThrowOutcome",
       );
 
+      expect({
+        ...act.subject,
+        invocation: battleActSpellPresentation(act)?.invocation,
+      }).toMatchObject({
+        tag: "actionSpell",
+        actorId: fireballCase.casterId,
+        invocation: {
+          tag: "spellSlot",
+          spellId: fireballSpellId,
+          slotLevel: fireballCastLevel,
+          procedure: "saveGatedDamage",
+        },
+        mode: { tag: "cast" },
+      });
       expect(savingThrow).toMatchObject({
-        label: "Fireball point-origin Sphere Saving Throw outcomes",
+        sourceProcedureRef: act.subject.procedureRef,
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
+      });
+      expect(
+        requireSpellProcedureExecution(
+          state,
+          fireballCase.casterId,
+          act.subject.procedureRef,
+        ),
+      ).toMatchObject({
+        procedure: "saveGatedDamage",
+        resource: { tag: "spellSlot", slotLevel: fireballCastLevel },
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
+        damage: {
+          expr: { dice: fireballDamageRollResults.length, dieSize: 6 },
+          damageType: "fire",
+        },
+        successDamage: "half",
+        rangeFeet: 150,
       });
 
       const saveFill = fireballSavingThrowOutcomeFill({
@@ -1896,7 +1970,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const flyCase of flyCases) {
       expectFlyClassAccess(flyCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-fly-${flyCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -1908,8 +1982,9 @@ describe("level 5 SDK tracer bullets", () => {
         ],
         monsters: [],
       });
+      const state = session.state;
       const act = spellSlotActForProcedure(
-        state,
+        session,
         flySpellId,
         flyCastLevel,
         "scalarBuff",
@@ -2005,7 +2080,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const glyphOfWardingCase of glyphOfWardingCases) {
       expectGlyphOfWardingClassAccess(glyphOfWardingCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-glyph-of-warding-${glyphOfWardingCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -2017,7 +2092,7 @@ describe("level 5 SDK tracer bullets", () => {
         ],
         monsters: [],
       });
-      const glyphCreationActs = discoverBattleActs(state).filter(
+      const glyphCreationActs = discoverBattleActs(session).filter(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
           candidate.subject.mode.tag === "cast" &&
@@ -2066,7 +2141,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const hypnoticPatternCase of hypnoticPatternCases) {
       expectHypnoticPatternClassAccess(hypnoticPatternCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-hypnotic-pattern-${hypnoticPatternCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -2084,8 +2159,9 @@ describe("level 5 SDK tracer bullets", () => {
           ),
         ],
       });
+      const state = session.state;
       const act = spellSlotActForProcedure(
-        state,
+        session,
         hypnoticPatternSpellId,
         hypnoticPatternCastLevel,
         "hypnoticPattern",
@@ -2095,16 +2171,36 @@ describe("level 5 SDK tracer bullets", () => {
         "savingThrowOutcome",
       );
 
+      expect({
+        ...act.subject,
+        invocation: battleActSpellPresentation(act)?.invocation,
+      }).toMatchObject({
+        tag: "actionSpell",
+        actorId: hypnoticPatternCase.casterId,
+        invocation: {
+          tag: "spellSlot",
+          spellId: hypnoticPatternSpellId,
+          slotLevel: hypnoticPatternCastLevel,
+          procedure: "hypnoticPattern",
+        },
+        mode: { tag: "cast" },
+      });
       expect(savingThrow).toMatchObject({
-        label: "Hypnotic Pattern point-origin Cube Saving Throw outcomes",
+        sourceProcedureRef: act.subject.procedureRef,
         ability: "wis",
         dc: { kind: "caster_spell_save_dc" },
-        spell: expect.objectContaining({
-          procedure: "hypnoticPattern",
-          resource: { tag: "spellSlot", slotLevel: hypnoticPatternCastLevel },
-          targeting: { kind: "pointOriginCube", sideFeet: 30 },
-          rangeFeet: 120,
-        }),
+      });
+      expect(
+        requireSpellProcedureExecution(
+          state,
+          hypnoticPatternCase.casterId,
+          act.subject.procedureRef,
+        ),
+      ).toMatchObject({
+        procedure: "hypnoticPattern",
+        resource: { tag: "spellSlot", slotLevel: hypnoticPatternCastLevel },
+        targeting: { kind: "pointOriginCube", sideFeet: 30 },
+        rangeFeet: 120,
       });
 
       const resolved = requireResolved(
@@ -2181,7 +2277,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const lightningBoltCase of lightningBoltCases) {
       expectLightningBoltClassAccess(lightningBoltCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-lightning-bolt-${lightningBoltCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -2204,8 +2300,9 @@ describe("level 5 SDK tracer bullets", () => {
           ),
         ],
       });
+      const state = session.state;
       const act = spellSlotActForProcedure(
-        state,
+        session,
         lightningBoltSpellId,
         lightningBoltCastLevel,
         "saveGatedDamage",
@@ -2215,21 +2312,41 @@ describe("level 5 SDK tracer bullets", () => {
         "savingThrowOutcome",
       );
 
+      expect({
+        ...act.subject,
+        invocation: battleActSpellPresentation(act)?.invocation,
+      }).toMatchObject({
+        tag: "actionSpell",
+        actorId: lightningBoltCase.casterId,
+        invocation: {
+          tag: "spellSlot",
+          spellId: lightningBoltSpellId,
+          slotLevel: lightningBoltCastLevel,
+          procedure: "saveGatedDamage",
+        },
+        mode: { tag: "cast" },
+      });
       expect(savingThrow).toMatchObject({
-        label: "Lightning Bolt self-origin Line Saving Throw outcomes",
+        sourceProcedureRef: act.subject.procedureRef,
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
-        spell: expect.objectContaining({
-          procedure: "saveGatedDamage",
-          resource: { tag: "spellSlot", slotLevel: lightningBoltCastLevel },
-          targeting: { kind: "selfOriginLine", lengthFeet: 100, widthFeet: 5 },
-          damage: {
-            expr: { dice: lightningBoltDamageDiceCount, dieSize: 6 },
-            damageType: "lightning",
-          },
-          successDamage: "half",
-          rangeFeet: 0,
-        }),
+      });
+      expect(
+        requireSpellProcedureExecution(
+          state,
+          lightningBoltCase.casterId,
+          act.subject.procedureRef,
+        ),
+      ).toMatchObject({
+        procedure: "saveGatedDamage",
+        resource: { tag: "spellSlot", slotLevel: lightningBoltCastLevel },
+        targeting: { kind: "selfOriginLine", lengthFeet: 100, widthFeet: 5 },
+        damage: {
+          expr: { dice: lightningBoltDamageDiceCount, dieSize: 6 },
+          damageType: "lightning",
+        },
+        successDamage: "half",
+        rangeFeet: 0,
       });
 
       const saveFill = areaSavingThrowOutcomeFill(
@@ -2322,7 +2439,7 @@ describe("level 5 SDK tracer bullets", () => {
     for (const massHealingWordCase of massHealingWordCases) {
       expectMassHealingWordClassAccess(massHealingWordCase);
 
-      const state = battleFromSheets({
+      const session = battleSessionFromSheets({
         battleIdText: `battle:l5-tracer-mass-healing-word-${massHealingWordCase.sourceUnitId}`,
         characters: [
           characterSheet({
@@ -2354,8 +2471,9 @@ describe("level 5 SDK tracer bullets", () => {
         ],
         monsters: [],
       });
+      const state = session.state;
       const act = bonusActionSpellSlotActForProcedure(
-        state,
+        session,
         massHealingWordCase.casterId,
         massHealingWordSpellId,
         massHealingWordCastLevel,
@@ -2381,7 +2499,7 @@ describe("level 5 SDK tracer bullets", () => {
         mode: { tag: "cast" },
       });
       expect(targetList).toMatchObject({
-        label: "Mass Healing Word targets",
+        sourceProcedureRef: act.subject.procedureRef,
         minTargets: 1,
         maxTargets: 6,
         requiresTableSpatialFact: true,
@@ -2390,27 +2508,32 @@ describe("level 5 SDK tracer bullets", () => {
           massHealingWordTargetAId,
           massHealingWordTargetBId,
         ]),
-        spell: expect.objectContaining({
-          procedure: "directHitPointRestoration",
-          actionCost: "bonusAction",
-          resource: { tag: "spellSlot", slotLevel: massHealingWordCastLevel },
-          targeting: { kind: "targetList", minTargets: 1, maxTargets: 6 },
-          healing: {
-            expr: {
-              dice: 2,
-              dieSize: 4,
-              flat: massHealingWordSpellcastingAbilityModifier,
-            },
+      });
+      expect(
+        requireSpellProcedureExecution(
+          state,
+          massHealingWordCase.casterId,
+          act.subject.procedureRef,
+        ),
+      ).toMatchObject({
+        procedure: "directHitPointRestoration",
+        actionCost: "bonusAction",
+        resource: { tag: "spellSlot", slotLevel: massHealingWordCastLevel },
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 6 },
+        healing: {
+          expr: {
+            dice: 2,
+            dieSize: 4,
+            flat: massHealingWordSpellcastingAbilityModifier,
           },
-          rangeFeet: 60,
-        }),
+        },
+        rangeFeet: 60,
       });
 
       const targetIds = [massHealingWordTargetAId, massHealingWordTargetBId];
       const targetFill = spellTargetListFill(
         targetList,
         massHealingWordCase.casterId,
-        massHealingWordSpellId,
         targetIds,
       );
       const healingRoll = requireHole(
@@ -2423,21 +2546,7 @@ describe("level 5 SDK tracer bullets", () => {
       );
 
       expect(healingRoll).toMatchObject({
-        label: `Mass Healing Word healing (2d4+${massHealingWordSpellcastingAbilityModifier})`,
-        spell: expect.objectContaining({
-          procedure: "directHitPointRestoration",
-          actionCost: "bonusAction",
-          resource: { tag: "spellSlot", slotLevel: massHealingWordCastLevel },
-          targeting: { kind: "targetList", minTargets: 1, maxTargets: 6 },
-          healing: {
-            expr: {
-              dice: 2,
-              dieSize: 4,
-              flat: massHealingWordSpellcastingAbilityModifier,
-            },
-          },
-          rangeFeet: 60,
-        }),
+        sourceProcedureRef: act.subject.procedureRef,
       });
 
       const firstTargetBeforeHealing = requireCombatant(
@@ -2854,7 +2963,7 @@ function expectProtectionFromEnergyClassAccess(input: {
     },
   });
 
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: `battle:l5-tracer-protection-from-energy-access-${input.sourceUnitId}`,
     characters: [
       characterSheet({
@@ -2873,7 +2982,7 @@ function expectProtectionFromEnergyClassAccess(input: {
     monsters: [],
   });
   const act = spellSlotActForProcedure(
-    state,
+    session,
     protectionFromEnergySpellId,
     protectionFromEnergyCastLevel,
     "chosenDamageResistance",
@@ -2931,7 +3040,7 @@ function expectSleetStormClassAccess(input: {
     },
   });
 
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: `battle:l5-tracer-sleet-storm-access-${input.sourceUnitId}`,
     characters: [
       characterSheet({
@@ -2949,8 +3058,9 @@ function expectSleetStormClassAccess(input: {
     ],
     monsters: [],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     sleetStormSpellId,
     sleetStormCastLevel,
     "sleetStormAreaHazard",
@@ -2972,22 +3082,28 @@ function expectSleetStormClassAccess(input: {
     mode: { tag: "cast" },
   });
   expect(area).toMatchObject({
-    label: "Sleet Storm area",
+    sourceProcedureRef: act.subject.procedureRef,
     area: {
       kind: "pointOriginCylinder",
       radiusFeet: movementFeet(20),
       heightFeet: movementFeet(40),
     },
-    spell: expect.objectContaining({
-      procedure: "sleetStormAreaHazard",
-      resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
-      targeting: {
-        kind: "pointOriginCylinder",
-        radiusFeet: movementFeet(20),
-        heightFeet: movementFeet(40),
-      },
-      rangeFeet: movementFeet(150),
-    }),
+  });
+  expect(
+    requireSpellProcedureExecution(
+      state,
+      input.casterId,
+      act.subject.procedureRef,
+    ),
+  ).toMatchObject({
+    procedure: "sleetStormAreaHazard",
+    resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
+    targeting: {
+      kind: "pointOriginCylinder",
+      radiusFeet: movementFeet(20),
+      heightFeet: movementFeet(40),
+    },
+    rangeFeet: movementFeet(150),
   });
 }
 
@@ -3017,13 +3133,13 @@ function expectSlowClassAccess(input: {
 }
 
 function bonusActionSpellSlotActForProcedure(
-  state: BattleState,
+  session: BattleRuntimeSession,
   casterId: CombatantId,
   spellId: string,
   slotLevel: number,
   procedure: SpellSlotProcedure,
 ): CastBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is CastBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       candidate.subject.actorId === casterId &&
@@ -3043,7 +3159,6 @@ function bonusActionSpellSlotActForProcedure(
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   casterId: CombatantId,
-  _spellId: string,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {
@@ -3213,6 +3328,22 @@ function requireSnapshotCombatant(
   return combatant;
 }
 
+function requireSpellProcedureExecution(
+  state: BattleState,
+  casterId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+) {
+  const caster = requireCharacterCombatant(state, casterId);
+  const binding = characterProcedureBinding(
+    caster.origin.execution,
+    procedureRef,
+  );
+  if (binding?.procedure.kind !== "spellInvocation") {
+    throw new Error("Expected a bound mechanical spell procedure execution.");
+  }
+  return binding.procedure.execution;
+}
+
 function ongoingSpellTargetWithinRangeFact(input: {
   readonly casterId: CombatantId;
   readonly target: OngoingSpellTarget;
@@ -3228,13 +3359,14 @@ function ongoingSpellTargetWithinRangeFact(input: {
 }
 
 function startCounterspellableMagicMissile(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
   readonly reactorId: CombatantId;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  const state = input.session.state;
   const act = spellSlotActForProcedure(
-    input.state,
+    input.session,
     magicMissileSpellId,
     magicMissileTriggerSlotLevel,
     "repeatedDamageAllocation",
@@ -3252,14 +3384,13 @@ function startCounterspellableMagicMissile(input: {
     targetId: input.targetId,
     dartCount: allocation.allocationCount,
   });
-  const reactor = requireCharacterCombatant(input.state, input.reactorId);
+  const reactor = requireCharacterCombatant(state, input.reactorId);
   const counterspellProcedureRef =
     reactor.origin.execution.procedureBindings.flatMap((binding) => {
       return binding?.procedure.kind === "spellInvocation" &&
-        binding.procedure.invocation.procedure === "counterspell" &&
-        binding.procedure.invocation.spell.id === counterspellSpellId &&
-        binding.procedure.invocation.resource.tag === "spellSlot" &&
-        Number(binding.procedure.invocation.resource.slotLevel) ===
+        binding.procedure.execution.procedure === "counterspell" &&
+        binding.procedure.execution.resource.tag === "spellSlot" &&
+        Number(binding.procedure.execution.resource.slotLevel) ===
           counterspellCastLevel
         ? [binding.procedureRef]
         : [];
@@ -3268,7 +3399,7 @@ function startCounterspellableMagicMissile(input: {
     throw new Error("Expected admitted Counterspell execution binding.");
   }
   const result = resolveBattleSubject({
-    state: input.state,
+    state,
     subject: act.subject,
     fills: [
       allocationFill,
@@ -3374,10 +3505,9 @@ function requireCounterspellChoice(
       );
       return (
         binding?.procedure.kind === "spellInvocation" &&
-        binding.procedure.invocation.procedure === "counterspell" &&
-        binding.procedure.invocation.spell.id === counterspellSpellId &&
-        binding.procedure.invocation.resource.tag === "spellSlot" &&
-        Number(binding.procedure.invocation.resource.slotLevel) ===
+        binding.procedure.execution.procedure === "counterspell" &&
+        binding.procedure.execution.resource.tag === "spellSlot" &&
+        Number(binding.procedure.execution.resource.slotLevel) ===
           counterspellCastLevel
       );
     },
@@ -3408,9 +3538,9 @@ function requireUncannyDodgeAttackDamageChoice(
         candidate.choice.procedureRef,
       );
       return (
-        (binding?.procedure.kind === "unitFeature" ||
-          binding?.procedure.kind === "unitSupportProfile") &&
-        binding.procedure.unitId === rogueUncannyDodgeUnitId
+        binding?.procedure.kind === "unitFeature" &&
+        binding.procedure.execution.kind ===
+          REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
       );
     },
   );
@@ -3492,7 +3622,7 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
   readonly afterDamageHp: Hp;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 } {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: `battle:l5-tracer-protection-from-energy-${damageType}`,
     characters: [
       characterSheet({
@@ -3517,8 +3647,9 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
       monsterBattleInput(monsterId, 10, elementalTouchStatBlock(damageType)),
     ],
   });
+  const state = session.state;
   const act = spellSlotActForProcedure(
-    state,
+    session,
     protectionFromEnergySpellId,
     protectionFromEnergyCastLevel,
     "chosenDamageResistance",
@@ -3546,7 +3677,11 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
   const monsterTurn = requireResolved(
     endTurn({ state: cast.state, actorId: wizardId }),
   ).state;
-  const subject = attackSubject(monsterTurn, monsterId, "Elemental Touch");
+  const subject = attackSubject(
+    { state: monsterTurn, context: session.context },
+    monsterId,
+    "Elemental Touch",
+  );
   const targetHole = requireHole(
     resolveBattleSubject({ state: monsterTurn, subject, fills: [] }),
     "targetChoice",
@@ -3588,9 +3723,7 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
   };
 }
 
-function assertLevelFiveFastMovementHandoff(input: {
-  readonly sourceUnitId: UnitRecord["id"];
-}): void {
+function assertLevelFiveFastMovementHandoff(): void {
   const fastMovementDeltaFeet = movementDeltaFeet(10);
   const expectedNotHeavyArmorSpeedFeet = movementFeet(40);
   const expectedPostDashRemainingFeet = movementFeet(
@@ -3624,22 +3757,24 @@ function assertLevelFiveFastMovementHandoff(input: {
   });
 
   expect(
-    requireCharacterCombatant(state, fastMovementBarbarianId).origin
-      .characterUnitRefs,
+    requireCharacterCombatant(state, fastMovementBarbarianId).origin.execution
+      .procedureBindings,
   ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        unit: expect.objectContaining({ id: input.sourceUnitId }),
-        supportProfiles: expect.arrayContaining([
-          expect.objectContaining({
+        procedure: expect.objectContaining({
+          kind: "unitFeature",
+          execution: {
             kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
-            deltaFeet: fastMovementDeltaFeet,
-            condition: {
-              kind: "notWearingArmor",
-              categories: ["heavy"],
+            speed: {
+              deltaFeet: fastMovementDeltaFeet,
+              condition: {
+                kind: "notWearingArmor",
+                categories: ["heavy"],
+              },
             },
-          }),
-        ]),
+          },
+        }),
       }),
     ]),
   );
@@ -3694,7 +3829,7 @@ function assertLevelFiveExtraAttackHandoff(input: {
     typeof levelFiveMartialBuild
   >[0]["abilityScores"];
 }): void {
-  const state = battleFromSheets({
+  const session = battleSessionFromSheets({
     battleIdText: input.battleIdText,
     characters: [
       characterSheet({
@@ -3716,9 +3851,8 @@ function assertLevelFiveExtraAttackHandoff(input: {
       monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
     ],
   });
-
   expect(
-    requireCharacterCombatant(state, input.actorId).origin.characterUnitRefs,
+    session.context.characters.get(input.actorId)?.unitPresentationSources,
   ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
@@ -3734,7 +3868,7 @@ function assertLevelFiveExtraAttackHandoff(input: {
   );
 
   const first = resolveWeaponAttackMiss({
-    state,
+    session,
     actorId: input.actorId,
     targetId: monsterId,
     attackName: input.attackName,
@@ -3748,7 +3882,7 @@ function assertLevelFiveExtraAttackHandoff(input: {
   ]);
 
   const second = resolveWeaponAttackMiss({
-    state: first.state,
+    session: { state: first.state, context: session.context },
     actorId: input.actorId,
     targetId: monsterId,
     attackName: input.attackName,
@@ -3758,19 +3892,20 @@ function assertLevelFiveExtraAttackHandoff(input: {
 }
 
 function resolveWeaponAttackMiss(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly attackName: string;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
-  const subject = attackSubject(input.state, input.actorId, input.attackName);
+  const subject = attackSubject(input.session, input.actorId, input.attackName);
+  const state = input.session.state;
   const target = requireHole(
-    resolveBattleSubject({ state: input.state, subject, fills: [] }),
+    resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
   );
   const roll = requireHole(
     resolveBattleSubject({
-      state: input.state,
+      state,
       subject,
       fills: [
         attackTargetFill(
@@ -3785,7 +3920,7 @@ function resolveWeaponAttackMiss(input: {
   );
   return requireResolved(
     resolveBattleSubject({
-      state: input.state,
+      state,
       subject,
       fills: [
         attackTargetFill(
@@ -3814,20 +3949,20 @@ function stateWithSleetStormTargetConcentration(
   state: BattleState,
 ): BattleState {
   const target = requireCombatant(state, sleetStormTargetId);
-  const concentrationEffect: BattleActiveEffect = {
+  const concentrationProcedureRef = battleProcedureExecutionRefForTest(
+    "sleet-storm-target-concentration",
+  );
+  const concentrationEffect = {
     kind: "spellArmorClassBonus",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "sleet-storm-target-concentration",
-    ),
+    sourceProcedureRef: concentrationProcedureRef,
     sourceCombatantId: sleetStormTargetId,
     bonus: 1,
-    negatedSpellIds: [],
+    negatesRepeatedDamageAllocation: false,
     expiresAt: {
       kind: "concentration",
       combatantId: sleetStormTargetId,
     },
-  };
-  const concentrationProcedureRef = concentrationEffect.sourceProcedureRef;
+  } satisfies BattleActiveEffect;
   return {
     ...state,
     combatants: new Map(state.combatants).set(sleetStormTargetId, {

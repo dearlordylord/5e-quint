@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 //
 // The Spiritual Weapon profile family: a prepared Bonus Action spell creates a
@@ -50,16 +52,20 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
-  type SpellInvocationRef,
-  spellEffectInvocationRef,
-} from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
-import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../../identity.ts";
+import {
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByAntimagicField,
+} from "../antimagic-field-suppression.ts";
 import {
   spiritualWeaponForcePositionHole,
   spellTargetHole,
 } from "../spells-targeting.ts";
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
+import { currentActorId } from "../creature-state-leaves.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import type {
   SpellAdmissionContext,
@@ -69,17 +75,15 @@ import type {
 import { Schema } from "effect";
 import {
   AttackBonus,
-  BattleRuntimeObjectSchema,
   MovementFeet,
-  NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
-  SpellEffectSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 type SpiritualWeaponAttackProxyInvocation = Extract<
@@ -419,7 +423,6 @@ function discoverSpiritualWeaponAttackProxyCastAct(
             tag: "bonusActionSpell" as const,
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: spiritualWeaponAttackProxyInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
           initialHoles: [
@@ -435,6 +438,22 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SpiritualWeaponRepeatAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
+  if (
+    currentActorId(state) === invocation.activeEffect.startedOn.actorId &&
+    state.initiative.round === invocation.activeEffect.startedOn.round
+  ) {
+    return [];
+  }
+  if (
+    ongoingSpellEffectSuppressedByAntimagicField(
+      state,
+      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+        invocation.activeEffect,
+      ),
+    )
+  ) {
+    return [];
+  }
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []
@@ -444,7 +463,6 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
             tag: "bonusActionSpell" as const,
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: spiritualWeaponRepeatAttackInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
           initialHoles: [
@@ -455,39 +473,6 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
       ];
 }
 
-function spiritualWeaponAttackProxyInvocationRef(
-  invocation: SpiritualWeaponAttackProxyInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "spiritualWeaponAttackProxy",
-  };
-}
-
-function spiritualWeaponRepeatAttackInvocationRef(
-  invocation: SpiritualWeaponRepeatAttackInvocation,
-): SpellInvocationRef {
-  return spellEffectInvocationRef(
-    invocation.spell.id,
-    invocation.activeEffect.sourceCombatantId,
-    "spiritualWeaponRepeatAttack",
-  );
-}
-
-function spiritualWeaponAttackProxyCastSummary(
-  invocation: SpiritualWeaponAttackProxyInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function spiritualWeaponRepeatAttackCastSummary(
-  invocation: SpiritualWeaponRepeatAttackInvocation,
-): string {
-  return `Use a Bonus Action to move ${invocation.spell.name}'s force and repeat the attack.`;
-}
-
 function resolveSpiritualWeapon(
   input: SpiritualWeaponResolveInput,
 ): BattleResolutionResult {
@@ -495,28 +480,23 @@ function resolveSpiritualWeapon(
 }
 
 const SpiritualWeaponAttackProxyInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "spiritualWeaponAttackProxy" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("spiritualWeaponAttackProxy"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("singleCombatant"),
       }),
-      durationTicks: BattleRuntimeObjectSchema,
+      durationTicks: ElapsedTimeTicksSchema,
       rangeFeet: MovementFeet,
       forceReachFeet: MovementFeet,
       repeatMoveMaxFeet: MovementFeet,
       damage: Schema.Struct({
         kind: Schema.Literal("fixedSpellAttackDamage"),
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
         damageType: Schema.Literal("force"),
       }),
       attackKind: Schema.Literal("melee_spell_attack"),
@@ -525,31 +505,12 @@ const SpiritualWeaponAttackProxyInvocationSchema =
   );
 
 const SpiritualWeaponRepeatAttackInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "spiritualWeaponRepeatAttack" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
-      access: SpellEffectSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spiritualWeaponRepeatAttack"),
-      spell: BattleRuntimeObjectSchema,
-      actionCost: Schema.Literal("bonusAction"),
-      activeEffect: BattleRuntimeObjectSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
-      damage: Schema.Struct({
-        kind: Schema.Literal("fixedSpellAttackDamage"),
-        expr: BattleRuntimeObjectSchema,
-        damageType: Schema.Literal("force"),
-      }),
-      attackKind: Schema.Literal("melee_spell_attack"),
-      attackBonus: AttackBonus,
-      forceReachFeet: MovementFeet,
-      repeatMoveMaxFeet: MovementFeet,
+      spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+      activeEffectRef: BattleActiveEffectExecutionRef,
+      activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   );
 export const spiritualWeaponAttackProxyProfile: SpellProcedureProfile<
@@ -558,15 +519,12 @@ export const spiritualWeaponAttackProxyProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spiritualWeaponAttackProxy",
-  invocationSchema: SpiritualWeaponAttackProxyInvocationSchema,
+  executionSchema: SpiritualWeaponAttackProxyInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpiritualWeaponAttackProxy,
   discoverCastAct: discoverSpiritualWeaponAttackProxyCastAct,
-  castSummary: spiritualWeaponAttackProxyCastSummary,
-  invocationRef: spiritualWeaponAttackProxyInvocationRef,
   resolve: resolveSpiritualWeapon,
 };
 
@@ -576,14 +534,11 @@ export const spiritualWeaponRepeatAttackProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spiritualWeaponRepeatAttack",
-  invocationSchema: SpiritualWeaponRepeatAttackInvocationSchema,
+  executionSchema: SpiritualWeaponRepeatAttackInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpiritualWeaponRepeatAttack,
   discoverCastAct: discoverSpiritualWeaponRepeatAttackCastAct,
-  castSummary: spiritualWeaponRepeatAttackCastSummary,
-  invocationRef: spiritualWeaponRepeatAttackInvocationRef,
   resolve: resolveSpiritualWeapon,
 };

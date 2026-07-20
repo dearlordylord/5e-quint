@@ -30,13 +30,16 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { spellSlotInvocationRef } from "./battle-subjects.ts";
 import {
-  battleProcedureExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSpellInvocationRefForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -73,7 +76,7 @@ describe("Feather Fall Reaction spell", () => {
       (candidate) => {
         if (candidate.kind !== "castTriggeredReactionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          awaitingReaction.state,
+          { ...state, state: awaitingReaction.state },
           candidate.reactorId,
           candidate.subject.procedureRef,
         );
@@ -185,7 +188,7 @@ describe("Feather Fall Reaction spell", () => {
 
   test("leaves unaffected and stale landing facts to normal Falling resolution", () => {
     const unaffected = resolveFeatherFallLanding({
-      state: battleWithFeatherFall(),
+      state: battleWithFeatherFall().state,
       targetId: fallingAId,
     });
     expect(unaffected).toMatchObject({
@@ -308,7 +311,7 @@ function srdSpellRecord(unitId: string): SpellRecord {
   return unit;
 }
 
-function battleWithFeatherFall(): BattleState {
+function battleWithFeatherFall(): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("feather-fall-reaction-spell"),
     combatants: [
@@ -342,11 +345,8 @@ function battleWithFeatherFall(): BattleState {
 function castFeatherFallOn(
   targetIds: readonly [CombatantId, ...CombatantId[]],
 ): BattleState {
-  const awaitingReaction = openFeatherFallWindow(
-    battleWithFeatherFall(),
-    targetIds[0],
-    true,
-  );
+  const session = battleWithFeatherFall();
+  const awaitingReaction = openFeatherFallWindow(session, targetIds[0], true);
   if (awaitingReaction.tag !== "needsHoles") {
     throw new Error("Expected Feather Fall falling-trigger Reaction window.");
   }
@@ -354,7 +354,7 @@ function castFeatherFallOn(
     (candidate) => {
       if (candidate.kind !== "castTriggeredReactionSpell") return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        awaitingReaction.state,
+        { ...session, state: awaitingReaction.state },
         candidate.reactorId,
         candidate.subject.procedureRef,
       );
@@ -440,12 +440,12 @@ function characterCreature(
 }
 
 function openFeatherFallWindow(
-  state: BattleState,
+  session: BattleRuntimeSession,
   fallingCreatureId: CombatantId,
   includeTriggerFact: boolean,
 ): BattleResolutionResult {
   return openCreatureFallsInterruptWindow({
-    state,
+    state: session.state,
     fallingCreatureId,
     reactionSpellTargetFacts: includeTriggerFact
       ? [
@@ -453,8 +453,14 @@ function openFeatherFallWindow(
             kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
             reactorId: casterId,
             fallingCreatureId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(featherFallUnitId),
+            sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+              session,
+              casterId,
+              spellSlotInvocationRef(
+                featherFallUnitId,
+                1,
+                "featherFallMitigation",
+              ),
             ),
             rangeFeet: movementFeet(60),
           },
@@ -477,9 +483,7 @@ function featherFallTargetListFill(
       kind: "featherFallTargetFallingWithinRange",
       casterId: casterIdValue,
       targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(featherFallUnitId),
-      ),
+      sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
       rangeFeet: movementFeet(60),
     })),
   };

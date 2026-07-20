@@ -13,7 +13,6 @@
 //                                       spells-discovery.ts:discoverBattleActs
 //   - castSummary()                   - was the heldLight branch in
 //                                       spells-discovery.ts
-//   - invocationRef()                 - was the heldLight Match case in
 //                                       spells-invocation-ref.ts
 //   - resolve()                       - was resolveHeldLightSpellAct in
 //                                       spells-resolve-release.ts
@@ -25,12 +24,11 @@
 //     resolver still owns the hurl damage lifecycle.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import { attackBonus, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 
-import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
   maybeOpenInterruptWindow,
@@ -45,20 +43,33 @@ import {
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
-  BattleRuntimeObjectSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
+import {
+  AttackBonus,
   ClassCantripSpellAccessSchema,
+  DamageTypeSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
+  SingleCreatureOrObjectSpellTargetingSchema,
 } from "../codec-building-blocks.ts";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
+import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import type { HeldLightHurlMechanicalFacts } from "../../battle-reducer.ts";
+import {
+  characterExecutionWithHeldLightHurl,
+  type HeldLightHurlSpellProcedureExecution,
+} from "../../character-execution.ts";
 
 type HeldLightInvocation = Extract<
   SupportedSpellInvocation,
@@ -93,7 +104,7 @@ export function isProduceFlameOngoingEffectSpell(
 
 function admitHeldLight(
   spell: SpellRecord,
-  _ctx: SpellAdmissionContext,
+  ctx: SpellAdmissionContext,
 ): readonly HeldLightInvocation[] {
   if (!isProduceFlameOngoingEffectSpell(spell)) {
     return [];
@@ -116,7 +127,8 @@ function admitHeldLight(
     return [];
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  return Either.isLeft(durationTicks)
+  const hurl = heldLightHurlMechanicalFacts(spell, ctx);
+  return Either.isLeft(durationTicks) || hurl === null
     ? []
     : [
         {
@@ -133,9 +145,59 @@ function admitHeldLight(
               lightOperation.effect.dimAdditionalFeet,
             ),
           },
+          hurl,
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       ];
+}
+
+export function heldLightHurlMechanicalFacts(
+  spell: SpellRecord,
+  ctx: SpellAdmissionContext,
+): HeldLightHurlMechanicalFacts | null {
+  if (!isProduceFlameOngoingEffectSpell(spell)) return null;
+  const hurlOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost?.kind === "standard_action" &&
+      operation.trigger.cost.action === "magic" &&
+      operation.effect.kind === "attack_roll",
+  );
+  if (
+    hurlOperation === undefined ||
+    hurlOperation.effect.kind !== "attack_roll" ||
+    hurlOperation.effect.attackKind !== "ranged_spell_attack" ||
+    hurlOperation.effect.onHit.length !== 1 ||
+    hurlOperation.effect.onMiss.length !== 1 ||
+    hurlOperation.effect.onMiss[0]?.kind !== "none"
+  ) {
+    return null;
+  }
+  const damageEffect = hurlOperation.effect.onHit[0];
+  if (
+    damageEffect?.kind !== "damage" ||
+    !Schema.is(DamageTypeSchema)(damageEffect.damageType) ||
+    damageEffect.damageType !== "fire" ||
+    damageEffect.amount === undefined
+  ) {
+    return null;
+  }
+  const damageExpr = supportedDamageAmountExpr({
+    amount: damageEffect.amount,
+    spellLevel: spell.mechanics.level,
+    characterLevel: spellAdmissionCharacterLevel(ctx),
+  });
+  if (damageExpr === null) return null;
+  return {
+    targeting: { kind: "singleCreatureOrObject" },
+    damage: { expr: damageExpr, damageType: damageEffect.damageType },
+    rangeFeet: movementFeet(60),
+    attackKind: hurlOperation.effect.attackKind,
+    attackBonus: attackBonus(
+      Number(ctx.actor.origin.spellcasting.spellcastingAbilityModifier) +
+        Number(ctx.actor.origin.spellcasting.proficiencyBonus),
+    ),
+  };
 }
 
 function discoverHeldLightCastAct(
@@ -149,26 +211,11 @@ function discoverHeldLightCastAct(
         tag: "bonusActionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: heldLightInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [],
     },
   ];
-}
-
-function heldLightInvocationRef(
-  invocation: HeldLightInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "heldLight",
-  };
-}
-
-function heldLightCastSummary(invocation: HeldLightInvocation): string {
-  return `Cast ${invocation.spell.name} as a cantrip.`;
 }
 
 function applyHeldLightEffect(
@@ -185,10 +232,25 @@ function applyHeldLightEffect(
     ownerId: actorId,
   });
   if (allocation.tag === "ownerNotFound") return state;
+  const hurlExecution = {
+    spellRuleFacts: invocation.spellRuleFacts,
+    access: invocation.access,
+    resource: invocation.resource,
+    procedure: "heldLightHurl",
+    sourceEffectRef: allocation.effectRef,
+    sourceHeldLightProcedureRef: invocation.sourceProcedureRef,
+    targeting: invocation.hurl.targeting,
+    damage: invocation.hurl.damage,
+    rangeFeet: invocation.hurl.rangeFeet,
+    attackKind: invocation.hurl.attackKind,
+    attackBonus: invocation.hurl.attackBonus,
+  } satisfies HeldLightHurlSpellProcedureExecution;
+  const owner = allocation.owner;
+  if (owner.origin.kind !== "character") return state;
   return {
     ...allocation.state,
     combatants: new Map(allocation.state.combatants).set(actorId, {
-      ...allocation.owner,
+      ...owner,
       activeEffects: [
         ...caster.activeEffects.filter(
           (effect) =>
@@ -208,6 +270,13 @@ function applyHeldLightEffect(
           expiresAt: invocation.expiresAt,
         },
       ],
+      origin: {
+        ...owner.origin,
+        execution: characterExecutionWithHeldLightHurl(
+          owner.origin.execution,
+          hurlExecution,
+        ),
+      },
     }),
   };
 }
@@ -280,20 +349,28 @@ function resolveHeldLight(
       };
 }
 
-const HeldLightInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "heldLight" }>
->(
+const HeldLightInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: ClassCantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("heldLight"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
     light: Schema.Struct({
       brightRadiusFeet: MovementFeet,
       dimAdditionalFeet: MovementFeet,
     }),
-    expiresAt: BattleRuntimeObjectSchema,
+    hurl: Schema.Struct({
+      targeting: SingleCreatureOrObjectSpellTargetingSchema,
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("ranged_spell_attack"),
+      attackBonus: AttackBonus,
+    }),
+    expiresAt: BattleActiveEffectExpirationSchema,
   }),
 );
 export const heldLightProfile: SpellProcedureProfile<
@@ -302,14 +379,11 @@ export const heldLightProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "heldLight",
-  invocationSchema: HeldLightInvocationSchema,
+  executionSchema: HeldLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitHeldLight,
   discoverCastAct: discoverHeldLightCastAct,
-  castSummary: heldLightCastSummary,
-  invocationRef: heldLightInvocationRef,
   resolve: resolveHeldLight,
 };

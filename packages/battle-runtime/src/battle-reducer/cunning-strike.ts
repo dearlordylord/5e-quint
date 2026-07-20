@@ -9,7 +9,6 @@ import type { Ability, Size } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import type { BattleMovementSpeedKind } from "../battle-subjects.ts";
-import { characterUnitProcedureRef } from "../character-execution.ts";
 import type {
   AttackDamageRider,
   BattleCunningStrikeDamageContinuation,
@@ -30,7 +29,6 @@ import type {
   CunningStrikeHideInvisibleEndSuppressionEffect,
   CunningStrikeEndTurnCoverDegree,
   CunningStrikeOption,
-  CunningStrikeOptionEffect,
   CunningStrikePostDamageMovementEffect,
   CunningStrikeQualifyingCoverDegree,
   CunningStrikeSizeGatedConditionSaveEffect,
@@ -119,18 +117,21 @@ export function eligibleCunningStrikeContexts(input: {
     return [];
   }
   const targetSize = combatantEffectiveSize(target);
-  const execution = attacker.origin.execution;
-  const baseCunningStrikeProfiles = attacker.origin.characterUnitRefs.flatMap(
-    (unitRef) =>
-      unitRef.supportProfiles.flatMap((supportProfile) =>
-        typeof supportProfile === "object" &&
-        supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
-          ? [{ unitId: unitRef.unit.id, supportProfile }]
-          : [],
-      ),
+  const characterOrigin = attacker.origin;
+  const execution = characterOrigin.execution;
+  const baseCunningStrikeProcedures = execution.procedureBindings.flatMap(
+    (binding) => {
+      const procedure = binding.procedure;
+      return procedure.kind === "unitSupportProfile" &&
+        typeof procedure.execution === "object" &&
+        procedure.execution.kind === CUNNING_STRIKE_SUPPORT_PROFILE
+        ? [{ procedureRef: binding.procedureRef, execution: procedure.execution }]
+        : [];
+    },
   );
-  return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.flatMap((supportProfile) => {
+  return execution.procedureBindings.flatMap((binding) => {
+      if (binding.procedure.kind !== "unitSupportProfile") return [];
+      const supportProfile = binding.procedure.execution;
       if (
         typeof supportProfile !== "object" ||
         (supportProfile.kind !== CUNNING_STRIKE_SUPPORT_PROFILE &&
@@ -141,16 +142,18 @@ export function eligibleCunningStrikeContexts(input: {
       const baseProfile =
         supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
           ? supportProfile
-          : baseCunningStrikeProfiles.find(
+          : baseCunningStrikeProcedures.find(
               (candidate) =>
-                candidate.unitId === supportProfile.optionGrant.sourceUnitId,
-            )?.supportProfile;
+                candidate.procedureRef ===
+                supportProfile.optionGrant.sourceProcedureRef,
+            )?.execution;
       if (baseProfile === undefined) {
         return [];
       }
       const sourceRider = input.eligibleAttackDamageRiders.find(
         (rider) =>
-          rider.unitId === baseProfile.cunningStrike.trigger.sourceUnitId,
+          rider.procedureRef ===
+          baseProfile.cunningStrike.trigger.damageRiderProcedureRef,
       );
       if (sourceRider === undefined) {
         return [];
@@ -159,15 +162,6 @@ export function eligibleCunningStrikeContexts(input: {
         supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
           ? supportProfile.cunningStrike.options
           : [supportProfile.optionGrant.option];
-      const procedureRef = characterUnitProcedureRef(
-        execution,
-        unitRef.unit.id,
-        {
-          kind: "unitSupportProfile",
-          supportKinds: new Set([supportProfile.kind]),
-        },
-      );
-      if (procedureRef === undefined) return [];
       return options.flatMap((option) =>
         cunningStrikeOptionEligibleForTarget(
           option,
@@ -178,10 +172,8 @@ export function eligibleCunningStrikeContexts(input: {
               {
                 attackerId: input.attackerId,
                 targetId: input.targetId,
-                unitId: unitRef.unit.id,
-                procedureRef,
-                label: supportProfile.unit.name,
-                sourceDamageRiderUnitId: sourceRider.unitId,
+                procedureRef: binding.procedureRef,
+                sourceDamageRiderProcedureRef: sourceRider.procedureRef,
                 support: baseProfile,
                 option,
                 hiddenBeforeAttack: input.hiddenBeforeAttack,
@@ -189,18 +181,16 @@ export function eligibleCunningStrikeContexts(input: {
             ]
           : [],
       );
-    }),
-  );
+    });
 }
 
 export function cunningStrikeDamageRollOptions(
   contexts: readonly CunningStrikeContext[],
 ): readonly BattleCunningStrikeOption[] {
   return contexts.map((context) => ({
-    unitId: context.unitId,
+    procedureRef: context.procedureRef,
     optionId: context.option.selectionId,
-    label: `${context.label}: ${cunningStrikeOptionLabel(context.option.effect)}`,
-    sourceDamageRiderUnitId: context.sourceDamageRiderUnitId,
+    sourceDamageRiderProcedureRef: context.sourceDamageRiderProcedureRef,
     dieCost: {
       dice: context.option.cost.dice,
       dieSize: context.option.cost.dieSize,
@@ -218,7 +208,7 @@ export function selectedCunningStrikeContext(
   return (
     contexts.find(
       (context) =>
-        context.unitId === selection.unitId &&
+        context.procedureRef === selection.procedureRef &&
         context.option.selectionId === selection.optionId,
     ) ?? null
   );
@@ -246,7 +236,8 @@ export function validateCunningStrikeDamageRollSelection(input: {
     return "Selected Cunning Strike option is not eligible for this attack.";
   }
   const sourceRider = input.selectedAttackDamageRiders.find(
-    (rider) => rider.unitId === context.sourceDamageRiderUnitId,
+    (rider) =>
+      rider.procedureRef === context.sourceDamageRiderProcedureRef,
   );
   if (sourceRider === undefined) {
     return "Cunning Strike requires selecting the triggering Sneak Attack damage rider.";
@@ -264,7 +255,7 @@ export function attackDamageRidersAfterCunningStrikeCost(
     return selectedAttackDamageRiders;
   }
   return selectedAttackDamageRiders.map((rider) =>
-    rider.unitId === context.sourceDamageRiderUnitId
+    rider.procedureRef === context.sourceDamageRiderProcedureRef
       ? (attackDamageRiderWithCunningStrikeCost(rider, context) ?? rider)
       : rider,
   );
@@ -840,28 +831,6 @@ function applyCunningStrikeImmediateConditionFailure(
       ),
     ),
   };
-}
-
-function cunningStrikeOptionLabel(effect: CunningStrikeOptionEffect): string {
-  return Match.value(effect).pipe(
-    byCunningStrikeEffectKind(
-      "equipmentGatedConditionSave",
-      () => "equipment-gated condition save",
-    ),
-    byCunningStrikeEffectKind(
-      "sizeGatedConditionSave",
-      () => "size-gated condition save",
-    ),
-    byCunningStrikeEffectKind(
-      "postDamageMovement",
-      () => "post-damage movement",
-    ),
-    byCunningStrikeEffectKind(
-      "hideInvisibleEndSuppression",
-      () => "hide Invisible end suppression",
-    ),
-    Match.exhaustive,
-  );
 }
 
 function requireCunningStrikeSaveDc(

@@ -22,6 +22,11 @@ import * as Option from "effect/Option";
 import { Match } from "effect";
 
 import type { BattleCreatureInit } from "../battle-init.ts";
+import type {
+  BattleRuntimeContext,
+  BattleRuntimeSession,
+  CharacterBattleRuntimeContext,
+} from "../battle-runtime-context.ts";
 
 import {
   BattleId,
@@ -31,7 +36,12 @@ import {
   type BattleExecutionScopeCursor,
 } from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
-import { characterExecutionWithSpellInvocations } from "../character-execution.ts";
+import {
+  characterUnitProcedureBindings,
+  characterExecutionWithSpellInvocations,
+  characterSpellSelectionInvocation,
+  spellProcedureExecutionContext,
+} from "../character-execution.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
 import {
@@ -62,7 +72,6 @@ import type {
   BattleStateInitIssue,
 } from "../battle-reducer.ts";
 import { INITIAL_ROUND, INITIAL_TURN_RESOURCES } from "../battle-reducer.ts";
-import { INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 const InitialInitiativeSetupBrand: unique symbol = Symbol(
   "InitialInitiativeSetup",
@@ -71,11 +80,13 @@ const InitialInitiativeSetupBrand: unique symbol = Symbol(
 class InitialInitiativeSetupWorkflow {
   readonly [InitialInitiativeSetupBrand] = true;
   #state: BattleState;
+  readonly #context: BattleRuntimeContext;
   #setupOpen = true;
   readonly #consumedInitiativeSwapSources = new Set<CombatantId>();
 
-  constructor(state: BattleState) {
-    this.#state = state;
+  constructor(session: BattleRuntimeSession) {
+    this.#state = session.state;
+    this.#context = session.context;
   }
 
   get state(): BattleState {
@@ -95,9 +106,9 @@ class InitialInitiativeSetupWorkflow {
     this.#state = state;
   }
 
-  finish(): BattleState {
+  finish(): BattleRuntimeSession {
     this.#setupOpen = false;
-    return this.#state;
+    return { state: this.#state, context: this.#context };
   }
 }
 
@@ -112,22 +123,22 @@ type StartBattleInput = {
 export function startBattleWithInitialInitiativeSetup(
   input: StartBattleInput,
 ): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
-  const state = startBattle(input);
-  return Either.isLeft(state)
-    ? Either.left(state.left)
-    : Either.right(initialInitiativeSetupState(state.right));
+  const session = startBattle(input);
+  return Either.isLeft(session)
+    ? Either.left(session.left)
+    : Either.right(initialInitiativeSetupState(session.right));
 }
 
 export function finishInitialInitiativeSetup(
   setup: InitialInitiativeSetup,
-): BattleState {
+): BattleRuntimeSession {
   return setup.finish();
 }
 
 function initialInitiativeSetupState(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): InitialInitiativeSetup {
-  return new InitialInitiativeSetupWorkflow(state);
+  return new InitialInitiativeSetupWorkflow(session);
 }
 
 export function requiredInitiativeRollModeForCombatant(
@@ -138,19 +149,26 @@ export function requiredInitiativeRollModeForCombatant(
   if (combatant?.origin.kind !== "character") {
     return undefined;
   }
-  const hasRemarkableAthleteAdvantage = [
-    ...combatant.origin.remarkableAthleteProfiles.values(),
-  ].some(
-    (profile) =>
-      profile.remarkableAthlete.initiative.kind === "rollAdvantage" &&
-      profile.remarkableAthlete.initiative.roll === "initiative",
+  const hasRemarkableAthleteAdvantage = characterUnitProcedureBindings(
+    combatant.origin.execution,
+  ).some(
+    ({ procedure }) =>
+      Match.value(procedure).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          unitFeature: ({ execution }) =>
+            execution.kind === "remarkableAthlete" &&
+            execution.remarkableAthlete.initiative.kind === "rollAdvantage" &&
+            execution.remarkableAthlete.initiative.roll === "initiative",
+          unitSupportProfile: () => false,
+        }),
+      ),
   );
   return hasRemarkableAthleteAdvantage ? "advantage" : undefined;
 }
 
 export function startBattle(
   input: StartBattleInput,
-): Either.Either<BattleState, BattleStateInitIssue> {
+): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
   if (input.combatants.length === 0) {
     return battleStateInitIssue("startBattle requires at least one combatant.");
   }
@@ -159,6 +177,10 @@ export function startBattle(
   const executionScopeCursors = new Map<
     CombatantId,
     BattleExecutionScopeCursor
+  >();
+  const characterContexts = new Map<
+    CombatantId,
+    CharacterBattleRuntimeContext
   >();
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
@@ -196,6 +218,9 @@ export function startBattle(
       );
     }
     combatants.set(combatant.combatantId, admission.creature);
+    if ("runtimeContext" in admission) {
+      characterContexts.set(combatant.combatantId, admission.runtimeContext);
+    }
     if (admission.nextScopeOrdinal > 0) {
       executionScopeCursors.set(
         combatant.combatantId,
@@ -231,29 +256,60 @@ export function startBattle(
     interruptStack: [],
     legendaryActionWindow: null,
   };
-  const combatantsWithCharacterExecutions = new Map(
-    [...state.combatants].map(([combatantId, combatant]) => {
-      if (combatant.origin.kind !== "character") {
-        return [combatantId, combatant] as const;
-      }
-      return [
-        combatantId,
-        {
-          ...combatant,
-          origin: {
-            ...combatant.origin,
-            execution: characterExecutionWithSpellInvocations(
-              combatant.origin.execution,
-              admittedSpellActs(combatant, state),
-            ),
-          },
+  const combatantsWithCharacterExecutions = new Map(state.combatants);
+  for (const [combatantId, combatant] of state.combatants) {
+    if (combatant.origin.kind !== "character") continue;
+    const characterContext = characterContexts.get(combatantId);
+    if (characterContext === undefined) {
+      return battleStateInitIssue(
+        `Character ${combatantId} is missing its runtime context.`,
+      );
+    }
+    const admitted = admittedSpellActs(
+      combatant,
+      state,
+      characterContext.resourceOwnership,
+      characterContext.spellcastingPresentationSource,
+    );
+    const spellContext = spellProcedureExecutionContext(
+      characterContext.resourceOwnership,
+    );
+    const execution = characterExecutionWithSpellInvocations(
+      combatant.origin.execution,
+      admitted,
+      spellContext,
+    );
+    combatantsWithCharacterExecutions.set(combatantId, {
+      ...combatant,
+      origin: {
+        ...combatant.origin,
+        execution,
+      },
+    });
+    characterContexts.set(combatantId, {
+      ...characterContext,
+      spellPresentationSources: execution.procedureBindings.flatMap(
+        (binding) => {
+          if (binding.procedure.kind !== "spellInvocation") return [];
+          const invocation = characterSpellSelectionInvocation(
+            execution,
+            binding.procedureRef,
+            admitted,
+            spellContext,
+          );
+          return invocation === undefined
+            ? []
+            : [{ procedureRef: binding.procedureRef, invocation }];
         },
-      ] as const;
-    }),
-  );
+      ),
+    });
+  }
   return Either.right({
-    ...state,
-    combatants: combatantsWithCharacterExecutions,
+    state: {
+      ...state,
+      combatants: combatantsWithCharacterExecutions,
+    },
+    context: { characters: characterContexts },
   });
 }
 
@@ -411,13 +467,15 @@ function combatantHasInitiativeProficiencyAndSwap(
 ): boolean {
   return (
     combatant.origin.kind === "character" &&
-    combatant.origin.characterUnitRefs.some((unitRef) =>
-      unitRef.supportProfiles.some(
-        (profile) =>
-          typeof profile !== "string" &&
-          profile.kind === INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
-      ),
-    )
+    combatant.origin.execution.procedureBindings.some((binding) => {
+      const procedure = binding.procedure;
+      return (
+        (procedure.kind === "unitFeature" ||
+          procedure.kind === "unitSupportProfile") &&
+        typeof procedure.execution === "object" &&
+        procedure.execution.kind === "initiativeProficiencyAndSwap"
+      );
+    })
   );
 }
 
@@ -472,14 +530,22 @@ export function addBattleCombatant(input: {
     combatants: combatantsWithAdmission,
   };
   const admittedCreature =
-    admission.creature.origin.kind === "character"
+    "runtimeContext" in admission
       ? {
           ...admission.creature,
           origin: {
             ...admission.creature.origin,
             execution: characterExecutionWithSpellInvocations(
               admission.creature.origin.execution,
-              admittedSpellActs(admission.creature, stateWithAdmission),
+              admittedSpellActs(
+                admission.creature,
+                stateWithAdmission,
+                admission.runtimeContext.resourceOwnership,
+                admission.runtimeContext.spellcastingPresentationSource,
+              ),
+              spellProcedureExecutionContext(
+                admission.runtimeContext.resourceOwnership,
+              ),
             ),
           },
         }

@@ -27,10 +27,11 @@ import type {
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
-  BATTLE_D20_ROLL_MODIFIER_KINDS,
   BATTLE_SPECIAL_SPEED_KINDS,
-  type BattleActiveEffectExpiration,
   type BattleSpecialSpeedKind,
+} from "../battle-subjects.ts";
+import {
+  type BattleActiveEffectExpiration,
   type BattleD20RollModifierDelta,
   type BattleD20RollModifierKind,
   type AbilityCheckRollModeSpellEffect,
@@ -44,6 +45,7 @@ import {
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
+  BATTLE_D20_ROLL_MODIFIER_KINDS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
@@ -328,7 +330,7 @@ export function scalarBuffSpellEffect(
         kind: "spellArmorClassBonus",
         sourceCombatantId: actorId,
         bonus: effect.delta.dice,
-        negatedSpellIds: [],
+        negatesRepeatedDamageAllocation: false,
         expiresAt,
       },
     };
@@ -528,7 +530,16 @@ export function rollModifierSpellTargeting(
     return null;
   }
   if (attachment.value.selection.mode === "any_number") {
-    return { kind: "targetList", minTargets: 1, maxTargets: "allLegalTargets" };
+    return {
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: "allLegalTargets",
+      requiredTargetDisposition:
+        "disposition" in attachment.value.selection &&
+        attachment.value.selection.disposition === "willing"
+          ? "willing"
+          : "unrestricted",
+    };
   }
   const targetCount = scalarBuffSpellTargetCount(
     attachment.value.selection,
@@ -537,7 +548,16 @@ export function rollModifierSpellTargeting(
   );
   return targetCount === null
     ? null
-    : { kind: "targetList", minTargets: 1, maxTargets: targetCount };
+    : {
+        kind: "targetList",
+        minTargets: 1,
+        maxTargets: targetCount,
+        requiredTargetDisposition:
+          "disposition" in attachment.value.selection &&
+          attachment.value.selection.disposition === "willing"
+            ? "willing"
+            : "unrestricted",
+      };
 }
 
 export function rollModifierActiveEffect(

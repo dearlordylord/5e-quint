@@ -10,15 +10,14 @@ import {
   BattleFillSchema,
   BattleHoleSchema,
   battleReducerStartRouteEvent,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   snapshotBattle,
-  type AvailableBattleAct,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -35,7 +34,10 @@ import {
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import type { BattleCreatureAttackDamageRollHole } from "./battle-reducer.ts";
+import type {
+  BattleActDiscoveryCandidate,
+  BattleCreatureAttackDamageRollHole,
+} from "./battle-reducer.ts";
 import {
   CREATURE_ATTACK_DAMAGE_HOLE_ID,
   resolveCreatureAttack,
@@ -441,7 +443,7 @@ describe("creature-attack public reducer boundaries", () => {
     const state = startCreatureAttackBattle();
 
     expect(
-      discoverBattleActs(state).some(
+      discoverBattleActCandidates(state).some(
         (act) =>
           act.subject.tag === "creatureAttack" &&
           act.subject.actorId === ATTACKER_B_ID,
@@ -462,7 +464,7 @@ describe("creature-attack public reducer boundaries", () => {
     const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
 
     expect(
-      discoverBattleActs(state).some(
+      discoverBattleActCandidates(state).some(
         (act) =>
           act.subject.tag === "creatureAttack" &&
           act.subject.actorId === ATTACKER_A_ID,
@@ -479,7 +481,7 @@ describe("creature-attack public reducer boundaries", () => {
     const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
 
     expect(
-      discoverBattleActs(state).some(
+      discoverBattleActCandidates(state).some(
         (act) =>
           act.subject.tag === "creatureAttack" &&
           act.subject.actorId === ATTACKER_A_ID,
@@ -540,7 +542,7 @@ describe("creature-attack public reducer boundaries", () => {
       throw new Error("Expected missed Creature Attack to resolve.");
     }
     expect(
-      discoverBattleActs(result.state).some(
+      discoverBattleActCandidates(result.state).some(
         (act) =>
           act.subject.tag === "creatureAttack" &&
           act.subject.actorId === ATTACKER_A_ID,
@@ -789,7 +791,7 @@ function prepareCreatureAttackActorTurn(
   let currentState = state;
   for (let turnCount = 0; turnCount <= 2; turnCount += 1) {
     if (
-      discoverBattleActs(currentState).some(
+      discoverBattleActCandidates(currentState).some(
         (act) =>
           act.subject.tag === "creatureAttack" &&
           act.subject.actorId === actorId,
@@ -825,8 +827,8 @@ function creatureAttackSubject(
 function discoverCreatureAttackAct(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "creatureAttack" }>,
-): AvailableBattleAct {
-  const discovered = discoverBattleActs(state).find(
+): BattleActDiscoveryCandidate {
+  const discovered = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "creatureAttack" &&
       act.subject.actorId === subject.actorId &&

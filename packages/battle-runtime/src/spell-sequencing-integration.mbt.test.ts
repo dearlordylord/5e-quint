@@ -68,8 +68,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 
 type SpellSequencingTurnRole = "caster" | "target";
@@ -110,7 +111,7 @@ type SpellSequencingProjection = {
 };
 
 type SpellSequencingRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly turnRole: SpellSequencingTurnRole;
   readonly lastResult: SpellSequencingLastResult;
 };
@@ -267,16 +268,19 @@ function initialRuntimeState(): SpellSequencingRuntimeState {
     targetHp: initialTargetHp,
     targetMaxHp: initialTargetHp,
   });
-  const caster = requireCombatant(battle, spellCasterId);
+  const caster = requireCombatant(battle.state, spellCasterId);
   return {
     battle: {
       ...battle,
-      combatants: new Map(battle.combatants).set(spellCasterId, {
-        ...caster,
-        hp: Hp(initialCasterHp),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
+      state: {
+        ...battle.state,
+        combatants: new Map(battle.state.combatants).set(spellCasterId, {
+          ...caster,
+          hp: Hp(initialCasterHp),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      },
     },
     turnRole: "caster",
     lastResult: "init",
@@ -287,7 +291,7 @@ function castDragonsBreath(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
   const act = bonusSpellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: dragonsBreathUnitId,
     slotLevel: 2,
   });
@@ -295,7 +299,7 @@ function castDragonsBreath(
   const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         knownWillingSpellTargetListFill(
@@ -310,7 +314,7 @@ function castDragonsBreath(
     "Expected Dragon's Breath cast to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "caster",
     lastResult: "castDragonsBreath",
   };
@@ -320,11 +324,11 @@ function endCasterTurnForDragonsBreath(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected Dragon's Breath caster End Turn to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "target",
     lastResult: "targetTurnWithBreath",
   };
@@ -336,7 +340,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
   const exhaleAct = dragonsBreathExhaleAct(state.battle);
   const needsSave = requireNeedsHoles(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: exhaleAct.subject,
       fills: [],
     }),
@@ -346,7 +350,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
   const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, false);
   const needsDamage = requireNeedsHoles(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: exhaleAct.subject,
       fills: [saveFill],
     }),
@@ -359,7 +363,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
   );
   const needsConcentration = requireNeedsHoles(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: exhaleAct.subject,
       fills: [saveFill, damageFill],
     }),
@@ -371,7 +375,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: exhaleAct.subject,
       fills: [
         saveFill,
@@ -386,7 +390,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
     "Expected Dragon's Breath exhale to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "target",
     lastResult: "exhaledBreath",
   };
@@ -396,11 +400,11 @@ function endTargetTurnAfterBreath(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellTargetId }),
+    endTurn({ state: state.battle.state, actorId: spellTargetId }),
     "Expected target End Turn before Heat Metal to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "caster",
     lastResult: "casterTurnAfterBreath",
   };
@@ -410,7 +414,7 @@ function castHeatMetalContact(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: heatMetalUnitId,
     slotLevel: 2,
   });
@@ -422,7 +426,7 @@ function castHeatMetalContact(
   });
   const contactHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [objectFill],
     }),
@@ -434,7 +438,7 @@ function castHeatMetalContact(
   });
   const damageHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [objectFill, contactFill],
     }),
@@ -442,7 +446,7 @@ function castHeatMetalContact(
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         objectFill,
@@ -453,7 +457,7 @@ function castHeatMetalContact(
     "Expected Heat Metal cast to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "caster",
     lastResult: "castHeatMetal",
   };
@@ -463,11 +467,11 @@ function endCasterTurnForHeatMetal(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected Heat Metal caster End Turn to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "target",
     lastResult: "targetTurnWithHeatMetal",
   };
@@ -477,11 +481,11 @@ function endTargetTurnForHeatMetalRepeat(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellTargetId }),
+    endTurn({ state: state.battle.state, actorId: spellTargetId }),
     "Expected Heat Metal target End Turn to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "caster",
     lastResult: "casterTurnWithHeatMetalRepeat",
   };
@@ -491,7 +495,7 @@ function repeatHeatMetalContactDamage(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
   const act = bonusSpellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: heatMetalUnitId,
   });
   const contactFill = spellObjectContactTargetsFill({
@@ -500,7 +504,7 @@ function repeatHeatMetalContactDamage(
   });
   const damageHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [contactFill],
     }),
@@ -508,7 +512,7 @@ function repeatHeatMetalContactDamage(
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         contactFill,
@@ -518,7 +522,7 @@ function repeatHeatMetalContactDamage(
     "Expected Heat Metal repeat damage to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "caster",
     lastResult: "repeatHeatMetal",
   };
@@ -527,25 +531,25 @@ function repeatHeatMetalContactDamage(
 function spellSequencingProjection(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingProjection {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const target = requireCombatant(state.battle, spellTargetId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
   const dragonsBreathActive =
-    dragonsBreathTargetEffect(state.battle) !== undefined;
-  const heatMetalActive = heatMetalEffect(state.battle) !== undefined;
+    dragonsBreathTargetEffect(state.battle.state) !== undefined;
+  const heatMetalActive = heatMetalEffect(state.battle.state) !== undefined;
   const projection = {
     turnRole: state.turnRole,
     magicActionAvailable: canSpendAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
       "magic",
     ),
     bonusActionAvailable:
-      state.battle.currentTurnResources.currentHasBonusAction,
+      state.battle.state.currentTurnResources.currentHasBonusAction,
     dragonsBreathActive,
     heatMetalActive,
-    concentrationSpell: concentrationSpell(state.battle),
+    concentrationSpell: concentrationSpell(state.battle.state),
     heatMetalRepeatAvailable:
       maybeBonusSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: heatMetalUnitId,
       }) !== undefined,
     casterHp: Number(caster.hp),
@@ -599,13 +603,15 @@ function heatMetalEffect(state: BattleState): HeatMetalEffect | undefined {
   );
 }
 
-function dragonsBreathExhaleAct(state: BattleState): AvailableBattleAct & {
+function dragonsBreathExhaleAct(
+  session: BattleRuntimeSession,
+): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "dragonsBreathExhale" }
   >;
 } {
-  const exhaleAct = discoverBattleActs(state).find(
+  const exhaleAct = discoverBattleActs(session).find(
     (act): act is ReturnType<typeof dragonsBreathExhaleAct> =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.command === "dragonsBreathExhale",

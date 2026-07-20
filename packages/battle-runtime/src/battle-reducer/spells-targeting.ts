@@ -35,10 +35,9 @@ import {
   type BattleCreatureState,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
-  type MagicWeaponEnhancementSpellInvocation,
-  type SupportedSpellInvocation,
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
 import {
   distantSpellRangeModifierForApplications,
@@ -51,7 +50,6 @@ import {
   repeatedDamageAllocationInvocationFacts,
   repeatedDamageAllocationTargetCardinality,
 } from "./spell-procedure-profiles/repeated-damage-allocation-facts.ts";
-import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   type BattleObjectId,
@@ -66,26 +64,19 @@ import {
   magicalEffectTargetsInterdictionMessage,
 } from "./antimagic-field-magical-effect-interdiction.ts";
 
-type SingleCreatureOrObjectSpellAttackDamageInvocation =
-  Extract<
-    BattleTargetSpatialFact,
-    { readonly kind: "spellObjectTarget" }
-  > extends infer ObjectFact
-    ? {
-        readonly procedure:
-          | "heldLightHurl"
-          | "spellAttackSequence"
-          | "spellAttackDamage";
-        readonly spell: { readonly id: string; readonly name: string };
-        readonly rangeFeet: ObjectFact extends {
-          readonly rangeFeet: infer RangeFeet;
-        }
-          ? RangeFeet
-          : never;
-      }
-    : never;
+type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
+
+type SingleCreatureOrObjectSpellAttackDamageInvocation = Extract<
+  RuntimeSpellProcedure,
+  {
+    readonly procedure:
+      | "heldLightHurl"
+      | "spellAttackSequence"
+      | "spellAttackDamage";
+  }
+>;
 type SpellAttackSequenceInvocation = Extract<
-  SupportedSpellInvocation,
+  RuntimeSpellProcedure,
   { readonly procedure: "spellAttackSequence" }
 >;
 type SpellAttackSequenceObjectTargetHoleInvocation =
@@ -97,19 +88,23 @@ type SingleObjectSpellInvocation =
     >
   | SpellAttackSequenceObjectTargetHoleInvocation
   | Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       {
         readonly procedure: "objectContactDamage";
-        readonly spell: { readonly id: string; readonly name: string };
       }
     >
   | Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       {
         readonly procedure: "objectLight";
-        readonly spell: { readonly id: string; readonly name: string };
       }
     >;
+
+type MechanicalTargetListSpellInvocation = import("../battle-reducer.ts").TargetListSpellInvocationOf<RuntimeSpellProcedure>;
+type MagicWeaponEnhancementSpellExecution = Extract<
+  RuntimeSpellProcedure,
+  { readonly procedure: "magicWeaponEnhancement" }
+>;
 
 type SpellTargetLegalityOptions = {
   readonly spiritualWeaponForcePositionId?: BattleTablePositionId;
@@ -164,7 +159,7 @@ export function spellTargetHole(
     kind: "targetChoice",
     holeId: ATTACK_TARGET_HOLE_ID,
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
-    label: `${invocation.spell.name} target`,
+    label: `Spell target`,
     procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
     spellTargetSpatialFactRequest: {
@@ -192,7 +187,7 @@ export function spellTargetHole(
 }
 
 export function spellTargetRequiresAttackRollRelationshipFact(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return (
     invocation.procedure === "spellAttackDamage" ||
@@ -209,7 +204,7 @@ export function spellTargetRequiresAttackRollRelationshipFact(
 }
 
 function spiritualWeaponRepeatTargetingAllows(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   targetId: CombatantId,
 ): boolean {
   return (
@@ -222,7 +217,7 @@ function spiritualWeaponRepeatTargetingAllows(
 export function spiritualWeaponForcePositionHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       {
         readonly procedure:
           | "spiritualWeaponAttackProxy"
@@ -246,8 +241,8 @@ export function spiritualWeaponForcePositionHole(
     holeInstanceKey: holeInstanceKey(key),
     label:
       mode === "cast"
-        ? `${invocation.spell.name} force position`
-        : `${invocation.spell.name} force reposition`,
+        ? `Spell force position`
+        : `Spell force reposition`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     mode,
     maxDistanceFeet,
@@ -258,7 +253,7 @@ export function spiritualWeaponForcePositionHole(
 export function spiritualWeaponForcePositionInvalidReason(
   forcePosition: BattleSpiritualWeaponForcePosition,
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     {
       readonly procedure:
         | "spiritualWeaponAttackProxy"
@@ -297,7 +292,7 @@ export function spellAttackSequencePartTargetHole(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       { readonly procedure: "spellAttackSequence" }
     >
   >,
@@ -309,7 +304,7 @@ export function spellAttackSequencePartTargetHole(
     kind: "targetChoice",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} ${partName} ${partIndex + 1} target`,
+    label: `Spell ${partName} ${partIndex + 1} target`,
     procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
     spellTargetSpatialFactRequest: {
@@ -336,7 +331,7 @@ export function spellAttackSequencePartTargetHole(
 
 export function spellAttackSequencePartTargetHoleId(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "spellAttackSequence" }
   >,
   partIndex: number,
@@ -346,7 +341,7 @@ export function spellAttackSequencePartTargetHoleId(
 
 function spellAttackSequencePartTargetHoleKey(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "spellAttackSequence" }
   >,
   partIndex: number,
@@ -362,7 +357,7 @@ export function spellObjectTargetHole(
     kind: "objectTargetChoice",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} object target`,
+    label: `Spell object target`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
   };
@@ -381,7 +376,7 @@ export function spellAttackSequencePartObjectTargetHole(
     kind: "objectTargetChoice",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} ${partName} ${partIndex + 1} object target`,
+    label: `Spell ${partName} ${partIndex + 1} object target`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
   };
@@ -410,21 +405,21 @@ export function spellObjectTargetHoleId(
 }
 
 export function magicWeaponTargetItemHole(
-  invocation: BattleExecutableSpellInvocation<MagicWeaponEnhancementSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<MagicWeaponEnhancementSpellExecution>,
 ): BattleMagicWeaponTargetItemHole {
   const holeKey = `battle:spell:magic-weapon-target-item:${invocation.procedure}`;
   return {
     kind: "magicWeaponTargetItem",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} target item`,
+    label: `Spell target item`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableItemFact: true,
   };
 }
 
 export function magicWeaponTargetItemHoleId(
-  invocation: MagicWeaponEnhancementSpellInvocation,
+  invocation: MagicWeaponEnhancementSpellExecution,
 ): BattleHoleId {
   return holeId(
     `battle:spell:magic-weapon-target-item:${invocation.procedure}`,
@@ -437,7 +432,7 @@ export function spellObjectContactTargetsHole(input: {
   readonly objectId: BattleObjectId;
   readonly invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       {
         readonly procedure: "objectContactDamage" | "objectContactDamageRepeat";
       }
@@ -453,14 +448,17 @@ export function spellObjectContactTargetsHole(input: {
     kind: "objectContactTargets",
     holeId: holeIdForSelection,
     holeInstanceKey: holeInstanceKey(holeIdForSelection),
-    label: `${input.invocation.spell.name} contact creatures`,
+    label: `Spell contact creatures`,
     objectContact: {
       sourceCombatantId: input.sourceCombatantId,
       sourceProcedureRef: objectContactDamageSourceProcedureRef(
         input.invocation,
       ),
       objectId: input.objectId,
-      rangeFeet: input.invocation.rangeFeet,
+      rangeFeet:
+        input.invocation.procedure === "objectContactDamageRepeat"
+          ? input.invocation.activeEffect.rangeFeet
+          : input.invocation.rangeFeet,
       requiresObjectWithinRange: input.requiresObjectWithinRange,
     },
     choices: [...input.state.combatants.keys()].filter(
@@ -478,7 +476,7 @@ export function spellObjectContactTargetsHole(input: {
 export function objectContactDamageSourceProcedureRef(
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       {
         readonly procedure: "objectContactDamage" | "objectContactDamageRepeat";
       }
@@ -502,7 +500,7 @@ export function spellObjectContactTargetsHoleId(input: {
 export function spellDancingLightsPlacementHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       {
         readonly procedure:
           | "dancingLightsSeparateCast"
@@ -521,7 +519,7 @@ export function spellDancingLightsPlacementHole(
     kind: "dancingLightsPlacement",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} placement`,
+    label: `Spell placement`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     mode,
     form,
@@ -535,7 +533,7 @@ export function spellDancingLightsPlacementHole(
 
 export function spellDancingLightsPlacementHoleId(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     {
       readonly procedure:
         | "dancingLightsSeparateCast"
@@ -554,7 +552,7 @@ export function spellDancingLightsPlacementHoleId(
 
 export function spellTargetAllocationHoleId(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "repeatedDamageAllocation" }
   >,
 ): BattleHoleId {
@@ -566,7 +564,7 @@ export function spellTargetAllocationHole(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       { readonly procedure: "repeatedDamageAllocation" }
     >
   >,
@@ -576,7 +574,7 @@ export function spellTargetAllocationHole(
     kind: "spellTargetAllocation",
     holeId: spellTargetAllocationHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} target allocation`,
+    label: `Spell target allocation`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     allocationCount: repeatedDamageAllocationTargetCardinality(
       repeatedDamageAllocationAdmissionFactsForInvocation(invocation),
@@ -589,7 +587,7 @@ export function spellTargetAllocationHole(
 }
 
 export function spellTargetListHoleId(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): BattleHoleId {
   return holeId(`battle:spell:target-list:${invocation.procedure}`);
 }
@@ -597,7 +595,7 @@ export function spellTargetListHoleId(
 export function spellTargetListHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<TargetListSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<MechanicalTargetListSpellInvocation>,
 ): BattleSpellTargetListHole {
   const holeKey = `battle:spell:target-list:${invocation.procedure}`;
   const choices = [...state.combatants.keys()].filter((id) =>
@@ -607,7 +605,7 @@ export function spellTargetListHole(
     kind: "spellTargetList",
     holeId: spellTargetListHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} targets`,
+    label: `Spell targets`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     minTargets: invocation.targeting.minTargets,
     maxTargets: targetListHoleMaxTargets(invocation, choices.length),
@@ -653,7 +651,7 @@ function targetListTargetingRequiresCaster(
 }
 
 function targetListHoleMaxTargets(
-  invocation: TargetListSpellInvocation,
+  invocation: MechanicalTargetListSpellInvocation,
   choiceCount: number,
 ): number {
   return targetListTargetingHasFixedMaximum(invocation.targeting)
@@ -663,7 +661,7 @@ function targetListHoleMaxTargets(
 
 export function commandOptionChoiceHole(
   invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "command" }>
+    Extract<RuntimeSpellProcedure, { readonly procedure: "command" }>
   >,
 ): BattleCommandOptionChoiceHole {
   const holeKey = `battle:spell:command-option:${invocation.procedure}`;
@@ -671,7 +669,7 @@ export function commandOptionChoiceHole(
     kind: "commandOptionChoice",
     holeId: commandOptionChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} command option`,
+    label: `Spell command option`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     choices: COMMAND_OPTIONS,
   };
@@ -679,7 +677,7 @@ export function commandOptionChoiceHole(
 
 export function commandOptionChoiceHoleId(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "command" }
   >,
 ): BattleHoleId {
@@ -689,7 +687,7 @@ export function commandOptionChoiceHoleId(
 export function selfTransformationModeChoiceHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       { readonly procedure: "selfTransformationMode" }
     >
   >,
@@ -699,7 +697,7 @@ export function selfTransformationModeChoiceHole(
     kind: "selfTransformationModeChoice",
     holeId: selfTransformationModeChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} mode`,
+    label: `Spell mode`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     choices: invocation.modeChoices,
   };
@@ -707,7 +705,7 @@ export function selfTransformationModeChoiceHole(
 
 export function selfTransformationModeChoiceHoleId(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "selfTransformationMode" }
   >,
 ): BattleHoleId {
@@ -719,7 +717,7 @@ export function selfTransformationModeChoiceHoleId(
 export function spellAreaChoiceHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       {
         readonly procedure:
           | "fogCloudObscurement"
@@ -741,7 +739,7 @@ export function spellAreaChoiceHole(
     kind: "spellAreaChoice",
     holeId: spellAreaChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} area`,
+    label: `Spell area`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     area: invocation.targeting,
   };
@@ -749,7 +747,7 @@ export function spellAreaChoiceHole(
 
 export function spellAreaChoiceHoleId(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     {
       readonly procedure:
         | "fogCloudObscurement"
@@ -770,7 +768,7 @@ export function spellAreaChoiceHoleId(
 
 export function spellTeleportDestinationHole(
   invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "selfTeleport" }>
+    Extract<RuntimeSpellProcedure, { readonly procedure: "selfTeleport" }>
   >,
   actorId: CombatantId,
 ): BattleTeleportDestinationHole {
@@ -779,7 +777,7 @@ export function spellTeleportDestinationHole(
     kind: "teleportDestination",
     holeId: spellTeleportDestinationHoleId(invocation, actorId),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} destination`,
+    label: `Spell destination`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     actorId,
     maxDistanceFeet: invocation.maxDistanceFeet,
@@ -789,7 +787,7 @@ export function spellTeleportDestinationHole(
 
 export function spellTeleportDestinationHoleId(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "selfTeleport" }
   >,
   actorId: CombatantId,
@@ -799,7 +797,7 @@ export function spellTeleportDestinationHoleId(
 
 function spellTeleportDestinationHoleKey(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "selfTeleport" }
   >,
   actorId: CombatantId,
@@ -925,7 +923,7 @@ export function spellObjectIgnitionFact(
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       { readonly procedure: "spellAttackDamage" }
     >
   >,
@@ -946,7 +944,7 @@ export function spellManufacturedMetalObjectTargetFact(
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       { readonly procedure: "objectContactDamage" }
     >
   >,
@@ -968,7 +966,7 @@ export function spellObjectLightTargetFact(
   actorId: CombatantId,
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "objectLight" }>
+    Extract<RuntimeSpellProcedure, { readonly procedure: "objectLight" }>
   >,
   applications?: readonly SpellMetamagicApplicationFact[],
 ): ObjectLightTargetFact | null {
@@ -1017,7 +1015,7 @@ export function spellTargetHasNonSpatialPrerequisites(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   const target = state.combatants.get(targetId);
   if (
@@ -1075,7 +1073,7 @@ export function validateSpellTargetAllocation(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       { readonly procedure: "repeatedDamageAllocation" }
     >
   >,
@@ -1118,13 +1116,13 @@ export function validateSpellTargetAllocation(
   const targetCardinality =
     repeatedDamageAllocationTargetCardinality(invocationFacts);
   if (!legalRepeatedDamageAllocationInvocationFacts(invocationFacts)) {
-    return `${invocation.spell.name} target allocation must choose between ${targetCardinality.minimumTargetCount} and ${targetCardinality.maximumTargetCount} target entries.`;
+    return `Spell target allocation must choose between ${targetCardinality.minimumTargetCount} and ${targetCardinality.maximumTargetCount} target entries.`;
   }
   if (!repeatedDamageAllocationInvocationCanAffectTargets(invocationFacts)) {
     return "Spell target allocation entries must be combatants within the selected spell's supported range.";
   }
   if (allocatedCount !== targetCardinality.maximumTargetCount) {
-    return `${invocation.spell.name} target allocation must assign exactly ${targetCardinality.maximumTargetCount} repeated effects.`;
+    return `Spell target allocation must assign exactly ${targetCardinality.maximumTargetCount} repeated effects.`;
   }
   return null;
 }
@@ -1132,24 +1130,24 @@ export function validateSpellTargetAllocation(
 export function validateSpellTargetList(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<TargetListSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<MechanicalTargetListSpellInvocation>,
   targetIds: readonly CombatantId[],
   facts: readonly BattleSpellTargetListSpatialFact[],
 ): string | null {
   if (targetIds.length < invocation.targeting.minTargets) {
-    return `${invocation.spell.name} must target at least ${invocation.targeting.minTargets} creature.`;
+    return `Spell must target at least ${invocation.targeting.minTargets} creature.`;
   }
   if (
     targetListTargetingHasFixedMaximum(invocation.targeting) &&
     targetIds.length > invocation.targeting.maxTargets
   ) {
-    return `${invocation.spell.name} can target at most ${invocation.targeting.maxTargets} creatures.`;
+    return `Spell can target at most ${invocation.targeting.maxTargets} creatures.`;
   }
   if (
     targetListTargetingRequiresCaster(invocation.targeting) &&
     !targetIds.includes(actorId)
   ) {
-    return `${invocation.spell.name} must include the caster among its targets.`;
+    return `Spell must include the caster among its targets.`;
   }
   const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
     state,
@@ -1204,7 +1202,7 @@ export function validatePointOriginSphereSpellTargetList(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      RuntimeSpellProcedure,
       { readonly procedure: "directHitPointRestoration" }
     >
   >,
@@ -1258,7 +1256,7 @@ export function sameCombatantIdSet(
 }
 
 export function spellInvocationRequiresKnownWillingTarget(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return (
     invocation.procedure === "persistentArmorEffect" ||
@@ -1267,16 +1265,12 @@ export function spellInvocationRequiresKnownWillingTarget(
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     invocation.procedure === "wardingBond" ||
     invocation.procedure === "dragonsBreathInitial" ||
-    invocationHasWillingTargetList(invocation) ||
-    (registeredSpellProcedureProfile(
-      invocation.procedure,
-    )?.knownWillingTargetSpellIds.includes(invocation.spell.id) ??
-      false)
+    invocationHasWillingTargetList(invocation)
   );
 }
 
 function invocationHasWillingTargetList(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return (
     "targeting" in invocation &&

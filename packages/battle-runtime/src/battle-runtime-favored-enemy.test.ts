@@ -4,7 +4,12 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-marked-damage-rider
 import { describe, expect, test } from "vitest";
 import { markedDamageRiderProfile } from "./battle-reducer/spell-procedure-profiles/marked-damage-rider.ts";
-import type { BattleState } from "./battle-runtime-test-support.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
+import type {
+  BattleRuntimeSession,
+  BattleState,
+  CombatantId,
+} from "./battle-runtime-test-support.ts";
 import {
   attackDamageDispositionFill,
   attackRollFill,
@@ -37,10 +42,8 @@ import {
   spellFillSet,
   spellRecord,
   spellSlotInvocationRef,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
-  supportedSpellActs,
-  supportedSpellInvocationMatchesRef,
   targetFill,
   unitLibrary,
   wizardSpellcasting,
@@ -49,7 +52,7 @@ import {
 describe("battle runtime: Favored Enemy", () => {
   test("Favored Enemy casts Hunter's Mark without expending a Spell Slot", () => {
     const favoredEnemy = rangerFavoredEnemyResource();
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-favored-enemy-hunters-mark"),
       combatants: [
         characterSeed({
@@ -73,17 +76,25 @@ describe("battle runtime: Favored Enemy", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject = {
       tag: "bonusActionSpell" as const,
       actorId: fighterId,
       invocation: classFeatureFreeCastSpellInvocationRef(
         "hunters_mark",
-        "ranger_favored_enemy",
+        characterResourcePoolRefForUnit(
+          session,
+          fighterId,
+          "ranger_favored_enemy",
+        ),
         "markedDamageRider",
       ),
       mode: { tag: "cast" as const },
     };
-    const act = findAct(state, subject);
+    const act = findAct(session, subject);
+    if (act.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected Favored Enemy bonus-action spell subject.");
+    }
     const markTarget = findHole(act.initialHoles, "targetChoice");
     const marked = requireResolved(
       resolveBattleSubject({
@@ -95,31 +106,33 @@ describe("battle runtime: Favored Enemy", () => {
               kind: "spellTarget",
               casterId: fighterId,
               targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
+              sourceProcedureRef: act.subject.procedureRef,
             },
           ]),
         ],
       }),
     );
-    const ranger = marked.state.combatants.get(fighterId);
+    const markedSession = { ...session, state: marked.state };
+    const ranger = markedSession.state.combatants.get(fighterId);
 
     expect(ranger?.origin.kind).toBe("character");
     if (ranger?.origin.kind !== "character") {
       throw new Error("Expected Ranger caster.");
     }
-    expect(ranger.origin.resources[0]?.usesRemaining).toBe(resourceCount(1));
+    expect(
+      characterResourceForUnit(markedSession, fighterId, "ranger_favored_enemy")
+        ?.usesRemaining,
+    ).toBe(resourceCount(1));
     expect(ranger.origin.spellcasting?.spellSlots).toEqual([
       { spellLevel: 1, count: 1, expended: 0 },
     ]);
     expect(
-      marked.state.currentTurnResources.spellSlotUsesThisTurn.some(
+      markedSession.state.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed",
       ),
     ).toBe(false);
     expect(
-      marked.state.currentTurnResources.levelOnePlusSpellCastsThisTurn,
+      markedSession.state.currentTurnResources.levelOnePlusSpellCastsThisTurn,
     ).toContain(fighterId);
     expect(ranger.concentration).toEqual({
       sourceProcedureRef: expect.any(String),
@@ -137,7 +150,7 @@ describe("battle runtime: Favored Enemy", () => {
       }),
     ]);
     expect(
-      requiredAbilityCheckRollMode(marked.state, fighterId, "wis", {
+      requiredAbilityCheckRollMode(markedSession.state, fighterId, "wis", {
         skill: "survival",
         targetId: goblinId,
       }),
@@ -146,7 +159,7 @@ describe("battle runtime: Favored Enemy", () => {
 
   test("stale Favored Enemy Hunter's Mark free-cast resolution preserves turn resources and Concentration", () => {
     const favoredEnemy = rangerFavoredEnemyResource();
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-favored-enemy-stale-hunters-mark"),
       combatants: [
         characterSeed({
@@ -170,26 +183,36 @@ describe("battle runtime: Favored Enemy", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject = {
       tag: "bonusActionSpell" as const,
       actorId: fighterId,
       invocation: classFeatureFreeCastSpellInvocationRef(
         "hunters_mark",
-        "ranger_favored_enemy",
+        characterResourcePoolRefForUnit(
+          session,
+          fighterId,
+          "ranger_favored_enemy",
+        ),
         "markedDamageRider",
       ),
       mode: { tag: "cast" as const },
     };
-    const act = findAct(state, subject);
+    const act = findAct(session, subject);
+    if (act.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected Hunter's Mark Bonus Action spell.");
+    }
     const markTarget = findHole(act.initialHoles, "targetChoice");
     const ranger = state.combatants.get(fighterId);
     if (ranger?.origin.kind !== "character") {
       throw new Error("Expected Ranger caster.");
     }
-    const invocation = supportedSpellActs(ranger).find(
-      (candidate) =>
-        candidate.procedure === "markedDamageRider" &&
-        supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+    if (act.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected bound Favored Enemy Bonus Action spell.");
+    }
+    const invocation = characterSpellProcedure(
+      ranger.origin.execution,
+      act.subject.procedureRef,
     );
     if (
       invocation === undefined ||
@@ -204,7 +227,11 @@ describe("battle runtime: Favored Enemy", () => {
       ),
       effectKind: "spellEffect",
     } as const;
-    const [favoredEnemyResource] = ranger.origin.resources;
+    const favoredEnemyResource = characterResourceForUnit(
+      session,
+      fighterId,
+      "ranger_favored_enemy",
+    );
     if (
       favoredEnemyResource === undefined ||
       !characterBattleResourceIsUseCount(favoredEnemyResource) ||
@@ -221,7 +248,9 @@ describe("battle runtime: Favored Enemy", () => {
           ...ranger.origin,
           resources: [
             { ...favoredEnemyResource, usesRemaining: resourceCount(0) },
-            ...ranger.origin.resources.slice(1),
+            ...ranger.origin.resources.filter(
+              (resource) => resource !== favoredEnemyResource,
+            ),
           ],
         },
       }),
@@ -233,15 +262,10 @@ describe("battle runtime: Favored Enemy", () => {
           kind: "spellTarget",
           casterId: fighterId,
           targetId: goblinId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("hunters_mark"),
-          ),
+          sourceProcedureRef: act.subject.procedureRef,
         },
       ]),
     ];
-    if (act.subject.tag !== "bonusActionSpell") {
-      throw new Error("Expected bound Favored Enemy Bonus Action spell.");
-    }
     const fillSet = spellFillSet(
       fills,
       invocation,
@@ -273,7 +297,7 @@ describe("battle runtime: Favored Enemy", () => {
   });
 
   test("Favored Enemy initializes at its level-1 Long Rest use cap", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-favored-enemy-long-rest-cap"),
       combatants: [
         characterSeed({
@@ -284,13 +308,16 @@ describe("battle runtime: Favored Enemy", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const ranger = state.combatants.get(fighterId);
+    const ranger = session.state.combatants.get(fighterId);
 
     expect(ranger?.origin.kind).toBe("character");
     if (ranger?.origin.kind !== "character") {
       throw new Error("Expected Ranger caster.");
     }
-    expect(ranger.origin.resources[0]?.usesRemaining).toBe(resourceCount(2));
+    expect(
+      characterResourceForUnit(session, fighterId, "ranger_favored_enemy")
+        ?.usesRemaining,
+    ).toBe(resourceCount(2));
   });
 
   test("Favored Enemy free-cast support requires Hunter's Mark grant identity", () => {
@@ -320,7 +347,7 @@ describe("battle runtime: Favored Enemy", () => {
 
   test("Favored Enemy falls back to normal Hunter's Mark Spell Slot casting when free casts are exhausted", () => {
     const favoredEnemy = rangerFavoredEnemyResource({ usesRemaining: 0 });
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-favored-enemy-hunters-mark-slot-fallback"),
       combatants: [
         characterSeed({
@@ -346,7 +373,7 @@ describe("battle runtime: Favored Enemy", () => {
     });
 
     expect(
-      discoverBattleActs(state).some(
+      discoverBattleActs(session).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.tag ===
@@ -366,38 +393,43 @@ describe("battle runtime: Favored Enemy", () => {
       ),
       mode: { tag: "cast" as const },
     };
-    const act = findAct(state, subject);
+    const act = findAct(session, subject);
+    if (act.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected Hunter's Mark Bonus Action spell.");
+    }
     const markTarget = findHole(act.initialHoles, "targetChoice");
     const marked = requireResolved(
       resolveBattleSubject({
-        state,
-        subject,
+        state: session.state,
+        subject: act.subject,
         fills: [
           targetFill(markTarget, goblinId, [
             {
               kind: "spellTarget",
               casterId: fighterId,
               targetId: goblinId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hunters_mark"),
-              ),
+              sourceProcedureRef: act.subject.procedureRef,
             },
           ]),
         ],
       }),
     );
-    const ranger = marked.state.combatants.get(fighterId);
+    const markedSession = { ...session, state: marked.state };
+    const ranger = markedSession.state.combatants.get(fighterId);
 
     expect(ranger?.origin.kind).toBe("character");
     if (ranger?.origin.kind !== "character") {
       throw new Error("Expected Ranger caster.");
     }
-    expect(ranger.origin.resources[0]?.usesRemaining).toBe(resourceCount(0));
+    expect(
+      characterResourceForUnit(markedSession, fighterId, "ranger_favored_enemy")
+        ?.usesRemaining,
+    ).toBe(resourceCount(0));
     expect(ranger.origin.spellcasting?.spellSlots).toEqual([
       { spellLevel: 1, count: 1, expended: 1 },
     ]);
     expect(
-      marked.state.currentTurnResources.spellSlotUsesThisTurn.some(
+      markedSession.state.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed",
       ),
     ).toBe(true);
@@ -407,7 +439,8 @@ describe("battle runtime: Favored Enemy", () => {
 describe("battle runtime: Paladin's Smite", () => {
   test("Paladin's Smite casts Divine Smite after a melee hit without expending a Spell Slot", () => {
     const paladinsSmite = paladinsSmiteResource();
-    const state = paladinsSmiteBattleState(paladinsSmite);
+    const session = paladinsSmiteBattleSession(paladinsSmite);
+    const state = session.state;
     const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
@@ -440,7 +473,7 @@ describe("battle runtime: Paladin's Smite", () => {
           return false;
         return (
           characterSpellInvocationRefForProcedureRefForTest(
-            awaitingReaction.state,
+            { state: awaitingReaction.state, context: session.context },
             choice.reactorId,
             choice.subject.procedureRef,
           ).tag === "classFeatureFreeCast"
@@ -454,14 +487,18 @@ describe("battle runtime: Paladin's Smite", () => {
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        awaitingReaction.state,
+        { state: awaitingReaction.state, context: session.context },
         smiteChoice.reactorId,
         smiteChoice.subject.procedureRef,
       ),
     ).toEqual(
       classFeatureFreeCastSpellInvocationRef(
         "divine_smite",
-        "paladin_paladins_smite",
+        characterResourcePoolRefForUnit(
+          session,
+          fighterId,
+          "paladin_paladins_smite",
+        ),
         "afterHitDamage",
       ),
     );
@@ -526,10 +563,22 @@ describe("battle runtime: Paladin's Smite", () => {
     if (paladin?.origin.kind !== "character") {
       throw new Error("Expected Paladin caster.");
     }
+    const resourcePoolRef = session.context.characters
+      .get(fighterId)
+      ?.resourceOwnership.find(
+        (resource) => resource.unit.id === "paladin_paladins_smite",
+      )?.resourcePoolRef;
     const paladinsSmiteResourceState = paladin.origin.resources.find(
-      (resource) => resource.unit.id === "paladin_paladins_smite",
+      (resource) => resource.resourcePoolRef === resourcePoolRef,
     );
-    expect(paladinsSmiteResourceState?.usesRemaining).toBe(resourceCount(0));
+    if (
+      paladinsSmiteResourceState === undefined ||
+      !characterBattleResourceIsUseCount(paladinsSmiteResourceState) ||
+      characterBattleResourceIsUnlimited(paladinsSmiteResourceState)
+    ) {
+      throw new Error("Expected Paladin's Smite limited resource state.");
+    }
+    expect(paladinsSmiteResourceState.usesRemaining).toBe(resourceCount(0));
     expect(paladin.origin.spellcasting?.spellSlots).toEqual([
       { spellLevel: 1, count: 1, expended: 0 },
     ]);
@@ -544,9 +593,10 @@ describe("battle runtime: Paladin's Smite", () => {
   });
 
   test("Paladin's Smite falls back to ordinary Divine Smite Spell Slot casting when the free cast is exhausted", () => {
-    const state = paladinsSmiteBattleState(
+    const session = paladinsSmiteBattleSession(
       paladinsSmiteResource({ usesRemaining: 0 }),
     );
+    const state = session.state;
     const subject = paladinLongswordAttackSubject(state);
     const target = findHole(
       findAct(state, subject).initialHoles,
@@ -577,7 +627,7 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          awaitingReaction.state,
+          { state: awaitingReaction.state, context: session.context },
           choice.reactorId,
           choice.subject.procedureRef,
         );
@@ -591,7 +641,7 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          awaitingReaction.state,
+          { state: awaitingReaction.state, context: session.context },
           choice.reactorId,
           choice.subject.procedureRef,
         );
@@ -604,7 +654,8 @@ describe("battle runtime: Paladin's Smite", () => {
   });
 
   test("Paladin's Smite free cast remains available after a Spell Slot use without offering slot Smite", () => {
-    const baseState = paladinsSmiteBattleState(paladinsSmiteResource());
+    const session = paladinsSmiteBattleSession(paladinsSmiteResource());
+    const baseState = session.state;
     const state: BattleState = {
       ...baseState,
       currentTurnResources: {
@@ -643,7 +694,7 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          awaitingReaction.state,
+          { state: awaitingReaction.state, context: session.context },
           choice.reactorId,
           choice.subject.procedureRef,
         );
@@ -657,7 +708,7 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          awaitingReaction.state,
+          { state: awaitingReaction.state, context: session.context },
           choice.reactorId,
           choice.subject.procedureRef,
         );
@@ -695,10 +746,10 @@ describe("battle runtime: Paladin's Smite", () => {
   });
 });
 
-function paladinsSmiteBattleState(
+function paladinsSmiteBattleSession(
   resource: ReturnType<typeof paladinsSmiteResource>,
 ) {
-  return startBattleRight({
+  return startBattleSessionRight({
     battleId: battleId("battle-paladins-smite-divine-smite"),
     combatants: [
       characterSeed({
@@ -726,4 +777,38 @@ function paladinsSmiteBattleState(
 
 function paladinLongswordAttackSubject(state: BattleState) {
   return fighterAttackSubject(state, "Longsword");
+}
+
+function characterResourceForUnit(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+  unitId: string,
+) {
+  const resourcePoolRef = session.context.characters
+    .get(actorId)
+    ?.resourceOwnership.find(
+      (ownership) => ownership.unit.id === unitId,
+    )?.resourcePoolRef;
+  const actor = session.state.combatants.get(actorId);
+  const resource =
+    actor?.origin.kind === "character"
+      ? actor.origin.resources.find(
+          (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+        )
+      : undefined;
+  return resource !== undefined && characterBattleResourceIsUseCount(resource)
+    ? resource
+    : undefined;
+}
+
+function characterResourcePoolRefForUnit(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+  unitId: string,
+) {
+  const resource = characterResourceForUnit(session, actorId, unitId);
+  if (resource === undefined) {
+    throw new Error(`Expected character resource for ${unitId}.`);
+  }
+  return resource.resourcePoolRef;
 }

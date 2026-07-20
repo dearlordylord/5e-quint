@@ -4,7 +4,6 @@
 
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { difficultyClass } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import type {
@@ -20,14 +19,9 @@ import type { BattleActiveEffect } from "../active-effect/types.ts";
 import type { MonkFocusFlurryOfBlowsStrikeSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
-  MONK_FOCUS_PROCEDURE_QUERY,
-  characterUnitProcedureRef,
-  characterUnitProcedureId,
+  characterProcedureBinding,
+  type UnitSupportProcedureExecution,
 } from "../character-execution.ts";
-import type {
-  BattleOpenHandTechniqueSupportProfile,
-  BattleUnitSupportProfile,
-} from "../unit-feature-support.ts";
 
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { isMonkFocusFlurryOfBlowsActionResource } from "./monk-focus.ts";
@@ -60,9 +54,11 @@ type OpenHandTechniqueFlurryHit = {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly subject: MonkFocusFlurryOfBlowsStrikeSubject;
-  readonly unitId: UnitRecord["id"];
   readonly procedureRef: BattleProcedureExecutionRef;
-  readonly profile: BattleOpenHandTechniqueSupportProfile;
+  readonly execution: Extract<
+    UnitSupportProcedureExecution,
+    { readonly kind: "openHandTechnique" }
+  >;
 };
 
 export type OpenHandTechniqueAfterHitResult =
@@ -268,8 +264,8 @@ function openHandTechniqueSavingThrowHole(
 ): BattleUnitFeatureSavingThrowOutcomeHole {
   const ability =
     choice === "pushAwayOnFailedSave"
-      ? hit.profile.technique.effects.pushAwayOnFailedSave.save.ability
-      : hit.profile.technique.effects.applyConditionOnFailedSave.save.ability;
+      ? hit.execution.technique.effects.pushAwayOnFailedSave.save.ability
+      : hit.execution.technique.effects.applyConditionOnFailedSave.save.ability;
   const actor = state.combatants.get(hit.actorId);
   if (actor === undefined) {
     throw new Error("Open Hand Technique save hole requires an actor.");
@@ -299,7 +295,7 @@ function openHandTechniqueSavingThrowHole(
     dc: {
       kind: "fixed",
       dc: difficultyClass(
-        hit.profile.technique.effectSaveDc.base +
+        hit.execution.technique.effectSaveDc.base +
           wisdomModifier +
           combatantProficiencyBonus(actor),
       ),
@@ -352,7 +348,7 @@ function applyOpenHandTechniquePushAway(
   push: BattleShovePushOutcome | undefined,
 ): OpenHandTechniqueAfterHitResult {
   const distanceFeet =
-    hit.profile.technique.effects.pushAwayOnFailedSave.distanceFeet;
+    hit.execution.technique.effects.pushAwayOnFailedSave.distanceFeet;
   if (push === undefined) {
     return {
       tag: "invalid",
@@ -397,7 +393,7 @@ function applyOpenHandTechniqueApplyProne(
           target,
           applyCondition(
             target.conditions,
-            hit.profile.technique.effects.applyConditionOnFailedSave.condition,
+            hit.execution.technique.effects.applyConditionOnFailedSave.condition,
           ),
         ),
       }),
@@ -446,29 +442,40 @@ function openHandTechniqueFlurryHit(
   ) {
     return null;
   }
-  const focusUnitId = characterUnitProcedureId(
+  const focusBinding = characterProcedureBinding(
     actor.origin.execution,
     subject.focusProcedureRef,
-    MONK_FOCUS_PROCEDURE_QUERY,
   );
-  if (focusUnitId === undefined) return null;
-  const selectedProfile = actor.origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.flatMap((supportProfile) =>
-      openHandTechniqueSupportProfile(unitRef.unit.id, supportProfile),
-    ),
-  )[0];
-  if (selectedProfile === undefined) return null;
-  const procedureRef = characterUnitProcedureRef(
-    actor.origin.execution,
-    selectedProfile.unitId,
-    {
-      kind: "unitSupportProfile",
-      supportKinds: new Set([selectedProfile.profile.kind]),
+  const focusProcedure = focusBinding?.procedure;
+  if (
+    focusProcedure?.kind !== "unitSupportProfile" ||
+    typeof focusProcedure.execution !== "object" ||
+    focusProcedure.execution.kind !== "monkFocusBattleOptions" ||
+    focusProcedure.source.kind !== "resourcePool"
+  ) {
+    return null;
+  }
+  const focusResourcePoolRef = focusProcedure.source.resourcePoolRef;
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) => {
+      const candidateProcedure = candidate.procedure;
+      return (
+        (candidateProcedure.kind === "unitSupportProfile" ||
+          candidateProcedure.kind === "unitFeature") &&
+        typeof candidateProcedure.execution === "object" &&
+        candidateProcedure.execution.kind === "openHandTechnique" &&
+        candidateProcedure.execution.technique.trigger.resourcePoolRef ===
+          focusResourcePoolRef
+      );
     },
   );
+  const procedure = binding?.procedure;
   if (
-    procedureRef === undefined ||
-    selectedProfile.profile.technique.trigger.resourceUnitId !== focusUnitId
+    (procedure?.kind !== "unitSupportProfile" &&
+      procedure?.kind !== "unitFeature") ||
+    typeof procedure.execution !== "object" ||
+    procedure.execution.kind !== "openHandTechnique" ||
+    binding === undefined
   ) {
     return null;
   }
@@ -476,27 +483,9 @@ function openHandTechniqueFlurryHit(
     actorId,
     targetId,
     subject,
-    unitId: selectedProfile.unitId,
-    procedureRef,
-    profile: selectedProfile.profile,
+    procedureRef: binding.procedureRef,
+    execution: procedure.execution,
   };
-}
-
-function openHandTechniqueSupportProfile(
-  unitId: UnitRecord["id"],
-  supportProfile: BattleUnitSupportProfile,
-):
-  | readonly [
-      {
-        readonly unitId: UnitRecord["id"];
-        readonly profile: BattleOpenHandTechniqueSupportProfile;
-      },
-    ]
-  | readonly [] {
-  return typeof supportProfile === "object" &&
-    supportProfile.kind === "openHandTechnique"
-    ? [{ unitId, profile: supportProfile }]
-    : [];
 }
 
 function openHandTechniquePush(

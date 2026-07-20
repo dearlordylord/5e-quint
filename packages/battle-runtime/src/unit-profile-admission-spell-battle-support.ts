@@ -13,6 +13,7 @@ import {
   startBattle,
   type BattleCreatureInit,
   type BattleState,
+  type BattleRuntimeSession,
   type CombatantId,
 } from "./index.ts";
 import {
@@ -115,7 +116,7 @@ export function spellBattle(input: {
     readonly statBlock: StatBlockRecord;
     readonly initiative: number;
   }[];
-}): BattleState {
+}): BattleRuntimeSession {
   const casterId = input.casterId ?? spellCasterId;
   const casterClassLevels = input.casterClassLevels ?? [
     { className: "wizard", level: 1 },
@@ -253,7 +254,7 @@ export function resolvedAnimalFriendshipState(
   sourceCasterId: CombatantId = spellCasterId,
 ): BattleState {
   const spell = spellRecord(animalFriendshipUnitId);
-  const state = spellBattle({
+  const session = spellBattle({
     casterId: sourceCasterId,
     preparedSpells: [spell],
     statBlockTargets: [
@@ -265,7 +266,8 @@ export function resolvedAnimalFriendshipState(
       ...additionalStatBlockTargets,
     ],
   });
-  const act = spellAct({ state, spellId: animalFriendshipUnitId });
+  const state = session.state;
+  const act = spellAct({ session, spellId: animalFriendshipUnitId });
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
   const targetFill = spellTargetListFill(
     targetHole,

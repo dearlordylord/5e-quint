@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
 //
 // The Gust of Wind Line Spell Procedure Profile: action-time Spell Slot
@@ -27,7 +28,6 @@ import {
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -38,7 +38,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { resolveGustOfWindLineSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -46,9 +46,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -321,7 +320,6 @@ function gustOfWindLineCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: gustOfWindLineInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -356,22 +354,6 @@ function gustOfWindLineMetamagicInitialHoles(
   return holes;
 }
 
-function gustOfWindLineInvocationRef(
-  invocation: GustOfWindLineSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "gustOfWindLine",
-  };
-}
-
-function gustOfWindLineCastSummary(
-  invocation: GustOfWindLineSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveGustOfWindLine(
   input: GustOfWindLineResolveInput,
@@ -387,14 +369,12 @@ function resolveGustOfWindLine(
   });
 }
 
-const GustOfWindLineInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "gustOfWindLine" }>
->(
+const GustOfWindLineInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("gustOfWindLine"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("str"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
@@ -402,7 +382,7 @@ const GustOfWindLineInvocationSchema = spellProcedureInvocationSchema<
       lengthFeet: MovementFeet,
       widthFeet: MovementFeet,
     }),
-    durationTicks: Schema.Number,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
     pushDistanceFeet: MovementFeet,
     movementCost: Schema.Struct({
@@ -413,15 +393,12 @@ const GustOfWindLineInvocationSchema = spellProcedureInvocationSchema<
 );
 export const gustOfWindLineProfile = {
   procedure: "gustOfWindLine",
-  invocationSchema: GustOfWindLineInvocationSchema,
+  executionSchema: GustOfWindLineInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitGustOfWindLine,
   discoverCastAct: discoverGustOfWindLineCastAct,
-  castSummary: gustOfWindLineCastSummary,
-  invocationRef: gustOfWindLineInvocationRef,
   resolve: resolveGustOfWindLine,
 } satisfies SpellProcedureProfile<
   "gustOfWindLine",

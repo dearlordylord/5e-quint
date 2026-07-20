@@ -54,7 +54,7 @@ import {
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
-  spellDamageNegatedForTarget,
+  repeatedDamageAllocationNegatedForTarget,
   spellDamageHole,
   spellTargetAllocationHole,
   validatePreparedSlotSpellDamageGroups,
@@ -118,7 +118,7 @@ export function resolvePreparedSlotSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} does not use an attack roll.`,
+      `Spell does not use an attack roll.`,
     );
   }
   if (input.fillSet.targetAllocation === undefined) {
@@ -777,7 +777,7 @@ function repeatedDamageAllocationSpellDamageByType(
   allocationIndex: number,
   repeatedEffectCount: number,
 ): ReadonlyMap<DamageType, number> {
-  if (spellDamageNegatedForTarget(target, invocation.spell.id)) {
+  if (repeatedDamageAllocationNegatedForTarget(target)) {
     return new Map();
   }
   const group = damageRoll.value[allocationIndex];

@@ -192,7 +192,7 @@ function discoverLevel3ActionSpell(input: {
   const spell = spellRecord(input.spellId);
   const state = selectedSpellBattle(spell);
   const act = spellAct({
-    state,
+    session: state,
     spellId: input.spellId,
     slotLevel: 3,
   });
@@ -220,7 +220,7 @@ function verifyHastePositiveEffects(input: {
 }): void {
   const targetHole = requireHole(input.act.initialHoles, "targetChoice");
   const resolved = resolveBattleSubject({
-    state: input.state,
+    state: input.state.state,
     subject: input.act.subject,
     fills: [
       knownWillingSpellTargetFill(
@@ -267,7 +267,7 @@ function verifyProtectionFromEnergyResistance(input: {
     "thunder",
   ]);
   const resolved = resolveBattleSubject({
-    state: input.state,
+    state: input.state.state,
     subject: input.act.subject,
     fills: [
       knownWillingSpellTargetFill(
@@ -314,7 +314,7 @@ function verifySleetStormAreaHazard(input: {
     }),
   );
   const resolved = resolveBattleSubject({
-    state: input.state,
+    state: input.state.state,
     subject: input.act.subject,
     fills: [sleetStormAreaFill(area)],
   });

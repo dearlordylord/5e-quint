@@ -20,7 +20,11 @@ import { describe, expect, test } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
-import { battleProcedureExecutionRef } from "./identity.ts";
+import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution.ts";
+import {
+  battleProcedureExecutionRef,
+  type BattleProcedureExecutionRef,
+} from "./identity.ts";
 import {
   antimagicFieldUnitId,
   clericChannelDivinityUnitId,
@@ -47,6 +51,7 @@ import {
   characterCreature,
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
 import {
   battleAreaId,
   battleId,
@@ -61,6 +66,7 @@ import {
   type BattleAntimagicFieldAuraMembership,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
   type CombatantId,
 } from "./index.ts";
@@ -78,7 +84,7 @@ const preserveLifeUnitRef = preserveLifeUnitRefWithSupport();
 
 describe("Antimagic Field action interdiction", () => {
   test("origin-included aura blocks action and Bonus Action spell discovery", () => {
-    const state = activeAntimagicAuraState(
+    const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
       auraMembership({
         sourceCombatantId: spellCasterId,
@@ -87,14 +93,16 @@ describe("Antimagic Field action interdiction", () => {
       }),
     );
 
-    expect(maybeSpellAct({ state, spellId: rayOfFrostUnitId })).toBeUndefined();
     expect(
-      maybeBonusSpellAct({ state, spellId: healingWordUnitId }),
+      maybeSpellAct({ session, spellId: rayOfFrostUnitId }),
+    ).toBeUndefined();
+    expect(
+      maybeBonusSpellAct({ session, spellId: healingWordUnitId }),
     ).toBeUndefined();
   });
 
   test("origin-excluded aura does not block the origin creature", () => {
-    const state = activeAntimagicAuraState(
+    const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
       auraMembership({
         sourceCombatantId: spellCasterId,
@@ -103,14 +111,16 @@ describe("Antimagic Field action interdiction", () => {
       }),
     );
 
-    expect(maybeSpellAct({ state, spellId: rayOfFrostUnitId })).toBeDefined();
     expect(
-      maybeBonusSpellAct({ state, spellId: healingWordUnitId }),
+      maybeSpellAct({ session, spellId: rayOfFrostUnitId }),
+    ).toBeDefined();
+    expect(
+      maybeBonusSpellAct({ session, spellId: healingWordUnitId }),
     ).toBeDefined();
   });
 
   test("non-origin aura membership blocks the current actor without geometry state", () => {
-    const state = activeAntimagicAuraState(
+    const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
       auraMembership({
         sourceCombatantId: spellTargetId,
@@ -119,13 +129,15 @@ describe("Antimagic Field action interdiction", () => {
       }),
     );
 
-    expect(maybeSpellAct({ state, spellId: rayOfFrostUnitId })).toBeUndefined();
+    expect(
+      maybeSpellAct({ session, spellId: rayOfFrostUnitId }),
+    ).toBeUndefined();
   });
 
   test("stale spell subjects are rejected when refreshed membership puts the caster inside", () => {
     const base = spellInterdictionBattle();
-    const act = spellAct({ state: base, spellId: rayOfFrostUnitId });
-    const stale = activeAntimagicAuraState(
+    const act = spellAct({ session: base, spellId: rayOfFrostUnitId });
+    const stale = activeAntimagicAuraSession(
       base,
       auraMembership({
         sourceCombatantId: spellTargetId,
@@ -135,7 +147,7 @@ describe("Antimagic Field action interdiction", () => {
     );
 
     const result = resolveBattleSubject({
-      state: stale,
+      state: stale.state,
       subject: act.subject,
       fills: [],
     });
@@ -150,7 +162,7 @@ describe("Antimagic Field action interdiction", () => {
   test("interdicts non-spell Magic Action feature discovery and stale resolution", () => {
     const base = preserveLifeBattle();
     const act = preserveLifeAct(base);
-    const stale = activeAntimagicAuraState(
+    const stale = activeAntimagicAuraSession(
       base,
       auraMembership({
         sourceCombatantId: spellTargetId,
@@ -161,7 +173,11 @@ describe("Antimagic Field action interdiction", () => {
 
     expect(preserveLifeActOrUndefined(stale)).toBeUndefined();
     expect(
-      resolveBattleSubject({ state: stale, subject: act.subject, fills: [] }),
+      resolveBattleSubject({
+        state: stale.state,
+        subject: act.subject,
+        fills: [],
+      }),
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
@@ -171,8 +187,8 @@ describe("Antimagic Field action interdiction", () => {
 
   test("interdicts non-spell action-spell Magic Action discovery and stale resolution", () => {
     const base = flameBladeAttackBattle();
-    const attack = spellAct({ state: base, spellId: flameBladeUnitId });
-    const stale = activeAntimagicAuraState(
+    const attack = spellAct({ session: base, spellId: flameBladeUnitId });
+    const stale = activeAntimagicAuraSession(
       base,
       auraMembership({
         sourceCombatantId: spellTargetId,
@@ -182,11 +198,11 @@ describe("Antimagic Field action interdiction", () => {
     );
 
     expect(
-      maybeSpellAct({ state: stale, spellId: flameBladeUnitId }),
+      maybeSpellAct({ session: stale, spellId: flameBladeUnitId }),
     ).toBeUndefined();
     expect(
       resolveBattleSubject({
-        state: stale,
+        state: stale.state,
         subject: attack.subject,
         fills: [],
       }),
@@ -200,10 +216,10 @@ describe("Antimagic Field action interdiction", () => {
   test("does not interdict non-spell Bonus Action spell-effect discovery or stale resolution", () => {
     const base = spiritualWeaponRepeatBattle();
     const repeat = bonusSpellAct({
-      state: base,
+      session: base,
       spellId: spiritualWeaponUnitId,
     });
-    const stale = activeAntimagicAuraState(
+    const stale = activeAntimagicAuraSession(
       base,
       auraMembership({
         sourceCombatantId: spellTargetId,
@@ -213,11 +229,11 @@ describe("Antimagic Field action interdiction", () => {
     );
 
     expect(
-      maybeBonusSpellAct({ state: stale, spellId: spiritualWeaponUnitId }),
+      maybeBonusSpellAct({ session: stale, spellId: spiritualWeaponUnitId }),
     ).toBeDefined();
     expect(
       resolveBattleSubject({
-        state: stale,
+        state: stale.state,
         subject: repeat.subject,
         fills: [],
       }),
@@ -231,7 +247,7 @@ describe("Antimagic Field action interdiction", () => {
   test("interdicts runtime-command Magic Action discovery and stale resolution", () => {
     const base = levitateCasterControlBattle();
     const altitudeAct = levitateAltitudeControlAct(base);
-    const stale = activeAntimagicAuraState(
+    const stale = activeAntimagicAuraSession(
       base,
       auraMembership({
         sourceCombatantId: spellTargetId,
@@ -249,7 +265,7 @@ describe("Antimagic Field action interdiction", () => {
     ).toBe(false);
     expect(
       resolveBattleSubject({
-        state: stale,
+        state: stale.state,
         subject: altitudeAct.subject,
         fills: [],
       }),
@@ -261,7 +277,7 @@ describe("Antimagic Field action interdiction", () => {
   });
 
   test("interdicts stale triggered Reaction spell subjects", () => {
-    const state = activeAntimagicAuraState(
+    const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
       auraMembership({
         sourceCombatantId: spellCasterId,
@@ -271,13 +287,13 @@ describe("Antimagic Field action interdiction", () => {
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: {
         tag: "runtimeCommand",
         actorId: spellCasterId,
         command: "castTriggeredReactionSpell",
         reactorId: spellCasterId,
-        procedureRef: requireCounterspellProcedureRef(state),
+        procedureRef: requireCounterspellProcedureRef(session.state),
       },
       fills: [],
     });
@@ -290,7 +306,7 @@ describe("Antimagic Field action interdiction", () => {
   });
 
   test("combatant removal prunes removed non-origin members without dropping the aura witness", () => {
-    const state = activeAntimagicAuraState(
+    const session = activeAntimagicAuraSession(
       preserveLifeBattle(),
       auraMembership({
         sourceCombatantId: spellCasterId,
@@ -300,7 +316,7 @@ describe("Antimagic Field action interdiction", () => {
     );
 
     const removed = removeBattleCombatants({
-      state,
+      state: session.state,
       combatantIds: [spellTargetId],
     });
 
@@ -320,11 +336,13 @@ describe("Antimagic Field action interdiction", () => {
         },
       }),
     );
-    expect(preserveLifeActOrUndefined(removed.right)).toBeUndefined();
+    expect(
+      preserveLifeActOrUndefined({ ...session, state: removed.right }),
+    ).toBeUndefined();
   });
 });
 
-function spellInterdictionBattle(): BattleState {
+function spellInterdictionBattle(): BattleRuntimeSession {
   return spellBattle({
     cantrips: [spellRecord(rayOfFrostUnitId)],
     preparedSpells: [spellRecord(healingWordUnitId)],
@@ -335,17 +353,17 @@ function spellInterdictionBattle(): BattleState {
   });
 }
 
-function flameBladeAttackBattle(): BattleState {
-  const state = spellBattle({
+function flameBladeAttackBattle(): BattleRuntimeSession {
+  const session = spellBattle({
     preparedSpells: [spellRecord(flameBladeUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     targetHp: 20,
     targetMaxHp: 20,
   });
   const cast = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: bonusSpellAct({
-      state,
+      session,
       spellId: flameBladeUnitId,
       slotLevel: 2,
     }).subject,
@@ -354,28 +372,55 @@ function flameBladeAttackBattle(): BattleState {
   if (cast.tag !== "resolved") {
     throw new Error("Expected Flame Blade held object to resolve.");
   }
-  return cast.state;
+  return { ...session, state: cast.state };
 }
 
-function spiritualWeaponRepeatBattle(): BattleState {
-  const state = spellBattle({
+function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
+  const session = spellBattle({
     preparedSpells: [spellRecord(spiritualWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
-  const caster = state.combatants.get(spellCasterId);
-  if (caster === undefined) {
+  const caster = session.state.combatants.get(spellCasterId);
+  if (!isCharacterBattleCreatureState(caster)) {
     throw new Error("Expected Spiritual Weapon caster combatant.");
   }
+  const sourceBinding = caster.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure === "spiritualWeaponAttackProxy",
+  );
+  if (
+    sourceBinding?.procedure.kind !== "spellInvocation" ||
+    sourceBinding.procedure.execution.procedure !==
+      "spiritualWeaponAttackProxy"
+  ) {
+    throw new Error("Expected Spiritual Weapon source procedure binding.");
+  }
+  const activeEffect = spiritualWeaponActiveEffect(sourceBinding.procedureRef);
+  const execution = characterExecutionWithSpiritualWeaponRepeatAttack(
+    caster.origin.execution,
+    {
+      procedure: "spiritualWeaponRepeatAttack",
+      activeEffectRef: activeEffect.effectRef,
+      activeEffectSourceProcedureRef: sourceBinding.procedureRef,
+    },
+  );
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      activeEffects: [...caster.activeEffects, spiritualWeaponActiveEffect()],
-    }),
+    ...session,
+    state: {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [...caster.activeEffects, activeEffect],
+        origin: { ...caster.origin, execution },
+      }),
+    },
   };
 }
 
-function spiritualWeaponActiveEffect(): Extract<
+function spiritualWeaponActiveEffect(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+): Extract<
   BattleActiveEffect,
   { readonly kind: "spiritualWeapon" }
 > {
@@ -388,9 +433,7 @@ function spiritualWeaponActiveEffect(): Extract<
     effectRef: battleActiveEffectExecutionRefForTest(
       "antimagic-action-spiritual-weapon",
     ),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(spiritualWeaponUnitId),
-    ),
+    sourceProcedureRef,
     sourceCombatantId: spellCasterId,
     sourceSpellLevel,
     forcePositionId: battleTablePositionId(
@@ -418,16 +461,20 @@ function spiritualWeaponActiveEffect(): Extract<
   };
 }
 
-function levitateCasterControlBattle(): BattleState {
+function levitateCasterControlBattle(): BattleRuntimeSession {
   const spell = spellRecord(levitateUnitId);
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 2 }],
   });
-  const act = spellAct({ state, spellId: levitateUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session,
+    spellId: levitateUnitId,
+    slotLevel: 2,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const needsInitialRise = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       knownWillingSpellTargetFill(
@@ -446,7 +493,7 @@ function levitateCasterControlBattle(): BattleState {
     "levitateInitialRise",
   );
   const cast = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       knownWillingSpellTargetFill(
@@ -472,11 +519,11 @@ function levitateCasterControlBattle(): BattleState {
   if (nextCasterTurn.tag !== "resolved") {
     throw new Error("Expected target end turn.");
   }
-  return nextCasterTurn.state;
+  return { ...session, state: nextCasterTurn.state };
 }
 
-function levitateAltitudeControlAct(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+function levitateAltitudeControlAct(session: BattleRuntimeSession) {
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "levitateAltitudeControl",
@@ -498,11 +545,11 @@ function levitateInitialRiseFill(
   };
 }
 
-function activeAntimagicAuraState(
-  state: BattleState,
+function activeAntimagicAuraSession(
+  session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
-): BattleState {
-  const combatants = new Map(state.combatants);
+): BattleRuntimeSession {
+  const combatants = new Map(session.state.combatants);
   const source = combatants.get(aura.sourceCombatantId);
   if (source === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
@@ -512,8 +559,8 @@ function activeAntimagicAuraState(
     activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
   });
   return {
-    ...state,
-    combatants,
+    ...session,
+    state: { ...session.state, combatants },
   };
 }
 
@@ -558,7 +605,7 @@ function auraMembership(input: {
   };
 }
 
-function preserveLifeBattle(): BattleState {
+function preserveLifeBattle(): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("antimagic-field-preserve-life"),
     combatants: [
@@ -570,7 +617,11 @@ function preserveLifeBattle(): BattleState {
         currentHp: Hp(20),
         maxHp: Hp(20),
         characterUnitRefs: [preserveLifeUnitRef],
-        unitFeatures: [{ unit: preserveLifeUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(preserveLifeUnit, [
+            { className: "cleric", level: classLevel(3) },
+          ]),
+        ],
         resources: [{ unit: channelDivinityUnit, usesRemaining: 2 }],
       }),
       characterCreature({
@@ -595,16 +646,16 @@ function preserveLifeBattle(): BattleState {
   return result.right;
 }
 
-function preserveLifeAct(state: BattleState) {
-  const act = preserveLifeActOrUndefined(state);
+function preserveLifeAct(session: BattleRuntimeSession) {
+  const act = preserveLifeActOrUndefined(session);
   if (act === undefined) {
     throw new Error("Expected Preserve Life act.");
   }
   return act;
 }
 
-function preserveLifeActOrUndefined(state: BattleState) {
-  return discoverBattleActs(state).find(
+function preserveLifeActOrUndefined(session: BattleRuntimeSession) {
+  return discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === spellCasterId &&

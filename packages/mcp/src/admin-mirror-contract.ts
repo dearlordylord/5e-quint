@@ -1,8 +1,4 @@
-import {
-  BattleSnapshotSchema,
-  BattleUnitSupportSourceSchema,
-} from "@dnd/battle-runtime";
-import { StatBlockRecordSchema } from "@dnd/surface/surface/schema";
+import { BattleSnapshotSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
@@ -114,55 +110,12 @@ const AdminMirrorProjectionEnvelopeFieldsSchema = Schema.Struct({
     Schema.int(),
     Schema.greaterThanOrEqualTo(0),
   ),
-  selectedContent: Schema.Union(
-    BattleUnitSupportSourceSchema,
-    StatBlockRecordSchema,
-    Schema.Null,
-  ),
   projection: AdminSessionProjectionSchema,
 });
 export const AdminMirrorProjectionEnvelopeSchema =
-  AdminMirrorProjectionEnvelopeFieldsSchema.pipe(
-    Schema.filter((envelope) => selectedContentMatchesPresentation(envelope), {
-      message: () =>
-        "Admin Mirror selected content must exactly match the pending presentation kind and selected identity.",
-    }),
-  );
+  AdminMirrorProjectionEnvelopeFieldsSchema;
 export type AdminMirrorProjectionEnvelope =
   typeof AdminMirrorProjectionEnvelopeSchema.Type;
-
-function selectedContentMatchesPresentation(
-  envelope: typeof AdminMirrorProjectionEnvelopeFieldsSchema.Type,
-): boolean {
-  const presentation =
-    envelope.projection.session.transientBattleFills?.presentation;
-  if (
-    presentation === undefined ||
-    presentation.kind === "intrinsic" ||
-    presentation.kind === "attack"
-  ) {
-    return envelope.selectedContent === null;
-  }
-  const selectedContent = envelope.selectedContent;
-  if (selectedContent === null) return false;
-  if (presentation.kind === "spell") {
-    return (
-      selectedContent.kind === "spell" &&
-      selectedContent.id === presentation.invocation.spellId
-    );
-  }
-  if (presentation.kind === "druidWildShapeForm") {
-    return (
-      selectedContent.kind === "statBlock" &&
-      selectedContent.id === presentation.formStatBlockId
-    );
-  }
-  return (
-    selectedContent.kind !== "spell" &&
-    selectedContent.kind !== "statBlock" &&
-    selectedContent.id === presentation.unitId
-  );
-}
 
 export const AdminMirrorSessionStateSchema = Schema.Struct({
   envelope: AdminMirrorProjectionEnvelopeSchema,

@@ -2,7 +2,6 @@ import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-suppor
 import { sameBattleSubject } from "./battle-subjects.ts";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -50,13 +49,11 @@ import {
   battleId,
   battleObjectId,
   battleReducerStartRouteEvent,
-  cantripSpellInvocationRef,
   characterId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   objectInvisibleBenefitDenied,
   snapshotBattle,
-  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -64,7 +61,7 @@ import {
   type BattleLightEmitterAttachment,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 
 // Production path: Starry Wisp is admitted through the spell support profile
@@ -221,7 +218,7 @@ const starryWispObjectRouteDriverSchema = {
 function createStarryWispObjectDriver() {
   return defineDriver(starryWispObjectDriverSchema, () => {
     let state = starryWispObjectBattle();
-    const subject = starryWispSubject();
+    const subject = starryWispSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverStarryWispHoles(state, subject);
     let objectDamage: ObjectDamageMbtProjection = { tag: "none" };
@@ -501,7 +498,7 @@ function routeRejectStaleAfterResolved(): readonly ReducerRouteEvent[] {
   const damage = publicObjectDamageAndLightRoute([[3, 3]]);
   const stale = resolveBattleSubject({
     state: damage.state,
-    subject: starryWispSubject(),
+    subject: damage.attack.boundary.act.subject,
     fills: damage.fills,
   });
   return publicRoute(
@@ -544,12 +541,12 @@ function requirePublicRouteEvents(
 function publicObjectTargetBoundaryRoute(input: {
   readonly spatialFacts: "present" | "missing";
 }): {
-  readonly act: AvailableBattleAct;
+  readonly act: ReturnType<typeof discoverBattleActCandidates>[number];
   readonly result: BattleResolutionResult;
   readonly fills: readonly BattleFill[];
 } {
   const state = starryWispObjectBattle();
-  const subject = starryWispSubject();
+  const subject = starryWispSubject(state);
   const act = discoverStarryWispAct(state, subject);
   const objectTarget = requireStarryWispObjectHole(
     act.initialHoles,
@@ -596,7 +593,7 @@ function publicObjectAttackRollRoute(input: {
   ];
   const result = resolveBattleSubject({
     state: boundary.result.state,
-    subject: starryWispSubject(),
+    subject: boundary.act.subject,
     fills,
   });
   if (result.tag !== "resolved" && result.tag !== "needsHoles") {
@@ -624,7 +621,7 @@ function publicObjectDamageAndLightRoute(
   ];
   const result = resolveBattleSubject({
     state: attack.result.state,
-    subject: starryWispSubject(),
+    subject: attack.boundary.act.subject,
     fills,
   });
   if (result.tag !== "resolved") {
@@ -765,16 +762,30 @@ function baseUnarmedStrike(): Extract<
   };
 }
 
-function starryWispSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: fighterId,
-    invocation: cantripSpellInvocationRef("starry_wisp", "spellAttackDamage"),
-    mode: { tag: "cast" },
-  };
+function starryWispSubject(
+  state: BattleState,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Starry Wisp character actor.");
+  }
+  const act = discoverBattleActCandidates(state).find((candidate) => {
+    const subject = candidate.subject;
+    return (
+      subject.tag === "actionSpell" &&
+      subject.actorId === fighterId &&
+      actor.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === subject.procedureRef &&
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure === "spellAttackDamage",
+      )
+    );
+  });
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected Starry Wisp spell act.");
+  }
+  return act.subject;
 }
 
 function discoverStarryWispHoles(
@@ -787,15 +798,12 @@ function discoverStarryWispHoles(
 function discoverStarryWispAct(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
-): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+): ReturnType<typeof discoverBattleActCandidates>[number] {
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      ("invocation" in subject
-        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
-          subject.invocation.spellId
-        : sameBattleSubject(candidate.subject, subject)),
+      sameBattleSubject(candidate.subject, subject),
   );
   if (act == null) {
     throw new Error("Expected Starry Wisp spell act.");

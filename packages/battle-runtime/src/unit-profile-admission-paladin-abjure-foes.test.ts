@@ -14,6 +14,7 @@ import * as Either from "effect/Either";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import {
   requireCharacterUnitProcedureRefForTest,
+  characterBattleFeatureInitForTest,
   characterSeed,
   savingThrowOutcomeFill,
   testCharacterD20Statistics,
@@ -23,6 +24,7 @@ import type {
   BattleFill,
   BattleHole,
   BattleResolutionResult,
+  BattleRuntimeSession,
   BattleState,
   BattleTargetSpatialFact,
   BattleProcedureExecutionRef,
@@ -43,6 +45,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
   resolveBattleSubject,
@@ -59,10 +62,10 @@ const secondTargetId = combatantId("abjure-foes-second-target");
 
 describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
   test("admits the SRD Surface record and resolves failed Wisdom saves into runnable Frightened restrictions", () => {
-    const state = abjureFoesBattle();
-    const act = abjureFoesAct(state);
+    const session = abjureFoesBattle();
+    const act = abjureFoesAct(session);
     const procedureRef = requireCharacterUnitProcedureRefForTest(
-      state,
+      session,
       spellCasterId,
       paladinAbjureFoesUnitId,
     );
@@ -75,13 +78,12 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
       tag: "unitFeature",
       actorId: spellCasterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         paladinAbjureFoesUnitId,
       ),
     });
     expect(save).toMatchObject({
-      unitFeature: { unitId: paladinAbjureFoesUnitId, label: "Abjure Foes" },
       ability: "wis",
       dc: { kind: "fixed", dc: 13 },
       targetIds: expect.arrayContaining([spellTargetId, secondTargetId]),
@@ -89,7 +91,7 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
 
     const resolved = recordResolvedState(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [
           abjureFoesSavingThrowFill(procedureRef, save, [
@@ -102,7 +104,12 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
     const failedTarget = requireCombatant(resolved, spellTargetId);
     const savedTarget = requireCombatant(resolved, secondTargetId);
 
-    expect(channelDivinityUsesRemaining(resolved)).toBe(1);
+    expect(
+      channelDivinityUsesRemaining({
+        state: resolved,
+        context: session.context,
+      }),
+    ).toBe(1);
     expect(resolved.currentTurnResources.actionResources).toHaveLength(0);
     expect(hasCondition(failedTarget.conditions, "frightened")).toBe(true);
     expect(hasCondition(savedTarget.conditions, "frightened")).toBe(false);
@@ -160,11 +167,11 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
   });
 
   test("rejects selected targets without the visible-within-60-feet spatial fact", () => {
-    const state = abjureFoesBattle();
-    const act = abjureFoesAct(state);
+    const session = abjureFoesBattle();
+    const act = abjureFoesAct(session);
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const result = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         {
@@ -179,7 +186,7 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
     expect(result).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: expect.stringContaining("visibility and 60-foot range"),
+      message: expect.stringContaining("visibility and range evidence"),
     });
   });
 });
@@ -189,7 +196,7 @@ function abjureFoesBattle(
     readonly channelDivinityUsesRemaining?: number;
     readonly paladinLevel?: ClassLevel;
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const paladinLevel = input.paladinLevel ?? classLevel(9);
   const result = startBattle({
     battleId: battleId("paladin-abjure-foes"),
@@ -201,7 +208,11 @@ function abjureFoesBattle(
         classLevels: [{ className: "paladin", level: paladinLevel }],
         d20Statistics: testCharacterD20Statistics({ cha: 16, wis: 10 }),
         characterUnitRefs: [requireAbjureFoesUnitRef(paladinLevel)],
-        unitFeatures: [{ unit: abjureFoesUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(abjureFoesUnit, [
+            { className: "paladin", level: paladinLevel },
+          ]),
+        ],
         resources: [
           {
             unit: channelDivinityUnit,
@@ -237,8 +248,8 @@ function abjureFoesBattle(
   return result.right;
 }
 
-function abjureFoesAct(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+function abjureFoesAct(session: BattleRuntimeSession) {
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&
@@ -294,13 +305,18 @@ function requireCombatant(state: BattleState, combatantId: CombatantId) {
   return combatant;
 }
 
-function channelDivinityUsesRemaining(state: BattleState): number {
-  const actor = state.combatants.get(spellCasterId);
+function channelDivinityUsesRemaining(session: BattleRuntimeSession): number {
+  const actor = session.state.combatants.get(spellCasterId);
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected Paladin actor.");
   }
+  const resourcePoolRef = session.context.characters
+    .get(spellCasterId)
+    ?.resourceOwnership.find(
+      (ownership) => ownership.unit.id === paladinChannelDivinityUnitId,
+    )?.resourcePoolRef;
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === paladinChannelDivinityUnitId,
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
   if (resource === undefined || !("usesRemaining" in resource)) {
     throw new Error("Expected Paladin Channel Divinity resource.");
@@ -309,7 +325,7 @@ function channelDivinityUsesRemaining(state: BattleState): number {
 }
 
 function hasMoveAct(state: BattleState, actorId: CombatantId): boolean {
-  return discoverBattleActs(state).some(
+  return discoverBattleActCandidates(state).some(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.actorId === actorId &&

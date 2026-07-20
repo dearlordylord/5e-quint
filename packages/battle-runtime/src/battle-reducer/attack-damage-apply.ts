@@ -17,14 +17,19 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
+import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
-  characterUnitFeatureProcedureId,
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterUnitProcedure,
 } from "../character-execution.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
-import { boundAttackExecutionSelectionMatchesOption } from "../battle-action-options.ts";
+import {
+  attackExecutionSelectionForOption,
+  boundAttackExecutionSelectionKey,
+  boundAttackExecutionSelectionMatchesOption,
+} from "../battle-action-options.ts";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
@@ -34,7 +39,7 @@ import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
-import { attackDamageAbilityModifierChoiceUnitIds } from "./attack-damage-ability-modifier-choice.ts";
+import { attackDamageAbilityModifierChoiceProcedureRefs } from "./attack-damage-ability-modifier-choice.ts";
 import {
   LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
@@ -58,7 +63,7 @@ import {
   type SpellAttackDamageComponent,
   type StatBlockMultiattackActionResource,
 } from "../battle-reducer.ts";
-import { attackDamageDieFloorChoiceUnitIds } from "./attack-damage-die-floor-choice.ts";
+import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,
   hpDamageProjection,
@@ -93,8 +98,8 @@ export function attackDamageHole(
   spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
-  weaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
-  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  weaponDamageDiceRollChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
+  eligibleAttackDamageDieFloorChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
   cunningStrikeOptions: BattleDamageRollHole["cunningStrikeOptions"] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
@@ -107,8 +112,8 @@ export function attackDamageHole(
     ongoingDamageModifier,
   );
   const name = attackActionOptionName(attack);
-  const damageDieFloorChoiceUnitIds = attackDamageDieFloorChoiceUnitIds(
-    eligibleAttackDamageDieFloorChoiceUnitIds,
+  const damageDieFloorProcedureRefs = attackDamageDieFloorChoiceProcedureRefs(
+    eligibleAttackDamageDieFloorChoiceProcedureRefs,
   );
   return {
     kind: "rolledDice",
@@ -134,12 +139,15 @@ export function attackDamageHole(
       ? {}
       : { spellMarkedDamageRiders }),
     ...(cunningStrikeOptions.length === 0 ? {} : { cunningStrikeOptions }),
-    ...(weaponDamageDiceRollChoiceUnitIds.length === 0
+    ...(weaponDamageDiceRollChoiceProcedureRefs.length === 0
       ? {}
-      : { weaponDamageDiceRollChoiceUnitIds }),
-    ...(damageDieFloorChoiceUnitIds === null
+      : { weaponDamageDiceRollChoiceProcedureRefs }),
+    ...(damageDieFloorProcedureRefs === null
       ? {}
-      : { attackDamageDieFloorChoiceUnitIds: damageDieFloorChoiceUnitIds }),
+      : {
+          attackDamageDieFloorChoiceProcedureRefs:
+            damageDieFloorProcedureRefs,
+        }),
     ...(attack.kind !== "weapon" ||
     attack.attackDamageAbilityModifierChoice === undefined
       ? {}
@@ -314,7 +322,7 @@ export function damageDispositionChoicesEqual(
   if (a.kind !== b.kind) return false;
   return a.kind === "zeroHitPointReplacement" &&
     b.kind === "zeroHitPointReplacement"
-    ? a.unitId === b.unitId
+    ? a.procedureRef === b.procedureRef
     : true;
 }
 
@@ -331,10 +339,17 @@ export function zeroHitPointReplacementChoices(
   ) {
     return [];
   }
-  return target.origin.resources.flatMap((resource) =>
-    zeroHitPointReplacementResource(target, resource.unit.id) === null
-      ? []
-      : [{ kind: "zeroHitPointReplacement", unitId: resource.unit.id }],
+  return target.origin.execution.procedureBindings.flatMap((binding) =>
+    binding.procedure.kind === "unitFeature" &&
+    binding.procedure.execution.kind === "zeroHitPointReplacement" &&
+    zeroHitPointReplacementResource(target, binding.procedureRef) !== null
+      ? [
+          {
+            kind: "zeroHitPointReplacement" as const,
+            procedureRef: binding.procedureRef,
+          },
+        ]
+      : [],
   );
 }
 
@@ -405,12 +420,14 @@ export function attackActionOptionsForActor(
     return actor.origin.attack == null
       ? [unarmedStrike]
       : [
-          ...attackActionVariantOptions(
-            weaponAttackWithActiveSpellEffects(
-              state,
-              actor,
-              actor.origin.attack,
-              mainHandWeaponItemIdForAttack(actor, actor.origin.attack),
+          ...uniqueAttackExecutionSelectionOptions(
+            attackActionVariantOptions(
+              weaponAttackWithActiveSpellEffects(
+                state,
+                actor,
+                actor.origin.attack,
+                mainHandWeaponItemIdForAttack(actor, actor.origin.attack),
+              ),
             ),
           ),
           unarmedStrike,
@@ -441,6 +458,20 @@ export function attackActionOptionsForActor(
   }
 
   return [];
+}
+
+function uniqueAttackExecutionSelectionOptions(
+  candidates: readonly BoundSupportedAttackActionOption[],
+): readonly BoundSupportedAttackActionOption[] {
+  const selectionKeys = new Set<string>();
+  return candidates.filter((candidate) => {
+    const selectionKey = boundAttackExecutionSelectionKey(
+      attackExecutionSelectionForOption(candidate),
+    );
+    if (selectionKeys.has(selectionKey)) return false;
+    selectionKeys.add(selectionKey);
+    return true;
+  });
 }
 
 export function offHandAttackActionOptionForActor(
@@ -499,24 +530,24 @@ export function offHandAttackActionOptionsForActor(
       _projectedOffHandDamageAbilityModifierChoice,
     ...projectedOffHandWithoutDamageAbilityModifierChoice
   } = projectedOffHand;
-  const twoWeaponFightingSupportUnitIds =
-    characterLightExtraAttackDamageAbilityModifierSupportUnitIds(actor);
+  const twoWeaponFightingSupportProcedureRefs =
+    characterLightExtraAttackDamageAbilityModifierSupportProcedureRefs(actor);
   const lightPropertyOffHand = {
     ...projectedOffHandWithoutDamageAbilityModifierChoice,
     damageAbilityModifier: lightPropertyDamageAbilityModifierForAttack(
       projectedOffHand,
-      twoWeaponFightingSupportUnitIds.length > 0,
+      twoWeaponFightingSupportProcedureRefs.length > 0,
     ),
     ...lightPropertyAttackDamageAbilityModifierChoice(
       projectedOffHand,
-      twoWeaponFightingSupportUnitIds,
+      twoWeaponFightingSupportProcedureRefs,
     ),
     ...(projectedOffHand.alternateAbilityChoices === undefined
       ? {}
       : {
           alternateAbilityChoices: lightPropertyAlternateAbilityChoices(
             projectedOffHand.alternateAbilityChoices,
-            twoWeaponFightingSupportUnitIds,
+            twoWeaponFightingSupportProcedureRefs,
           ),
         }),
   };
@@ -762,12 +793,16 @@ function weaponAttackWithActiveSacredWeapon(
   if (effect === undefined) {
     return attack;
   }
-  const profile = actor.origin.paladinSacredWeaponProfiles.get(
-    characterUnitFeatureProcedureId(
-      actor.origin.execution,
-      effect.sourceProcedureRef,
-    ),
+  const procedure = characterUnitProcedure(
+    actor.origin.execution,
+    effect.sourceProcedureRef,
+    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   );
+  const profile =
+    procedure?.kind === "unitFeature" &&
+    procedure.execution.kind === "paladinSacredWeapon"
+      ? procedure.execution
+      : undefined;
   if (profile === undefined) {
     return attack;
   }
@@ -1129,20 +1164,20 @@ function offHandWeaponItemIdForAttack(
 
 function lightPropertyAlternateAbilityChoices(
   choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
-  twoWeaponFightingSupportUnitIds: readonly UnitRecord["id"][],
+  twoWeaponFightingSupportProcedureRefs: readonly BattleProcedureExecutionRef[],
 ): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
   const [first, ...rest] = choices;
   return [
-    lightPropertyAbilityChoice(first, twoWeaponFightingSupportUnitIds),
+    lightPropertyAbilityChoice(first, twoWeaponFightingSupportProcedureRefs),
     ...rest.map((choice) =>
-      lightPropertyAbilityChoice(choice, twoWeaponFightingSupportUnitIds),
+      lightPropertyAbilityChoice(choice, twoWeaponFightingSupportProcedureRefs),
     ),
   ];
 }
 
 function lightPropertyAbilityChoice(
   choice: CharacterWeaponAttackAbilityChoice,
-  twoWeaponFightingSupportUnitIds: readonly UnitRecord["id"][],
+  twoWeaponFightingSupportProcedureRefs: readonly BattleProcedureExecutionRef[],
 ): CharacterWeaponAttackAbilityChoice {
   const {
     attackDamageAbilityModifierChoice: _choiceDamageAbilityModifierChoice,
@@ -1154,7 +1189,7 @@ function lightPropertyAbilityChoice(
       lightPropertyDamageAbilityModifierForAbilityChoice(choice),
     ...lightPropertyAttackDamageAbilityModifierChoiceForAbilityChoice(
       choice,
-      twoWeaponFightingSupportUnitIds,
+      twoWeaponFightingSupportProcedureRefs,
     ),
   };
 }
@@ -1196,14 +1231,15 @@ function lightPropertyDamageAbilityModifier(input: {
 
 function lightPropertyAttackDamageAbilityModifierChoice(
   attack: CharacterWeaponAttackActionOption,
-  unitIds: readonly UnitRecord["id"][],
+  procedureRefs: readonly BattleProcedureExecutionRef[],
 ): Pick<
   CharacterWeaponAttackActionOption,
   "attackDamageAbilityModifierChoice"
 > {
-  const nonEmptyUnitIds = attackDamageAbilityModifierChoiceUnitIds(unitIds);
+  const nonEmptyProcedureRefs =
+    attackDamageAbilityModifierChoiceProcedureRefs(procedureRefs);
   if (
-    nonEmptyUnitIds === null ||
+    nonEmptyProcedureRefs === null ||
     attack.damageAbilityModifier !== undefined ||
     attack.abilityModifier <= 0
   ) {
@@ -1211,7 +1247,7 @@ function lightPropertyAttackDamageAbilityModifierChoice(
   }
   return {
     attackDamageAbilityModifierChoice: {
-      unitIds: nonEmptyUnitIds,
+      procedureRefs: nonEmptyProcedureRefs,
       appliedDamageAbilityModifier: attack.abilityModifier,
       declinedDamageAbilityModifier: abilityModifier(0),
     },
@@ -1220,35 +1256,35 @@ function lightPropertyAttackDamageAbilityModifierChoice(
 
 function lightPropertyAttackDamageAbilityModifierChoiceForAbilityChoice(
   choice: CharacterWeaponAttackAbilityChoice,
-  unitIds: readonly UnitRecord["id"][],
+  procedureRefs: readonly BattleProcedureExecutionRef[],
 ): Pick<
   CharacterWeaponAttackAbilityChoice,
   "attackDamageAbilityModifierChoice"
 > {
-  const nonEmptyUnitIds = attackDamageAbilityModifierChoiceUnitIds(unitIds);
-  if (nonEmptyUnitIds === null || choice.damageAbilityModifier <= 0) {
+  const nonEmptyProcedureRefs =
+    attackDamageAbilityModifierChoiceProcedureRefs(procedureRefs);
+  if (nonEmptyProcedureRefs === null || choice.damageAbilityModifier <= 0) {
     return {};
   }
   return {
     attackDamageAbilityModifierChoice: {
-      unitIds: nonEmptyUnitIds,
+      procedureRefs: nonEmptyProcedureRefs,
       appliedDamageAbilityModifier: choice.damageAbilityModifier,
       declinedDamageAbilityModifier: abilityModifier(0),
     },
   };
 }
 
-function characterLightExtraAttackDamageAbilityModifierSupportUnitIds(
+function characterLightExtraAttackDamageAbilityModifierSupportProcedureRefs(
   actor: CharacterBattleCreatureState,
-): readonly UnitRecord["id"][] {
-  return actor.origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.some(
-      (profile) =>
-        typeof profile === "object" &&
-        profile.kind ===
-          LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
-    )
-      ? [unitRef.unit.id]
+): readonly BattleProcedureExecutionRef[] {
+  return actor.origin.execution.procedureBindings.flatMap((binding) =>
+    (binding.procedure.kind === "unitFeature" ||
+      binding.procedure.kind === "unitSupportProfile") &&
+    typeof binding.procedure.execution === "object" &&
+    binding.procedure.execution.kind ===
+      LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE
+      ? [binding.procedureRef]
       : [],
   );
 }
@@ -1369,10 +1405,18 @@ function hasMartialArtsAttackProjectionSupport(
   actor: BattleCreatureState,
 ): boolean {
   if (actor.origin.kind !== "character") return false;
-  return actor.origin.characterUnitRefs.some((unitRef) =>
-    unitRef.supportProfiles.includes(
-      MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
-    ),
+  return actor.origin.execution.procedureBindings.some(
+    (binding) => {
+      const procedure = binding.procedure;
+      return (
+        (procedure.kind === "unitFeature" &&
+          procedure.execution.kind ===
+            MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE) ||
+        (procedure.kind === "unitSupportProfile" &&
+          procedure.execution ===
+            MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE)
+      );
+    },
   );
 }
 

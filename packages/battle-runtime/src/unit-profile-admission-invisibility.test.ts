@@ -61,6 +61,7 @@ import {
   type BattleHole,
   type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type CombatantId,
 } from "./index.ts";
@@ -70,13 +71,13 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
   test("invisibility admits as a touch target-list condition spell with slot-scaled targets", () => {
     const extraTargetId = combatantId("unit-profile-invisibility-extra-target");
     const spell = spellRecord(invisibilityUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       extraTargetIds: [extraTargetId],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: invisibilityUnitId,
       slotLevel: 3,
     });
@@ -88,13 +89,14 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(invisibilityUnitId, 3, "directCondition"),
       ),
       mode: { tag: "cast" },
     });
-    expect(spellActInvocation(state, act)).toEqual(
+    const state = session.state;
+    expect(spellActInvocation(session, act)).toEqual(
       expect.objectContaining({
         procedure: "directCondition",
         spell,
@@ -167,27 +169,25 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
 
   test("invisibility ends immediately after the target makes an attack roll", () => {
     const attackerId = combatantId("unit-profile-invisibility-attacker");
-    const cast = castInvisibilityOnTargets(
-      spellBattle({
-        preparedSpells: [spellRecord(invisibilityUnitId)],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-        statBlockTargets: [
-          {
-            combatantId: attackerId,
-            statBlock: statBlockWithCreatureType("humanoid"),
-            initiative: 19,
-          },
-        ],
-      }),
-      [attackerId],
-    );
+    const session = spellBattle({
+      preparedSpells: [spellRecord(invisibilityUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      statBlockTargets: [
+        {
+          combatantId: attackerId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 19,
+        },
+      ],
+    });
+    const cast = castInvisibilityOnTargets(session, [attackerId]);
     expectInvisibilityEffect(cast.state, attackerId);
 
     const attackerTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
     const attack = statBlockAttackAct(
-      attackerTurn.state,
+      { state: attackerTurn.state, context: session.context },
       attackerId,
       "Scimitar",
     );
@@ -246,7 +246,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
   });
 
   test("invisibility ends immediately after the target casts a spell", () => {
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spellRecord(invisibilityUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetSpellcasting: {
@@ -262,14 +262,14 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         spellSlots: [{ spellLevel: 2, count: 1 }],
       },
     });
-    const cast = castInvisibilityOnTargets(state, [spellTargetId]);
+    const cast = castInvisibilityOnTargets(session, [spellTargetId]);
     expectInvisibilityEffect(cast.state, spellTargetId);
 
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
     const blur = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: session.context },
       spellId: blurUnitId,
       slotLevel: 2,
     });
@@ -305,7 +305,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     const counterspellerId = combatantId(
       "unit-profile-invisibility-counterspeller",
     );
-    const state = invisibilityReactionBattle({
+    const session = invisibilityReactionBattle({
       targetPreparedSpells: [spellRecord(blurUnitId)],
       targetSpellSlots: [{ spellLevel: 2, count: 1 }],
       extraCombatants: [
@@ -320,14 +320,14 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         }),
       ],
     });
-    const cast = castInvisibilityOnTargets(state, [spellTargetId]);
+    const cast = castInvisibilityOnTargets(session, [spellTargetId]);
     expectInvisibilityEffect(cast.state, spellTargetId);
 
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
     const blur = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: session.context },
       spellId: blurUnitId,
       slotLevel: 2,
     });
@@ -338,7 +338,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         fills: [
           spellCastReactionFactsFill([
             counterspellTriggerFact({
-              state: targetTurn.state,
+              session: { state: targetTurn.state, context: session.context },
               reactorId: counterspellerId,
               casterId: spellTargetId,
             }),
@@ -353,6 +353,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     ).toBeNull();
 
     const choice = requireTriggeredReactionSpellChoice({
+      session,
       result: awaitingCounterspell,
       reactorId: counterspellerId,
       spellId: counterspellUnitId,
@@ -379,7 +380,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     const magicMissileCasterId = combatantId(
       "unit-profile-invisibility-magic-missile-caster",
     );
-    const state = invisibilityReactionBattle({
+    const session = invisibilityReactionBattle({
       targetPreparedSpells: [spellRecord(shieldUnitId)],
       targetSpellSlots: [{ spellLevel: 1, count: 1 }],
       extraCombatants: [
@@ -394,7 +395,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         }),
       ],
     });
-    const cast = castInvisibilityOnTargets(state, [spellTargetId]);
+    const cast = castInvisibilityOnTargets(session, [spellTargetId]);
     expectInvisibilityEffect(cast.state, spellTargetId);
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
@@ -404,7 +405,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     );
 
     const magicMissile = spellAct({
-      state: missileTurn.state,
+      session: { state: missileTurn.state, context: session.context },
       spellId: magicMissileUnitId,
       slotLevel: 1,
     });
@@ -433,6 +434,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       }),
     );
     const choice = requireTriggeredReactionSpellChoice({
+      session,
       result: awaitingShield,
       reactorId: spellTargetId,
       spellId: shieldUnitId,
@@ -469,7 +471,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     const magicMissileCasterId = combatantId(
       "unit-profile-invisibility-counterspell-trigger-caster",
     );
-    const state = invisibilityReactionBattle({
+    const session = invisibilityReactionBattle({
       targetPreparedSpells: [spellRecord(counterspellUnitId)],
       targetSpellSlots: [{ spellLevel: 3, count: 1 }],
       extraCombatants: [
@@ -484,7 +486,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         }),
       ],
     });
-    const cast = castInvisibilityOnTargets(state, [spellTargetId]);
+    const cast = castInvisibilityOnTargets(session, [spellTargetId]);
     expectInvisibilityEffect(cast.state, spellTargetId);
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
@@ -494,7 +496,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     );
 
     const magicMissile = spellAct({
-      state: missileTurn.state,
+      session: { state: missileTurn.state, context: session.context },
       spellId: magicMissileUnitId,
       slotLevel: 1,
     });
@@ -520,7 +522,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
           }),
           spellCastReactionFactsFill([
             counterspellTriggerFact({
-              state: missileTurn.state,
+              session: { state: missileTurn.state, context: session.context },
               reactorId: spellTargetId,
               casterId: magicMissileCasterId,
             }),
@@ -529,6 +531,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       }),
     );
     const choice = requireTriggeredReactionSpellChoice({
+      session,
       result: awaitingCounterspell,
       reactorId: spellTargetId,
       spellId: counterspellUnitId,
@@ -553,18 +556,18 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
 });
 
 function castInvisibilityOnTargets(
-  state: BattleState,
+  session: BattleRuntimeSession,
   targetIds: readonly CombatantId[],
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const act = spellAct({
-    state,
+    session,
     spellId: invisibilityUnitId,
     slotLevel: 2,
   });
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   return requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(
@@ -607,7 +610,7 @@ function invisibilityReactionBattle(input: {
   readonly targetPreparedSpells: readonly SpellRecord[];
   readonly targetSpellSlots: CharacterSpellcastingInit["spellSlots"];
   readonly extraCombatants: readonly BattleCreatureInit[];
-}): BattleState {
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("unit-profile-invisibility-reactions"),
     combatants: [
@@ -661,7 +664,7 @@ type CounterspellTriggerFact = Extract<
 >;
 
 function counterspellTriggerFact(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
 }): CounterspellTriggerFact {
@@ -670,7 +673,7 @@ function counterspellTriggerFact(input: {
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-      input.state,
+      input.session,
       input.reactorId,
       spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
     ),
@@ -689,6 +692,7 @@ function spellCastReactionFactsFill(
 }
 
 function requireTriggeredReactionSpellChoice(input: {
+  readonly session: BattleRuntimeSession;
   readonly result: NeedsHolesResult;
   readonly reactorId: CombatantId;
   readonly spellId: string;
@@ -711,7 +715,7 @@ function requireTriggeredReactionSpellChoice(input: {
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        input.result.state,
+        { state: input.result.state, context: input.session.context },
         candidate.reactorId,
         candidate.subject.procedureRef,
       );

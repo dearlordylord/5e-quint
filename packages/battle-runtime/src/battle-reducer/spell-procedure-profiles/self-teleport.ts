@@ -22,7 +22,6 @@
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -36,7 +35,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -52,9 +51,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -133,27 +131,11 @@ function discoverSelfTeleportCastAct(
         tag: "bonusActionSpell" as const,
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: selfTeleportInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
       initialHoles: [spellTeleportDestinationHole(invocation, actorId)],
     },
   ];
-}
-
-function selfTeleportInvocationRef(
-  invocation: SelfTeleportInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "selfTeleport",
-  };
-}
-
-function selfTeleportCastSummary(invocation: SelfTeleportInvocation): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and teleport to a caller-supplied unoccupied visible destination within ${invocation.maxDistanceFeet} feet.`;
 }
 
 function resolveSelfTeleport(
@@ -296,34 +278,29 @@ function validateSelfTeleportDestination(
     return "Teleport destination must be more than 0 feet away.";
   }
   if (destination.distanceFeet > invocation.maxDistanceFeet) {
-    return `${invocation.spell.name} destination must be within ${invocation.maxDistanceFeet} feet.`;
+    return `Spell destination must be within ${invocation.maxDistanceFeet} feet.`;
   }
   return null;
 }
 
-const SelfTeleportInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "selfTeleport" }>
->(
+const SelfTeleportInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("selfTeleport"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
     maxDistanceFeet: MovementFeet,
   }),
 );
 export const selfTeleportProfile = {
   procedure: "selfTeleport",
-  invocationSchema: SelfTeleportInvocationSchema,
+  executionSchema: SelfTeleportInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSelfTeleport,
   discoverCastAct: discoverSelfTeleportCastAct,
-  castSummary: selfTeleportCastSummary,
-  invocationRef: selfTeleportInvocationRef,
   resolve: resolveSelfTeleport,
 } satisfies SpellProcedureProfile<
   "selfTeleport",

@@ -12,8 +12,6 @@
 //                         spells-profiles.ts
 //   - discoverCastAct() - was the objectLight branch in spells-discovery.ts
 //   - castSummary()     - was the objectLight branch in spells-discovery.ts
-//   - invocationRef()   - was the objectLight branch in
-//                         spells-invocation-ref.ts
 //   - resolve()         - was resolveObjectLightSpellAct in
 //                         spells-resolve-release.ts
 //   - applyEffect()     - was applyObjectLightSpellEffect in
@@ -29,7 +27,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   battleSpellEffectOccurrenceId,
-  spellId,
   type BattleObjectId,
   type CombatantId,
 } from "../../identity.ts";
@@ -43,7 +40,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -60,9 +56,9 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   ClassCantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
@@ -327,7 +323,6 @@ function discoverObjectLightCastAct(
       tag: "actionSpell" as const,
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: objectLightInvocationRef(invocation),
       mode: { tag: "cast" as const },
     },
     initialHoles: [spellObjectTargetHole(invocation)],
@@ -341,7 +336,6 @@ function discoverObjectLightCastAct(
         tag: "actionSpell" as const,
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: objectLightInvocationRef(invocation),
         mode: { tag: "cast" as const },
         metamagic,
       },
@@ -349,30 +343,6 @@ function discoverObjectLightCastAct(
     };
   });
   return [baseCastAct, ...metamagicCastActs];
-}
-
-function objectLightInvocationRef(
-  invocation: BattleExecutableSpellInvocation<ObjectLightInvocation>,
-): SpellInvocationRef {
-  if (invocation.resource.tag === "spellSlot") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "objectLight",
-    };
-  }
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "objectLight",
-  };
-}
-
-function objectLightCastSummary(invocation: ObjectLightInvocation): string {
-  return invocation.resource.tag === "spellSlot"
-    ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
-    : `Cast ${invocation.spell.name} as a cantrip.`;
 }
 
 function applyObjectLightEffect(
@@ -544,15 +514,13 @@ function resolveObjectLight(
       };
 }
 
-const ObjectLightInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "objectLight" }>
->(
+const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("objectLight"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("singleObject"),
@@ -566,13 +534,13 @@ const ObjectLightInvocationSchema = spellProcedureInvocationSchema<
         brightRadiusFeet: MovementFeet,
         dimAdditionalFeet: MovementFeet,
       }),
-      expiresAt: BattleRuntimeObjectSchema,
+      expiresAt: BattleActiveEffectExpirationSchema,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("objectLight"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("singleObject"),
@@ -585,7 +553,7 @@ const ObjectLightInvocationSchema = spellProcedureInvocationSchema<
         brightRadiusFeet: MovementFeet,
         dimAdditionalFeet: MovementFeet,
       }),
-      expiresAt: BattleRuntimeObjectSchema,
+      expiresAt: BattleActiveEffectExpirationSchema,
     }),
   ),
 );
@@ -594,15 +562,12 @@ export const objectLightProfile: SpellProcedureProfile<
   ObjectLightInvocation
 > = {
   procedure: "objectLight",
-  invocationSchema: ObjectLightInvocationSchema,
+  executionSchema: ObjectLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitObjectLight,
   discoverCastAct: discoverObjectLightCastAct,
-  castSummary: objectLightCastSummary,
-  invocationRef: objectLightInvocationRef,
   resolve: resolveObjectLight,
 };
 

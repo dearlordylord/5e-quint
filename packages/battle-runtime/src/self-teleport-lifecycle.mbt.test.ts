@@ -1,6 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-teleport
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
 // RAW trace:
@@ -46,15 +45,12 @@ import type {
   BattleState,
   CombatantId,
 } from "./index.ts";
-import { snapshotBattle } from "./index.ts";
+import { discoverBattleActCandidates, snapshotBattle } from "./index.ts";
 import {
   requireCombatant,
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
-import {
-  maybeBonusSpellAct,
-  teleportDestinationFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
+import { teleportDestinationFill } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
@@ -336,7 +332,7 @@ function initialRuntimeState(): SelfTeleportRuntimeState {
     battle: spellBattle({
       preparedSpells: [spellRecord(mistyStepUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
-    }),
+    }).state,
     lastTeleport: undefined,
     lastAntimagicTransitWitness: undefined,
     lastResult: "init",
@@ -480,16 +476,20 @@ function selfTeleportProjection(
 }
 
 function maybeSelfTeleportAct(state: BattleState) {
-  const act = maybeBonusSpellAct({
-    state,
-    spellId: mistyStepUnitId,
-    slotLevel: 2,
+  const actor = state.combatants.get(spellCasterId);
+  if (actor?.origin.kind !== "character") return undefined;
+  return discoverBattleActCandidates(state).find((candidate) => {
+    const subject = candidate.subject;
+    return (
+      subject.tag === "bonusActionSpell" &&
+      actor.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === subject.procedureRef &&
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure === "selfTeleport",
+      )
+    );
   });
-  return act !== undefined &&
-    battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
-    battleActSpellPresentation(act)?.invocation.procedure === "selfTeleport"
-    ? act
-    : undefined;
 }
 
 function requireSelfTeleportAct(state: BattleState) {

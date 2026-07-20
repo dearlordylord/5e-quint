@@ -31,6 +31,7 @@ import {
   applyBattleHitPointDamage,
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
+  discoverBattleActCandidates,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -43,6 +44,7 @@ import type {
   BattleActiveEffect,
   BattleFill,
   BattleHole,
+  BattleRuntimeSession,
   BattleState,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -97,7 +99,7 @@ function castHeightenedHideousLaughter() {
   );
   const heightenedFill = targetChoiceFill(heightenedHole, spellTargetId);
   const needsSave = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [targetFill, heightenedFill],
   });
@@ -106,7 +108,7 @@ function castHeightenedHideousLaughter() {
     { targetId: spellTargetId, rollMode: "disadvantage" },
   ]);
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -142,7 +144,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: hideousLaughterUnitId,
       slotLevel: 2,
     });
@@ -174,13 +176,13 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       [spellTargetId],
     );
     const needsSave = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
     const initialSave = requireResultHole(needsSave, "savingThrowOutcome");
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -213,7 +215,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
     expect(
-      discoverBattleActs(targetTurn.state).some(
+      discoverBattleActCandidates(targetTurn.state).some(
         (candidate) =>
           candidate.subject.tag === "runtimeCommand" &&
           candidate.subject.command === "standFromProne" &&
@@ -310,9 +312,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         .set(spellCasterId, {
           ...requireCombatant(cast.state, spellCasterId),
           concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(hideousLaughterUnitId),
-            ),
+            sourceProcedureRef: hideousLaughterEffect.sourceProcedureRef,
             effectKind: "spellEffect",
           },
         })
@@ -363,7 +363,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const hideousAct = spellAct({
-      state: spellDamageState,
+      session: spellDamageState,
       spellId: hideousLaughterUnitId,
     });
     const hideousTarget = requireHole(
@@ -378,14 +378,14 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     );
     const hideousInitialSave = requireResultHole(
       resolveBattleSubject({
-        state: spellDamageState,
+        state: spellDamageState.state,
         subject: hideousAct.subject,
         fills: [hideousTargetFill],
       }),
       "savingThrowOutcome",
     );
     const hideousCast = resolveBattleSubject({
-      state: spellDamageState,
+      state: spellDamageState.state,
       subject: hideousAct.subject,
       fills: [
         hideousTargetFill,
@@ -434,7 +434,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
     const fireBoltAct = spellAct({
-      state: casterTurn.state,
+      session: battleSessionWithState(spellDamageState, casterTurn.state),
       spellId: fireBoltUnitId,
     });
     const fireBoltTarget = requireHole(
@@ -594,7 +594,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: hideousLaughterUnitId,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
@@ -606,14 +606,14 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     );
     const initialSave = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
       "savingThrowOutcome",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -640,30 +640,33 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     ) => {
       const spell = spellRecord(hideousLaughterUnitId);
       const baseState = spellBattle({ preparedSpells: [spell] });
-      const baseTarget = requireCombatant(baseState, spellTargetId);
-      const state: BattleState = {
+      const baseTarget = requireCombatant(baseState.state, spellTargetId);
+      const state: BattleRuntimeSession = {
         ...baseState,
-        combatants: new Map(baseState.combatants).set(spellTargetId, {
-          ...baseTarget,
-          activeEffects: [
-            ...baseTarget.activeEffects,
-            {
-              kind: "conditionImmunity",
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(heroismUnitId),
-              ),
-              sourceCombatantId: spellCasterId,
-              condition: immuneCondition,
-              conditionHadNonSpellSource: false,
-              expiresAt: {
-                kind: "duration",
-                durationTicks: elapsedTimeTicks(600),
+        state: {
+          ...baseState.state,
+          combatants: new Map(baseState.state.combatants).set(spellTargetId, {
+            ...baseTarget,
+            activeEffects: [
+              ...baseTarget.activeEffects,
+              {
+                kind: "conditionImmunity",
+                sourceProcedureRef: battleProcedureExecutionRefForTest(
+                  String(heroismUnitId),
+                ),
+                sourceCombatantId: spellCasterId,
+                condition: immuneCondition,
+                conditionHadNonSpellSource: false,
+                expiresAt: {
+                  kind: "duration",
+                  durationTicks: elapsedTimeTicks(600),
+                },
               },
-            },
-          ],
-        }),
+            ],
+          }),
+        },
       };
-      const act = spellAct({ state, spellId: hideousLaughterUnitId });
+      const act = spellAct({ session: state, spellId: hideousLaughterUnitId });
       const targetHole = requireHole(act.initialHoles, "spellTargetList");
       const targetFill = spellTargetListFill(
         targetHole,
@@ -673,14 +676,14 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       );
       const initialSave = requireResultHole(
         resolveBattleSubject({
-          state,
+          state: state.state,
           subject: act.subject,
           fills: [targetFill],
         }),
         "savingThrowOutcome",
       );
       const resolved = resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetFill,
@@ -727,7 +730,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseState.state, spellTargetId);
     const firstEffect = {
       kind: "hideousLaughter",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -767,8 +770,8 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       ),
     );
     const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(spellTargetId, {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...affectedTarget,
         activeEffects: [firstEffect, secondEffect],
       }),
@@ -873,49 +876,52 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   test("Hideous Laughter does not break Concentration when Incapacitated immunity prevents Incapacitated", () => {
     const spell = spellRecord(hideousLaughterUnitId);
     const baseState = spellBattle({ preparedSpells: [spell] });
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseState.state, spellTargetId);
     const targetConcentration = {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(heroismUnitId),
       ),
       effectKind: "spellEffect" as const,
     };
-    const state: BattleState = {
+    const state: BattleRuntimeSession = {
       ...baseState,
-      combatants: new Map(baseState.combatants).set(spellTargetId, {
-        ...target,
-        concentration: targetConcentration,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "conditionImmunity",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(heroismUnitId),
-            ),
-            sourceCombatantId: spellTargetId,
-            condition: "incapacitated",
-            conditionHadNonSpellSource: false,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(600),
+      state: {
+        ...baseState.state,
+        combatants: new Map(baseState.state.combatants).set(spellTargetId, {
+          ...target,
+          concentration: targetConcentration,
+          activeEffects: [
+            ...target.activeEffects,
+            {
+              kind: "conditionImmunity",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(heroismUnitId),
+              ),
+              sourceCombatantId: spellTargetId,
+              condition: "incapacitated",
+              conditionHadNonSpellSource: false,
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(600),
+              },
             },
-          },
-          {
-            kind: "turnStartTemporaryHitPoints",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(heroismUnitId),
-            ),
-            sourceCombatantId: spellTargetId,
-            amount: 3,
-            expiresAt: {
-              kind: "concentration",
-              combatantId: spellTargetId,
+            {
+              kind: "turnStartTemporaryHitPoints",
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                String(heroismUnitId),
+              ),
+              sourceCombatantId: spellTargetId,
+              amount: 3,
+              expiresAt: {
+                kind: "concentration",
+                combatantId: spellTargetId,
+              },
             },
-          },
-        ],
-      }),
+          ],
+        }),
+      },
     };
-    const act = spellAct({ state, spellId: hideousLaughterUnitId });
+    const act = spellAct({ session: state, spellId: hideousLaughterUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetHole,
@@ -925,14 +931,14 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     );
     const initialSave = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
       "savingThrowOutcome",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -957,3 +963,10 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     ).toBe(true);
   });
 });
+
+function battleSessionWithState(
+  session: BattleRuntimeSession,
+  state: BattleState,
+): BattleRuntimeSession {
+  return { ...session, state };
+}

@@ -9,7 +9,6 @@ import {
   initiativeScore,
   startBattle,
   type BattleCreatureState,
-  type BattleUnitSupportProfile,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
@@ -355,7 +354,7 @@ function startCharacterBattle(input: {
       initiative: initiativeScore(20),
     }),
   );
-  const state = expectRight(
+  const session = expectRight(
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [
@@ -368,7 +367,7 @@ function startCharacterBattle(input: {
       ],
     }),
   );
-  const combatant = state.combatants.get(input.combatantId);
+  const combatant = session.state.combatants.get(input.combatantId);
   if (!isCharacterBattleCombatant(combatant)) {
     throw new Error("Expected character-origin battle combatant.");
   }
@@ -432,13 +431,13 @@ function supportProfileKindCount(
   combatant: CharacterBattleCombatant,
   kind: string,
 ): number {
-  return combatant.origin.characterUnitRefs
-    .flatMap((ref) => ref.supportProfiles)
-    .filter((profile) => supportProfileKind(profile) === kind).length;
-}
-
-function supportProfileKind(profile: BattleUnitSupportProfile): string {
-  return typeof profile === "string" ? profile : profile.kind;
+  return combatant.origin.execution.procedureBindings.filter((binding) => {
+    if (binding.procedure.kind !== "unitSupportProfile") return false;
+    const execution = binding.procedure.execution;
+    return (
+      (typeof execution === "string" ? execution : execution.kind) === kind
+    );
+  }).length;
 }
 
 type CharacterSheetTestInput = Omit<

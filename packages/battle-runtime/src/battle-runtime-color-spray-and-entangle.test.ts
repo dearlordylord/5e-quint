@@ -1,7 +1,8 @@
 import {
-  startBattleRight,
+  startBattleSessionRight,
   requireResolved,
   requireHole,
+  requireCharacterSpellProcedureRefForTest,
   abilityCheckFill,
   savingThrowOutcomeFill,
   characterSeed,
@@ -20,6 +21,7 @@ import {
   breakBattleConcentration,
   discoverBattleActs,
   endTurn,
+  findAct,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
@@ -27,7 +29,7 @@ import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts"
 import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
 import { describe, expect, test } from "vitest";
 import type {
-  BattleActDiscoverySubject,
+  BattleSubject,
   BattleHole,
 } from "./battle-runtime-test-support.ts";
 
@@ -40,7 +42,7 @@ function holeProcedureRef(hole: BattleHole) {
 
 describe("battle runtime: Color Spray and Entangle", () => {
   test("Color Spray applies spell-owned Blinded to failed self-origin Cone saves", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-color-spray"),
       combatants: [
         characterSeed({
@@ -63,20 +65,20 @@ describe("battle runtime: Color Spray and Entangle", () => {
         }),
       ],
     });
-    const subject = magicSubject("color_spray");
+    const subject = findAct(session, magicSubject("color_spray")).subject;
     const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: session.state, subject, fills: [] }),
       "savingThrowOutcome",
     );
     expect(savingThrows).toMatchObject({
-      label: "Color Spray self-origin Cone Saving Throw outcomes",
+      label: "Spell self-origin Cone Saving Throw outcomes",
       ability: "con",
       outcomeTargeting: "area",
     });
 
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
@@ -121,7 +123,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
   });
 
   test("Color Spray expiration does not erase unrelated Blinded sources", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-color-spray-source-preservation"),
       combatants: [
         characterSeed({
@@ -143,14 +145,14 @@ describe("battle runtime: Color Spray and Entangle", () => {
         }),
       ],
     });
-    const subject = magicSubject("color_spray");
+    const subject = findAct(session, magicSubject("color_spray")).subject;
     const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: session.state, subject, fills: [] }),
       "savingThrowOutcome",
     );
     const sprayed = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
@@ -177,7 +179,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
   });
 
   test("Entangle applies concentration-owned Restrained to failed point-origin Cube saves", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-entangle"),
       combatants: [
         characterSeed({
@@ -200,20 +202,20 @@ describe("battle runtime: Color Spray and Entangle", () => {
         }),
       ],
     });
-    const subject = magicSubject("entangle");
+    const subject = findAct(session, magicSubject("entangle")).subject;
     const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: session.state, subject, fills: [] }),
       "savingThrowOutcome",
     );
     expect(savingThrows).toMatchObject({
-      label: "Entangle point-origin Cube Saving Throw outcomes",
+      label: "Spell point-origin Cube Saving Throw outcomes",
       ability: "str",
       outcomeTargeting: "area",
     });
 
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
@@ -254,7 +256,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     expect(expendedLevelOneSlots(result, wizardId)).toBe(1);
 
     const casterIncluded = resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [
         {
@@ -280,7 +282,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
   });
 
   test("Entangle Restrained ends on Concentration break or Strength Athletics escape", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-entangle-cleanup"),
       combatants: [
         characterSeed({
@@ -297,18 +299,19 @@ describe("battle runtime: Color Spray and Entangle", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
+    const entangleSubject = findAct(session, magicSubject("entangle")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
-        state,
-        subject: magicSubject("entangle"),
+        state: session.state,
+        subject: entangleSubject,
         fills: [],
       }),
       "savingThrowOutcome",
     );
     const entangled = requireResolved(
       resolveBattleSubject({
-        state,
-        subject: magicSubject("entangle"),
+        state: session.state,
+        subject: entangleSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: skeletonId, succeeded: false },
@@ -326,7 +329,10 @@ describe("battle runtime: Color Spray and Entangle", () => {
     const skeletonTurn = requireResolved(
       endTurn({ state: entangled, actorId: wizardId }),
     ).state;
-    const escapeAct = discoverBattleActs(skeletonTurn).find(
+    const escapeAct = discoverBattleActs({
+      state: skeletonTurn,
+      context: session.context,
+    }).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint",
@@ -377,13 +383,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
   });
 
   test("Entangle escape actions identify the restraining caster", () => {
-    const secondDruidEntangle: BattleActDiscoverySubject = {
-      tag: "actionSpell",
-      actorId: secondWizardId,
-      invocation: spellSlotInvocationRef("entangle", 1, "saveGatedCondition"),
-      mode: { tag: "cast" },
-    };
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-entangle-two-casters"),
       combatants: [
         characterSeed({
@@ -411,18 +411,32 @@ describe("battle runtime: Color Spray and Entangle", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
+    const secondDruidEntangle: BattleSubject = {
+      tag: "actionSpell",
+      actorId: secondWizardId,
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        session,
+        secondWizardId,
+        spellSlotInvocationRef("entangle", 1, "saveGatedCondition"),
+      ),
+      mode: { tag: "cast" },
+    };
+    const firstEntangleSubject = findAct(
+      session,
+      magicSubject("entangle"),
+    ).subject;
     const firstSavingThrows = requireHole(
       resolveBattleSubject({
-        state,
-        subject: magicSubject("entangle"),
+        state: session.state,
+        subject: firstEntangleSubject,
         fills: [],
       }),
       "savingThrowOutcome",
     );
     const firstEntangled = requireResolved(
       resolveBattleSubject({
-        state,
-        subject: magicSubject("entangle"),
+        state: session.state,
+        subject: firstEntangleSubject,
         fills: [
           savingThrowOutcomeFill(firstSavingThrows, [
             { targetId: skeletonId, succeeded: false },
@@ -455,7 +469,10 @@ describe("battle runtime: Color Spray and Entangle", () => {
     const skeletonTurn = requireResolved(
       endTurn({ state: twiceEntangled, actorId: secondWizardId }),
     ).state;
-    const escapeActs = discoverBattleActs(skeletonTurn).filter(
+    const escapeActs = discoverBattleActs({
+      state: skeletonTurn,
+      context: session.context,
+    }).filter(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint",
@@ -522,7 +539,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
   });
 
   test("Entangle recast preserves the newly applied same-spell restraint", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-entangle-recast"),
       combatants: [
         characterSeed({
@@ -539,18 +556,19 @@ describe("battle runtime: Color Spray and Entangle", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
+    const entangleSubject = findAct(session, magicSubject("entangle")).subject;
     const firstSavingThrows = requireHole(
       resolveBattleSubject({
-        state,
-        subject: magicSubject("entangle"),
+        state: session.state,
+        subject: entangleSubject,
         fills: [],
       }),
       "savingThrowOutcome",
     );
     const firstEntangled = requireResolved(
       resolveBattleSubject({
-        state,
-        subject: magicSubject("entangle"),
+        state: session.state,
+        subject: entangleSubject,
         fills: [
           savingThrowOutcomeFill(firstSavingThrows, [
             { targetId: skeletonId, succeeded: false },
@@ -569,7 +587,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     const secondSavingThrows = requireHole(
       resolveBattleSubject({
         state: nextDruidTurn,
-        subject: magicSubject("entangle"),
+        subject: entangleSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -577,7 +595,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     const recast = requireResolved(
       resolveBattleSubject({
         state: nextDruidTurn,
-        subject: magicSubject("entangle"),
+        subject: entangleSubject,
         fills: [
           savingThrowOutcomeFill(secondSavingThrows, [
             { targetId: skeletonId, succeeded: false },

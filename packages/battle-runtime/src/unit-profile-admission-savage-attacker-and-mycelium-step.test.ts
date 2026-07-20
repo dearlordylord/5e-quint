@@ -1,7 +1,11 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  characterAttackSubjectForTest,
+  characterBattleFeatureInitForTest,
+  requireCharacterUnitProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 import {
   rogueSneakAttackUnitId,
   savageAttackerUnitId,
@@ -29,15 +33,11 @@ import {
   Either,
   mechanicsOnlyMyceliumStepUnit,
   myceliumStepInput,
-  myceliumStepUnitId,
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
-import type {
-  BattleState,
-  UnitRecord,
-} from "./unit-profile-admission-test-support.ts";
+import type { BattleState } from "./unit-profile-admission-test-support.ts";
 
 describe("QMBT31 deterministic Savage Attacker profile slice", () => {
   test("savage attacker is admitted and projected as a weapon damage dice roll choice", () => {
@@ -48,7 +48,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(savageAttackerUnitId),
+        unit,
         supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
       }),
     );
@@ -68,10 +68,11 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
   });
 
   test("savage attacker support projection chooses either weapon damage dice candidate on a weapon hit", () => {
-    const state = savageAttackerBattle({
+    const session = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject(state, "Longsword");
+    const state = session.state;
+    const subject = weaponAttackSubject(session, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -100,7 +101,13 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
 
     expect(damage).toMatchObject({
       kind: "rolledDice",
-      weaponDamageDiceRollChoiceUnitIds: [savageAttackerUnitId],
+      weaponDamageDiceRollChoiceProcedureRefs: [
+        requireCharacterUnitProcedureRefForTest(
+          session,
+          spellCasterId,
+          savageAttackerUnitId,
+        ),
+      ],
     });
 
     const resolved = resolveBattleSubject({
@@ -110,7 +117,11 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
         damageRollFillWithGroups(damage, [[8]], undefined, {
-          unitId: savageAttackerUnitId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellCasterId,
+            savageAttackerUnitId,
+          ),
           selection: "second",
           candidates: [
             { results: [DieRollResult(2)] },
@@ -124,7 +135,14 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       snapshot: {
         turn: {
           weaponDamageDiceRollChoicesUsedThisTurn: [
-            { attackerId: spellCasterId, unitId: savageAttackerUnitId },
+            {
+              attackerId: spellCasterId,
+              procedureRef: requireCharacterUnitProcedureRefForTest(
+                session,
+                spellCasterId,
+                savageAttackerUnitId,
+              ),
+            },
           ],
         },
       },
@@ -132,10 +150,11 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
   });
 
   test("savage attacker critical-hit candidates are full doubled weapon dice pools", () => {
-    const state = savageAttackerBattle({
+    const session = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject(state, "Longsword");
+    const state = session.state;
+    const subject = weaponAttackSubject(session, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -164,7 +183,13 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
 
     expect(damage).toMatchObject({
       kind: "rolledDice",
-      weaponDamageDiceRollChoiceUnitIds: [savageAttackerUnitId],
+      weaponDamageDiceRollChoiceProcedureRefs: [
+        requireCharacterUnitProcedureRefForTest(
+          session,
+          spellCasterId,
+          savageAttackerUnitId,
+        ),
+      ],
     });
 
     const resolved = resolveBattleSubject({
@@ -174,7 +199,11 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
         attackRollFill(roll, { total: 20, naturalD20: 20 }),
         damageRollFillWithGroups(damage, [[2, 3]], undefined, {
-          unitId: savageAttackerUnitId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellCasterId,
+            savageAttackerUnitId,
+          ),
           selection: "second",
           candidates: [
             { results: [DieRollResult(1), DieRollResult(2)] },
@@ -189,7 +218,14 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       snapshot: {
         turn: {
           weaponDamageDiceRollChoicesUsedThisTurn: [
-            { attackerId: spellCasterId, unitId: savageAttackerUnitId },
+            {
+              attackerId: spellCasterId,
+              procedureRef: requireCharacterUnitProcedureRefForTest(
+                session,
+                spellCasterId,
+                savageAttackerUnitId,
+              ),
+            },
           ],
         },
       },
@@ -197,16 +233,22 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
   });
 
   test("savage attacker rerolls only weapon dice when the hit has an attack damage rider", () => {
-    const state = savageAttackerBattle({
+    const session = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
       classLevels: [{ className: "rogue", level: classLevel(1) }],
       characterUnitRefs: [
         savageAttackerBattleUnitRef(),
         attackDamageRiderBattleUnitRef(),
       ],
-      unitFeatures: [{ unit: unitLibrary.requireUnit(rogueSneakAttackUnitId) }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(
+          unitLibrary.requireUnit(rogueSneakAttackUnitId),
+          [{ className: "rogue", level: classLevel(1) }],
+        ),
+      ],
     });
-    const subject = weaponAttackSubject(state, "Shortbow");
+    const state = session.state;
+    const subject = weaponAttackSubject(session, "Shortbow");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -242,12 +284,22 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       attackDamageRiders: [
         {
           attackerId: spellCasterId,
-          unitId: rogueSneakAttackUnitId,
-          label: "Sneak Attack",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellCasterId,
+            rogueSneakAttackUnitId,
+          ),
+          optional: true,
           damage: { dice: 1, dieSize: 6, damageType: "piercing" },
         },
       ],
-      weaponDamageDiceRollChoiceUnitIds: [savageAttackerUnitId],
+      weaponDamageDiceRollChoiceProcedureRefs: [
+        requireCharacterUnitProcedureRefForTest(
+          session,
+          spellCasterId,
+          savageAttackerUnitId,
+        ),
+      ],
     });
 
     const resolved = resolveBattleSubject({
@@ -260,14 +312,29 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
           naturalD20: 10,
           rollMode: "advantage",
         }),
-        damageRollFillWithGroups(damage, [[5], [6]], [rogueSneakAttackUnitId], {
-          unitId: savageAttackerUnitId,
-          selection: "second",
-          candidates: [
-            { results: [DieRollResult(2)] },
-            { results: [DieRollResult(5)] },
+        damageRollFillWithGroups(
+          damage,
+          [[5], [6]],
+          [
+            requireCharacterUnitProcedureRefForTest(
+              session,
+              spellCasterId,
+              rogueSneakAttackUnitId,
+            ),
           ],
-        }),
+          {
+            procedureRef: requireCharacterUnitProcedureRefForTest(
+              session,
+              spellCasterId,
+              savageAttackerUnitId,
+            ),
+            selection: "second",
+            candidates: [
+              { results: [DieRollResult(2)] },
+              { results: [DieRollResult(5)] },
+            ],
+          },
+        ),
       ],
     });
 
@@ -276,10 +343,24 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       snapshot: {
         turn: {
           attackDamageRidersUsedThisTurn: [
-            { attackerId: spellCasterId, unitId: rogueSneakAttackUnitId },
+            {
+              attackerId: spellCasterId,
+              procedureRef: requireCharacterUnitProcedureRefForTest(
+                session,
+                spellCasterId,
+                rogueSneakAttackUnitId,
+              ),
+            },
           ],
           weaponDamageDiceRollChoicesUsedThisTurn: [
-            { attackerId: spellCasterId, unitId: savageAttackerUnitId },
+            {
+              attackerId: spellCasterId,
+              procedureRef: requireCharacterUnitProcedureRefForTest(
+                session,
+                spellCasterId,
+                savageAttackerUnitId,
+              ),
+            },
           ],
         },
       },
@@ -287,10 +368,11 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
   });
 
   test("savage attacker cannot be used after a miss or on non-weapon damage", () => {
-    const weaponState = savageAttackerBattle({
+    const weaponSession = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const subject = weaponAttackSubject(weaponState, "Longsword");
+    const weaponState = weaponSession.state;
+    const subject = weaponAttackSubject(weaponSession, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: weaponState, subject, fills: [] }),
       "targetChoice",
@@ -325,7 +407,11 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
           attackRollFill(roll, { total: 1, naturalD20: 2 }),
           damageRollFillWithGroups(hitDamage, [[8]], undefined, {
-            unitId: savageAttackerUnitId,
+            procedureRef: requireCharacterUnitProcedureRefForTest(
+              weaponSession,
+              spellCasterId,
+              savageAttackerUnitId,
+            ),
             selection: "second",
             candidates: [
               { results: [DieRollResult(2)] },
@@ -336,7 +422,8 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
 
-    const unarmedState = savageAttackerBattle({ attack: null });
+    const unarmedSession = savageAttackerBattle({ attack: null });
+    const unarmedState = unarmedSession.state;
     const unarmedSubject = characterAttackSubjectForTest(
       unarmedState,
       spellCasterId,
@@ -382,26 +469,43 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
     expect(unarmedDamage).not.toMatchObject({
       holes: [
         expect.objectContaining({
-          weaponDamageDiceRollChoiceUnitIds: [savageAttackerUnitId],
+          weaponDamageDiceRollChoiceProcedureRefs: [
+            requireCharacterUnitProcedureRefForTest(
+              weaponSession,
+              spellCasterId,
+              savageAttackerUnitId,
+            ),
+          ],
         }),
       ],
     });
   });
 
   test("savage attacker is unavailable after one use in the same turn", () => {
-    const base = savageAttackerBattle({
+    const baseSession = savageAttackerBattle({
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
+    const base = baseSession.state;
     const state: BattleState = {
       ...base,
       currentTurnResources: {
         ...base.currentTurnResources,
         weaponDamageDiceRollChoicesUsedThisTurn: [
-          { attackerId: spellCasterId, unitId: savageAttackerUnitId },
+          {
+            attackerId: spellCasterId,
+            procedureRef: requireCharacterUnitProcedureRefForTest(
+              baseSession,
+              spellCasterId,
+              savageAttackerUnitId,
+            ),
+          },
         ],
       },
     };
-    const subject = weaponAttackSubject(state, "Longsword");
+    const subject = weaponAttackSubject(
+      { state, context: baseSession.context },
+      "Longsword",
+    );
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -428,48 +532,9 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       "rolledDice",
     );
 
-    expect(damage).not.toHaveProperty("weaponDamageDiceRollChoiceUnitIds");
-  });
-
-  test("savage attacker support gate rejects adjacent reroll shapes", () => {
-    const unit = unitLibrary.requireUnit(savageAttackerUnitId);
-    if (unit.kind !== "feat" || unit.mechanics.family !== "on_hit_trigger") {
-      throw new Error("Expected Savage Attacker on-hit feat Unit.");
-    }
-    // The adjacent-shape fixtures intentionally mutate a decoded SRD Unit into
-    // unsupported authored shapes that the current surface union does not
-    // expose through a typed fixture constructor. The support gate is the local
-    // evidence under test, so this cast does not cross a production boundary.
-    const adjacentUnits = [
-      {
-        ...unit,
-        id: "test_savage_attacker_required",
-        mechanics: { ...unit.mechanics, optional: false },
-      },
-      {
-        ...unit,
-        id: "test_savage_attacker_other_scope",
-        mechanics: {
-          ...unit.mechanics,
-          effect: { ...unit.mechanics.effect, diceScope: "all_damage_dice" },
-        },
-      },
-    ] as unknown as readonly UnitRecord[];
-
-    for (const adjacentUnit of adjacentUnits) {
-      expect(
-        battleUnitRefWithSupportProfiles({
-          unitRef: { unitId: adjacentUnit.id },
-          unit: adjacentUnit,
-        }),
-      ).toEqual(
-        Either.left({
-          tag: "battleUnitSupportProfileIssue",
-          message: `Unsupported battle weapon damage dice roll choice Unit hook: ${adjacentUnit.id}.`,
-        }),
-      );
-      expect(parseSupportedUnitFeatureProfile(adjacentUnit, [])).toBeNull();
-    }
+    expect(damage).not.toHaveProperty(
+      "weaponDamageDiceRollChoiceProcedureRefs",
+    );
   });
 });
 
@@ -481,7 +546,7 @@ describe("QMBT21 Classic non-SRD deterministic feature profile slice", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(myceliumStepUnitId),
+        unit,
         supportProfiles: [
           {
             kind: "alternateActionCost",

@@ -15,13 +15,14 @@ import {
   type BattleInsectPlagueAreaHazardTrigger,
   type BattleSleetStormAreaHazardTrigger,
   type BattleSpellTargetListRelationshipFact,
-  type SupportedDamageSpellInvocation,
 } from "./battle-reducer.ts";
 import {
   battleAreaId,
   battleActSpellPresentation,
+  battleSelectedSpellInvocationForProcedure,
   battleObjectId,
   battleTablePositionId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   type AvailableBattleAct,
   type BattleAreaId,
@@ -29,17 +30,19 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleLineDirectionId,
+  type BattleRuntimeSession,
   type BattleObjectDamageDisposition,
   type BattleObjectIgnitionDisposition,
+  type BattleProcedureExecutionRef,
   type BattleSpellAreaChoice,
   type BattleSpellAreaOriginAnchor,
   type BattleSpellConditionChoiceHole,
   type BattleState,
   type BattleSubject,
+  type BattleSelectedSpellInvocation,
   type BattleTargetSpatialFact,
   type CombatantId,
   type SpellInvocationRef,
-  type SupportedSpellInvocation,
 } from "./index.ts";
 import type {
   ActionSpellAct,
@@ -68,8 +71,11 @@ import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime-test-support.ts";
-import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
+import {
+  characterSpellProcedureExecution,
+  characterSpellProcedure,
+  type SpellProcedureExecution,
+} from "./character-execution.ts";
 function spellInvocationForAvailableAct(
   _state: BattleState,
   act: AvailableBattleAct,
@@ -94,7 +100,7 @@ const tableSelectedPointAreaOriginAnchor = {
 } as const satisfies BattleSpellAreaOriginAnchor;
 
 export function spellAct(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: string;
   readonly slotLevel?: number;
 }): ActionSpellAct {
@@ -107,13 +113,16 @@ export function spellAct(input: {
 }
 
 export function maybeSpellAct(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: string;
   readonly slotLevel?: number;
 }): ActionSpellAct | undefined {
-  return discoverBattleActs(input.state).find(
+  return discoverBattleActs(input.session).find(
     (candidate): candidate is ActionSpellAct => {
-      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
       return (
         candidate.subject.tag === "actionSpell" &&
         invocation?.spellId === input.spellId &&
@@ -126,7 +135,7 @@ export function maybeSpellAct(input: {
 }
 
 export function bonusSpellAct(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: string;
   readonly slotLevel?: number;
 }): BonusActionSpellAct {
@@ -139,13 +148,16 @@ export function bonusSpellAct(input: {
 }
 
 export function maybeBonusSpellAct(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: string;
   readonly slotLevel?: number;
 }): BonusActionSpellAct | undefined {
-  return discoverBattleActs(input.state).find(
+  return discoverBattleActs(input.session).find(
     (candidate): candidate is BonusActionSpellAct => {
-      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
       return (
         candidate.subject.tag === "bonusActionSpell" &&
         invocation?.spellId === input.spellId &&
@@ -158,17 +170,21 @@ export function maybeBonusSpellAct(input: {
 }
 
 export function bonusSpellActForItem(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: string;
   readonly componentWeaponItemId: string;
 }): BonusActionSpellAct {
-  const act = discoverBattleActs(input.state).find(
+  const act = discoverBattleActs(input.session).find(
     (candidate): candidate is BonusActionSpellAct => {
-      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
       return (
         candidate.subject.tag === "bonusActionSpell" &&
         invocation?.spellId === input.spellId &&
-        candidate.subject.componentWeaponItemId === input.componentWeaponItemId
+        characterSpellProcedureItemId(input.session.state, candidate) ===
+          input.componentWeaponItemId
       );
     },
   );
@@ -179,6 +195,24 @@ export function bonusSpellActForItem(input: {
     );
   }
   return act;
+}
+
+function characterSpellProcedureItemId(
+  state: BattleState,
+  act: AvailableBattleAct,
+): string | undefined {
+  if (!("procedureRef" in act.subject)) return undefined;
+  const actor = state.combatants.get(act.subject.actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  const procedure = characterSpellProcedure(
+    actor.origin.execution,
+    act.subject.procedureRef,
+  );
+  return procedure?.procedure === "weaponAttackOverride"
+    ? procedure.attachedWeaponItemId
+    : procedure?.procedure === "spellHostedWeaponAttack"
+      ? procedure.componentWeaponItemId
+      : undefined;
 }
 
 export function magicWeaponTargetItemFill(
@@ -200,12 +234,15 @@ export function magicWeaponTargetItemFill(
 }
 
 export function bonusActionDashSpellAct(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: string;
 }): BonusActionDashSpellAct {
-  const act = discoverBattleActs(input.state).find(
+  const act = discoverBattleActs(input.session).find(
     (candidate): candidate is BonusActionDashSpellAct => {
-      const invocation = spellInvocationForAvailableAct(input.state, candidate);
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
       return (
         candidate.subject.tag === "bonusActionDashSpell" &&
         invocation?.spellId === input.spellId
@@ -219,9 +256,9 @@ export function bonusActionDashSpellAct(input: {
   return act;
 }
 
-export function jumpMovementReplacementAct(
-  state: BattleState,
-): AvailableBattleAct & {
+export function jumpMovementReplacementAct(state: BattleState): ReturnType<
+  typeof discoverBattleActCandidates
+>[number] & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -239,7 +276,7 @@ export function jumpMovementReplacementAct(
 }
 
 export function maybeJumpMovementReplacementAct(state: BattleState):
-  | (AvailableBattleAct & {
+  | (ReturnType<typeof discoverBattleActCandidates>[number] & {
       readonly subject: Extract<
         BattleSubject,
         {
@@ -249,12 +286,12 @@ export function maybeJumpMovementReplacementAct(state: BattleState):
       >;
     })
   | undefined {
-  return discoverBattleActs(state).find(isJumpMovementReplacementAct);
+  return discoverBattleActCandidates(state).find(isJumpMovementReplacementAct);
 }
 
 function isJumpMovementReplacementAct(
-  candidate: AvailableBattleAct,
-): candidate is AvailableBattleAct & {
+  candidate: ReturnType<typeof discoverBattleActCandidates>[number],
+): candidate is ReturnType<typeof discoverBattleActCandidates>[number] & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -350,17 +387,6 @@ export function spellTargetFill(
         targetId,
         sourceProcedureRef,
       },
-      ...(hole.spellTargetSpatialFactRequest?.requiresKnownWillingTarget ===
-      true
-        ? [
-            {
-              kind: "spellTargetKnownWilling" as const,
-              casterId,
-              targetId,
-              sourceProcedureRef,
-            },
-          ]
-        : []),
     ],
   };
 }
@@ -792,15 +818,6 @@ export function spellTargetListFill(
   const sourceProcedureRef =
     battleProcedureExecutionRefForSpellHoleForTest(hole);
   const relationshipFactRequest = hole.relationshipFactRequest;
-  const knownWillingFacts =
-    hole.requiresKnownWillingTargets === true
-      ? targetIds.map((targetId) => ({
-          kind: "spellTargetKnownWilling" as const,
-          casterId,
-          targetId,
-          sourceProcedureRef,
-        }))
-      : [];
   const selectedRelationshipFacts =
     relationshipFacts ??
     (relationshipFactRequest?.kind === "spellTargetIsHostileToCaster" &&
@@ -839,7 +856,6 @@ export function spellTargetListFill(
           radiusFeet: hole.spatialTargeting.radiusFeet,
           targetIds,
         },
-        ...knownWillingFacts,
       ],
     };
   }
@@ -857,7 +873,6 @@ export function spellTargetListFill(
         targetId,
         sourceProcedureRef,
       })),
-      ...knownWillingFacts,
     ],
   };
 }
@@ -1314,7 +1329,7 @@ export function commandFleeMovementFill(
 }
 
 export function greaseGroundHazardSaveAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   trigger: "entersArea" | "endsTurnInArea",
 ): AvailableBattleAct & {
@@ -1326,7 +1341,7 @@ export function greaseGroundHazardSaveAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1351,14 +1366,14 @@ export function greaseGroundHazardSaveAct(
 }
 
 export function greaseGroundHazardEndTurnAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): ReturnType<typeof greaseGroundHazardSaveAct> {
-  return greaseGroundHazardSaveAct(state, actorId, "endsTurnInArea");
+  return greaseGroundHazardSaveAct(session, actorId, "endsTurnInArea");
 }
 
 export function webRestraintSaveAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   trigger: "entersArea" | "startsTurnInArea",
 ): AvailableBattleAct & {
@@ -1370,7 +1385,7 @@ export function webRestraintSaveAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1449,7 +1464,7 @@ export function sleetStormAreaHazardSaveAct(
 }
 
 export function insectPlagueAreaHazardSaveAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   trigger: BattleInsectPlagueAreaHazardTrigger,
 ): AvailableBattleAct & {
@@ -1461,7 +1476,7 @@ export function insectPlagueAreaHazardSaveAct(
     }
   >;
 } {
-  const effect = activeInsectPlagueAreaHazardEffect(state);
+  const effect = activeInsectPlagueAreaHazardEffect(session.state);
   if (effect === undefined) {
     throw new Error("Expected active Insect Plague area hazard.");
   }
@@ -1498,7 +1513,7 @@ export function insectPlagueAreaHazardSaveAct(
       "Resolve the caller-supplied Insect Plague Constitution Saving Throw and Piercing damage.",
     initialHoles: [
       insectPlagueAreaHazardSavingThrowOutcomeHole(
-        state,
+        session.state,
         actorId,
         effect,
         trigger,
@@ -1508,7 +1523,7 @@ export function insectPlagueAreaHazardSaveAct(
 }
 
 export function cloudkillAreaHazardSaveAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   trigger: BattleCloudkillAreaHazardTrigger,
 ): AvailableBattleAct & {
@@ -1520,7 +1535,7 @@ export function cloudkillAreaHazardSaveAct(
     }
   >;
 } {
-  const effect = activeCloudkillAreaHazardEffect(state);
+  const effect = activeCloudkillAreaHazardEffect(session.state);
   if (effect === undefined) {
     throw new Error("Expected active Cloudkill area hazard.");
   }
@@ -1561,7 +1576,7 @@ export function cloudkillAreaHazardSaveAct(
       "Resolve the caller-supplied Cloudkill Constitution Saving Throw and Poison damage.",
     initialHoles: [
       cloudkillAreaHazardSavingThrowOutcomeHole(
-        state,
+        session.state,
         actorId,
         effect,
         trigger,
@@ -1610,7 +1625,7 @@ function activeSleetStormAreaHazardEffect(
 }
 
 export function webRestrainedNoLongerInAreaAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
 ): AvailableBattleAct & {
   readonly subject: Extract<
@@ -1621,7 +1636,7 @@ export function webRestrainedNoLongerInAreaAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1644,7 +1659,9 @@ export function webRestrainedNoLongerInAreaAct(
   return act;
 }
 
-export function webAreaRemovedAct(state: BattleState): AvailableBattleAct & {
+export function webAreaRemovedAct(
+  session: BattleRuntimeSession,
+): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -1653,7 +1670,7 @@ export function webAreaRemovedAct(state: BattleState): AvailableBattleAct & {
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1680,7 +1697,7 @@ export function gustOfWindLineEndTurnSaveAct(
   actorId: CombatantId = spellTargetId,
   areaId: BattleAreaId = gustOfWindAreaId,
   directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
-): AvailableBattleAct & {
+): ReturnType<typeof discoverBattleActCandidates>[number] & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -1689,10 +1706,10 @@ export function gustOfWindLineEndTurnSaveAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (
       candidate,
-    ): candidate is AvailableBattleAct & {
+    ): candidate is ReturnType<typeof discoverBattleActCandidates>[number] & {
       readonly subject: Extract<
         BattleSubject,
         {
@@ -1718,7 +1735,7 @@ export function gustOfWindLineDirectionChangeAct(
   actorId: CombatantId = spellCasterId,
   areaId: BattleAreaId = gustOfWindAreaId,
   directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
-): AvailableBattleAct & {
+): ReturnType<typeof discoverBattleActCandidates>[number] & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -1727,10 +1744,10 @@ export function gustOfWindLineDirectionChangeAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (
       candidate,
-    ): candidate is AvailableBattleAct & {
+    ): candidate is ReturnType<typeof discoverBattleActCandidates>[number] & {
       readonly subject: Extract<
         BattleSubject,
         {
@@ -1752,7 +1769,7 @@ export function gustOfWindLineDirectionChangeAct(
 }
 
 export function flamingSphereEndTurnAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId = spellTargetId,
 ): AvailableBattleAct & {
   readonly subject: Extract<
@@ -1763,7 +1780,7 @@ export function flamingSphereEndTurnAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1788,7 +1805,7 @@ export function flamingSphereEndTurnAct(
 }
 
 export function flamingSphereRepositionAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId = spellCasterId,
 ): AvailableBattleAct & {
   readonly subject: Extract<
@@ -1799,7 +1816,7 @@ export function flamingSphereRepositionAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1823,7 +1840,7 @@ export function flamingSphereRepositionAct(
 }
 
 export function flamingSphereRamAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId = spellCasterId,
   targetId: CombatantId = spellTargetId,
 ): AvailableBattleAct & {
@@ -1835,7 +1852,7 @@ export function flamingSphereRamAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1871,7 +1888,7 @@ export function moonbeamRepositionMovementFill(
 }
 
 export function moonbeamEndTurnSaveAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId = spellTargetId,
   areaId: BattleAreaId = moonbeamAreaId,
 ): AvailableBattleAct & {
@@ -1883,7 +1900,7 @@ export function moonbeamEndTurnSaveAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1908,7 +1925,7 @@ export function moonbeamEndTurnSaveAct(
 }
 
 export function moonbeamRepositionAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId = spellCasterId,
 ): AvailableBattleAct & {
   readonly subject: Extract<
@@ -1919,7 +1936,7 @@ export function moonbeamRepositionAct(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -1971,9 +1988,9 @@ export function targetAbilityChoicesFill(
 }
 
 export function isSelectedSorcerousBurstDamageInvocation(
-  invocation: SupportedSpellInvocation,
+  invocation: SpellProcedureExecution,
 ): invocation is Extract<
-  SupportedDamageSpellInvocation,
+  SpellProcedureExecution,
   { readonly procedure: "spellAttackDamage" }
 > {
   return (
@@ -1983,18 +2000,18 @@ export function isSelectedSorcerousBurstDamageInvocation(
 }
 
 export function spellActInvocation(
-  state: BattleState,
+  session: BattleRuntimeSession,
   act: ActionSpellAct,
-): SupportedSpellInvocation {
-  return requireSpellProcedureForTest(state, act.subject.procedureRef);
+): BattleSelectedSpellInvocation {
+  return requireSpellProcedureForTest(session, act.subject.procedureRef);
 }
 
 export function spellHoleInvocation(
-  state: BattleState,
+  session: BattleRuntimeSession,
   holes: readonly BattleHole[],
-): SupportedSpellInvocation {
+): BattleSelectedSpellInvocation {
   return requireSpellProcedureForTest(
-    state,
+    session,
     battleProcedureExecutionRefForSpellHoleForTest(
       holes[0] ??
         (() => {
@@ -2005,26 +2022,36 @@ export function spellHoleInvocation(
 }
 
 function requireSpellProcedureForTest(
-  state: BattleState,
-  procedureRef: Parameters<typeof characterSpellProcedure>[1],
-): SupportedSpellInvocation {
-  const availableRefs: string[] = [];
-  for (const combatant of state.combatants.values()) {
-    if (combatant.origin.kind !== "character") continue;
-    const invocation = characterSpellProcedure(
-      combatant.origin.execution,
+  session: BattleRuntimeSession,
+  procedureRef: BattleProcedureExecutionRef,
+): BattleSelectedSpellInvocation {
+  for (const combatant of session.state.combatants.values()) {
+    if (
+      combatant.origin.kind !== "character" ||
+      characterSpellProcedureExecution(
+        combatant.origin.execution,
+        procedureRef,
+      ) === undefined
+    ) {
+      continue;
+    }
+    const invocation = battleSelectedSpellInvocationForProcedure(
+      session,
+      combatant.combatantId,
       procedureRef,
     );
     if (invocation !== undefined) return invocation;
-    const currentInvocations = supportedSpellActs(combatant, state);
-    availableRefs.push(
-      ...currentInvocations.map((candidate) => candidate.sourceProcedureRef),
-    );
-    const currentInvocation = currentInvocations.find(
-      (candidate) => candidate.sourceProcedureRef === procedureRef,
-    );
-    if (currentInvocation !== undefined) return currentInvocation;
   }
+  const availableRefs = [...session.state.combatants.values()].flatMap(
+    (combatant) =>
+      combatant.origin.kind === "character"
+        ? combatant.origin.execution.procedureBindings.flatMap((binding) =>
+            binding.procedure.kind === "spellInvocation"
+              ? [binding.procedureRef]
+              : [],
+          )
+        : [],
+  );
   throw new Error(
     `Expected bound Spell procedure ${procedureRef}; available refs: ${availableRefs.join(", ")}.`,
   );

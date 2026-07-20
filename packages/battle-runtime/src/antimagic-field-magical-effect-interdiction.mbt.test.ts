@@ -28,6 +28,7 @@ import {
   characterCreature,
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   knownWillingSpellTargetFill,
@@ -49,7 +50,7 @@ import {
   type BattleAntimagicFieldAuraMembership,
   type BattleFill,
   type BattleHitPointHealingPoolDistributionHole,
-  type BattleState,
+  type BattleRuntimeSession,
   type CombatantId,
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
@@ -247,11 +248,15 @@ function initProjection(): AntimagicMagicalEffectInterdictionProjection {
   };
 }
 
-function spellTargetInterdicted(state: BattleState): boolean {
-  const act = spellAct({ state, spellId: cureWoundsUnitId, slotLevel: 1 });
+function spellTargetInterdicted(session: BattleRuntimeSession): boolean {
+  const act = spellAct({
+    session,
+    spellId: cureWoundsUnitId,
+    slotLevel: 1,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       knownWillingSpellTargetFill(
@@ -264,18 +269,22 @@ function spellTargetInterdicted(state: BattleState): boolean {
   });
   return (
     magicalEffectTargetsInterdictedByAntimagicField({
-      state,
+      state: session.state,
       source: SPELL_MAGICAL_EFFECT_SOURCE,
       targetIds: [spellTargetId],
     }) || result.tag === "invalid"
   );
 }
 
-function spellAreaDeliveryInterdicted(state: BattleState): boolean {
-  const act = spellAct({ state, spellId: burningHandsUnitId, slotLevel: 1 });
+function spellAreaDeliveryInterdicted(session: BattleRuntimeSession): boolean {
+  const act = spellAct({
+    session,
+    spellId: burningHandsUnitId,
+    slotLevel: 1,
+  });
   const save = requireHole(act.initialHoles, "savingThrowOutcome");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       savingThrowOutcomeFill(save, [
@@ -286,11 +295,17 @@ function spellAreaDeliveryInterdicted(state: BattleState): boolean {
   return result.tag === "invalid";
 }
 
-function objectContactDeliveryInterdicted(state: BattleState): boolean {
+function objectContactDeliveryInterdicted(
+  session: BattleRuntimeSession,
+): boolean {
   const objectId = battleObjectId(
     "antimagic-field-magical-effect-mbt-heat-metal-object",
   );
-  const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session,
+    spellId: heatMetalUnitId,
+    slotLevel: 2,
+  });
   const objectFill = spellManufacturedMetalObjectTargetFill({
     hole: requireHole(act.initialHoles, "objectTargetChoice"),
     objectId,
@@ -298,7 +313,7 @@ function objectContactDeliveryInterdicted(state: BattleState): boolean {
     casterId: spellCasterId,
   });
   const contact = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [objectFill],
   });
@@ -307,7 +322,7 @@ function objectContactDeliveryInterdicted(state: BattleState): boolean {
     "objectContactTargets",
   );
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       objectFill,
@@ -320,14 +335,16 @@ function objectContactDeliveryInterdicted(state: BattleState): boolean {
   return result.tag === "invalid";
 }
 
-function otherMagicalEffectTargetInterdicted(state: BattleState): boolean {
-  const act = preserveLifeAct(state);
+function otherMagicalEffectTargetInterdicted(
+  session: BattleRuntimeSession,
+): boolean {
+  const act = preserveLifeAct(session);
   const distribution = requireHole(
     act.initialHoles,
     "hitPointHealingDistribution",
   );
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       preserveLifeDistributionFill(distribution, [
@@ -337,19 +354,19 @@ function otherMagicalEffectTargetInterdicted(state: BattleState): boolean {
   });
   return (
     magicalEffectTargetsInterdictedByAntimagicField({
-      state,
+      state: session.state,
       source: OTHER_MAGICAL_EFFECT_SOURCE,
       targetIds: [spellTargetId],
     }) || result.tag === "invalid"
   );
 }
 
-function outsideAuraSpellTargetState(): BattleState {
+function outsideAuraSpellTargetState(): BattleRuntimeSession {
   return spellTargetBattle();
 }
 
-function insideAuraSpellTargetState(): BattleState {
-  return activeAntimagicAuraState(
+function insideAuraSpellTargetState(): BattleRuntimeSession {
+  return activeAntimagicAuraSession(
     spellTargetBattle(),
     auraMembership({
       sourceCombatantId: spellTargetId,
@@ -359,7 +376,7 @@ function insideAuraSpellTargetState(): BattleState {
   );
 }
 
-function spellTargetBattle(): BattleState {
+function spellTargetBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(cureWoundsUnitId)],
     spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -368,12 +385,12 @@ function spellTargetBattle(): BattleState {
   });
 }
 
-function outsideAuraSpellAreaState(): BattleState {
+function outsideAuraSpellAreaState(): BattleRuntimeSession {
   return spellAreaBattle();
 }
 
-function insideAuraSpellAreaState(): BattleState {
-  return activeAntimagicAuraState(
+function insideAuraSpellAreaState(): BattleRuntimeSession {
+  return activeAntimagicAuraSession(
     spellAreaBattle(),
     auraMembership({
       sourceCombatantId: spellTargetId,
@@ -383,19 +400,19 @@ function insideAuraSpellAreaState(): BattleState {
   );
 }
 
-function spellAreaBattle(): BattleState {
+function spellAreaBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(burningHandsUnitId)],
     spellSlots: [{ spellLevel: 1, count: 1 }],
   });
 }
 
-function outsideAuraObjectContactState(): BattleState {
+function outsideAuraObjectContactState(): BattleRuntimeSession {
   return objectContactBattle();
 }
 
-function insideAuraObjectContactState(): BattleState {
-  return activeAntimagicAuraState(
+function insideAuraObjectContactState(): BattleRuntimeSession {
+  return activeAntimagicAuraSession(
     objectContactBattle(),
     auraMembership({
       sourceCombatantId: spellTargetId,
@@ -405,7 +422,7 @@ function insideAuraObjectContactState(): BattleState {
   );
 }
 
-function objectContactBattle(): BattleState {
+function objectContactBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(heatMetalUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -414,12 +431,12 @@ function objectContactBattle(): BattleState {
   });
 }
 
-function outsideAuraOtherMagicalEffectState(): BattleState {
+function outsideAuraOtherMagicalEffectState(): BattleRuntimeSession {
   return preserveLifeBattle();
 }
 
-function insideAuraOtherMagicalEffectState(): BattleState {
-  return activeAntimagicAuraState(
+function insideAuraOtherMagicalEffectState(): BattleRuntimeSession {
+  return activeAntimagicAuraSession(
     preserveLifeBattle(),
     auraMembership({
       sourceCombatantId: spellTargetId,
@@ -429,11 +446,11 @@ function insideAuraOtherMagicalEffectState(): BattleState {
   );
 }
 
-function activeAntimagicAuraState(
-  state: BattleState,
+function activeAntimagicAuraSession(
+  session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
-): BattleState {
-  const combatants = new Map(state.combatants);
+): BattleRuntimeSession {
+  const combatants = new Map(session.state.combatants);
   const source = combatants.get(aura.sourceCombatantId);
   if (source === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
@@ -443,8 +460,8 @@ function activeAntimagicAuraState(
     activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
   });
   return {
-    ...state,
-    combatants,
+    ...session,
+    state: { ...session.state, combatants },
   };
 }
 
@@ -489,7 +506,7 @@ function auraMembership(input: {
   };
 }
 
-function preserveLifeBattle(): BattleState {
+function preserveLifeBattle(): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("antimagic-field-magical-effect-mbt-preserve-life"),
     combatants: [
@@ -501,7 +518,11 @@ function preserveLifeBattle(): BattleState {
         currentHp: Hp(20),
         maxHp: Hp(20),
         characterUnitRefs: [preserveLifeUnitRef],
-        unitFeatures: [{ unit: preserveLifeUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(preserveLifeUnit, [
+            { className: "cleric", level: classLevel(3) },
+          ]),
+        ],
         resources: [{ unit: channelDivinityUnit, usesRemaining: 2 }],
       }),
       characterCreature({
@@ -526,8 +547,8 @@ function preserveLifeBattle(): BattleState {
   return result.right;
 }
 
-function preserveLifeAct(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+function preserveLifeAct(session: BattleRuntimeSession) {
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId &&

@@ -342,9 +342,7 @@ function normalizeQuintState(
   };
 }
 
-function damageFactsField(
-  raw: unknown,
-): ConcentrationHazardExactDamageFacts {
+function damageFactsField(raw: unknown): ConcentrationHazardExactDamageFacts {
   const facts = quintStateRecord(raw);
   return {
     damageType: damageTypeField(quintField(facts, "damageType")),

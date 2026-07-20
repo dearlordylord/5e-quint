@@ -32,7 +32,7 @@ import {
   requireHole,
   requireResultHole,
   resolveWeaponAttack,
-  weaponAttackSubject,
+  singleCharacterWeaponAttackSubject,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   extraAttackBattle,
@@ -61,7 +61,7 @@ import {
   combatantId,
   decodeUnitRecordSync,
   difficultyClass,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   Either,
   movementDeltaFeet,
   movementFeet,
@@ -75,6 +75,7 @@ import type {
   BattleState,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
 
 const syntheticExtraAttackCounts = [1, 2, 3] as const;
 type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
@@ -175,7 +176,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
         );
         currentState = result.state;
       }
-      expect(discoverBattleActs(currentState)).not.toEqual(
+      expect(discoverBattleActCandidates(currentState)).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             subject: expect.objectContaining({
@@ -250,7 +251,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
     if (second.tag !== "resolved") {
       throw new Error("Expected second Extra Attack slot to resolve.");
     }
-    expect(discoverBattleActs(second.state)).not.toEqual(
+    expect(discoverBattleActCandidates(second.state)).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: expect.objectContaining({
@@ -291,7 +292,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       throw new Error("Expected first Extra Attack slot to resolve.");
     }
 
-    const moveAct = discoverBattleActs(first.state).find(
+    const moveAct = discoverBattleActCandidates(first.state).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "move" &&
@@ -351,7 +352,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       ],
     };
 
-    expect(discoverBattleActs(first.state)).toEqual(
+    expect(discoverBattleActCandidates(first.state)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: expect.objectContaining({
@@ -361,7 +362,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
         }),
       ]),
     );
-    expect(discoverBattleActs(grappledState)).not.toEqual(
+    expect(discoverBattleActCandidates(grappledState)).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: expect.objectContaining({
@@ -492,7 +493,7 @@ function classFeatureExtraAttackSlotCount(state: BattleState): number {
 function resolveWeaponAttackMiss(
   state: BattleState,
 ): ReturnType<typeof resolveBattleSubject> {
-  const subject = weaponAttackSubject(state, "Longsword");
+  const subject = singleCharacterWeaponAttackSubject(state, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -1351,13 +1352,13 @@ function acrobaticMovementBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function acrobaticMovementHole(
   state: BattleState,
 ): Extract<ReturnType<typeof requireHole>, { readonly kind: "movement" }> {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === spellCasterId &&
@@ -1405,7 +1406,11 @@ function secondStoryWorkBattle(): BattleState {
         initiative: 20,
         characterUnitRefs: [unitRef.right],
         classLevels: [{ className: "rogue", level: classLevel(3) }],
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "rogue", level: classLevel(3) },
+          ]),
+        ],
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -1418,11 +1423,11 @@ function secondStoryWorkBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function secondStoryWorkMovementHole(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === secondStoryWorkActorId &&

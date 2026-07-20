@@ -93,119 +93,174 @@ import { wardingBondProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
 import type {
-  AnySpellProcedureProfile,
   SpellAdmissionContext,
   SpellProcedureAdmissionProfile,
+  SpellProcedureAnyTargetListInvocationClassifier,
+  SpellProcedureMetamagicCompatibility,
 } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import type { SpellProcedureExecutionByProcedure } from "../../character-execution.ts";
 
-export function registeredSpellProcedureProfiles() {
-  return [
-    damageReductionProfile,
-    rollModifierProfile,
-    makeStableProfile,
-    heldLightProfile,
-    heldLightHurlProfile,
-    objectLightProfile,
-    thaumaturgyBoomingVoiceProfile,
-    blurAttackRollDefenseProfile,
-    seeInvisibleObserverSightProfile,
-    mirrorImageHitInterceptionProfile,
-    persistentArmorEffectProfile,
-    magicWeaponEnhancementProfile,
-    wardingBondProfile,
-    creatureTypeProtectionProfile,
-    conditionRemovalProtectionProfile,
-    chosenDamageResistanceProfile,
-    hastePositiveProfile,
-    directConditionProfile,
-    directConditionRemovalProfile,
-    conditionImmunityAndTurnStartTemporaryHitPointsProfile,
-    creatureSizeChangeProfile,
-    creatureSizeDecreaseProfile,
-    levitatedCreatureProfile,
-    scalarBuffProfile,
-    directHitPointRestorationProfile,
-    expeditiousRetreatDashProfile,
-    jumpMovementReplacementProfile,
-    featherFallMitigationProfile,
-    selfTeleportProfile,
-    selfTransformationModeProfile,
-    dragonsBreathInitialProfile,
-    sanctuaryTargetingInterdictionProfile,
-    markedDamageRiderProfile,
-    weaponDamageRiderProfile,
-    afterHitDamageProfile,
-    afterHitSaveGatedConditionProfile,
-    afterHitTimedDamageAndSaveProfile,
-    afterHitDamageAndIlluminationProfile,
-    weaponAttackOverrideProfile,
-    spellHostedWeaponAttackProfile,
-    saveGatedDamageProfile,
-    saveGatedConditionProfile,
-    saveGatedConditionImmunityProfile,
-    saveGatedAttackRollAdvantageProfile,
-    abilityD20TestRollModeSaveGateProfile,
-    sleepTargetAdmissionProfile,
-    hideousLaughterProfile,
-    hypnoticPatternProfile,
-    slowActivePenaltiesProfile,
-    greaseGroundHazardProfile,
-    gustOfWindLineProfile,
-    flamingSphereProfile,
-    moonbeamProfile,
-    fogCloudObscurementProfile,
-    spikeGrowthMovementHazardProfile,
-    webRestraintHazardProfile,
-    sleetStormAreaHazardProfile,
-    insectPlagueAreaHazardProfile,
-    cloudkillAreaHazardProfile,
-    magicalDarknessPointOriginProfile,
-    antimagicFieldOngoingSpellSuppressionProfile,
-    commandProfile,
-    counterspellProfile,
-    shieldReactionProfile,
-    spellAttackDamageProfile,
-    spellAttackSequenceProfile,
-    spellCreatedHeldObjectProfile,
-    spellCreatedHeldObjectAttackProfile,
-    spellCreatedHeldObjectReEvokeProfile,
-    spiritualWeaponAttackProxyProfile,
-    spiritualWeaponRepeatAttackProfile,
-    objectContactDamageProfile,
-    objectContactDamageRepeatProfile,
-    ongoingSpellEndProfile,
-    chainedSpellAttackDamageProfile,
-    attackBurstSaveDamageProfile,
-    repeatedDamageAllocationProfile,
-    dancingLightsSeparateCastProfile,
-    dancingLightsCombinedCastProfile,
-    dancingLightsRepositionProfile,
-  ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
+export function registeredSpellProcedureProfileRegistry() {
+  return {
+    damageReduction: damageReductionProfile,
+    rollModifier: rollModifierProfile,
+    makeStable: makeStableProfile,
+    heldLight: heldLightProfile,
+    heldLightHurl: heldLightHurlProfile,
+    objectLight: objectLightProfile,
+    thaumaturgyBoomingVoice: thaumaturgyBoomingVoiceProfile,
+    blurAttackRollDefense: blurAttackRollDefenseProfile,
+    seeInvisibleObserverSight: seeInvisibleObserverSightProfile,
+    mirrorImageHitInterception: mirrorImageHitInterceptionProfile,
+    persistentArmorEffect: persistentArmorEffectProfile,
+    magicWeaponEnhancement: magicWeaponEnhancementProfile,
+    wardingBond: wardingBondProfile,
+    creatureTypeProtection: creatureTypeProtectionProfile,
+    conditionRemovalProtection: conditionRemovalProtectionProfile,
+    chosenDamageResistance: chosenDamageResistanceProfile,
+    hastePositive: hastePositiveProfile,
+    directCondition: directConditionProfile,
+    directConditionRemoval: directConditionRemovalProfile,
+    conditionImmunityAndTurnStartTemporaryHitPoints:
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile,
+    creatureSizeIncrease: creatureSizeChangeProfile,
+    creatureSizeDecrease: creatureSizeDecreaseProfile,
+    levitatedCreature: levitatedCreatureProfile,
+    scalarBuff: scalarBuffProfile,
+    directHitPointRestoration: directHitPointRestorationProfile,
+    expeditiousRetreatDash: expeditiousRetreatDashProfile,
+    jumpMovementReplacement: jumpMovementReplacementProfile,
+    featherFallMitigation: featherFallMitigationProfile,
+    selfTeleport: selfTeleportProfile,
+    selfTransformationMode: selfTransformationModeProfile,
+    dragonsBreathInitial: dragonsBreathInitialProfile,
+    sanctuaryTargetingInterdiction: sanctuaryTargetingInterdictionProfile,
+    markedDamageRider: markedDamageRiderProfile,
+    weaponDamageRider: weaponDamageRiderProfile,
+    afterHitDamage: afterHitDamageProfile,
+    afterHitSaveGatedCondition: afterHitSaveGatedConditionProfile,
+    afterHitTimedDamageAndSave: afterHitTimedDamageAndSaveProfile,
+    afterHitDamageAndIllumination: afterHitDamageAndIlluminationProfile,
+    weaponAttackOverride: weaponAttackOverrideProfile,
+    spellHostedWeaponAttack: spellHostedWeaponAttackProfile,
+    saveGatedDamage: saveGatedDamageProfile,
+    saveGatedCondition: saveGatedConditionProfile,
+    saveGatedConditionImmunity: saveGatedConditionImmunityProfile,
+    saveGatedAttackRollAdvantage: saveGatedAttackRollAdvantageProfile,
+    abilityD20TestRollModeSaveGate: abilityD20TestRollModeSaveGateProfile,
+    sleepTargetAdmission: sleepTargetAdmissionProfile,
+    hideousLaughter: hideousLaughterProfile,
+    hypnoticPattern: hypnoticPatternProfile,
+    slowActivePenalties: slowActivePenaltiesProfile,
+    greaseGroundHazard: greaseGroundHazardProfile,
+    gustOfWindLine: gustOfWindLineProfile,
+    flamingSphere: flamingSphereProfile,
+    moonbeam: moonbeamProfile,
+    fogCloudObscurement: fogCloudObscurementProfile,
+    spikeGrowthMovementHazard: spikeGrowthMovementHazardProfile,
+    webRestraintHazard: webRestraintHazardProfile,
+    sleetStormAreaHazard: sleetStormAreaHazardProfile,
+    insectPlagueAreaHazard: insectPlagueAreaHazardProfile,
+    cloudkillAreaHazard: cloudkillAreaHazardProfile,
+    magicalDarknessPointOrigin: magicalDarknessPointOriginProfile,
+    antimagicFieldOngoingSpellSuppression:
+      antimagicFieldOngoingSpellSuppressionProfile,
+    command: commandProfile,
+    counterspell: counterspellProfile,
+    shieldReaction: shieldReactionProfile,
+    spellAttackDamage: spellAttackDamageProfile,
+    spellAttackSequence: spellAttackSequenceProfile,
+    spellCreatedHeldObject: spellCreatedHeldObjectProfile,
+    spellCreatedHeldObjectAttack: spellCreatedHeldObjectAttackProfile,
+    spellCreatedHeldObjectReEvoke: spellCreatedHeldObjectReEvokeProfile,
+    spiritualWeaponAttackProxy: spiritualWeaponAttackProxyProfile,
+    spiritualWeaponRepeatAttack: spiritualWeaponRepeatAttackProfile,
+    objectContactDamage: objectContactDamageProfile,
+    objectContactDamageRepeat: objectContactDamageRepeatProfile,
+    ongoingSpellEnd: ongoingSpellEndProfile,
+    chainedSpellAttackDamage: chainedSpellAttackDamageProfile,
+    attackBurstSaveDamage: attackBurstSaveDamageProfile,
+    repeatedDamageAllocation: repeatedDamageAllocationProfile,
+    dancingLightsSeparateCast: dancingLightsSeparateCastProfile,
+    dancingLightsCombinedCast: dancingLightsCombinedCastProfile,
+    dancingLightsReposition: dancingLightsRepositionProfile,
+  } satisfies Record<
+    SupportedSpellInvocation["procedure"],
+    { readonly procedure: SupportedSpellInvocation["procedure"] }
+  >;
 }
 
-type RegisteredSpellProcedureProfiles = ReturnType<
-  typeof registeredSpellProcedureProfiles
+export type RegisteredSpellProcedureProfiles = ReturnType<
+  typeof registeredSpellProcedureProfileRegistry
 >;
 
-// The proxy target is never read directly; get traps defer tuple construction
-// until registry consumers run, after profile/codecs cyclic imports settle.
-export const REGISTERED_SPELL_PROCEDURE_PROFILES = new Proxy(
-  [] as unknown as RegisteredSpellProcedureProfiles,
-  {
-    get(_target, property) {
-      const profiles = registeredSpellProcedureProfiles();
-      const value = Reflect.get(profiles, property, profiles);
-      return typeof value === "function" ? value.bind(profiles) : value;
-    },
-  },
-) as RegisteredSpellProcedureProfiles;
+// A profile schema intentionally may be narrower than the full source
+// invocation variant: it decodes only the mechanical facts that the profile's
+// admission constructor can produce. Completeness is therefore keyed by the
+// procedure discriminant, while soundness requires every decoded value to be
+// a valid execution for that key.
+type InvalidRegisteredExecutionSchemaVariants = {
+  [Procedure in keyof RegisteredSpellProcedureProfiles]: Exclude<
+    RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"],
+    SpellProcedureExecutionByProcedure[Procedure]
+  >;
+}[keyof RegisteredSpellProcedureProfiles];
 
-// Procedure literal type derived from the registry. As more profiles
-// migrate, this widens automatically without a hand-maintained union.
-export type RegisteredSpellProcedure =
-  (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number]["procedure"];
+type RegisteredExecutionSchemaWithAny = {
+  [Procedure in keyof RegisteredSpellProcedureProfiles]: 0 extends 1 &
+    RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"]
+    ? Procedure
+    : never;
+}[keyof RegisteredSpellProcedureProfiles];
+
+type RegisteredProfileProcedureMismatch = {
+  [Procedure in keyof RegisteredSpellProcedureProfiles]:
+    | Exclude<
+        RegisteredSpellProcedureProfiles[Procedure]["procedure"],
+        Procedure
+      >
+    | Exclude<
+        Procedure,
+        RegisteredSpellProcedureProfiles[Procedure]["procedure"]
+      >;
+}[keyof RegisteredSpellProcedureProfiles];
+
+type RegisteredExecutionSchemaProcedureMismatch = {
+  [Procedure in keyof RegisteredSpellProcedureProfiles]:
+    | Exclude<
+        RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"]["procedure"],
+        Procedure
+      >
+    | Exclude<
+        Procedure,
+        RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"]["procedure"]
+      >;
+}[keyof RegisteredSpellProcedureProfiles];
+
+type AssertRegisteredExecutionSchemasAreKeyed<T extends never> = T;
+export type RegisteredSpellProcedureExecutionSchemaCompletenessCheck =
+  AssertRegisteredExecutionSchemasAreKeyed<
+    | Exclude<
+        SupportedSpellInvocation["procedure"],
+        keyof RegisteredSpellProcedureProfiles
+      >
+    | Exclude<
+        keyof RegisteredSpellProcedureProfiles,
+        SupportedSpellInvocation["procedure"]
+      >
+    | InvalidRegisteredExecutionSchemaVariants
+    | RegisteredExecutionSchemaWithAny
+    | RegisteredProfileProcedureMismatch
+    | RegisteredExecutionSchemaProcedureMismatch
+  >;
+
+export function registeredSpellProcedureProfiles() {
+  return Object.values(registeredSpellProcedureProfileRegistry());
+}
+
+export type RegisteredSpellProcedure = keyof RegisteredSpellProcedureProfiles;
 
 type AssertNoMissingSpellProcedure<T extends never> = T;
 export type RegisteredSpellProcedureCompletenessCheck =
@@ -213,39 +268,29 @@ export type RegisteredSpellProcedureCompletenessCheck =
     Exclude<SupportedSpellInvocation["procedure"], RegisteredSpellProcedure>
   >;
 
-let registryByProcedure:
-  | ReadonlyMap<SupportedSpellInvocation["procedure"], AnySpellProcedureProfile>
-  | undefined;
-
-function registeredSpellProcedureProfileMap(): ReadonlyMap<
-  SupportedSpellInvocation["procedure"],
-  AnySpellProcedureProfile
-> {
-  registryByProcedure ??= new Map(
-    REGISTERED_SPELL_PROCEDURE_PROFILES.map(
-      (p) => [p.procedure, p as AnySpellProcedureProfile] as const,
-    ),
-  );
-  return registryByProcedure;
-}
+export type RegisteredSpellProcedureClassification = {
+  readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
+  readonly targetListInvocation: SpellProcedureAnyTargetListInvocationClassifier;
+  readonly isReadiedSpellCompatible: boolean;
+};
 
 export function registeredSpellProcedureProfile(
   procedure: SupportedSpellInvocation["procedure"],
-): AnySpellProcedureProfile | null {
-  return registeredSpellProcedureProfileMap().get(procedure) ?? null;
+): RegisteredSpellProcedureClassification {
+  return registeredSpellProcedureProfileRegistry()[procedure];
 }
 
 export function admitRegisteredSpellProcedureProfiles(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly SupportedSpellInvocation[] {
-  return REGISTERED_SPELL_PROCEDURE_PROFILES.flatMap((profile) =>
+  return registeredSpellProcedureProfiles().flatMap((profile) =>
     admissionProfileFor(profile).admit(spell, ctx),
   );
 }
 
 function admissionProfileFor(
-  profile: AnySpellProcedureProfile,
+  profile: SpellProcedureAdmissionProfile,
 ): SpellProcedureAdmissionProfile {
   return profile;
 }
@@ -255,18 +300,6 @@ function admissionProfileFor(
 // input types preserved.
 export function spellProcedureProfileFor<P extends RegisteredSpellProcedure>(
   procedure: P,
-): Extract<
-  (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number],
-  { readonly procedure: P }
-> {
-  const found = registeredSpellProcedureProfileMap().get(procedure);
-  if (found === undefined) {
-    throw new Error(
-      `spellProcedureProfileFor: procedure ${procedure} is in RegisteredSpellProcedure but missing from registry map`,
-    );
-  }
-  return found as unknown as Extract<
-    (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number],
-    { readonly procedure: P }
-  >;
+): RegisteredSpellProcedureProfiles[P] {
+  return registeredSpellProcedureProfileRegistry()[procedure];
 }

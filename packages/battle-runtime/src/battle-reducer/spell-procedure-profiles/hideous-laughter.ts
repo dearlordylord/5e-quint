@@ -13,12 +13,11 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Advantage, Condition, Prone,
 //     Incapacitated, Magic Action, and Spell Invocation.
 
-import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
+import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   ActivationPhase,
   TargetSelection,
 } from "@dnd/surface/surface/types";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -30,7 +29,7 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
 import { resolveHideousLaughterSpellAct } from "../spells-resolve-save-gates.ts";
@@ -40,9 +39,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -121,7 +119,6 @@ export function supportedPreparedHideousLaughterProfile(
           ability: hideousLaughter.phase.ability,
           dc: hideousLaughter.phase.dc,
           targeting: hideousLaughter.targeting(slot.spellLevel),
-          rangeFeet: hideousLaughter.rangeFeet,
         },
       ];
     },
@@ -133,7 +130,6 @@ function hideousLaughterSpell(spell: HideousLaughterSpellInvocation["spell"]): {
   readonly targeting: (
     slotLevel: SpellSlotLevel,
   ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
-  readonly rangeFeet: HideousLaughterSpellInvocation["rangeFeet"];
 } | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -171,7 +167,6 @@ function hideousLaughterSpell(spell: HideousLaughterSpellInvocation["spell"]): {
       minTargets: 1,
       maxTargets: targetCountBySlot(slotLevel),
     }),
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }
 
@@ -293,7 +288,6 @@ function hideousLaughterCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: hideousLaughterInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -325,22 +319,6 @@ function hideousLaughterMetamagicInitialHoles(
   return holes;
 }
 
-function hideousLaughterInvocationRef(
-  invocation: HideousLaughterSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "hideousLaughter",
-  };
-}
-
-function hideousLaughterCastSummary(
-  invocation: HideousLaughterSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveHideousLaughter(
   input: HideousLaughterResolveInput,
@@ -356,14 +334,12 @@ function resolveHideousLaughter(
   });
 }
 
-const HideousLaughterInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "hideousLaughter" }>
->(
+const HideousLaughterInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("hideousLaughter"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
@@ -377,15 +353,12 @@ const HideousLaughterInvocationSchema = spellProcedureInvocationSchema<
 );
 export const hideousLaughterProfile = {
   procedure: "hideousLaughter",
-  invocationSchema: HideousLaughterInvocationSchema,
+  executionSchema: HideousLaughterInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitHideousLaughter,
   discoverCastAct: discoverHideousLaughterCastAct,
-  castSummary: hideousLaughterCastSummary,
-  invocationRef: hideousLaughterInvocationRef,
   resolve: resolveHideousLaughter,
 } satisfies SpellProcedureProfile<
   "hideousLaughter",

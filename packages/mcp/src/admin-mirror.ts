@@ -1,5 +1,5 @@
 import { snapshotBattle } from "@dnd/battle-runtime";
-import { Effect, Either, Match, Option, Schema } from "effect";
+import { Effect, Either, Schema } from "effect";
 
 import { characterListRows } from "./character-session-rows.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -127,9 +127,9 @@ function adminProjection(
   if (Either.isLeft(characters)) return Either.left(characters.left);
   return Either.right({
     battle:
-      root.sessionStore.battleState === null
+      root.sessionStore.battleSession === null
         ? null
-        : snapshotBattle(root.sessionStore.battleState),
+        : snapshotBattle(root.sessionStore.battleSession.state),
     characters: characters.right,
     session: adminMirrorSessionSummary(root.sessionStore.snapshot()),
   });
@@ -151,103 +151,14 @@ function publishAdminProjection(root: McpCompositionRoot): Effect.Effect<void> {
   if (publication.tag === "disabled") return Effect.void;
   const projection = adminProjection(root);
   if (Either.isLeft(projection)) return Effect.void;
-  const selectedContent = selectedContentForProjection(root, projection.right);
-  if (Either.isLeft(selectedContent)) return Effect.void;
   return publication.publisher.publish({
     mirrorSessionId: publication.mirrorSessionId,
     projection: projection.right,
     publisherInstanceId: publication.publisherInstanceId,
-    selectedContent: selectedContent.right,
     sequence: publication.nextSequence(),
     sourceProcessId: process.pid,
   });
 }
-
-function selectedContentForProjection(
-  root: McpCompositionRoot,
-  projection: AdminSessionProjection,
-): Either.Either<
-  AdminMirrorProjectionEnvelope["selectedContent"],
-  AdminMirrorSelectedContentIssue
-> {
-  const presentation =
-    projection.session.transientBattleFills?.presentation ?? null;
-  if (presentation === null) return Either.right(null);
-  return Match.value(presentation).pipe(
-    Match.when({ kind: "intrinsic" }, () => Either.right(null)),
-    Match.when({ kind: "attack" }, () => Either.right(null)),
-    Match.when({ kind: "spell" }, ({ invocation }) =>
-      Option.match(root.unitLibrary.getUnit(invocation.spellId), {
-        onNone: () =>
-          Either.left({
-            tag: "selectedSpellContentUnavailable",
-            spellId: invocation.spellId,
-          } as const),
-        onSome: Either.right,
-      }),
-    ),
-    Match.when({ kind: "druidWildShapeForm" }, ({ formStatBlockId }) =>
-      Option.match(root.statBlockCatalog.getStatBlock(formStatBlockId), {
-        onNone: () =>
-          Either.left({
-            tag: "selectedWildShapeFormContentUnavailable",
-            formStatBlockId,
-          } as const),
-        onSome: Either.right,
-      }),
-    ),
-    Match.when({ kind: "unit" }, ({ unitId }) => {
-      const catalogUnit = Option.getOrNull(root.unitLibrary.getUnit(unitId));
-      if (catalogUnit !== null) return Either.right(catalogUnit);
-      const battle = root.sessionStore.battleState;
-      if (battle === null) {
-        return Either.left({
-          tag: "selectedUnitContentUnavailable",
-          unitId,
-        } as const);
-      }
-      for (const combatant of battle.combatants.values()) {
-        if (combatant.origin.kind !== "character") continue;
-        const selected = combatant.origin.characterUnitRefs.find(
-          (candidate) => candidate.unit.id === unitId,
-        )?.unit;
-        if (selected !== undefined) return Either.right(selected);
-      }
-      return Either.left({
-        tag: "selectedUnitContentUnavailable",
-        unitId,
-      } as const);
-    }),
-    Match.exhaustive,
-  );
-}
-
-type AdminMirrorPendingPresentation = NonNullable<
-  AdminSessionProjection["session"]["transientBattleFills"]
->["presentation"];
-
-type AdminMirrorSelectedContentIssue =
-  | {
-      readonly tag: "selectedSpellContentUnavailable";
-      readonly spellId: Extract<
-        AdminMirrorPendingPresentation,
-        { readonly kind: "spell" }
-      >["invocation"]["spellId"];
-    }
-  | {
-      readonly tag: "selectedUnitContentUnavailable";
-      readonly unitId: Extract<
-        AdminMirrorPendingPresentation,
-        { readonly kind: "unit" }
-      >["unitId"];
-    }
-  | {
-      readonly tag: "selectedWildShapeFormContentUnavailable";
-      readonly formStatBlockId: Extract<
-        AdminMirrorPendingPresentation,
-        { readonly kind: "druidWildShapeForm" }
-      >["formStatBlockId"];
-    };
 
 export function publishAdminProjectionBestEffort(
   root: McpCompositionRoot,

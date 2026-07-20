@@ -1,4 +1,4 @@
-import type { BattleState } from "@dnd/battle-runtime";
+import type { BattleRuntimeSession } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import { Either } from "effect";
 
@@ -7,8 +7,9 @@ import { errorContent } from "./tool-content.ts";
 
 export function finalizeCharacterSessionsFromBattle(
   root: McpCompositionRoot,
-  state: BattleState,
+  battleSession: BattleRuntimeSession,
 ): ReturnType<typeof errorContent> | null {
+  const state = battleSession.state;
   for (const combatant of state.combatants.values()) {
     if (combatant.origin.kind !== "character") continue;
 
@@ -31,6 +32,7 @@ export function finalizeCharacterSessionsFromBattle(
     const settledSession = settleCharacterSheetFromBattle({
       combatant,
       state,
+      context: battleSession.context,
       sheet: session.sheet,
       unitLibrary: root.unitLibrary,
       statBlockCatalog: root.statBlockCatalog,

@@ -1,4 +1,4 @@
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 export const ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS = [
   "apply",
@@ -9,18 +9,18 @@ export type AttackDamageDieFloorChoiceSelection =
   (typeof ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS)[number];
 
 export type AttackDamageDieFloorChoiceFill = {
-  readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly selection: AttackDamageDieFloorChoiceSelection;
 };
 
-export type AttackDamageDieFloorChoiceUnitIds = readonly [
-  UnitRecord["id"],
-  ...UnitRecord["id"][],
+export type AttackDamageDieFloorChoiceProcedureRefs = readonly [
+  BattleProcedureExecutionRef,
+  ...BattleProcedureExecutionRef[],
 ];
 
-export function attackDamageDieFloorChoiceUnitIds(
-  unitIds: readonly UnitRecord["id"][],
-): AttackDamageDieFloorChoiceUnitIds | null {
-  const [first, ...rest] = unitIds;
+export function attackDamageDieFloorChoiceProcedureRefs(
+  procedureRefs: readonly BattleProcedureExecutionRef[],
+): AttackDamageDieFloorChoiceProcedureRefs | null {
+  const [first, ...rest] = procedureRefs;
   return first === undefined ? null : [first, ...rest];
 }

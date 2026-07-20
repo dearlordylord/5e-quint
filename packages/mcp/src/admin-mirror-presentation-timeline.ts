@@ -5,14 +5,6 @@ import type {
   AdminMirrorProjectionEnvelope,
   AdminSessionProjection,
 } from "./admin-mirror-contract.ts";
-import { battleActTimelineLabel } from "./battle-act-timeline-label.ts";
-import {
-  hasFillKind,
-  targetIdFromFills,
-} from "./admin-mirror-presentation-input.ts";
-
-export { battleActTimelineLabel } from "./battle-act-timeline-label.ts";
-
 type EventAction = {
   readonly detail: string;
   readonly summary: string;
@@ -158,7 +150,7 @@ function eventAction(
   const projection = envelope.projection;
   const currentPending = projection.session.transientBattleFills;
   if (currentPending !== null) {
-    return pendingAction(currentPending, projection, envelope.selectedContent);
+    return pendingAction(currentPending, projection);
   }
 
   const previousPending = previousProjection?.session.transientBattleFills;
@@ -167,12 +159,7 @@ function eventAction(
     previousPending !== undefined &&
     previousPending !== null
   ) {
-    return resolvedAction(
-      previousPending,
-      previousProjection,
-      projection,
-      previousEnvelope?.selectedContent ?? null,
-    );
+    return resolvedAction(previousPending, projection);
   }
 
   if (previousProjection?.battle === null && projection.battle !== null) {
@@ -206,82 +193,11 @@ function pendingAction(
     AdminSessionProjection["session"]["transientBattleFills"]
   >,
   projection: AdminSessionProjection,
-  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
 ): EventAction | null {
   const subject = pending.subject;
   const actor = displayNameForCombatant(projection, subject.actorId);
-  const targetId = targetIdFromFills(pending.fills);
-  const target =
-    targetId === null ? null : displayNameForCombatant(projection, targetId);
-
-  if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = battleActTimelineLabel(
-      pending.presentation,
-      selectedContent,
-    );
-    if (attackName === null) return null;
-    if (hasFillKind(pending.fills, "attackRoll")) {
-      return {
-        detail:
-          target === null
-            ? `${actor} rolled ${attackName}.`
-            : `${actor} rolled ${attackName} against ${target}.`,
-        summary: `${actor} rolls ${attackName}`,
-      };
-    }
-    return {
-      detail:
-        target === null
-          ? `${actor} chose ${attackName}.`
-          : `${actor} targeted ${target} with ${attackName}.`,
-      summary:
-        target === null
-          ? `${actor} attacks with ${attackName}`
-          : `${actor} targets ${target}`,
-    };
-  }
-
-  if (pending.presentation.kind === "spell") {
-    const spell = battleActTimelineLabel(pending.presentation, selectedContent);
-    if (spell === null) return null;
-    if (hasFillKind(pending.fills, "attackRoll")) {
-      return {
-        detail:
-          target === null
-            ? `${actor} rolled ${spell}.`
-            : `${actor} rolled ${spell} against ${target}.`,
-        summary: `${actor} rolls ${spell}`,
-      };
-    }
-    return {
-      detail:
-        target === null
-          ? `${actor} began casting ${spell}.`
-          : `${actor} targeted ${target} with ${spell}.`,
-      summary:
-        target === null
-          ? `${actor} casts ${spell}`
-          : `${actor} targets ${target}`,
-    };
-  }
-
-  if (
-    pending.presentation.kind === "unit" ||
-    pending.presentation.kind === "druidWildShapeForm"
-  ) {
-    const feature = battleActTimelineLabel(
-      pending.presentation,
-      selectedContent,
-    );
-    if (feature === null) return null;
-    return {
-      detail: `${actor} is resolving ${feature}.`,
-      summary: `${actor} uses ${feature}`,
-    };
-  }
-
   return {
-    detail: `Pending battle fills for ${subject.tag}.`,
+    detail: `${actor} is resolving ${subject.tag}.`,
     summary: "Battle action pending",
   };
 }
@@ -290,77 +206,12 @@ function resolvedAction(
   pending: NonNullable<
     AdminSessionProjection["session"]["transientBattleFills"]
   >,
-  previousProjection: AdminSessionProjection,
   projection: AdminSessionProjection,
-  selectedContent: AdminMirrorProjectionEnvelope["selectedContent"],
 ): EventAction | null {
   const subject = pending.subject;
   const actor = displayNameForCombatant(projection, subject.actorId);
-  const changes = hpChanges(previousProjection, projection);
-  const targetId =
-    targetIdFromFills(pending.fills) ?? changes[0]?.combatantId ?? null;
-  const target =
-    targetId === null ? null : displayNameForCombatant(projection, targetId);
-
-  if (subject.tag === "action" && subject.action === "attack") {
-    const attackName = battleActTimelineLabel(
-      pending.presentation,
-      selectedContent,
-    );
-    if (attackName === null) return null;
-    if (changes.length === 0 && hasFillKind(pending.fills, "attackRoll")) {
-      return {
-        detail:
-          target === null
-            ? `${actor}'s ${attackName} missed.`
-            : `${actor}'s ${attackName} missed ${target}.`,
-        summary: `${actor} misses with ${attackName}`,
-      };
-    }
-    return {
-      detail:
-        target === null
-          ? `${actor}'s ${attackName} resolved.`
-          : `${actor}'s ${attackName} hit ${target}.`,
-      summary:
-        target === null
-          ? `${actor} resolves ${attackName}`
-          : `${actor} hits ${target} with ${attackName}`,
-    };
-  }
-
-  if (pending.presentation.kind === "spell") {
-    const spell = battleActTimelineLabel(pending.presentation, selectedContent);
-    if (spell === null) return null;
-    return {
-      detail:
-        target === null
-          ? `${actor} resolved ${spell}.`
-          : `${actor} resolved ${spell} against ${target}.`,
-      summary:
-        target === null
-          ? `${actor} casts ${spell}`
-          : `${actor} casts ${spell} on ${target}`,
-    };
-  }
-
-  if (
-    pending.presentation.kind === "unit" ||
-    pending.presentation.kind === "druidWildShapeForm"
-  ) {
-    const feature = battleActTimelineLabel(
-      pending.presentation,
-      selectedContent,
-    );
-    if (feature === null) return null;
-    return {
-      detail: `${actor} resolved ${feature}.`,
-      summary: `${actor} uses ${feature}`,
-    };
-  }
-
   return {
-    detail: `Resolved battle fills for ${subject.tag}.`,
+    detail: `${actor} resolved ${subject.tag}.`,
     summary: "Battle action resolved",
   };
 }

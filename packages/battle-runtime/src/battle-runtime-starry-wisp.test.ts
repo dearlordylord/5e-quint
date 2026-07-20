@@ -1,5 +1,5 @@
 import {
-  startBattleRight,
+  startBattleSessionRight,
   testBattleCreatureStateWithConditions,
   requireResolved,
   requireHole,
@@ -33,12 +33,12 @@ import {
   objectInvisibleBenefitDenied,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
-import type { BattleActDiscoverySubject as BattleSubject } from "./battle-runtime-test-support.ts";
+import type { BattleSubject } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Starry Wisp", () => {
   test("Starry Wisp applies a shared Dim Light emitter to a hit creature until the caster's next turn ends", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-starry-wisp-creature"),
       combatants: [
         characterSeed({
@@ -55,7 +55,7 @@ describe("battle runtime: Starry Wisp", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("starry_wisp");
+    const subject = findAct(state, magicSubject("starry_wisp")).subject;
     const act = findAct(state, subject);
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
@@ -68,7 +68,7 @@ describe("battle runtime: Starry Wisp", () => {
     const target = findHole(act.initialHoles, "targetChoice");
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -76,7 +76,7 @@ describe("battle runtime: Starry Wisp", () => {
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -86,11 +86,11 @@ describe("battle runtime: Starry Wisp", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Starry Wisp damage (2d8-radiant)",
+      label: "Spell damage (2d8-radiant)",
     });
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFill(target, skeletonId),
@@ -152,7 +152,7 @@ describe("battle runtime: Starry Wisp", () => {
 
   test("Starry Wisp hit denies Invisible benefit without removing the condition until the caster's next turn ends", () => {
     const allyId = combatantId("starry-wisp-ally");
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-starry-wisp-invisible-denial"),
       combatants: [
         characterSeed({
@@ -176,13 +176,13 @@ describe("battle runtime: Starry Wisp", () => {
         }),
       ],
     });
-    const skeleton = state.combatants.get(skeletonId);
+    const skeleton = state.state.combatants.get(skeletonId);
     if (skeleton === undefined) {
       throw new Error("Expected Starry Wisp target combatant.");
     }
     const invisibleState = {
-      ...state,
-      combatants: new Map(state.combatants).set(
+      ...state.state,
+      combatants: new Map(state.state.combatants).set(
         skeletonId,
         testBattleCreatureStateWithConditions(
           skeleton,
@@ -190,7 +190,11 @@ describe("battle runtime: Starry Wisp", () => {
         ),
       ),
     };
-    const subject = magicSubject("starry_wisp");
+    const invisibleSession = { state: invisibleState, context: state.context };
+    const subject = findAct(
+      invisibleSession,
+      magicSubject("starry_wisp"),
+    ).subject;
     const target = findHole(
       findAct(invisibleState, subject).initialHoles,
       "targetChoice",
@@ -296,7 +300,7 @@ describe("battle runtime: Starry Wisp", () => {
   });
 
   test("Starry Wisp object targeting requires a matching caller-supplied object fact", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-starry-wisp-object-fact"),
       combatants: [
         characterSeed({
@@ -313,19 +317,18 @@ describe("battle runtime: Starry Wisp", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("starry_wisp");
+    const subject = findAct(state, magicSubject("starry_wisp")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         objectTargetFill({
           hole: objectTarget,
-          spellId: "starry_wisp",
           rangeFeet: movementFeet(30),
         }),
       ],
@@ -340,7 +343,7 @@ describe("battle runtime: Starry Wisp", () => {
   });
 
   test("Starry Wisp object target miss spends the Magic action without object damage", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-starry-wisp-object-miss"),
       combatants: [
         characterSeed({
@@ -357,19 +360,18 @@ describe("battle runtime: Starry Wisp", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("starry_wisp");
+    const subject = findAct(state, magicSubject("starry_wisp")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
     );
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
-      spellId: "starry_wisp",
       armorClass: armorClass(13),
     });
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFillForObject],
       }),
@@ -377,7 +379,7 @@ describe("battle runtime: Starry Wisp", () => {
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFillForObject,
@@ -406,7 +408,7 @@ describe("battle runtime: Starry Wisp", () => {
   });
 
   test("Starry Wisp object attack rolls enforce attacker-wide disadvantage", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-starry-wisp-object-poisoned"),
       combatants: [
         characterSeed({
@@ -424,19 +426,18 @@ describe("battle runtime: Starry Wisp", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("starry_wisp");
+    const subject = findAct(state, magicSubject("starry_wisp")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
     );
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
-      spellId: "starry_wisp",
       armorClass: armorClass(13),
     });
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFillForObject],
       }),
@@ -447,7 +448,7 @@ describe("battle runtime: Starry Wisp", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFillForObject,
@@ -462,7 +463,7 @@ describe("battle runtime: Starry Wisp", () => {
     });
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFillForObject,
@@ -488,7 +489,7 @@ describe("battle runtime: Starry Wisp", () => {
   });
 
   test("Starry Wisp applies object hit point and damage-threshold disposition on a hit", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-starry-wisp-object-hit"),
       combatants: [
         characterSeed({
@@ -505,7 +506,7 @@ describe("battle runtime: Starry Wisp", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("starry_wisp");
+    const subject = findAct(state, magicSubject("starry_wisp")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
@@ -514,12 +515,11 @@ describe("battle runtime: Starry Wisp", () => {
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
       objectId,
-      spellId: "starry_wisp",
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFillForObject],
       }),
@@ -527,7 +527,7 @@ describe("battle runtime: Starry Wisp", () => {
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFillForObject,
@@ -538,7 +538,7 @@ describe("battle runtime: Starry Wisp", () => {
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFillForObject,
@@ -585,7 +585,6 @@ describe("battle runtime: Starry Wisp", () => {
     const thresholdTargetFill = objectTargetFill({
       hole: objectTarget,
       objectId: thresholdObjectId,
-      spellId: "starry_wisp",
       damageDisposition: {
         kind: "hitPointsWithDamageThreshold",
         hitPoints: Hp(10),
@@ -594,7 +593,7 @@ describe("battle runtime: Starry Wisp", () => {
     });
     const thresholdDamage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           thresholdTargetFill,
@@ -604,7 +603,7 @@ describe("battle runtime: Starry Wisp", () => {
       "rolledDice",
     );
     const thresholdResult = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         thresholdTargetFill,
@@ -630,7 +629,7 @@ describe("battle runtime: Starry Wisp", () => {
   });
 
   test("Starry Wisp object Invisible-benefit denial expires with its object Dim Light emitter", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-starry-wisp-object-invisible-denial"),
       combatants: [
         characterSeed({
@@ -647,7 +646,7 @@ describe("battle runtime: Starry Wisp", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("starry_wisp");
+    const subject = findAct(state, magicSubject("starry_wisp")).subject;
     const objectId = battleObjectId("invisible-training-crystal");
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
@@ -656,16 +655,19 @@ describe("battle runtime: Starry Wisp", () => {
     const objectFill = objectTargetFill({
       hole: objectTarget,
       objectId,
-      spellId: "starry_wisp",
       damageDisposition: { kind: "tableResolved" },
     });
     const attackRoll = requireHole(
-      resolveBattleSubject({ state, subject, fills: [objectFill] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [objectFill],
+      }),
       "attackRoll",
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           objectFill,
@@ -676,7 +678,7 @@ describe("battle runtime: Starry Wisp", () => {
     );
     const hit = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           objectFill,

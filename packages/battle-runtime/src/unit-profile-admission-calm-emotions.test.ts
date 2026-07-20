@@ -30,21 +30,19 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
 
 describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
   test("calm_emotions is admitted as Humanoid Sphere save-gated condition immunity", () => {
     const spell = spellRecord(calmEmotionsUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: calmEmotionsUnitId,
       slotLevel: 2,
     });
-
     expect({
       ...act.subject,
       invocation: battleActSpellPresentation(act)?.invocation,
@@ -52,7 +50,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(
           calmEmotionsUnitId,
@@ -65,12 +63,12 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Calm Emotions point-origin Sphere Saving Throw outcomes",
+        label: "Spell point-origin Sphere Saving Throw outcomes",
         ability: "cha",
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
+    expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedConditionImmunity",
         spell,
@@ -81,14 +79,12 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         activeEffects: [
           expect.objectContaining({
             kind: "conditionImmunity",
-            sourceProcedureRef: expect.any(String),
             sourceCombatantId: spellCasterId,
             condition: "charmed",
             expiresAt: { kind: "concentration", combatantId: spellCasterId },
           }),
           expect.objectContaining({
             kind: "conditionImmunity",
-            sourceProcedureRef: expect.any(String),
             sourceCombatantId: spellCasterId,
             condition: "frightened",
             expiresAt: { kind: "concentration", combatantId: spellCasterId },
@@ -103,27 +99,27 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     const spell = calmEmotionsWithExtraFailedSaveEffect(
       spellRecord(calmEmotionsUnitId),
     );
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
 
-    expect(maybeSpellAct({ state, spellId: spell.id })).toBeUndefined();
+    expect(maybeSpellAct({ session, spellId: spell.id })).toBeUndefined();
   });
 
   test("failed Humanoid saves gain Charmed and Frightened immunity until Concentration ends", () => {
     const spell = spellRecord(calmEmotionsUnitId);
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseSession.state, spellTargetId);
     if (target.positiveHpUnconscious !== null) {
       throw new Error("Expected Calm Emotions target to be conscious.");
     }
-    const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(spellTargetId, {
+    const state = {
+      ...baseSession.state,
+      combatants: new Map(baseSession.state.combatants).set(spellTargetId, {
         ...target,
         conditions: applyCondition(
           applyCondition(target.conditions, "charmed"),
@@ -131,7 +127,11 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         ),
       }),
     };
-    const act = spellAct({ state, spellId: calmEmotionsUnitId });
+    const act = spellAct({
+      session: { ...baseSession, state },
+      spellId: calmEmotionsUnitId,
+    });
+    const procedureRef = act.subject.procedureRef;
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     const resolved = resolveBattleSubject({
@@ -167,7 +167,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       [
         expect.objectContaining({
           kind: "conditionImmunity",
-          sourceProcedureRef: expect.any(String),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "charmed",
           conditionHadNonSpellSource: true,
@@ -175,7 +175,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         }),
         expect.objectContaining({
           kind: "conditionImmunity",
-          sourceProcedureRef: expect.any(String),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           condition: "frightened",
           conditionHadNonSpellSource: true,
@@ -207,7 +207,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
   test("non-Humanoids are rejected by the condition-immunity branch", () => {
     const spell = spellRecord(calmEmotionsUnitId);
     const beastId = combatantId("unit-profile-calm-emotions-beast");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       statBlockTargets: [
@@ -218,11 +218,11 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         },
       ],
     });
-    const act = spellAct({ state, spellId: calmEmotionsUnitId });
+    const act = spellAct({ session, spellId: calmEmotionsUnitId });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     const rejected = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [

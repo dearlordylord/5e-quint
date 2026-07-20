@@ -1,4 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
+import {
+  DamageTypeSchema,
+  DcSourceSchema,
+  DiceExprSchema,
+} from "@dnd/surface/surface/schema";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
@@ -14,8 +19,7 @@
 //     Spell Invocation.
 
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../../battle-interrupt-triggers.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
   supportedCantripSaveGateDamageProfile,
   supportedPreparedSaveGateDamageProfile,
@@ -28,18 +32,18 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
-  BattleRuntimeObjectSchema,
   AbilitySchema,
   ClassCantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
-  SpellFailedSaveConditionEffectSchema,
   PreparedSpellAccessSchema,
   SpellFailedSavePostDamageRiderSchema,
   SpellPostSaveAreaEffectSchema,
   SpellSavingThrowRollModeRuleSchema,
   SpellSlotInvocationResourceSchema,
+  SpellDamageSchema,
 } from "../codec-building-blocks.ts";
+import { SpellFailedSaveConditionEffectExecutionSchema } from "./save-gated-condition.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -68,7 +72,8 @@ import {
 } from "../spells-holes-fills.ts";
 import {
   spellAdmissionCharacterLevel,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 type SaveGatedDamageSpellInvocation = Extract<
@@ -230,7 +235,6 @@ function saveGatedDamageCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: saveGatedDamageInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -288,36 +292,10 @@ function readiedSaveGatedDamageActs(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: saveGatedDamageInvocationRef(invocation),
       mode: { tag: "ready", trigger },
     },
     initialHoles: [],
   }));
-}
-
-function saveGatedDamageInvocationRef(
-  invocation: SaveGatedDamageSpellInvocation,
-): SpellInvocationRef {
-  return invocation.resource.tag === "spellSlot"
-    ? {
-        tag: "spellSlot",
-        spellId: spellId(invocation.spell.id),
-        slotLevel: invocation.resource.slotLevel,
-        procedure: "saveGatedDamage",
-      }
-    : {
-        tag: "cantrip",
-        spellId: spellId(invocation.spell.id),
-        procedure: "saveGatedDamage",
-      };
-}
-
-function saveGatedDamageCastSummary(
-  invocation: SaveGatedDamageSpellInvocation,
-): string {
-  return invocation.resource.tag === "spellSlot"
-    ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
-    : `Cast ${invocation.spell.name} as a cantrip.`;
 }
 
 function resolveSaveGatedDamage(
@@ -344,18 +322,16 @@ const ReactionSpellInvocationCastingTimeSchema = Schema.Struct({
   kind: Schema.Literal("reaction"),
 });
 
-const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "saveGatedDamage" }>
->(
+const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedDamage"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       castingTime: ActionSpellInvocationCastingTimeSchema,
-      ability: Schema.String,
-      dc: BattleRuntimeObjectSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
       targeting: Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("singleCombatant"),
@@ -392,16 +368,17 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
         }),
       ),
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
-        damageType: Schema.String,
+        expr: DiceExprSchema,
+        damageType: DamageTypeSchema,
       }),
+      additionalDamageComponents: Schema.Array(SpellDamageSchema),
       successDamage: Schema.Literal("none", "half"),
       rangeFeet: MovementFeet,
       failedSavePostDamageRiders: Schema.Array(
         SpellFailedSavePostDamageRiderSchema,
       ),
       failedSaveConditionEffects: Schema.Array(
-        SpellFailedSaveConditionEffectSchema,
+        SpellFailedSaveConditionEffectExecutionSchema,
       ),
       failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
       saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
@@ -413,13 +390,13 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedDamage"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       castingTime: Schema.Union(
         ActionSpellInvocationCastingTimeSchema,
         ReactionSpellInvocationCastingTimeSchema,
       ),
-      ability: Schema.String,
-      dc: BattleRuntimeObjectSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
       targeting: Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("singleCombatant"),
@@ -456,16 +433,17 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
         }),
       ),
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
-        damageType: Schema.String,
+        expr: DiceExprSchema,
+        damageType: DamageTypeSchema,
       }),
+      additionalDamageComponents: Schema.Array(SpellDamageSchema),
       successDamage: Schema.Literal("none", "half"),
       rangeFeet: MovementFeet,
       failedSavePostDamageRiders: Schema.Array(
         SpellFailedSavePostDamageRiderSchema,
       ),
       failedSaveConditionEffects: Schema.Array(
-        SpellFailedSaveConditionEffectSchema,
+        SpellFailedSaveConditionEffectExecutionSchema,
       ),
       failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
       saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
@@ -477,15 +455,12 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
 );
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
-  invocationSchema: SaveGatedDamageInvocationSchema,
+  executionSchema: SaveGatedDamageInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
-  knownWillingTargetSpellIds: [],
   admit: admitSaveGatedDamage,
   discoverCastAct: discoverSaveGatedDamageCastAct,
-  castSummary: saveGatedDamageCastSummary,
-  invocationRef: saveGatedDamageInvocationRef,
   resolve: resolveSaveGatedDamage,
 } satisfies SpellProcedureProfile<
   "saveGatedDamage",

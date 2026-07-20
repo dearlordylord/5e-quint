@@ -1,15 +1,18 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { characterUnitProcedureBindings } from "./character-execution.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.potent-cantrip
 import { describe, expect, test } from "vitest";
+import { classLevel } from "@dnd/shared/types";
 
 import {
+  characterBattleFeatureInitForTest,
   attackRollFill,
+  battleProcedureExecutionRefForSpellHoleForTest,
   battleId,
   battleObjectId,
   characterSeed,
   damageRollFill,
-  discoverBattleActs,
+  discoverBattleActCandidates,
+  findAct,
   findHole,
   Hp,
   magicSubject,
@@ -22,7 +25,7 @@ import {
   skeletonCreatureInit,
   skeletonId,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   supportedBattleUnitRef,
   targetFill,
   unitLibrary,
@@ -36,21 +39,26 @@ const potentCantripUnitRef = supportedBattleUnitRef(potentCantripUnit);
 
 describe("Potent Cantrip runtime", () => {
   test("projects the admitted Potent Cantrip profile into character battle state", () => {
-    const state = potentCantripBattle({ cantrips: ["ray_of_frost"] });
+    const state = potentCantripBattle({ cantrips: ["ray_of_frost"] }).state;
     const wizard = state.combatants.get(wizardId);
 
     expect(wizard?.origin.kind).toBe("character");
     if (wizard?.origin.kind !== "character") {
       throw new Error("Expected Wizard character origin.");
     }
-    expect([...wizard.origin.potentCantripProfiles.keys()]).toEqual([
-      "wizard_potent_cantrip",
-    ]);
+    expect(
+      characterUnitProcedureBindings(wizard.origin.execution).filter(
+        ({ procedure }) =>
+          procedure.kind === "unitFeature" &&
+          procedure.execution.kind === "potentCantrip",
+      ),
+    ).toHaveLength(1);
   });
 
   test("applies half cantrip damage on a missed spell attack without hit riders", () => {
-    const state = potentCantripBattle({ cantrips: ["ray_of_frost"] });
-    const subject = magicSubject("ray_of_frost");
+    const session = potentCantripBattle({ cantrips: ["ray_of_frost"] });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("ray_of_frost")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -91,8 +99,9 @@ describe("Potent Cantrip runtime", () => {
   });
 
   test("does not apply attack cantrip non-damage effects on the miss branch", () => {
-    const state = potentCantripBattle({ cantrips: ["shocking_grasp"] });
-    const subject = magicSubject("shocking_grasp");
+    const session = potentCantripBattle({ cantrips: ["shocking_grasp"] });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("shocking_grasp")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -131,8 +140,9 @@ describe("Potent Cantrip runtime", () => {
   });
 
   test("does not apply attack cantrip light-emission riders on the miss branch", () => {
-    const state = potentCantripBattle({ cantrips: ["starry_wisp"] });
-    const subject = magicSubject("starry_wisp");
+    const session = potentCantripBattle({ cantrips: ["starry_wisp"] });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("starry_wisp")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -172,8 +182,9 @@ describe("Potent Cantrip runtime", () => {
   });
 
   test("applies half cantrip damage on successful cantrip saves", () => {
-    const state = potentCantripBattle({ cantrips: ["acid_splash"] });
-    const subject = magicSubject("acid_splash");
+    const session = potentCantripBattle({ cantrips: ["acid_splash"] });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("acid_splash")).subject;
     const saves = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -202,8 +213,9 @@ describe("Potent Cantrip runtime", () => {
   });
 
   test("does not apply failed-save cantrip effects on a successful save", () => {
-    const state = potentCantripBattle({ cantrips: ["vicious_mockery"] });
-    const subject = magicSubject("vicious_mockery");
+    const session = potentCantripBattle({ cantrips: ["vicious_mockery"] });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("vicious_mockery")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -244,22 +256,27 @@ describe("Potent Cantrip runtime", () => {
   });
 
   test("does not open Potent Cantrip half-damage for object targets", () => {
-    const state = potentCantripBattle({ cantrips: ["fire_bolt"] });
-    const subject = magicSubject("fire_bolt");
-    const act = discoverBattleActs(state).find(
+    const session = potentCantripBattle({ cantrips: ["fire_bolt"] });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("fire_bolt")).subject;
+    if (subject.tag !== "actionSpell") {
+      throw new Error("Expected Fire Bolt action spell subject.");
+    }
+    const act = discoverBattleActCandidates(state).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
-        battleActSpellPresentation(candidate)?.invocation.spellId ===
-          "fire_bolt",
+        candidate.subject.procedureRef === subject.procedureRef,
     );
     if (act === undefined) {
       throw new Error("Expected Fire Bolt action spell act.");
     }
     const objectId = battleObjectId("potent-cantrip-object-target");
+    const objectTargetHole = findHole(act.initialHoles, "objectTargetChoice");
+    const sourceProcedureRef =
+      battleProcedureExecutionRefForSpellHoleForTest(objectTargetHole);
     const objectTarget = objectTargetFill({
-      hole: findHole(act.initialHoles, "objectTargetChoice"),
+      hole: objectTargetHole,
       objectId,
-      spellId: "fire_bolt",
       rangeFeet: movementFeet(120),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
       spatialFacts: [
@@ -267,9 +284,7 @@ describe("Potent Cantrip runtime", () => {
           kind: "spellObjectTarget",
           casterId: wizardId,
           objectId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("fire_bolt"),
-          ),
+          sourceProcedureRef,
           rangeFeet: movementFeet(120),
           armorClass: armorClass(13),
           damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
@@ -278,9 +293,7 @@ describe("Potent Cantrip runtime", () => {
           kind: "spellObjectIgnition",
           casterId: wizardId,
           objectId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("fire_bolt"),
-          ),
+          sourceProcedureRef,
           disposition: { kind: "flammableUnattended" },
         },
       ],
@@ -339,7 +352,7 @@ describe("Potent Cantrip runtime", () => {
 function potentCantripBattle(input: {
   readonly cantrips: readonly Parameters<typeof spellRecord>[0][];
 }) {
-  return startBattleRight({
+  return startBattleSessionRight({
     battleId: battleId("potent-cantrip-runtime"),
     combatants: [
       characterSeed({
@@ -349,7 +362,11 @@ function potentCantripBattle(input: {
         attack: null,
         classLevels: [{ className: "wizard", level: 3 }],
         characterUnitRefs: [potentCantripUnitRef],
-        unitFeatures: [{ unit: potentCantripUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(potentCantripUnit, [
+            { className: "wizard", level: classLevel(3) },
+          ]),
+        ],
         spellcasting: wizardSpellcasting({
           cantrips: input.cantrips.map(spellRecord),
           preparedSpells: [],

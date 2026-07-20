@@ -83,7 +83,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const spell = spellRecord(holdPersonUnitId);
     const beastId = combatantId("unit-profile-hold-person-beast");
     const secondHumanoidId = combatantId("unit-profile-hold-person-humanoid-2");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       extraTargetIds: [secondHumanoidId],
@@ -96,7 +96,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       ],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: holdPersonUnitId,
       slotLevel: 3,
     });
@@ -108,7 +108,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef("hold_person", 3, "saveGatedCondition"),
       ),
@@ -125,7 +125,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       expect.arrayContaining([spellTargetId, secondHumanoidId]),
     );
     expect(targetHole.choices).not.toContain(beastId);
-    expect(spellHoleInvocation(state, [targetHole])).toEqual(
+    expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -159,7 +159,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -172,7 +172,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       }),
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -383,12 +383,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("hold_person self-target failed save spends resources then immediately breaks Concentration", () => {
     const spell = spellRecord(holdPersonUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: holdPersonUnitId,
       slotLevel: 2,
     });
@@ -402,14 +402,14 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill],
       }),
       "savingThrowOutcome",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -440,10 +440,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("hold_person failed save breaks target Concentration while keeping Paralyzed", () => {
     const spell = spellRecord(holdPersonUnitId);
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const baseState = baseSession.state;
     const target = requireCombatant(baseState, spellTargetId);
     const targetConcentration = {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -473,8 +474,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         ],
       }),
     };
+    const session = { state, context: baseSession.context };
     const act = spellAct({
-      state,
+      session,
       spellId: holdPersonUnitId,
       slotLevel: 2,
     });
@@ -487,14 +489,14 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill],
       }),
       "savingThrowOutcome",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -537,12 +539,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("hold_person all-success initial save spends resources without stale Concentration", () => {
     const spell = spellRecord(holdPersonUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: holdPersonUnitId,
       slotLevel: 2,
     });
@@ -555,14 +557,14 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill],
       }),
       "savingThrowOutcome",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -595,7 +597,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const spell = spellRecord(holdMonsterUnitId);
     const beastId = combatantId("unit-profile-hold-monster-beast");
     const undeadId = combatantId("unit-profile-hold-monster-undead");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 5, count: 1 }],
       statBlockTargets: [
@@ -612,7 +614,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       ],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: holdMonsterUnitId,
       slotLevel: 5,
     });
@@ -624,7 +626,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(holdMonsterUnitId, 5, "saveGatedCondition"),
       ),
@@ -640,7 +642,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(targetHole.choices).toEqual(
       expect.arrayContaining([spellTargetId, beastId, undeadId]),
     );
-    expect(spellHoleInvocation(state, [targetHole])).toEqual(
+    expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -666,12 +668,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       }),
     );
 
-    const sixthLevelState = spellBattle({
+    const sixthLevelSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 6, count: 1 }],
     });
     const sixthLevelAct = spellAct({
-      state: sixthLevelState,
+      session: sixthLevelSession,
       spellId: holdMonsterUnitId,
       slotLevel: 6,
     });
@@ -682,12 +684,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("contagion is admitted as touch save damage with counted Poisoned lifecycle", () => {
     const spell = spellRecord(contagionUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 5, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: contagionUnitId,
       slotLevel: 5,
     });
@@ -699,7 +701,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(contagionUnitId, 5, "saveGatedDamage"),
       ),
@@ -715,7 +717,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       "wis",
       "cha",
     ]);
-    expect(spellHoleInvocation(state, [abilityHole])).toEqual(
+    expect(spellHoleInvocation(session, [abilityHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         spell,
@@ -764,13 +766,13 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     );
     const abilityFill = abilityChoiceFill(abilityHole, "wis");
     const needsSave = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill, abilityFill],
     });
     const initialSave = requireResultHole(needsSave, "savingThrowOutcome");
     const needsDamage = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -782,7 +784,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
     const damage = requireResultHole(needsDamage, "rolledDice");
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -841,12 +843,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("contagion locks in after three failed repeated saves", () => {
     const spell = spellRecord(contagionUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 5, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: contagionUnitId,
       slotLevel: 5,
     });
@@ -861,14 +863,14 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const abilityFill = abilityChoiceFill(abilityHole, "con");
     const initialSave = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, abilityFill],
       }),
       "savingThrowOutcome",
     );
     const needsDamage = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -880,7 +882,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
     const damage = requireResultHole(needsDamage, "rolledDice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -925,12 +927,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("blindness_deafness is admitted with condition choice and end-turn save lifecycle", () => {
     const spell = spellRecord(blindnessDeafnessUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: blindnessDeafnessUnitId,
       slotLevel: 2,
     });
@@ -942,7 +944,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef("blindness_deafness", 2, "saveGatedCondition"),
       ),
@@ -961,7 +963,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         choices: ["blinded", "deafened"],
       }),
     );
-    expect(spellHoleInvocation(state, [targetHole])).toEqual(
+    expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -1002,14 +1004,14 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     ).toBe(true);
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, conditionFill],
       }),
       "savingThrowOutcome",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -1083,12 +1085,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("color_spray is admitted as a self-origin Cone save-gated slot condition spell", () => {
     const spell = spellRecord(colorSprayUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: colorSprayUnitId,
       slotLevel: 1,
     });
@@ -1109,12 +1111,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Color Spray self-origin Cone Saving Throw outcomes",
+        label: "Spell self-origin Cone Saving Throw outcomes",
         ability: "con",
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
+    expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -1141,12 +1143,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
   });
   test("entangle is admitted as a point-origin Cube save-gated slot condition spell", () => {
     const spell = spellRecord(entangleUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: entangleUnitId,
       slotLevel: 1,
     });
@@ -1163,12 +1165,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Entangle point-origin Cube Saving Throw outcomes",
+        label: "Spell point-origin Cube Saving Throw outcomes",
         ability: "str",
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
+    expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
         spell,
@@ -1201,12 +1203,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
   });
   test("sleep is admitted as point-origin Sphere target admission", () => {
     const spell = spellRecord(sleepUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: sleepUnitId,
       slotLevel: 1,
     });
@@ -1223,12 +1225,12 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Sleep point-origin Sphere Saving Throw outcomes",
+        label: "Spell point-origin Sphere Saving Throw outcomes",
         ability: "wis",
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
+    expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "sleepTargetAdmission",
         spell,
@@ -1271,10 +1273,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("lesser_restoration is admitted as Bonus Action direct condition removal", () => {
     const spell = spellRecord(lesserRestorationUnitId);
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const baseState = baseSession.state;
     const target = requireCombatant(baseState, spellTargetId);
     const paralyzedEffect = {
       kind: "spellConditionEndTurnSave" as const,
@@ -1333,7 +1336,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         affectedTarget,
       ),
     };
-    const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
+    const session = { ...baseSession, state };
+    const act = bonusSpellAct({
+      session,
+      spellId: lesserRestorationUnitId,
+    });
 
     expect({
       ...act.subject,
@@ -1342,7 +1349,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(
           lesserRestorationUnitId,
@@ -1360,7 +1367,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       "paralyzed",
       "poisoned",
     ]);
-    expect(spellHoleInvocation(state, [conditionHole])).toEqual(
+    expect(spellHoleInvocation(session, [conditionHole])).toEqual(
       expect.objectContaining({
         procedure: "directConditionRemoval",
         spell,
@@ -1410,10 +1417,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
   test("lesser_restoration clears source Concentration when removing the last concentration condition effect", () => {
     const spell = spellRecord(lesserRestorationUnitId);
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const baseState = baseSession.state;
     const caster = requireCombatant(baseState, spellCasterId);
     const target = requireCombatant(baseState, spellTargetId);
     const paralyzedEffect = {
@@ -1456,7 +1464,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         })
         .set(spellTargetId, affectedTarget),
     };
-    const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
+    const session = { state, context: baseSession.context };
+    const act = bonusSpellAct({
+      session,
+      spellId: lesserRestorationUnitId,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const conditionHole = requireHole(act.initialHoles, "conditionChoice");
 
@@ -1494,7 +1506,7 @@ function castHeightenedHoldPerson(input: {
   readonly failedTargetIds: readonly CombatantId[];
 }): BattleState {
   const spell = spellRecord(holdPersonUnitId);
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
     extraTargetIds: input.targetIds.filter(
@@ -1519,7 +1531,8 @@ function castHeightenedHoldPerson(input: {
       ],
     },
   });
-  const act = heightenedSaveGatedConditionAct(state, holdPersonUnitId);
+  const state = session.state;
+  const act = heightenedSaveGatedConditionAct(session, holdPersonUnitId);
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
   const heightenedHole = requireHole(act.initialHoles, "targetChoice");
   const targetFill = spellTargetListFill(
@@ -1562,10 +1575,10 @@ function castHeightenedHoldPerson(input: {
 }
 
 function heightenedSaveGatedConditionAct(
-  state: BattleState,
+  session: ReturnType<typeof spellBattle>,
   spellId: string,
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId === spellId &&

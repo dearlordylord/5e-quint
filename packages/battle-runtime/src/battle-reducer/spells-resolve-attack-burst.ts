@@ -369,7 +369,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     ordinaryHit,
   });
   if (
-    input.fillSet.attackRoll.missToHitReplacementUnitId !== undefined &&
+    input.fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
     missToHitReplacement === null
   ) {
     return invalidResult(

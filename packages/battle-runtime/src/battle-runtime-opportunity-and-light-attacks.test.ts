@@ -1,6 +1,8 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
+  characterBattleFeatureInitForTest,
   startBattleRight,
+  startBattleSessionRight,
   requireResolved,
   fighterVsGoblinBattle,
   fighterAttackSubject,
@@ -43,10 +45,11 @@ import {
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import type {
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { classLevel } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import { battleFillEquals } from "./battle-reducer.ts";
 import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
@@ -73,7 +76,7 @@ function statBlockAttackProcedureRef(
 
 describe("battle runtime: Light property and Opportunity Attacks", () => {
   test("Light Property Bonus Action Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-off-hand"),
       combatants: [
         characterSeed({
@@ -95,6 +98,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject: BattleSubject = characterBonusAttackSubjectForTest(
       state,
       fighterId,
@@ -102,7 +106,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     );
 
     expect(
-      discoverBattleActs(state).map((act) => act.subject),
+      discoverBattleActs(session).map((act) => act.subject),
     ).not.toContainEqual(subject);
     expect(resolveBattleSubject({ state, subject, fills: [] })).toMatchObject({
       tag: "invalid",
@@ -354,7 +358,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           initiative: 10,
           classLevels: [{ className: "rogue", level: 5 }],
           attack: null,
-          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+              { className: "rogue", level: classLevel(5) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
         }),
       ],
@@ -583,7 +591,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
   });
 
   test("Light Property Bonus Action Attack distinguishes held weapon identity from weapon kind", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-off-hand-two-daggers"),
       combatants: [
         characterSeed({
@@ -605,6 +613,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const attackSubject: BattleSubject = fighterAttackSubject(state, "Dagger");
     const target = requireHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
@@ -630,7 +639,9 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     ).state;
 
     expect(
-      discoverBattleActs(afterMainDagger).map((act) => act.subject),
+      discoverBattleActs({ ...session, state: afterMainDagger }).map(
+        (act) => act.subject,
+      ),
     ).toContainEqual(
       characterBonusAttackSubjectForTest(
         afterMainDagger,
@@ -1353,9 +1364,16 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           initiative: 20,
           classLevels: [{ className: "bard", level: 3 }],
           resources: [cuttingWordsResource({ unit: cuttingWordsDamageOnly })],
-          unitFeatures: [cuttingWordsDamageOnly].map((unit) => ({ unit })),
+          unitFeatures: [
+            characterBattleFeatureInitForTest(cuttingWordsDamageOnly, [
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
-            reactionModifierUnitRef(cuttingWordsDamageOnly.id),
+            {
+              unit: cuttingWordsDamageOnly,
+              supportProfiles: ["reactionRollOrDamageReduction"],
+            },
           ],
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -1483,7 +1501,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         characterSeed({
           initiative: 20,
           classLevels: [{ className: "rogue", level: 5 }],
-          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+              { className: "rogue", level: classLevel(5) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -1603,7 +1625,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           initiative: 20,
           currentHp: 5,
           classLevels: [{ className: "rogue", level: 5 }],
-          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+              { className: "rogue", level: classLevel(5) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
         }),
         statBlockCreatureInit({ initiative: 10 }),

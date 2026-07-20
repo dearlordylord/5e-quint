@@ -7,12 +7,14 @@
 // and gates initial rise, target movement, caster altitude control, and cleanup
 // through caller/table-supplied witnesses.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  ElapsedTimeTicksSchema,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -24,7 +26,7 @@ import {
   type BattleState,
   type LevitatedCreatureSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -55,16 +57,19 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type LevitatedCreatureInvocation = LevitatedCreatureSpellInvocation;
+type LevitatedCreatureResolveInput = SpellProcedureProfileResolveInput<
+  LevitatedCreatureInvocation,
+  ActionSpellBattleResolutionInput
+> &
+  SpellProcedureStoredGlyphReleaseOptions;
 
 function admitLevitatedCreature(
   spell: SpellRecord,
@@ -194,7 +199,6 @@ function discoverLevitatedCreatureCastAct(
               tag: "actionSpell" as const,
               actorId,
               procedureRef: invocation.sourceProcedureRef,
-              invocation: levitatedCreatureInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
             initialHoles: [targetHole],
@@ -203,29 +207,9 @@ function discoverLevitatedCreatureCastAct(
   return castActs;
 }
 
-function levitatedCreatureInvocationRef(
-  invocation: LevitatedCreatureInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "levitatedCreature",
-  };
-}
-
-function levitatedCreatureCastSummary(
-  invocation: LevitatedCreatureInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveLevitatedCreature(
-  input: SpellProcedureProfileResolveInput<
-    LevitatedCreatureInvocation,
-    ActionSpellBattleResolutionInput
-  > &
-    SpellProcedureStoredGlyphReleaseOptions,
+  input: LevitatedCreatureResolveInput,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -432,7 +416,7 @@ function applyLevitatedCreatureSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: LevitatedCreatureInvocation,
+  invocation: LevitatedCreatureResolveInput["invocation"],
   initialRiseFeet: MovementFeet,
   procedureRef: ActionSpellBattleResolutionInput["subject"]["procedureRef"],
 ): BattleState {
@@ -487,14 +471,12 @@ function applyLevitatedCreatureSpellEffect(
   }, state);
 }
 
-const LevitatedCreatureInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "levitatedCreature" }>
->(
+const LevitatedCreatureInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("levitatedCreature"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     ability: Schema.Literal("con"),
     dc: DcSourceSchema,
@@ -503,7 +485,17 @@ const LevitatedCreatureInvocationSchema = spellProcedureInvocationSchema<
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Literal(1),
     }),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: Schema.Struct({
+      kind: Schema.Literal("spellLevitatedCreature"),
+      sourceCombatantId: CombatantId,
+      maxAltitudeChangeFeet: MovementFeet,
+      rangeFeet: MovementFeet,
+      expiresAt: Schema.Struct({
+        kind: Schema.Literal("concentration"),
+        combatantId: CombatantId,
+        durationTicks: ElapsedTimeTicksSchema,
+      }),
+    }),
     maxInitialRiseFeet: MovementFeet,
     rangeFeet: MovementFeet,
   }),
@@ -514,14 +506,11 @@ export const levitatedCreatureProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "levitatedCreature",
-  invocationSchema: LevitatedCreatureInvocationSchema,
+  executionSchema: LevitatedCreatureInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitLevitatedCreature,
   discoverCastAct: discoverLevitatedCreatureCastAct,
-  castSummary: levitatedCreatureCastSummary,
-  invocationRef: levitatedCreatureInvocationRef,
   resolve: resolveLevitatedCreature,
 };

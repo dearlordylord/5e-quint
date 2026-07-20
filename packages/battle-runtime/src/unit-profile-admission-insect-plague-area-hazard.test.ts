@@ -1,5 +1,8 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import type { BattleProcedureExecutionRef } from "./index.ts";
+import type {
+  BattleProcedureExecutionRef,
+  BattleRuntimeSession,
+} from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-03-INSECT-PLAGUE-AREA-HAZARD insect_plague
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-insect-plague-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
@@ -42,16 +45,20 @@ import {
 
 function castInsectPlague() {
   const spell = insectPlagueSpellRecord();
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 5, count: 1 }],
     targetHp: 20,
     targetMaxHp: 20,
   });
-  const act = spellAct({ state, spellId: insectPlagueUnitId, slotLevel: 5 });
+  const act = spellAct({
+    session,
+    spellId: insectPlagueUnitId,
+    slotLevel: 5,
+  });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [insectPlagueAreaFill(area)],
   });
@@ -64,7 +71,14 @@ function castInsectPlague() {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Insect Plague caster End Turn to resolve.");
   }
-  return { spell, state, act, cast: cast.state, targetTurn: targetTurn.state };
+  return {
+    spell,
+    session,
+    state: session.state,
+    act,
+    cast: cast.state,
+    targetTurn: targetTurn.state,
+  };
 }
 
 function insectPlagueSpellRecord(): SpellRecord {
@@ -92,17 +106,17 @@ function insectPlagueDifficultTerrainFact(
 }
 
 function resolveInsectPlagueSave(input: {
-  readonly state: ReturnType<typeof castInsectPlague>["cast"];
+  readonly session: BattleRuntimeSession;
   readonly succeeded: boolean;
 }) {
   const saveAct = insectPlagueAreaHazardSaveAct(
-    input.state,
+    input.session,
     spellTargetId,
     "appearsInArea",
   );
   const saveHole = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   const pendingDamage = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: saveAct.subject,
     fills: [
       singleTargetSavingThrowOutcomeFill(
@@ -123,7 +137,7 @@ function resolveInsectPlagueSave(input: {
   });
   const damageHole = requireResultHole(pendingDamage, "rolledDice");
   return resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: saveAct.subject,
     fills: [
       singleTargetSavingThrowOutcomeFill(
@@ -138,7 +152,7 @@ function resolveInsectPlagueSave(input: {
 
 describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("insect plague is admitted as a ten-minute point-origin Sphere hazard", () => {
-    const { spell, state, act } = castInsectPlague();
+    const { spell, session, act } = castInsectPlague();
 
     expect({
       ...act.subject,
@@ -156,11 +170,11 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     expect(area).toEqual(
       expect.objectContaining({
-        label: "Insect Plague area",
+        label: "Spell area",
         area: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
       }),
     );
-    expect(spellHoleInvocation(state, [area])).toEqual(
+    expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "insectPlagueAreaHazard",
         spell,
@@ -262,8 +276,11 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   });
 
   test("appearance save applies full or half Piercing damage through the active hazard", () => {
-    const { cast } = castInsectPlague();
-    const failed = resolveInsectPlagueSave({ state: cast, succeeded: false });
+    const first = castInsectPlague();
+    const failed = resolveInsectPlagueSave({
+      session: { state: first.cast, context: first.session.context },
+      succeeded: false,
+    });
     expect(failed).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -273,9 +290,9 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       },
     });
 
-    const { cast: secondCast } = castInsectPlague();
+    const second = castInsectPlague();
     const succeeded = resolveInsectPlagueSave({
-      state: secondCast,
+      session: { state: second.cast, context: second.session.context },
       succeeded: true,
     });
     expect(succeeded).toMatchObject({
@@ -289,9 +306,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   });
 
   test("entry and end-turn saves share the once-per-turn hazard ledger", () => {
-    const { targetTurn } = castInsectPlague();
+    const { session, targetTurn } = castInsectPlague();
+    const targetTurnSession = { state: targetTurn, context: session.context };
     const entryAct = insectPlagueAreaHazardSaveAct(
-      targetTurn,
+      targetTurnSession,
       spellTargetId,
       "entersArea",
     );
@@ -323,7 +341,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
     expect(
       insectPlagueAreaHazardSaveAct(
-        entrySaved.state,
+        { state: entrySaved.state, context: session.context },
         spellTargetId,
         "endsTurnInArea",
       ).subject,
@@ -334,7 +352,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       resolveBattleSubject({
         state: entrySaved.state,
         subject: insectPlagueAreaHazardSaveAct(
-          entrySaved.state,
+          { state: entrySaved.state, context: session.context },
           spellTargetId,
           "endsTurnInArea",
         ).subject,

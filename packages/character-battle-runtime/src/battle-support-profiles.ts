@@ -148,7 +148,7 @@ function withBattleSupportProfiles(
     : Either.right(battleUnitRef.right);
 }
 
-function battleSupportProfileSourceFactsForBuild(
+export function battleSupportProfileSourceFactsForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Either.Either<

@@ -21,7 +21,7 @@ import type {
   BonusActionDashSpellBattleResolutionInput,
   BonusActionSpellBattleResolutionInput,
 } from "../battle-reducer.ts";
-import { spellId, type CombatantId } from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./domain-constants.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
@@ -94,7 +94,7 @@ export function slowSomaticSpellFailureOutcomeHole(input: {
     kind: "slowSomaticSpellFailureOutcome",
     label: "Slow Somatic spell failure chance",
     actorId: input.actorId,
-    spellId: spellId(input.invocation.spell.id),
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
     failurePercent: SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
     activeEffectSources: effects.map((effect) => ({
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -183,7 +183,7 @@ function spellInvocationRequiresEffectiveSomaticComponent(input: {
 }): boolean {
   if (
     !spellInvocationIsSpellcasting(input.invocation) ||
-    !input.invocation.spell.mechanics.components.s
+    !input.invocation.spellRuleFacts.components.somatic
   ) {
     return false;
   }

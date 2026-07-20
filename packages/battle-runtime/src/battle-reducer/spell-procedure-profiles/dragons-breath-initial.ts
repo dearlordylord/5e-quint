@@ -16,12 +16,14 @@
 //   - UBIQUITOUS_LANGUAGE.md: Bonus Action, Magic Action, Concentration,
 //     Spell Slot, Spell Invocation, Spell Effect, and Spell Save DC.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  ElapsedTimeTicksSchema,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { movementFeet, SpellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
@@ -32,7 +34,7 @@ import {
   type DragonsBreathInitialSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { spellSaveDcForCaster } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -52,9 +54,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DamageTypeSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -209,7 +210,6 @@ function discoverDragonsBreathInitialCastAct(
             tag: "bonusActionSpell" as const,
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: dragonsBreathInitialInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
           initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
@@ -217,22 +217,6 @@ function discoverDragonsBreathInitialCastAct(
       ];
 }
 
-function dragonsBreathInitialInvocationRef(
-  invocation: DragonsBreathInitialInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "dragonsBreathInitial",
-  };
-}
-
-function dragonsBreathInitialCastSummary(
-  invocation: DragonsBreathInitialInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveDragonsBreathInitial(
   input: DragonsBreathInitialResolveInput,
@@ -358,39 +342,40 @@ function resolveDragonsBreathInitial(
 }
 
 export const DragonsBreathInitialInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "dragonsBreathInitial" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("dragonsBreathInitial"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
         maxTargets: Schema.Literal(1),
       }),
-      activeEffect: BattleRuntimeObjectSchema,
+      activeEffect: Schema.Struct({
+        kind: Schema.Literal("dragonsBreath"),
+        sourceCombatantId: CombatantId,
+        originalSlotLevel: SpellSlotLevel,
+        expiresAt: Schema.Struct({
+          kind: Schema.Literal("concentration"),
+          combatantId: CombatantId,
+          durationTicks: ElapsedTimeTicksSchema,
+        }),
+      }),
       damageTypeChoices: Schema.Array(DamageTypeSchema),
       rangeFeet: MovementFeet,
     }),
   );
 export const dragonsBreathInitialProfile = {
   procedure: "dragonsBreathInitial",
-  invocationSchema: DragonsBreathInitialInvocationSchema,
+  executionSchema: DragonsBreathInitialInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitDragonsBreathInitial,
   discoverCastAct: discoverDragonsBreathInitialCastAct,
-  castSummary: dragonsBreathInitialCastSummary,
-  invocationRef: dragonsBreathInitialInvocationRef,
   resolve: resolveDragonsBreathInitial,
 } satisfies SpellProcedureProfile<
   "dragonsBreathInitial",
