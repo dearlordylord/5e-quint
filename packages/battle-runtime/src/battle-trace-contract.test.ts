@@ -22,7 +22,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
-  type BattleState,
+  type BattleRuntimeSession,
   type CombatantId,
 } from "./index.ts";
 
@@ -42,8 +42,9 @@ const targetId = combatantId("trace-target");
 
 describe("battle trace contract", () => {
   test("projects public weapon attack hit replay into QNT-owned checkpoints", () => {
-    const state = startBattleRight();
-    const attackAct = requireAttackAct(state);
+    const session = startBattleRight();
+    const state = session.state;
+    const attackAct = requireAttackAct(session);
     const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
     const target = attackTargetFill(targetHole);
     const afterTarget = resolveBattleSubject({
@@ -83,8 +84,9 @@ describe("battle trace contract", () => {
   });
 
   test("projects public weapon attack miss replay into QNT-owned checkpoints", () => {
-    const state = startBattleRight();
-    const attackAct = requireAttackAct(state);
+    const session = startBattleRight();
+    const state = session.state;
+    const attackAct = requireAttackAct(session);
     const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
     const target = attackTargetFill(targetHole);
     const afterTarget = resolveBattleSubject({
@@ -115,7 +117,7 @@ describe("battle trace contract", () => {
   });
 });
 
-function startBattleRight(): BattleState {
+function startBattleRight(): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("trace-contract"),
     combatants: [
@@ -135,8 +137,8 @@ function startBattleRight(): BattleState {
   return result.right;
 }
 
-function requireAttackAct(state: BattleState): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+function requireAttackAct(session: BattleRuntimeSession): AvailableBattleAct {
+  const act = discoverBattleActs(session).find(
     (availableAct) =>
       availableAct.subject.tag === "action" &&
       availableAct.subject.action === "attack" &&

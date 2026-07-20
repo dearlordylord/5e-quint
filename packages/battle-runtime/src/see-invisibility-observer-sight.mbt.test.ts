@@ -27,6 +27,7 @@ import { describe, expect, it } from "vitest";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   combatantCanSee,
+  discoverBattleActCandidates,
   seeInvisibleRevealsEtherealWitness,
   seeInvisibleRevealsInvisibleObject,
   type BattleActiveEffect,
@@ -40,7 +41,6 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { maybeSpellAct } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -133,7 +133,7 @@ function initialRuntimeState(
       spellBattle({
         preparedSpells: [spellRecord(seeInvisibilityUnitId)],
         spellSlots: [{ spellLevel: 2, count: 1 }],
-      }),
+      }).state,
       {
         targetHasInvisibleCondition: input.targetHasInvisibleCondition ?? false,
         targetHidden: input.targetHidden ?? false,
@@ -339,11 +339,9 @@ describe("See Invisibility observer-sight MBT parity", () => {
 function castSeeInvisibilityInRuntimeState(
   state: SeeInvisibilityObserverSightRuntimeState,
 ): SeeInvisibilityObserverSightRuntimeState {
-  const act = maybeSpellAct({
-    state: state.battle,
-    spellId: seeInvisibilityUnitId,
-    slotLevel: 2,
-  });
+  const act = discoverBattleActCandidates(state.battle).find(
+    (candidate) => candidate.subject.tag === "actionSpell",
+  );
   if (act === undefined) {
     return state;
   }

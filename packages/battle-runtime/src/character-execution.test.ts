@@ -7,7 +7,7 @@ import { wizardVsSkeletonBattle } from "./battle-runtime-test-support.ts";
 describe("character procedure execution identity", () => {
   test("decodes durable bindings independently of their serialized order", () => {
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(
-      snapshotBattle(wizardVsSkeletonBattle()),
+      snapshotBattle(wizardVsSkeletonBattle().state),
     );
     const wizard = encoded.combatants.find(
       (combatant) => combatant.origin.kind === "character",

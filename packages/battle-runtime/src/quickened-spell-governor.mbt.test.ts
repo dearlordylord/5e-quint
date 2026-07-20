@@ -59,7 +59,7 @@ import {
   savingThrowOutcomeFill,
   skeletonId,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   unitLibrary,
@@ -77,6 +77,7 @@ import {
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
   type CombatantId,
@@ -149,7 +150,7 @@ type QuickenedSpellGovernorProjection = {
 };
 
 type QuickenedSpellGovernorRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly invalidKind: InvalidKind;
   readonly lastResult: LastResult;
 };
@@ -208,7 +209,7 @@ function createQuickenedSpellGovernorDriver() {
       },
       doResolveQuickenedAfterMagicActionSpent: () => {
         state = resolveQuickenedRestoration({
-          battle: magicActionSpent(initialRuntimeState().battle),
+          battle: withMagicActionSpent(initialRuntimeState().battle),
           invalidKind: "none",
           lastResult: "init",
         });
@@ -361,7 +362,7 @@ describe("Quickened Spell governor MBT parity", () => {
 
   it("allows the Bonus Action rewrite after the Magic action has been spent without casting a level 1+ spell", () => {
     const resolved = resolveQuickenedRestoration({
-      battle: magicActionSpent(initialRuntimeState().battle),
+      battle: withMagicActionSpent(initialRuntimeState().battle),
       invalidKind: "none",
       lastResult: "init",
     });
@@ -373,16 +374,17 @@ describe("Quickened Spell governor MBT parity", () => {
       targetHp: QUICKENED_HEALING_RESULT_HP,
       spellSlotCommitted: true,
       quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
     });
   });
 
   it("observes the copied quickened qRoute through public reducer entrypoints", () => {
-    const state = initialRuntimeState().battle;
-    const act = quickenedRayOfFrostAct(state);
+    const session = initialRuntimeState().battle;
+    const act = quickenedRayOfFrostAct(session);
     const targetHole = findHole(act.initialHoles, "targetChoice");
     const target = targetFill(targetHole, skeletonId);
     const awaitingAttackRoll = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [target],
     });
@@ -395,7 +397,7 @@ describe("Quickened Spell governor MBT parity", () => {
       naturalD20: 10,
     });
     const awaitingDamageRoll = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [target, attackRoll],
     });
@@ -405,7 +407,7 @@ describe("Quickened Spell governor MBT parity", () => {
     );
     const resolved = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [
           target,
@@ -471,9 +473,9 @@ describe("Quickened Spell governor MBT parity", () => {
     expect(observeQuickenedRestorationRoute(base)).toEqual(
       quickenedRestorationPublicRoute(),
     );
-    expect(observeQuickenedRestorationRoute(magicActionSpent(base))).toEqual(
-      quickenedRestorationPublicRoute(),
-    );
+    expect(
+      observeQuickenedRestorationRoute(withMagicActionSpent(base)),
+    ).toEqual(quickenedRestorationPublicRoute());
     expect(observeQuickenedSaveGatedRoute("color_spray", skeletonId)).toEqual(
       quickenedSaveGatedPublicRoute("battleActiveEffect"),
     );
@@ -494,7 +496,7 @@ describe("Quickened Spell governor MBT parity", () => {
     }).battle;
     expect(
       invalidQuickenedRoute({
-        state: unaffordableState,
+        session: unaffordableState,
         subject: quickenedCureWoundsSubject(unaffordableState),
       }),
     ).toEqual(quickenedResourceGovernorRoute());
@@ -503,7 +505,7 @@ describe("Quickened Spell governor MBT parity", () => {
     }).battle;
     expect(
       invalidQuickenedRoute({
-        state: unknownOptionState,
+        session: unknownOptionState,
         subject: {
           ...quickenedCureWoundsSubject(unknownOptionState),
           metamagic: [{ effectKind: "saving_throw_disadvantage" }],
@@ -516,7 +518,7 @@ describe("Quickened Spell governor MBT parity", () => {
     }).battle;
     expect(
       invalidQuickenedRoute({
-        state: duplicateStackingState,
+        session: duplicateStackingState,
         subject: {
           ...quickenedCureWoundsSubject(duplicateStackingState),
           metamagic: [
@@ -532,7 +534,7 @@ describe("Quickened Spell governor MBT parity", () => {
     }).battle;
     expect(
       invalidQuickenedRoute({
-        state: incompatibleStackingState,
+        session: incompatibleStackingState,
         subject: {
           ...quickenedCureWoundsSubject(incompatibleStackingState),
           metamagic: [
@@ -546,14 +548,17 @@ describe("Quickened Spell governor MBT parity", () => {
     const priorLevelOnePlusBase = initialRuntimeState().battle;
     const priorLevelOnePlusState = {
       ...priorLevelOnePlusBase,
-      currentTurnResources: {
-        ...priorLevelOnePlusBase.currentTurnResources,
-        levelOnePlusSpellCastsThisTurn: [wizardId],
+      state: {
+        ...priorLevelOnePlusBase.state,
+        currentTurnResources: {
+          ...priorLevelOnePlusBase.state.currentTurnResources,
+          levelOnePlusSpellCastsThisTurn: [wizardId],
+        },
       },
     };
     expect(
       invalidQuickenedRoute({
-        state: priorLevelOnePlusState,
+        session: priorLevelOnePlusState,
         subject: quickenedCureWoundsSubject(priorLevelOnePlusState),
       }),
     ).toEqual([
@@ -573,6 +578,7 @@ describe("Quickened Spell governor MBT parity", () => {
     ).toMatchObject({
       quickenedCureWoundsOffered: false,
       sorceryPointsRemaining: UNAFFORDABLE_SORCERY_POINTS,
+      spellSlotActsAvailable: true,
       invalidKind: "unaffordable",
       lastResult: "rejectedUnaffordable",
     });
@@ -580,6 +586,7 @@ describe("Quickened Spell governor MBT parity", () => {
       quickenedSpellGovernorProjection(rejectUnknownOption()),
     ).toMatchObject({
       quickenedCureWoundsOffered: true,
+      spellSlotActsAvailable: true,
       invalidKind: "unknownOption",
       lastResult: "rejectedUnknownOption",
     });
@@ -587,12 +594,14 @@ describe("Quickened Spell governor MBT parity", () => {
       quickenedSpellGovernorProjection(rejectUnsupportedSecondOption()),
     ).toMatchObject({
       sorceryPointsRemaining: HIGH_SORCERY_POINTS,
+      spellSlotActsAvailable: true,
       invalidKind: "unsupportedSecondOption",
       lastResult: "rejectedUnsupportedSecondOption",
     });
     expect(quickenedSpellGovernorProjection(rejectOnePerSpell())).toMatchObject(
       {
         sorceryPointsRemaining: HIGH_SORCERY_POINTS,
+        spellSlotActsAvailable: true,
         invalidKind: "onePerSpell",
         lastResult: "rejectedOnePerSpell",
       },
@@ -602,6 +611,7 @@ describe("Quickened Spell governor MBT parity", () => {
     ).toMatchObject({
       quickenedCureWoundsOffered: false,
       levelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: true,
       invalidKind: "sameTurnLevelOnePlus",
       lastResult: "rejectedPriorLevelOnePlusSpell",
     });
@@ -657,7 +667,7 @@ function resolveQuickenedRestoration(
     },
   ]);
   const awaitingHealingRoll = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [target],
   });
@@ -667,13 +677,13 @@ function resolveQuickenedRestoration(
   );
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [target, damageRollFillWithGroups(healingRoll, [[4, 3]])],
     }),
   );
   return {
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     invalidKind: "none",
     lastResult: "resolvedQuickenedRestoration",
   };
@@ -686,7 +696,7 @@ function resolveQuickenedSaveGatedCondition(
   const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
@@ -696,7 +706,7 @@ function resolveQuickenedSaveGatedCondition(
     }),
   );
   return {
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     invalidKind: "none",
     lastResult: "resolvedQuickenedSaveGatedCondition",
   };
@@ -709,7 +719,7 @@ function resolveQuickenedSaveGatedConditionImmunity(
   const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
@@ -719,7 +729,7 @@ function resolveQuickenedSaveGatedConditionImmunity(
     }),
   );
   return {
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     invalidKind: "none",
     lastResult: "resolvedQuickenedSaveGatedConditionImmunity",
   };
@@ -732,13 +742,13 @@ function resolveQuickenedDirectCondition(
   const targetHole = findSpellTargetListHole(act.initialHoles);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [spellTargetListFill(targetHole, "invisibility", [fighterId])],
     }),
   );
   return {
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     invalidKind: "none",
     lastResult: "resolvedQuickenedDirectCondition",
   };
@@ -751,13 +761,13 @@ function resolveQuickenedRollModifier(
   const targetHole = findSpellTargetListHole(act.initialHoles);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [spellTargetListFill(targetHole, "bless", [fighterId])],
     }),
   );
   return {
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     invalidKind: "none",
     lastResult: "resolvedQuickenedRollModifier",
   };
@@ -776,7 +786,7 @@ function resolveQuickenedCreatureSizeChange(): QuickenedSpellGovernorRuntimeStat
   }
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         knownWillingSpellTargetFill(
@@ -789,7 +799,7 @@ function resolveQuickenedCreatureSizeChange(): QuickenedSpellGovernorRuntimeStat
     }),
   );
   return {
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     invalidKind: "none",
     lastResult: "resolvedQuickenedCreatureSizeChange",
   };
@@ -802,7 +812,7 @@ function rejectUnaffordable(): QuickenedSpellGovernorRuntimeState {
   expect(hasQuickenedCureWoundsAct(state.battle)).toBe(false);
   expectInvalid(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: quickenedCureWoundsSubject(state.battle),
       fills: [],
     }),
@@ -822,7 +832,7 @@ function rejectUnknownOption(): QuickenedSpellGovernorRuntimeState {
   expect(hasQuickenedCureWoundsAct(state.battle)).toBe(true);
   expectInvalid(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: {
         ...quickenedCureWoundsSubject(state.battle),
         metamagic: [{ effectKind: "saving_throw_disadvantage" }],
@@ -845,7 +855,7 @@ function rejectUnsupportedSecondOption(): QuickenedSpellGovernorRuntimeState {
   });
   expectInvalid(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: {
         ...quickenedCureWoundsSubject(state.battle),
         metamagic: [
@@ -871,7 +881,7 @@ function rejectOnePerSpell(): QuickenedSpellGovernorRuntimeState {
   });
   expectInvalid(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: {
         ...quickenedCureWoundsSubject(state.battle),
         metamagic: [
@@ -895,9 +905,12 @@ function rejectPriorLevelOnePlusSpell(): QuickenedSpellGovernorRuntimeState {
   const state: QuickenedSpellGovernorRuntimeState = {
     battle: {
       ...base.battle,
-      currentTurnResources: {
-        ...base.battle.currentTurnResources,
-        levelOnePlusSpellCastsThisTurn: [wizardId],
+      state: {
+        ...base.battle.state,
+        currentTurnResources: {
+          ...base.battle.state.currentTurnResources,
+          levelOnePlusSpellCastsThisTurn: [wizardId],
+        },
       },
     },
     invalidKind: "none",
@@ -906,7 +919,7 @@ function rejectPriorLevelOnePlusSpell(): QuickenedSpellGovernorRuntimeState {
   expect(hasQuickenedCureWoundsAct(state.battle)).toBe(false);
   expectInvalid(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: quickenedCureWoundsSubject(state.battle),
       fills: [],
     }),
@@ -922,9 +935,9 @@ function rejectPriorLevelOnePlusSpell(): QuickenedSpellGovernorRuntimeState {
 function quickenedSpellGovernorProjection(
   state: QuickenedSpellGovernorRuntimeState,
 ): QuickenedSpellGovernorProjection {
-  const resources = state.battle.currentTurnResources;
-  const skeleton = state.battle.combatants.get(skeletonId);
-  const fighter = state.battle.combatants.get(fighterId);
+  const resources = state.battle.state.currentTurnResources;
+  const skeleton = state.battle.state.combatants.get(skeletonId);
+  const fighter = state.battle.state.combatants.get(fighterId);
   return {
     quickenedCureWoundsOffered: hasQuickenedCureWoundsAct(state.battle),
     colorSprayBlinded:
@@ -932,18 +945,18 @@ function quickenedSpellGovernorProjection(
         ? false
         : hasCondition(skeleton.conditions, "blinded"),
     calmEmotionsImmunity:
-      state.battle.combatants
+      state.battle.state.combatants
         .get(fighterId)
         ?.activeEffects.some((effect) => effect.kind === "conditionImmunity") ??
       false,
     invisibilityActive:
-      state.battle.combatants
+      state.battle.state.combatants
         .get(fighterId)
         ?.activeEffects.some(
           (effect) => effect.kind === "targetActionEndedSpellCondition",
         ) ?? false,
     blessActive:
-      state.battle.combatants
+      state.battle.state.combatants
         .get(fighterId)
         ?.activeEffects.some((effect) => effect.kind === "d20RollModifier") ??
       false,
@@ -953,8 +966,8 @@ function quickenedSpellGovernorProjection(
         : combatantEffectiveSize(fighter) === "large",
     magicActionAvailable: canSpendAction(resources, "magic"),
     bonusActionAvailable: resources.currentHasBonusAction,
-    sorceryPointsRemaining: Number(sorceryPointsRemaining(state.battle)),
-    targetHp: state.battle.combatants.get(fighterId)?.hp ?? 0,
+    sorceryPointsRemaining: Number(sorceryPointsRemaining(state.battle.state)),
+    targetHp: state.battle.state.combatants.get(fighterId)?.hp ?? 0,
     spellSlotCommitted: resources.spellSlotUsesThisTurn.some(
       (use) => use.kind === "committed" && use.combatantId === wizardId,
     ),
@@ -964,7 +977,6 @@ function quickenedSpellGovernorProjection(
       resources.quickenedLevelOnePlusSpellCastsThisTurn.includes(wizardId),
     spellSlotActsAvailable: discoverBattleActs(state.battle).some(
       (candidate) =>
-        "invocation" in candidate.subject &&
         battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot",
     ),
     invalidKind: state.invalidKind,
@@ -973,11 +985,11 @@ function quickenedSpellGovernorProjection(
 }
 
 function invalidQuickenedRoute(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly subject: QuickenedBonusActionSpellAct["subject"];
 }) {
   const result = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: input.subject,
     fills: [],
   });
@@ -986,9 +998,9 @@ function invalidQuickenedRoute(input: {
 }
 
 function observeQuickenedRestorationRoute(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): readonly BattleReducerRouteEvent[] {
-  const act = quickenedCureWoundsAct(state);
+  const act = quickenedCureWoundsAct(session);
   const targetHole = findHole(act.initialHoles, "targetChoice");
   const target = targetFill(targetHole, fighterId, [
     {
@@ -1001,7 +1013,7 @@ function observeQuickenedRestorationRoute(
     },
   ]);
   const awaitingHealingRoll = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [target],
   });
@@ -1011,7 +1023,7 @@ function observeQuickenedRestorationRoute(
   );
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [target, damageRollFillWithGroups(healingRoll, [[4, 3]])],
     }),
@@ -1028,12 +1040,12 @@ function observeQuickenedSaveGatedRoute(
   spellId: Extract<QuickenedSpellId, "calm_emotions" | "color_spray">,
   targetId: CombatantId,
 ): readonly BattleReducerRouteEvent[] {
-  const state = initialRuntimeState().battle;
-  const act = quickenedSpellAct(state, spellId);
+  const session = initialRuntimeState().battle;
+  const act = quickenedSpellAct(session, spellId);
   const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [{ targetId, succeeded: false }]),
@@ -1050,12 +1062,12 @@ function observeQuickenedSaveGatedRoute(
 function observeQuickenedTargetListRoute(
   spellId: Extract<QuickenedSpellId, "bless" | "invisibility">,
 ): readonly BattleReducerRouteEvent[] {
-  const state = initialRuntimeState().battle;
-  const act = quickenedSpellAct(state, spellId);
+  const session = initialRuntimeState().battle;
+  const act = quickenedSpellAct(session, spellId);
   const targetHole = findSpellTargetListHole(act.initialHoles);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [spellTargetListFill(targetHole, spellId, [fighterId])],
     }),
@@ -1203,8 +1215,8 @@ function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
   readonly preparedSpellIds?: readonly SpellRecord["id"][];
-}): BattleState {
-  return startBattleRight({
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle:quickened-spell-governor-mbt"),
     combatants: [
       characterSeed({
@@ -1274,6 +1286,12 @@ function magicActionSpent(state: BattleState): BattleState {
   };
 }
 
+function withMagicActionSpent(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  return { ...session, state: magicActionSpent(session.state) };
+}
+
 function quickenedMetamagicOption(): MetamagicOptionFixture {
   return {
     effectKind: QUICKENED_METAMAGIC_EFFECT_KIND,
@@ -1306,7 +1324,7 @@ type QuickenedBonusActionSpellAct = AvailableBattleAct & {
 };
 
 function quickenedCureWoundsAct(
-  state: BattleState,
+  state: BattleRuntimeSession,
 ): QuickenedBonusActionSpellAct {
   const act = discoverBattleActs(state).find(isQuickenedCureWoundsAct);
   expect(act).toBeDefined();
@@ -1316,7 +1334,7 @@ function quickenedCureWoundsAct(
   return act;
 }
 
-function hasQuickenedCureWoundsAct(state: BattleState): boolean {
+function hasQuickenedCureWoundsAct(state: BattleRuntimeSession): boolean {
   return discoverBattleActs(state).some(isQuickenedCureWoundsAct);
 }
 
@@ -1334,7 +1352,7 @@ function isQuickenedCureWoundsAct(
 }
 
 function quickenedCureWoundsSubject(
-  state: BattleState,
+  state: BattleRuntimeSession,
 ): QuickenedBonusActionSpellAct["subject"] {
   const actionSpell = discoverBattleActs(state).find(
     (candidate) =>
@@ -1361,7 +1379,7 @@ type QuickenedSpellId =
   | "invisibility";
 
 function quickenedCreatureSizeChangeAct(
-  state: BattleState,
+  state: BattleRuntimeSession,
 ): QuickenedBonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
@@ -1382,7 +1400,7 @@ function quickenedCreatureSizeChangeAct(
 }
 
 function quickenedRayOfFrostAct(
-  state: BattleState,
+  state: BattleRuntimeSession,
 ): QuickenedBonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
@@ -1403,7 +1421,7 @@ function quickenedRayOfFrostAct(
 }
 
 function quickenedSpellAct(
-  state: BattleState,
+  state: BattleRuntimeSession,
   spellId: QuickenedSpellId,
 ): QuickenedBonusActionSpellAct {
   const act = discoverBattleActs(state).find(
@@ -1524,14 +1542,7 @@ function compareQuickenedSpellGovernorStates(
   runtime: QuickenedSpellGovernorProjection,
   quint: QuickenedSpellGovernorProjection,
 ): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw error;
-  }
+  expect(runtime).toEqual(quint);
   return true;
 }
 

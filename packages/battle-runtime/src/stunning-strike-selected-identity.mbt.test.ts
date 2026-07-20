@@ -9,7 +9,7 @@ import {
   attackRollFill,
   battleId,
   characterSeed,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   fighterId,
   goblinId,
   hasCondition,
@@ -28,7 +28,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 type StunningStrikeProjection = {
@@ -167,7 +167,10 @@ function projectSecondUseGate(): StunningStrikeProjection {
     currentTurnResources: {
       ...state.currentTurnResources,
       stunningStrikesUsedThisTurn: [
-        { attackerId: fighterId, unitId: "monk_stunning_strike" },
+        {
+          attackerId: fighterId,
+          procedureRef: stunningStrikeProcedureRef(state),
+        },
       ],
     },
   };
@@ -183,19 +186,18 @@ function projectResolved(
   if (target === undefined) {
     throw new Error("Expected Stunning Strike target.");
   }
+  const procedureRef = stunningStrikeProcedureRef(result.state);
   return expectedProjection({
     targetStunned: hasCondition(target.conditions, "stunned"),
     targetSpeedHalved: target.activeEffects.some(
       (effect) =>
         effect.kind === "speedHalved" &&
-        "sourceUnitId" in effect &&
-        effect.sourceUnitId === "monk_stunning_strike",
+        effect.sourceProcedureRef === procedureRef,
     ),
     targetAttackAdvantage: target.activeEffects.some(
       (effect) =>
         effect.kind === "nextAttackRollAgainstSelf" &&
-        "sourceUnitId" in effect &&
-        effect.sourceUnitId === "monk_stunning_strike" &&
+        effect.sourceProcedureRef === procedureRef &&
         effect.mode === "advantage",
     ),
     focusUsesRemaining: monkFocusUsesRemaining(result.state),
@@ -282,7 +284,7 @@ function stunningStrikeBattle(
 }
 
 function attackSubject(state: BattleState): BattleSubject {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack",
@@ -298,18 +300,54 @@ function monkFocusUsesRemaining(state: BattleState): number {
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected Monk character.");
   }
+  const focusResourcePoolRef =
+    stunningStrikeBinding(state).execution.spends.resourcePoolRef;
   const focus = actor.origin.resources.find(
-    (resource) => resource.unit.id === "monk_monks_focus",
+    (resource) => resource.resourcePoolRef === focusResourcePoolRef,
   );
-  if (focus === undefined) {
+  if (
+    focus === undefined ||
+    !("usesRemaining" in focus) ||
+    focus.usesRemaining === undefined
+  ) {
     throw new Error("Expected Monk Focus resource.");
   }
   return Number(focus.usesRemaining);
 }
 
 function stunningStrikeUsedThisTurn(state: BattleState): boolean {
+  const procedureRef = stunningStrikeProcedureRef(state);
   return state.currentTurnResources.stunningStrikesUsedThisTurn.some(
     (usage) =>
-      usage.attackerId === fighterId && usage.unitId === "monk_stunning_strike",
+      usage.attackerId === fighterId && usage.procedureRef === procedureRef,
   );
+}
+
+function stunningStrikeProcedureRef(state: BattleState) {
+  return stunningStrikeBinding(state).procedureRef;
+}
+
+function stunningStrikeBinding(state: BattleState) {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Stunning Strike Monk character.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitSupportProfile" &&
+      typeof candidate.procedure.execution === "object" &&
+      candidate.procedure.execution.kind === "stunningStrike",
+  );
+  if (
+    binding === undefined ||
+    binding.procedure.kind !== "unitSupportProfile" ||
+    typeof binding.procedure.execution !== "object" ||
+    binding.procedure.execution.kind !== "stunningStrike"
+  ) {
+    throw new Error("Expected mechanical Stunning Strike procedure binding.");
+  }
+  return {
+    procedureRef: binding.procedureRef,
+    execution: binding.procedure.execution.stunningStrike,
+  };
 }

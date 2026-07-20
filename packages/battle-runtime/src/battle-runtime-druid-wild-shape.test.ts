@@ -1,7 +1,3 @@
-import {
-  battleActDruidWildShapePresentation,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
@@ -11,6 +7,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS druid_wild_shape
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   armorClassDelta,
   defaultArmorClassState,
@@ -38,6 +35,7 @@ import {
   characterSeed,
   combatantId,
   damageRollFill,
+  discoverBattleActCandidates,
   discoverBattleActs,
   findHole,
   goblinId,
@@ -46,7 +44,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCatalog,
   statBlockCreatureInit,
   targetFill,
@@ -75,12 +73,14 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CharacterBattleCreatureState,
   type CharacterBattleD20Statistics,
   type WildShapeEquipmentDispositionChoice,
   type WildShapeLoadoutObjectRef,
 } from "./index.ts";
+import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 
 const druidId = combatantId("wild-shape-druid");
@@ -120,22 +120,23 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   expect(Number(activeSnapshot.armorClass)).toBe(11);
   expect(Number(activeSnapshot.movement.speedFeet)).toBe(60);
 
-  const activeActs = discoverBattleActs(assumed.state);
+  const activeActs = discoverBattleActCandidates(assumed.state);
   expect(
-    activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary.includes("Hooves"),
+    activeActs.some((act) =>
+      isAttackActForProcedure(
+        act,
+        wildShapeStatBlockAttackProcedureRef(assumed.state, "Hooves"),
+      ),
     ),
   ).toBe(true);
   expect(
     activeActs.some(
       (act) =>
         act.subject.tag === "actionSpell" ||
-        (act.subject.tag === "action" &&
-          act.subject.action === "attack" &&
-          act.summary === "Take the Attack action with Longsword."),
+        isAttackActForProcedure(
+          act,
+          trueFormMainAttackProcedureRef(assumed.state),
+        ),
     ),
   ).toBe(false);
 
@@ -150,11 +151,11 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const reusedDruid = requireCharacter(reused.state, druidId);
   expect(activeDruidWildShapeForm(reusedDruid)?.id).toBe(catId);
   expect(
-    discoverBattleActs(reused.state).some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary.includes("Scratch"),
+    discoverBattleActCandidates(reused.state).some((act) =>
+      isAttackActForProcedure(
+        act,
+        wildShapeStatBlockAttackProcedureRef(reused.state, "Scratch"),
+      ),
     ),
   ).toBe(true);
   expect(
@@ -423,13 +424,13 @@ test("requires and validates Wild Shape equipment disposition fills for selected
     11,
   );
 
-  const activeActs = discoverBattleActs(resolved.state);
+  const activeActs = discoverBattleActCandidates(resolved.state);
   expect(
-    activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary === "Take the Attack action with Quarterstaff.",
+    activeActs.some((act) =>
+      isAttackActForProcedure(
+        act,
+        trueFormMainAttackProcedureRef(resolved.state),
+      ),
     ),
   ).toBe(false);
 });
@@ -545,11 +546,11 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
     13,
   );
   expect(
-    discoverBattleActs(resolved.state).some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary === "Take the Attack action with Quarterstaff.",
+    discoverBattleActCandidates(resolved.state).some((act) =>
+      isAttackActForProcedure(
+        act,
+        trueFormMainAttackProcedureRef(resolved.state),
+      ),
     ),
   ).toBe(false);
 });
@@ -599,29 +600,29 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     [{ item: mainWeapon, disposition: "worn" }],
   );
 
-  const activeActs = discoverBattleActs(resolved.state);
+  const activeActs = discoverBattleActCandidates(resolved.state);
   expect(
-    activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary.includes("Hooves"),
+    activeActs.some((act) =>
+      isAttackActForProcedure(
+        act,
+        wildShapeStatBlockAttackProcedureRef(resolved.state, "Hooves"),
+      ),
     ),
   ).toBe(true);
   expect(
-    activeActs.some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary === "Take the Attack action with Longsword.",
+    activeActs.some((act) =>
+      isAttackActForProcedure(
+        act,
+        trueFormMainAttackProcedureRef(resolved.state),
+      ),
     ),
   ).toBe(true);
 
-  const longswordAct = activeActs.find(
-    (act) =>
-      act.subject.tag === "action" &&
-      act.subject.action === "attack" &&
-      act.summary === "Take the Attack action with Longsword.",
+  const longswordAct = activeActs.find((act) =>
+    isAttackActForProcedure(
+      act,
+      trueFormMainAttackProcedureRef(resolved.state),
+    ),
   );
   if (longswordAct?.subject.tag !== "action") {
     throw new Error("Expected Longsword attack act.");
@@ -727,27 +728,39 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
   );
   const battleReadyState = restoreBonusAction(resolved.state);
 
-  const activeActs = discoverBattleActs(battleReadyState);
+  const activeActs = discoverBattleActCandidates(battleReadyState);
   expect(
-    activeActs.some(
-      (act) => act.summary === "Take the Attack action with Shortsword.",
+    activeActs.some((act) =>
+      isAttackActForProcedure(
+        act,
+        trueFormMainAttackProcedureRef(battleReadyState),
+      ),
     ),
   ).toBe(true);
   expect(
     activeActs.some(
-      (act) => act.summary === "Take the Attack action with Dagger.",
+      (act) =>
+        isAttackActForProcedure(
+          act,
+          trueFormOffHandAttackProcedureRef(battleReadyState),
+        ) && act.subject.tag === "action",
     ),
   ).toBe(false);
   expect(
     activeActs.some(
       (act) =>
-        act.summary ===
-        "Make the Light property Bonus Action attack with Dagger.",
+        isAttackActForProcedure(
+          act,
+          trueFormOffHandAttackProcedureRef(battleReadyState),
+        ) && act.subject.tag === "bonusAction",
     ),
   ).toBe(false);
 
-  const shortswordAct = activeActs.find(
-    (act) => act.summary === "Take the Attack action with Shortsword.",
+  const shortswordAct = activeActs.find((act) =>
+    isAttackActForProcedure(
+      act,
+      trueFormMainAttackProcedureRef(battleReadyState),
+    ),
   );
   if (shortswordAct?.subject.tag !== "action") {
     throw new Error("Expected Shortsword attack act.");
@@ -781,16 +794,22 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     }),
   ).state;
 
-  const afterLightActs = discoverBattleActs(afterQualifyingAttack);
+  const afterLightActs = discoverBattleActCandidates(afterQualifyingAttack);
   expect(
     afterLightActs.some(
-      (act) => act.summary === "Take the Attack action with Dagger.",
+      (act) =>
+        isAttackActForProcedure(
+          act,
+          trueFormOffHandAttackProcedureRef(afterQualifyingAttack),
+        ) && act.subject.tag === "action",
     ),
   ).toBe(false);
   const daggerAct = afterLightActs.find(
     (act) =>
-      act.summary ===
-      "Make the Light property Bonus Action attack with Dagger.",
+      isAttackActForProcedure(
+        act,
+        trueFormOffHandAttackProcedureRef(afterQualifyingAttack),
+      ) && act.subject.tag === "bonusAction",
   );
   if (daggerAct?.subject.tag !== "bonusAction") {
     throw new Error("Expected Dagger off-hand Bonus Action act.");
@@ -895,11 +914,11 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
   );
 
   expect(
-    discoverBattleActs(resolved.state).some(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary === "Take the Attack action with Longsword.",
+    discoverBattleActCandidates(resolved.state).some((act) =>
+      isAttackActForProcedure(
+        act,
+        trueFormMainAttackProcedureRef(resolved.state),
+      ),
     ),
   ).toBe(false);
 });
@@ -1348,7 +1367,7 @@ test("projects retained and higher Beast Saving Throw modifiers while in Wild Sh
 
 test("offers one assume-form act for each known Beast form", () => {
   const initial = druidWildShapeBattle();
-  const acts = discoverBattleActs(initial);
+  const acts = discoverBattleActCandidates(initial);
   expect(
     acts.filter(
       (act) =>
@@ -1360,7 +1379,7 @@ test("offers one assume-form act for each known Beast form", () => {
 
 test("offers no assume-form acts when no Wild Shape forms are battle-available", () => {
   const initial = druidWildShapeBattle({ knownForms: [] });
-  const acts = discoverBattleActs(initial);
+  const acts = discoverBattleActCandidates(initial);
   expect(
     acts.filter(
       (act) =>
@@ -2019,10 +2038,11 @@ test("shape-shift reversion reports a missing combatant distinctly", () => {
 });
 
 test("Wild Shape blocks spell invocation before Beast Spells", () => {
-  const initial = druidWildShapeBattle({
+  const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL - 1,
     preparedSpells: [spellRecord("cure_wounds")],
   });
+  const initial = session.state;
   const assumed = requireResolved(
     resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
@@ -2033,14 +2053,20 @@ test("Wild Shape blocks spell invocation before Beast Spells", () => {
     ),
   );
 
-  expect(hasActionSpell(assumed.state, "cure_wounds")).toBe(false);
+  expect(
+    hasActionSpell(
+      { state: assumed.state, context: session.context },
+      "cure_wounds",
+    ),
+  ).toBe(false);
 });
 
 test("Beast Spells admits no-Material spell invocation while Wild Shape is active", () => {
-  const initial = druidWildShapeBattle({
+  const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     preparedSpells: [spellRecord("cure_wounds")],
   });
+  const initial = session.state;
   const assumed = requireResolved(
     resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
@@ -2051,15 +2077,21 @@ test("Beast Spells admits no-Material spell invocation while Wild Shape is activ
     ),
   );
 
-  expect(hasActionSpell(assumed.state, "cure_wounds")).toBe(true);
+  expect(
+    hasActionSpell(
+      { state: assumed.state, context: session.context },
+      "cure_wounds",
+    ),
+  ).toBe(true);
 });
 
 test("Beast Spells admits focus-replaceable Material spell invocation while Wild Shape is active", () => {
-  const initial = druidWildShapeBattle({
+  const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     preparedSpells: [spellRecord("animal_friendship")],
     targetStatBlock: statBlockCatalog.requireStatBlock(catId),
   });
+  const initial = session.state;
   const assumed = requireResolved(
     resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
@@ -2070,11 +2102,16 @@ test("Beast Spells admits focus-replaceable Material spell invocation while Wild
     ),
   );
 
-  expect(hasActionSpell(assumed.state, "animal_friendship")).toBe(true);
+  expect(
+    hasActionSpell(
+      { state: assumed.state, context: session.context },
+      "animal_friendship",
+    ),
+  ).toBe(true);
 });
 
 test("Beast Spells rejects priced or consumed Material spells while Wild Shape is active", () => {
-  const initial = druidWildShapeBattle({
+  const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     preparedSpells: [
       spellRecord("cure_wounds"),
@@ -2082,6 +2119,7 @@ test("Beast Spells rejects priced or consumed Material spells while Wild Shape i
     ],
     spellSlots: [{ spellLevel: 2, count: 2 }],
   });
+  const initial = session.state;
   const assumed = requireResolved(
     resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
@@ -2092,8 +2130,9 @@ test("Beast Spells rejects priced or consumed Material spells while Wild Shape i
     ),
   );
 
-  expect(hasActionSpell(assumed.state, "cure_wounds")).toBe(true);
-  expect(hasActionSpell(assumed.state, "continual_flame")).toBe(false);
+  const assumedSession = { state: assumed.state, context: session.context };
+  expect(hasActionSpell(assumedSession, "cure_wounds")).toBe(true);
+  expect(hasActionSpell(assumedSession, "continual_flame")).toBe(false);
 });
 
 test("rounds odd-level duration down through the general division rule", () => {
@@ -2129,7 +2168,26 @@ function druidWildShapeBattle(input?: {
   readonly extraCombatants?: readonly ReturnType<typeof characterSeed>[];
   readonly targetStatBlock?: StatBlockRecord;
 }): BattleState {
-  return startBattleRight({
+  return druidWildShapeSession(input).state;
+}
+
+function druidWildShapeSession(input?: {
+  readonly druidLevel?: number;
+  readonly armorClass?: ArmorClassState;
+  readonly attack?: CharacterSeedInput["attack"];
+  readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
+  readonly d20Statistics?: CharacterBattleD20Statistics;
+  readonly knownForms?: readonly StatBlockRecord[];
+  readonly preparedSpells?: readonly SpellRecord[];
+  readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
+  readonly spellSlots?: readonly {
+    readonly spellLevel: 1 | 2 | 3 | 4 | 5;
+    readonly count: number;
+  }[];
+  readonly extraCombatants?: readonly ReturnType<typeof characterSeed>[];
+  readonly targetStatBlock?: StatBlockRecord;
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-druid-wild-shape"),
     combatants: [
       druidWildShapeCreatureInit(input),
@@ -2190,8 +2248,11 @@ function druidWildShapeCreatureInit(input?: {
   });
 }
 
-function hasActionSpell(state: BattleState, spellId: string): boolean {
-  return discoverBattleActs(state).some(
+function hasActionSpell(
+  session: BattleRuntimeSession,
+  spellId: string,
+): boolean {
+  return discoverBattleActs(session).some(
     (act) =>
       act.subject.tag === "actionSpell" &&
       battleActSpellPresentation(act)?.invocation.spellId === spellId,
@@ -2286,12 +2347,9 @@ function statBlockAttackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const subject = discoverBattleActs(state).find(
-    (act) =>
-      act.subject.tag === "action" &&
-      act.subject.action === "attack" &&
-      act.subject.actorId === druidId &&
-      act.summary.includes(attackName),
+  const procedureRef = wildShapeStatBlockAttackProcedureRef(state, attackName);
+  const subject = discoverBattleActCandidates(state).find((act) =>
+    isAttackActForProcedure(act, procedureRef),
   )?.subject;
   if (
     subject?.tag !== "action" ||
@@ -2303,6 +2361,54 @@ function statBlockAttackSubject(
   return subject;
 }
 
+type AttackCandidate = ReturnType<typeof discoverBattleActCandidates>[number];
+type AttackProcedureRef = Extract<
+  BattleSubject,
+  | { readonly tag: "action"; readonly action: "attack" }
+  | { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
+>["procedureRef"];
+
+function isAttackActForProcedure(
+  act: AttackCandidate,
+  procedureRef: AttackProcedureRef | null,
+): boolean {
+  return (
+    procedureRef !== null &&
+    ((act.subject.tag === "action" && act.subject.action === "attack") ||
+      (act.subject.tag === "bonusAction" &&
+        act.subject.action === "offHandAttack")) &&
+    act.subject.procedureRef === procedureRef
+  );
+}
+
+function wildShapeStatBlockAttackProcedureRef(
+  state: BattleState,
+  attackName: string,
+): AttackProcedureRef | null {
+  const active = activeDruidWildShape(requireCharacter(state, druidId));
+  if (active === null) return null;
+  return (
+    statBlockProcedurePresentations(active.admission).find(
+      (presentation) =>
+        presentation.kind === "attack" && presentation.name === attackName,
+    )?.procedureRef ?? null
+  );
+}
+
+function trueFormMainAttackProcedureRef(
+  state: BattleState,
+): AttackProcedureRef | null {
+  return requireCharacter(state, druidId).origin.attack?.procedureRef ?? null;
+}
+
+function trueFormOffHandAttackProcedureRef(
+  state: BattleState,
+): AttackProcedureRef | null {
+  return (
+    requireCharacter(state, druidId).origin.offHandAttack?.procedureRef ?? null
+  );
+}
+
 function wildShapeSubject(
   state: BattleState,
   input:
@@ -2312,14 +2418,20 @@ function wildShapeSubject(
       }
     | { readonly action: "dismiss" },
 ): Extract<BattleSubject, { readonly tag: "druidWildShape" }> {
-  const subject = discoverBattleActs(state).find(
+  const actor = requireCharacter(state, druidId);
+  const formExecutionRef =
+    input.action === "assumeForm"
+      ? actor.origin.druidWildShapeAvailableForms?.find(
+          (admission) => admission.statBlock.id === input.formStatBlockId,
+        )?.execution.scopeRef
+      : undefined;
+  const subject = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "druidWildShape" &&
       act.subject.action === input.action &&
       (input.action === "dismiss" ||
         (act.subject.action === "assumeForm" &&
-          battleActDruidWildShapePresentation(act)?.formStatBlockId ===
-            input.formStatBlockId)),
+          act.subject.formExecutionRef === formExecutionRef)),
   )?.subject;
   if (subject?.tag !== "druidWildShape") {
     throw new Error("Expected Druid Wild Shape act.");
@@ -2488,11 +2600,13 @@ function isCharacterBattleCreatureState(
 function druidWildShapeUsesRemaining(
   combatant: CharacterBattleCreatureState,
 ): number {
-  const resource = combatant.origin.resources.find(
-    (candidate) => candidate.unit.id === "druid_wild_shape",
-  );
-  if (resource === undefined || !("usesRemaining" in resource)) {
-    throw new Error("Expected Druid Wild Shape resource.");
+  const [resource, ...additionalResources] = combatant.origin.resources;
+  if (
+    resource === undefined ||
+    additionalResources.length > 0 ||
+    !("usesRemaining" in resource)
+  ) {
+    throw new Error("Expected the fixture's sole Wild Shape use resource.");
   }
   return Number(resource.usesRemaining);
 }

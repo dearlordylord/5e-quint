@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-REPLAY: L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall doSlowFallReduceDamage doSlowFallPreventDamage
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+import { classLevel } from "@dnd/shared/types";
 import {
   type BattleState,
   type CombatantId,
@@ -9,6 +10,7 @@ import {
   resolveFallDamageLanding,
 } from "./index.ts";
 import {
+  characterBattleFeatureInitForTest,
   battleId,
   characterSeed,
   combatantId,
@@ -146,7 +148,11 @@ function battleWithSlowFallMonk(input: {
         initiative: 10,
         classLevels: [{ className: "monk", level: input.level }],
         attack: null,
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "monk", level: classLevel(input.level) },
+          ]),
+        ],
         characterUnitRefs: [
           reactionModifierUnitRefWithProfile(
             unit.id,

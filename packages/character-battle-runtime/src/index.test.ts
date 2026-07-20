@@ -24,9 +24,12 @@ import type {
   BattleCreatureState,
   BattleHole,
   BattleSubject,
+  BattleRuntimeContext,
+  BattleRuntimeSession,
   BattleState,
+  CharacterBattleResourceOwnership,
   CharacterBattleResourceState,
-  CharacterBattleSpellcastingState,
+  CharacterBattleSpellcastingExecutionState,
 } from "@dnd/battle-runtime";
 import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -795,7 +798,7 @@ describe("Character Sheet battle handoff", () => {
 
     const admitted = admitCharacterSheetCompanionToBattle({
       sheet: forged,
-      state,
+      state: state.state,
       unitLibrary,
       ownerCombatantId: ownerId,
       companionCombatantId: combatantId("forged-companion"),
@@ -900,7 +903,7 @@ describe("Character Sheet battle handoff", () => {
 
     const admitted = admitCharacterSheetCompanionToBattle({
       sheet: forged,
-      state,
+      state: state.state,
       unitLibrary,
       ownerCombatantId: ownerId,
       companionCombatantId: companionId,
@@ -950,7 +953,7 @@ describe("Character Sheet battle handoff", () => {
 
     const admitted = admitCharacterSheetCompanionToBattle({
       sheet,
-      state,
+      state: state.state,
       unitLibrary: unitLibraryWithSyntheticFamiliarFormCatalog(),
       ownerCombatantId: ownerId,
       companionCombatantId: companionId,
@@ -1011,7 +1014,7 @@ describe("Character Sheet battle handoff", () => {
       throw new Error("Find Familiar fixture must expose form eligibility.");
     }
     const cast = castFindFamiliar({
-      state,
+      state: state.state,
       casterId: ownerId,
       familiarId: battleOnlyCompanionId,
       catalog: statBlockCatalog,
@@ -1028,6 +1031,7 @@ describe("Character Sheet battle handoff", () => {
       settleCharacterSheetFromBattle({
         sheet,
         state: cast.state,
+        context: state.context,
         combatant: requireCombatant(cast.state, ownerId),
         unitLibrary,
         statBlockCatalog,
@@ -1174,6 +1178,14 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
 
+    expect(characterSheetDruidWildShapeKnownForms(sheet)).toEqual({
+      statBlockIds: [
+        "stat_block_rat",
+        "stat_block_riding_horse",
+        "stat_block_spider",
+        "stat_block_wolf",
+      ],
+    });
     const init = expectRight(
       characterSheetBattleInit({
         combatantId: combatantId("druid-wild-shape-subset"),
@@ -1382,7 +1394,7 @@ describe("Character Sheet battle handoff", () => {
     expect(refs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "ranger_hunters_prey",
+          unit: expect.objectContaining({ id: "ranger_hunters_prey" }),
           supportProfiles: expect.arrayContaining([
             expect.objectContaining({
               kind: "huntersPrey",
@@ -1436,7 +1448,9 @@ describe("Character Sheet battle handoff", () => {
     expect(refs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "species_dragonborn_breath_weapon",
+          unit: expect.objectContaining({
+            id: "species_dragonborn_breath_weapon",
+          }),
           supportProfiles: expect.arrayContaining([
             expect.objectContaining({
               kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -1457,7 +1471,9 @@ describe("Character Sheet battle handoff", () => {
     expect(refs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "species_dragonborn_damage_resistance",
+          unit: expect.objectContaining({
+            id: "species_dragonborn_damage_resistance",
+          }),
           supportProfiles: expect.arrayContaining([
             {
               kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
@@ -1497,12 +1513,21 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
 
-    expect(init.creatureInit.kind).toBe("character");
-    if (init.creatureInit.kind !== "character") return;
-    expect(init.creatureInit.characterUnitRefs).toEqual(
+    const session = expectRight(
+      startBattle({
+        battleId: battleId("battle-dragonborn-breath-parse"),
+        combatants: [init],
+      }),
+    );
+    const runtimeContext = session.context.characters.get(
+      combatantId("dragonborn-breath-parse"),
+    );
+    expect(runtimeContext?.unitPresentationSources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "species_dragonborn_breath_weapon",
+          unit: expect.objectContaining({
+            id: "species_dragonborn_breath_weapon",
+          }),
           supportProfiles: expect.arrayContaining([
             expect.objectContaining({
               kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -1520,10 +1545,12 @@ describe("Character Sheet battle handoff", () => {
         }),
       ]),
     );
-    expect(init.creatureInit.characterUnitRefs).toEqual(
+    expect(runtimeContext?.unitPresentationSources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "species_dragonborn_damage_resistance",
+          unit: expect.objectContaining({
+            id: "species_dragonborn_damage_resistance",
+          }),
           supportProfiles: expect.arrayContaining([
             {
               kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
@@ -1539,7 +1566,7 @@ describe("Character Sheet battle handoff", () => {
         }),
       ]),
     );
-    expect(init.creatureInit.resources).toEqual(
+    expect(runtimeContext?.resourceOwnership).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           unit: expect.objectContaining({
@@ -1548,6 +1575,21 @@ describe("Character Sheet battle handoff", () => {
         }),
       ]),
     );
+    const breathWeaponOwnership = runtimeContext?.resourceOwnership.find(
+      (candidate) => candidate.unit.id === "species_dragonborn_breath_weapon",
+    );
+    const dragonborn = session.state.combatants.get(
+      combatantId("dragonborn-breath-parse"),
+    );
+    expect(dragonborn?.origin.kind).toBe("character");
+    if (
+      dragonborn?.origin.kind === "character" &&
+      breathWeaponOwnership !== undefined
+    ) {
+      expect(
+        dragonborn.origin.resources.map((resource) => resource.resourcePoolRef),
+      ).toContain(breathWeaponOwnership.resourcePoolRef);
+    }
   });
 
   test("projects Dwarven Resilience Poison Resistance and Poisoned save Advantage support into battle Unit refs", () => {
@@ -1563,7 +1605,7 @@ describe("Character Sheet battle handoff", () => {
     expect(refs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "dwarf_dwarven_resilience",
+          unit: expect.objectContaining({ id: "dwarf_dwarven_resilience" }),
           supportProfiles: [
             {
               kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
@@ -1603,7 +1645,7 @@ describe("Character Sheet battle handoff", () => {
     expect(refs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "species_halfling_brave",
+          unit: expect.objectContaining({ id: "species_halfling_brave" }),
           supportProfiles: [
             {
               kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
@@ -1677,15 +1719,20 @@ describe("Character Sheet battle handoff", () => {
     const activeHandoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      context: state.context,
       combatant: requireCombatant(assume.state, combatantId("druid")),
     });
     expect(Either.isLeft(activeHandoff)).toBe(true);
 
     const dismissableState = restoreBonusAction(assume.state);
+    const dismissableSession = {
+      state: dismissableState,
+      context: state.context,
+    };
     const dismissed = requireResolvedBattleSubject(
       resolveBattleSubject({
         state: dismissableState,
-        subject: druidWildShapeAct(dismissableState, "dismiss"),
+        subject: druidWildShapeAct(dismissableSession, "dismiss"),
         fills: [],
       }),
     );
@@ -1693,6 +1740,7 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.right,
         unitLibrary,
+        context: state.context,
         combatant: requireCombatant(dismissed.state, combatantId("druid")),
       }),
     );
@@ -1730,10 +1778,13 @@ describe("Character Sheet battle handoff", () => {
     if (!hasLimitedCharacterBattleResourceCap(driftedWildShapeResource)) {
       throw new Error("Expected finite drifted Wild Shape resource.");
     }
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("drifted-wild-shape");
 
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: driftedWildShapeUnit }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -1741,9 +1792,7 @@ describe("Character Sheet battle handoff", () => {
           classLevels: [{ className: "druid", level: classLevel(2) }],
           resources: [
             {
-              unit: driftedWildShapeUnit,
-              resourcePoolRef:
-                battleResourcePoolExecutionRefForTest("drifted-wild-shape"),
+              resourcePoolRef,
               resource: driftedWildShapeResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -2354,11 +2403,7 @@ describe("Character Sheet battle handoff", () => {
               spellcastingAbilityModifier: abilityModifier(3),
               proficiencyBonus: proficiencyBonus(3),
               canCastSpells: true,
-              cantrips: [],
-              preparedSpells: [],
-              spellbookRitualSpellAccesses: [],
-              bookOfShadowsSpellAccesses: [],
-              invocationSpellAccesses: [],
+              pactOfTheChainFindFamiliarInvocationMode: null,
               spellSlots: [
                 {
                   spellLevel: spellSlotLevel(1),
@@ -2402,11 +2447,7 @@ describe("Character Sheet battle handoff", () => {
             spellcastingAbilityModifier: abilityModifier(3),
             proficiencyBonus: proficiencyBonus(3),
             canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            bookOfShadowsSpellAccesses: [],
-            invocationSpellAccesses: [],
+            pactOfTheChainFindFamiliarInvocationMode: null,
             spellSlots: [
               {
                 spellLevel: spellSlotLevel(1),
@@ -2488,7 +2529,7 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
 
-    const sorcerer = state.combatants.get(combatantIdValue);
+    const sorcerer = state.state.combatants.get(combatantIdValue);
     if (sorcerer?.origin.kind !== "character") {
       throw new Error("Expected character-origin Sorcerer combatant.");
     }
@@ -2586,7 +2627,7 @@ describe("Character Sheet battle handoff", () => {
         ],
       }),
     );
-    const sorcerer = battle.combatants.get(sorcererCombatantId);
+    const sorcerer = battle.state.combatants.get(sorcererCombatantId);
     if (sorcerer?.origin.kind !== "character") {
       throw new Error("Expected Sorcerer character combatant.");
     }
@@ -2603,6 +2644,7 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
     const spentSorcerer = handoffBranchCombatant({
+      combatantId: sorcererCombatantId,
       hp: characterSheetCurrentHp(sheet),
       maxHp: expectRight(characterSheetHitPointMaximum({ sheet, unitLibrary })),
       tempHp: characterSheetTempHp(sheet),
@@ -2610,7 +2652,7 @@ describe("Character Sheet battle handoff", () => {
       origin: {
         ...sorcerer.origin,
         resources: sorcerer.origin.resources.map((resource) =>
-          resource.unit.id === spentSorceryPoints.unit.id
+          resource.resourcePoolRef === spentSorceryPoints.resourcePoolRef
             ? spentSorceryPoints
             : resource,
         ),
@@ -2621,6 +2663,7 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet,
         unitLibrary,
+        context: battle.context,
         combatant: spentSorcerer,
       }),
     );
@@ -2681,18 +2724,19 @@ describe("Character Sheet battle handoff", () => {
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
     expect(hasFixedCharacterBattleResourceCap(favoredEnemyResource)).toBe(true);
     if (!hasFixedCharacterBattleResourceCap(favoredEnemyResource)) return;
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("favored-enemy");
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
           characterId: characterId("character:ranger-handoff"),
           resources: [
             {
-              unit: favoredEnemy,
-              resourcePoolRef:
-                battleResourcePoolExecutionRefForTest("favored-enemy"),
+              resourcePoolRef,
               resource: favoredEnemyResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -2742,19 +2786,20 @@ describe("Character Sheet battle handoff", () => {
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
     expect(hasFixedCharacterBattleResourceCap(favoredEnemyResource)).toBe(true);
     if (!hasFixedCharacterBattleResourceCap(favoredEnemyResource)) return;
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "drifted-favored-enemy",
+    );
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
           characterId: characterId("character:ranger-free-cast-drift"),
           resources: [
             {
-              unit: favoredEnemy,
-              resourcePoolRef: battleResourcePoolExecutionRefForTest(
-                "drifted-favored-enemy",
-              ),
+              resourcePoolRef,
               resource: {
                 ...favoredEnemyResource,
                 cap: {
@@ -2819,10 +2864,13 @@ describe("Character Sheet battle handoff", () => {
         usesRemaining: 1,
       }),
     );
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("focus-expended");
 
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: focusUnit }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -2830,9 +2878,7 @@ describe("Character Sheet battle handoff", () => {
           classLevels: [{ className: "monk", level: classLevel(2) }],
           resources: [
             {
-              unit: focusUnit,
-              resourcePoolRef:
-                battleResourcePoolExecutionRefForTest("focus-expended"),
+              resourcePoolRef,
               resource: focusResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(0),
@@ -2879,10 +2925,13 @@ describe("Character Sheet battle handoff", () => {
     if (!hasLimitedCharacterBattleResourceCap(driftedFocusResource)) {
       throw new Error("Expected finite drifted Monk Focus resource.");
     }
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("drifted-focus");
 
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: driftedFocusUnit }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -2890,9 +2939,7 @@ describe("Character Sheet battle handoff", () => {
           classLevels: [{ className: "monk", level: classLevel(2) }],
           resources: [
             {
-              unit: driftedFocusUnit,
-              resourcePoolRef:
-                battleResourcePoolExecutionRefForTest("drifted-focus"),
+              resourcePoolRef,
               resource: driftedFocusResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -2972,10 +3019,13 @@ describe("Character Sheet battle handoff", () => {
       expect.objectContaining({ unit: focusUnit }),
     );
     expect(initFocusResource).not.toHaveProperty("usesRemaining");
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("focus-recovered");
 
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: recovered,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: focusUnit }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -2983,9 +3033,7 @@ describe("Character Sheet battle handoff", () => {
           classLevels: [{ className: "monk", level: classLevel(2) }],
           resources: [
             {
-              unit: focusUnit,
-              resourcePoolRef:
-                battleResourcePoolExecutionRefForTest("focus-recovered"),
+              resourcePoolRef,
               resource: focusResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
@@ -3037,10 +3085,14 @@ describe("Character Sheet battle handoff", () => {
     if (driftedFontOfMagicResource.kind !== "point_pool") {
       throw new Error("Expected drifted Font of Magic point-pool resource.");
     }
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "drifted-font-of-magic",
+    );
 
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: driftedFontOfMagicUnit }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -3048,10 +3100,7 @@ describe("Character Sheet battle handoff", () => {
           classLevels: [{ className: "sorcerer", level: classLevel(5) }],
           resources: [
             {
-              unit: driftedFontOfMagicUnit,
-              resourcePoolRef: battleResourcePoolExecutionRefForTest(
-                "drifted-font-of-magic",
-              ),
+              resourcePoolRef,
               resource: driftedFontOfMagicResource,
               pointsRemaining: resourceCount(5),
             },
@@ -3090,18 +3139,19 @@ describe("Character Sheet battle handoff", () => {
       true,
     );
     if (!hasFixedCharacterBattleResourceCap(paladinsSmiteResource)) return;
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("paladins-smite");
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: paladinsSmite }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
           characterId: characterId("character:paladin-smite-handoff"),
           resources: [
             {
-              unit: paladinsSmite,
-              resourcePoolRef:
-                battleResourcePoolExecutionRefForTest("paladins-smite"),
+              resourcePoolRef,
               resource: paladinsSmiteResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(0),
@@ -3153,19 +3203,20 @@ describe("Character Sheet battle handoff", () => {
       true,
     );
     if (!hasLimitedCharacterBattleResourceCap(favoredEnemyResource)) return;
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "threshold-favored-enemy",
+    );
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
+      resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
           characterId: characterId("character:ranger-handoff-scaling"),
           resources: [
             {
-              unit: favoredEnemy,
-              resourcePoolRef: battleResourcePoolExecutionRefForTest(
-                "threshold-favored-enemy",
-              ),
+              resourcePoolRef,
               resource: {
                 ...favoredEnemyResource,
                 cap: {
@@ -3305,7 +3356,6 @@ describe("Character Build battle projection", () => {
     expect(trueStrike?.subject).toMatchObject({
       tag: "actionSpell",
       actorId: casterId,
-      componentWeaponItemId: trueStrikeDaggerItemId(),
     });
     expect(trueStrike?.summary).toBe(
       "Cast True Strike as a cantrip using Dagger.",
@@ -3572,7 +3622,7 @@ describe("Character Build battle projection", () => {
       }),
     );
 
-    expect(state.combatants.get(warlockId)?.origin).toMatchObject({
+    expect(state.state.combatants.get(warlockId)?.origin).toMatchObject({
       kind: "character",
       invocationFeatures: [{ tag: "eldritchMind" }],
     });
@@ -3611,17 +3661,21 @@ describe("Character Build battle projection", () => {
         unitLibrary,
       }),
     );
-    const fighter = state.combatants.get(fighterId);
+    const fighter = state.state.combatants.get(fighterId);
     expect(fighter?.origin).toMatchObject({
       kind: "character",
       weaponMasteries: [{ weaponUnitId: "weapon_longsword" }],
-      characterUnitRefs: expect.arrayContaining([
+    });
+    expect(
+      state.context.characters.get(fighterId)?.unitPresentationSources,
+    ).toEqual(
+      expect.arrayContaining([
         {
-          unitId: "mastery_sap",
+          unit: expect.objectContaining({ id: "mastery_sap" }),
           supportProfiles: ["weaponMasterySap"],
         },
       ]),
-    });
+    );
 
     const subject = requireDiscoveredAttackSubject(
       state,
@@ -3630,12 +3684,12 @@ describe("Character Build battle projection", () => {
     );
     const meleeReachFact = attackMeleeReachFact(subject, targetId);
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, targetId, [meleeReachFact])],
       }),
@@ -3643,7 +3697,7 @@ describe("Character Build battle projection", () => {
     );
     const damageRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, targetId, [meleeReachFact]),
@@ -3654,7 +3708,7 @@ describe("Character Build battle projection", () => {
     );
     const hit = requireResolvedBattleSubject(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, targetId, [meleeReachFact]),
@@ -3664,9 +3718,15 @@ describe("Character Build battle projection", () => {
       }),
     );
 
+    const sapProcedureRef = state.context.characters
+      .get(fighterId)
+      ?.unitProcedureOwnership.find(
+        (ownership) => ownership.unitId === "mastery_sap",
+      )?.procedureRef;
+    expect(sapProcedureRef).toBeDefined();
     expect(hit.state.combatants.get(targetId)?.activeEffects).toContainEqual({
       kind: "nextAttackRollBySelf",
-      sourceUnitId: "mastery_sap",
+      sourceProcedureRef: sapProcedureRef,
       sourceCombatantId: fighterId,
       mode: "disadvantage",
       expiresAt: { kind: "startOfTurn", combatantId: fighterId },
@@ -3686,7 +3746,7 @@ describe("Character Build battle projection", () => {
     expect(refs).toEqual(
       expect.arrayContaining([
         {
-          unitId: "fighter_tactical_master",
+          unit: expect.objectContaining({ id: "fighter_tactical_master" }),
           supportProfiles: [
             {
               kind: "tacticalMasterReplacement",
@@ -3695,15 +3755,15 @@ describe("Character Build battle projection", () => {
           ],
         },
         {
-          unitId: "mastery_push",
+          unit: expect.objectContaining({ id: "mastery_push" }),
           supportProfiles: ["weaponMasteryPush"],
         },
         {
-          unitId: "mastery_sap",
+          unit: expect.objectContaining({ id: "mastery_sap" }),
           supportProfiles: ["weaponMasterySap"],
         },
         {
-          unitId: "mastery_slow",
+          unit: expect.objectContaining({ id: "mastery_slow" }),
           supportProfiles: ["weaponMasterySlow"],
         },
       ]),
@@ -3731,17 +3791,21 @@ describe("Character Build battle projection", () => {
         unitLibrary,
       }),
     );
-    const fighter = state.combatants.get(fighterId);
+    const fighter = state.state.combatants.get(fighterId);
     expect(fighter?.origin).toMatchObject({
       kind: "character",
       weaponMasteries: [{ weaponUnitId: "weapon_quarterstaff" }],
-      characterUnitRefs: expect.arrayContaining([
+    });
+    expect(
+      state.context.characters.get(fighterId)?.unitPresentationSources,
+    ).toEqual(
+      expect.arrayContaining([
         {
-          unitId: "mastery_topple",
+          unit: expect.objectContaining({ id: "mastery_topple" }),
           supportProfiles: ["weaponMasteryTopple"],
         },
       ]),
-    });
+    );
 
     const subject = requireDiscoveredAttackSubject(
       state,
@@ -3750,12 +3814,12 @@ describe("Character Build battle projection", () => {
     );
     const meleeReachFact = attackMeleeReachFact(subject, targetId);
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, targetId, [meleeReachFact])],
       }),
@@ -3763,7 +3827,7 @@ describe("Character Build battle projection", () => {
     );
     const toppleSave = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, targetId, [meleeReachFact]),
@@ -3774,7 +3838,6 @@ describe("Character Build battle projection", () => {
     );
 
     expect(toppleSave).toMatchObject({
-      unitFeature: { unitId: "mastery_topple", label: "Topple" },
       ability: "con",
       dc: { kind: "fixed", dc: difficultyClass(12) },
       targetIds: [targetId],
@@ -3802,17 +3865,21 @@ describe("Character Build battle projection", () => {
         unitLibrary,
       }),
     );
-    const fighter = state.combatants.get(fighterId);
+    const fighter = state.state.combatants.get(fighterId);
     expect(fighter?.origin).toMatchObject({
       kind: "character",
       weaponMasteries: [{ weaponUnitId: "weapon_greataxe" }],
-      characterUnitRefs: expect.arrayContaining([
+    });
+    expect(
+      state.context.characters.get(fighterId)?.unitPresentationSources,
+    ).toEqual(
+      expect.arrayContaining([
         {
-          unitId: "mastery_cleave",
+          unit: expect.objectContaining({ id: "mastery_cleave" }),
           supportProfiles: ["weaponMasteryCleave"],
         },
       ]),
-    });
+    );
 
     const subject = requireDiscoveredAttackSubject(
       state,
@@ -3821,12 +3888,12 @@ describe("Character Build battle projection", () => {
     );
     const meleeReachFact = attackMeleeReachFact(subject, targetId);
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, targetId, [meleeReachFact])],
       }),
@@ -3834,7 +3901,7 @@ describe("Character Build battle projection", () => {
     );
     const damageRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, targetId, [meleeReachFact]),
@@ -3845,7 +3912,7 @@ describe("Character Build battle projection", () => {
     );
     const cleaveDecision = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, targetId, [meleeReachFact]),
@@ -3857,7 +3924,6 @@ describe("Character Build battle projection", () => {
     );
 
     expect(cleaveDecision).toMatchObject({
-      unitFeature: { unitId: "mastery_cleave", label: "Cleave" },
       choices: ["use", "decline"],
     });
   });
@@ -3891,8 +3957,7 @@ describe("Character Build battle projection", () => {
       damageAbilityModifier: abilityModifier(3),
       effect: {
         damage: {
-          kind: "authoredReplacement",
-          sourceUnitId: "monk_martial_arts",
+          kind: "mechanicalReplacement",
           dice: 1,
           dieSize: 6,
         },
@@ -4029,12 +4094,12 @@ describe("Character Build battle projection", () => {
       ]),
     );
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, targetId, [meleeReachFact])],
       }),
@@ -4042,7 +4107,7 @@ describe("Character Build battle projection", () => {
     );
     const damageRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, targetId, [meleeReachFact]),
@@ -4056,7 +4121,7 @@ describe("Character Build battle projection", () => {
     );
     const hit = requireResolvedBattleSubject(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, targetId, [meleeReachFact]),
@@ -4107,12 +4172,16 @@ describe("Character Build battle projection", () => {
     );
     const mainMeleeReachFact = attackMeleeReachFact(mainSubject, targetId);
     const mainTarget = requireHole(
-      resolveBattleSubject({ state, subject: mainSubject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: mainSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const mainRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: mainSubject,
         fills: [targetFill(mainTarget, targetId, [mainMeleeReachFact])],
       }),
@@ -4120,7 +4189,7 @@ describe("Character Build battle projection", () => {
     );
     const afterMainAttack = requireResolvedBattleSubject(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: mainSubject,
         fills: [
           targetFill(mainTarget, targetId, [mainMeleeReachFact]),
@@ -4130,8 +4199,12 @@ describe("Character Build battle projection", () => {
     ).state;
 
     const offHandAttackName = "Dagger (Charisma) (radiant)";
+    const afterMainAttackSession = {
+      state: afterMainAttack,
+      context: state.context,
+    };
     const offHandSubject = requireDiscoveredAttackSubject(
-      afterMainAttack,
+      afterMainAttackSession,
       actorId,
       `Make the Light property Bonus Action attack with ${offHandAttackName}.`,
     );
@@ -4140,7 +4213,7 @@ describe("Character Build battle projection", () => {
       targetId,
     );
     expect(
-      discoverBattleActs(afterMainAttack).map((act) => act.summary),
+      discoverBattleActs(afterMainAttackSession).map((act) => act.summary),
     ).toEqual(
       expect.arrayContaining([
         "Make the Light property Bonus Action attack with Dagger (piercing).",
@@ -4343,8 +4416,7 @@ describe("Character Build battle projection", () => {
         damageAbilityModifier: abilityModifier(3),
         effect: {
           damage: {
-            kind: "authoredReplacement",
-            sourceUnitId: "monk_martial_arts",
+            kind: "mechanicalReplacement",
             dice: 1,
             dieSize,
           },
@@ -4471,12 +4543,16 @@ describe("Character Build battle projection", () => {
       action: "grapple" as const,
     };
     const grappleTarget = requireHole(
-      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: grappleSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const grappleOutcome = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: grappleSubject,
         fills: [
           targetFill(grappleTarget, targetId, [
@@ -4492,12 +4568,16 @@ describe("Character Build battle projection", () => {
       action: "shove" as const,
     };
     const shoveTarget = requireHole(
-      resolveBattleSubject({ state, subject: shoveSubject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: shoveSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const shoveOutcome = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: shoveSubject,
         fills: [
           targetFill(shoveTarget, targetId, [
@@ -4730,11 +4810,11 @@ type BoundAttackSubject =
     >;
 
 function requireDiscoveredAttackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: ReturnType<typeof combatantId>,
   summary: string,
 ): BoundAttackSubject {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActs(session).find(
     (act) => act.subject.actorId === actorId && act.summary === summary,
   )?.subject;
   if (
@@ -4787,7 +4867,9 @@ function requireResolvedBattleSubject(
   return result;
 }
 
-function startDruidWildShapeSheetBattle(sheet: CharacterSheet): BattleState {
+function startDruidWildShapeSheetBattle(
+  sheet: CharacterSheet,
+): BattleRuntimeSession {
   const characterInit = expectRight(
     characterSheetBattleInit({
       combatantId: combatantId("druid"),
@@ -4842,10 +4924,10 @@ function emptyStatBlockCatalog(): StatBlockCatalog {
 }
 
 function druidWildShapeAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   action: "assumeForm" | "dismiss",
 ): Extract<BattleSubject, { readonly tag: "druidWildShape" }> {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "druidWildShape" && act.subject.action === action,
   )?.subject;
@@ -4856,11 +4938,11 @@ function druidWildShapeAct(
 }
 
 function resolveDruidWildShapeAssumeFormWithoutLoadoutEquipment(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ) {
-  const subject = druidWildShapeAct(state, "assumeForm");
+  const subject = druidWildShapeAct(session, "assumeForm");
   const needsDisposition = resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
     fills: [],
   });
@@ -4870,7 +4952,7 @@ function resolveDruidWildShapeAssumeFormWithoutLoadoutEquipment(
   const hole = requireHole(needsDisposition, "wildShapeEquipmentDisposition");
   expect(hole.candidates).toEqual([]);
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
     fills: [
       {
@@ -5742,19 +5824,15 @@ function trueStrikeDaggerItemId() {
 
 function handoffSpellcastingState(
   input: {
-    readonly spellSlots?: CharacterBattleSpellcastingState["spellSlots"];
+    readonly spellSlots?: CharacterBattleSpellcastingExecutionState["spellSlots"];
   } = {},
-): CharacterBattleSpellcastingState {
+): CharacterBattleSpellcastingExecutionState {
   return {
     sourceClassName: "wizard",
     spellcastingAbilityModifier: abilityModifier(3),
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
-    cantrips: [],
-    preparedSpells: [],
-    spellbookRitualSpellAccesses: [],
-    bookOfShadowsSpellAccesses: [],
-    invocationSpellAccesses: [],
+    pactOfTheChainFindFamiliarInvocationMode: null,
     spellSlots: input.spellSlots ?? [
       {
         spellLevel: spellSlotLevel(1),
@@ -5769,17 +5847,13 @@ function pactMagicHandoffSpellcastingState(input: {
   readonly spellLevel?: ReturnType<typeof spellSlotLevel>;
   readonly count?: ResourceCount;
   readonly expended: ResourceCount;
-}): CharacterBattleSpellcastingState {
+}): CharacterBattleSpellcastingExecutionState {
   return {
     sourceClassName: "warlock",
     spellcastingAbilityModifier: abilityModifier(2),
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
-    cantrips: [],
-    preparedSpells: [],
-    spellbookRitualSpellAccesses: [],
-    bookOfShadowsSpellAccesses: [],
-    invocationSpellAccesses: [],
+    pactOfTheChainFindFamiliarInvocationMode: null,
     spellSlots: [
       {
         spellLevel: input.spellLevel ?? spellSlotLevel(1),
@@ -6133,16 +6207,35 @@ function testSorcererMetamagicOptionId(optionId: string) {
 }
 
 function settleHandoffBranchToCharacterSheet(
-  input: Omit<Parameters<typeof settleCharacterSheetFromBattle>[0], "state">,
+  input: Omit<
+    Parameters<typeof settleCharacterSheetFromBattle>[0],
+    "state" | "context"
+  > & {
+    readonly context?: BattleRuntimeContext;
+    readonly resourceOwnership?: readonly CharacterBattleResourceOwnership[];
+  },
 ): ReturnType<typeof settleCharacterSheetFromBattle> {
+  const session = handoffBranchSession(
+    input.combatant,
+    input.resourceOwnership,
+  );
   return settleCharacterSheetFromBattle({
-    ...input,
-    state: handoffBranchState(input.combatant),
+    sheet: input.sheet,
+    state: session.state,
+    context: input.context ?? session.context,
+    combatant: input.combatant,
+    unitLibrary: input.unitLibrary,
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
   });
 }
 
-function handoffBranchState(combatant: BattleCreatureState): BattleState {
-  const state = expectRight(
+function handoffBranchSession(
+  combatant: BattleCreatureState,
+  resourceOwnership: readonly CharacterBattleResourceOwnership[] = [],
+): BattleRuntimeSession {
+  const session = expectRight(
     startBattle({
       battleId: battleId("battle:handoff-branch"),
       combatants: [
@@ -6155,8 +6248,26 @@ function handoffBranchState(combatant: BattleCreatureState): BattleState {
     }),
   );
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(combatant.combatantId, combatant),
+    state: {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(
+        combatant.combatantId,
+        combatant,
+      ),
+    },
+    context: {
+      characters: new Map([
+        [
+          combatant.combatantId,
+          {
+            resourceOwnership,
+            spellPresentationSources: [],
+            unitProcedureOwnership: [],
+            unitPresentationSources: [],
+          },
+        ],
+      ]),
+    },
   };
 }
 

@@ -41,7 +41,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
       cantrips: [spell],
       casterClassLevels: [{ className: "warlock", level: classLevel(5) }],
     });
-    const act = spellAct({ state, spellId: eldritchBlastUnitId });
+    const act = spellAct({ session: state, spellId: eldritchBlastUnitId });
 
     expect({
       ...act.subject,
@@ -63,14 +63,14 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
       "objectTargetChoice",
     ]);
     expect(act.initialHoles).toEqual([
-      expect.objectContaining({ label: "Eldritch Blast attack 1 target" }),
+      expect.objectContaining({ label: "Spell attack 1 target" }),
       expect.objectContaining({
-        label: "Eldritch Blast attack 1 object target",
+        label: "Spell attack 1 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Eldritch Blast attack 2 target" }),
+      expect.objectContaining({ label: "Spell attack 2 target" }),
       expect.objectContaining({
-        label: "Eldritch Blast attack 2 object target",
+        label: "Spell attack 2 object target",
         requiresTableSpatialFact: true,
       }),
     ]);
@@ -80,7 +80,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: targetHoles.map((hole) =>
           spellTargetFill(
@@ -163,7 +163,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     for (const spell of malformedSpells) {
       expect(
         maybeSpellAct({
-          state: spellBattle({ cantrips: [spell] }),
+          session: spellBattle({ cantrips: [spell] }),
           spellId: spell.id,
         }),
       ).toBeUndefined();

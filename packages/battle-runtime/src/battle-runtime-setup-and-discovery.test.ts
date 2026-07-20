@@ -1,5 +1,6 @@
 import {
   startBattleRight,
+  startBattleSessionRight,
   addBattleCombatantRight,
   removeBattleCombatantsRight,
   fighterVsGoblinBattle,
@@ -133,7 +134,7 @@ describe("battle runtime: setup and discovery", () => {
   });
 
   test("prepared spell attack hole codec preserves discriminated spell damage payload", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-prepared-spell-attack-codec"),
       combatants: [
         characterSeed({
@@ -149,9 +150,10 @@ describe("battle runtime: setup and discovery", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("guiding_bolt");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("guiding_bolt")).subject;
     const target = findHole(
-      findAct(state, subject).initialHoles,
+      findAct(session, subject).initialHoles,
       "targetChoice",
     );
     const attackRoll = requireHole(
@@ -367,14 +369,15 @@ describe("battle runtime: setup and discovery", () => {
   });
 
   test("discoverBattleActs exposes attack, movement, and endTurn for the current actor", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-1"),
       combatants: [
         characterSeed({ initiative: 20 }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const acts = discoverBattleActs(state);
+    const state = session.state;
+    const acts = discoverBattleActs(session);
 
     expect(acts.map((act) => act.subject)).toEqual(
       expect.arrayContaining([
@@ -395,12 +398,11 @@ describe("battle runtime: setup and discovery", () => {
   });
 
   test("discoverBattleActs omits attack when there is no target", () => {
-    const acts = discoverBattleActs(
-      startBattleRight({
-        battleId: battleId("battle-no-target"),
-        combatants: [characterSeed({ initiative: 20 })],
-      }),
-    );
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-no-target"),
+      combatants: [characterSeed({ initiative: 20 })],
+    });
+    const acts = discoverBattleActs(session);
 
     expect(acts.map((act) => act.subject)).not.toContainEqual(
       expect.objectContaining({ tag: "action", action: "attack" }),

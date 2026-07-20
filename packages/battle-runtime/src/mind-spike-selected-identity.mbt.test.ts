@@ -20,7 +20,11 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
-import type { BattleActiveEffect, BattleState } from "./index.ts";
+import type {
+  BattleActiveEffect,
+  BattleRuntimeSession,
+  BattleState,
+} from "./index.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
@@ -224,7 +228,11 @@ function createDriver(): SimpleDriver<
 function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIdentityProjection {
   const spell = spellRecord(mindSpikeUnitId);
   const state = mindSpikeBattle();
-  const act = spellAct({ state, spellId: mindSpikeUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session: state,
+    spellId: mindSpikeUnitId,
+    slotLevel: 2,
+  });
   expect({
     ...act.subject,
     invocation: battleActSpellPresentation(act)?.invocation,
@@ -248,7 +256,7 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
   );
   const savingThrow = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -275,14 +283,14 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
   ]);
   const damageRoll = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill, saveFill],
     }),
     "rolledDice",
   );
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -321,21 +329,24 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
 
 function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityProjection {
   const state = mindSpikeBattle();
-  const caster = requireCombatant(state, spellCasterId);
+  const caster = requireCombatant(state.state, spellCasterId);
   const concentratingState = {
     ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spellId("synthetic_prior_concentration")),
-        ),
-        effectKind: "spellEffect",
-      },
-    }),
+    state: {
+      ...state.state,
+      combatants: new Map(state.state.combatants).set(spellCasterId, {
+        ...caster,
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(spellId("synthetic_prior_concentration")),
+          ),
+          effectKind: "spellEffect",
+        },
+      }),
+    },
   };
   const act = spellAct({
-    state: concentratingState,
+    session: concentratingState,
     spellId: mindSpikeUnitId,
     slotLevel: 2,
   });
@@ -347,7 +358,7 @@ function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityPr
   );
   const savingThrow = requireResultHole(
     resolveBattleSubject({
-      state: concentratingState,
+      state: concentratingState.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -359,14 +370,14 @@ function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityPr
   ]);
   const damageRoll = requireResultHole(
     resolveBattleSubject({
-      state: concentratingState,
+      state: concentratingState.state,
       subject: act.subject,
       fills: [targetFill, saveFill],
     }),
     "rolledDice",
   );
   const resolved = resolveBattleSubject({
-    state: concentratingState,
+    state: concentratingState.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -395,7 +406,7 @@ function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityPr
   });
 }
 
-function mindSpikeBattle(): BattleState {
+function mindSpikeBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(mindSpikeUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],

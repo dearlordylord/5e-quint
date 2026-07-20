@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 //
 // The magicalDarknessPointOrigin Spell Procedure Profile: action-time Spell
@@ -34,8 +35,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
   parseBattleSpellEffectLevel,
   BattleSpellEffectLevel,
@@ -48,9 +48,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -184,7 +183,6 @@ function discoverMagicalDarknessPointOriginCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: magicalDarknessPointOriginInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
@@ -192,22 +190,6 @@ function discoverMagicalDarknessPointOriginCastAct(
   ];
 }
 
-function magicalDarknessPointOriginInvocationRef(
-  invocation: MagicalDarknessPointOriginSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "magicalDarknessPointOrigin",
-  };
-}
-
-function magicalDarknessPointOriginCastSummary(
-  invocation: MagicalDarknessPointOriginSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveMagicalDarknessPointOrigin(
   input: MagicalDarknessPointOriginResolveInput,
@@ -221,37 +203,29 @@ function resolveMagicalDarknessPointOrigin(
 }
 
 const MagicalDarknessPointOriginInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "magicalDarknessPointOrigin" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("magicalDarknessPointOrigin"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({
         kind: Schema.Literal("pointOriginSphere"),
         radiusFeet: MovementFeet,
       }),
-      durationTicks: BattleRuntimeObjectSchema,
+      durationTicks: ElapsedTimeTicksSchema,
       rangeFeet: MovementFeet,
       dispelledSpellCreatedLightMaxSpellLevel: BattleSpellEffectLevel,
     }),
   );
 export const magicalDarknessPointOriginProfile = {
   procedure: "magicalDarknessPointOrigin",
-  invocationSchema: MagicalDarknessPointOriginInvocationSchema,
+  executionSchema: MagicalDarknessPointOriginInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitMagicalDarknessPointOrigin,
   discoverCastAct: discoverMagicalDarknessPointOriginCastAct,
-  castSummary: magicalDarknessPointOriginCastSummary,
-  invocationRef: magicalDarknessPointOriginInvocationRef,
   resolve: resolveMagicalDarknessPointOrigin,
 } satisfies SpellProcedureProfile<
   "magicalDarknessPointOrigin",

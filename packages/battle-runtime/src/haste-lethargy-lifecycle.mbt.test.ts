@@ -37,6 +37,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   breakBattleConcentration,
+  discoverBattleActCandidates,
   endTurn,
   type BattleActiveEffect,
   type BattleCreatureState,
@@ -54,10 +55,7 @@ import {
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import {
-  knownWillingSpellTargetFill,
-  spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
+import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 
 const hasteLethargyScenarios = [
@@ -337,11 +335,16 @@ function hasteBattle(): BattleState {
   return spellBattle({
     preparedSpells: [spellRecord(hasteUnitId)],
     spellSlots: [{ spellLevel: 3, count: 2 }],
-  });
+  }).state;
 }
 
 function castHaste(state: BattleState): BattleState {
-  const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+  const act = discoverBattleActCandidates(state).find(
+    (candidate) => candidate.subject.tag === "actionSpell",
+  );
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected Haste mechanical spell act.");
+  }
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
@@ -503,7 +506,7 @@ function stateWithSyntheticTargetConcentration(
     sourceProcedureRef: syntheticTargetConcentrationProcedureRef,
     sourceCombatantId: spellTargetId,
     bonus: 1,
-    negatedSpellIds: [],
+    negatesRepeatedDamageAllocation: false,
     expiresAt: {
       kind: "concentration",
       combatantId: spellTargetId,

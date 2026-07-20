@@ -1,5 +1,8 @@
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
-import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterUnitProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT47 orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT53 orc_adrenaline_rush
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.zero-hit-point-replacement
@@ -18,6 +21,7 @@ import {
   attackDamageDispositionFill,
   attackRollFill,
   damageRollFillWithGroups,
+  requireCombatant,
   requireHole,
   requireResultHole,
   weaponAttackSubject,
@@ -63,7 +67,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
+        unit,
         supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
       }),
     );
@@ -84,22 +88,30 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
   });
 
   test("Relentless Endurance replaces a non-outright drop to 0 with 1 Hit Point and spends its use", () => {
-    const state = relentlessEnduranceBattle({ targetHp: 3 });
-    const disposition = relentlessEnduranceDisposition(state, 4);
+    const session = relentlessEnduranceBattle({ targetHp: 3 });
+    const disposition = relentlessEnduranceDisposition(session, 4);
 
     expect(disposition.choices).toContainEqual({
       kind: "zeroHitPointReplacement",
-      unitId: orcRelentlessEnduranceUnitId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        session,
+        spellTargetId,
+        orcRelentlessEnduranceUnitId,
+      ),
     });
 
     const result = resolveBattleSubject({
-      state,
-      subject: weaponAttackSubject(state, "Longsword"),
+      state: session.state,
+      subject: weaponAttackSubject(session, "Longsword"),
       fills: [
         ...disposition.prefixFills,
         attackDamageDispositionFill(disposition, {
           kind: "zeroHitPointReplacement",
-          unitId: orcRelentlessEnduranceUnitId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellTargetId,
+            orcRelentlessEnduranceUnitId,
+          ),
         }),
       ],
     });
@@ -129,13 +141,22 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     if (target?.origin.kind !== "character") {
       throw new Error("Expected Relentless Endurance target character.");
     }
-    expect(target.origin.resources[0]?.usesRemaining).toBe(0);
+    const resourcePoolRef = session.context.characters
+      .get(spellTargetId)
+      ?.resourceOwnership.find(
+        (ownership) => ownership.unit.id === orcRelentlessEnduranceUnitId,
+      )?.resourcePoolRef;
+    expect(
+      target.origin.resources.find(
+        (resource) => resource.resourcePoolRef === resourcePoolRef,
+      )?.usesRemaining,
+    ).toBe(0);
   });
 
   test("Relentless Endurance replaces non-attack spell damage that drops the target to 0", () => {
     const unit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
     const spell = spellRecord(rayOfFrostUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       cantrips: [spell],
       targetHp: 3,
       targetResources: [{ unit }],
@@ -146,7 +167,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
         },
       ],
     });
-    const act = spellAct({ state, spellId: rayOfFrostUnitId });
+    const act = spellAct({ session, spellId: rayOfFrostUnitId });
     const target = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       target,
@@ -156,7 +177,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     );
     const roll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -165,7 +186,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
     const damage = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, rollFill],
       }),
@@ -174,7 +195,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     const damageFill = damageRollFillWithGroups(damage, [[4]]);
     const disposition = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, rollFill, damageFill],
       }),
@@ -182,7 +203,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -190,7 +211,11 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
         damageFill,
         attackDamageDispositionFill(disposition, {
           kind: "zeroHitPointReplacement",
-          unitId: orcRelentlessEnduranceUnitId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellTargetId,
+            orcRelentlessEnduranceUnitId,
+          ),
         }),
       ],
     });
@@ -212,7 +237,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
   test("Relentless Endurance replaces failed save damage that drops the target to 0", () => {
     const unit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
     const spell = spellRecord(acidSplashUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       cantrips: [spell],
       targetHp: 3,
       targetResources: [{ unit }],
@@ -223,19 +248,23 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
         },
       ],
     });
-    const act = spellAct({ state, spellId: acidSplashUnitId });
+    const act = spellAct({ session, spellId: acidSplashUnitId });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(save, [
       { targetId: spellTargetId, succeeded: false },
     ]);
     const damage = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [saveFill] }),
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
       "rolledDice",
     );
     const damageFill = damageRollFillWithGroups(damage, [[4]]);
     const disposition = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [saveFill, damageFill],
       }),
@@ -243,14 +272,18 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         saveFill,
         damageFill,
         attackDamageDispositionFill(disposition, {
           kind: "zeroHitPointReplacement",
-          unitId: orcRelentlessEnduranceUnitId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellTargetId,
+            orcRelentlessEnduranceUnitId,
+          ),
         }),
       ],
     });
@@ -270,12 +303,12 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
   });
 
   test("declining Relentless Endurance follows the ordinary zero-HP lifecycle", () => {
-    const state = relentlessEnduranceBattle({ targetHp: 3 });
-    const disposition = relentlessEnduranceDisposition(state, 4);
+    const session = relentlessEnduranceBattle({ targetHp: 3 });
+    const disposition = relentlessEnduranceDisposition(session, 4);
 
     const result = resolveBattleSubject({
-      state,
-      subject: weaponAttackSubject(state, "Longsword"),
+      state: session.state,
+      subject: weaponAttackSubject(session, "Longsword"),
       fills: [
         ...disposition.prefixFills,
         attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
@@ -336,18 +369,20 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
   });
 
   test("invalid zero-Hit-Point replacement disposition fills are rejected", () => {
-    const state = relentlessEnduranceBattle({ targetHp: 3 });
-    const disposition = relentlessEnduranceDisposition(state, 4);
+    const session = relentlessEnduranceBattle({ targetHp: 3 });
+    const disposition = relentlessEnduranceDisposition(session, 4);
 
     expect(
       resolveBattleSubject({
-        state,
-        subject: weaponAttackSubject(state, "Longsword"),
+        state: session.state,
+        subject: weaponAttackSubject(session, "Longsword"),
         fills: [
           ...disposition.prefixFills,
           attackDamageDispositionFill(disposition, {
             kind: "zeroHitPointReplacement",
-            unitId: "wrong_relentless_endurance",
+            procedureRef: battleProcedureExecutionRefForTest(
+              "wrong_relentless_endurance",
+            ),
           }),
         ],
       }),
@@ -434,7 +469,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
       }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(orcAdrenalineRushUnitId),
+        unit,
         supportProfiles: [adrenalineRushSupportProfile()],
       }),
     );
@@ -452,13 +487,31 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
   });
 
   test("Adrenaline Rush spends a Bonus Action Dash use and grants Proficiency Bonus Temporary Hit Points", () => {
-    const state = adrenalineRushBattle({ tempHp: 1 });
-    const act = adrenalineRushDashAct(state);
+    const session = adrenalineRushBattle({ tempHp: 1 });
+    const caster = requireCombatant(session.state, spellCasterId);
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected Adrenaline Rush caster to be a character.");
+    }
+    const resourcePoolRef = session.context.characters
+      .get(spellCasterId)
+      ?.resourceOwnership.find(
+        (candidate) => candidate.unit.id === orcAdrenalineRushUnitId,
+      )?.resourcePoolRef;
+    const resource = caster.origin.resources.find(
+      (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+    );
+    if (resource === undefined) {
+      throw new Error("Expected Adrenaline Rush resource.");
+    }
+    const act = adrenalineRushDashAct(session);
     const result = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [],
     });
+    if (result.tag === "invalid") {
+      throw new Error(result.message);
+    }
 
     expect(result).toMatchObject({
       tag: "resolved",
@@ -478,7 +531,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
             origin: expect.objectContaining({
               resources: [
                 expect.objectContaining({
-                  unitId: orcAdrenalineRushUnitId,
+                  resourcePoolRef: resource.resourcePoolRef,
                   usesRemaining: 2,
                 }),
               ],
@@ -490,10 +543,10 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
   });
 
   test("Adrenaline Rush keeps higher existing Temporary Hit Points", () => {
-    const state = adrenalineRushBattle({ tempHp: 5 });
+    const session = adrenalineRushBattle({ tempHp: 5 });
     const result = resolveBattleSubject({
-      state,
-      subject: adrenalineRushDashAct(state).subject,
+      state: session.state,
+      subject: adrenalineRushDashAct(session).subject,
       fills: [],
     });
 
@@ -511,9 +564,9 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
   });
 
   test("Adrenaline Rush is unavailable without uses", () => {
-    const state = adrenalineRushBattle({ usesRemaining: 0 });
+    const session = adrenalineRushBattle({ usesRemaining: 0 });
     expect(
-      discoverBattleActs(state).some(
+      discoverBattleActs(session).some(
         (act) =>
           act.subject.tag === "bonusActionStandardAction" &&
           battleActUnitPresentation(act)?.unitId === orcAdrenalineRushUnitId,
@@ -521,10 +574,10 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
     ).toBe(false);
     expect(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: adrenalineRushDashSubject(
           requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             spellCasterId,
             orcAdrenalineRushUnitId,
           ),

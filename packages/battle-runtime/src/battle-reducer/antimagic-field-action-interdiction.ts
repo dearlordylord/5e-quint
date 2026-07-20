@@ -10,12 +10,16 @@ import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleAntimagicFieldAuraMembership,
   BattleState,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type {
+  RuntimeSpellProcedureExecution,
+  SpellProcedureExecution,
+} from "../character-execution.ts";
 import type { BattleAreaId, CombatantId } from "../identity.ts";
 import {
   characterProcedureBinding,
   characterSpellProcedure,
+  unitSupportProfileKind,
 } from "../character-execution.ts";
 import {
   spellInvocationIsSpellcasting,
@@ -49,7 +53,7 @@ const NON_SPELLCASTING_SPELL_ACT_PROCEDURES = [
   "objectContactDamageRepeat",
   "spiritualWeaponRepeatAttack",
   "dancingLightsReposition",
-] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+] as const satisfies ReadonlyArray<SpellProcedureExecution["procedure"]>;
 
 export function combatantInsideActiveAntimagicFieldAura(
   state: BattleState,
@@ -82,7 +86,7 @@ export function antimagicFieldInterdictionMessage(
 }
 
 export function spellInvocationActInterdictedByAntimagicField(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedureExecution,
 ): boolean {
   return (
     spellInvocationIsSpellcasting(invocation) ||
@@ -168,6 +172,7 @@ function spellActSubjectInterdictionKind(
   const invocation = characterSpellProcedure(
     actor.origin.execution,
     subject.procedureRef,
+    actor,
   );
   if (invocation === undefined) return null;
   return NON_SPELLCASTING_SPELL_ACT_PROCEDURES.some(
@@ -228,9 +233,13 @@ function unitFeatureSubjectSpendsMagicAction(
   ) {
     return false;
   }
-  const unitId = binding.procedure.unitId;
+  const procedure = binding.procedure;
+  const executionKind =
+    procedure.kind === "unitFeature"
+      ? procedure.execution.kind
+      : unitSupportProfileKind(procedure.execution);
   return (
-    actor.origin.magicActionHealingPoolProfiles.has(unitId) ||
-    actor.origin.magicActionAreaSaveDamageHealingProfiles.has(unitId)
+    executionKind === "magicActionHealingPool" ||
+    executionKind === "magicActionAreaSaveDamageHealing"
   );
 }

@@ -46,15 +46,16 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   breakBattleConcentration,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   type BattleFill,
   type BattleHole,
   type BattleLineDirectionId,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleProcedureExecutionRef,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import type { GustOfWindLineEffect } from "./battle-reducer/turn-end-movement.ts";
 
@@ -107,7 +108,7 @@ type GustOfWindLineState = {
 };
 
 type GustRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly currentTurnRole: GustTurnRole;
   readonly holes: readonly BattleHole[];
   readonly lastResult: GustLastResult;
@@ -286,12 +287,12 @@ function initialRuntimeState(): GustRuntimeState {
 
 function discoverInitialLineSave(state: GustRuntimeState): GustRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: gustOfWindUnitId,
     slotLevel: 2,
   });
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [],
   });
@@ -308,13 +309,13 @@ function castGustOfWind(
 ): GustRuntimeState {
   const save = requireInitialLineSaveHole(state.holes);
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: gustOfWindUnitId,
     slotLevel: 2,
   });
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         gustOfWindLineSavingThrowOutcomeFill(save, [
@@ -326,7 +327,7 @@ function castGustOfWind(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: succeeded ? "initialSaveSucceeded" : "initialSaveFailed",
   };
@@ -334,19 +335,19 @@ function castGustOfWind(
 
 function trySameTurnDirectionChange(state: GustRuntimeState): GustRuntimeState {
   expect(
-    maybeGustDirectionChangeAct(state.battle, gustOfWindNorthDirectionId),
+    maybeGustDirectionChangeAct(state.battle.state, gustOfWindNorthDirectionId),
   ).toBeUndefined();
   return { ...state, lastResult: "directionChangeBlocked" };
 }
 
 function endCasterTurn(state: GustRuntimeState): GustRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected Gust of Wind caster End Turn to resolve.",
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "target",
     holes: [],
     lastResult: "endCasterTurn",
@@ -355,13 +356,13 @@ function endCasterTurn(state: GustRuntimeState): GustRuntimeState {
 
 function discoverEndTurnLineSave(state: GustRuntimeState): GustRuntimeState {
   const act = gustOfWindLineEndTurnSaveAct(
-    state.battle,
+    state.battle.state,
     spellTargetId,
     gustOfWindAreaId,
-    effectDirectionId(state.battle),
+    effectDirectionId(state.battle.state),
   );
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [],
   });
@@ -376,21 +377,21 @@ function fillEndTurnLineSave(
   state: GustRuntimeState,
   succeeded: boolean,
 ): GustRuntimeState {
-  const effect = gustLineEffect(state.battle);
+  const effect = gustLineEffect(state.battle.state);
   if (effect === undefined) {
     throw new Error("Expected active Gust of Wind Line.");
   }
   const directionId = effect.directionId;
   const save = requireEndTurnLineSaveHole(state.holes);
   const act = gustOfWindLineEndTurnSaveAct(
-    state.battle,
+    state.battle.state,
     spellTargetId,
     gustOfWindAreaId,
     directionId,
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         gustOfWindLineSavingThrowOutcomeFill(
@@ -404,7 +405,7 @@ function fillEndTurnLineSave(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "caster",
     holes: [],
     lastResult: succeeded ? "endTurnSaveSucceeded" : "endTurnSaveFailed",
@@ -417,14 +418,14 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
     actorId: spellTargetId,
     command: "move",
   };
-  const directionId = effectDirectionId(state.battle);
-  const effect = gustLineEffect(state.battle);
+  const directionId = effectDirectionId(state.battle.state);
+  const effect = gustLineEffect(state.battle.state);
   if (effect === undefined) {
     throw new Error("Expected active Gust of Wind Line.");
   }
   const moveHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: moveSubject,
       fills: [],
     }),
@@ -432,7 +433,7 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
@@ -451,7 +452,7 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: "movedCloser",
   };
@@ -459,13 +460,13 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
 
 function discoverDirectionChange(state: GustRuntimeState): GustRuntimeState {
   const act = gustOfWindLineDirectionChangeAct(
-    state.battle,
+    state.battle.state,
     spellCasterId,
     gustOfWindAreaId,
     gustOfWindNorthDirectionId,
   );
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [],
   });
@@ -479,14 +480,14 @@ function discoverDirectionChange(state: GustRuntimeState): GustRuntimeState {
 function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {
   const direction = requireDirectionChoiceHole(state.holes);
   const act = gustOfWindLineDirectionChangeAct(
-    state.battle,
+    state.battle.state,
     spellCasterId,
     gustOfWindAreaId,
     gustOfWindNorthDirectionId,
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [gustOfWindLineDirectionChoiceFill(direction)],
     }),
@@ -494,7 +495,7 @@ function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: "directionChanged",
   };
@@ -503,24 +504,30 @@ function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {
 function breakGustConcentration(state: GustRuntimeState): GustRuntimeState {
   return {
     ...state,
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    battle: {
+      ...state.battle,
+      state: breakBattleConcentration(state.battle.state, spellCasterId),
+    },
     holes: [],
     lastResult: "concentrationBroken",
   };
 }
 
 function gustProjection(state: GustRuntimeState): GustOfWindLineState {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const effect = gustLineEffect(state.battle);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const effect = gustLineEffect(state.battle.state);
   const lineActive = effect !== undefined;
   const projection = {
     currentTurnRole: state.currentTurnRole,
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     bonusActionAvailable:
-      state.battle.currentTurnResources.currentHasBonusAction,
+      state.battle.state.currentTurnResources.currentHasBonusAction,
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: gustOfWindUnitId,
         slotLevel: 2,
       }) !== undefined,
@@ -587,7 +594,7 @@ function maybeGustDirectionChangeAct(
   state: BattleState,
   directionId: BattleLineDirectionId,
 ) {
-  return discoverBattleActs(state).find(
+  return discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "gustOfWindLineDirectionChange" &&

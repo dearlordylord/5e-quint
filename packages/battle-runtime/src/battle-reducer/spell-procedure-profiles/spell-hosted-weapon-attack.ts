@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-hosted-weapon-attack
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 //
 // The spellHostedWeaponAttack Spell Procedure Profile: an action cantrip that
@@ -29,10 +30,12 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
+  type CharacterBattleCreatureState,
   type SpellHostedWeaponAttackInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { resolveSelectedAttackProcedure } from "../attack-main.ts";
+import { isCharacterBattleCreatureState } from "../creature-state.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
@@ -43,26 +46,23 @@ import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import { attackTargetHole, needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 import {
   AbilityModifier,
   AttackBonus,
-  BattleRuntimeObjectSchema,
-  BoundCharacterWeaponAttackActionOptionSchema,
   ClassCantripSpellAccessSchema,
   DamageTypeSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 const DAMAGE_TYPE_CHOICES = [
@@ -89,7 +89,7 @@ function admitSpellHostedWeaponAttack(
 
   const origin = ctx.actor.origin;
   const spellcasting = origin.spellcasting;
-  return spellHostedWeaponAttacks(ctx)
+  return spellHostedWeaponAttacks(ctx.actor)
     .filter(({ attack }) =>
       origin.weaponProficiencies.some((proficiency) =>
         weaponMatchesProficiency(attack.weapon, proficiency),
@@ -164,12 +164,14 @@ function spellHostedWeaponAttackProjection(
       };
 }
 
-function spellHostedWeaponAttacks(ctx: SpellAdmissionContext): readonly {
+function spellHostedWeaponAttacks(
+  actor: CharacterBattleCreatureState,
+): readonly {
   readonly itemId: string;
   readonly attack: BoundCharacterWeaponAttackActionOption;
 }[] {
-  const origin = ctx.actor.origin;
-  const activeWildShape = activeDruidWildShapeEffect(ctx.actor);
+  const origin = actor.origin;
+  const activeWildShape = activeDruidWildShapeEffect(actor);
   return [
     ...(origin.attack === null ||
     (activeWildShape !== null &&
@@ -239,11 +241,15 @@ function discoverSpellHostedWeaponAttackCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellHostedWeaponAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const targetHole = attackTargetHole(
+  const componentWeapon = spellHostedWeaponAttackForExecution(
     state,
     actorId,
-    invocation.componentWeapon.attack,
+    invocation.componentWeaponItemId,
   );
+  if (componentWeapon === undefined) {
+    return [];
+  }
+  const targetHole = attackTargetHole(state, actorId, componentWeapon.attack);
   return targetHole.choices.length === 0
     ? []
     : [
@@ -252,47 +258,26 @@ function discoverSpellHostedWeaponAttackCastAct(
             tag: "actionSpell",
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: spellHostedWeaponAttackInvocationRef(invocation),
             mode: { tag: "cast" },
-            componentWeaponItemId: invocation.componentWeapon.itemId,
           },
           initialHoles: [spellDamageTypeChoiceHole(invocation), targetHole],
         },
       ];
 }
 
-function spellHostedWeaponAttackInvocationRef(
-  invocation: SpellHostedWeaponAttackInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "spellHostedWeaponAttack",
-  };
-}
-
-function spellHostedWeaponAttackCastSummary(
-  invocation: SpellHostedWeaponAttackInvocation,
-): string {
-  return `Cast ${invocation.spell.name} as a cantrip using ${invocation.componentWeapon.attack.weapon.name}.`;
-}
-
 function resolveSpellHostedWeaponAttack(
   input: SpellHostedWeaponAttackResolveInput,
 ): BattleResolutionResult {
-  const subjectWeaponItemId = input.input.subject.componentWeaponItemId;
-  if (subjectWeaponItemId === undefined) {
+  const componentWeapon = spellHostedWeaponAttackForExecution(
+    input.input.state,
+    input.actorId,
+    input.invocation.componentWeaponItemId,
+  );
+  if (componentWeapon === undefined) {
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Spell-hosted weapon attack component weapon identity is required.",
-    );
-  }
-  if (subjectWeaponItemId !== input.invocation.componentWeapon.itemId) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Spell-hosted weapon attack component weapon no longer matches this spell act.",
+      "Spell-hosted weapon attack component weapon is no longer available.",
     );
   }
   if (input.fillSet.damageTypeChoice === undefined) {
@@ -308,7 +293,11 @@ function resolveSpellHostedWeaponAttack(
       "Spell-hosted weapon attack damage type must be Radiant or the selected weapon's normal damage type.",
     );
   }
-  const attack = spellHostedWeaponAttack(input.invocation, selectedDamageType);
+  const attack = spellHostedWeaponAttack(
+    input.invocation,
+    componentWeapon.attack,
+    selectedDamageType,
+  );
   const attackFills = input.input.fills.filter(
     (fill) => fill.kind !== "damageTypeChoice",
   );
@@ -347,10 +336,7 @@ function resolveSpellHostedWeaponAttack(
     {
       ...baseInput,
       ...replayOptions,
-      subject: {
-        ...baseInput.subject,
-        componentWeaponItemId: subjectWeaponItemId,
-      },
+      subject: baseInput.subject,
       fills: attackFills,
       pendingAttackDamageAdditions,
     },
@@ -367,10 +353,10 @@ function resolveSpellHostedWeaponAttack(
 }
 
 function spellHostedWeaponAttack(
-  invocation: SpellHostedWeaponAttackInvocation,
+  invocation: SpellHostedWeaponAttackResolveInput["invocation"],
+  attack: BoundCharacterWeaponAttackActionOption,
   damageType: DamageType,
 ): BoundCharacterWeaponAttackActionOption {
-  const attack = invocation.componentWeapon.attack;
   return {
     ...attack,
     abilityModifier: invocation.spellcastingAbilityModifier,
@@ -384,6 +370,25 @@ function spellHostedWeaponAttack(
           : { ...attack.weapon.damage, damageType },
     },
   };
+}
+
+function spellHostedWeaponAttackForExecution(
+  state: BattleState,
+  actorId: CombatantId,
+  componentWeaponItemId: string,
+):
+  | {
+      readonly itemId: string;
+      readonly attack: BoundCharacterWeaponAttackActionOption;
+    }
+  | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined || !isCharacterBattleCreatureState(actor)) {
+    return undefined;
+  }
+  return spellHostedWeaponAttacks(actor).find(
+    ({ itemId }) => itemId === componentWeaponItemId,
+  );
 }
 
 function spellHostedWeaponAttackBonusDamageAdditions(
@@ -405,28 +410,20 @@ function spellHostedWeaponAttackBonusDamageAdditions(
 }
 
 export const SpellHostedWeaponAttackInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "spellHostedWeaponAttack" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellHostedWeaponAttack"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
-      componentWeapon: Schema.Struct({
-        itemId: Schema.String,
-        attack: BoundCharacterWeaponAttackActionOptionSchema,
-      }),
+      componentWeaponItemId: Schema.String,
       spellcastingAbilityModifier: AbilityModifier,
       attackBonus: AttackBonus,
       damageTypeChoices: Schema.Array(DamageTypeSchema),
       bonusDamage: Schema.NullOr(
         Schema.Struct({
-          expr: BattleRuntimeObjectSchema,
+          expr: DiceExprSchema,
           damageType: DamageTypeSchema,
         }),
       ),
@@ -438,14 +435,11 @@ export const spellHostedWeaponAttackProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "spellHostedWeaponAttack",
-  invocationSchema: SpellHostedWeaponAttackInvocationSchema,
+  executionSchema: SpellHostedWeaponAttackInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpellHostedWeaponAttack,
   discoverCastAct: discoverSpellHostedWeaponAttackCastAct,
-  castSummary: spellHostedWeaponAttackCastSummary,
-  invocationRef: spellHostedWeaponAttackInvocationRef,
   resolve: resolveSpellHostedWeaponAttack,
 };

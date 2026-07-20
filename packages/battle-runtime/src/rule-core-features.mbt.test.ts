@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
+} from "./battle-runtime-test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
@@ -65,6 +68,7 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
   attackBonus,
+  classLevel,
   difficultyClass,
   DieRollResult,
   Hp,
@@ -80,7 +84,6 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
-  type BattleActDiscoverySubject,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -90,11 +93,10 @@ import {
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
   battleId,
-  cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
   resolveFailedAbilityCheckResourceBoost,
@@ -103,18 +105,17 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import type { CharacterBattleResourceState } from "./character-battle-resources.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
-import {
-  mechanicsOnlyMyceliumStepUnit,
-  myceliumStepUnitId,
-} from "./classic-non-srd-mechanics-test-fixtures.ts";
+import { mechanicsOnlyMyceliumStepUnit } from "./classic-non-srd-mechanics-test-fixtures.ts";
 
 const ruleCoreFeatureMbtHoles = [
   "DamageRoll",
@@ -822,7 +823,7 @@ function createRuleCoreFeatureDriver(
       readonly rollMode?: AttackRollMode;
       readonly activatedOngoingFeatureUnitId?: string;
       readonly missToHitReplacementUnitId?: string;
-      readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+      readonly selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[];
       readonly weaponDamageDiceRollChoice?: Extract<
         BattleFill,
         { readonly kind: "rolledDice" }
@@ -886,10 +887,10 @@ function createRuleCoreFeatureDriver(
           attackRollFill(attackRoll, rollValue),
           damageRollFillWithGroups(
             damage,
-            input.selectedAttackDamageRiderUnitIds === undefined
+            input.selectedAttackDamageRiderProcedureRefs === undefined
               ? (input.damageGroups ?? [[input.damageRoll]])
               : [[input.damageRoll], [6]],
-            input.selectedAttackDamageRiderUnitIds,
+            input.selectedAttackDamageRiderProcedureRefs,
             input.weaponDamageDiceRollChoice,
           ),
         ],
@@ -902,54 +903,31 @@ function createRuleCoreFeatureDriver(
       doActionSurgeActivate: () => {
         state = actionSurgeBattle();
         resetProjection();
-        resolveSubject(
-          unitFeatureSubject(
-            recordSelectedUnitRuntimeBoundaryId("fighter_action_surge"),
-          ),
-        );
-        featureUsesRemaining = resourceUsesRemaining(
-          state,
-          "fighter_action_surge",
-        );
+        resolveSubject(unitFeatureSubject(state));
+        featureUsesRemaining = resourceUsesRemaining(state);
       },
       doActionSurgeSpendAttack: () => {
         resolveActorAttack({ state, damageRoll: 7 });
-        featureUsesRemaining = resourceUsesRemaining(
-          state,
-          "fighter_action_surge",
-        );
+        featureUsesRemaining = resourceUsesRemaining(state);
         lastDamageAmount = 7;
       },
       doActionSurgeRejectTwice: () => {
         const result = resolveBattleSubject({
           state,
-          subject: unitFeatureSubject(
-            recordSelectedUnitRuntimeBoundaryId("fighter_action_surge"),
-          ),
+          subject: unitFeatureSubject(state),
           fills: [],
         });
         recordResult(result);
-        featureUsesRemaining = resourceUsesRemaining(
-          state,
-          "fighter_action_surge",
-        );
+        featureUsesRemaining = resourceUsesRemaining(state);
       },
       doDiscoverSecondWind: () => {
         state = secondWindBattle();
         resetProjection();
-        const act = findAct(
-          state,
-          unitFeatureSubject(
-            recordSelectedUnitRuntimeBoundaryId("fighter_second_wind"),
-          ),
-        );
+        const act = findAct(state, unitFeatureSubject(state));
         holes = act.initialHoles;
         lastResult = "needsHoles";
         lastInvalidReason = "none";
-        featureUsesRemaining = resourceUsesRemaining(
-          state,
-          "fighter_second_wind",
-        );
+        featureUsesRemaining = resourceUsesRemaining(state);
       },
       doResolveSecondWindLow: () => resolveSecondWind(1),
       doResolveSecondWindHigh: () => resolveSecondWind(8),
@@ -968,10 +946,7 @@ function createRuleCoreFeatureDriver(
       doCunningHide: () => {
         state = cunningActionBattle();
         resetProjection();
-        const subject = bonusActionStandardActionSubject(
-          "rogue_cunning_action",
-          "hide",
-        );
+        const subject = bonusActionStandardActionSubject(state, "hide");
         const act = findAct(state, subject);
         recordResult(
           resolveBattleSubject({
@@ -992,10 +967,7 @@ function createRuleCoreFeatureDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: bonusActionStandardActionSubject(
-              myceliumStepUnitId,
-              "dash",
-            ),
+            subject: bonusActionStandardActionSubject(state, "dash"),
             fills: [],
           }),
         );
@@ -1005,15 +977,13 @@ function createRuleCoreFeatureDriver(
         resetProjection();
         const raging = resolveBattleSubject({
           state,
-          subject: unitFeatureSubject(
-            recordSelectedUnitRuntimeBoundaryId("barbarian_rage"),
-          ),
+          subject: unitFeatureSubject(state),
           fills: [],
         });
         recordResult(raging);
         if (raging.tag !== "resolved") return;
         resolveActorAttack({ state: raging.state, damageRoll: 4 });
-        featureUsesRemaining = resourceUsesRemaining(state, "barbarian_rage");
+        featureUsesRemaining = resourceUsesRemaining(state);
         lastDamageAmount = 7;
       },
       doRecklessAttack: () => {
@@ -1038,8 +1008,8 @@ function createRuleCoreFeatureDriver(
           attackName: "Dagger",
           damageRoll: 4,
           rollMode: "advantage",
-          selectedAttackDamageRiderUnitIds: [
-            recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+          selectedAttackDamageRiderProcedureRefs: [
+            requireUnitFeatureProcedureRef(state, actorId, "attackDamageRider"),
           ],
         });
         lastDamageAmount = 1;
@@ -1049,7 +1019,7 @@ function createRuleCoreFeatureDriver(
         resetProjection();
         const raging = resolveBattleSubject({
           state,
-          subject: unitFeatureSubject("barbarian_rage"),
+          subject: unitFeatureSubject(state),
           fills: [],
         });
         recordResult(raging);
@@ -1063,7 +1033,7 @@ function createRuleCoreFeatureDriver(
             "barbarian_reckless_attack",
           ),
         });
-        featureUsesRemaining = resourceUsesRemaining(state, "barbarian_rage");
+        featureUsesRemaining = resourceUsesRemaining(state);
         lastDamageAmount = 2;
       },
       doImprovedCritical: () => {
@@ -1085,7 +1055,11 @@ function createRuleCoreFeatureDriver(
           state,
           damageRoll: 8,
           weaponDamageDiceRollChoice: {
-            unitId: recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
+            procedureRef: requireUnitFeatureProcedureRef(
+              state,
+              actorId,
+              "weaponDamageDiceRollChoice",
+            ),
             selection: "second",
             candidates: [rolledDiceGroup([2]), rolledDiceGroup([8])],
           },
@@ -1145,18 +1119,16 @@ function createRuleCoreFeatureDriver(
               damageFill,
               attackDamageDispositionFill(disposition, {
                 kind: "zeroHitPointReplacement",
-                unitId: recordSelectedUnitRuntimeBoundaryId(
-                  "orc_relentless_endurance",
+                procedureRef: requireUnitFeatureProcedureRef(
+                  state,
+                  targetId,
+                  "zeroHitPointReplacement",
                 ),
               }),
             ],
           }),
         );
-        featureUsesRemaining = resourceUsesRemaining(
-          state,
-          "orc_relentless_endurance",
-          targetId,
-        );
+        featureUsesRemaining = resourceUsesRemaining(state, targetId);
         lastDamageAmount = 1;
       },
       doEvasionSuccess: () => resolveDexHalfCantrip(true),
@@ -1177,7 +1149,7 @@ function createRuleCoreFeatureDriver(
           reductionRoll: 4,
           damageRoll: 6,
         });
-        featureUsesRemaining = resourceUsesRemaining(state, cuttingWords.id);
+        featureUsesRemaining = resourceUsesRemaining(state);
         lastDamageAmount = 2;
       },
       doDeflectAttacksDamageReduction: () => {
@@ -1325,16 +1297,11 @@ function createRuleCoreFeatureDriver(
       recordResult(
         resolveBattleSubject({
           state,
-          subject: unitFeatureSubject(
-            recordSelectedUnitRuntimeBoundaryId("fighter_second_wind"),
-          ),
+          subject: unitFeatureSubject(state),
           fills: [damageRollFillWithGroups(hole, [[roll]])],
         }),
       );
-      featureUsesRemaining = resourceUsesRemaining(
-        state,
-        "fighter_second_wind",
-      );
+      featureUsesRemaining = resourceUsesRemaining(state);
       lastDamageAmount = roll === 1 ? 3 : 8;
     }
 
@@ -1347,7 +1314,11 @@ function createRuleCoreFeatureDriver(
       resetProjection();
       const result = resolveFailedAbilityCheckResourceBoost({
         state,
-        unitId: recordSelectedUnitRuntimeBoundaryId(unit.id),
+        procedureRef: requireUnitFeatureProcedureRef(
+          state,
+          actorId,
+          "failedAbilityCheckResourceBoost",
+        ),
         abilityCheck: {
           actorId,
           ability: "int",
@@ -1358,10 +1329,7 @@ function createRuleCoreFeatureDriver(
         boostRoll: input.boostRoll,
       });
       recordResult(result);
-      featureUsesRemaining = resourceUsesRemaining(
-        state,
-        "fighter_second_wind",
-      );
+      featureUsesRemaining = resourceUsesRemaining(state);
       if (result.tag === "resolved") {
         abilityCheckBoostedTotal = result.abilityCheckBoost.boostedTotal;
         abilityCheckBoostedSucceeded =
@@ -1375,10 +1343,7 @@ function createRuleCoreFeatureDriver(
       recordResult(
         resolveBattleSubject({
           state,
-          subject: bonusActionStandardActionSubject(
-            "rogue_cunning_action",
-            action,
-          ),
+          subject: bonusActionStandardActionSubject(state, action),
           fills: [],
         }),
       );
@@ -1387,15 +1352,11 @@ function createRuleCoreFeatureDriver(
     function resolveDexHalfCantrip(succeeded: boolean): void {
       state = evasionBattle(input.evasionUnitId);
       resetProjection();
-      const subject: BattleActDiscoverySubject = {
-        tag: "actionSpell",
-        actorId: combatantId("rule-core-feature-wizard"),
-        invocation: cantripSpellInvocationRef(
-          "dex_half_cantrip",
-          "saveGatedDamage",
-        ),
-        mode: { tag: "cast" },
-      };
+      const subject = requireDiscoveredSubject(
+        state,
+        "actionSpell",
+        combatantId("rule-core-feature-wizard"),
+      );
       const savingThrow = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
         "savingThrowOutcome",
@@ -1717,7 +1678,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function featureBattle(): BattleState {
@@ -1779,7 +1740,11 @@ function tacticalMindBattle(
         initiative: 20,
         classLevels: [{ className: "fighter", level: 2 }],
         resources: [unitResource("fighter_second_wind")],
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "fighter", level: classLevel(2) },
+          ]),
+        ],
         characterUnitRefs: [unitRef.right],
       }),
       featureTarget(10),
@@ -1856,11 +1821,12 @@ function recklessBattle(): BattleState {
         initiative: 20,
         classLevels: [{ className: "barbarian", level: 2 }],
         unitFeatures: [
-          {
-            unit: unitLibrary.requireUnit(
+          characterBattleFeatureInitForTest(
+            unitLibrary.requireUnit(
               recordSelectedUnitRuntimeBoundaryId("barbarian_reckless_attack"),
             ),
-          },
+            [{ className: "barbarian", level: classLevel(2) }],
+          ),
         ],
       }),
       featureTarget(10),
@@ -1877,11 +1843,12 @@ function sneakAttackBattle(): BattleState {
         classLevels: [{ className: "rogue", level: 1 }],
         attack: zeroAbilityWeaponAttack("weapon_dagger"),
         unitFeatures: [
-          {
-            unit: unitLibrary.requireUnit(
+          characterBattleFeatureInitForTest(
+            unitLibrary.requireUnit(
               recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
             ),
-          },
+            [{ className: "rogue", level: classLevel(1) }],
+          ),
         ],
         characterUnitRefs: [
           {
@@ -1907,12 +1874,16 @@ function frenzyBattle(): BattleState {
         classLevels: [{ className: "barbarian", level: 3 }],
         resources: [unitResource("barbarian_rage")],
         unitFeatures: [
-          { unit: unitLibrary.requireUnit(frenzyUnitId) },
-          {
-            unit: unitLibrary.requireUnit(
+          characterBattleFeatureInitForTest(
+            unitLibrary.requireUnit(frenzyUnitId),
+            [{ className: "barbarian", level: classLevel(3) }],
+          ),
+          characterBattleFeatureInitForTest(
+            unitLibrary.requireUnit(
               recordSelectedUnitRuntimeBoundaryId("barbarian_reckless_attack"),
             ),
-          },
+            [{ className: "barbarian", level: classLevel(3) }],
+          ),
         ],
         characterUnitRefs: [
           {
@@ -2052,9 +2023,9 @@ function evasionBattle(unitId: EvasionUnitId = "rogue_evasion"): BattleState {
         classLevels: [{ className: unit.className, level: 7 }],
         attack: null,
         unitFeatures: [
-          {
-            unit,
-          },
+          characterBattleFeatureInitForTest(unit, [
+            { className: unit.className, level: classLevel(7) },
+          ]),
         ],
         characterUnitRefs: [
           {
@@ -2093,7 +2064,11 @@ function reactionModifierBattle(input: {
         classLevels: [{ className: input.className, level: input.level }],
         attack: null,
         resources: input.resources,
-        unitFeatures: [{ unit: input.unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(input.unit, [
+            { className: input.className, level: classLevel(input.level) },
+          ]),
+        ],
         characterUnitRefs: [
           {
             unit: input.unit,
@@ -2266,42 +2241,84 @@ function actorAttackSubject(
   return characterAttackSubjectForTest(state, actor, attackName);
 }
 
+function requireDiscoveredSubject(
+  state: BattleState,
+  tag: "actionSpell",
+  ownerId?: CombatantId,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+function requireDiscoveredSubject(
+  state: BattleState,
+  tag: "unitFeature",
+  ownerId?: CombatantId,
+): Extract<BattleSubject, { readonly tag: "unitFeature" }>;
+function requireDiscoveredSubject(
+  state: BattleState,
+  tag: "actionSpell" | "unitFeature",
+  ownerId: CombatantId = actorId,
+): BattleSubject {
+  const subject = discoverBattleActCandidates(state).find(
+    (candidate) =>
+      candidate.subject.actorId === ownerId && candidate.subject.tag === tag,
+  )?.subject;
+  if (subject === undefined) {
+    throw new Error(`Expected discovered ${tag} act.`);
+  }
+  return subject;
+}
+
+function requireUnitFeatureProcedureRef(
+  state: BattleState,
+  ownerId: CombatantId,
+  executionKind:
+    | "attackDamageRider"
+    | "failedAbilityCheckResourceBoost"
+    | "weaponDamageDiceRollChoice"
+    | "zeroHitPointReplacement",
+): BattleProcedureExecutionRef {
+  const actor = state.combatants.get(ownerId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant ${ownerId}.`);
+  }
+  const procedureRef = actor.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "unitFeature" &&
+      binding.procedure.execution.kind === executionKind,
+  )?.procedureRef;
+  if (procedureRef === undefined) {
+    throw new Error(
+      `Expected ${executionKind} Unit feature procedure for ${ownerId}.`,
+    );
+  }
+  return procedureRef;
+}
+
 function unitFeatureSubject(
-  unitId: string,
+  state: BattleState,
 ): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
-  return {
-    tag: "unitFeature",
-    actorId,
-    unitId: recordSelectedUnitRuntimeBoundaryId(unitId),
-  };
+  return requireDiscoveredSubject(state, "unitFeature");
 }
 
 function bonusActionStandardActionSubject(
-  sourceUnitId: string,
+  state: BattleState,
   action: "dash" | "disengage" | "hide",
 ): Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> {
-  if (action === "dash") {
-    return {
-      tag: "bonusActionStandardAction",
-      actorId,
-      sourceUnitId: recordSelectedUnitRuntimeBoundaryId(sourceUnitId),
-      action,
-      speedKind: "walk",
-    };
+  const subject = discoverBattleActCandidates(state).find(
+    (candidate) =>
+      candidate.subject.tag === "bonusActionStandardAction" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.action === action,
+  )?.subject;
+  if (subject?.tag !== "bonusActionStandardAction") {
+    throw new Error(`Expected ${action} Bonus Action standard act.`);
   }
-  return {
-    tag: "bonusActionStandardAction",
-    actorId,
-    sourceUnitId: recordSelectedUnitRuntimeBoundaryId(sourceUnitId),
-    action,
-  };
+  return subject;
 }
 
 function findAct(
   state: BattleState,
   subject: BattleSubject,
-): ReturnType<typeof discoverBattleActs>[number] {
-  const act = discoverBattleActs(state).find((candidate) =>
+): ReturnType<typeof discoverBattleActCandidates>[number] {
+  const act = discoverBattleActCandidates(state).find((candidate) =>
     isDeepStrictEqual(candidate.subject, subject),
   );
   if (act === undefined) {
@@ -2446,7 +2463,7 @@ function savingThrowOutcomeFill(
 function damageRollFillWithGroups(
   hole: Pick<BattleHole, "kind" | "holeId">,
   groups: readonly (readonly number[])[],
-  selectedAttackDamageRiderUnitIds?: readonly string[],
+  selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[],
   weaponDamageDiceRollChoice?: Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
@@ -2456,9 +2473,9 @@ function damageRollFillWithGroups(
   return {
     kind: "rolledDice",
     holeId: hole.holeId,
-    ...(selectedAttackDamageRiderUnitIds === undefined
+    ...(selectedAttackDamageRiderProcedureRefs === undefined
       ? {}
-      : { selectedAttackDamageRiderUnitIds }),
+      : { selectedAttackDamageRiderProcedureRefs }),
     ...(weaponDamageDiceRollChoice === undefined
       ? {}
       : { weaponDamageDiceRollChoice }),
@@ -2532,14 +2549,11 @@ function reactionModifierChoice(
 
 function resourceUsesRemaining(
   state: BattleState,
-  unitId: string,
   ownerId: CombatantId = actorId,
 ): number {
   const actor = state.combatants.get(ownerId);
   if (actor?.origin.kind !== "character") return 1;
-  const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === unitId,
-  );
+  const resource = requireSoleLimitedFeatureResource(actor.origin.resources);
   if (
     resource === undefined ||
     characterBattleResourceUsage(resource) !== "limited"
@@ -2555,7 +2569,12 @@ function combatProwessUsesRemaining(state: BattleState): number {
     throw new Error("Expected Combat Prowess actor.");
   }
   return actor.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
-    (usage) => usage.unitId === "feat_boon_of_combat_prowess",
+    (usage) =>
+      usage.procedureRef ===
+      unitFeatureProcedureRefForProjection(
+        state,
+        "attackRollMissToHitReplacement",
+      ),
   )
     ? 0
     : 1;
@@ -2584,6 +2603,16 @@ function projectRuleCoreFeatureState(input: {
   if (actor === undefined) {
     throw new Error("Expected rule-core Feature actor.");
   }
+  const activeOngoingFeatures =
+    input.state.combatants.get(actorId)?.activeOngoingFeatureOccurrences;
+  const rageProcedureRef = ongoingFeatureProcedureRefForProjection(
+    input.state,
+    "bonusAction",
+  );
+  const recklessProcedureRef = ongoingFeatureProcedureRefForProjection(
+    input.state,
+    "firstAttackRoll",
+  );
   return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: snapshot.turn.actionResources.length > 0,
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
@@ -2595,21 +2624,22 @@ function projectRuleCoreFeatureState(input: {
     dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
     disengaged: snapshot.turn.disengaged,
     hidden: input.state.combatants.get(actorId)?.hidden !== null,
-    rageActive: [
-      ...(input.state.combatants
-        .get(actorId)
-        ?.activeOngoingFeatureOccurrences.keys() ?? []),
-    ].some((key) => String(key) === "barbarian_rage"),
-    recklessActive: [
-      ...(input.state.combatants
-        .get(actorId)
-        ?.activeOngoingFeatureOccurrences.keys() ?? []),
-    ].some((key) => String(key) === "barbarian_reckless_attack"),
+    rageActive:
+      rageProcedureRef !== undefined &&
+      activeOngoingFeatures?.has(rageProcedureRef) === true,
+    recklessActive:
+      recklessProcedureRef !== undefined &&
+      activeOngoingFeatures?.has(recklessProcedureRef) === true,
     incomingAttackAdvantage: incomingAttackAdvantage(input.state),
     sneakAttackUsedThisTurn:
       input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
         (used) =>
-          used.attackerId === actorId && used.unitId === "rogue_sneak_attack",
+          used.attackerId === actorId &&
+          used.procedureRef ===
+            unitFeatureProcedureRefForProjection(
+              input.state,
+              "attackDamageRider",
+            ),
       ),
     lastDamageAmount: input.lastDamageAmount,
     abilityCheckBoostedTotal: input.abilityCheckBoostedTotal,
@@ -2623,6 +2653,33 @@ function projectRuleCoreFeatureState(input: {
   });
 }
 
+function unitFeatureProcedureRefForProjection(
+  state: BattleState,
+  kind: "attackDamageRider" | "attackRollMissToHitReplacement",
+): BattleProcedureExecutionRef | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  return actor.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "unitFeature" &&
+      binding.procedure.execution.kind === kind,
+  )?.procedureRef;
+}
+
+function ongoingFeatureProcedureRefForProjection(
+  state: BattleState,
+  activationTrigger: "bonusAction" | "firstAttackRoll",
+): BattleProcedureExecutionRef | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  return actor.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "unitFeature" &&
+      binding.procedure.execution.kind === "ongoingFeature" &&
+      binding.procedure.execution.activationTrigger === activationTrigger,
+  )?.procedureRef;
+}
+
 function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
   if (
     state.currentTurnResources.actionResources.some(
@@ -2634,9 +2691,7 @@ function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
   }
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind === "character") {
-    const resource = actor.origin.resources.find(
-      (candidate) => candidate.unit.id === "fighter_action_surge",
-    );
+    const resource = requireSoleLimitedFeatureResource(actor.origin.resources);
     if (
       resource !== undefined &&
       characterBattleResourceUsage(resource) === "limited" &&
@@ -2647,6 +2702,24 @@ function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
     }
   }
   return "NoActionSurgeActionGrant";
+}
+
+function requireSoleLimitedFeatureResource(
+  resources: readonly CharacterBattleResourceState[],
+): CharacterBattleResourceState {
+  const limitedResources = resources.filter(
+    (candidate) => characterBattleResourceUsage(candidate) === "limited",
+  );
+  if (limitedResources.length !== 1) {
+    throw new Error(
+      `Expected exactly one limited feature resource, got ${limitedResources.length}.`,
+    );
+  }
+  const resource = limitedResources.at(0);
+  if (resource === undefined) {
+    throw new Error("Expected the sole limited feature resource.");
+  }
+  return resource;
 }
 
 function incomingAttackAdvantage(state: BattleState): boolean {

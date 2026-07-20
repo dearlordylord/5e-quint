@@ -21,7 +21,7 @@ import {
   resolveBattleSubject,
   targetFill,
   unitFeatureDecisionFill,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 type GrapplerAttackRollMode = "none" | "normal" | "advantage" | "disadvantage";

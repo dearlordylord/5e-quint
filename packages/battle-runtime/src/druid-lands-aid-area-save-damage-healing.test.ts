@@ -1,8 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellPresentation,
-  battleActUnitPresentation,
-} from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-area-save-damage-healing
 import { describe, expect, test } from "vitest";
@@ -13,13 +8,14 @@ import * as Either from "effect/Either";
 import {
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
   type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
 import {
-  requireCharacterUnitProcedureRefForTest,
+  characterBattleFeatureInitForTest,
   characterSeed,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -40,7 +36,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
@@ -56,23 +52,12 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const state = landsAidBattle();
     const act = landsAidAct(state);
 
-    expect({
-      ...act.subject,
-      invocation: battleActSpellPresentation(act)?.invocation,
-    }).toMatchObject({
+    expect(act.subject).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
-      procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
-        spellCasterId,
-        druidLandsAidUnitId,
-      ),
+      procedureRef: landsAidProcedureRef(state),
     });
     expect(requireHole(act.initialHoles, "savingThrowOutcome")).toMatchObject({
-      unitFeature: {
-        unitId: druidLandsAidUnitId,
-        label: "Land's Aid",
-      },
       ability: "con",
       dc: { kind: "fixed", dc: 13 },
       targetIds: expect.arrayContaining([spellTargetId, secondTargetId]),
@@ -81,15 +66,15 @@ describe("Druid Land's Aid area save damage and healing", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "rolledDice",
-          label: "Land's Aid damage (2d6)",
+          label: "Magic Action damage (2d6)",
         }),
         expect.objectContaining({
           kind: "targetChoice",
-          label: "Land's Aid healing target",
+          label: "Magic Action damage and healing target",
         }),
         expect.objectContaining({
           kind: "rolledDice",
-          label: "Land's Aid healing (2d6)",
+          label: "Magic Action healing (2d6)",
         }),
       ]),
     );
@@ -159,11 +144,11 @@ describe("Druid Land's Aid area save damage and healing", () => {
         expect.arrayContaining([
           expect.objectContaining({
             kind: "rolledDice",
-            label: `Land's Aid damage (${damageRolls.length}d6)`,
+            label: `Magic Action damage (${damageRolls.length}d6)`,
           }),
           expect.objectContaining({
             kind: "rolledDice",
-            label: `Land's Aid healing (${healingRolls.length}d6)`,
+            label: `Magic Action healing (${healingRolls.length}d6)`,
           }),
         ]),
       );
@@ -214,7 +199,7 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const state = withoutActionResources(landsAidBattle());
     const result = resolveBattleSubject({
       state,
-      subject: landsAidSubject(),
+      subject: landsAidSubject(state),
       fills: [],
     });
 
@@ -230,7 +215,7 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const state = landsAidBattle({ wildShapeUsesRemaining: 0 });
     const result = resolveBattleSubject({
       state,
-      subject: landsAidSubject(),
+      subject: landsAidSubject(state),
       fills: [],
     });
 
@@ -369,7 +354,11 @@ function landsAidBattle(
         initiative: 20,
         classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
         characterUnitRefs: [requireLandsAidUnitRef(druidLevel)],
-        unitFeatures: [{ unit: landsAidUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(landsAidUnit, [
+            { className: "druid", level: classLevel(druidLevel) },
+          ]),
+        ],
         resources: [
           {
             unit: wildShapeUnit,
@@ -409,7 +398,7 @@ function landsAidBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function withoutActionResources(state: BattleState): BattleState {
@@ -451,7 +440,12 @@ function resolveLandsAid(
     state,
     subject: act.subject,
     fills: [
-      landsAidSavingThrowFill(save, input.outcomes, input.areaTargetIds),
+      landsAidSavingThrowFill(
+        save,
+        landsAidSubject(state).procedureRef,
+        input.outcomes,
+        input.areaTargetIds,
+      ),
       rolledDiceFill(damage, input.damageRolls),
       targetChoiceFill(target, input.healingTargetId),
       rolledDiceFill(healing, input.healingRolls),
@@ -461,31 +455,56 @@ function resolveLandsAid(
 
 function landsAidAct(state: BattleState) {
   const act = landsAidActOrUndefined(state);
-  if (act === undefined) {
+  if (act === undefined || act.subject.tag !== "unitFeature") {
     throw new Error("Expected Land's Aid act.");
   }
   return act;
 }
 
 function landsAidActOrUndefined(state: BattleState) {
-  return discoverBattleActs(state).find(
+  const subject = landsAidSubject(state);
+  return discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === spellCasterId &&
-      battleActUnitPresentation(act)?.unitId === druidLandsAidUnitId,
+      act.subject.procedureRef === subject.procedureRef,
   );
 }
 
-function landsAidSubject() {
+function landsAidSubject(state: BattleState) {
   return {
     tag: "unitFeature" as const,
     actorId: spellCasterId,
-    unitId: druidLandsAidUnitId,
+    procedureRef: landsAidProcedureRef(state),
   };
+}
+
+function landsAidProcedureRef(state: BattleState): BattleProcedureExecutionRef {
+  const actor = state.combatants.get(spellCasterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Land Druid actor.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    ({ procedure }) => {
+      if (procedure.kind === "unitFeature") {
+        return procedure.execution.kind === "magicActionAreaSaveDamageHealing";
+      }
+      return (
+        procedure.kind === "unitSupportProfile" &&
+        typeof procedure.execution !== "string" &&
+        procedure.execution.kind === "magicActionAreaSaveDamageHealing"
+      );
+    },
+  );
+  if (binding === undefined) {
+    throw new Error("Expected Land's Aid mechanical procedure.");
+  }
+  return binding.procedureRef;
 }
 
 function landsAidSavingThrowFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
@@ -497,19 +516,20 @@ function landsAidSavingThrowFill(
     holeId: hole.holeId,
     value: { outcomes },
     spatialFacts:
-      areaTargetIds.length === 0 ? [] : [landsAidAreaFact(areaTargetIds)],
+      areaTargetIds.length === 0
+        ? []
+        : [landsAidAreaFact(sourceProcedureRef, areaTargetIds)],
   };
 }
 
 function landsAidAreaFact(
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): BattleTargetSpatialFact {
   return {
     kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
     actorId: spellCasterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(druidLandsAidUnitId),
-    ),
+    sourceProcedureRef,
     originWithinRangeFeet: movementFeet(60),
     radiusFeet: movementFeet(10),
     targetIds,
@@ -582,7 +602,7 @@ function wildShapeUsesRemaining(state: BattleState): number {
     throw new Error("Expected Druid actor.");
   }
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === druidWildShapeUnitId,
+    (candidate) => "usesRemaining" in candidate,
   );
   if (resource === undefined || !("usesRemaining" in resource)) {
     throw new Error("Expected Druid Wild Shape use-count resource.");

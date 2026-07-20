@@ -9,9 +9,9 @@
 // ongoing attack-roll protection facet.
 
 import { movementFeet } from "@dnd/shared/types";
+import { CreatureTypeSchema } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -23,7 +23,8 @@ import {
   type BattleState,
   type CreatureTypeProtectionSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import {
   DISPEL_EVIL_AND_GOOD_CREATURE_TYPES,
@@ -50,10 +51,8 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -138,6 +137,8 @@ function protectionFromEvilAndGoodSpellProjection(
     phase.attachment.kind !== "hole" ||
     phase.attachment.value.kind !== "target" ||
     phase.attachment.value.selection.mode !== "one" ||
+    !("disposition" in phase.attachment.value.selection) ||
+    phase.attachment.value.selection.disposition !== "willing" ||
     effects.length !== 1 ||
     effect?.kind !== "modify_roll_advantage" ||
     effect.mode !== "disadvantage" ||
@@ -154,7 +155,12 @@ function protectionFromEvilAndGoodSpellProjection(
   }
 
   return {
-    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    targeting: {
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: 1,
+      requiredTargetDisposition: "willing",
+    },
     activeEffect: {
       kind: "creatureTypeProtection",
       sourceCombatantId: actorId,
@@ -245,7 +251,6 @@ function discoverCreatureTypeProtectionCastAct(
           tag: "actionSpell" as const,
           actorId,
           procedureRef: invocation.sourceProcedureRef,
-          invocation: creatureTypeProtectionInvocationRef(invocation),
           mode: { tag: "cast" as const },
         },
         initialHoles: [],
@@ -262,7 +267,6 @@ function discoverCreatureTypeProtectionCastAct(
               tag: "actionSpell" as const,
               actorId,
               procedureRef: invocation.sourceProcedureRef,
-              invocation: creatureTypeProtectionInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
             initialHoles: [targetHole],
@@ -271,22 +275,6 @@ function discoverCreatureTypeProtectionCastAct(
   return castActs;
 }
 
-function creatureTypeProtectionInvocationRef(
-  invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "creatureTypeProtection",
-  };
-}
-
-function creatureTypeProtectionCastSummary(
-  invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveCreatureTypeProtection(
   input: SpellProcedureProfileResolveInput<
@@ -468,17 +456,12 @@ function applyCreatureTypeProtectionEffect(
   }, state);
 }
 
-const CreatureTypeProtectionInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "creatureTypeProtection" }
-  >
->(
+const CreatureTypeProtectionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("creatureTypeProtection"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     targeting: Schema.Union(
       Schema.Struct({
@@ -488,9 +471,20 @@ const CreatureTypeProtectionInvocationSchema = spellProcedureInvocationSchema<
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
         maxTargets: Schema.Number,
+        requiredTargetDisposition: Schema.Literal("willing"),
       }),
     ),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: Schema.Struct({
+      kind: Schema.Literal("creatureTypeProtection"),
+      sourceCombatantId: CombatantId,
+      attackRollMode: Schema.Literal("disadvantage"),
+      protectedAgainstCreatureTypes: Schema.Array(CreatureTypeSchema),
+      preventedConditions: Schema.Array(
+        Schema.Literal(...PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS),
+      ),
+      preventsPossession: Schema.Boolean,
+      expiresAt: BattleActiveEffectExpirationSchema,
+    }),
     rangeFeet: MovementFeet,
   }),
 );
@@ -499,17 +493,14 @@ export const creatureTypeProtectionProfile: SpellProcedureProfile<
   CreatureTypeProtectionSpellInvocation
 > = {
   procedure: "creatureTypeProtection",
-  invocationSchema: CreatureTypeProtectionInvocationSchema,
+  executionSchema: CreatureTypeProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: {
     kind: "byTargetingKind",
     targetingKind: "targetList",
   },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitCreatureTypeProtection,
   discoverCastAct: discoverCreatureTypeProtectionCastAct,
-  castSummary: creatureTypeProtectionCastSummary,
-  invocationRef: creatureTypeProtectionInvocationRef,
   resolve: resolveCreatureTypeProtection,
 };

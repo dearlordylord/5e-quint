@@ -26,17 +26,34 @@ import {
   interruptDecisionFill,
   reactionModifierChoice,
   requireBardicInspirationD20TestResolved,
-  requireCharacterUnitProcedureRefForTest,
   requireElapsedHours,
   requireResolved,
   resolveBardicInspirationFailedD20Test,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  resolveBattleSubjectUncheckedForTest,
   resourceCount,
   rolledDiceGroup,
   targetFill,
   unsupportedAbilityModifierActivationUnit,
 } from "./battle-runtime-test-support.ts";
+import type { BattleRuntimeSession } from "./index.ts";
+
+function requireBardicInspirationProcedureRef(session: BattleRuntimeSession) {
+  const actor = session.state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected the Bard fixture to be a character.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitFeature" &&
+      candidate.procedure.execution.kind === "bardicInspirationGrant",
+  );
+  if (binding === undefined) {
+    throw new Error("Expected the Bardic Inspiration mechanical procedure.");
+  }
+  return binding.procedureRef;
+}
 
 describe("battle runtime: Bardic Inspiration", () => {
   test("Bardic Inspiration grants one one-hour d6 die at Bard level 1 and spends Bonus Action and Charisma-derived use", () => {
@@ -50,9 +67,15 @@ describe("battle runtime: Bardic Inspiration", () => {
 
     const resolved = requireResolved(
       resolveBattleSubject({
-        state,
+        session: state,
         subject,
-        fills: [bardicInspirationTargetFill(target, goblinId)],
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            requireBardicInspirationProcedureRef(state),
+            goblinId,
+          ),
+        ],
       }),
     );
 
@@ -60,22 +83,33 @@ describe("battle runtime: Bardic Inspiration", () => {
       false,
     );
     const fighter = resolved.state.combatants.get(fighterId);
+    if (fighter?.origin.kind !== "character") {
+      throw new Error("Expected the Bard fixture to be a character.");
+    }
+    const bardicInspirationOwnership = state.context.characters
+      .get(fighterId)
+      ?.resourceOwnership.find(
+        (ownership) => ownership.unit.id === bardicInspiration.id,
+      );
+    if (bardicInspirationOwnership === undefined) {
+      throw new Error("Expected Bardic Inspiration resource ownership.");
+    }
     expect(
-      fighter?.origin.kind === "character" ? fighter.origin.resources : [],
-    ).toEqual([
+      fighter.origin.resources.find(
+        (resource) =>
+          resource.resourcePoolRef ===
+          bardicInspirationOwnership.resourcePoolRef,
+      ),
+    ).toEqual(
       expect.objectContaining({
-        unit: expect.objectContaining({ id: bardicInspiration.id }),
+        resourcePoolRef: bardicInspirationOwnership.resourcePoolRef,
         usesRemaining: resourceCount(2),
       }),
-    ]);
+    );
     expect(resolved.state.combatants.get(goblinId)?.activeEffects).toEqual([
       {
         kind: "bardicInspirationDie",
-        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-          state,
-          fighterId,
-          bardicInspiration.id,
-        ),
+        sourceProcedureRef: requireBardicInspirationProcedureRef(state),
         sourceCombatantId: fighterId,
         dieSize: 6,
         expiresAt: {
@@ -100,9 +134,15 @@ describe("battle runtime: Bardic Inspiration", () => {
 
     const resolved = requireResolved(
       resolveBattleSubject({
-        state,
+        session: state,
         subject,
-        fills: [bardicInspirationTargetFill(target, goblinId)],
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            requireBardicInspirationProcedureRef(state),
+            goblinId,
+          ),
+        ],
       }),
     );
 
@@ -118,10 +158,10 @@ describe("battle runtime: Bardic Inspiration", () => {
     const highCharisma = bardicInspirationBattle({ charismaModifier: 4 });
     const lowCharisma = bardicInspirationBattle({ charismaModifier: -1 });
 
-    expect(characterResourceUses(highCharisma, fighterId)).toEqual([
+    expect(characterResourceUses(highCharisma.state, fighterId)).toEqual([
       resourceCount(4),
     ]);
-    expect(characterResourceUses(lowCharisma, fighterId)).toEqual([
+    expect(characterResourceUses(lowCharisma.state, fighterId)).toEqual([
       resourceCount(1),
     ]);
   });
@@ -151,7 +191,7 @@ describe("battle runtime: Bardic Inspiration", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        session: state,
         subject,
         fills: [targetFill(target, goblinId, [])],
       }),
@@ -160,7 +200,9 @@ describe("battle runtime: Bardic Inspiration", () => {
       reason: "invalidFill",
       message: "Bardic Inspiration target must be within 60 feet.",
     });
-    expect(characterResourceUses(state, fighterId)).toEqual([resourceCount(3)]);
+    expect(characterResourceUses(state.state, fighterId)).toEqual([
+      resourceCount(3),
+    ]);
   });
 
   test("Bardic Inspiration accepts hearing when the target cannot see the Bard", () => {
@@ -178,23 +220,24 @@ describe("battle runtime: Bardic Inspiration", () => {
     expect(
       requireResolved(
         resolveBattleSubject({
-          state,
+          session: state,
           subject,
           fills: [
-            bardicInspirationTargetFill(target, goblinId, {
-              canHear: true,
-            }),
+            bardicInspirationTargetFill(
+              target,
+              requireBardicInspirationProcedureRef(state),
+              goblinId,
+              {
+                canHear: true,
+              },
+            ),
           ],
         }),
       ).state.combatants.get(goblinId)?.activeEffects,
     ).toEqual([
       expect.objectContaining({
         kind: "bardicInspirationDie",
-        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-          state,
-          fighterId,
-          bardicInspiration.id,
-        ),
+        sourceProcedureRef: requireBardicInspirationProcedureRef(state),
       }),
     ]);
   });
@@ -213,9 +256,15 @@ describe("battle runtime: Bardic Inspiration", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        session: state,
         subject,
-        fills: [bardicInspirationTargetFill(target, goblinId)],
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            requireBardicInspirationProcedureRef(state),
+            goblinId,
+          ),
+        ],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -240,23 +289,24 @@ describe("battle runtime: Bardic Inspiration", () => {
     expect(
       requireResolved(
         resolveBattleSubject({
-          state: blinded,
+          session: blinded,
           subject,
           fills: [
-            bardicInspirationTargetFill(blindedTarget, goblinId, {
-              canHear: true,
-            }),
+            bardicInspirationTargetFill(
+              blindedTarget,
+              requireBardicInspirationProcedureRef(blinded),
+              goblinId,
+              {
+                canHear: true,
+              },
+            ),
           ],
         }),
       ).state.combatants.get(goblinId)?.activeEffects,
     ).toEqual([
       expect.objectContaining({
         kind: "bardicInspirationDie",
-        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-          blinded,
-          fighterId,
-          bardicInspiration.id,
-        ),
+        sourceProcedureRef: requireBardicInspirationProcedureRef(blinded),
       }),
     ]);
 
@@ -271,12 +321,17 @@ describe("battle runtime: Bardic Inspiration", () => {
 
     expect(
       resolveBattleSubject({
-        state: blindedAndDeafened,
+        session: blindedAndDeafened,
         subject,
         fills: [
-          bardicInspirationTargetFill(blindedAndDeafenedTarget, goblinId, {
-            canHear: true,
-          }),
+          bardicInspirationTargetFill(
+            blindedAndDeafenedTarget,
+            requireBardicInspirationProcedureRef(blindedAndDeafened),
+            goblinId,
+            {
+              canHear: true,
+            },
+          ),
         ],
       }),
     ).toMatchObject({
@@ -288,20 +343,25 @@ describe("battle runtime: Bardic Inspiration", () => {
   });
 
   test("Bardic Inspiration rejects an Unconscious target even with a hearing fact", () => {
-    const bardicInspiration = bardicInspirationUnit();
     const state = bardicInspirationBattle({
       charismaModifier: 1,
       targetConditions: ["unconscious"],
     });
-    const subject = bardicInspirationSubject(bardicInspiration.id);
 
     expect(
-      resolveBattleSubject({
-        state,
-        subject,
+      resolveBattleSubjectUncheckedForTest({
+        state: state.state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          procedureRef: requireBardicInspirationProcedureRef(state),
+        },
         fills: [
           bardicInspirationTargetFill(
-            bardicInspirationStaleTargetHole(state),
+            bardicInspirationStaleTargetHole(
+              requireBardicInspirationProcedureRef(state),
+            ),
+            requireBardicInspirationProcedureRef(state),
             goblinId,
             {
               canHear: true,
@@ -350,9 +410,15 @@ describe("battle runtime: Bardic Inspiration", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        session: state,
         subject,
-        fills: [bardicInspirationTargetFill(target, goblinId)],
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            requireBardicInspirationProcedureRef(state),
+            goblinId,
+          ),
+        ],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -372,14 +438,20 @@ describe("battle runtime: Bardic Inspiration", () => {
     );
     const granted = requireResolved(
       resolveBattleSubject({
-        state,
+        session: state,
         subject,
-        fills: [bardicInspirationTargetFill(target, goblinId)],
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            requireBardicInspirationProcedureRef(state),
+            goblinId,
+          ),
+        ],
       }),
     ).state;
 
     expect(
-      resolveBattleSubject({
+      resolveBattleSubjectUncheckedForTest({
         state: {
           ...granted,
           currentTurnResources: {
@@ -387,8 +459,18 @@ describe("battle runtime: Bardic Inspiration", () => {
             currentHasBonusAction: true,
           },
         },
-        subject,
-        fills: [bardicInspirationTargetFill(target, goblinId)],
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          procedureRef: requireBardicInspirationProcedureRef(state),
+        },
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            requireBardicInspirationProcedureRef(state),
+            goblinId,
+          ),
+        ],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -408,18 +490,27 @@ describe("battle runtime: Bardic Inspiration", () => {
     );
     const granted = requireResolved(
       resolveBattleSubject({
-        state,
+        session: state,
         subject,
-        fills: [bardicInspirationTargetFill(target, goblinId)],
+        fills: [
+          bardicInspirationTargetFill(
+            target,
+            requireBardicInspirationProcedureRef(state),
+            goblinId,
+          ),
+        ],
       }),
     ).state;
 
     expect(
       discoverBattleActs({
-        ...granted,
-        currentTurnResources: {
-          ...granted.currentTurnResources,
-          currentHasBonusAction: true,
+        ...state,
+        state: {
+          ...granted,
+          currentTurnResources: {
+            ...granted.currentTurnResources,
+            currentHasBonusAction: true,
+          },
         },
       }).some(
         (act) =>

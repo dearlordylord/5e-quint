@@ -1,12 +1,12 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
   battleId,
   characterId,
   combatantId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   initiativeScore,
   startBattle,
@@ -16,8 +16,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -41,6 +42,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
 
@@ -60,16 +62,18 @@ const statBlockCatalog = statBlockCatalogResult.catalog;
 const chromaticOrb = decodeSpellRecord(chromaticOrbInput);
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 
 describe("Chromatic Orb chained spell attack", () => {
   test("is offered for the chained spell attack shape without requiring SRD identity", () => {
-    const canonicalState = chromaticOrbBattle({ spellLevel: 1 });
-    const canonicalAct = chromaticOrbAct(canonicalState);
+    const canonicalSession = chromaticOrbSession({ spellLevel: 1 });
+    const canonicalAct = discoverBattleActs(canonicalSession).find(
+      (candidate) => candidate.subject.tag === "actionSpell",
+    );
+    if (canonicalAct === undefined) {
+      throw new Error("Expected canonical Chromatic Orb presentation.");
+    }
     expect(battleActSpellPresentation(canonicalAct)?.invocation.spellId).toBe(
       "chromatic_orb",
     );
@@ -83,12 +87,12 @@ describe("Chromatic Orb chained spell attack", () => {
         section: "battle-runtime chained spell attack test fixture",
       },
     } satisfies SpellRecord;
-    const lookalikeState = chromaticOrbBattle({
+    const lookalikeSession = chromaticOrbSession({
       spellLevel: 1,
       spell: noncanonicalLookalike,
     });
     expect(
-      discoverBattleActs(lookalikeState).some(
+      discoverBattleActs(lookalikeSession).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -445,7 +449,7 @@ describe("Chromatic Orb chained spell attack", () => {
     const state = chromaticOrbBattle({ spellLevel: 1 });
     const readyAct = chromaticOrbReadyAct(state);
     const readied = resolveResolved(state, readyAct.subject, []);
-    const releaseAct = discoverBattleActs(readied.state).find(
+    const releaseAct = discoverBattleActCandidates(readied.state).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "releaseReadiedSpell" &&
@@ -506,6 +510,15 @@ function chromaticOrbBattle(input: {
   readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
   readonly spell?: SpellRecord;
 }): BattleState {
+  return chromaticOrbSession(input).state;
+}
+
+function chromaticOrbSession(input: {
+  readonly spellLevel: 1 | 2;
+  readonly firstTargetHp?: number;
+  readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
+  readonly spell?: SpellRecord;
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId(`chromatic-orb-${input.spellLevel}`),
     combatants: [
@@ -567,13 +580,10 @@ function decodeSpellRecord(raw: unknown): SpellRecord {
 }
 
 function chromaticOrbAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        chromaticOrb.id &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "chainedSpellAttackDamage",
+      candidate.subject.mode.tag === "cast",
   );
   if (act?.subject.tag !== "actionSpell") {
     throw new Error("Expected Chromatic Orb action spell act.");
@@ -582,13 +592,9 @@ function chromaticOrbAct(state: BattleState): ActionSpellAct {
 }
 
 function chromaticOrbReadyAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        chromaticOrb.id &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "chainedSpellAttackDamage" &&
       candidate.subject.mode.tag === "ready" &&
       candidate.subject.mode.trigger === "spellCast",
   );
@@ -837,9 +843,8 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(chromaticOrb.id),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
       },
     ],
   };
@@ -861,9 +866,8 @@ function spellLeapTargetFill(
             kind: "spellLeapTargetWithinRange",
             previousTargetId,
             targetId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(chromaticOrb.id),
-            ),
+            sourceProcedureRef:
+              battleProcedureExecutionRefForSpellHoleForTest(hole),
             rangeFeet: movementFeet(30),
           },
         ]
@@ -993,3 +997,4 @@ function characterCreature(input: {
     },
   };
 }
+import { battleActSpellPresentation } from "./battle-act-composition.ts";

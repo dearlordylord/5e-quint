@@ -89,11 +89,16 @@ function withoutKnownWillingFacts<
 describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   test("false_life is admitted as self Temporary Hit Points with slot scaling", () => {
     const spell = spellRecord(falseLifeUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: falseLifeUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: falseLifeUnitId,
+      slotLevel: 2,
+    });
 
     expect({
       ...act.subject,
@@ -102,14 +107,14 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(falseLifeUnitId, 2, "scalarBuff"),
       ),
       mode: { tag: "cast" },
     });
     const tempHpHole = requireHole(act.initialHoles, "rolledDice");
-    expect(spellHoleInvocation(state, [tempHpHole])).toEqual(
+    expect(spellHoleInvocation(session, [tempHpHole])).toEqual(
       expect.objectContaining({
         procedure: "scalarBuff",
         effect: {
@@ -142,12 +147,17 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   test("longstrider is admitted as timed Speed increase with slot-scaled targets", () => {
     const spell = spellRecord(longstriderUnitId);
     const secondTargetId = combatantId("unit-profile-longstrider-target-2");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       extraTargetIds: [secondTargetId],
     });
-    const act = spellAct({ state, spellId: longstriderUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: longstriderUnitId,
+      slotLevel: 2,
+    });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     expect(targetListHole).toEqual(
@@ -265,11 +275,16 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("longstrider rejects unrelated attack-roll fills", () => {
     const spell = spellRecord(longstriderUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: longstriderUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: longstriderUnitId,
+      slotLevel: 2,
+    });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     const resolved = resolveBattleSubject({
@@ -300,15 +315,16 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("longstrider does not stack with an overlapping casting of the same spell", () => {
     const spell = spellRecord(longstriderUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
     });
+    const state = session.state;
     const target = state.combatants.get(spellTargetId);
     if (target === undefined) {
       throw new Error("Expected Longstrider target.");
     }
     const act = spellAct({
-      state,
+      session,
       spellId: longstriderUnitId,
       slotLevel: 1,
     });
@@ -376,8 +392,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("shield_of_faith is admitted as a Bonus Action concentration AC bonus", () => {
     const spell = spellRecord(shieldOfFaithUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
-    const act = bonusSpellAct({ state, spellId: shieldOfFaithUnitId });
+    const session = spellBattle({ preparedSpells: [spell] });
+    const state = session.state;
+    const act = bonusSpellAct({ session, spellId: shieldOfFaithUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     expect({
@@ -387,7 +404,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(shieldOfFaithUnitId, 1, "scalarBuff"),
       ),
@@ -426,18 +443,18 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("scalar buff admission rejects explicit non-creature target selections", () => {
     const spell = shieldOfFaithWithObjectTarget();
-    const state = spellBattle({ preparedSpells: [spell] });
-
-    expect(maybeBonusSpellAct({ state, spellId: spell.id })).toBeUndefined();
+    const session = spellBattle({ preparedSpells: [spell] });
+    expect(maybeBonusSpellAct({ session, spellId: spell.id })).toBeUndefined();
   });
 
   test("barkskin is admitted as a Bonus Action timed willing-target Armor Class floor", () => {
     const spell = spellRecord(barkskinUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = bonusSpellAct({ state, spellId: barkskinUnitId });
+    const state = session.state;
+    const act = bonusSpellAct({ session, spellId: barkskinUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     expect({
@@ -447,7 +464,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(barkskinUnitId, 2, "scalarBuff"),
       ),
@@ -572,7 +589,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("barkskin does not lower a target whose Armor Class is already 17 or higher", () => {
     const spell = spellRecord(barkskinUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetArmorClass: {
@@ -585,7 +602,8 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         armorTraining: new Set(["heavy" as const]),
       },
     });
-    const act = bonusSpellAct({ state, spellId: barkskinUnitId });
+    const state = session.state;
+    const act = bonusSpellAct({ session, spellId: barkskinUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     const resolved = resolveBattleSubject({
@@ -618,7 +636,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   test("spider_climb is admitted as a concentration Climb Speed grant with slot-scaled willing targets", () => {
     const spell = spellRecord(spiderClimbUnitId);
     const secondTargetId = combatantId("unit-profile-spider-climb-target-2");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 2, count: 1 },
@@ -626,8 +644,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       ],
       extraTargetIds: [secondTargetId],
     });
+    const state = session.state;
     const levelTwoAct = spellAct({
-      state,
+      session,
       spellId: spiderClimbUnitId,
       slotLevel: 2,
     });
@@ -636,7 +655,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       "targetChoice",
     );
     const levelThreeAct = spellAct({
-      state,
+      session,
       spellId: spiderClimbUnitId,
       slotLevel: 3,
     });
@@ -652,7 +671,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(spiderClimbUnitId, 2, "scalarBuff"),
       ),
@@ -760,12 +779,13 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("spider_climb concentration cleanup removes the granted Climb Speed", () => {
     const spell = spellRecord(spiderClimbUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const state = session.state;
     const act = spellAct({
-      state,
+      session,
       spellId: spiderClimbUnitId,
       slotLevel: 2,
     });
@@ -812,7 +832,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   test("fly is admitted as a fixed Fly Speed and hover grant with slot-scaled willing targets", () => {
     const spell = spellRecord(flyUnitId);
     const secondTargetId = combatantId("unit-profile-fly-target-2");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 3, count: 1 },
@@ -820,8 +840,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       ],
       extraTargetIds: [secondTargetId],
     });
+    const state = session.state;
     const levelThreeAct = spellAct({
-      state,
+      session,
       spellId: flyUnitId,
       slotLevel: 3,
     });
@@ -830,7 +851,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       "targetChoice",
     );
     const levelFourAct = spellAct({
-      state,
+      session,
       spellId: flyUnitId,
       slotLevel: 4,
     });
@@ -846,7 +867,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(flyUnitId, 3, "scalarBuff"),
       ),
@@ -953,11 +974,12 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("fly concentration, duration, and Dash projections use the fixed Fly Speed grant", () => {
     const spell = spellRecord(flyUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: flyUnitId, slotLevel: 3 });
+    const state = session.state;
+    const act = spellAct({ session, spellId: flyUnitId, slotLevel: 3 });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const resolved = resolveBattleSubject({
       state,
@@ -1092,13 +1114,14 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   });
 
   test("fly Concentration cleanup opens the existing falling Reaction and landing pipeline when the target cannot stop the fall", () => {
-    const cast = castFlyOnCaster({
+    const session = spellBattle({
       preparedSpells: [spellRecord(flyUnitId), spellRecord(featherFallUnitId)],
       spellSlots: [
         { spellLevel: 1, count: 1 },
         { spellLevel: 3, count: 1 },
       ],
     });
+    const cast = castFlyFromSession(session, 3);
     const laterCasterTurn = advanceToNextCasterTurn(cast.state);
     const broken = breakBattleConcentration(
       laterCasterTurn.state,
@@ -1109,7 +1132,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       spellCasterId,
     );
     const featherFallProcedureRef = requireCharacterSpellProcedureRefForTest(
-      broken,
+      { ...session, state: broken },
       spellCasterId,
       spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
     );
@@ -1156,7 +1179,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         (candidate) => {
           if (candidate.kind !== "castTriggeredReactionSpell") return false;
           const invocation = characterSpellInvocationRefForProcedureRefForTest(
-            reactionState,
+            { ...session, state: reactionState },
             candidate.reactorId,
             candidate.subject.procedureRef,
           );
@@ -1268,16 +1291,19 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("fly recast replacement can record a hover-relevant reason instead of opening a fall", () => {
     const spell = spellRecord(flyUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 3, count: 1 },
         { spellLevel: 4, count: 1 },
       ],
     });
-    const firstCast = castFlyFromState(state, 3);
+    const firstCast = castFlyFromSession(session, 3);
     const laterCasterTurn = advanceToNextCasterTurn(firstCast.state);
-    const secondCast = castFlyFromState(laterCasterTurn.state, 4);
+    const secondCast = castFlyFromSession(
+      { state: laterCasterTurn.state, context: session.context },
+      4,
+    );
     const endedEffect = requirePendingFlySpeedGrantCleanup(
       secondCast.state,
       spellCasterId,
@@ -1357,14 +1383,15 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const spell = spellRecord(aidUnitId);
     const secondTargetId = combatantId("unit-profile-aid-target-2");
     const thirdTargetId = combatantId("unit-profile-aid-target-3");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       targetHp: 7,
       targetMaxHp: 12,
       extraTargetIds: [secondTargetId, thirdTargetId],
     });
-    const act = spellAct({ state, spellId: aidUnitId, slotLevel: 3 });
+    const state = session.state;
+    const act = spellAct({ session, spellId: aidUnitId, slotLevel: 3 });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     expect({
@@ -1374,7 +1401,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(aidUnitId, 3, "scalarBuff"),
       ),
@@ -1383,7 +1410,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     expect(targetListHole).toEqual(
       expect.objectContaining({ minTargets: 1, maxTargets: 3 }),
     );
-    expect(spellHoleInvocation(state, [targetListHole])).toEqual(
+    expect(spellHoleInvocation(session, [targetListHole])).toEqual(
       expect.objectContaining({
         procedure: "scalarBuff",
         effect: {
@@ -1439,13 +1466,14 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("aid expiration removes the maximum Hit Point bonus and subtracts the current Hit Point increase", () => {
     const spell = spellRecord(aidUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 7,
       targetMaxHp: 12,
     });
-    const act = spellAct({ state, spellId: aidUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({ session, spellId: aidUnitId, slotLevel: 2 });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
     const resolved = resolveBattleSubject({
       state,
@@ -1526,18 +1554,19 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("aid lower-slot recast waits under a stronger overlapping maximum Hit Point increase", () => {
     const spell = spellRecord(aidUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 7,
       targetMaxHp: 12,
     });
+    const state = session.state;
     const target = state.combatants.get(spellTargetId);
     if (target === undefined) {
       throw new Error("Expected Aid target.");
     }
     const act = spellAct({
-      state,
+      session,
       spellId: aidUnitId,
       slotLevel: 2,
     });
@@ -1648,17 +1677,18 @@ function castFlyOnCaster(
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
 > {
-  return castFlyFromState(spellBattle(input), 3);
+  return castFlyFromSession(spellBattle(input), 3);
 }
 
-function castFlyFromState(
-  state: BattleState,
+function castFlyFromSession(
+  session: ReturnType<typeof spellBattle>,
   slotLevel: 3 | 4,
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
 > {
-  const act = spellAct({ state, spellId: flyUnitId, slotLevel });
+  const state = session.state;
+  const act = spellAct({ session, spellId: flyUnitId, slotLevel });
   const targetChoice = act.initialHoles.find(
     (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
       hole.kind === "targetChoice",
@@ -1787,8 +1817,9 @@ function interruptDecisionFill(
 describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
   test("heroism stores Frightened immunity separately from turn-start Temporary Hit Points", () => {
     const spell = spellRecord(heroismUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: heroismUnitId });
+    const session = spellBattle({ preparedSpells: [spell] });
+    const state = session.state;
+    const act = spellAct({ session, spellId: heroismUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     expect({
@@ -1798,7 +1829,7 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(
           heroismUnitId,
@@ -1868,8 +1899,9 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
 
   test("heroism grants spellcasting-modifier Temporary Hit Points when the target starts its turn", () => {
     const spell = spellRecord(heroismUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: heroismUnitId });
+    const session = spellBattle({ preparedSpells: [spell] });
+    const state = session.state;
+    const act = spellAct({ session, spellId: heroismUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const resolved = resolveBattleSubject({
       state,
@@ -1915,7 +1947,8 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
 
   test("heroism makes an already Frightened willing target unaffected by Frightened", () => {
     const spell = spellRecord(heroismUnitId);
-    const baseState = spellBattle({ preparedSpells: [spell] });
+    const baseSession = spellBattle({ preparedSpells: [spell] });
+    const baseState = baseSession.state;
     const target = baseState.combatants.get(spellCasterId);
     expect(target).not.toBeUndefined();
     if (target === undefined) {
@@ -1932,7 +1965,8 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
         conditions: applyCondition(target.conditions, "frightened"),
       }),
     };
-    const act = spellAct({ state, spellId: heroismUnitId });
+    const session = { state, context: baseSession.context };
+    const act = spellAct({ session, spellId: heroismUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     const resolved = resolveBattleSubject({
@@ -1971,12 +2005,17 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
   test("heroism scales target count by slot level while limiting choices to known-willing targets", () => {
     const spell = spellRecord(heroismUnitId);
     const secondTargetId = combatantId("unit-profile-heroism-target-2");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       extraTargetIds: [secondTargetId],
     });
-    const act = spellAct({ state, spellId: heroismUnitId, slotLevel: 2 });
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: heroismUnitId,
+      slotLevel: 2,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
 
     expect(targetHole).toEqual(

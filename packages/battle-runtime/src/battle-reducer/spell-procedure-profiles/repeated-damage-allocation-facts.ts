@@ -1,6 +1,6 @@
 import { type SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import type { SpellProcedureExecution } from "../../character-execution.ts";
 
 export const repeatedDamageAllocationMinimumSlotLevel = spellSlotLevel(1);
 export const repeatedDamageAllocationMinimumTargetCount = 1;
@@ -39,7 +39,7 @@ const repeatedDamageAllocationActionKindByInvocationAction = {
 >;
 
 export type RepeatedDamageAllocationInvocation = Extract<
-  SupportedSpellInvocation,
+  SpellProcedureExecution,
   { readonly procedure: "repeatedDamageAllocation" }
 >;
 

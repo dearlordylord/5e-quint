@@ -8,8 +8,6 @@ import {
   damageAmount as toDamageAmount,
 } from "@dnd/shared/types";
 
-import type { UnitRecord } from "@dnd/surface/surface/types";
-
 import { Match } from "effect";
 
 import {
@@ -19,8 +17,6 @@ import {
 } from "../character-battle-resources.ts";
 
 import { CombatantId } from "../identity.ts";
-
-import { ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import { combatantCanSee } from "./creature-state-leaves.ts";
 
@@ -83,7 +79,6 @@ import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-f
 export function attackDamageReductionZeroDamageRedirectSelection(input: {
   readonly state: BattleState;
   readonly reactorId: CombatantId;
-  readonly unitId: UnitRecord["id"];
   readonly offer: AttackDamageReductionZeroDamageRedirectOffer;
   readonly target:
     | Extract<BattleFill, { readonly kind: "targetChoice" }>
@@ -100,7 +95,7 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const { damage, offer, reactorId, save, state, target, unitId } = input;
+  const { damage, offer, reactorId, save, state, target } = input;
   if (target === undefined && save === undefined && damage === undefined) {
     return { tag: "ok", value: undefined };
   }
@@ -115,7 +110,6 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
     !attackDamageReductionRedirectResourceAvailable(
       state,
       reactorId,
-      unitId,
       offer,
     )
   ) {
@@ -280,7 +274,6 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
   const selection = attackDamageReductionZeroDamageRedirectSelection({
     state: input.state,
     reactorId: offer.reactorId,
-    unitId: offer.unitId,
     offer: offer.redirect,
     target: input.redirectTarget,
     save: input.redirectSave,
@@ -311,7 +304,6 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
       relationshipFacts,
     ),
     offer.reactorId,
-    offer.unitId,
     offer.redirect,
   );
   if (selection.value.savingThrowSucceeded) {
@@ -399,7 +391,6 @@ export function attackDamageReductionZeroDamageRedirectHoles(
     attackDamageReductionRedirectResourceAvailable(
       state,
       offer.reactorId,
-      offer.unitId,
       offer.redirect,
     ) === false
   ) {
@@ -415,7 +406,7 @@ export function attackDamageReductionZeroDamageRedirectHoles(
       holeId: ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
       holeInstanceKey:
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_INSTANCE,
-      label: `${offer.label} redirect target`,
+      label: "Attack damage reduction redirect target",
       choices: targetChoices,
       requiresTableSpatialFact: true,
     },
@@ -424,7 +415,7 @@ export function attackDamageReductionZeroDamageRedirectHoles(
       holeId: ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
       holeInstanceKey:
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_INSTANCE,
-      label: `${offer.label} Dexterity saving throw`,
+      label: "Attack damage reduction redirect Dexterity saving throw",
       ...(ongoingFeatureEnemyRelationshipDecisionRequired(
         state,
         offer.reactorId,
@@ -454,7 +445,7 @@ export function attackDamageReductionZeroDamageRedirectHoles(
       holeId: ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
       holeInstanceKey:
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_INSTANCE,
-      label: `${offer.label} redirected damage`,
+      label: "Attack damage reduction redirected damage",
     },
   ];
 }
@@ -476,19 +467,15 @@ export function attackDamageReductionZeroDamageRedirectTargetChoices(
 export function attackDamageReductionRedirectResourceAvailable(
   state: BattleState,
   reactorId: CombatantId,
-  unitId: UnitRecord["id"],
   offer: AttackDamageReductionZeroDamageRedirectOffer,
 ): boolean {
   const reactor = state.combatants.get(reactorId);
-  return (
-    attackDamageReductionRedirectResource(reactor, unitId, offer) !== undefined
-  );
+  return attackDamageReductionRedirectResource(reactor, offer) !== undefined;
 }
 
 export function spendAttackDamageReductionRedirectResource(
   state: BattleState,
   reactorId: CombatantId,
-  unitId: UnitRecord["id"],
   offer: AttackDamageReductionZeroDamageRedirectOffer,
 ): BattleState {
   const reactor = state.combatants.get(reactorId);
@@ -497,7 +484,6 @@ export function spendAttackDamageReductionRedirectResource(
   }
   const resource = attackDamageReductionRedirectResource(
     reactor,
-    unitId,
     offer,
   );
   if (resource === undefined) return state;
@@ -519,25 +505,13 @@ export function spendAttackDamageReductionRedirectResource(
 
 export function attackDamageReductionRedirectResource(
   reactor: BattleCreatureState | undefined,
-  unitId: UnitRecord["id"],
   offer: AttackDamageReductionZeroDamageRedirectOffer,
 ): CharacterBattleResourceState | undefined {
   if (reactor?.origin.kind !== "character") return undefined;
-  const characterOrigin = reactor.origin;
-  const reducingFeatureIsProjected = characterOrigin.characterUnitRefs.some(
-    (unitRef) =>
-      unitRef.unit.id === unitId &&
-      unitRef.supportProfiles.includes(
-        ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
-      ),
-  );
-  if (!reducingFeatureIsProjected) return undefined;
-  return characterOrigin.resources.find(
+  return reactor.origin.resources.find(
     (resource) =>
-      resource.unit.id === offer.spends.resourceUnitId &&
+      resource.resourcePoolRef === offer.spends.resourcePoolRef &&
       offer.spends.amount === 1 &&
-      resource.unit.kind === "class_feature" &&
-      resource.unit.mechanics.family === "resource_container" &&
       resourceHasUsesRemaining(resource),
   );
 }

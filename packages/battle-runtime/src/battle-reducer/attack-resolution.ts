@@ -46,10 +46,16 @@ import {
   movementFeet,
 } from "@dnd/shared/types";
 
-import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import { Match } from "effect";
-import { characterProcedureBinding } from "../character-execution.ts";
+import {
+  characterProcedureBinding,
+  type CharacterUnitProcedureExecution,
+} from "../character-execution.ts";
+import type {
+  BattleProcedureExecutionRef,
+  BattleResourcePoolExecutionRef,
+} from "../identity.ts";
 
 import * as Either from "effect/Either";
 
@@ -71,11 +77,9 @@ import {
 } from "../character-battle-resources.ts";
 
 import { CombatantId } from "../identity.ts";
-import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
-  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleAttackActionAdditionalAttacks,
 } from "../unit-feature-support.ts";
 
@@ -124,8 +128,6 @@ import {
 } from "./dispatcher.ts";
 
 import {
-  actorHasAlternateActionCost,
-  bonusActionDashTemporaryHitPointsForActor,
   canHideInCurrentCircumstances,
   escapeGrappleOutcomeHole,
   escapeSpellRestraintAbilityCheckHole,
@@ -393,7 +395,10 @@ function bonusActionStandardActionProcedure(
 ):
   | { readonly kind: "spell" }
   | { readonly kind: "staleSpell" }
-  | { readonly kind: "unit"; readonly unitId: UnitRecord["id"] }
+  | {
+      readonly kind: "unit";
+      readonly procedure: CharacterUnitProcedureExecution;
+    }
   | undefined {
   if (!isCharacterBattleCreatureState(actor)) return undefined;
   const binding = characterProcedureBinding(
@@ -402,7 +407,7 @@ function bonusActionStandardActionProcedure(
   );
   if (
     binding?.procedure.kind === "spellInvocation" &&
-    binding.procedure.invocation.procedure === "expeditiousRetreatDash"
+    binding.procedure.execution.procedure === "expeditiousRetreatDash"
   ) {
     return "sourceEffectRef" in subject &&
       actor.activeEffects.some(
@@ -415,10 +420,13 @@ function bonusActionStandardActionProcedure(
       ? { kind: "spell" }
       : { kind: "staleSpell" };
   }
-  return binding?.procedure.kind === "unitFeature" ||
-    binding?.procedure.kind === "unitSupportProfile"
-    ? { kind: "unit", unitId: binding.procedure.unitId }
-    : undefined;
+  if (
+    binding?.procedure.kind !== "unitFeature" &&
+    binding?.procedure.kind !== "unitSupportProfile"
+  ) {
+    return undefined;
+  }
+  return { kind: "unit", procedure: binding.procedure };
 }
 
 export function resolveBonusActionStandardAction(
@@ -435,16 +443,18 @@ export function resolveBonusActionStandardAction(
   }
   if (
     (procedure?.kind !== "unit" ||
-      !actorHasAlternateActionCost(
-        actor,
-        procedure.unitId,
+      typeof procedure.procedure.execution !== "object" ||
+      procedure.procedure.execution.kind !== "alternateActionCost" ||
+      procedure.procedure.execution.to.kind !== "bonusAction" ||
+      !procedure.procedure.execution.from.actions.includes(
         input.subject.action,
       )) &&
     (input.subject.action !== "dash" ||
       (procedure?.kind !== "spell" &&
         (procedure?.kind !== "unit" ||
-          bonusActionDashTemporaryHitPointsForActor(actor, procedure.unitId) ===
-            null)))
+          typeof procedure.procedure.execution !== "object" ||
+          procedure.procedure.execution.kind !==
+            "bonusActionDashTemporaryHitPoints")))
   ) {
     return invalidResult(
       input.state,
@@ -486,10 +496,12 @@ export function resolveBonusActionDash(
     );
   }
   const procedure = bonusActionStandardActionProcedure(actor, input.subject);
-  const dashTemporaryHitPoints = bonusActionDashTemporaryHitPointsForActor(
-    actor,
-    procedure?.kind === "unit" ? procedure.unitId : undefined,
-  );
+  const dashTemporaryHitPoints =
+    procedure?.kind === "unit" &&
+    typeof procedure.procedure.execution === "object" &&
+    procedure.procedure.execution.kind === "bonusActionDashTemporaryHitPoints"
+      ? procedure.procedure
+      : null;
   const speedKind =
     input.subject.action === "dash" ? input.subject.speedKind : "walk";
   if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
@@ -497,6 +509,26 @@ export function resolveBonusActionDash(
       input.state,
       "unsupportedActOption",
       "Dash speed kind is not represented for this combatant.",
+    );
+  }
+  const dashTemporaryHitPointsResourcePoolRef =
+    dashTemporaryHitPoints?.source.kind === "resourcePool"
+      ? dashTemporaryHitPoints.source.resourcePoolRef
+      : undefined;
+  if (
+    dashTemporaryHitPoints !== null &&
+    (!isCharacterBattleCreatureState(actor) ||
+      dashTemporaryHitPointsResourcePoolRef === undefined ||
+      !actor.origin.resources.some(
+        (resource) =>
+          resource.resourcePoolRef === dashTemporaryHitPointsResourcePoolRef &&
+          resourceHasUsesRemaining(resource),
+      ))
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action Dash Temporary Hit Points is no longer available.",
     );
   }
   const spent = spendActivationResource(input.state.currentTurnResources, {
@@ -526,7 +558,7 @@ export function resolveBonusActionDash(
     return resolveBonusActionDashTemporaryHitPoints(
       nextState,
       actor,
-      procedure.unitId,
+      dashTemporaryHitPointsResourcePoolRef,
     );
   }
   return {
@@ -539,7 +571,7 @@ export function resolveBonusActionDash(
 export function resolveBonusActionDashTemporaryHitPoints(
   dashedState: BattleState,
   actor: CharacterBattleCreatureState,
-  sourceUnitId: string,
+  resourcePoolRef: BattleResourcePoolExecutionRef | undefined,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const nextActor = applyTemporaryHitPoints(
     {
@@ -547,7 +579,7 @@ export function resolveBonusActionDashTemporaryHitPoints(
       origin: {
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
-          candidate.unit.id === sourceUnitId &&
+          candidate.resourcePoolRef === resourcePoolRef &&
           resourceHasUsesRemaining(candidate)
             ? spendCharacterResourceUse(candidate)
             : candidate,
@@ -927,11 +959,13 @@ export function resolveHide(
   if (
     input.subject.tag === "bonusActionStandardAction" &&
     (bonusActionProcedure?.kind !== "unit" ||
-      !actorHasAlternateActionCost(
-        actor,
-        bonusActionProcedure.unitId,
-        input.subject.action,
-      ))
+      (bonusActionProcedure.procedure.kind !== "unitSupportProfile" ||
+        typeof bonusActionProcedure.procedure.execution !== "object" ||
+        bonusActionProcedure.procedure.execution.kind !==
+          "alternateActionCost" ||
+        !bonusActionProcedure.procedure.execution.from.actions.includes(
+          input.subject.action,
+        )))
   ) {
     return invalidResult(
       input.state,
@@ -2156,13 +2190,13 @@ export function validateAttackDamageFill(
   spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
-  eligibleWeaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
-  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  eligibleWeaponDamageDiceRollChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
+  eligibleAttackDamageDieFloorChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
   eligibleCunningStrikeContexts: readonly CunningStrikeContext[] = [],
 ): string | null {
   const selectedRiders = selectedAttackDamageRiders(
     eligibleAttackDamageRiders,
-    fill.selectedAttackDamageRiderUnitIds,
+    fill.selectedAttackDamageRiderProcedureRefs,
   );
   if (selectedRiders === null) {
     return "Selected attack damage rider is not eligible for this attack.";
@@ -2205,7 +2239,7 @@ export function validateAttackDamageFill(
   }
 
   const weaponDamageDiceRollChoice = selectedWeaponDamageDiceRollChoice(
-    eligibleWeaponDamageDiceRollChoiceUnitIds,
+    eligibleWeaponDamageDiceRollChoiceProcedureRefs,
     fill.weaponDamageDiceRollChoice,
   );
   if (
@@ -2216,7 +2250,7 @@ export function validateAttackDamageFill(
   }
   const attackDamageDieFloorChoiceIssue = validateAttackDamageDieFloorChoice(
     fill,
-    eligibleAttackDamageDieFloorChoiceUnitIds,
+    eligibleAttackDamageDieFloorChoiceProcedureRefs,
   );
   if (attackDamageDieFloorChoiceIssue !== null) {
     return attackDamageDieFloorChoiceIssue;
@@ -2268,10 +2302,10 @@ export function validateAttackDamageAbilityModifierChoice(
 
 export function validateAttackDamageDieFloorChoice(
   fill: BattleRolledDiceFill,
-  eligibleUnitIds: readonly UnitRecord["id"][],
+  eligibleProcedureRefs: readonly BattleProcedureExecutionRef[],
 ): string | null {
   const selectedChoice = selectedAttackDamageDieFloorChoice(
-    eligibleUnitIds,
+    eligibleProcedureRefs,
     fill.attackDamageDieFloorChoice,
   );
   if (
@@ -2281,7 +2315,7 @@ export function validateAttackDamageDieFloorChoice(
     return "Attack damage die floor choice is not eligible for this attack.";
   }
   if (
-    eligibleUnitIds.length > 0 &&
+    eligibleProcedureRefs.length > 0 &&
     fill.attackDamageDieFloorChoice === undefined
   ) {
     return "Attack damage die floor choice is required for this attack.";
@@ -2386,12 +2420,11 @@ export function criticalThresholdForAttack(
     return 20;
   }
 
-  return attacker.origin.characterUnitRefs.some(
-    (unitRef) =>
-      unitRef.supportProfiles.some(
-        (profile) =>
-          profile === WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
-      ) === true,
+  return attacker.origin.execution.procedureBindings.some(
+    (binding) =>
+      (binding.procedure.kind === "unitFeature" ||
+        binding.procedure.kind === "unitSupportProfile") &&
+      binding.procedure.execution === "weaponOrUnarmedCriticalRange19",
   )
     ? 19
     : 20;
@@ -2454,31 +2487,25 @@ export function classFeatureExtraAttackForActor(
     readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
   } | null = null;
-  for (const unitRef of actor.origin.characterUnitRefs) {
-    for (const profile of unitRef.supportProfiles) {
-      if (
-        typeof profile === "object" &&
-        profile.kind === ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE
-      ) {
-        const binding = actor.origin.execution.procedureBindings.find(
-          (candidate) =>
-            candidate.procedure.kind !== "spellInvocation" &&
-            candidate.procedure.kind !== "unavailableSpellInvocation" &&
-            candidate.procedure.unitId === unitRef.unit.id &&
-            candidate.procedure.supportKind ===
-              ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
-        );
-        if (binding === undefined) continue;
-        if (
-          strongest === null ||
-          profile.additionalAttacks > strongest.additionalAttacks
-        ) {
-          strongest = {
-            additionalAttacks: profile.additionalAttacks,
-            sourceProcedureRef: binding.procedureRef,
-          };
-        }
-      }
+  for (const binding of actor.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      (procedure.kind !== "unitFeature" &&
+        procedure.kind !== "unitSupportProfile") ||
+      typeof procedure.execution !== "object" ||
+      procedure.execution.kind !== ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE
+    ) {
+      continue;
+    }
+    const additionalAttacks = procedure.execution.additionalAttacks;
+    if (
+      strongest === null ||
+      additionalAttacks > strongest.additionalAttacks
+    ) {
+      strongest = {
+        additionalAttacks,
+        sourceProcedureRef: binding.procedureRef,
+      };
     }
   }
   return strongest;

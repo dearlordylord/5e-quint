@@ -21,6 +21,7 @@ import { Either } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
+import { characterUnitProcedureBindings } from "../character-execution.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -1279,7 +1280,9 @@ export function resolveSaveGateDamageSpellAct(input: {
           input.input.subject.tag === "bonusActionSpell"
             ? { kind: "bonusAction" }
             : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
+        ...spellCastMetamagicApplicationsInput(
+          input.metamagicApplications ?? [],
+        ),
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -2152,13 +2155,18 @@ function potentCantripAppliesToSuccessfulSave(input: {
   ) {
     return false;
   }
-  return [...input.actor.origin.potentCantripProfiles.values()].some(
-    (profile) =>
-      profile.potentCantrip.trigger.kind === "castCantripAtCreature" &&
-      profile.potentCantrip.trigger.cantripKind === "damaging" &&
-      profile.potentCantrip.outcomes.includes("targetSucceedsSavingThrow") &&
-      profile.potentCantrip.damage === "halfCantripDamageIfAny" &&
-      profile.potentCantrip.additionalEffect === "none",
+  return characterUnitProcedureBindings(input.actor.origin.execution).some(
+    ({ procedure }) =>
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "potentCantrip" &&
+      procedure.execution.potentCantrip.trigger.kind ===
+        "castCantripAtCreature" &&
+      procedure.execution.potentCantrip.trigger.cantripKind === "damaging" &&
+      procedure.execution.potentCantrip.outcomes.includes(
+        "targetSucceedsSavingThrow",
+      ) &&
+      procedure.execution.potentCantrip.damage === "halfCantripDamageIfAny" &&
+      procedure.execution.potentCantrip.additionalEffect === "none",
   );
 }
 
@@ -2174,11 +2182,11 @@ function failedSaveConcentrationDurationEffect(input: {
     { readonly procedure: "saveGatedDamage" }
   >;
 }): SpellConcentrationDurationEffect | null {
-  if (input.invocation.spell.mechanics.duration.kind !== "concentration") {
+  if (input.invocation.spellRuleFacts.duration.kind !== "concentration") {
     return null;
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    input.invocation.spell.mechanics.duration.upTo,
+    input.invocation.spellRuleFacts.duration.upTo,
   );
   if (Either.isLeft(durationTicks)) {
     return null;

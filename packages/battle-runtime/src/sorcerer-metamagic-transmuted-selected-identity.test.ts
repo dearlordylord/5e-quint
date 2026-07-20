@@ -4,4 +4,6 @@ import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness
 
 import { sorcererMetamagicTransmutedSelectedIdentityReplay } from "./sorcerer-metamagic-transmuted-selected-identity.replay-data.test-support.ts";
 
-defineSelectedIdentityReplayWitness(sorcererMetamagicTransmutedSelectedIdentityReplay);
+defineSelectedIdentityReplayWitness(
+  sorcererMetamagicTransmutedSelectedIdentityReplay,
+);

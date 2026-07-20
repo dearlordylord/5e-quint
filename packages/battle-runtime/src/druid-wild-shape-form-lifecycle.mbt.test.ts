@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -54,7 +53,7 @@ import {
   resolveBattleSubject,
   savingThrowOutcomeFill,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCatalog,
   targetFill,
   unitLibrary,
@@ -72,8 +71,8 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
   type CharacterBattleCreatureState,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
@@ -124,7 +123,7 @@ const DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
 } as const;
 
 type DruidWildShapeFormLifecycleRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly lastResult: LastResult;
 };
 type AvailableBattleAct = ReturnType<typeof discoverBattleActs>[number];
@@ -571,7 +570,7 @@ function expectedDruidWildShapeFormProjection(
 
 function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
   return {
-    battle: startBattleRight({
+    battle: startBattleSessionRight({
       battleId: battleId("druid-wild-shape-form-lifecycle-mbt"),
       combatants: [
         characterSeed({
@@ -647,9 +646,12 @@ function beginNextTurn(
   return {
     battle: {
       ...state.battle,
-      currentTurnResources: {
-        ...state.battle.currentTurnResources,
-        currentHasBonusAction: true,
+      state: {
+        ...state.battle.state,
+        currentTurnResources: {
+          ...state.battle.state.currentTurnResources,
+          currentHasBonusAction: true,
+        },
       },
     },
     lastResult: "nextTurn",
@@ -695,7 +697,7 @@ function resolveWildShapeSubjectWithRoute(
   });
   const initial = requireNeedsHoles(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
@@ -719,13 +721,16 @@ function resolveWildShapeSubjectWithRoute(
   };
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [allMergedFill],
     }),
   );
   return {
-    state: { battle: resolved.state, lastResult },
+    state: {
+      battle: { ...state.battle, state: resolved.state },
+      lastResult,
+    },
     routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
   };
 }
@@ -737,13 +742,16 @@ function dismissFormWithRoute(state: DruidWildShapeFormLifecycleRuntimeState): {
   const act = wildShapeAct(state.battle, { action: "dismiss" });
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
   );
   return {
-    state: { battle: resolved.state, lastResult: "dismissed" },
+    state: {
+      battle: { ...state.battle, state: resolved.state },
+      lastResult: "dismissed",
+    },
     routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
   };
 }
@@ -759,18 +767,20 @@ function resolveIncapacitatedReversionWithRoute(
   const act = actionSpellAct(opponentTurn.state.battle, "hypnotic_pattern", {
     tag: "spellSlot",
     slotLevel: 3,
-    procedure: "hypnoticPattern",
   });
   const savingThrow = requireBattleHole(act.initialHoles, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: opponentTurn.state.battle,
+      state: opponentTurn.state.battle.state,
       subject: act.subject,
       fills: [hypnoticPatternSavingThrowOutcomeFill(savingThrow)],
     }),
   );
   return {
-    state: { battle: resolved.state, lastResult: "incapacitated" },
+    state: {
+      battle: { ...opponentTurn.state.battle, state: resolved.state },
+      lastResult: "incapacitated",
+    },
     terminalRouteEvents: resolved.routeEvents ?? [],
     routeEvents: [
       ...opponentTurn.routeEvents,
@@ -790,7 +800,6 @@ function resolveDeathReversionWithRoute(
   const opponentTurn = endDruidTurnWithRoute(state);
   const act = actionSpellAct(opponentTurn.state.battle, "fire_bolt", {
     tag: "cantrip",
-    procedure: "spellAttackDamage",
   });
   const target = requireBattleHole(act.initialHoles, "targetChoice");
   const targetChoice = targetFill(target, druidId, [
@@ -798,14 +807,12 @@ function resolveDeathReversionWithRoute(
       kind: "spellTarget",
       casterId: opponentId,
       targetId: druidId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("fire_bolt"),
-      ),
+      sourceProcedureRef: act.subject.procedureRef,
     },
   ]);
   const needsAttack = requireNeedsHoles(
     resolveBattleSubject({
-      state: opponentTurn.state.battle,
+      state: opponentTurn.state.battle.state,
       subject: act.subject,
       fills: [targetChoice],
     }),
@@ -817,14 +824,14 @@ function resolveDeathReversionWithRoute(
   });
   const needsDamage = requireNeedsHoles(
     resolveBattleSubject({
-      state: opponentTurn.state.battle,
+      state: opponentTurn.state.battle.state,
       subject: act.subject,
       fills: [targetChoice, attackRoll],
     }),
   );
   const damage = requireBattleHole(needsDamage.holes, "rolledDice");
   const result = resolveBattleSubject({
-    state: opponentTurn.state.battle,
+    state: opponentTurn.state.battle.state,
     subject: act.subject,
     fills: [targetChoice, attackRoll, damageRollFillWithGroups(damage, [[10]])],
   });
@@ -837,7 +844,10 @@ function resolveDeathReversionWithRoute(
   }
   const resolved = result;
   return {
-    state: { battle: resolved.state, lastResult: "dead" },
+    state: {
+      battle: { ...opponentTurn.state.battle, state: resolved.state },
+      lastResult: "dead",
+    },
     terminalRouteEvents: resolved.routeEvents ?? [],
     routeEvents: [
       ...opponentTurn.routeEvents,
@@ -857,7 +867,7 @@ function endDruidTurnWithRoute(
 } {
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: {
         tag: "runtimeCommand",
         actorId: druidId,
@@ -867,7 +877,10 @@ function endDruidTurnWithRoute(
     }),
   );
   return {
-    state: { battle: resolved.state, lastResult: state.lastResult },
+    state: {
+      battle: { ...state.battle, state: resolved.state },
+      lastResult: state.lastResult,
+    },
     routeEvents: resolved.routeEvents ?? [],
   };
 }
@@ -893,32 +906,18 @@ function isActionSpellAvailableAct(
 }
 
 function actionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellUnitId: string,
   invocation:
     | {
         readonly tag: "cantrip";
-        readonly procedure: Extract<
-          Extract<
-            BattleSubject,
-            { readonly tag: "actionSpell"; readonly invocation: unknown }
-          >["invocation"],
-          { readonly tag: "cantrip" }
-        >["procedure"];
       }
     | {
         readonly tag: "spellSlot";
         readonly slotLevel: number;
-        readonly procedure: Extract<
-          Extract<
-            BattleSubject,
-            { readonly tag: "actionSpell"; readonly invocation: unknown }
-          >["invocation"],
-          { readonly tag: "spellSlot" }
-        >["procedure"];
       },
 ): ActionSpellAvailableAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAvailableAct => {
       if (!isActionSpellAvailableAct(candidate)) {
         return false;
@@ -929,8 +928,6 @@ function actionSpellAct(
           invocation.tag &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spellUnitId &&
-        battleActSpellPresentation(candidate)?.invocation.procedure ===
-          invocation.procedure &&
         (invocation.tag === "cantrip" ||
           (battleActSpellPresentation(candidate)?.invocation.tag ===
             "spellSlot" &&
@@ -995,7 +992,7 @@ function beginNextTurnWithRoute(
 } {
   const opponentTurn = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: {
         tag: "runtimeCommand",
         actorId: druidId,
@@ -1016,7 +1013,10 @@ function beginNextTurnWithRoute(
     }),
   );
   return {
-    state: { battle: druidTurn.state, lastResult: "nextTurn" },
+    state: {
+      battle: { ...state.battle, state: druidTurn.state },
+      lastResult: "nextTurn",
+    },
     routeEvents: [
       ...(opponentTurn.routeEvents ?? []),
       ...(druidTurn.routeEvents ?? []),
@@ -1031,7 +1031,7 @@ function isDruidWildShapeAvailableAct(
 }
 
 function wildShapeAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   input:
     | {
         readonly action: "assumeForm";
@@ -1039,7 +1039,7 @@ function wildShapeAct(
       }
     | { readonly action: "dismiss" },
 ): DruidWildShapeAvailableAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is DruidWildShapeAvailableAct => {
       if (!isDruidWildShapeAvailableAct(candidate)) {
         return false;
@@ -1062,8 +1062,11 @@ function wildShapeAct(
 function druidWildShapeFormProjection(
   state: DruidWildShapeFormLifecycleRuntimeState,
 ): DruidWildShapeFormLifecycleProjection {
-  const druid = requireCharacter(state.battle, druidId);
-  const snapshot = snapshotCreature(snapshotBattle(state.battle), druidId);
+  const druid = requireCharacter(state.battle.state, druidId);
+  const snapshot = snapshotCreature(
+    snapshotBattle(state.battle.state),
+    druidId,
+  );
   const form = activeDruidWildShapeForm(druid);
   const mergedEquipmentCount =
     activeDruidWildShapeEffect(druid)?.equipmentDisposition.filter(
@@ -1080,9 +1083,9 @@ function druidWildShapeFormProjection(
   const projection = {
     activeForm: activeFormFromStatBlock(form),
     bonusActionAvailable: canSpendBonusAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
     ),
-    usesRemaining: druidWildShapeUsesRemaining(druid),
+    usesRemaining: druidWildShapeUsesRemaining(state.battle),
     tempHp: Number(druid.tempHp),
     armorClass: Number(snapshot.armorClass),
     creatureSize: literalField(snapshot.size, CREATURE_SIZES),
@@ -1144,11 +1147,15 @@ function isCharacterBattleCreatureState(
   return combatant?.origin.kind === "character";
 }
 
-function druidWildShapeUsesRemaining(
-  combatant: CharacterBattleCreatureState,
-): number {
-  const resource = combatant.origin.resources.find(
-    (candidate) => candidate.unit.id === "druid_wild_shape",
+function druidWildShapeUsesRemaining(session: BattleRuntimeSession): number {
+  const resourcePoolRef = session.context.characters
+    .get(druidId)
+    ?.resourceOwnership.find(
+      (ownership) => ownership.unit.id === "druid_wild_shape",
+    )?.resourcePoolRef;
+  const druid = requireCharacter(session.state, druidId);
+  const resource = druid.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
   if (resource === undefined || !("usesRemaining" in resource)) {
     throw new Error("Expected Druid Wild Shape resource.");

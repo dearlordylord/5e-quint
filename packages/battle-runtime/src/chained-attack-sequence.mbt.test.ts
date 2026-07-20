@@ -46,8 +46,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeContext,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import {
@@ -143,6 +144,7 @@ type ChainedAttackSequenceState = {
 
 type ChainedAttackRuntimeState = {
   readonly baseBattle: BattleState;
+  readonly context: BattleRuntimeContext;
   readonly projectionBattle: BattleState;
   readonly subject: ChainedAttackSubject | null;
   readonly fills: readonly BattleFill[];
@@ -494,8 +496,9 @@ function initialRuntimeState(): ChainedAttackRuntimeState {
     extraTargetIds: [secondTargetId, thirdTargetId],
   });
   return {
-    baseBattle: battle,
-    projectionBattle: battle,
+    baseBattle: battle.state,
+    context: battle.context,
+    projectionBattle: battle.state,
     subject: null,
     fills: [],
     holes: [],
@@ -521,7 +524,7 @@ function startCast(
   state: ChainedAttackRuntimeState,
   slotLevel: ChainedSlotLevel,
 ): ChainedAttackRuntimeState {
-  const act = chainedAttackAct(state.baseBattle, slotLevel);
+  const act = chainedAttackAct(state.baseBattle, state.context, slotLevel);
   if (act.subject.tag !== "actionSpell") {
     throw new Error("Expected chained Action spell subject.");
   }
@@ -771,9 +774,10 @@ function chainedAttackSequenceProjection(
 
 function chainedAttackAct(
   state: BattleState,
+  context: BattleRuntimeContext,
   slotLevel: ChainedSlotLevel,
 ): ChainedActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs({ state, context }).find(
     (candidate): candidate is ChainedActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===

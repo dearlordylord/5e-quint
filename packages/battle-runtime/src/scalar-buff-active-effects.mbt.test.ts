@@ -369,11 +369,11 @@ function resolveShieldOfFaithCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(shieldOfFaithUnitId)],
   });
-  const act = bonusSpellAct({ state, spellId: shieldOfFaithUnitId });
+  const act = bonusSpellAct({ session: state, spellId: shieldOfFaithUnitId });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -402,11 +402,15 @@ function resolveLongstriderCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(longstriderUnitId)],
   });
-  const act = spellAct({ state, spellId: longstriderUnitId, slotLevel: 1 });
+  const act = spellAct({
+    session: state,
+    spellId: longstriderUnitId,
+    slotLevel: 1,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -436,11 +440,15 @@ function resolveSpiderClimbCast(): ScalarBuffResolvedCast {
     preparedSpells: [spellRecord(spiderClimbUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
-  const act = spellAct({ state, spellId: spiderClimbUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session: state,
+    spellId: spiderClimbUnitId,
+    slotLevel: 2,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         knownWillingSpellTargetFill(
@@ -466,11 +474,11 @@ function resolveAidCast(): ScalarBuffResolvedCast {
     preparedSpells: [spellRecord(aidUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
-  const act = spellAct({ state, spellId: aidUnitId, slotLevel: 2 });
+  const act = spellAct({ session: state, spellId: aidUnitId, slotLevel: 2 });
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetHole, spellCasterId, aidUnitId, [
@@ -496,11 +504,15 @@ function resolveFalseLifeCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(falseLifeUnitId)],
   });
-  const act = spellAct({ state, spellId: falseLifeUnitId, slotLevel: 1 });
+  const act = spellAct({
+    session: state,
+    spellId: falseLifeUnitId,
+    slotLevel: 1,
+  });
   const rollHole = requireHole(act.initialHoles, "rolledDice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [damageRollFillWithGroups(rollHole, [[2, 3]])],
     }),

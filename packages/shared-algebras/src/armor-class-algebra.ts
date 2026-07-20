@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
-import { Brand, Match } from "effect";
+import { Brand, Match, Schema } from "effect";
 import { ABILITIES, Integer } from "@dnd/shared/types";
 import type {
   Ability,
@@ -15,6 +15,12 @@ import type {
 
 export type ArmorClass = Integer & Brand.Brand<"ArmorClass">;
 const ArmorClass = Brand.all(Integer, Brand.nominal<ArmorClass>());
+export const ArmorClassSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.brand("Integer"),
+  Schema.brand("ArmorClass"),
+);
 
 export function armorClass(value: number): ArmorClass {
   return ArmorClass(Math.max(1, Math.floor(value)));

@@ -1,24 +1,18 @@
-import type {
-  CharacterProcedureBattleSubject,
-  CharacterProcedureSelectionSubject,
-} from "./battle-subjects.ts";
+import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import type { CharacterBattleCreatureState } from "./battle-reducer.ts";
 import {
   BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
-  characterSpellProcedureInvocationRef,
-  characterSpellProcedureRef,
-  characterSpellProcedureRefForInvocationRef,
-  characterUnitProcedureRef,
+  characterUnitProcedure,
   type CharacterUnitProcedureQuery,
 } from "./character-execution.ts";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
-import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-holes-fills.ts";
+import type { CharacterBattleRuntimeContext } from "./battle-runtime-context.ts";
 export function characterUnitProcedureQueryForSubject(
-  subject: CharacterProcedureBattleSubject | CharacterProcedureSelectionSubject,
+  subject: CharacterProcedureBattleSubject,
 ): CharacterUnitProcedureQuery | undefined {
   if (
     subject.tag === "unitFeature" ||
@@ -38,97 +32,20 @@ export function characterUnitProcedureQueryForSubject(
   return undefined;
 }
 
-/**
- * Admits the authored selection carried by the outer composition envelope.
- * Reducer execution receives the returned binding ref and never repeats this
- * authored lookup.
- */
-export function admitCharacterProcedureSelection(
+export function characterUnitProcedureRefsForAuthoredSelection(
+  context: CharacterBattleRuntimeContext,
   actor: CharacterBattleCreatureState,
-  subject: CharacterProcedureSelectionSubject,
-): BattleProcedureExecutionRef | undefined {
-  if (
-    subject.tag === "actionSpell" ||
-    subject.tag === "bonusActionSpell" ||
-    subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell"
-  ) {
-    return admitSpellSelection(actor, subject);
-  }
-  if (
-    subject.tag === "unitFeature" ||
-    subject.tag === "unitFeatureHeldWeaponActivation"
-  ) {
-    return characterUnitProcedureRef(
+  unitId: UnitRecord["id"],
+  query: CharacterUnitProcedureQuery,
+): readonly BattleProcedureExecutionRef[] {
+  return context.unitProcedureOwnership.flatMap((ownership) =>
+    ownership.unitId === unitId &&
+    characterUnitProcedure(
       actor.origin.execution,
-      subject.unitId,
-      CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-    );
-  }
-  if (subject.tag === "druidWildShape") {
-    return characterUnitProcedureRef(
-      actor.origin.execution,
-      subject.unitId,
-      DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-    );
-  }
-  if (subject.tag === "bonusActionStandardAction") {
-    if ("sourceProcedureRef" in subject) {
-      const invocationRef = characterSpellProcedureInvocationRef(
-        actor.origin.execution,
-        subject.sourceProcedureRef,
-      );
-      if (invocationRef === undefined) return undefined;
-      const invocation = supportedSpellActs(actor).find(
-        (candidate) =>
-          candidate.procedure === "expeditiousRetreatDash" &&
-          supportedSpellInvocationMatchesRef(candidate, invocationRef),
-      );
-      return invocation === undefined ? undefined : subject.sourceProcedureRef;
-    }
-    const unitProcedureRef = characterUnitProcedureRef(
-      actor.origin.execution,
-      subject.sourceUnitId,
-      BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
-    );
-    return unitProcedureRef;
-  }
-  return characterUnitProcedureRef(
-    actor.origin.execution,
-    subject.resourceUnitId,
-    MONK_FOCUS_PROCEDURE_QUERY,
+      ownership.procedureRef,
+      query,
+    ) !== undefined
+      ? [ownership.procedureRef]
+      : [],
   );
-}
-
-function admitSpellSelection(
-  actor: CharacterBattleCreatureState,
-  subject: Extract<
-    CharacterProcedureSelectionSubject,
-    {
-      readonly tag:
-        | "actionSpell"
-        | "bonusActionSpell"
-        | "bonusActionDashSpell"
-        | "findFamiliarTouchSpell";
-    }
-  >,
-): BattleProcedureExecutionRef | undefined {
-  const componentWeaponItemId =
-    "componentWeaponItemId" in subject
-      ? subject.componentWeaponItemId
-      : undefined;
-  const invocation = supportedSpellActs(actor).find(
-    (candidate) =>
-      supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-      (candidate.procedure !== "spellHostedWeaponAttack" ||
-        componentWeaponItemId === candidate.componentWeapon.itemId) &&
-      (candidate.procedure !== "weaponAttackOverride" ||
-        componentWeaponItemId === candidate.attachedWeapon.itemId),
-  );
-  return invocation === undefined
-    ? characterSpellProcedureRefForInvocationRef(
-        actor.origin.execution,
-        subject.invocation,
-      )
-    : characterSpellProcedureRef(actor.origin.execution, invocation);
 }

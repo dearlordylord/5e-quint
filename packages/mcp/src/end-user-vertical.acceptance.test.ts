@@ -174,7 +174,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
-      "Adrenaline Rush",
+      "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
       "End Turn",
@@ -407,7 +407,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-      "Adrenaline Rush",
+      "Adrenaline Rush: Dash",
       "Second Wind",
       "Action Surge",
       "Move",
@@ -467,7 +467,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-      "Adrenaline Rush",
+      "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
       "End Turn",
@@ -499,7 +499,7 @@ describe("end-user MCP vertical", () => {
     });
 
     const wizardActs = callTool(root, "discover_battle_acts", {});
-    expect(wizardActs.snapshot.acts).toEqual(
+    expect(wizardActs.availableActs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           presentation: expect.objectContaining({
@@ -592,7 +592,7 @@ describe("end-user MCP vertical", () => {
     });
 
     const skeletonActs = callTool(root, "discover_battle_acts", {});
-    expect(skeletonActs.snapshot.acts).toEqual(
+    expect(skeletonActs.availableActs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -657,16 +657,7 @@ describe("end-user MCP vertical", () => {
       currentActorId: "fighter",
     });
 
-    const secondWindAct = requireUnitFeatureAct(
-      root,
-      "fighter",
-      "fighter_second_wind",
-    );
-    fillBattleSubject(root, secondWindAct.subject, {
-      kind: "rolledDice",
-      holeId: "battle:unit-feature:fighter_second_wind:healing-roll",
-      value: [{ results: [2] }],
-    });
+    resolveSecondWind(root, "fighter", [2]);
     expect(callTool(root, "read_battle_state", {}).snapshot.combatants).toEqual(
       [
         expect.objectContaining({ combatantId: "fighter", hp: 20 }),
@@ -1245,11 +1236,9 @@ function requireCreationOption(
 }
 
 function actionLabels(payload: {
-  readonly snapshot: {
-    readonly acts: ReadonlyArray<{ readonly label: string }>;
-  };
+  readonly availableActs: ReadonlyArray<{ readonly label: string }>;
 }) {
-  return payload.snapshot.acts.map((act) => act.label);
+  return payload.availableActs.map((act) => act.label);
 }
 
 function createAndFinalizeFighterTwo(
@@ -1897,7 +1886,7 @@ function requireBattleAct(
   predicate: (act: BattleActView) => boolean,
   label: string,
 ): BattleActView {
-  const act = callTool(root, "discover_battle_acts", {}).snapshot.acts.find(
+  const act = callTool(root, "discover_battle_acts", {}).availableActs.find(
     (candidate: BattleActView) => predicate(candidate),
   );
   if (act === undefined) throw new Error(`Expected battle act: ${label}`);
@@ -1913,7 +1902,7 @@ function requireAttackAct(
     root,
     "discover_battle_acts",
     {},
-  ).snapshot.acts.filter(
+  ).availableActs.filter(
     (act: BattleActView) =>
       act.subject.tag === "action" &&
       act.subject.actorId === actorId &&
@@ -1988,56 +1977,38 @@ type TriggeredSpellChoiceView = {
 
 function requireTriggeredSpellChoice(
   payload: {
-    readonly snapshot: {
-      readonly combatants: readonly {
-        readonly combatantId: string;
-        readonly origin?: {
-          readonly execution?: {
-            readonly procedureBindings?: readonly {
-              readonly procedureRef: string;
-              readonly procedure?: {
-                readonly kind?: string;
-                readonly invocation?: {
-                  readonly spell?: { readonly id?: string };
-                };
-              };
-            }[];
-          };
+    readonly presentedInterruptChoices: readonly {
+      readonly choice: TriggeredSpellChoiceView;
+      readonly presentation: {
+        readonly kind: string;
+        readonly invocation?: {
+          readonly spellId: string;
         };
-      }[];
-      readonly pendingInterrupt: {
-        readonly choices: readonly TriggeredSpellChoiceView[];
       };
-    };
+    }[];
   },
   reactorId: string,
   spellId: string,
 ): TriggeredSpellChoiceView {
-  const reactor = payload.snapshot.combatants.find(
-    (combatant) => combatant.combatantId === reactorId,
-  );
-  const matchingChoices = payload.snapshot.pendingInterrupt.choices.filter(
-    (choice) => {
+  const matchingChoices = payload.presentedInterruptChoices.filter(
+    ({ choice, presentation }) => {
       if (
         choice.kind !== "castTriggeredReactionSpell" ||
         choice.reactorId !== reactorId
       ) {
         return false;
       }
-      const binding = reactor?.origin?.execution?.procedureBindings?.find(
-        (candidate) => candidate.procedureRef === choice.subject.procedureRef,
-      );
       return (
-        binding?.procedure?.kind === "spellInvocation" &&
-        binding.procedure.invocation?.spell?.id === spellId
+        presentation.kind === "spell" &&
+        presentation.invocation?.spellId === spellId
       );
     },
   );
-  const [choice] = matchingChoices;
-  if (matchingChoices.length !== 1 || choice === undefined) {
+  const [presentedChoice] = matchingChoices;
+  if (matchingChoices.length !== 1 || presentedChoice === undefined) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
   }
-  return choice;
+  return presentedChoice.choice;
 }
 
 function resolveAttackWithShieldReaction(
@@ -2101,16 +2072,27 @@ function resourcePoolRefForUnit(
   combatantIdText: string,
   unitId: string,
 ): string {
-  const actor = root.sessionStore.battleState?.combatants.get(
-    combatantId(combatantIdText),
-  );
+  const session = root.sessionStore.battleSession;
+  if (session === null) {
+    throw new Error("Expected active battle session.");
+  }
+  const actor = session.state.combatants.get(combatantId(combatantIdText));
   if (actor?.origin.kind !== "character") {
     throw new Error(
       `Expected character combatant resource owner: ${combatantIdText}`,
     );
   }
+  const matchingOwnership = session.context.characters
+    .get(combatantId(combatantIdText))
+    ?.resourceOwnership.filter((candidate) => candidate.unit.id === unitId);
+  const [ownership] = matchingOwnership ?? [];
+  if (matchingOwnership?.length !== 1 || ownership === undefined) {
+    throw new Error(
+      `Expected one ${unitId} resource owner for ${combatantIdText}`,
+    );
+  }
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === unitId,
+    (candidate) => candidate.resourcePoolRef === ownership.resourcePoolRef,
   );
   if (resource === undefined) {
     throw new Error(`Expected ${unitId} resource for ${combatantIdText}`);

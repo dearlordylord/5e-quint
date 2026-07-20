@@ -73,6 +73,7 @@ import {
   type BattleHole,
   type BattleFill,
   type BattleResolutionResult,
+  type BattleRuntimeContext,
   type BattleState,
 } from "./index.ts";
 
@@ -130,6 +131,7 @@ type CreatureSizeChangeProjection = {
 
 type CreatureSizeChangeRuntimeState = {
   readonly battle: BattleState;
+  readonly context: BattleRuntimeContext;
   readonly holes: readonly BattleHole[];
   readonly lastDamageApplied: number;
   readonly lastResult: LastResult;
@@ -305,12 +307,14 @@ describe("Enlarge/Reduce creature size-change lifecycle MBT parity", () => {
 });
 
 function initialRuntimeState(): CreatureSizeChangeRuntimeState {
+  const session = spellBattle({
+    preparedSpells: [spellRecord(enlargeReduceUnitId)],
+    spellSlots: [{ spellLevel: 2, count: 1 }],
+    targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
+  });
   return {
-    battle: spellBattle({
-      preparedSpells: [spellRecord(enlargeReduceUnitId)],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-      targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
-    }),
+    battle: session.state,
+    context: session.context,
     holes: [],
     lastDamageApplied: noDamageResolved,
     lastResult: "init",
@@ -320,7 +324,11 @@ function initialRuntimeState(): CreatureSizeChangeRuntimeState {
 function discoverUnwillingReduceSave(
   state: CreatureSizeChangeRuntimeState,
 ): CreatureSizeChangeRuntimeState {
-  const act = creatureSizeActInState(state.battle, "creatureSizeDecrease");
+  const act = creatureSizeActInState(
+    state.battle,
+    state.context,
+    "creatureSizeDecrease",
+  );
   const target = requireHole(act.initialHoles, "targetChoice");
   const result = resolveBattleSubject({
     state: state.battle,
@@ -349,7 +357,11 @@ function castUnwillingReduce(
   state: CreatureSizeChangeRuntimeState,
   saveSucceeded: boolean,
 ): CreatureSizeChangeRuntimeState {
-  const act = creatureSizeActInState(state.battle, "creatureSizeDecrease");
+  const act = creatureSizeActInState(
+    state.battle,
+    state.context,
+    "creatureSizeDecrease",
+  );
   const target = requireHole(act.initialHoles, "targetChoice");
   const save = requireHole(state.holes, "savingThrowOutcome");
   const resolved = requireResolved(
@@ -385,7 +397,7 @@ function castWillingCreatureSizeChange(
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
   lastResult: Extract<LastResult, "willingEnlarge" | "willingReduce">,
 ): CreatureSizeChangeRuntimeState {
-  const act = creatureSizeActInState(state.battle, procedure);
+  const act = creatureSizeActInState(state.battle, state.context, procedure);
   const target = requireHole(act.initialHoles, "targetChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
@@ -551,14 +563,12 @@ function expireSizeChangeDuration(
 
 function creatureSizeActInState(
   state: BattleState,
+  context: BattleRuntimeContext,
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs({ state, context }).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        enlargeReduceUnitId &&
       battleActSpellPresentation(candidate)?.invocation.procedure === procedure,
   );
   expect(act).toBeDefined();
@@ -594,7 +604,7 @@ function creatureSizeChangeProjection(
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: { state: state.battle, context: state.context },
         spellId: enlargeReduceUnitId,
         slotLevel: 2,
       }) !== undefined,

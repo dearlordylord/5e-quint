@@ -1,4 +1,4 @@
-import { Brand, Either, Match } from "effect";
+import { Brand, Either, Match, Schema } from "effect";
 
 export const TIME_SPAN_SECONDS_PER_ROUND = 6;
 export const TIME_SPAN_SECONDS_PER_MINUTE = 60;
@@ -14,10 +14,21 @@ export type TimeSpanUnit = (typeof TIME_SPAN_UNITS)[number];
 
 export type ElapsedTimeTicks = number & Brand.Brand<"ElapsedTimeTicks">;
 const ElapsedTimeTicks = Brand.nominal<ElapsedTimeTicks>();
+export const ElapsedTimeTicksSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("ElapsedTimeTicks"),
+);
 
 export type PositiveElapsedTimeTicks = ElapsedTimeTicks &
   Brand.Brand<"PositiveElapsedTimeTicks">;
 const PositiveElapsedTimeTicks = Brand.nominal<PositiveElapsedTimeTicks>();
+export const PositiveElapsedTimeTicksSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.brand("ElapsedTimeTicks"),
+  Schema.brand("PositiveElapsedTimeTicks"),
+);
 
 export type PositiveInt = number & Brand.Brand<"PositiveInt">;
 const PositiveInt = Brand.nominal<PositiveInt>();

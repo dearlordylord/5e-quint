@@ -22,7 +22,8 @@ import {
 } from "./battle-runtime-test-support.ts";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
+import type { DamageType } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   baneUnitId,
   blessUnitId,
@@ -81,6 +82,7 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleFill,
+  BattleRuntimeSession,
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
@@ -186,7 +188,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
       extraTargetIds: [secondTargetId, thirdTargetId, fourthTargetId],
     });
-    const act = spellAct({ state, spellId: blessUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: blessUnitId,
+      slotLevel: 2,
+    });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     expect({
@@ -207,7 +213,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetListHole, spellCasterId, blessUnitId, [
@@ -259,9 +265,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       preparedSpells: [spell],
       extraTargetIds: [secondTargetId],
     });
-    const caster = state.combatants.get(spellCasterId);
-    const firstTarget = state.combatants.get(spellTargetId);
-    const secondTarget = state.combatants.get(secondTargetId);
+    const caster = state.state.combatants.get(spellCasterId);
+    const firstTarget = state.state.combatants.get(spellTargetId);
+    const secondTarget = state.state.combatants.get(secondTargetId);
     if (
       caster === undefined ||
       firstTarget === undefined ||
@@ -269,7 +275,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ) {
       throw new Error("Expected Bless recast combatants.");
     }
-    const act = spellAct({ state, spellId: blessUnitId });
+    const act = spellAct({ session: state, spellId: blessUnitId });
     const priorBlessEffect = {
       kind: "d20RollModifier" as const,
       sourceProcedureRef: act.subject.procedureRef,
@@ -279,29 +285,32 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       skill: null,
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     };
-    const stateWithPriorBless: BattleState = {
+    const stateWithPriorBless: BattleRuntimeSession = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(spellCasterId, {
-          ...caster,
-          concentration: {
-            sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(spellTargetId, {
-          ...firstTarget,
-          activeEffects: [...firstTarget.activeEffects, priorBlessEffect],
-        })
-        .set(secondTargetId, {
-          ...secondTarget,
-          activeEffects: [...secondTarget.activeEffects, priorBlessEffect],
-        }),
+      state: {
+        ...state.state,
+        combatants: new Map(state.state.combatants)
+          .set(spellCasterId, {
+            ...caster,
+            concentration: {
+              sourceProcedureRef: act.subject.procedureRef,
+              effectKind: "spellEffect",
+            },
+          })
+          .set(spellTargetId, {
+            ...firstTarget,
+            activeEffects: [...firstTarget.activeEffects, priorBlessEffect],
+          })
+          .set(secondTargetId, {
+            ...secondTarget,
+            activeEffects: [...secondTarget.activeEffects, priorBlessEffect],
+          }),
+      },
     };
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     const resolved = resolveBattleSubject({
-      state: stateWithPriorBless,
+      state: stateWithPriorBless.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetListHole, spellCasterId, blessUnitId, [
@@ -353,7 +362,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       preparedSpells: [spell],
       extraTargetIds: [secondTargetId],
     });
-    const act = spellAct({ state, spellId: baneUnitId });
+    const act = spellAct({ session: state, spellId: baneUnitId });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetListHole,
@@ -362,7 +371,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       [spellTargetId, secondTargetId],
     );
     const awaitingSaves = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -376,7 +385,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -415,7 +424,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("guidance requires a cast-time skill choice and stores it on the d4 ability-check modifier", () => {
     const spell = spellRecord(guidanceUnitId);
     const state = spellBattle({ cantrips: [spell], spellSlots: [] });
-    const act = spellAct({ state, spellId: guidanceUnitId });
+    const act = spellAct({ session: state, spellId: guidanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const skillHole = requireHole(act.initialHoles, "skillChoice");
 
@@ -436,7 +445,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(targetHole.choices).toEqual([spellCasterId, spellTargetId]);
 
     const unwillingTarget = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         withoutKnownWillingFacts(
@@ -456,7 +465,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -497,7 +506,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       extraTargetIds: [secondTargetId],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: passWithoutTraceUnitId,
       slotLevel: 2,
     });
@@ -521,7 +530,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
 
     const missingCaster = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(
@@ -538,7 +547,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(
@@ -593,7 +602,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+    const act = spellAct({ session: state, spellId: enhanceAbilityUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const abilityHole = requireHole(act.initialHoles, "abilityChoice");
 
@@ -614,7 +623,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(abilityHole.choices).toEqual(["str", "dex", "int", "wis", "cha"]);
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -678,7 +687,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
       extraTargetIds: [secondTargetId, thirdTargetId],
     });
-    const act = spellAct({ state, spellId: enthrallUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: enthrallUnitId,
+      slotLevel: 2,
+    });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     expect({
@@ -705,7 +718,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       [spellTargetId, secondTargetId, thirdTargetId],
     );
     const awaitingSaves = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -719,7 +732,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -799,7 +812,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       extraTargetIds: [secondTargetId],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: enhanceAbilityUnitId,
       slotLevel: 3,
     });
@@ -845,7 +858,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toBe(true);
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(
@@ -903,7 +916,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       extraTargetIds: [secondTargetId, thirdTargetId],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: enhanceAbilityUnitId,
       slotLevel: 3,
     });
@@ -921,7 +934,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetListFill(
@@ -941,7 +954,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [validTargets],
       }),
@@ -952,7 +965,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           validTargets,
@@ -967,7 +980,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           validTargets,
@@ -981,7 +994,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           validTargets,
@@ -997,7 +1010,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("resistance stores a chosen damage-type reduction with a once-per-turn use marker", () => {
     const spell = spellRecord(resistanceUnitId);
     const state = spellBattle({ cantrips: [spell], spellSlots: [] });
-    const act = spellAct({ state, spellId: resistanceUnitId });
+    const act = spellAct({ session: state, spellId: resistanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
 
@@ -1030,7 +1043,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ]);
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -1069,7 +1082,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("resistance rejects fill kinds owned by other spell procedures", () => {
     const spell = spellRecord(resistanceUnitId);
     const state = spellBattle({ cantrips: [spell], spellSlots: [] });
-    const act = spellAct({ state, spellId: resistanceUnitId });
+    const act = spellAct({ session: state, spellId: resistanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
     const baseFills = [
@@ -1123,7 +1136,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     for (const fill of nonDamageReductionFills) {
       expect(
         resolveBattleSubject({
-          state,
+          state: state.state,
           subject: act.subject,
           fills: [...baseFills, fill],
         }),
@@ -1138,7 +1151,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       spellSlots: [],
     });
     const guidanceAct = spellAct({
-      state: guidanceState,
+      session: guidanceState,
       spellId: guidanceUnitId,
     });
     const guidanceTargetHole = requireHole(
@@ -1158,7 +1171,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const guidanceSkillFill = skillChoiceFill(guidanceSkillHole, "stealth");
 
     const targetListResult = resolveBattleSubject({
-      state: guidanceState,
+      state: guidanceState.state,
       subject: guidanceAct.subject,
       fills: [
         {
@@ -1183,7 +1196,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     });
 
     const targetAbilityResult = resolveBattleSubject({
-      state: guidanceState,
+      state: guidanceState.state,
       subject: guidanceAct.subject,
       fills: [
         guidanceTargetFill,
@@ -1203,7 +1216,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     });
 
     const savingThrowResult = resolveBattleSubject({
-      state: guidanceState,
+      state: guidanceState.state,
       subject: guidanceAct.subject,
       fills: [
         guidanceTargetFill,
@@ -1228,7 +1241,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const blessAct = spellAct({
-      state: blessState,
+      session: blessState,
       spellId: blessUnitId,
       slotLevel: 1,
     });
@@ -1237,7 +1250,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       "spellTargetList",
     );
     const skillChoiceResult = resolveBattleSubject({
-      state: blessState,
+      state: blessState.state,
       subject: blessAct.subject,
       fills: [
         spellTargetListFill(blessTargetListHole, spellCasterId, blessUnitId, [
@@ -1261,13 +1274,13 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       spellSlots: [],
     });
-    const targetCombatant = baseState.combatants.get(spellTargetId);
+    const targetCombatant = baseState.state.combatants.get(spellTargetId);
     if (targetCombatant === undefined) {
       throw new Error("Expected spell target.");
     }
     const state = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(spellTargetId, {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...targetCombatant,
         activeEffects: [
           ...targetCombatant.activeEffects,
@@ -1288,7 +1301,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ],
       }),
     };
-    const subject = weaponAttackSubject(state, "Longsword");
+    const subject = weaponAttackSubject({ ...baseState, state }, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -1364,9 +1377,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       spellSlots: [],
     });
-    const targetCombatant = requireCombatant(baseState, spellTargetId);
+    const targetCombatant = requireCombatant(baseState.state, spellTargetId);
     const state = withResistanceEffect(
-      baseState,
+      baseState.state,
       spellTargetId,
       "piercing",
       false,
@@ -1386,7 +1399,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
 
     const spentState = withResistanceEffect(
-      baseState,
+      baseState.state,
       spellTargetId,
       "slashing",
       true,
@@ -1409,7 +1422,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("resistance once-per-turn marker resets on the next turn boundary", () => {
     const baseState = spellBattle({ spellSlots: [] });
     const state = withResistanceEffect(
-      baseState,
+      baseState.state,
       spellTargetId,
       "slashing",
       true,
@@ -1435,7 +1448,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("resistance applies to fixed attack damage and matching spell damage", () => {
     const fixedBase = spellBattle({ attack: null, spellSlots: [] });
     const fixedState = withResistanceEffect(
-      fixedBase,
+      fixedBase.state,
       spellTargetId,
       "bludgeoning",
       false,
@@ -1491,21 +1504,24 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       throw new Error("Expected fixed damage attack to resolve.");
     }
     expect(fixedResolved.state.combatants.get(spellTargetId)?.hp).toBe(
-      requireCombatant(fixedBase, spellTargetId).hp,
+      requireCombatant(fixedBase.state, spellTargetId).hp,
     );
 
     const spell = spellRecord(rayOfFrostUnitId);
     const spellBase = spellBattle({ cantrips: [spell], spellSlots: [] });
-    const spellState = withResistanceEffect(
-      spellBase,
-      spellTargetId,
-      "cold",
-      false,
-    );
-    const act = spellAct({ state: spellState, spellId: rayOfFrostUnitId });
+    const spellSession = {
+      ...spellBase,
+      state: withResistanceEffect(
+        spellBase.state,
+        spellTargetId,
+        "cold",
+        false,
+      ),
+    };
+    const act = spellAct({ session: spellSession, spellId: rayOfFrostUnitId });
     const spellTarget = requireResultHole(
       resolveBattleSubject({
-        state: spellState,
+        state: spellSession.state,
         subject: act.subject,
         fills: [],
       }),
@@ -1519,7 +1535,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
     const spellAttack = requireResultHole(
       resolveBattleSubject({
-        state: spellState,
+        state: spellSession.state,
         subject: act.subject,
         fills: [spellTargetFillValue],
       }),
@@ -1531,14 +1547,14 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     });
     const spellDamage = requireResultHole(
       resolveBattleSubject({
-        state: spellState,
+        state: spellSession.state,
         subject: act.subject,
         fills: [spellTargetFillValue, spellAttackFill],
       }),
       "rolledDice",
     );
     const needsSpellReduction = resolveBattleSubject({
-      state: spellState,
+      state: spellSession.state,
       subject: act.subject,
       fills: [
         spellTargetFillValue,
@@ -1554,7 +1570,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       needsSpellReduction.holes,
     );
     const spellResolved = resolveBattleSubject({
-      state: spellState,
+      state: spellSession.state,
       subject: act.subject,
       fills: [
         spellTargetFillValue,
@@ -1568,7 +1584,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       throw new Error("Expected spell damage to resolve.");
     }
     expect(spellResolved.state.combatants.get(spellTargetId)?.hp).toBe(
-      Hp(Number(requireCombatant(spellBase, spellTargetId).hp) - 1),
+      Hp(Number(requireCombatant(spellBase.state, spellTargetId).hp) - 1),
     );
   });
 
@@ -1580,7 +1596,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       targetMaxHp: 10,
     });
     const state = withResistanceEffect(
-      baseState,
+      baseState.state,
       spellTargetId,
       "slashing",
       false,
@@ -1665,14 +1681,14 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
 describe("L12G Protection from Poison deterministic Spell Unit admission", () => {
   test("protection_from_poison removes Poisoned and stores condition-save Advantage plus poison Resistance", () => {
     const spell = spellRecord(protectionFromPoisonUnitId);
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseSession.state, spellTargetId);
     const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(
+      ...baseSession.state,
+      combatants: new Map(baseSession.state.combatants).set(
         spellTargetId,
         battleCreatureStateWithKnockOutPreservedConditions(
           {
@@ -1704,7 +1720,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       ),
     };
     const act = spellAct({
-      state,
+      session: { ...baseSession, state },
       spellId: protectionFromPoisonUnitId,
       slotLevel: 2,
     });
@@ -1717,7 +1733,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        { ...baseSession, state },
         spellCasterId,
         spellSlotInvocationRef(
           protectionFromPoisonUnitId,
@@ -1786,11 +1802,17 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       cantrips: [poisonSpell],
       spellSlots: [],
     });
-    const poisonState = withProtectionFromPoisonResistance(
-      poisonBase,
-      spellTargetId,
-    );
-    const act = spellAct({ state: poisonState, spellId: poisonSprayUnitId });
+    const poisonSession = {
+      ...poisonBase,
+      state: withProtectionFromPoisonResistance(
+        poisonBase.state,
+        spellTargetId,
+      ),
+    };
+    const act = spellAct({
+      session: poisonSession,
+      spellId: poisonSprayUnitId,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       targetHole,
@@ -1800,7 +1822,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     );
     const attack = requireResultHole(
       resolveBattleSubject({
-        state: poisonState,
+        state: poisonSession.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -1812,14 +1834,14 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     });
     const damage = requireResultHole(
       resolveBattleSubject({
-        state: poisonState,
+        state: poisonSession.state,
         subject: act.subject,
         fills: [targetFill, attackFill],
       }),
       "rolledDice",
     );
     const poisonResolved = resolveBattleSubject({
-      state: poisonState,
+      state: poisonSession.state,
       subject: act.subject,
       fills: [targetFill, attackFill, damageRollFillWithGroups(damage, [[5]])],
     });
@@ -1828,7 +1850,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       throw new Error("Expected resisted poison damage to resolve.");
     }
     expect(poisonResolved.state.combatants.get(spellTargetId)?.hp).toBe(
-      Hp(Number(requireCombatant(poisonBase, spellTargetId).hp) - 2),
+      Hp(Number(requireCombatant(poisonBase.state, spellTargetId).hp) - 2),
     );
 
     const weaponBase = spellBattle({
@@ -1836,7 +1858,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       spellSlots: [],
     });
     const weaponState = withProtectionFromPoisonResistance(
-      weaponBase,
+      weaponBase.state,
       spellTargetId,
     );
     const weaponAttack = completedWeaponDamageInput(weaponState);
@@ -1850,16 +1872,16 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       throw new Error("Expected non-poison weapon damage to resolve.");
     }
     expect(weaponResolved.state.combatants.get(spellTargetId)?.hp).toBe(
-      Hp(Number(requireCombatant(weaponBase, spellTargetId).hp) - 4),
+      Hp(Number(requireCombatant(weaponBase.state, spellTargetId).hp) - 4),
     );
   });
 
   test("protection_from_poison projects Advantage on Poisoned end-condition saves", () => {
-    const baseState = spellBattle({ spellSlots: [] });
-    const target = requireCombatant(baseState, spellTargetId);
+    const baseSession = spellBattle({ spellSlots: [] });
+    const target = requireCombatant(baseSession.state, spellTargetId);
     const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(
+      ...baseSession.state,
+      combatants: new Map(baseSession.state.combatants).set(
         spellTargetId,
         battleCreatureStateWithKnockOutPreservedConditions(
           {
@@ -1952,13 +1974,13 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: protectionFromPoisonUnitId,
       slotLevel: 2,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -2033,7 +2055,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: protectionFromEnergyUnitId,
       slotLevel: 3,
     });
@@ -2076,7 +2098,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     const damageTypeFill = damageTypeChoiceFill(damageTypeHole, "fire");
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill, damageTypeFill],
       }),
@@ -2089,7 +2111,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       spellTargetId,
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [willingTargetFill, damageTypeFill],
     });
@@ -2142,14 +2164,14 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: protectionFromEnergyUnitId,
       slotLevel: 3,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         knownWillingSpellTargetFill(
@@ -2205,12 +2227,15 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
   test("protection_from_energy Resistance halves only matching damage through the target-side adjustment pipeline", () => {
     const fireSpell = spellRecord(fireBoltUnitId);
     const fireBase = spellBattle({ cantrips: [fireSpell], spellSlots: [] });
-    const fireState = withProtectionFromEnergyResistance(
-      fireBase,
-      spellTargetId,
-      "fire",
-    );
-    const act = spellAct({ state: fireState, spellId: fireBoltUnitId });
+    const fireSession = {
+      ...fireBase,
+      state: withProtectionFromEnergyResistance(
+        fireBase.state,
+        spellTargetId,
+        "fire",
+      ),
+    };
+    const act = spellAct({ session: fireSession, spellId: fireBoltUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       targetHole,
@@ -2220,7 +2245,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     );
     const attackHole = requireResultHole(
       resolveBattleSubject({
-        state: fireState,
+        state: fireSession.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -2232,14 +2257,14 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     });
     const damageHole = requireResultHole(
       resolveBattleSubject({
-        state: fireState,
+        state: fireSession.state,
         subject: act.subject,
         fills: [targetFill, attackFill],
       }),
       "rolledDice",
     );
     const fireResolved = resolveBattleSubject({
-      state: fireState,
+      state: fireSession.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -2252,7 +2277,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       throw new Error("Expected Fire Bolt damage to resolve.");
     }
     expect(fireResolved.state.combatants.get(spellTargetId)?.hp).toBe(
-      Hp(Number(requireCombatant(fireBase, spellTargetId).hp) - 4),
+      Hp(Number(requireCombatant(fireBase.state, spellTargetId).hp) - 4),
     );
 
     const weaponBase = spellBattle({
@@ -2260,7 +2285,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       spellSlots: [],
     });
     const weaponState = withProtectionFromEnergyResistance(
-      weaponBase,
+      weaponBase.state,
       spellTargetId,
       "fire",
     );
@@ -2275,7 +2300,7 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       throw new Error("Expected nonmatching weapon damage to resolve.");
     }
     expect(weaponResolved.state.combatants.get(spellTargetId)?.hp).toBe(
-      Hp(Number(requireCombatant(weaponBase, spellTargetId).hp) - 4),
+      Hp(Number(requireCombatant(weaponBase.state, spellTargetId).hp) - 4),
     );
   });
 });
@@ -2306,12 +2331,12 @@ defineSelectedIdentityReplayWitness({
               spellSlots: [{ spellLevel: 3, count: 1 }],
             });
             const act = spellAct({
-              state,
+              session: state,
               spellId: protectionFromEnergyUnitId,
               slotLevel: 3,
             });
             const resolved = resolveBattleSubject({
-              state,
+              state: state.state,
               subject: act.subject,
               fills: [
                 knownWillingSpellTargetFill(

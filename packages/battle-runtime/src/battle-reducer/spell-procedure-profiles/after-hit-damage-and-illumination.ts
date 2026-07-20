@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage-illumination
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 //
 // The afterHitDamageAndIllumination Spell Procedure Profile: a Bonus Action
@@ -34,12 +36,11 @@ import type {
 import { Either } from "effect";
 
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AfterHitDamageAndIlluminationSpellInvocation,
   type AttackSpellDamageAddition,
-  type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleInterruptedProcedure,
@@ -47,10 +48,10 @@ import {
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
-  type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
+import type { BattleSpellProcedureExecution } from "../../character-execution.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
@@ -72,9 +73,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DamageTypeSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -82,6 +82,16 @@ import {
 
 type AfterHitDamageAndIlluminationInvocation =
   AfterHitDamageAndIlluminationSpellInvocation;
+
+const ShiningSmiteIlluminationEffectSchema = Schema.Struct({
+  kind: Schema.Literal("shiningSmiteIllumination"),
+  sourceCombatantId: CombatantId,
+  expiresAt: Schema.Struct({
+    kind: Schema.Literal("concentration"),
+    combatantId: CombatantId,
+    durationTicks: ElapsedTimeTicksSchema,
+  }),
+});
 type AttackHitBonusActionSpellCommandSubject = Extract<
   BattleSubject,
   {
@@ -243,27 +253,11 @@ function afterHitDamageAndIlluminationSpellProjection(
 function discoverAfterHitDamageAndIlluminationCastAct(
   _state: BattleState,
   _actorId: CombatantId,
-  _invocation: AfterHitDamageAndIlluminationInvocation,
-): readonly AvailableBattleAct[] {
+  _invocation: BattleSpellProcedureExecution<AfterHitDamageAndIlluminationInvocation>,
+): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
 
-function afterHitDamageAndIlluminationInvocationRef(
-  invocation: AfterHitDamageAndIlluminationInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "afterHitDamageAndIllumination",
-  };
-}
-
-function afterHitDamageAndIlluminationCastSummary(
-  invocation: AfterHitDamageAndIlluminationInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
-}
 
 function applyAfterHitDamageAndIlluminationSpellEffect(
   state: BattleState,
@@ -378,7 +372,8 @@ function resolveAfterHitDamageAndIllumination(
     state: nextState,
     subject: input.input.subject,
     casterId: input.input.subject.casterId,
-    spellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellProcedure: input.invocation.procedure,
     targetIds: [input.input.target.combatantId],
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
@@ -393,36 +388,28 @@ function resolveAfterHitDamageAndIllumination(
 }
 
 const AfterHitDamageAndIlluminationInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "afterHitDamageAndIllumination" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("afterHitDamageAndIllumination"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
-      activeEffect: BattleRuntimeObjectSchema,
+      activeEffect: ShiningSmiteIlluminationEffectSchema,
     }),
   );
 export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
-  invocationSchema: AfterHitDamageAndIlluminationInvocationSchema,
+  executionSchema: AfterHitDamageAndIlluminationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitAfterHitDamageAndIllumination,
   discoverCastAct: discoverAfterHitDamageAndIlluminationCastAct,
-  castSummary: afterHitDamageAndIlluminationCastSummary,
-  invocationRef: afterHitDamageAndIlluminationInvocationRef,
   resolve: resolveAfterHitDamageAndIllumination,
 } satisfies SpellProcedureProfile<
   "afterHitDamageAndIllumination",

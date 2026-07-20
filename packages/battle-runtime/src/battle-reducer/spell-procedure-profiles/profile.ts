@@ -5,12 +5,18 @@
 // resolvers in spells-resolve-support-effects.ts, applyEffect in
 // spells-active-effects.ts, codec in battle-codecs.ts, discovery branches in
 // spells-discovery.ts, classification in spells-invocation-guards.ts,
-// metamagic flags in metamagic.ts, ref builder in spells-invocation-ref.ts,
-// etc). Consolidating each profile behind this type localises change: adding
+// metamagic flags in metamagic.ts, etc). Invocation references deliberately
+// stay in the outer presentation join because they retain authored spell
+// identity. Consolidating each mechanical profile behind this type localises change: adding
 // a new profile is one file; changing how an existing profile behaves opens
 // exactly that file.
 
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
+import {
+  DurationSchema,
+  RangeSchema,
+  SpellLevelSchema,
+} from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import type {
@@ -18,16 +24,23 @@ import type {
   BattleActDiscoveryCandidate,
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
-  BattleExecutableSpellInvocation,
   BattleResolutionResult,
   BattleState,
   ReadiedSpellInvocation,
   SupportedSpellInvocation,
   TargetListSpellInvocation,
+  TargetListSpellInvocationOf,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import type {
+  BattleSpellProcedureExecution,
+  SpellProcedureExecution,
+  SpellRuleExecutionFacts,
+} from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
-import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
+import type {
+  CharacterBattleResourceOwnership,
+  CharacterBattleSpellcastingState,
+} from "../../character-battle-resources.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
@@ -59,6 +72,7 @@ export type SpellAdmissionBattleProjection = {
 export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
   readonly battle: SpellAdmissionBattleProjection | undefined;
+  readonly resourceOwnership: readonly CharacterBattleResourceOwnership[];
 };
 
 // Registry admission is existential over each profile's concrete invocation.
@@ -84,6 +98,7 @@ function isSpellAdmissionActor(
 export function spellAdmissionContextFor(
   actor: BattleCreatureState,
   state: BattleState | undefined,
+  resourceOwnership: readonly CharacterBattleResourceOwnership[],
 ): SpellAdmissionContext | null {
   if (!isSpellAdmissionActor(actor)) {
     return null;
@@ -91,6 +106,7 @@ export function spellAdmissionContextFor(
   return {
     actor,
     battle: spellAdmissionBattleProjection(state),
+    resourceOwnership,
   };
 }
 
@@ -144,14 +160,34 @@ export type SpellProcedureMetamagicCompatibility =
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 
+export const SpellRuleExecutionFactsSchema: Schema.Schema<SpellRuleExecutionFacts> =
+  Schema.Struct({
+    level: SpellLevelSchema,
+    range: RangeSchema,
+    duration: DurationSchema,
+    components: Schema.Struct({
+      verbal: Schema.Boolean,
+      somatic: Schema.Boolean,
+      hasMaterial: Schema.Boolean,
+      hasPricedOrConsumedMaterial: Schema.Boolean,
+    }),
+    twinnedTargetCount: Schema.Union(
+      Schema.Struct({
+        base: Schema.Number,
+        baseLevel: Schema.Number,
+      }),
+      Schema.Null,
+    ),
+  });
+
 export type SpellProcedureProfileResolveInput<
-  I,
+  I extends SupportedSpellInvocation,
   Input = ActionSpellBattleResolutionInput,
   FillSet = OkSpellFillSet,
 > = {
   readonly input: Input;
   readonly actorId: CombatantId;
-  readonly invocation: BattleExecutableSpellInvocation<I>;
+  readonly invocation: BattleSpellProcedureExecution<I>;
   readonly fillSet: FillSet;
 };
 
@@ -171,12 +207,6 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
     : never;
 }[SupportedSpellInvocation["procedure"]];
 
-type SpellProcedureTargeting<I> = I extends {
-  readonly targeting: infer Targeting;
-}
-  ? Targeting
-  : never;
-
 export type SpellProcedureAnyTargetListInvocationClassifier =
   | { readonly kind: "always" }
   | { readonly kind: "none" }
@@ -186,10 +216,7 @@ export type SpellProcedureTargetListInvocationClassifier<
   I extends SupportedSpellInvocation,
 > = [I] extends [TargetListSpellInvocation]
   ? { readonly kind: "always" }
-  : Extract<
-        SpellProcedureTargeting<I>,
-        { readonly kind: "targetList" }
-      > extends never
+  : TargetListSpellInvocationOf<I> extends never
     ? { readonly kind: "none" }
     :
         | { readonly kind: "none" }
@@ -226,7 +253,6 @@ export type SpellProcedureProfile<
   readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
   readonly targetListInvocation: SpellProcedureTargetListInvocationClassifier<I>;
   readonly isReadiedSpellCompatible: SpellProcedureReadiedSpellCompatibility<I>;
-  readonly knownWillingTargetSpellIds: ReadonlyArray<SpellRecord["id"]>;
 
   // Discovery: enumerate every currently-admissible invocation of this
   // profile for the given actor + spell. Returns [] if the spell does not
@@ -240,22 +266,14 @@ export type SpellProcedureProfile<
   readonly discoverCastAct: (
     state: BattleState,
     actorId: CombatantId,
-    invocation: BattleExecutableSpellInvocation<I>,
+    invocation: BattleSpellProcedureExecution<I>,
   ) => readonly BattleActDiscoveryCandidate[];
 
-  // Discovery: short human-readable label for the cast act.
-  readonly castSummary: (
-    invocation: BattleExecutableSpellInvocation<I>,
-  ) => string;
-
-  // Reference projection used to address an invocation across snapshots and
-  // continuations.
-  readonly invocationRef: (
-    invocation: BattleExecutableSpellInvocation<I>,
-  ) => SpellInvocationRef;
-
-  // Runtime codec for the exact invocation shape admitted by this profile.
-  readonly invocationSchema: Schema.Schema<I>;
+  // Runtime codec for the exact mechanical execution shape owned by this
+  // profile. Authored spell payloads are joined outside reducer execution.
+  readonly executionSchema: {
+    readonly Type: SpellProcedureExecution<I>;
+  };
 
   // Dispatch entry: consume a fill set, produce a resolution result.
   readonly resolve: (
@@ -263,15 +281,10 @@ export type SpellProcedureProfile<
   ) => BattleResolutionResult;
 };
 
-export function spellProcedureInvocationSchema<
-  I,
-  S extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
->(schema: S): Schema.Schema<I> {
-  // Effect Schema preserves the runtime parser for each invocation branch, but
-  // generic record/object helpers infer wider structural fields than the
-  // reducer's branded/domain aliases. Profile-local discriminants select the
-  // exact SupportedSpellInvocation branch before the value reaches runtime.
-  return schema as unknown as Schema.Schema<I>;
+export function spellProcedureExecutionSchema<
+  S extends Schema.Schema.AnyNoContext,
+>(schema: S): S {
+  return schema;
 }
 
 // Existential wrapper for a heterogeneous registry. Distributes over the

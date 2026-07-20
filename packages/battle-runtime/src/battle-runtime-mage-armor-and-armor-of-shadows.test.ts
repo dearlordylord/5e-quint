@@ -5,7 +5,7 @@ import {
   abilityModifier,
   armorOfShadowsSpellInvocationRef,
   battleId,
-  battleProcedureExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSeed,
   combatantId,
   defaultArmorClassState,
@@ -19,6 +19,7 @@ import {
   findHole,
   magicSubject,
   requireCharacterSpellProcedureRefForTest,
+  requireCharacterUnitProcedureRefForTest,
   requireElapsedHours,
   requireHole,
   requireResolved,
@@ -28,7 +29,7 @@ import {
   spellRecord,
   spellSlotInvocationRef,
   startBattle,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCatalog,
   targetFill,
   unitLibrary,
@@ -45,7 +46,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         dex: abilityModifier(2),
       },
     };
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-mage-armor"),
       combatants: [
         characterSeed({
@@ -65,11 +66,15 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
+    const state = session.state;
+    const subject = findAct(session, magicSubject("mage_armor")).subject;
+    expect(
+      discoverBattleActs(session).map((act) => act.subject),
+    ).toContainEqual({
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         wizardId,
         spellSlotInvocationRef("mage_armor", 1, "persistentArmorEffect"),
       ),
@@ -79,7 +84,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     const target = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -87,10 +92,10 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     if (target.kind !== "targetChoice") {
       throw new Error("Expected targetChoice hole.");
     }
-    expect(target.choices).toEqual([wizardId]);
+    expect(target.choices).toEqual([wizardId, skeletonId]);
     const result = resolveBattleSubject({
       state,
-      subject: magicSubject("mage_armor"),
+      subject,
       fills: [targetFill(target, wizardId)],
     });
 
@@ -129,7 +134,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
   });
 
   test("Mage Armor rejects forged Saving Throw outcome fills", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-mage-armor-forged-save"),
       combatants: [
         characterSeed({
@@ -144,10 +149,12 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("mage_armor")).subject;
     const target = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -155,7 +162,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: magicSubject("mage_armor"),
+      subject,
       fills: [
         targetFill(target, wizardId),
         {
@@ -180,7 +187,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         formula: { kind: "medium_dex_max_2" as const, base: 14 },
       },
     };
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-mage-armor-armored-target"),
       combatants: [
         characterSeed({
@@ -201,11 +208,13 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("mage_armor")).subject;
 
     const target = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -218,7 +227,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(
       resolveBattleSubject({
         state,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [targetFill(target, fighterId)],
       }),
     ).toMatchObject({
@@ -229,7 +238,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
   });
 
   test("Mage Armor target holes keep a hidden caster unrevealed until the effect succeeds", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-mage-armor-hidden-caster-target-hole"),
       combatants: [
         characterSeed({
@@ -243,6 +252,8 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("mage_armor")).subject;
     const wizard = state.combatants.get(wizardId);
     if (wizard === undefined) {
       throw new Error("Expected Wizard caster.");
@@ -257,7 +268,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
 
     const holes = resolveBattleSubject({
       state: hiddenState,
-      subject: magicSubject("mage_armor"),
+      subject,
       fills: [],
     });
 
@@ -280,7 +291,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       },
     };
     const druidId = combatantId("mage-armor-wild-shaped-druid");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-mage-armor-wild-shape-target"),
       combatants: [
         characterSeed({
@@ -309,10 +320,17 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("mage_armor")).subject;
     const druid = state.combatants.get(druidId);
     if (druid === undefined) {
       throw new Error("Expected Druid target.");
     }
+    const wildShapeProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      druidId,
+      "druid_wild_shape",
+    );
     const wildShapedState = {
       ...state,
       combatants: new Map(state.combatants).set(druidId, {
@@ -321,8 +339,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           ...druid.activeEffects,
           {
             kind: "druidWildShapeForm" as const,
-            sourceProcedureRef:
-              battleProcedureExecutionRefForTest("druid_wild_shape"),
+            sourceProcedureRef: wildShapeProcedureRef,
             sourceCombatantId: druidId,
             formStatBlockId: "stat_block_cat",
             formLimbs: { kind: "cannotHandleObjects" },
@@ -338,7 +355,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     const target = requireHole(
       resolveBattleSubject({
         state: wildShapedState,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -352,23 +369,21 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         kind: "spellTarget",
         casterId: wizardId,
         targetId: druidId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("mage_armor"),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
       },
       {
         kind: "spellTargetKnownWilling",
         casterId: wizardId,
         targetId: druidId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("mage_armor"),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
       },
     ]);
     const result = requireResolved(
       resolveBattleSubject({
         state: wildShapedState,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [knownWillingDruidTarget],
       }),
     );
@@ -388,7 +403,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       },
     };
     const druidId = combatantId("mage-armor-stale-wild-shape-druid");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-mage-armor-stale-wild-shape-target"),
       combatants: [
         characterSeed({
@@ -417,10 +432,17 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("mage_armor")).subject;
     const druid = state.combatants.get(druidId);
     if (druid === undefined) {
       throw new Error("Expected Druid target.");
     }
+    const wildShapeProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      druidId,
+      "druid_wild_shape",
+    );
     const staleWildShapeState = {
       ...state,
       combatants: new Map(state.combatants).set(druidId, {
@@ -429,8 +451,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           ...druid.activeEffects,
           {
             kind: "druidWildShapeForm" as const,
-            sourceProcedureRef:
-              battleProcedureExecutionRefForTest("druid_wild_shape"),
+            sourceProcedureRef: wildShapeProcedureRef,
             sourceCombatantId: druidId,
             formStatBlockId: "missing_wild_shape_form",
             formLimbs: { kind: "cannotHandleObjects" },
@@ -447,7 +468,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     const target = requireHole(
       resolveBattleSubject({
         state: staleWildShapeState,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -456,11 +477,11 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       throw new Error("Expected targetChoice hole.");
     }
 
-    expect(target.choices).not.toContain(druidId);
+    expect(target.choices).toContain(druidId);
     expect(
       resolveBattleSubject({
         state: staleWildShapeState,
-        subject: magicSubject("mage_armor"),
+        subject,
         fills: [targetFill(target, druidId)],
       }),
     ).toMatchObject({
@@ -477,7 +498,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         dex: abilityModifier(2),
       },
     };
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-armor-of-shadows"),
       combatants: [
         characterSeed({
@@ -500,20 +521,22 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = {
+    const state = session.state;
+    const selection = {
       tag: "actionSpell" as const,
       actorId: wizardId,
       invocation: armorOfShadowsSpellInvocationRef("mage_armor"),
       mode: { tag: "cast" as const },
     };
-    const act = findAct(state, subject);
+    const act = findAct(session, selection);
+    const subject = act.subject;
     const target = findHole(act.initialHoles, "targetChoice");
     if (target.kind !== "targetChoice") {
       throw new Error("Expected targetChoice hole.");
     }
 
-    expect(act.summary).toBe("Cast Mage Armor using Armor of Shadows.");
-    expect(target.choices).toEqual([wizardId]);
+    expect(act.summary).toBe("Use Mage Armor.");
+    expect(target.choices).toEqual([wizardId, skeletonId]);
     expect(
       resolveBattleSubject({
         state,
@@ -587,10 +610,17 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     ).toHaveLength(1);
   });
 
-  test("Armor of Shadows Spell Access rejects non-Mage-Armor spell records", () => {
-    const mageArmorWithWrongRuntimeId = {
-      ...spellRecord("mage_armor"),
-      id: "misidentified_mage_armor",
+  test("Armor of Shadows Spell Access rejects spells without its persistent-armor mechanics", () => {
+    const mageArmor = spellRecord("mage_armor");
+    if (mageArmor.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected the Mage Armor fixture to be an ongoing effect.");
+    }
+    const mageArmorWithWrongLevel = {
+      ...mageArmor,
+      mechanics: {
+        ...mageArmor.mechanics,
+        level: 2 as const,
+      },
     };
 
     expect(
@@ -608,7 +638,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
               invocationSpellAccesses: [
                 {
                   tag: "armorOfShadowsMageArmor",
-                  spell: mageArmorWithWrongRuntimeId,
+                  spell: mageArmorWithWrongLevel,
                 },
               ],
             }),
@@ -632,7 +662,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         formula: { kind: "medium_dex_max_2" as const, base: 14 },
       },
     };
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-armor-of-shadows-armored-self"),
       combatants: [
         characterSeed({
@@ -654,18 +684,24 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         }),
       ],
     });
+    const state = session.state;
+    const invocationRef = armorOfShadowsSpellInvocationRef("mage_armor");
     const subject = {
       tag: "actionSpell" as const,
       actorId: wizardId,
-      invocation: armorOfShadowsSpellInvocationRef("mage_armor"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        session,
+        wizardId,
+        invocationRef,
+      ),
       mode: { tag: "cast" as const },
     };
     expect(
-      discoverBattleActs(state).some(
+      discoverBattleActs(session).some(
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
-            subject.invocation.spellId,
+            invocationRef.spellId,
       ),
     ).toBe(false);
     const target = requireHole(

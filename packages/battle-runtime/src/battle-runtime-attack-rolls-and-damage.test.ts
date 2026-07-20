@@ -1,5 +1,6 @@
 import {
   startBattleRight,
+  startBattleSessionRight,
   fighterVsGoblinBattle,
   criticalRange19UnitRefs,
   fighterAttackSubject,
@@ -35,7 +36,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
@@ -502,7 +503,7 @@ describe("battle runtime: attack rolls and damage", () => {
   });
 
   test("Martial Arts grants an eligible Bonus Action Unarmed Strike without an Attack-action prerequisite", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-martial-arts-bonus-unarmed-strike"),
       combatants: [
         characterSeed({
@@ -522,7 +523,8 @@ describe("battle runtime: attack rolls and damage", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const act = discoverBattleActs(state).find(
+    const state = session.state;
+    const act = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusAction" &&
         candidate.subject.action === "martialArtsUnarmedStrike",
@@ -662,7 +664,7 @@ describe("battle runtime: attack rolls and damage", () => {
     ] as const;
 
     for (const loadout of rejectedLoadouts) {
-      const state = startBattleRight({
+      const session = startBattleSessionRight({
         battleId: battleId(`battle-martial-arts-reject-${loadout.name}`),
         combatants: [
           characterSeed({
@@ -684,9 +686,10 @@ describe("battle runtime: attack rolls and damage", () => {
           statBlockCreatureInit({ initiative: 10 }),
         ],
       });
+      const state = session.state;
 
       expect(
-        discoverBattleActs(state).some(
+        discoverBattleActs(session).some(
           (candidate) =>
             candidate.subject.tag === "bonusAction" &&
             candidate.subject.action === "martialArtsUnarmedStrike",

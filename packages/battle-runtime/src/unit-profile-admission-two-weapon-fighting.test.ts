@@ -20,16 +20,17 @@ import {
   characterBonusAttackSubjectForTest,
   fighterId,
   goblinId,
+  requireCharacterUnitProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleSubject,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   testDaggerAttack,
   testShortswordAttack,
-  type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleRuntimeSession,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
   battleLightExtraAttackDamageAbilityModifierSupportForUnit,
@@ -129,7 +130,13 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     expect(result.damage).toMatchObject({
       label: "Dagger damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
-        unitIds: [twoWeaponFightingUnitId],
+        procedureRefs: [
+          requireCharacterUnitProcedureRefForTest(
+            result.state,
+            fighterId,
+            twoWeaponFightingUnitId,
+          ),
+        ],
         appliedDamageAbilityModifier: battleAbilityModifier(3),
         declinedDamageAbilityModifier: battleAbilityModifier(0),
       },
@@ -158,7 +165,13 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     expect(result.damage).toMatchObject({
       label: "Dagger damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
-        unitIds: [twoWeaponFightingUnitId],
+        procedureRefs: [
+          requireCharacterUnitProcedureRefForTest(
+            result.state,
+            fighterId,
+            twoWeaponFightingUnitId,
+          ),
+        ],
       },
     });
     expect(result.resolved).toMatchObject({
@@ -187,7 +200,13 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     expect(result.damage).toMatchObject({
       label: "Dagger (Dexterity) damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
-        unitIds: [twoWeaponFightingUnitId],
+        procedureRefs: [
+          requireCharacterUnitProcedureRefForTest(
+            result.state,
+            fighterId,
+            twoWeaponFightingUnitId,
+          ),
+        ],
         appliedDamageAbilityModifier: battleAbilityModifier(4),
         declinedDamageAbilityModifier: battleAbilityModifier(0),
       },
@@ -218,7 +237,13 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     expect(result.damage).toMatchObject({
       label: "Dagger (Dexterity) damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
-        unitIds: [twoWeaponFightingUnitId],
+        procedureRefs: [
+          requireCharacterUnitProcedureRefForTest(
+            result.state,
+            fighterId,
+            twoWeaponFightingUnitId,
+          ),
+        ],
         appliedDamageAbilityModifier: battleAbilityModifier(4),
         declinedDamageAbilityModifier: battleAbilityModifier(0),
       },
@@ -375,8 +400,8 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
 function lightAttackBattle(input: {
   readonly characterUnitRefs?: readonly BattleUnitRef[];
   readonly offHandAttack?: ReturnType<typeof testDaggerAttack>;
-}): BattleState {
-  return startBattleRight({
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("unit-profile-two-weapon-fighting-admission"),
     combatants: [
       characterSeed({
@@ -401,34 +426,40 @@ function lightAttackBattle(input: {
   });
 }
 
-function afterQualifyingLightAttack(state: BattleState): BattleState {
-  const subject: BattleSubject = fighterAttackSubject(state, "Shortsword");
+function afterQualifyingLightAttack(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  const subject: BattleSubject = fighterAttackSubject(
+    session.state,
+    "Shortsword",
+  );
   const target = requireHole(
-    resolveBattleSubject({ state, subject, fills: [] }),
+    resolveBattleSubject({ state: session.state, subject, fills: [] }),
     "targetChoice",
   );
   const roll = requireHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [targetFill(target, goblinId)],
     }),
     "attackRoll",
   );
-  return requireResolved(
+  const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [
         targetFill(target, goblinId),
         attackRollFill(roll, { total: 1, naturalD20: 1 }),
       ],
     }),
-  ).state;
+  );
+  return { state: resolved.state, context: session.context };
 }
 
 function resolveOffHandHit(input: {
-  readonly state: BattleState;
+  readonly state: BattleRuntimeSession;
   readonly damageRoll: number;
   readonly attackAbility?: "dex";
   readonly expectsAttackDamageAbilityModifierChoice?: true;
@@ -440,13 +471,13 @@ function resolveOffHandHit(input: {
   >["selection"];
 }) {
   const subject: BattleSubject = characterBonusAttackSubjectForTest(
-    input.state,
+    input.state.state,
     fighterId,
     "offHandAttack",
     input.attackAbility,
   );
   const target = requireHole(
-    resolveBattleSubject({ state: input.state, subject, fills: [] }),
+    resolveBattleSubject({ state: input.state.state, subject, fills: [] }),
     "targetChoice",
   );
   const targetChoice = attackTargetFill(target, fighterId, goblinId, {
@@ -456,7 +487,7 @@ function resolveOffHandHit(input: {
   });
   const roll = requireHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.state.state,
       subject,
       fills: [targetChoice],
     }),
@@ -464,7 +495,7 @@ function resolveOffHandHit(input: {
   );
   const damage = requireHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.state.state,
       subject,
       fills: [
         targetChoice,
@@ -479,7 +510,13 @@ function resolveOffHandHit(input: {
   ) {
     expect(damage).toMatchObject({
       attackDamageAbilityModifierChoice: {
-        unitIds: [twoWeaponFightingUnitId],
+        procedureRefs: [
+          requireCharacterUnitProcedureRefForTest(
+            input.state,
+            fighterId,
+            twoWeaponFightingUnitId,
+          ),
+        ],
       },
     });
   } else {
@@ -487,8 +524,9 @@ function resolveOffHandHit(input: {
   }
   return {
     damage,
+    state: input.state,
     resolved: resolveBattleSubject({
-      state: input.state,
+      state: input.state.state,
       subject,
       fills: [
         targetChoice,
@@ -499,7 +537,11 @@ function resolveOffHandHit(input: {
           input.attackDamageAbilityModifierSelection === undefined
             ? undefined
             : {
-                unitId: twoWeaponFightingUnitId,
+                procedureRef: requireCharacterUnitProcedureRefForTest(
+                  input.state,
+                  fighterId,
+                  twoWeaponFightingUnitId,
+                ),
                 selection: input.attackDamageAbilityModifierSelection,
               },
         ),

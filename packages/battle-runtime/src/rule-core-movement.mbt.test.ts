@@ -43,6 +43,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -169,7 +170,7 @@ function createRuleCoreMovementDriver() {
     }
 
     function resolveSubject(
-      subject: Parameters<typeof resolveBattleSubject>[0]["subject"],
+      subject: BattleSubject,
       fills: readonly BattleFill[] = [],
     ): void {
       recordResult(resolveBattleSubject({ state, subject, fills }));
@@ -399,7 +400,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function movementCreature(input: {

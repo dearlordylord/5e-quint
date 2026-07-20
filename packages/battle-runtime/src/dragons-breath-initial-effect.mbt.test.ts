@@ -47,6 +47,7 @@ import {
   type BattleActiveEffect,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
 } from "./index.ts";
 import {
@@ -96,7 +97,7 @@ type DragonsBreathInitialEffectState = {
 };
 
 type DragonsBreathInitialRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly turnRole: DragonsBreathTurnRole;
   readonly lastResult: DragonsBreathLastResult;
 };
@@ -278,7 +279,7 @@ function castDragonsBreath(
   slotLevel: number,
 ): DragonsBreathInitialRuntimeState {
   const act = bonusSpellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: dragonsBreathUnitId,
     slotLevel,
   });
@@ -286,7 +287,7 @@ function castDragonsBreath(
   const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         knownWillingSpellTargetListFill(
@@ -301,7 +302,7 @@ function castDragonsBreath(
     "Expected Dragon's Breath cast to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "caster",
     lastResult: "cast",
   };
@@ -311,11 +312,11 @@ function endCasterTurn(
   state: DragonsBreathInitialRuntimeState,
 ): DragonsBreathInitialRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected Dragon's Breath caster End Turn to resolve.",
   );
   return {
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     turnRole: "target",
     lastResult: "targetTurn",
   };
@@ -326,7 +327,10 @@ function breakDragonsBreathConcentration(
 ): DragonsBreathInitialRuntimeState {
   return {
     ...state,
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    battle: {
+      ...state.battle,
+      state: breakBattleConcentration(state.battle.state, spellCasterId),
+    },
     lastResult: "concentrationBroken",
   };
 }
@@ -334,9 +338,9 @@ function breakDragonsBreathConcentration(
 function dragonsBreathInitialEffectProjection(
   state: DragonsBreathInitialRuntimeState,
 ): DragonsBreathInitialEffectState {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const effect = dragonsBreathTargetEffect(state.battle);
-  const spellSaveDc = spellSaveDcForCaster(state.battle, spellCasterId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const effect = dragonsBreathTargetEffect(state.battle.state);
+  const spellSaveDc = spellSaveDcForCaster(state.battle.state, spellCasterId);
   const targetEffectActive = effect !== undefined;
   const casterConcentrating =
     effect !== undefined &&
@@ -345,11 +349,11 @@ function dragonsBreathInitialEffectProjection(
   const projection = {
     turnRole: state.turnRole,
     bonusActionAvailable: canSpendBonusAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
     ),
     spellInvocationAvailable:
       maybeBonusSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: dragonsBreathUnitId,
       }) !== undefined,
     targetEffectActive,
@@ -389,9 +393,12 @@ function dragonsBreathTargetEffect(
   );
 }
 
-function dragonsBreathExhaleActAvailable(state: BattleState): boolean {
-  if (!canSpendAction(state.currentTurnResources, "magic")) return false;
-  return discoverBattleActs(state).some(
+function dragonsBreathExhaleActAvailable(
+  session: BattleRuntimeSession,
+): boolean {
+  if (!canSpendAction(session.state.currentTurnResources, "magic"))
+    return false;
+  return discoverBattleActs(session).some(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.command === "dragonsBreathExhale",

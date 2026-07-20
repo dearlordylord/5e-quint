@@ -21,18 +21,19 @@ import { describe, expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 import {
   battleReducerStartRouteEvent,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
-  type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleReducerRouteOwnerGroup,
   type BattleReducerRouteSubjectFamily,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleRuntimeSession,
+  type BattleSubject,
 } from "./index.ts";
 import {
   calmEmotionsUnitId,
@@ -269,6 +270,7 @@ type RouteHoles = RouteDiscoverEvent["holes"];
 type HazardCastReplay = {
   readonly route: readonly BattleReducerRouteEvent[];
   readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
 };
 
 function replaySpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEvent[] {
@@ -324,7 +326,7 @@ function replayWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
     throw new Error("Expected Web caster End Turn to resolve.");
   }
   const saveAct = webRestraintSaveAct(
-    targetTurn.state,
+    { ...cast.session, state: targetTurn.state },
     spellTargetId,
     "entersArea",
   );
@@ -355,11 +357,15 @@ function replayWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
 function spikeGrowthHazardCastReplay(): HazardCastReplay {
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const state = selectedSpellBattle(spellRecord(spikeGrowthUnitId), 2);
-  const act = spellAct({ state, spellId: spikeGrowthUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session: state,
+    spellId: spikeGrowthUnitId,
+    slotLevel: 2,
+  });
   route.push(...routeEventsOfSubject(act, "Spike Growth discovery"));
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [spikeGrowthAreaFill(area)],
   });
@@ -367,17 +373,17 @@ function spikeGrowthHazardCastReplay(): HazardCastReplay {
   if (cast.tag !== "resolved") {
     throw new Error("Expected Spike Growth cast to resolve.");
   }
-  return { route, state: cast.state };
+  return { route, state: cast.state, session: state };
 }
 
 function webHazardCastReplay(): HazardCastReplay {
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const state = selectedSpellBattle(spellRecord(webUnitId), 2);
-  const act = spellAct({ state, spellId: webUnitId, slotLevel: 2 });
+  const act = spellAct({ session: state, spellId: webUnitId, slotLevel: 2 });
   route.push(...routeEventsOfSubject(act, "Web discovery"));
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [webAreaFill(area)],
   });
@@ -385,7 +391,7 @@ function webHazardCastReplay(): HazardCastReplay {
   if (cast.tag !== "resolved") {
     throw new Error("Expected Web cast to resolve.");
   }
-  return { route, state: cast.state };
+  return { route, state: cast.state, session: state };
 }
 
 function endConcentrationSpatialRoute(
@@ -415,16 +421,16 @@ function endConcentrationSpatialRoute(
   return routeEventsOfSubject(ended, label);
 }
 
-function moveAct(state: BattleState): AvailableBattleAct & {
+function moveAct(state: BattleState): BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "move" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (
       candidate,
-    ): candidate is AvailableBattleAct & {
+    ): candidate is BattleActDiscoveryCandidate & {
       readonly subject: Extract<
         BattleSubject,
         { readonly tag: "runtimeCommand"; readonly command: "move" }
@@ -594,7 +600,7 @@ function recordDiscoveredInvocation(
   const spell = selectedSpellRecord(input.spellId);
   const state = selectedSpellBattle(spell, input.slotLevel);
   const act = spellAct({
-    state,
+    session: state,
     spellId: input.spellId,
     slotLevel: input.slotLevel,
   });
@@ -624,7 +630,7 @@ function expectedProjection(
 function selectedSpellBattle(
   spell: SpellRecord,
   slotLevel: 1 | 2,
-): BattleState {
+): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: slotLevel, count: 1 }],

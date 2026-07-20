@@ -11,7 +11,6 @@ import {
   TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./battle-reducer/metamagic.ts";
 import {
-  type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -20,9 +19,10 @@ import {
   battleReducerStartRouteEvent,
   battleLineDirectionId,
   characterBattleResourceIsPointPool,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   resolveBattleSubject,
 } from "./index.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 import {
   attackRollFill,
   battleProcedureExecutionRefForSpellHoleForTest,
@@ -44,20 +44,22 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
-import type { SupportedSpellInvocation } from "./battle-reducer.ts";
+import { characterSpellProcedureExecution } from "./character-execution.ts";
 
 function spellInvocationForAct(
   state: BattleState,
-  act: AvailableBattleAct,
-): SupportedSpellInvocation | undefined {
+  act: BattleActDiscoveryCandidate,
+) {
   const subject = act.subject;
   if (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") {
     return undefined;
   }
   const actor = state.combatants.get(subject.actorId);
   return actor?.origin.kind === "character"
-    ? characterSpellProcedure(actor.origin.execution, subject.procedureRef)
+    ? characterSpellProcedureExecution(
+        actor.origin.execution,
+        subject.procedureRef,
+      )
     : undefined;
 }
 
@@ -508,10 +510,10 @@ export function resolveCarefulBurningHands(state: BattleState): BattleState {
 
 export function resolveCarefulCommand(state: BattleState): BattleState {
   const act = carefulCommandAct(state);
-  const target = targetListFill(act.initialHoles, "Command targets", "command");
+  const target = targetListFill(act.initialHoles, "Spell targets", "command");
   const protectedTargets = targetListFill(
     act.initialHoles,
-    "Command Careful Spell protected targets",
+    "Spell Careful Spell protected targets",
     "command",
   );
   const option = commandOptionFill(act.initialHoles);
@@ -550,7 +552,7 @@ export function observeCarefulSavingThrowProtectionRoute(
   const act = carefulBurningHandsAct(state);
   const protectedTargets = targetListFill(
     act.initialHoles,
-    "Burning Hands Careful Spell protected targets",
+    "Spell Careful Spell protected targets",
     "burning_hands",
     [fighterId],
   );
@@ -597,10 +599,10 @@ export function observeCarefulCommandNoEffectRoute(
   state: BattleState,
 ): readonly BattleReducerRouteEvent[] {
   const act = carefulCommandAct(state);
-  const target = targetListFill(act.initialHoles, "Command targets", "command");
+  const target = targetListFill(act.initialHoles, "Spell targets", "command");
   const protectedTargets = targetListFill(
     act.initialHoles,
-    "Command Careful Spell protected targets",
+    "Spell Careful Spell protected targets",
     "command",
   );
   const option = commandOptionFill(act.initialHoles);
@@ -716,7 +718,7 @@ function resolveHeightenedHideousLaughterSubject(state: BattleState) {
   const act = heightenedHideousLaughterAct(state);
   const target = targetListFill(
     act.initialHoles,
-    "Hideous Laughter targets",
+    "Spell targets",
     "hideous_laughter",
   );
   const heightenedTarget = targetFill(
@@ -796,7 +798,7 @@ export function resolveHeightenedGreaseEntrySave(
   const targetTurn = requireResolved(
     endTurn({ state: cast, actorId: wizardId }),
   ).state;
-  const entryAct = discoverBattleActs(targetTurn).find(
+  const entryAct = discoverBattleActCandidates(targetTurn).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "greaseGroundHazardSave" &&
@@ -886,7 +888,7 @@ export function resolveHeightenedGustOfWindEndTurnSave(
   const targetTurn = requireResolved(
     endTurn({ state: cast, actorId: wizardId }),
   ).state;
-  const endTurnAct = discoverBattleActs(targetTurn).find(
+  const endTurnAct = discoverBattleActCandidates(targetTurn).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "gustOfWindLineSave" &&
@@ -1164,7 +1166,7 @@ export function resolveTwinnedBless(state: BattleState): BattleState {
       state,
       subject: act.subject,
       fills: [
-        targetListFill(act.initialHoles, "Bless targets", "bless", [
+        targetListFill(act.initialHoles, "Spell targets", "bless", [
           wizardId,
           fighterId,
           skeletonId,
@@ -1188,7 +1190,7 @@ export function observeTwinnedBlessRoute(
       state,
       subject: act.subject,
       fills: [
-        targetListFill(act.initialHoles, "Bless targets", "bless", [
+        targetListFill(act.initialHoles, "Spell targets", "bless", [
           wizardId,
           fighterId,
           skeletonId,
@@ -1372,9 +1374,9 @@ function empoweredMetamagicOption(): CharacterBattleMetamagicOptionFact {
   };
 }
 
-type QuickenedBonusActionSpellAct = AvailableBattleAct & {
+type QuickenedBonusActionSpellAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
-    AvailableBattleAct["subject"],
+    BattleActDiscoveryCandidate["subject"],
     { readonly tag: "bonusActionSpell" }
   >;
 };
@@ -1382,7 +1384,7 @@ type QuickenedBonusActionSpellAct = AvailableBattleAct & {
 function quickenedBurningHandsAct(
   state: BattleState,
 ): QuickenedBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1400,7 +1402,7 @@ function quickenedBurningHandsAct(
 function quickenedRayOfFrostAct(
   state: BattleState,
 ): QuickenedBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1418,7 +1420,7 @@ function quickenedRayOfFrostAct(
 function quickenedEldritchBlastAct(
   state: BattleState,
 ): QuickenedBonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1460,15 +1462,15 @@ function eldritchBlastTargetFill(hole: BattleHole): BattleFill {
   return targetFill(hole, skeletonId);
 }
 
-type ActionSpellAct = AvailableBattleAct & {
+type ActionSpellAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
-    AvailableBattleAct["subject"],
+    BattleActDiscoveryCandidate["subject"],
     { readonly tag: "actionSpell" }
   >;
 };
 
 function actionRayOfFrostAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1481,7 +1483,7 @@ function actionRayOfFrostAct(state: BattleState): ActionSpellAct {
 }
 
 function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1497,7 +1499,7 @@ function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
 }
 
 function carefulCommandAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure === "command" &&
@@ -1512,7 +1514,7 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
 }
 
 function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1529,7 +1531,7 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
 }
 
 function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1546,7 +1548,7 @@ function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
 }
 
 function heightenedGreaseAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1563,7 +1565,7 @@ function heightenedGreaseAct(state: BattleState): ActionSpellAct {
 }
 
 function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure === "gustOfWindLine" &&
@@ -1579,7 +1581,7 @@ function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
 }
 
 function heightenedSaveGatedConditionAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct => {
       const invocation = spellInvocationForAct(state, candidate);
       return (
@@ -1604,7 +1606,7 @@ function heightenedSaveGatedConditionAct(state: BattleState): ActionSpellAct {
 }
 
 function transmutedBurningHandsToPoisonAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1622,7 +1624,7 @@ function transmutedBurningHandsToPoisonAct(state: BattleState): ActionSpellAct {
 }
 
 function transmutedRayOfFrostToPoisonAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
@@ -1640,7 +1642,7 @@ function transmutedRayOfFrostToPoisonAct(state: BattleState): ActionSpellAct {
 }
 
 function twinnedBlessAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure === "rollModifier" &&
@@ -1686,7 +1688,7 @@ function protectedTargetsFill(
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return targetListFill(
     holes,
-    "Burning Hands Careful Spell protected targets",
+    "Spell Careful Spell protected targets",
     "burning_hands",
   );
 }

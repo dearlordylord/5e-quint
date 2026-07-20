@@ -11,6 +11,11 @@ import type {
   SupportedSpellInvocation,
   TargetListSpellInvocation,
 } from "../battle-reducer.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
+
+type RuntimeSpellProcedure =
+  | SupportedSpellInvocation
+  | RuntimeSpellProcedureExecution;
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import {
@@ -20,7 +25,7 @@ import {
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-  characterUnitProcedureId,
+  characterUnitProcedure,
 } from "../character-execution.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import type { SpellProcedureAnyTargetListInvocationClassifier } from "./spell-procedure-profiles/profile.ts";
@@ -28,7 +33,6 @@ import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/regi
 import {
   DRUID_BEAST_SPELLS_CLASS_LEVEL,
   DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
-  parseSupportedUnitFeatureProfile,
   type BattleDruidWildShapeKnownFormSupportProfile,
 } from "../unit-feature-support.ts";
 
@@ -56,11 +60,11 @@ export function damageSpellSource(
 
 export function isScalarBuffTargetListInvocation(
   invocation: Extract<
-    SupportedSpellInvocation,
+    RuntimeSpellProcedure,
     { readonly procedure: "scalarBuff" }
   >,
 ): invocation is Extract<
-  SupportedSpellInvocation,
+  RuntimeSpellProcedure,
   { readonly procedure: "scalarBuff" }
 > & {
   readonly targeting: Extract<
@@ -71,9 +75,11 @@ export function isScalarBuffTargetListInvocation(
   return invocation.targeting.kind === "targetList";
 }
 
-export function isTargetListSpellInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is TargetListSpellInvocation {
+export function isTargetListSpellInvocation<
+  Invocation extends RuntimeSpellProcedure,
+>(
+  invocation: Invocation,
+): invocation is Invocation & TargetListSpellInvocation {
   const profile = registeredSpellProcedureProfile(invocation.procedure);
   if (profile === null) {
     return false;
@@ -87,8 +93,8 @@ export function isTargetListSpellInvocation(
 
 function targetListInvocationClassifierMatches(
   classifier: SpellProcedureAnyTargetListInvocationClassifier,
-  invocation: SupportedSpellInvocation,
-): invocation is TargetListSpellInvocation {
+  invocation: RuntimeSpellProcedure,
+): invocation is RuntimeSpellProcedure & TargetListSpellInvocation {
   if (classifier.kind === "none") {
     return false;
   }
@@ -103,7 +109,7 @@ function targetListInvocationClassifierMatches(
 
 export function activeOngoingFeaturesPreventSpellInvocation(
   actor: BattleCreatureState,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   if (!spellInvocationIsSpellcasting(invocation)) {
     return false;
@@ -130,7 +136,7 @@ function activeOngoingNonWildShapeFeaturesPreventSpellcasting(
 
 function druidBeastSpellsAllowsInvocation(
   actor: BattleCreatureState,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   if (actor.origin.kind !== "character") {
     return false;
@@ -139,7 +145,9 @@ function druidBeastSpellsAllowsInvocation(
   return (
     profile !== null &&
     Number(profile.classLevel) >= DRUID_BEAST_SPELLS_CLASS_LEVEL &&
-    !spellDefinitionHasPricedOrConsumedMaterialComponent(invocation.spell)
+    !("spellRuleFacts" in invocation
+      ? invocation.spellRuleFacts.components.hasPricedOrConsumedMaterial
+      : spellDefinitionHasPricedOrConsumedMaterialComponent(invocation.spell))
   );
 }
 
@@ -154,37 +162,22 @@ function activeDruidWildShapeSupportProfile(
   if (activeWildShape === null) {
     return null;
   }
-  const selectedUnitId = characterUnitProcedureId(
+  const procedure = characterUnitProcedure(
     origin.execution,
     activeWildShape.sourceProcedureRef,
     DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   );
-  const unitRef = origin.characterUnitRefs.find(
-    (candidate) => candidate.unit.id === selectedUnitId,
-  );
-  const profileFromUnitRef =
-    unitRef?.supportProfiles.find(
-      (profile): profile is BattleDruidWildShapeKnownFormSupportProfile =>
-        typeof profile === "object" &&
-        profile.kind === DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
-    ) ?? null;
-  if (profileFromUnitRef !== null) {
-    return profileFromUnitRef;
+  if (procedure?.kind === "unitFeature") {
+    return procedure.execution.kind ===
+      DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE
+      ? procedure.execution
+      : null;
   }
-
-  const resource = origin.resources.find(
-    (candidate) => candidate.unit.id === selectedUnitId,
-  );
-  if (resource === undefined) {
-    return null;
-  }
-  const profileFromResource = parseSupportedUnitFeatureProfile(
-    resource.unit,
-    origin.classLevels,
-  );
-  return profileFromResource?.kind ===
-    DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE
-    ? profileFromResource
+  if (procedure?.kind !== "unitSupportProfile") return null;
+  const execution = procedure.execution;
+  return typeof execution === "object" &&
+    execution.kind === DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE
+    ? execution
     : null;
 }
 

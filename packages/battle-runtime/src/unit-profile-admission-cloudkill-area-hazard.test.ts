@@ -45,10 +45,14 @@ function castCloudkill() {
     targetHp: 30,
     targetMaxHp: 30,
   });
-  const act = spellAct({ state, spellId: cloudkillUnitId, slotLevel: 5 });
+  const act = spellAct({
+    session: state,
+    spellId: cloudkillUnitId,
+    slotLevel: 5,
+  });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [cloudkillAreaFill(area)],
   });
@@ -61,7 +65,13 @@ function castCloudkill() {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Cloudkill caster End Turn to resolve.");
   }
-  return { spell, state, act, cast: cast.state, targetTurn: targetTurn.state };
+  return {
+    spell,
+    session: state,
+    act,
+    cast: cast.state,
+    targetTurn: targetTurn.state,
+  };
 }
 
 function cloudkillSpellRecord(): SpellRecord {
@@ -71,11 +81,12 @@ function cloudkillSpellRecord(): SpellRecord {
 }
 
 function resolveCloudkillSave(input: {
+  readonly session: ReturnType<typeof castCloudkill>["session"];
   readonly state: ReturnType<typeof castCloudkill>["cast"];
   readonly succeeded: boolean;
 }) {
   const saveAct = cloudkillAreaHazardSaveAct(
-    input.state,
+    { ...input.session, state: input.state },
     spellTargetId,
     "appearsInArea",
   );
@@ -117,7 +128,7 @@ function resolveCloudkillSave(input: {
 
 describe("L19E deterministic Cloudkill area-hazard admission", () => {
   test("cloudkill is admitted as a ten-minute point-origin Sphere hazard", () => {
-    const { spell, state, act } = castCloudkill();
+    const { spell, session, act } = castCloudkill();
 
     expect({
       ...act.subject,
@@ -135,11 +146,11 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     expect(area).toEqual(
       expect.objectContaining({
-        label: "Cloudkill area",
+        label: "Spell area",
         area: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
       }),
     );
-    expect(spellHoleInvocation(state, [area])).toEqual(
+    expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "cloudkillAreaHazard",
         spell,
@@ -198,8 +209,12 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   });
 
   test("appearance save applies full or half Poison damage through the active hazard", () => {
-    const { cast } = castCloudkill();
-    const failed = resolveCloudkillSave({ state: cast, succeeded: false });
+    const { cast, session } = castCloudkill();
+    const failed = resolveCloudkillSave({
+      session,
+      state: cast,
+      succeeded: false,
+    });
     expect(failed).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -209,8 +224,9 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       },
     });
 
-    const { cast: secondCast } = castCloudkill();
+    const { cast: secondCast, session: secondSession } = castCloudkill();
     const succeeded = resolveCloudkillSave({
+      session: secondSession,
       state: secondCast,
       succeeded: true,
     });
@@ -225,9 +241,9 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   });
 
   test("cloud movement, entry, and end-turn saves share the once-per-turn hazard ledger", () => {
-    const { targetTurn } = castCloudkill();
+    const { targetTurn, session } = castCloudkill();
     const moveAct = cloudkillAreaHazardSaveAct(
-      targetTurn,
+      { ...session, state: targetTurn },
       spellTargetId,
       "movesIntoSpace",
     );
@@ -261,7 +277,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       resolveBattleSubject({
         state: movedIntoSpace.state,
         subject: cloudkillAreaHazardSaveAct(
-          movedIntoSpace.state,
+          { ...session, state: movedIntoSpace.state },
           spellTargetId,
           "entersArea",
         ).subject,

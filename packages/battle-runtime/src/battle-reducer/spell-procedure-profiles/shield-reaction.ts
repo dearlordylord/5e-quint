@@ -18,7 +18,6 @@
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AvailableBattleAct,
@@ -28,7 +27,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
-import { spellId } from "../../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "../domain-constants.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
@@ -48,9 +46,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -103,7 +100,7 @@ function shieldReactionSpellProjection(
   spell: SpellRecord,
 ): Pick<
   ShieldReactionInvocation,
-  "armorClassBonus" | "negatedSpellIds"
+  "armorClassBonus" | "negatesRepeatedDamageAllocation"
 > | null {
   if (spell.mechanics.family !== "triggered_reaction") {
     return null;
@@ -156,29 +153,12 @@ function shieldReactionSpellProjection(
 
   return {
     armorClassBonus: acDelta.dice,
-    negatedSpellIds,
+    negatesRepeatedDamageAllocation: true,
   };
 }
 
 function discoverShieldReactionCastAct(): readonly AvailableBattleAct[] {
   return [];
-}
-
-function shieldReactionInvocationRef(
-  invocation: ShieldReactionInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "shieldReaction",
-  };
-}
-
-function shieldReactionCastSummary(
-  invocation: ShieldReactionInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveShieldReaction(
@@ -236,29 +216,24 @@ function resolveShieldReaction(
   };
 }
 
-const ShieldReactionInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "shieldReaction" }>
->(
+const ShieldReactionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("shieldReaction"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     armorClassBonus: Schema.Number,
-    negatedSpellIds: Schema.Array(Schema.String),
+    negatesRepeatedDamageAllocation: Schema.Literal(true),
   }),
 );
 export const shieldReactionProfile = {
   procedure: "shieldReaction",
-  invocationSchema: ShieldReactionInvocationSchema,
+  executionSchema: ShieldReactionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitShieldReaction,
   discoverCastAct: discoverShieldReactionCastAct,
-  castSummary: shieldReactionCastSummary,
-  invocationRef: shieldReactionInvocationRef,
   resolve: resolveShieldReaction,
 } satisfies SpellProcedureProfile<
   "shieldReaction",

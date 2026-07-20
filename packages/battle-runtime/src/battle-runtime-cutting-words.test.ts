@@ -1,4 +1,5 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer.ts";
+import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   attackDamageHoleAfterHit,
@@ -6,8 +7,8 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   battleId,
-  battleProcedureExecutionRefForTest,
   battleReactionRollOrDamageReductionSupportForUnit,
+  characterBattleFeatureInitForTest,
   characterSeed,
   cuttingWordsAttackOnlyUnit,
   cuttingWordsDamageOnlyUnit,
@@ -25,6 +26,7 @@ import {
   movementFeet,
   reactionModifierChoice,
   reactionModifierUnitRef,
+  requireCharacterUnitProcedureRefForTest,
   requireHole,
   resistantSkeletonCreatureInit,
   resolveBattleInterrupt,
@@ -33,6 +35,7 @@ import {
   rolledDiceGroup,
   skeletonId,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   unitLibrary,
@@ -60,9 +63,16 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWordsAttackOnly })],
-          unitFeatures: [{ unit: cuttingWordsAttackOnly }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(cuttingWordsAttackOnly, [
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
-            reactionModifierUnitRef(cuttingWordsAttackOnly.id),
+            {
+              unit: cuttingWordsAttackOnly,
+              supportProfiles: ["reactionRollOrDamageReduction"],
+            },
           ],
         }),
       ],
@@ -154,7 +164,10 @@ describe("battle runtime: Cutting Words", () => {
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWordsDamageOnly })],
           characterUnitRefs: [
-            reactionModifierUnitRef(cuttingWordsDamageOnly.id),
+            {
+              unit: cuttingWordsDamageOnly,
+              supportProfiles: ["reactionRollOrDamageReduction"],
+            },
           ],
         }),
       ],
@@ -250,7 +263,7 @@ describe("battle runtime: Cutting Words", () => {
 
   test("Cutting Words ability-check reduction can turn a success into a failure", () => {
     const cuttingWords = cuttingWordsUnit();
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-cutting-words-ability-check-converted"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -261,16 +274,26 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWords })],
-          unitFeatures: [{ unit: cuttingWords }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(cuttingWords, [
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
     });
+    const state = session.state;
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      cuttingWords.id,
+    );
 
     const resolved = resolveSuccessfulAbilityCheckReactionReduction({
       state,
       reactorId: fighterId,
-      unitId: cuttingWords.id,
+      procedureRef,
       abilityCheck: {
         actorId: goblinId,
         ability: "str",
@@ -281,9 +304,7 @@ describe("battle runtime: Cutting Words", () => {
             kind: "reactionRollOrDamageReductionTargetWithinRange",
             reactorId: fighterId,
             targetId: goblinId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(cuttingWords.id),
-            ),
+            sourceProcedureRef: procedureRef,
             rangeFeet: movementFeet(60),
           },
         ],
@@ -309,7 +330,7 @@ describe("battle runtime: Cutting Words", () => {
 
   test("Cutting Words ability-check reduction can leave a success successful", () => {
     const cuttingWords = cuttingWordsUnit();
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-cutting-words-ability-check-still-success"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -320,16 +341,26 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWords })],
-          unitFeatures: [{ unit: cuttingWords }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(cuttingWords, [
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
     });
+    const state = session.state;
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      cuttingWords.id,
+    );
 
     const resolved = resolveSuccessfulAbilityCheckReactionReduction({
       state,
       reactorId: fighterId,
-      unitId: cuttingWords.id,
+      procedureRef,
       abilityCheck: {
         actorId: goblinId,
         ability: "dex",
@@ -341,16 +372,13 @@ describe("battle runtime: Cutting Words", () => {
             kind: "reactionRollOrDamageReductionTargetWithinRange",
             reactorId: fighterId,
             targetId: goblinId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(cuttingWords.id),
-            ),
+            sourceProcedureRef: procedureRef,
             rangeFeet: movementFeet(60),
           },
         ],
       },
       reductionRoll: 3,
     });
-
     expect(resolved).toMatchObject({
       tag: "resolved",
       abilityCheckReduction: {
@@ -369,7 +397,7 @@ describe("battle runtime: Cutting Words", () => {
 
   test("Cutting Words ability-check reduction rejects pre-reduction failures and missing range facts", () => {
     const cuttingWords = cuttingWordsUnit();
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-cutting-words-ability-check-rejected"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -380,17 +408,27 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWords })],
-          unitFeatures: [{ unit: cuttingWords }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(cuttingWords, [
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
     });
+    const state = session.state;
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      cuttingWords.id,
+    );
 
     expect(
       resolveSuccessfulAbilityCheckReactionReduction({
         state,
         reactorId: fighterId,
-        unitId: cuttingWords.id,
+        procedureRef,
         abilityCheck: {
           actorId: goblinId,
           ability: "str",
@@ -401,7 +439,7 @@ describe("battle runtime: Cutting Words", () => {
               kind: "reactionRollOrDamageReductionTargetWithinRange",
               reactorId: fighterId,
               targetId: goblinId,
-              sourceProcedureRef: expect.any(String),
+              sourceProcedureRef: procedureRef,
               rangeFeet: movementFeet(60),
             },
           ],
@@ -411,14 +449,15 @@ describe("battle runtime: Cutting Words", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Cutting Words requires an already-successful ability check.",
+      message:
+        "Ability-check Reaction reduction requires an already-successful ability check.",
     });
 
     expect(
       resolveSuccessfulAbilityCheckReactionReduction({
         state,
         reactorId: fighterId,
-        unitId: cuttingWords.id,
+        procedureRef,
         abilityCheck: {
           actorId: goblinId,
           ability: "str",
@@ -431,13 +470,16 @@ describe("battle runtime: Cutting Words", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Cutting Words requires the creature to be within range.",
+      message:
+        "Ability-check Reaction reduction requires the creature to be within range.",
     });
   });
 
   test("Cutting Words ability-check reduction requires Bardic Inspiration uses", () => {
     const cuttingWords = cuttingWordsUnit();
-    const abilityCheck = {
+    const abilityCheck = (
+      procedureRef: ReturnType<typeof requireCharacterUnitProcedureRefForTest>,
+    ) => ({
       actorId: goblinId,
       ability: "str" as const,
       originalTotal: 15,
@@ -447,14 +489,12 @@ describe("battle runtime: Cutting Words", () => {
           kind: "reactionRollOrDamageReductionTargetWithinRange" as const,
           reactorId: fighterId,
           targetId: goblinId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(cuttingWords.id),
-          ),
+          sourceProcedureRef: procedureRef,
           rangeFeet: movementFeet(60),
         },
       ],
-    };
-    const stateWithoutResource = startBattleRight({
+    });
+    const sessionWithoutResource = startBattleSessionRight({
       battleId: battleId("battle-cutting-words-ability-check-no-resource"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -464,8 +504,12 @@ describe("battle runtime: Cutting Words", () => {
           initiative: 10,
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
-          resources: [],
-          unitFeatures: [{ unit: cuttingWords }],
+          resources: [cuttingWordsResource({ usesRemaining: 0 })],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(cuttingWords, [
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
@@ -473,10 +517,20 @@ describe("battle runtime: Cutting Words", () => {
 
     expect(
       resolveSuccessfulAbilityCheckReactionReduction({
-        state: stateWithoutResource,
+        state: sessionWithoutResource.state,
         reactorId: fighterId,
-        unitId: cuttingWords.id,
-        abilityCheck,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          sessionWithoutResource,
+          fighterId,
+          cuttingWords.id,
+        ),
+        abilityCheck: abilityCheck(
+          requireCharacterUnitProcedureRefForTest(
+            sessionWithoutResource,
+            fighterId,
+            cuttingWords.id,
+          ),
+        ),
         reductionRoll: 3,
       }),
     ).toMatchObject({
@@ -485,7 +539,7 @@ describe("battle runtime: Cutting Words", () => {
       message: "Ability-check Reaction reduction is no longer available.",
     });
 
-    const stateWithoutUses = startBattleRight({
+    const sessionWithoutUses = startBattleSessionRight({
       battleId: battleId("battle-cutting-words-ability-check-zero-resource"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -498,7 +552,11 @@ describe("battle runtime: Cutting Words", () => {
           resources: [
             cuttingWordsResource({ unit: cuttingWords, usesRemaining: 0 }),
           ],
-          unitFeatures: [{ unit: cuttingWords }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(cuttingWords, [
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
@@ -506,10 +564,20 @@ describe("battle runtime: Cutting Words", () => {
 
     expect(
       resolveSuccessfulAbilityCheckReactionReduction({
-        state: stateWithoutUses,
+        state: sessionWithoutUses.state,
         reactorId: fighterId,
-        unitId: cuttingWords.id,
-        abilityCheck,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          sessionWithoutUses,
+          fighterId,
+          cuttingWords.id,
+        ),
+        abilityCheck: abilityCheck(
+          requireCharacterUnitProcedureRefForTest(
+            sessionWithoutUses,
+            fighterId,
+            cuttingWords.id,
+          ),
+        ),
         reductionRoll: 3,
       }),
     ).toMatchObject({

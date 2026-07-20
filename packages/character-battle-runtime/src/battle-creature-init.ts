@@ -13,7 +13,7 @@ import {
   initiativeScore,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   type CharacterBattleFeatureInit,
-  type CharacterBattleMetamagicState,
+  type CharacterBattleMetamagicInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
   type CharacterBattleBookOfShadowsPresence,
@@ -21,7 +21,7 @@ import {
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
-  type BattleState,
+  type BattleRuntimeSession,
   type BattleStateInitIssue,
   type CharacterId,
   type CombatantId,
@@ -82,6 +82,7 @@ import {
   type BattleCreatureInitIssue,
 } from "./battle-character-build-projection.ts";
 import {
+  battleSupportProfileSourceFactsForBuild,
   characterBattleWeaponMasterySelections,
   characterUnitRefsWithBattleSupportProfiles,
 } from "./battle-support-profiles.ts";
@@ -181,7 +182,10 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
   readonly character: CharacterBuildCreatureInput;
   readonly statBlockBattleInput: StatBlockBattleInitInput;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<BattleState, BattleStateInitIssue | BattleCreatureInitIssue> {
+}): Either.Either<
+  BattleRuntimeSession,
+  BattleStateInitIssue | BattleCreatureInitIssue
+> {
   const characterInit = battleCreatureInitFromCharacterBuild({
     ...input.character,
     unitLibrary: input.unitLibrary,
@@ -306,7 +310,19 @@ export function battleCreatureInitFromCharacterBuild(
     return battleCreatureInitIssue(offHandAttack.left.message);
   }
   const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
-  const unitFeatures = characterBattleFeatures(input.build, input.unitLibrary);
+  const supportProfileSourceFacts = battleSupportProfileSourceFactsForBuild(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(supportProfileSourceFacts)) {
+    return battleCreatureInitIssue(supportProfileSourceFacts.left.message);
+  }
+  const unitFeatures = characterBattleFeatures(
+    input.build,
+    input.unitLibrary,
+    parseCharacterBattleClassLevels(classLevels.right),
+    supportProfileSourceFacts.right,
+  );
   if (Either.isLeft(unitFeatures)) {
     return battleCreatureInitIssue(unitFeatures.left.message);
   }
@@ -581,7 +597,7 @@ function characterBattleMetamagicFromBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Either.Either<
-  CharacterBattleMetamagicState | undefined,
+  CharacterBattleMetamagicInit | undefined,
   BattleCreatureInitIssue
 > {
   const facts = characterBuildSorcererMetamagicFacts({ build, unitLibrary });
@@ -833,6 +849,8 @@ function characterBattlePersistedUsesRemaining(
 function characterBattleFeatures(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
+  classLevels: Parameters<typeof parseSupportedUnitFeatureProfile>[1],
+  sourceFacts: Parameters<typeof parseSupportedUnitFeatureProfile>[2],
 ): Either.Either<
   readonly CharacterBattleFeatureInit[],
   BattleCreatureInitIssue
@@ -852,7 +870,14 @@ function characterBattleFeatures(
     ) {
       continue;
     }
-    features.push({ unit: unit.right });
+    const profile = parseSupportedUnitFeatureProfile(
+      unit.right,
+      classLevels,
+      sourceFacts,
+    );
+    if (profile !== null) {
+      features.push(profile);
+    }
   }
   return Either.right(features);
 }

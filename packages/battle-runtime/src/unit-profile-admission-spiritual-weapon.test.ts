@@ -21,6 +21,7 @@ import {
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type {
   BattleInterruptProcedureChoice,
+  BattleProcedureExecutionRef,
   BattleResolutionResult,
 } from "./index.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
@@ -62,7 +63,7 @@ import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 describe("L12G deterministic Spiritual Weapon admission", () => {
   test("spiritual weapon casts as a Bonus Action attack proxy with slot scaling", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 2, count: 1 },
@@ -70,12 +71,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ],
     });
     const secondLevelAct = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
     const fourthLevelAct = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 4,
     });
@@ -87,7 +88,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(
           spiritualWeaponUnitId,
@@ -105,7 +106,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         maxDistanceFeet: movementFeet(60),
       }),
     );
-    expect(spellHoleInvocation(state, fourthLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(session, fourthLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "spiritualWeaponAttackProxy",
         damage: {
@@ -121,7 +122,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
   test("rejects public Action spell subjects for the Bonus Action Spiritual Weapon cast", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
@@ -132,7 +133,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(
           spiritualWeaponUnitId,
@@ -145,7 +146,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: actionSubject,
         fills: [],
       }),
@@ -159,13 +160,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
   test("rejects authored repeat attacks with mismatched damage", () => {
     const spell = spiritualWeaponWithMismatchedRepeatDamage();
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-
     expect(
-      discoverBattleActs(state).some(
+      discoverBattleActs(session).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -183,13 +183,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ];
 
     for (const spell of spells) {
-      const state = spellBattle({
+      const session = spellBattle({
         preparedSpells: [spell],
         spellSlots: [{ spellLevel: 2, count: 1 }],
       });
 
       expect(
-        discoverBattleActs(state).some(
+        discoverBattleActs(session).some(
           (candidate) =>
             candidate.subject.tag === "bonusActionSpell" &&
             battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -204,14 +204,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   test("cast places the force, makes the immediate attack, and records concentration cleanup", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
+    const state = session.state;
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -315,7 +316,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   test("counterspell reaction frame uses the Spiritual Weapon Bonus Action resource", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetSpellcasting: {
@@ -331,8 +332,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         spellSlots: [{ spellLevel: 3, count: 1 }],
       },
     });
+    const state = session.state;
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -360,6 +362,11 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
             counterspellTriggerFact({
               reactorId: spellTargetId,
               casterId: spellCasterId,
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                session,
+                spellTargetId,
+                spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+              ),
             }),
           ]),
         ],
@@ -374,6 +381,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       },
     });
     const choice = requireTriggeredReactionSpellChoice({
+      session,
       result: awaitingCounterspell,
       reactorId: spellTargetId,
       spellId: counterspellUnitId,
@@ -406,12 +414,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   test("self-target immediate damage sees the newly created concentration proxy", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const state = session.state;
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -520,7 +529,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   test("Shield replay can turn the immediate Spiritual Weapon hit into a miss without re-spending the cast", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
@@ -538,8 +547,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         spellSlots: [{ spellLevel: 1, count: 1 }],
       },
     });
+    const state = session.state;
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -588,6 +598,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     );
 
     const choice = requireTriggeredReactionSpellChoice({
+      session,
       result: awaitingShield,
       reactorId: spellTargetId,
       spellId: shieldUnitId,
@@ -628,15 +639,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   test("sanctuary loss on cast still spends and records the Spiritual Weapon proxy", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
-    const state = withSanctuaryWard(
-      spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      }),
-      spellTargetId,
-    );
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const state = withSanctuaryWard(session.state, spellTargetId);
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -696,12 +705,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   test("cast rejects force positions outside the selected hole and SRD range", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const state = session.state;
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -754,12 +764,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const selectedForceId = battleTablePositionId("spiritual-weapon-force-a");
     const unrelatedForceId = battleTablePositionId("spiritual-weapon-force-b");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const state = session.state;
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -792,12 +803,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   test("same-turn repeat is unavailable even if a Bonus Action is restored", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const state = session.state;
     const act = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -843,7 +855,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     };
 
     expect(
-      discoverBattleActs(sameTurnWithBonusAction).some(
+      discoverBattleActs({
+        state: sameTurnWithBonusAction,
+        context: session.context,
+      }).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -858,14 +873,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const initialForceId = battleTablePositionId("spiritual-weapon-force-a");
     const movedForceId = battleTablePositionId("spiritual-weapon-force-b");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 30,
       targetMaxHp: 30,
     });
+    const state = session.state;
     const castAct = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -916,7 +932,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const repeatAct = discoverBattleActs(casterTurn.state).find(
+    const repeatAct = discoverBattleActs({
+      state: casterTurn.state,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1015,14 +1034,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const initialForceId = battleTablePositionId("spiritual-weapon-force-a");
     const movedForceId = battleTablePositionId("spiritual-weapon-force-b");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 30,
       targetMaxHp: 30,
     });
+    const state = session.state;
     const castAct = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -1085,7 +1105,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       },
     };
 
-    const repeatAct = discoverBattleActs(afterPriorSlotSpell).find(
+    const repeatAct = discoverBattleActs({
+      state: afterPriorSlotSpell,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1158,7 +1181,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const initialForceId = battleTablePositionId("spiritual-weapon-force-a");
     const movedForceId = battleTablePositionId("spiritual-weapon-force-b");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 30,
@@ -1176,8 +1199,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         spellSlots: [{ spellLevel: 1, count: 1 }],
       },
     });
+    const state = session.state;
     const castAct = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -1229,7 +1253,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const repeatAct = discoverBattleActs(casterTurn.state).find(
+    const repeatAct = discoverBattleActs({
+      state: casterTurn.state,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1282,6 +1309,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     });
 
     const choice = requireTriggeredReactionSpellChoice({
+      session,
       result: awaitingShield,
       reactorId: spellTargetId,
       spellId: shieldUnitId,
@@ -1323,12 +1351,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const initialForceId = battleTablePositionId("spiritual-weapon-force-a");
     const movedForceId = battleTablePositionId("spiritual-weapon-force-b");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const state = session.state;
     const castAct = bonusSpellAct({
-      state,
+      session,
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
@@ -1381,7 +1410,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     }
     const warded = withSanctuaryWard(casterTurn.state, spellTargetId);
 
-    const repeatAct = discoverBattleActs(warded).find(
+    const repeatAct = discoverBattleActs({
+      state: warded,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1474,14 +1506,13 @@ function requireNeedsHoles(result: BattleResolutionResult): NeedsHolesResult {
 function counterspellTriggerFact(input: {
   readonly reactorId: typeof spellTargetId;
   readonly casterId: typeof spellCasterId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): CounterspellTriggerFact {
   return {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(counterspellUnitId),
-    ),
+    sourceProcedureRef: input.sourceProcedureRef,
     rangeFeet: movementFeet(60),
   };
 }
@@ -1497,6 +1528,7 @@ function spellCastReactionFactsFill(
 }
 
 function requireTriggeredReactionSpellChoice(input: {
+  readonly session: ReturnType<typeof spellBattle>;
   readonly result: NeedsHolesResult;
   readonly reactorId: typeof spellTargetId;
   readonly spellId: string;
@@ -1519,7 +1551,7 @@ function requireTriggeredReactionSpellChoice(input: {
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        input.result.state,
+        { ...input.session, state: input.result.state },
         candidate.reactorId,
         candidate.subject.procedureRef,
       );

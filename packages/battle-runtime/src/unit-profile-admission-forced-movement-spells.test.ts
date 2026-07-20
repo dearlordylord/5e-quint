@@ -41,12 +41,12 @@ import {
   thunderwaveWithSaveGateCone,
 } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  type BattleRuntimeSession,
   difficultyClass,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
 
 describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
   test("thunderwave is admitted as self-origin Cube save damage with push and boom facts", () => {
@@ -56,7 +56,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: thunderwaveUnitId,
       slotLevel: 2,
     });
@@ -77,7 +77,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Thunderwave self-origin Cube Saving Throw outcomes",
+        label: "Spell self-origin Cube Saving Throw outcomes",
         ability: "con",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -124,11 +124,11 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       targetMaxHp: 30,
       extraTargetIds: [thunderwaveSecondTargetId],
     });
-    const act = spellAct({ state, spellId: thunderwaveUnitId });
+    const act = spellAct({ session: state, spellId: thunderwaveUnitId });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           thunderwaveSavingThrowOutcomeFill(savingThrow, [
@@ -141,7 +141,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         thunderwaveSavingThrowOutcomeFill(savingThrow, [
@@ -170,7 +170,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -184,7 +184,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -198,7 +198,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -213,7 +213,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -239,7 +239,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -257,7 +257,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -283,7 +283,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -297,7 +297,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: spell.id,
       }),
     ).toBeUndefined();
@@ -306,10 +306,10 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
   test("thunderwave rejects missing failed-save creature push facts", () => {
     const spell = spellRecord(thunderwaveUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: thunderwaveUnitId });
+    const act = spellAct({ session: state, spellId: thunderwaveUnitId });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const invalid = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {
@@ -345,7 +345,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dissonantWhispersUnitId,
       slotLevel: 2,
     });
@@ -366,7 +366,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     const target = requireHole(act.initialHoles, "targetChoice");
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -381,7 +381,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Dissonant Whispers Saving Throw outcome",
+        label: "Spell Saving Throw outcome",
         ability: "wis",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -419,7 +419,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const act = spellAct({ session: state, spellId: dissonantWhispersUnitId });
     const target = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       target,
@@ -429,7 +429,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -440,7 +440,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -448,7 +448,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     const movement = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetFill,
@@ -460,7 +460,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -486,7 +486,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
   test("dissonant whispers successful save deals half damage only", () => {
     const spell = spellRecord(dissonantWhispersUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const act = spellAct({ session: state, spellId: dissonantWhispersUnitId });
     const target = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       target,
@@ -496,7 +496,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -507,7 +507,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -515,7 +515,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -537,15 +537,18 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
   test("dissonant whispers failed save does not request movement when the target has no Reaction", () => {
     const spell = spellRecord(dissonantWhispersUnitId);
     const battle = spellBattle({ preparedSpells: [spell] });
-    const target = requireCombatant(battle, spellTargetId);
-    const state = {
-      ...battle,
-      combatants: new Map(battle.combatants).set(spellTargetId, {
-        ...target,
-        reactionAvailable: false,
-      }),
+    const target = requireCombatant(battle.state, spellTargetId);
+    const session = {
+      state: {
+        ...battle.state,
+        combatants: new Map(battle.state.combatants).set(spellTargetId, {
+          ...target,
+          reactionAvailable: false,
+        }),
+      },
+      context: battle.context,
     };
-    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const act = spellAct({ session, spellId: dissonantWhispersUnitId });
     const targetChoice = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       targetChoice,
@@ -555,7 +558,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -566,7 +569,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -574,7 +577,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -599,19 +602,22 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const state: BattleState = {
-      ...battle,
-      grapples: [
-        {
-          grapplerId: spellCasterId,
-          targetId: spellTargetId,
-          escapeDc: difficultyClass(12),
-          reachFeet: movementFeet(5),
-          hand: "left",
-        },
-      ],
+    const session: BattleRuntimeSession = {
+      state: {
+        ...battle.state,
+        grapples: [
+          {
+            grapplerId: spellCasterId,
+            targetId: spellTargetId,
+            escapeDc: difficultyClass(12),
+            reachFeet: movementFeet(5),
+            hand: "left",
+          },
+        ],
+      },
+      context: battle.context,
     };
-    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const act = spellAct({ session, spellId: dissonantWhispersUnitId });
     const targetChoice = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       targetChoice,
@@ -621,7 +627,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -632,7 +638,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -640,7 +646,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -666,7 +672,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const act = spellAct({ session: state, spellId: dissonantWhispersUnitId });
     const target = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       target,
@@ -676,7 +682,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -687,7 +693,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -695,7 +701,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
     const movement = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetFill,
@@ -707,7 +713,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -720,7 +726,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
               reactorId: spellCasterId,
               ...attackExecutionSelectionForSubjectForTest(
                 characterAttackSubjectForTest(
-                  state,
+                  state.state,
                   spellCasterId,
                   "Unarmed Strike",
                 ),

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
+import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
 //
 // The repeatedDamageAllocation Spell Procedure Profile: an action-time Spell
@@ -29,8 +30,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
   readiedSpellAct,
   spellCastSelectionSubject,
@@ -47,9 +47,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -153,29 +152,11 @@ function discoverRepeatedDamageAllocationCastAct(
             subject: spellCastSelectionSubject(
               actorId,
               invocation,
-              repeatedDamageAllocationInvocationRef(invocation),
             ),
             initialHoles: [targetAllocationHole],
           },
         ];
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
-}
-
-function repeatedDamageAllocationInvocationRef(
-  invocation: RepeatedDamageAllocationInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "repeatedDamageAllocation",
-  };
-}
-
-function repeatedDamageAllocationCastSummary(
-  invocation: RepeatedDamageAllocationInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
 }
 
 function resolveRepeatedDamageAllocation(
@@ -184,24 +165,19 @@ function resolveRepeatedDamageAllocation(
   return resolvePreparedSlotSpellAct(input);
 }
 
-const RepeatedDamageAllocationInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "repeatedDamageAllocation" }
-  >
->(
+const RepeatedDamageAllocationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("repeatedDamageAllocation"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("repeatedEffectTargetAllocation"),
       repeatedEffectCount: Schema.Number,
     }),
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
-      damageType: Schema.String,
+      expr: DiceExprSchema,
+      damageType: DamageTypeSchema,
     }),
     rangeFeet: MovementFeet,
   }),
@@ -211,14 +187,11 @@ export const repeatedDamageAllocationProfile: SpellProcedureProfile<
   RepeatedDamageAllocationInvocation
 > = {
   procedure: "repeatedDamageAllocation",
-  invocationSchema: RepeatedDamageAllocationInvocationSchema,
+  executionSchema: RepeatedDamageAllocationInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
-  knownWillingTargetSpellIds: [],
   admit: admitRepeatedDamageAllocation,
   discoverCastAct: discoverRepeatedDamageAllocationCastAct,
-  castSummary: repeatedDamageAllocationCastSummary,
-  invocationRef: repeatedDamageAllocationInvocationRef,
   resolve: resolveRepeatedDamageAllocation,
 };

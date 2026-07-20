@@ -728,13 +728,6 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   if (characterInit.creatureInit.kind !== "character") {
     throw new Error("Expected character battle creature init.");
   }
-  if (
-    characterInit.creatureInit.resources?.some(
-      (resource) => resource.unit.id === "sorcerer_metamagic",
-    ) === true
-  ) {
-    throw new Error("Metamagic must not create a local battle resource.");
-  }
 
   const battle = requireRight(
     startBattle({
@@ -749,7 +742,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
       ],
     }),
   );
-  const sorcerer = battle.combatants.get(sorcererCombatantId);
+  const sorcerer = battle.state.combatants.get(sorcererCombatantId);
   if (sorcerer?.origin.kind !== "character") {
     throw new Error("Expected Sorcerer character combatant.");
   }
@@ -758,6 +751,12 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   );
   if (sorceryPoints === undefined) {
     throw new Error("Expected shared Sorcery Point resource.");
+  }
+  if (
+    sorcerer.origin.metamagic?.sorceryPointResourcePoolRef !==
+    sorceryPoints.resourcePoolRef
+  ) {
+    throw new Error("Metamagic must use the shared Sorcery Point resource.");
   }
   const spentSorceryPoints = requireRight(
     spendCharacterPointPoolResource({
@@ -774,7 +773,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
     origin: {
       ...sorcerer.origin,
       resources: sorcerer.origin.resources.map((resource) =>
-        resource.unit.id === spentSorceryPoints.unit.id
+        resource.resourcePoolRef === spentSorceryPoints.resourcePoolRef
           ? spentSorceryPoints
           : resource,
       ),
@@ -783,7 +782,8 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   const handoff = requireRight(
     settleCharacterSheetFromBattle({
       sheet,
-      state: battleStateWithCombatant(battle, spentSorcerer),
+      state: battleStateWithCombatant(battle.state, spentSorcerer),
+      context: battle.context,
       unitLibrary,
       combatant: spentSorcerer,
     }),

@@ -55,6 +55,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   attackExecutionSelectionForSubjectForTest as interruptAttackExecutionSelectionForSubject,
@@ -63,12 +64,15 @@ import {
   attackTargetFill as interruptAttackTargetFill,
   interruptDecisionFill as interruptDecisionFillSupport,
   fighterAttackSubject as interruptFighterAttackSubject,
+  findAct as findActForTest,
   goblinId as interruptGoblinId,
   reactionChoiceWithSubject as interruptReactionChoiceWithSubject,
+  requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill as interruptSavingThrowOutcomeFill,
   secondWizardId as interruptSecondWizardId,
   wizardId as interruptWizardId,
   resolveBattleSubject,
+  type BattleActSelectorForTest,
 } from "./battle-runtime-test-support.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
@@ -86,11 +90,7 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { admitCharacterProcedureSelectionSubject } from "./battle-act-composition.ts";
-import type {
-  CharacterProcedureBattleSubject,
-  CharacterProcedureSelectionSubject,
-} from "./battle-subjects.ts";
+import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
@@ -104,6 +104,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  isCharacterProcedureBattleSubject,
   resolveBattleInterrupt,
   sameBattleSubject,
   snapshotBattle,
@@ -119,17 +120,18 @@ import {
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
+  type BattleRuntimeSession,
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
 function requireAdmittedCharacterProcedureSubject(
-  state: BattleState,
-  selection: CharacterProcedureSelectionSubject,
+  session: BattleRuntimeSession,
+  selection: BattleActSelectorForTest,
 ): CharacterProcedureBattleSubject {
-  const subject = admitCharacterProcedureSelectionSubject(state, selection);
-  if (subject === undefined) {
-    throw new Error(`Expected admitted ${selection.tag} procedure subject.`);
+  const subject = findActForTest(session, selection).subject;
+  if (!isCharacterProcedureBattleSubject(subject)) {
+    throw new Error(`Expected selected ${selection.tag} procedure subject.`);
   }
   return subject;
 }
@@ -847,7 +849,7 @@ type PendingConcentrationSave = {
   ];
 };
 type ConcentrationBreakTeardownRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly scenario: ConcentrationBreakTeardownScenario;
   readonly damageTaken: number;
   readonly saveDc: number;
@@ -1933,9 +1935,9 @@ const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
 
-function startBattleRight(
+function startBattleSessionRight(
   input: Parameters<typeof startBattle>[0],
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
@@ -2644,18 +2646,20 @@ function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
 
 export function createBattleRuntimeDriver() {
   return defineDriver(driverSchema, () => {
-    let state = fighterVsSkeletonBattle();
-    let subject: BattleSubject = fighterAttackSubject(state);
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    let subject: BattleSubject = fighterAttackSubject(session);
     let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = discoverAttackHoles(state, subject);
+    let holes: readonly BattleHole[] = discoverAttackHoles(session, subject);
     let lastResult: MbtProjection["lastResult"] = "init";
     let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
 
     function reset(): void {
-      state = fighterVsSkeletonBattle();
-      subject = fighterAttackSubject(state);
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      subject = fighterAttackSubject(session);
       fills = [];
-      holes = discoverAttackHoles(state, subject);
+      holes = discoverAttackHoles(session, subject);
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -2686,8 +2690,8 @@ export function createBattleRuntimeDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject(state);
-        holes = discoverAttackHoles(state, subject);
+        subject = fighterAttackSubject({ state, context: session.context });
+        holes = discoverAttackHoles({ state, context: session.context }, subject);
         lastResult = "needsHoles";
         lastInvalidReason = "";
       },
@@ -2729,14 +2733,26 @@ export function createBattleRuntimeDriver() {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[2], [2]], ["rogue_sneak_attack"]),
+          damageRollFillWithGroups(damage, [[2], [2]], [
+            requireCharacterUnitProcedureRefForTest(
+              { state, context: session.context },
+              fighterId,
+              "rogue_sneak_attack",
+            ),
+          ]),
         ]);
       },
       doFillDamageHighSneakAttack: () => {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[4], [4]], ["rogue_sneak_attack"]),
+          damageRollFillWithGroups(damage, [[4], [4]], [
+            requireCharacterUnitProcedureRefForTest(
+              { state, context: session.context },
+              fighterId,
+              "rogue_sneak_attack",
+            ),
+          ]),
         ]);
       },
       doRejectStaleAfterResolved: () => {
@@ -2748,19 +2764,19 @@ export function createBattleRuntimeDriver() {
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject(state);
+        subject = skeletonMultiattackSubject({ state, context: session.context });
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject(state);
+        subject = skeletonMultiattackSubject({ state, context: session.context });
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject(state);
+        subject = skeletonShortswordSubject({ state, context: session.context });
         const target = requireHole(
-          discoverAttackHoles(state, subject),
+          discoverAttackHoles({ state, context: session.context }, subject),
           "targetChoice",
         );
         const targetChoice = targetFill(target, fighterId);
@@ -2788,19 +2804,21 @@ export function createBattleRuntimeDriver() {
 
 export function createBattleRuntimeRouteDriver() {
   return defineDriver(driverSchema, () => {
-    let state = fighterVsSkeletonBattle();
-    let subject: BattleSubject = fighterAttackSubject(state);
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    let subject: BattleSubject = fighterAttackSubject(session);
     let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = discoverAttackHoles(state, subject);
+    let holes: readonly BattleHole[] = discoverAttackHoles(session, subject);
     let route: readonly ReducerRouteEvent[] = [];
     let lastResult: MbtProjection["lastResult"] = "init";
     let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
 
     function reset(): void {
-      state = fighterVsSkeletonBattle();
-      subject = fighterAttackSubject(state);
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      subject = fighterAttackSubject(session);
       fills = [];
-      const act = discoverAttackAct(state, subject);
+      const act = discoverAttackAct(session, subject);
       holes = act.initialHoles;
       route = [reducerRouteStartBattle("battleActionEconomy")];
       appendRequiredRouteEvents({
@@ -2864,8 +2882,8 @@ export function createBattleRuntimeRouteDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject(state);
-        const act = discoverAttackAct(state, subject);
+        subject = fighterAttackSubject({ state, context: session.context });
+        const act = discoverAttackAct({ state, context: session.context }, subject);
         holes = act.initialHoles;
         appendRequiredRouteEvents({
           routeEvents: act.routeEvents,
@@ -2912,14 +2930,26 @@ export function createBattleRuntimeRouteDriver() {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[2], [2]], ["rogue_sneak_attack"]),
+          damageRollFillWithGroups(damage, [[2], [2]], [
+            requireCharacterUnitProcedureRefForTest(
+              { state, context: session.context },
+              fighterId,
+              "rogue_sneak_attack",
+            ),
+          ]),
         ]);
       },
       doFillDamageHighSneakAttack: () => {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[4], [4]], ["rogue_sneak_attack"]),
+          damageRollFillWithGroups(damage, [[4], [4]], [
+            requireCharacterUnitProcedureRefForTest(
+              { state, context: session.context },
+              fighterId,
+              "rogue_sneak_attack",
+            ),
+          ]),
         ]);
       },
       doRejectStaleAfterResolved: () => {
@@ -2932,18 +2962,18 @@ export function createBattleRuntimeRouteDriver() {
         resolveWithoutFill();
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject(state);
+        subject = skeletonMultiattackSubject({ state, context: session.context });
         fills = [];
         resolveWithoutFill();
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject(state);
+        subject = skeletonMultiattackSubject({ state, context: session.context });
         fills = [];
         resolveWithoutFill();
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject(state);
-        const act = discoverAttackAct(state, subject);
+        subject = skeletonShortswordSubject({ state, context: session.context });
+        const act = discoverAttackAct({ state, context: session.context }, subject);
         appendRequiredRouteEvents({
           routeEvents: act.routeEvents,
           context: "weapon Attack skeleton stat-block attack discovery",
@@ -2989,8 +3019,9 @@ export function createBattleRuntimeRouteDriver() {
 
 export function createWeaponAttackOrderingDriver() {
   return defineDriver(weaponAttackOrderingDriverSchema, () => {
-    let state = fighterVsSkeletonBattle();
-    const subject = fighterAttackSubject(state);
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    const subject = fighterAttackSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: WeaponAttackOrderingProjection["stage"] = "actSelection";
@@ -2998,7 +3029,8 @@ export function createWeaponAttackOrderingDriver() {
     let orderingError: WeaponAttackOrderingProjection["orderingError"] = "";
 
     function reset(): void {
-      state = fighterVsSkeletonBattle();
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
       fills = [];
       holes = [];
       stage = "actSelection";
@@ -3052,7 +3084,7 @@ export function createWeaponAttackOrderingDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        holes = discoverAttackHoles(state, subject);
+        holes = discoverAttackHoles({ state, context: session.context }, subject);
         stage = "targetChoice";
         lastResult = "needsHoles";
         orderingError = "";
@@ -3144,9 +3176,10 @@ export function createWeaponAttackOrderingDriver() {
 
 export function createSaveGatedSpellOrderingDriver() {
   return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
-    let state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let state = session.state;
     let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
-      lightningBoltSubject(state);
+      lightningBoltSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: SaveGatedSpellOrderingProjection["stage"] = "actSelection";
@@ -3154,8 +3187,9 @@ export function createSaveGatedSpellOrderingDriver() {
     let orderingError: SaveGatedSpellOrderingProjection["orderingError"] = "";
 
     function reset(): void {
-      state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
-      subject = lightningBoltSubject(state);
+      session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+      state = session.state;
+      subject = lightningBoltSubject(session);
       fills = [];
       holes = [];
       stage = "actSelection";
@@ -3169,10 +3203,11 @@ export function createSaveGatedSpellOrderingDriver() {
       procedure: "saveGatedDamage" | "saveGatedCondition",
       nextStage: SaveGatedSpellOrderingProjection["stage"],
     ): void {
-      state = saveGatedSpellOrderingBattle(spellId, slotLevel);
-      subject = saveGatedSpellSubject(state, spellId, slotLevel, procedure);
+      session = saveGatedSpellOrderingBattle(spellId, slotLevel);
+      state = session.state;
+      subject = saveGatedSpellSubject(session, spellId, slotLevel, procedure);
       fills = [];
-      holes = discoverSaveGatedSpellHoles(state, subject, spellId);
+      holes = discoverSaveGatedSpellHoles(session, subject, spellId);
       stage = nextStage;
       lastResult = "needsHoles";
       orderingError = "";
@@ -3353,8 +3388,9 @@ export function createSaveGatedSpellOrderingDriver() {
 
 export function createWeaponAttackOrderingRouteDriver() {
   return defineDriver(weaponAttackOrderingDriverSchema, () => {
-    let state = fighterVsSkeletonBattle();
-    const subject = fighterAttackSubject(state);
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    const subject = fighterAttackSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -3363,7 +3399,8 @@ export function createWeaponAttackOrderingRouteDriver() {
     let orderingError: WeaponAttackOrderingProjection["orderingError"] = "";
 
     function reset(): void {
-      state = fighterVsSkeletonBattle();
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
       fills = [];
       holes = [];
       route = [battleReducerStartRouteEvent()];
@@ -3432,7 +3469,10 @@ export function createWeaponAttackOrderingRouteDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        const act = discoverAttackAct(state, subject);
+        const act = discoverAttackAct(
+          { state, context: session.context },
+          subject,
+        );
         holes = act.initialHoles;
         route = appendPublicRouteEvents(
           route,
@@ -8762,9 +8802,10 @@ export function createMarkedDamageImmunityRouteDriver() {
 
 export function createSaveGatedSpellOrderingRouteDriver() {
   return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
-    let state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let state = session.state;
     let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
-      lightningBoltSubject(state);
+      lightningBoltSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -8773,8 +8814,9 @@ export function createSaveGatedSpellOrderingRouteDriver() {
     let orderingError: SaveGatedSpellOrderingProjection["orderingError"] = "";
 
     function reset(): void {
-      state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
-      subject = lightningBoltSubject(state);
+      session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+      state = session.state;
+      subject = lightningBoltSubject(session);
       fills = [];
       holes = [];
       route = [reducerRouteStartBattle("battleActionEconomy")];
@@ -8789,10 +8831,11 @@ export function createSaveGatedSpellOrderingRouteDriver() {
       procedure: "saveGatedDamage" | "saveGatedCondition",
       nextStage: SaveGatedSpellOrderingProjection["stage"],
     ): void {
-      state = saveGatedSpellOrderingBattle(spellId, slotLevel);
-      subject = saveGatedSpellSubject(state, spellId, slotLevel, procedure);
+      session = saveGatedSpellOrderingBattle(spellId, slotLevel);
+      state = session.state;
+      subject = saveGatedSpellSubject(session, spellId, slotLevel, procedure);
       fills = [];
-      holes = discoverSaveGatedSpellHoles(state, subject, spellId);
+      holes = discoverSaveGatedSpellHoles(session, subject, spellId);
       route = [
         ...route,
         reducerRouteDiscoverBattleActs({
@@ -9031,9 +9074,10 @@ export function createSaveGatedSpellOrderingRouteDriver() {
 export function createSpellAttackOrderingDriver() {
   return defineDriver(spellAttackOrderingDriverSchema, () => {
     // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-    let state = spellAttackOrderingBattle("fire_bolt");
+    let session = spellAttackOrderingBattle("fire_bolt");
+    let state = session.state;
     let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
-      spellAttackSubject(state, "fire_bolt", "spellAttackDamage");
+      spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: SpellAttackOrderingProjection["stage"] = "actSelection";
@@ -9041,8 +9085,9 @@ export function createSpellAttackOrderingDriver() {
     let orderingError: SpellAttackOrderingProjection["orderingError"] = "";
 
     function reset(): void {
-      state = spellAttackOrderingBattle("fire_bolt");
-      subject = spellAttackSubject(state, "fire_bolt", "spellAttackDamage");
+      session = spellAttackOrderingBattle("fire_bolt");
+      state = session.state;
+      subject = spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
       fills = [];
       holes = [];
       stage = "actSelection";
@@ -9054,10 +9099,11 @@ export function createSpellAttackOrderingDriver() {
       spellId: "fire_bolt" | "sorcerous_burst",
       nextStage: SpellAttackOrderingProjection["stage"],
     ): void {
-      state = spellAttackOrderingBattle(spellId);
-      subject = spellAttackSubject(state, spellId, "spellAttackDamage");
+      session = spellAttackOrderingBattle(spellId);
+      state = session.state;
+      subject = spellAttackSubject(session, spellId, "spellAttackDamage");
       fills = [];
-      holes = discoverSpellAttackHoles(state, subject, spellId);
+      holes = discoverSpellAttackHoles(session, subject, spellId);
       stage = nextStage;
       lastResult = "needsHoles";
       orderingError = "";
@@ -9239,9 +9285,10 @@ export function createSpellAttackOrderingDriver() {
 export function createSpellAttackOrderingRouteDriver() {
   return defineDriver(spellAttackOrderingDriverSchema, () => {
     // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-    let state = spellAttackOrderingBattle("fire_bolt");
+    let session = spellAttackOrderingBattle("fire_bolt");
+    let state = session.state;
     let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
-      spellAttackSubject(state, "fire_bolt", "spellAttackDamage");
+      spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -9250,8 +9297,9 @@ export function createSpellAttackOrderingRouteDriver() {
     let orderingError: SpellAttackOrderingProjection["orderingError"] = "";
 
     function reset(): void {
-      state = spellAttackOrderingBattle("fire_bolt");
-      subject = spellAttackSubject(state, "fire_bolt", "spellAttackDamage");
+      session = spellAttackOrderingBattle("fire_bolt");
+      state = session.state;
+      subject = spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
       fills = [];
       holes = [];
       route = [battleReducerStartRouteEvent()];
@@ -9264,10 +9312,11 @@ export function createSpellAttackOrderingRouteDriver() {
       spellId: "fire_bolt" | "sorcerous_burst",
       nextStage: SpellAttackOrderingProjection["stage"],
     ): void {
-      state = spellAttackOrderingBattle(spellId);
-      subject = spellAttackSubject(state, spellId, "spellAttackDamage");
+      session = spellAttackOrderingBattle(spellId);
+      state = session.state;
+      subject = spellAttackSubject(session, spellId, "spellAttackDamage");
       fills = [];
-      const act = discoverSpellAttackAct(state, subject, spellId);
+      const act = discoverSpellAttackAct(session, subject, spellId);
       holes = act.initialHoles;
       route = appendPublicRouteEvents(route, act.routeEvents);
       stage = nextStage;
@@ -9472,7 +9521,8 @@ const INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE = 4;
 
 export function createChainedAttackProcedureRouteDriver() {
   return defineDriver(chainedAttackProcedureRouteDriverSchema, () => {
-    let state = chainedAttackProcedureBattle();
+    let session = chainedAttackProcedureBattle();
+    let state = session.state;
     let subject: ChainedAttackProcedureSubject | null = null;
     let slotLevel: ChainedAttackProcedureSlotLevel | null = null;
     let fills: readonly BattleFill[] = [];
@@ -9480,7 +9530,8 @@ export function createChainedAttackProcedureRouteDriver() {
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
-      state = chainedAttackProcedureBattle();
+      session = chainedAttackProcedureBattle();
+      state = session.state;
       subject = null;
       slotLevel = null;
       fills = [];
@@ -9521,7 +9572,7 @@ export function createChainedAttackProcedureRouteDriver() {
       init: reset,
       doStartCast: (input: { readonly slotLevel: number }) => {
         slotLevel = chainedAttackProcedureSlotLevel(input.slotLevel);
-        const act = chainedAttackProcedureAct(state, slotLevel);
+        const act = chainedAttackProcedureAct(session, slotLevel);
         if (act.subject.tag !== "actionSpell") {
           throw new Error("Expected chained Action spell subject.");
         }
@@ -9622,15 +9673,17 @@ export function createChainedAttackProcedureRouteDriver() {
 
 export function createIndependentSpellAttackSequenceRouteDriver() {
   return defineDriver(independentSpellAttackSequenceRouteDriverSchema, () => {
-    let replayBaseState = independentSpellAttackSequenceBattle();
-    const subject = independentSpellAttackSequenceSubject(replayBaseState);
+    let session = independentSpellAttackSequenceBattle();
+    let replayBaseState = session.state;
+    const subject = independentSpellAttackSequenceSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
-      replayBaseState = independentSpellAttackSequenceBattle();
-      const act = independentSpellAttackSequenceAct(replayBaseState);
+      session = independentSpellAttackSequenceBattle();
+      replayBaseState = session.state;
+      const act = independentSpellAttackSequenceAct(session);
       fills = [];
       holes = act.initialHoles;
       route = [
@@ -9884,8 +9937,9 @@ export function createInterruptStackResumeRouteDriver() {
         appendInterruptRouteEvents(declinedNested);
       },
       doShieldMutationResumesInterruptedAttack: () => {
-        const state = interruptShieldBattle();
-        const attackAct = interruptShieldUnarmedStrikeAct(state);
+        const session = interruptShieldBattle();
+        const state = session.state;
+        const attackAct = interruptShieldUnarmedStrikeAct(session);
         const target = requireTypedHole(attackAct.initialHoles, "targetChoice");
         const targetFillForAttack = interruptShieldAttackTargetFill(target);
         const awaitingAttackRoll = resolveBattleSubject({
@@ -9912,7 +9966,10 @@ export function createInterruptStackResumeRouteDriver() {
           throw new Error("Expected Shield to open an attack-hit interrupt.");
         }
         appendInterruptRouteEvents(awaitingReaction);
-        const choice = requireInterruptShieldReactionChoice(awaitingReaction);
+        const choice = requireInterruptShieldReactionChoice(
+          awaitingReaction,
+          session.context,
+        );
         const resolved = resolveBattleInterrupt({
           state: awaitingReaction.state,
           fill: interruptDecisionFillSupport(
@@ -10030,8 +10087,9 @@ function publicReplayContinuationAfterAttackDeclines(): {
 
 export function createHitPointRestorationOrderingDriver() {
   return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
-    let state = healingSpellOrderingBattle();
-    let subject: BattleSubject = healingWordSubject(state);
+    let session = healingSpellOrderingBattle();
+    let state = session.state;
+    let subject: BattleSubject = healingWordSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: HitPointRestorationOrderingProjection["stage"] = "actSelection";
@@ -10045,8 +10103,9 @@ export function createHitPointRestorationOrderingDriver() {
     let featureTargetZeroHpLifecycleCleared = false;
 
     function reset(): void {
-      state = healingSpellOrderingBattle();
-      subject = healingWordSubject(state);
+      session = healingSpellOrderingBattle();
+      state = session.state;
+      subject = healingWordSubject(session);
       fills = [];
       holes = [];
       stage = "actSelection";
@@ -10106,8 +10165,9 @@ export function createHitPointRestorationOrderingDriver() {
     return {
       init: reset,
       doDiscoverSingleTargetSpellHealing: () => {
-        state = healingSpellOrderingBattle();
-        subject = healingWordSubject(state);
+        session = healingSpellOrderingBattle();
+        state = session.state;
+        subject = healingWordSubject(session);
         fills = [];
         holes = healingOrderingHolesAfterFills(state, subject, []);
         stage = "spellHealingTargetChoice";
@@ -10143,8 +10203,9 @@ export function createHitPointRestorationOrderingDriver() {
         );
       },
       doDiscoverTargetListSpellHealing: () => {
-        state = healingTargetListSpellOrderingBattle();
-        subject = massHealingWordSubject(state);
+        session = healingTargetListSpellOrderingBattle();
+        state = session.state;
+        subject = massHealingWordSubject(session);
         fills = [];
         holes = healingOrderingHolesAfterFills(state, subject, []);
         stage = "spellHealingTargetList";
@@ -10194,8 +10255,9 @@ export function createHitPointRestorationOrderingDriver() {
           zeroHpLifecycleClearedByHealing(healedTarget);
       },
       doDiscoverFeatureHealingPool: () => {
-        state = featureHealingPoolOrderingBattle();
-        subject = preserveLifeSubject(state);
+        session = featureHealingPoolOrderingBattle();
+        state = session.state;
+        subject = preserveLifeSubject(session);
         fills = [];
         holes = healingOrderingHolesAfterFills(state, subject, []);
         stage = "featureHealingPoolDistribution";
@@ -10238,8 +10300,9 @@ export function createHitPointRestorationOrderingDriver() {
 
 export function createHitPointRestorationOrderingRouteDriver() {
   return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
-    let state = healingSpellOrderingBattle();
-    let subject: BattleSubject = healingWordSubject(state);
+    let session = healingSpellOrderingBattle();
+    let state = session.state;
+    let subject: BattleSubject = healingWordSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -10254,8 +10317,9 @@ export function createHitPointRestorationOrderingRouteDriver() {
     let featureTargetZeroHpLifecycleCleared = false;
 
     function reset(): void {
-      state = healingSpellOrderingBattle();
-      subject = healingWordSubject(state);
+      session = healingSpellOrderingBattle();
+      state = session.state;
+      subject = healingWordSubject(session);
       fills = [];
       holes = [];
       route = [battleReducerStartRouteEvent()];
@@ -10326,14 +10390,15 @@ export function createHitPointRestorationOrderingRouteDriver() {
     }
 
     function discoverHealingAct(input: {
-      readonly nextState: BattleState;
+      readonly nextSession: BattleRuntimeSession;
       readonly findAct: (
         act: ReturnType<typeof discoverBattleActs>[number],
       ) => boolean;
       readonly nextStage: HitPointRestorationOrderingProjection["stage"];
     }): void {
-      state = input.nextState;
-      const act = discoverBattleActs(state).find(input.findAct);
+      session = input.nextSession;
+      state = session.state;
+      const act = discoverBattleActs(session).find(input.findAct);
       if (act === undefined) {
         throw new Error("Expected public Hit Point restoration act discovery.");
       }
@@ -10355,7 +10420,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
       init: reset,
       doDiscoverSingleTargetSpellHealing: () => {
         discoverHealingAct({
-          nextState: healingSpellOrderingBattle(),
+          nextSession: healingSpellOrderingBattle(),
           findAct: (act) =>
             act.subject.tag === "bonusActionSpell" &&
             battleActSpellPresentation(act)?.invocation.procedure ===
@@ -10396,7 +10461,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
       },
       doDiscoverTargetListSpellHealing: () => {
         discoverHealingAct({
-          nextState: healingTargetListSpellOrderingBattle(),
+          nextSession: healingTargetListSpellOrderingBattle(),
           findAct: (act) =>
             act.subject.tag === "bonusActionSpell" &&
             battleActSpellPresentation(act)?.invocation.procedure ===
@@ -10451,7 +10516,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
       },
       doDiscoverFeatureHealingPool: () => {
         discoverHealingAct({
-          nextState: featureHealingPoolOrderingBattle(),
+          nextSession: featureHealingPoolOrderingBattle(),
           findAct: (act) =>
             act.subject.tag === "unitFeature" &&
             // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
@@ -10598,14 +10663,17 @@ export function createConcentrationBreakTeardownRouteDriver() {
       const act = concentrationBreakTeardownCastAct(input.battle);
       appendDiscoveredActRouteEvents(act);
       const result = resolveBattleSubject({
-        state: input.battle,
+        state: input.battle.state,
         subject: act.subject,
         fills: [],
       });
       appendResolutionRouteEvents(result);
       return {
         ...input,
-        battle: requireResolved(result).state,
+        battle: {
+          state: requireResolved(result).state,
+          context: input.battle.context,
+        },
         pendingConcentrationSave: null,
         lastRouteEvents: result.routeEvents ?? [],
       };
@@ -10638,36 +10706,40 @@ export function createConcentrationBreakTeardownRouteDriver() {
         const act = endConcentrationAct(cast.battle);
         appendDiscoveredActRouteEvents(act);
         const result = resolveBattleSubject({
-          state: cast.battle,
+          state: cast.battle.state,
           subject: act.subject,
           fills: [],
         });
         appendResolutionRouteEvents(result);
         state = {
           ...cast,
-          battle: requireResolved(result).state,
+          battle: {
+            state: requireResolved(result).state,
+            context: cast.battle.context,
+          },
           scenario: "voluntaryEndTeardown",
           teardownBeforeNextCommand:
-            concentrationTeardownIsVisibleBeforeNextCommand(
-              requireResolved(result).state,
-            ),
+            concentrationTeardownIsVisibleBeforeNextCommand({
+              state: requireResolved(result).state,
+              context: cast.battle.context,
+            }),
           lastRouteEvents: result.routeEvents ?? [],
         };
       },
       doCastReplacementConcentrationSpell: () => {
         const initial = initialConcentrationBreakTeardownState();
         const beforeReplacement = stateWithPreexistingBlurConcentration(
-          initial.battle,
+          initial.battle.state,
         );
         const replaced = recordConcentrationCast({
           ...initial,
-          battle: beforeReplacement,
+          battle: { state: beforeReplacement, context: initial.battle.context },
         });
         state = {
           ...replaced,
           scenario: "replacementTeardownBeforeNewEffect",
           replacementStartedAfterTeardown:
-            blurredEffectCount(replaced.battle) === 1,
+            blurredEffectCount(replaced.battle.state) === 1,
         };
       },
       step: () => {},
@@ -10691,8 +10763,9 @@ function createCommandOrderingDriverWithRoute<
   const IncludeRoute extends boolean,
 >(includeRoute: IncludeRoute) {
   return defineDriver(commandOrderingDriverSchema, () => {
-    let state = commandOrderingBattle();
-    let subject: BattleSubject = commandOrderingCastSubject(state);
+    let session = commandOrderingBattle();
+    let state = session.state;
+    let subject: BattleSubject = commandOrderingCastSubject(session);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
     let stage: CommandOrderingProjection["stage"] = "actSelection";
@@ -10703,8 +10776,9 @@ function createCommandOrderingDriverWithRoute<
     let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
 
     function reset(): void {
-      state = commandOrderingBattle();
-      subject = commandOrderingCastSubject(state);
+      session = commandOrderingBattle();
+      state = session.state;
+      subject = commandOrderingCastSubject(session);
       fills = [];
       holes = [];
       stage = "actSelection";
@@ -10722,6 +10796,7 @@ function createCommandOrderingDriverWithRoute<
       lastResult = result.tag;
       if (result.tag === "resolved") {
         state = result.state;
+        session = { state, context: session.context };
         holes = [];
         stage = nextStage;
         orderingError = "";
@@ -10732,6 +10807,7 @@ function createCommandOrderingDriverWithRoute<
       }
       if (result.tag === "needsHoles") {
         state = result.state;
+        session = { state, context: session.context };
         holes = result.holes;
         stage = nextStage;
         orderingError = "";
@@ -10779,8 +10855,9 @@ function createCommandOrderingDriverWithRoute<
     }
 
     function discoverCommand(): void {
-      state = commandOrderingBattle();
-      const act = commandOrderingCastAct(state);
+      session = commandOrderingBattle();
+      state = session.state;
+      const act = commandOrderingCastAct(session);
       subject = act.subject;
       fills = [];
       holes = act.initialHoles;
@@ -10797,7 +10874,8 @@ function createCommandOrderingDriverWithRoute<
       input: CommandTargetTurnInput = {},
     ): ReturnType<typeof commandRuntimeAct> {
       state = commandTargetTurn(option, input);
-      const act = commandRuntimeAct(state, option);
+      session = { state, context: session.context };
+      const act = commandRuntimeAct(session, option);
       subject = act.subject;
       fills = [];
       holes = act.initialHoles;
@@ -10910,7 +10988,10 @@ function createCommandOrderingDriverWithRoute<
             fills: [],
           }),
         ).state;
-        const command = commandRuntimeAct(targetTurn, "grovel");
+        const command = commandRuntimeAct(
+          { state: targetTurn, context: session.context },
+          "grovel",
+        );
         const result = resolveBattleSubject({
           state: targetTurn,
           subject: command.subject,
@@ -11079,16 +11160,18 @@ export function createExtraAttackDriver(
   schema: typeof extraAttackDriverSchema = extraAttackDriverSchema,
 ) {
   return defineDriver(schema, () => {
-    let state = extraAttackBattle(unitId);
+    let session = extraAttackBattle(unitId);
+    let state = session.state;
     let currentUnitId = unitId;
-    let subject: BattleSubject = fighterAttackSubject(state);
+    let subject: BattleSubject = fighterAttackSubject(session);
     let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
 
     function resetUnit(nextUnitId: ExtraAttackMbtUnitId): void {
       currentUnitId = nextUnitId;
-      state = extraAttackBattle(nextUnitId);
-      subject = fighterAttackSubject(state);
+      session = extraAttackBattle(nextUnitId);
+      state = session.state;
+      subject = fighterAttackSubject(session);
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -11110,9 +11193,9 @@ export function createExtraAttackDriver(
 
     function resolveAttackMiss(): void {
       recordExtraAttackBoundaryFromState(state, currentUnitId);
-      subject = fighterAttackSubject(state);
+      subject = fighterAttackSubject({ state, context: session.context });
       const target = requireHole(
-        discoverAttackHoles(state, subject),
+        discoverAttackHoles({ state, context: session.context }, subject),
         "targetChoice",
       );
       const targetChoice = targetFill(target, skeletonId);
@@ -11165,7 +11248,7 @@ export function createExtraAttackDriver(
       },
       doResolveSecondExtraAttackMiss: resolveAttackMiss,
       doRejectThirdExtraAttack: () => {
-        subject = fighterAttackSubject(state);
+        subject = fighterAttackSubject({ state, context: session.context });
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
       },
       doEndTurnClosesExtraAttackSlot: () => {
@@ -11185,20 +11268,22 @@ export function createExtraAttackDriver(
 
 export function createMagicMissileDriver() {
   return defineDriver(magicMissileDriverSchema, () => {
-    let state = fighterVsSkeletonBattle();
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
     const subject = magicMissileSubject();
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverMagicMissileHoles(
-      state,
+      session,
       subject,
     );
     let lastResult: MbtProjection["lastResult"] = "init";
     let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
 
     function reset(): void {
-      state = fighterVsSkeletonBattle();
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
       fills = [];
-      holes = discoverMagicMissileHoles(state, subject);
+      holes = discoverMagicMissileHoles(session, subject);
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -11258,7 +11343,8 @@ export function createMagicMissileDriver() {
 
 export function createMagicMissileRouteDriver() {
   return defineDriver(magicMissileDriverSchema, () => {
-    let state = fighterVsSkeletonBattle();
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
     const subject = magicMissileSubject();
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
@@ -11267,8 +11353,9 @@ export function createMagicMissileRouteDriver() {
     let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
 
     function reset(): void {
-      state = fighterVsSkeletonBattle();
-      const act = discoverMagicMissileAct(state, subject);
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      const act = discoverMagicMissileAct(session, subject);
       const initialHoles = act.initialHoles;
       fills = [];
       holes = initialHoles;
@@ -11342,6 +11429,7 @@ export function createMagicMissileRouteDriver() {
 export function createReducerSpineContractDriver() {
   return defineDriver(reducerSpineContractDriverSchema, () => {
     let state: BattleState | null = null;
+    let context: BattleRuntimeSession["context"] | null = null;
     let subject: BattleSubject = magicMissileSubject();
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
@@ -11354,6 +11442,7 @@ export function createReducerSpineContractDriver() {
 
     function reset(): void {
       state = null;
+      context = null;
       subject = magicMissileSubject();
       fills = [];
       holes = [];
@@ -11369,6 +11458,13 @@ export function createReducerSpineContractDriver() {
         throw new Error("Expected reducer-spine battle state to be started.");
       }
       return state;
+    }
+
+    function requireStartedSession(): BattleRuntimeSession {
+      if (context === null) {
+        throw new Error("Expected reducer-spine battle context to be started.");
+      }
+      return { state: requireStartedState(), context };
     }
 
     function recordAccepted(
@@ -11400,7 +11496,9 @@ export function createReducerSpineContractDriver() {
     return {
       init: reset,
       doStartBattle: () => {
-        state = fighterVsSkeletonBattle();
+        const session = fighterVsSkeletonBattleSession();
+        state = session.state;
+        context = session.context;
         subject = magicMissileSubject();
         fills = [];
         holes = [];
@@ -11415,7 +11513,7 @@ export function createReducerSpineContractDriver() {
         const spellSubject = magicMissileSubject();
         subject = spellSubject;
         fills = [];
-        holes = discoverMagicMissileHoles(state, spellSubject);
+        holes = discoverMagicMissileHoles(requireStartedSession(), spellSubject);
         stage = "actDiscovered";
         entrypoint = "discoverBattleActs";
         subjectKind = "slotSpell";
@@ -11476,10 +11574,11 @@ export function createReducerSpineContractDriver() {
       },
       doDiscoverWeaponAttack: () => {
         state = requireStartedState();
-        const attackSubject = skeletonShortswordSubject(state);
+        const session = requireStartedSession();
+        const attackSubject = skeletonShortswordSubject(session);
         subject = attackSubject;
         fills = [];
-        holes = discoverAttackHoles(state, attackSubject);
+        holes = discoverAttackHoles(session, attackSubject);
         stage = "actDiscovered";
         entrypoint = "discoverBattleActs";
         subjectKind = "weaponAttack";
@@ -11570,10 +11669,11 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
   includeRoute: IncludeRoute,
 ) {
   return defineDriver(scalarBuffDriverSchema, () => {
-    let state = scalarBuffBattle();
+    let session = scalarBuffBattle();
+    let state = session.state;
     let act: AvailableBattleAct = discoverLongstriderAct(
-      state,
-      longstriderSubject(state),
+      session,
+      longstriderSubject(session),
     );
     let subject: BattleSubject = act.subject;
     let fills: readonly BattleFill[] = [];
@@ -11583,8 +11683,9 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
     let route: readonly ReducerRouteEvent[] = initialScalarBuffRoute(act);
 
     function reset(): void {
-      state = scalarBuffBattle();
-      act = discoverLongstriderAct(state, longstriderSubject(state));
+      session = scalarBuffBattle();
+      state = session.state;
+      act = discoverLongstriderAct(session, longstriderSubject(session));
       subject = act.subject;
       fills = [];
       holes = act.initialHoles;
@@ -11697,14 +11798,16 @@ function createAdrenalineRushDriverWithRoute<
   const IncludeRoute extends boolean,
 >(includeRoute: IncludeRoute, schema: typeof adrenalineRushDriverSchema) {
   return defineDriver(schema, () => {
-    let state = adrenalineRushBattle();
+    let session = adrenalineRushBattle();
+    let state = session.state;
     let lastResult: AdrenalineRushMbtProjection["lastResult"] = "init";
     let lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"] =
       "";
     let route: readonly ReducerRouteEvent[] = initialAdrenalineRushRoute();
 
     function reset(): void {
-      state = adrenalineRushBattle();
+      session = adrenalineRushBattle();
+      state = session.state;
       lastResult = "init";
       lastInvalidReason = "";
       route = initialAdrenalineRushRoute();
@@ -11767,7 +11870,10 @@ function createAdrenalineRushDriverWithRoute<
         recordResult(
           resolveBattleSubject({
             state,
-            subject: adrenalineRushDashSubject(state),
+            subject: adrenalineRushDashSubject({
+              state,
+              context: session.context,
+            }),
             fills: [],
           }),
           FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS,
@@ -11777,7 +11883,10 @@ function createAdrenalineRushDriverWithRoute<
         recordResult(
           resolveBattleSubject({
             state,
-            subject: adrenalineRushDashSubject(state),
+            subject: adrenalineRushDashSubject({
+              state,
+              context: session.context,
+            }),
             fills: [],
           }),
           FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS,
@@ -11787,6 +11896,7 @@ function createAdrenalineRushDriverWithRoute<
       getState: () => {
         const projection = projectAdrenalineRushMbtState({
           state,
+          context: session.context,
           lastResult,
           lastInvalidReason,
         });
@@ -11886,31 +11996,32 @@ function activeFeatureSpellAttackRollModeRoute(): readonly ReducerRouteEvent[] {
 function projectActiveFeatureSpellBenefit(
   sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
 ): Omit<ActiveFeatureSpellBenefitRouteProjection, "route"> {
-  const state = activeFeatureSpellBenefitActivatedBattle(sourceClassName);
+  const session = activeFeatureSpellBenefitActivatedBattle(sourceClassName);
   return {
-    spellSaveDc: requireActiveFeatureSpellBenefitSaveDc(state),
-    spellAttackRollMode: activeFeatureSpellAttackRollMode(state),
+    spellSaveDc: requireActiveFeatureSpellBenefitSaveDc(session.state),
+    spellAttackRollMode: activeFeatureSpellAttackRollMode(session),
   };
 }
 
 function activeFeatureSpellBenefitActivatedBattle(
   sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
-): BattleState {
-  const state = activeFeatureSpellBenefitBattle(sourceClassName);
-  const subject = activeFeatureSpellBenefitSubject(state);
-  return requireResolved(
+): BattleRuntimeSession {
+  const session = activeFeatureSpellBenefitBattle(sourceClassName);
+  const subject = activeFeatureSpellBenefitSubject(session);
+  const state = requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [],
     }),
   ).state;
+  return { state, context: session.context };
 }
 
 function activeFeatureSpellBenefitBattle(
   sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
-): BattleState {
-  return startBattleRight({
+): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId(`active-feature-spell-benefit-route-${sourceClassName}`),
     combatants: [
       activeFeatureSpellBenefitCasterCreatureInit({
@@ -11923,9 +12034,9 @@ function activeFeatureSpellBenefitBattle(
 }
 
 function activeFeatureSpellBenefitSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === fighterId,
@@ -11947,9 +12058,10 @@ function requireActiveFeatureSpellBenefitSaveDc(state: BattleState): number {
 }
 
 function activeFeatureSpellAttackRollMode(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): ActiveFeatureSpellBenefitRouteProjection["spellAttackRollMode"] {
-  const subject = activeFeatureSpellBenefitSpellAttackSubject(state);
+  const state = session.state;
+  const subject = activeFeatureSpellBenefitSpellAttackSubject(session);
   const target = requireResultHole(
     resolveBattleSubject({
       state,
@@ -11970,9 +12082,9 @@ function activeFeatureSpellAttackRollMode(
 }
 
 function activeFeatureSpellBenefitSpellAttackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "actionSpell",
     actorId: fighterId,
     invocation: cantripSpellInvocationRef(
@@ -12039,13 +12151,15 @@ export function createRogueSteadyAimDriver(
   schema: typeof rogueSteadyAimDriverSchema = rogueSteadyAimDriverSchema,
 ) {
   return defineDriver(schema, () => {
-    let state = rogueSteadyAimBattle();
+    let session = rogueSteadyAimBattle();
+    let state = session.state;
     let lastResult: RogueSteadyAimMbtProjection["lastResult"] = "init";
     let lastInvalidReason: RogueSteadyAimMbtProjection["lastInvalidReason"] =
       "";
 
     function reset(): void {
-      state = rogueSteadyAimBattle();
+      session = rogueSteadyAimBattle();
+      state = session.state;
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -12066,9 +12180,9 @@ export function createRogueSteadyAimDriver(
     }
 
     function resolveAttack(): void {
-      const subject = fighterAttackSubject(state);
+      const subject = fighterAttackSubject({ state, context: session.context });
       const targetHole = requireHole(
-        discoverAttackHoles(state, subject),
+        discoverAttackHoles({ state, context: session.context }, subject),
         "targetChoice",
       );
       const target = targetFill(targetHole, skeletonId);
@@ -12100,17 +12214,24 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject(state),
+            subject: rogueSteadyAimSubject({
+              state,
+              context: session.context,
+            }),
             fills: [],
           }),
         );
       },
       doRejectAfterMoved: () => {
-        state = rogueSteadyAimBattleWithMovementSpent();
+        session = rogueSteadyAimBattleWithMovementSpent();
+        state = session.state;
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject(state),
+            subject: rogueSteadyAimSubject({
+              state,
+              context: session.context,
+            }),
             fills: [],
           }),
         );
@@ -12119,7 +12240,10 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject(state),
+            subject: rogueSteadyAimSubject({
+              state,
+              context: session.context,
+            }),
             fills: [],
           }),
         );
@@ -15025,8 +15149,7 @@ function projectMbtState(input: {
     ).length,
     sneakAttackUsedThisTurn: snapshot.turn.attackDamageRidersUsedThisTurn.some(
       (usage) =>
-        // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-        usage.attackerId === fighterId && usage.unitId === "rogue_sneak_attack",
+        usage.attackerId === fighterId,
     ),
     holes: projectHoles(input.holes),
     lastResult: input.lastResult,
@@ -15131,7 +15254,7 @@ function projectDeathSavingThrowState(
 function projectConcentrationBreakTeardownState(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownProjection {
-  const caster = requireBattleCombatant(state.battle, fighterId);
+  const caster = requireBattleCombatant(state.battle.state, fighterId);
   return {
     scenario: state.scenario,
     damageTaken: state.damageTaken,
@@ -15142,8 +15265,8 @@ function projectConcentrationBreakTeardownState(
       // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
       caster.concentration?.sourceProcedureRef === "blur" &&
       caster.concentration.effectKind === "spellEffect",
-    blurredEffectCount: blurredEffectCount(state.battle),
-    spellSlotExpended: casterSpellSlotExpended(state.battle),
+    blurredEffectCount: blurredEffectCount(state.battle.state),
+    spellSlotExpended: casterSpellSlotExpended(state.battle.state),
     teardownBeforeNextCommand: state.teardownBeforeNextCommand,
     replacementStartedAfterTeardown: state.replacementStartedAfterTeardown,
   };
@@ -15300,9 +15423,13 @@ function damageRequestsConcentrationSave(
   if (state.scenario !== "concentrationSpellCast") {
     throw new Error("Expected Concentration spell cast before damage.");
   }
-  const attackerTurn = advanceToConcentrationAttackerTurn(state.battle);
+  const attackerTurn = advanceToConcentrationAttackerTurn(state.battle.state);
+  const attackerTurnSession = {
+    state: attackerTurn,
+    context: state.battle.context,
+  };
   const act = statBlockAttackAct(
-    attackerTurn,
+    attackerTurnSession,
     concentrationBreakAttackerId,
     "Scimitar",
   );
@@ -15361,7 +15488,7 @@ function damageRequestsConcentrationSave(
   const damageTaken = Number(concentration.damageAmount);
   return {
     ...state,
-    battle: pending.state,
+    battle: { state: pending.state, context: state.battle.context },
     scenario: "damageSaveNeeded",
     damageTaken,
     saveDc: Number(concentration.dc),
@@ -15403,24 +15530,24 @@ function failConcentrationSave(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { state: resolved.state, context: state.battle.context },
     scenario: "damageFailedTeardownBeforeNextCommand",
     saveRollTotal,
     concentrationSaveOffered: false,
     teardownBeforeNextCommand: concentrationTeardownIsVisibleBeforeNextCommand(
-      resolved.state,
+      { state: resolved.state, context: state.battle.context },
     ),
     pendingConcentrationSave: null,
     lastRouteEvents: resolved.routeEvents ?? [],
   };
 }
 
-function concentrationBreakTeardownCastAct(state: BattleState): ReturnType<
+function concentrationBreakTeardownCastAct(session: BattleRuntimeSession): ReturnType<
   typeof discoverBattleActs
 >[number] & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
@@ -15436,7 +15563,7 @@ function concentrationBreakTeardownCastAct(state: BattleState): ReturnType<
   return act;
 }
 
-function endConcentrationAct(state: BattleState): ReturnType<
+function endConcentrationAct(session: BattleRuntimeSession): ReturnType<
   typeof discoverBattleActs
 >[number] & {
   readonly subject: Extract<
@@ -15444,7 +15571,7 @@ function endConcentrationAct(state: BattleState): ReturnType<
     { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
@@ -15501,11 +15628,12 @@ function advanceToConcentrationAttackerTurn(state: BattleState): BattleState {
 }
 
 function concentrationTeardownIsVisibleBeforeNextCommand(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): boolean {
+  const state = session.state;
   const caster = requireBattleCombatant(state, fighterId);
   return (
-    discoverBattleActs(state).length > 0 &&
+    discoverBattleActs(session).length > 0 &&
     caster.concentration === null &&
     blurredEffectCount(state) === 0
   );
@@ -15576,6 +15704,7 @@ function recordExtraAttackBoundaryFromState(
 }
 
 function projectAdrenalineRushMbtState(input: {
+  readonly context: BattleRuntimeSession["context"];
   readonly state: BattleState;
   readonly lastResult: AdrenalineRushMbtProjection["lastResult"];
   readonly lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"];
@@ -15592,7 +15721,7 @@ function projectAdrenalineRushMbtState(input: {
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
     dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
     featureUsesRemaining: resourceUsesRemaining(
-      input.state,
+      { state: input.state, context: input.context },
       "orc_adrenaline_rush",
     ),
     lastResult: input.lastResult,
@@ -15667,23 +15796,23 @@ function projectScalarBuffMbtState(input: {
 }
 
 function discoverAttackHoles(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): readonly BattleHole[] {
-  return discoverAttackAct(state, subject).initialHoles;
+  return discoverAttackAct(session, subject).initialHoles;
 }
 
 function discoverAttackAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
@@ -15697,10 +15826,10 @@ function discoverAttackAct(
 }
 
 function discoverLongstriderAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
@@ -15714,17 +15843,17 @@ function discoverLongstriderAct(
 }
 
 function discoverMagicMissileHoles(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): readonly BattleHole[] {
-  return discoverMagicMissileAct(state, subject).initialHoles;
+  return discoverMagicMissileAct(session, subject).initialHoles;
 }
 
 function discoverMagicMissileAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
@@ -15738,11 +15867,11 @@ function discoverMagicMissileAct(
 }
 
 function discoverSaveGatedSpellHoles(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
   spellId: string,
 ): readonly BattleHole[] {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
@@ -15756,19 +15885,19 @@ function discoverSaveGatedSpellHoles(
 }
 
 function discoverSpellAttackHoles(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
   spellId: string,
 ): readonly BattleHole[] {
-  return discoverSpellAttackAct(state, subject, spellId).initialHoles;
+  return discoverSpellAttackAct(session, subject, spellId).initialHoles;
 }
 
 function discoverSpellAttackAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
   spellId: string,
 ): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
@@ -15852,12 +15981,12 @@ function healingOrderingHolesAfterFills(
 }
 
 function fighterAttackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
@@ -15871,9 +16000,9 @@ function fighterAttackSubject(
 }
 
 function adrenalineRushDashSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "bonusActionStandardAction",
     actorId: fighterId,
     sourceUnitId: recordSelectedUnitRuntimeBoundaryId("orc_adrenaline_rush"),
@@ -15887,9 +16016,9 @@ function adrenalineRushDashSubject(
 }
 
 function rogueSteadyAimSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "unitFeature",
     actorId: fighterId,
     unitId: recordSelectedUnitRuntimeBoundaryId("rogue_steady_aim"),
@@ -15899,12 +16028,12 @@ function rogueSteadyAimSubject(
 }
 
 function skeletonMultiattackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "multiattack" }
 > {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === skeletonId &&
@@ -15917,12 +16046,12 @@ function skeletonMultiattackSubject(
 }
 
 function skeletonShortswordSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const matchingActs = discoverBattleActs(state).filter(
+  const matchingActs = discoverBattleActs(session).filter(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === skeletonId &&
@@ -15946,7 +16075,7 @@ function magicMissileSubject(): Extract<
   { readonly tag: "actionSpell" }
 > {
   const subject = requireAdmittedCharacterProcedureSubject(
-    fighterVsSkeletonBattle(),
+    fighterVsSkeletonBattleSession(),
     {
       tag: "actionSpell",
       actorId: fighterId,
@@ -15965,9 +16094,9 @@ function magicMissileSubject(): Extract<
 }
 
 function longstriderSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "actionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef("longstrider", 1, "scalarBuff"),
@@ -15978,18 +16107,18 @@ function longstriderSubject(
 }
 
 function lightningBoltSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  return saveGatedSpellSubject(state, "lightning_bolt", 3, "saveGatedDamage");
+  return saveGatedSpellSubject(session, "lightning_bolt", 3, "saveGatedDamage");
 }
 
 function saveGatedSpellSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: "lightning_bolt" | "blindness_deafness",
   slotLevel: 2 | 3,
   procedure: "saveGatedDamage" | "saveGatedCondition",
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "actionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef(spellId, slotLevel, procedure),
@@ -16000,11 +16129,11 @@ function saveGatedSpellSubject(
 }
 
 function spellAttackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: "fire_bolt" | "sorcerous_burst",
   procedure: "spellAttackDamage",
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "actionSpell",
     actorId: fighterId,
     invocation: cantripSpellInvocationRef(spellId, procedure),
@@ -16015,9 +16144,9 @@ function spellAttackSubject(
 }
 
 function independentSpellAttackSequenceSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "actionSpell",
     actorId: spellCasterId,
     invocation: cantripSpellInvocationRef(
@@ -16031,10 +16160,10 @@ function independentSpellAttackSequenceSubject(
 }
 
 function chainedAttackProcedureAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   slotLevel: ChainedAttackProcedureSlotLevel,
 ): ChainedAttackProcedureAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -16053,9 +16182,9 @@ function chainedAttackProcedureAct(
 }
 
 function independentSpellAttackSequenceAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): IndependentSpellAttackSequenceAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === spellCasterId &&
@@ -16079,9 +16208,9 @@ type InterruptShieldAttackAct = AvailableBattleAct & {
 };
 
 function interruptShieldUnarmedStrikeAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): InterruptShieldAttackAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is InterruptShieldAttackAct =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
@@ -16117,6 +16246,7 @@ function interruptShieldAttackTargetFill(
 
 function requireInterruptShieldReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  context: BattleRuntimeSession["context"],
 ): Extract<
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
@@ -16134,7 +16264,7 @@ function requireInterruptShieldReactionChoice(
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        result.state,
+        { state: result.state, context },
         candidate.reactorId,
         candidate.subject.procedureRef,
       );
@@ -16385,9 +16515,9 @@ function assertIndependentSpellAttackSequenceTargetHp(
 }
 
 function healingWordSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "bonusActionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef(
@@ -16404,9 +16534,9 @@ function healingWordSubject(
 }
 
 function massHealingWordSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "bonusActionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef(
@@ -16423,9 +16553,9 @@ function massHealingWordSubject(
 }
 
 function preserveLifeSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "unitFeature",
     actorId: fighterId,
     unitId: "cleric_preserve_life",
@@ -16441,8 +16571,8 @@ function moveSubject(): Extract<
   return { tag: "runtimeCommand", actorId: fighterId, command: "move" };
 }
 
-function fighterVsSkeletonBattle(): BattleState {
-  return startBattleRight({
+function fighterVsSkeletonBattleSession(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-fighter-skeleton"),
     combatants: [
       rogueCreatureInit({ initiative: 20 }),
@@ -16451,8 +16581,8 @@ function fighterVsSkeletonBattle(): BattleState {
   });
 }
 
-function interruptShieldBattle(): BattleState {
-  return startBattleRight({
+function interruptShieldBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-interrupt-stack-resume-shield"),
     combatants: [
       interruptShieldCharacterCreature({
@@ -16483,8 +16613,8 @@ function interruptShieldBattle(): BattleState {
 
 function extraAttackBattle(
   unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
-): BattleState {
-  return startBattleRight({
+): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-extra-attack"),
     combatants: [
       extraAttackCreatureInit({ initiative: 20, unitId }),
@@ -16559,8 +16689,8 @@ function extraAttackMbtClassLevel(unitId: ExtraAttackMbtUnitId): number {
   return 5;
 }
 
-function adrenalineRushBattle(): BattleState {
-  return startBattleRight({
+function adrenalineRushBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-adrenaline-rush"),
     combatants: [
       adrenalineRushCreatureInit({ initiative: 20 }),
@@ -16569,8 +16699,8 @@ function adrenalineRushBattle(): BattleState {
   });
 }
 
-function rogueSteadyAimBattle(): BattleState {
-  return startBattleRight({
+function rogueSteadyAimBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-rogue-steady-aim"),
     combatants: [
       rogueSteadyAimCreatureInit({ initiative: 20 }),
@@ -16579,23 +16709,27 @@ function rogueSteadyAimBattle(): BattleState {
   });
 }
 
-function rogueSteadyAimBattleWithMovementSpent(): BattleState {
-  const state = rogueSteadyAimBattle();
+function rogueSteadyAimBattleWithMovementSpent(): BattleRuntimeSession {
+  const session = rogueSteadyAimBattle();
+  const state = session.state;
   const actor = state.combatants.get(fighterId);
   if (actor === undefined) {
     throw new Error("Expected Steady Aim MBT actor.");
   }
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(fighterId, {
-      ...actor,
-      movementSpentFeet: movementFeet(5),
-    }),
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...actor,
+        movementSpentFeet: movementFeet(5),
+      }),
+    },
+    context: session.context,
   };
 }
 
-function scalarBuffBattle(): BattleState {
-  return startBattleRight({
+function scalarBuffBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-scalar-buff"),
     combatants: [
       scalarBuffCasterCreatureInit({ initiative: 20 }),
@@ -16607,8 +16741,8 @@ function scalarBuffBattle(): BattleState {
 function saveGatedSpellOrderingBattle(
   spellId: "lightning_bolt" | "blindness_deafness",
   slotLevel: 2 | 3,
-): BattleState {
-  return startBattleRight({
+): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-save-gated-spell-ordering"),
     combatants: [
       saveGatedSpellOrderingCasterCreatureInit({
@@ -16621,8 +16755,8 @@ function saveGatedSpellOrderingBattle(
   });
 }
 
-function commandOrderingBattle(): BattleState {
-  return startBattleRight({
+function commandOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-command-ordering"),
     combatants: [
       commandOrderingCasterCreatureInit({ initiative: 20 }),
@@ -16633,8 +16767,8 @@ function commandOrderingBattle(): BattleState {
 
 function spellAttackOrderingBattle(
   spellId: "fire_bolt" | "sorcerous_burst",
-): BattleState {
-  return startBattleRight({
+): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-spell-attack-ordering"),
     combatants: [
       spellAttackOrderingCasterCreatureInit({
@@ -16646,7 +16780,7 @@ function spellAttackOrderingBattle(
   });
 }
 
-function chainedAttackProcedureBattle(): BattleState {
+function chainedAttackProcedureBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(chromaticOrbUnitId)],
     spellSlots: [
@@ -16660,7 +16794,7 @@ function chainedAttackProcedureBattle(): BattleState {
   });
 }
 
-function independentSpellAttackSequenceBattle(): BattleState {
+function independentSpellAttackSequenceBattle(): BattleRuntimeSession {
   return spellBattle({
     cantrips: [spellRecord(INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID)],
     spellSlots: [],
@@ -16670,8 +16804,8 @@ function independentSpellAttackSequenceBattle(): BattleState {
   });
 }
 
-function healingSpellOrderingBattle(): BattleState {
-  return startBattleRight({
+function healingSpellOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId(
       "battle-runtime-mbt-hit-point-restoration-spell-ordering",
     ),
@@ -16687,8 +16821,8 @@ function healingSpellOrderingBattle(): BattleState {
   });
 }
 
-function healingTargetListSpellOrderingBattle(): BattleState {
-  return startBattleRight({
+function healingTargetListSpellOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId(
       "battle-runtime-mbt-hit-point-restoration-target-list-spell-ordering",
     ),
@@ -16704,8 +16838,8 @@ function healingTargetListSpellOrderingBattle(): BattleState {
   });
 }
 
-function featureHealingPoolOrderingBattle(): BattleState {
-  return startBattleRight({
+function featureHealingPoolOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId(
       "battle-runtime-mbt-hit-point-restoration-feature-ordering",
     ),
@@ -16717,7 +16851,11 @@ function featureHealingPoolOrderingBattle(): BattleState {
 }
 
 function deathSavingThrowBattle(): BattleState {
-  return startBattleRight({
+  return deathSavingThrowBattleSession().state;
+}
+
+function deathSavingThrowBattleSession(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-death-saving-throw-route"),
     combatants: [
       deathSavingThrowCharacterInit({
@@ -16747,8 +16885,8 @@ function deathSavingThrowBattle(): BattleState {
   });
 }
 
-function concentrationBreakTeardownBattle(): BattleState {
-  return startBattleRight({
+function concentrationBreakTeardownBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-concentration-break-teardown-route"),
     combatants: [
       concentrationBreakTeardownCasterInit({ initiative: 20 }),
@@ -16772,7 +16910,7 @@ function deathSavingThrowEndTurnSubject(): Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
 > {
-  const act = discoverBattleActs(deathSavingThrowBattle()).find(
+  const act = discoverBattleActs(deathSavingThrowBattleSession()).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === fighterId &&
@@ -16788,9 +16926,9 @@ function deathSavingThrowEndTurnSubject(): Extract<
 }
 
 function commandOrderingCastSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  const subject = requireAdmittedCharacterProcedureSubject(state, {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "actionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef("command", 1, "command"),
@@ -16800,12 +16938,12 @@ function commandOrderingCastSubject(
   return subject;
 }
 
-function commandOrderingCastAct(state: BattleState): ReturnType<
+function commandOrderingCastAct(session: BattleRuntimeSession): ReturnType<
   typeof discoverBattleActs
 >[number] & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
@@ -16830,13 +16968,13 @@ type CommandTargetTurnInput = {
 };
 
 function commandRuntimeAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   option: RuntimeCommandOption,
 ): ReturnType<typeof discoverBattleActs>[number] & {
   readonly subject: CommandRuntimeSubject;
 } {
   const command = commandSubjectForOption(option);
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
@@ -16881,14 +17019,14 @@ function commandTargetTurn(
 function castCommandForOrdering(
   option: RuntimeCommandOption,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
-  const state = commandOrderingBattle();
-  const act = commandOrderingCastAct(state);
+  const session = commandOrderingBattle();
+  const act = commandOrderingCastAct(session);
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
   const targetSelection = spellTargetListFill(target, "command", [skeletonId]);
   const optionSelection = commandOptionFill(commandOption, option);
   const savingThrow = requireHole(
-    commandHolesAfterFills(state, act.subject, [
+    commandHolesAfterFills(session.state, act.subject, [
       targetSelection,
       optionSelection,
     ]),
@@ -16896,7 +17034,7 @@ function castCommandForOrdering(
   );
   return requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetSelection,
@@ -16989,7 +17127,12 @@ function rogueCreatureInit(input: {
       },
       attack: daggerAttack(),
       unarmedStrike: baseUnarmedStrike(),
-      unitFeatures: [{ unit: unitLibrary.requireUnit("rogue_sneak_attack") }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(
+          unitLibrary.requireUnit("rogue_sneak_attack"),
+          [{ className: "rogue", level: classLevel(1) }],
+        ),
+      ],
       spellcasting: {
         sourceClassName: "rogue",
         spellcastingAbilityModifier: 3,
@@ -17083,7 +17226,11 @@ function rogueSteadyAimCreatureInit(input: {
       },
       attack: daggerAttack(),
       unarmedStrike: baseUnarmedStrike(),
-      unitFeatures: [{ unit: steadyAim }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(steadyAim, [
+          { className: "rogue", level: classLevel(3) },
+        ]),
+      ],
     },
   };
 }
@@ -17130,7 +17277,14 @@ function extraAttackCreatureInit(input: {
       },
       attack: daggerAttack(),
       unarmedStrike: baseUnarmedStrike(),
-      unitFeatures: [{ unit }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          {
+            className: unit.className,
+            level: classLevel(extraAttackMbtClassLevel(input.unitId)),
+          },
+        ]),
+      ],
     },
   };
 }
@@ -17160,7 +17314,11 @@ function adrenalineRushCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       resources: [{ unit, usesRemaining: 3 }],
-      unitFeatures: [{ unit }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          { className: "fighter", level: classLevel(5) },
+        ]),
+      ],
     },
   };
 }
@@ -17491,7 +17649,11 @@ function preserveLifeOrderingCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       resources: [{ unit: channelDivinity, usesRemaining: 2 }],
-      unitFeatures: [{ unit: preserveLife }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(preserveLife, [
+          { className: "cleric", level: classLevel(3) },
+        ]),
+      ],
     },
   };
 }
@@ -17714,11 +17876,20 @@ function rogueSteadyAimUnitRef(
   return unitRef.right;
 }
 
-function resourceUsesRemaining(state: BattleState, unitId: string): number {
+function resourceUsesRemaining(
+  session: BattleRuntimeSession,
+  unitId: string,
+): number {
+  const state = session.state;
   const actor = state.combatants.get(fighterId);
   if (actor?.origin.kind !== "character") return 1;
+  const resourcePoolRef = session.context.characters
+    .get(fighterId)
+    ?.resourceOwnership.find((ownership) => ownership.unit.id === unitId)
+    ?.resourcePoolRef;
+  if (resourcePoolRef === undefined) return 1;
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === unitId,
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
   if (
     resource === undefined ||
@@ -18234,7 +18405,7 @@ function chainedAttackProcedureDamageRollFill(
 function damageRollFillWithGroups(
   hole: BattleHole,
   groups: readonly (readonly number[])[],
-  selectedAttackDamageRiderUnitIds?: readonly string[],
+  selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[],
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> {
   if (groups.length === 0 || groups.some((group) => group.length === 0)) {
     throw new Error("Expected non-empty rolled damage groups.");
@@ -18243,9 +18414,9 @@ function damageRollFillWithGroups(
   return {
     kind: "rolledDice",
     holeId: hole.holeId,
-    ...(selectedAttackDamageRiderUnitIds === undefined
+    ...(selectedAttackDamageRiderProcedureRefs === undefined
       ? {}
-      : { selectedAttackDamageRiderUnitIds }),
+      : { selectedAttackDamageRiderProcedureRefs }),
     value: rolledDiceGroups(groups),
   };
 }

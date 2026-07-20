@@ -1,6 +1,7 @@
 import {
   requireCharacterSpellProcedureRefForTest,
-  startBattleRight,
+  startBattleSessionRight,
+  findAct,
   requireResolved,
   requireHole,
   targetFill,
@@ -22,12 +23,12 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
-import type { BattleActDiscoverySubject as BattleSubject } from "./battle-runtime-test-support.ts";
+import type { BattleSubject } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () => {
   test("Sacred Flame uses a creature target before Dexterity Saving Throw damage", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-sacred-flame"),
       combatants: [
         characterSeed({
@@ -43,27 +44,27 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("sacred_flame");
+    const subject = findAct(state, magicSubject("sacred_flame")).subject;
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const savingThrows = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, skeletonId)],
       }),
       "savingThrowOutcome",
     );
     expect(savingThrows).toMatchObject({
-      label: "Sacred Flame Saving Throw outcome",
+      label: "Spell Saving Throw outcome",
       ability: "dex",
       dc: { kind: "caster_spell_save_dc" },
     });
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -75,10 +76,10 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Sacred Flame damage (1d8-radiant)",
+      label: "Spell damage (1d8-radiant)",
     });
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFill(target, skeletonId),
@@ -101,7 +102,7 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
     });
 
     const success = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFill(target, skeletonId),
@@ -122,7 +123,7 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
   });
 
   test("Inflict Wounds spends a slot and applies half damage on a successful Constitution save", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-inflict-wounds"),
       combatants: [
         characterSeed({
@@ -150,12 +151,12 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
       mode: { tag: "cast" },
     };
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const savingThrows = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -163,7 +164,7 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -175,12 +176,12 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Inflict Wounds damage (3d10-necrotic)",
+      label: "Spell damage (3d10-necrotic)",
     });
 
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId),
@@ -213,7 +214,7 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
   });
 
   test("Burning Hands uses self-origin Cone outcomes, Fire damage, slot scaling, and slot spend", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-burning-hands"),
       combatants: [
         characterSeed({
@@ -247,11 +248,11 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
       mode: { tag: "cast" },
     };
     const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "savingThrowOutcome",
     );
     expect(savingThrows).toMatchObject({
-      label: "Burning Hands self-origin Cone Saving Throw outcomes",
+      label: "Spell self-origin Cone Saving Throw outcomes",
       ability: "dex",
     });
     const saveFill = savingThrowOutcomeFill(savingThrows, [
@@ -267,19 +268,19 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
     });
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [saveFill],
       }),
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Burning Hands damage (4d6-fire)",
+      label: "Spell damage (4d6-fire)",
     });
 
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [saveFill, damageRollFillWithGroups(damage, [[3, 3, 3, 3]])],
       }),
@@ -306,7 +307,7 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
   });
 
   test("Burning Hands rejects self-origin Cone outcomes anchored to another combatant", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-burning-hands-invalid-origin"),
       combatants: [
         characterSeed({
@@ -323,15 +324,15 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("burning_hands");
+    const subject = findAct(state, magicSubject("burning_hands")).subject;
     const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "savingThrowOutcome",
     );
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           {
@@ -355,7 +356,7 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
   });
 
   test("Burning Hands can resolve with an empty table-supplied Cone membership", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-burning-hands-empty-cone"),
       combatants: [
         characterSeed({
@@ -372,14 +373,14 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("burning_hands");
+    const subject = findAct(state, magicSubject("burning_hands")).subject;
     const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "savingThrowOutcome",
     );
     const result = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [savingThrowOutcomeFill(savingThrows, [])],
       }),

@@ -30,12 +30,8 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import {
-  bindSpellProcedureExecutionFacts,
-  characterExecutionWithSpellInvocations,
-  characterSpellProcedureRef,
-} from "../character-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import type { CharacterBattleResourceOwnership } from "../character-battle-resources.ts";
 import {
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
@@ -50,21 +46,27 @@ import { admitRegisteredSpellProcedureProfiles } from "./spell-procedure-profile
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
+import { characterSpellProcedure } from "../character-execution.ts";
 
 export function admittedSpellActs(
   actor: BattleCreatureState,
-  state?: BattleState,
+  state: BattleState | undefined,
+  resourceOwnership: readonly CharacterBattleResourceOwnership[],
+  spellcasting: CharacterBattleSpellcastingState | undefined,
 ): readonly SupportedSpellInvocation[] {
   if (actor.origin.kind !== "character") {
     return [];
   }
-  const spellcasting = actor.origin.spellcasting;
   if (spellcasting === undefined || !spellcasting.canCastSpells) {
     return [];
   }
   const preparedSpells = effectiveCharacterBattlePreparedSpells(spellcasting);
   const cantrips = effectiveCharacterBattleCantrips(spellcasting);
-  const admissionContext = spellAdmissionContextFor(actor, state);
+  const admissionContext = spellAdmissionContextFor(
+    actor,
+    state,
+    resourceOwnership,
+  );
   if (admissionContext === null) {
     return [];
   }
@@ -96,23 +98,22 @@ export function admittedSpellActs(
 
 export function supportedSpellActs(
   actor: BattleCreatureState,
-  state?: BattleState,
 ): readonly BattleExecutableSpellInvocation[] {
   if (!isCharacterBattleCreatureState(actor)) return [];
-  const invocations = admittedSpellActs(actor, state);
-  const execution = characterExecutionWithSpellInvocations(
-    actor.origin.execution,
-    invocations,
-  );
-  return invocations.flatMap((invocation) => {
-    const sourceProcedureRef = characterSpellProcedureRef(
-      execution,
-      invocation,
+  return actor.origin.execution.procedureBindings
+    .flatMap((binding) => {
+      if (binding.procedure.kind !== "spellInvocation") return [];
+      const invocation = characterSpellProcedure(
+        actor.origin.execution,
+        binding.procedureRef,
+        actor,
+      );
+      return invocation === undefined ? [] : [invocation];
+    })
+    .filter(
+      (invocation) =>
+        !activeOngoingFeaturesPreventSpellInvocation(actor, invocation),
     );
-    return sourceProcedureRef === undefined
-      ? []
-      : [bindSpellProcedureExecutionFacts(invocation, sourceProcedureRef)];
-  });
 }
 
 export function supportedPreparedHellishRebukeReactionSpellProfile(

@@ -91,7 +91,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = bonusSpellAct({ state, spellId: mistyStepUnitId });
+    const act = bonusSpellAct({ session: state, spellId: mistyStepUnitId });
     const destinationHole = requireHole(
       act.initialHoles,
       "teleportDestination",
@@ -102,7 +102,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       distanceFeet: 30,
     });
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [destinationFill],
     });
@@ -155,18 +155,22 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = bonusSpellAct({ state, spellId: mistyStepUnitId });
+    const act = bonusSpellAct({ session: state, spellId: mistyStepUnitId });
     const destinationHole = requireHole(
       act.initialHoles,
       "teleportDestination",
     );
 
     expect(
-      resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: act.subject,
+        fills: [],
+      }),
     ).toMatchObject({ tag: "needsHoles", holes: [destinationHole] });
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           teleportDestinationFill({
@@ -178,7 +182,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           teleportDestinationFill({
@@ -201,7 +205,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
               reactorId: spellTargetId,
               ...attackExecutionSelectionForSubjectForTest(
                 characterAttackSubjectForTest(
-                  state,
+                  state.state,
                   spellTargetId,
                   "Unarmed Strike",
                 ),
@@ -212,7 +216,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       };
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [ordinaryMovement],
       }),
@@ -225,7 +229,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = bonusSpellAct({ state, spellId: mistyStepUnitId });
+    const act = bonusSpellAct({ session: state, spellId: mistyStepUnitId });
     const destinationHole = requireHole(
       act.initialHoles,
       "teleportDestination",
@@ -252,7 +256,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           teleportDestinationFill({ hole: destinationHole }),
@@ -270,14 +274,14 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = bonusSpellAct({ state, spellId: mistyStepUnitId });
+    const act = bonusSpellAct({ session: state, spellId: mistyStepUnitId });
     const destinationHole = requireHole(
       act.initialHoles,
       "teleportDestination",
     );
     const destinationFill = teleportDestinationFill({ hole: destinationHole });
     const otherCasterId = combatantId("other-misty-step-caster");
-    const caster = state.combatants.get(spellCasterId);
+    const caster = state.state.combatants.get(spellCasterId);
     const invocation =
       caster?.origin.kind === "character"
         ? characterSpellProcedure(
@@ -307,14 +311,14 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [staleOtherCasterFill],
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [wrongHoleIdFill],
       }),
@@ -329,7 +333,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
     });
 
     expect(
-      maybeBonusSpellAct({ state, spellId: mistyStepUnitId }),
+      maybeBonusSpellAct({ session: state, spellId: mistyStepUnitId }),
     ).toBeUndefined();
   });
 });

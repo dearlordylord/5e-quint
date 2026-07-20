@@ -1,5 +1,4 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spiritual-weapon-attack-proxy
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
@@ -40,17 +39,16 @@ import {
   battleId,
   battleTablePositionId,
   characterId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
-  spellSlotInvocationRef,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -112,7 +110,7 @@ function createSpiritualWeaponDriver() {
   return defineDriver(spiritualWeaponDriverSchema, () => {
     let state = spiritualWeaponBattle();
     let subjectStartState = state;
-    let subject: BattleSubject = spiritualWeaponCastSubject();
+    let subject: BattleSubject = spiritualWeaponCastSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverSpiritualWeaponHoles(
       state,
@@ -125,7 +123,7 @@ function createSpiritualWeaponDriver() {
     function reset(): void {
       state = spiritualWeaponBattle();
       subjectStartState = state;
-      subject = spiritualWeaponCastSubject();
+      subject = spiritualWeaponCastSubject(state);
       fills = [];
       holes = discoverSpiritualWeaponHoles(state, "spiritualWeaponAttackProxy");
       lastResult = "init";
@@ -359,33 +357,27 @@ function spiritualWeaponCasterCreatureInit(input: {
   };
 }
 
-function spiritualWeaponCastSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "bonusActionSpell" }
-> {
-  return {
-    tag: "bonusActionSpell",
-    actorId: fighterId,
-    invocation: spellSlotInvocationRef(
-      "spiritual_weapon",
-      2,
-      "spiritualWeaponAttackProxy",
-    ),
-    mode: { tag: "cast" },
-  };
+function spiritualWeaponCastSubject(
+  state: BattleState,
+): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
+  const act = discoverBattleActCandidates(state).find(
+    (candidate) =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === fighterId,
+  );
+  if (act?.subject.tag !== "bonusActionSpell") {
+    throw new Error("Expected Spiritual Weapon cast act.");
+  }
+  return act.subject;
 }
 
 function spiritualWeaponRepeatSubject(
   state: BattleState,
 ): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.actorId === fighterId &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        "spiritual_weapon" &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "spiritualWeaponRepeatAttack",
+      candidate.subject.actorId === fighterId,
   );
   if (act === undefined || act.subject.tag !== "bonusActionSpell") {
     throw new Error("Expected Spiritual Weapon repeat act.");
@@ -397,13 +389,10 @@ function discoverSpiritualWeaponHoles(
   state: BattleState,
   procedure: "spiritualWeaponAttackProxy" | "spiritualWeaponRepeatAttack",
 ): readonly BattleHole[] {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.actorId === fighterId &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        "spiritual_weapon" &&
-      battleActSpellPresentation(candidate)?.invocation.procedure === procedure,
+      candidate.subject.actorId === fighterId,
   );
   if (act === undefined) {
     throw new Error(`Expected Spiritual Weapon ${procedure} act.`);
@@ -428,7 +417,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function baseUnarmedStrike(): Extract<

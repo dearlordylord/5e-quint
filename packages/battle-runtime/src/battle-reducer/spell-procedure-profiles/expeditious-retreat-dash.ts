@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-expeditious-retreat-dash
+import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE
 //
 // The expeditiousRetreatDash Spell Procedure Profile: a self-targeted Bonus
@@ -28,8 +29,7 @@ import {
   type BonusActionDashSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { applyDashToActor } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -39,7 +39,6 @@ import { invalidResult } from "../result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
-import { spellRequiresVerbal } from "../spells-discovery.ts";
 import {
   markSpellSlotExpendedThisTurn,
   spellActTurnResourceAvailable,
@@ -52,9 +51,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -63,6 +61,12 @@ type ExpeditiousRetreatDashInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "expeditiousRetreatDash" }
 >;
+
+const SpellDashBonusActionEffectSchema = Schema.Struct({
+  kind: Schema.Literal("spellDashBonusAction"),
+  sourceCombatantId: CombatantId,
+  expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
+});
 type ExpeditiousRetreatDashResolveInput = SpellProcedureProfileResolveInput<
   ExpeditiousRetreatDashInvocation,
   BonusActionDashSpellBattleResolutionInput
@@ -157,7 +161,6 @@ function discoverExpeditiousRetreatDashCastAct(
       tag: "bonusActionDashSpell" as const,
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: expeditiousRetreatDashInvocationRef(invocation),
       mode: { tag: "cast" as const },
       speedKind,
     },
@@ -165,22 +168,6 @@ function discoverExpeditiousRetreatDashCastAct(
   }));
 }
 
-function expeditiousRetreatDashInvocationRef(
-  invocation: ExpeditiousRetreatDashInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "expeditiousRetreatDash",
-  };
-}
-
-function expeditiousRetreatDashCastSummary(
-  invocation: ExpeditiousRetreatDashInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, immediately Dash, and keep Dash available as a Bonus Action while Concentration lasts.`;
-}
 
 function resolveExpeditiousRetreatDash(
   input: ExpeditiousRetreatDashResolveInput,
@@ -236,7 +223,7 @@ function resolveExpeditiousRetreatDash(
     );
   }
 
-  const castingState = spellRequiresVerbal(input.invocation.spell)
+  const castingState = input.invocation.spellRuleFacts.components.verbal
     ? revealHidden(input.input.state, subject.actorId)
     : input.input.state;
   const spellCastReactionWindow = maybeOpenInterruptWindow(
@@ -348,32 +335,24 @@ function resolveExpeditiousRetreatDash(
   };
 }
 
-const ExpeditiousRetreatDashInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "expeditiousRetreatDash" }
-  >
->(
+const ExpeditiousRetreatDashInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("expeditiousRetreatDash"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: SpellDashBonusActionEffectSchema,
   }),
 );
 export const expeditiousRetreatDashProfile = {
   procedure: "expeditiousRetreatDash",
-  invocationSchema: ExpeditiousRetreatDashInvocationSchema,
+  executionSchema: ExpeditiousRetreatDashInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitExpeditiousRetreatDash,
   discoverCastAct: discoverExpeditiousRetreatDashCastAct,
-  castSummary: expeditiousRetreatDashCastSummary,
-  invocationRef: expeditiousRetreatDashInvocationRef,
   resolve: resolveExpeditiousRetreatDash,
 } satisfies SpellProcedureProfile<
   "expeditiousRetreatDash",

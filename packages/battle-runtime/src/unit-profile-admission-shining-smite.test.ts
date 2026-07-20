@@ -41,14 +41,15 @@ import type { BattleSubject } from "./unit-profile-admission-test-support.ts";
 describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () => {
   test("shining_smite adds Radiant damage after a melee hit and illuminates the target until Concentration ends", () => {
     const spell = spellRecord(shiningSmiteUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const subject = weaponAttackSubject(state, "Longsword");
+    const state = session.state;
+    const subject = weaponAttackSubject(session, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -77,7 +78,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
         return (
           characterSpellInvocationRefForProcedureRefForTest(
-            awaitingReaction.state,
+            { ...session, state: awaitingReaction.state },
             candidate.reactorId,
             candidate.subject.procedureRef,
           ).spellId === shiningSmiteUnitId
@@ -92,7 +93,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        awaitingReaction.state,
+        { ...session, state: awaitingReaction.state },
         choice.reactorId,
         choice.subject.procedureRef,
       ),
@@ -290,19 +291,19 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
 
   test("shining_smite is admitted after an Unarmed Strike hit but not after a ranged weapon hit", () => {
     const spell = spellRecord(shiningSmiteUnitId);
-    const unarmedState = spellBattle({
+    const unarmedSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: null,
     });
     const unarmedSubject: BattleSubject = characterAttackSubjectForTest(
-      unarmedState,
+      unarmedSession.state,
       spellCasterId,
       "Unarmed Strike",
     );
     const unarmedTarget = requireResultHole(
       resolveBattleSubject({
-        state: unarmedState,
+        state: unarmedSession.state,
         subject: unarmedSubject,
         fills: [],
       }),
@@ -316,14 +317,14 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     );
     const unarmedRoll = requireResultHole(
       resolveBattleSubject({
-        state: unarmedState,
+        state: unarmedSession.state,
         subject: unarmedSubject,
         fills: [unarmedTargetFill],
       }),
       "attackRoll",
     );
     const unarmedHit = resolveBattleSubject({
-      state: unarmedState,
+      state: unarmedSession.state,
       subject: unarmedSubject,
       fills: [
         unarmedTargetFill,
@@ -341,7 +342,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        unarmedHit.state,
+        { ...unarmedSession, state: unarmedHit.state },
         unarmedChoice.reactorId,
         unarmedChoice.subject.procedureRef,
       ),
@@ -353,15 +354,15 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       ),
     );
 
-    const rangedState = spellBattle({
+    const rangedSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
     });
-    const rangedSubject = weaponAttackSubject(rangedState, "Shortbow");
+    const rangedSubject = weaponAttackSubject(rangedSession, "Shortbow");
     const rangedTarget = requireResultHole(
       resolveBattleSubject({
-        state: rangedState,
+        state: rangedSession.state,
         subject: rangedSubject,
         fills: [],
       }),
@@ -375,14 +376,14 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     );
     const rangedRoll = requireResultHole(
       resolveBattleSubject({
-        state: rangedState,
+        state: rangedSession.state,
         subject: rangedSubject,
         fills: [rangedTargetFill],
       }),
       "attackRoll",
     );
     const rangedHit = resolveBattleSubject({
-      state: rangedState,
+      state: rangedSession.state,
       subject: rangedSubject,
       fills: [
         rangedTargetFill,

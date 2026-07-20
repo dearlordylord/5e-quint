@@ -46,14 +46,14 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
       ],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelEvilAndGoodUnitId,
       slotLevel: 5,
     });
     expect(act.initialHoles).toEqual([]);
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [],
     });
@@ -91,7 +91,7 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
       throw new Error("Expected to advance to undead attacker turn.");
     }
     const undeadAttack = statBlockAttackAct(
-      undeadTurn.state,
+      { state: undeadTurn.state, context: state.context },
       undeadId,
       "Scimitar",
     );
@@ -124,7 +124,7 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
       throw new Error("Expected to advance to aberration attacker turn.");
     }
     const aberrationAttack = statBlockAttackAct(
-      aberrationTurn.state,
+      { state: aberrationTurn.state, context: state.context },
       aberrationId,
       "Scimitar",
     );
@@ -169,12 +169,12 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
       ],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelEvilAndGoodUnitId,
       slotLevel: 5,
     });
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [],
     });

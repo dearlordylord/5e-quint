@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 //
 // Cloudkill-shaped hazard: action-time Spell Slot casting creates a
@@ -27,7 +29,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -35,9 +36,8 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -51,7 +51,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 
 type CloudkillAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -234,7 +234,6 @@ function discoverCloudkillAreaHazardCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: cloudkillAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
@@ -242,22 +241,6 @@ function discoverCloudkillAreaHazardCastAct(
   ];
 }
 
-function cloudkillAreaHazardInvocationRef(
-  invocation: CloudkillAreaHazardSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "cloudkillAreaHazard",
-  };
-}
-
-function cloudkillAreaHazardCastSummary(
-  invocation: CloudkillAreaHazardSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveCloudkillAreaHazard(
   input: CloudkillAreaHazardResolveInput,
@@ -270,27 +253,22 @@ function resolveCloudkillAreaHazard(
   });
 }
 
-const CloudkillAreaHazardInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "cloudkillAreaHazard" }
-  >
->(
+const CloudkillAreaHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("cloudkillAreaHazard"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("con"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginSphere"),
       radiusFeet: MovementFeet,
     }),
-    durationTicks: BattleRuntimeObjectSchema,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
+      expr: DiceExprSchema,
       damageType: Schema.Literal("poison"),
     }),
   }),
@@ -298,15 +276,12 @@ const CloudkillAreaHazardInvocationSchema = spellProcedureInvocationSchema<
 
 export const cloudkillAreaHazardProfile = {
   procedure: "cloudkillAreaHazard",
-  invocationSchema: CloudkillAreaHazardInvocationSchema,
+  executionSchema: CloudkillAreaHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitCloudkillAreaHazard,
   discoverCastAct: discoverCloudkillAreaHazardCastAct,
-  castSummary: cloudkillAreaHazardCastSummary,
-  invocationRef: cloudkillAreaHazardInvocationRef,
   resolve: resolveCloudkillAreaHazard,
 } satisfies SpellProcedureProfile<
   "cloudkillAreaHazard",

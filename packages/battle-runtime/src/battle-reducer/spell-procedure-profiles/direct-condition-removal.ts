@@ -7,7 +7,6 @@
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
@@ -19,7 +18,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type DirectConditionRemovalSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -43,10 +42,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -150,7 +147,6 @@ function discoverDirectConditionRemovalCastAct(
             tag: "bonusActionSpell",
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: directConditionRemovalInvocationRef(invocation),
             mode: { tag: "cast" },
           },
           initialHoles: [targetHole, spellConditionChoiceHole(invocation)],
@@ -158,22 +154,6 @@ function discoverDirectConditionRemovalCastAct(
       ];
 }
 
-function directConditionRemovalInvocationRef(
-  invocation: DirectConditionRemovalSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "directConditionRemoval",
-  };
-}
-
-function directConditionRemovalCastSummary(
-  invocation: DirectConditionRemovalSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveDirectConditionRemoval(
   input: SpellProcedureProfileResolveInput<
@@ -346,17 +326,12 @@ function applyDirectConditionRemovalSpellEffect(
   }, state);
 }
 
-const DirectConditionRemovalInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directConditionRemoval" }
-  >
->(
+const DirectConditionRemovalInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("directConditionRemoval"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
@@ -364,9 +339,10 @@ const DirectConditionRemovalInvocationSchema = spellProcedureInvocationSchema<
       maxTargets: Schema.Literal(1),
     }),
     conditionChoices: Schema.Tuple(
-      ...DIRECT_CONDITION_REMOVAL_CONDITIONS.map((condition) =>
-        Schema.Literal(condition),
-      ),
+      Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[0]),
+      Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[1]),
+      Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[2]),
+      Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[3]),
     ),
     rangeFeet: MovementFeet,
   }),
@@ -377,14 +353,11 @@ export const directConditionRemovalProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "directConditionRemoval",
-  invocationSchema: DirectConditionRemovalInvocationSchema,
+  executionSchema: DirectConditionRemovalInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitDirectConditionRemoval,
   discoverCastAct: discoverDirectConditionRemovalCastAct,
-  castSummary: directConditionRemovalCastSummary,
-  invocationRef: directConditionRemovalInvocationRef,
   resolve: resolveDirectConditionRemoval,
 };

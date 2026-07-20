@@ -52,7 +52,16 @@ import type {
 } from "../identity.ts";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
-import { characterUnitFeatureProcedureId } from "../character-execution.ts";
+import {
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterExecutionWithDancingLightsReposition,
+  characterExecutionWithSpellCreatedHeldObjectProcedures,
+  characterExecutionWithSpiritualWeaponRepeatAttack,
+  characterUnitProcedure,
+  type DancingLightsRepositionSpellProcedureExecution,
+  type SpellCreatedHeldObjectSpellProcedureExecution,
+  type SpiritualWeaponRepeatAttackSpellProcedureExecution,
+} from "../character-execution.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
@@ -110,7 +119,10 @@ import {
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
 } from "./antimagic-field-suppression.ts";
-import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
+import {
+  HIDEOUS_LAUGHTER_DURATION_TICKS,
+  SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
+} from "./domain-constants.ts";
 import {
   battleCreatureWithSpellCreatedHeldObjectHand,
   spellCreatedHeldObjectFreeHand,
@@ -210,7 +222,7 @@ export type SaveGatedAttackRollAdvantageInvocation = Extract<
 >;
 
 export function saveGatedAttackRollAdvantageInvocationIsFaerieFire(
-  invocation: SaveGatedAttackRollAdvantageInvocation,
+  invocation: Pick<SaveGatedAttackRollAdvantageInvocation, "effect">,
 ): boolean {
   return invocation.effect.kind === "faerieFireOutline";
 }
@@ -558,6 +570,7 @@ export function applySpellCreatedHeldObjectEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly activeEffect: SpellCreatedHeldObjectActiveEffect;
+  readonly sourceExecution: SpellCreatedHeldObjectSpellProcedureExecution;
 }):
   | { readonly tag: "updated"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
@@ -593,11 +606,56 @@ export function applySpellCreatedHeldObjectEffect(input: {
     },
     freeHand,
   );
+  if (nextActor.origin.kind !== "character") {
+    return {
+      tag: "invalid",
+      message: "Spell-created held object execution owner is not a character.",
+    };
+  }
+  const dynamicExecution =
+    characterExecutionWithSpellCreatedHeldObjectProcedures(
+      nextActor.origin.execution,
+      [
+        {
+          spellRuleFacts: input.sourceExecution.spellRuleFacts,
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: input.activeEffect.sourceCombatantId,
+          },
+          resource: { tag: "none" },
+          procedure: "spellCreatedHeldObjectAttack",
+          targeting: { kind: "singleCombatant" },
+          damage: input.activeEffect.attack.damage,
+          rangeFeet: SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
+          attackKind: input.activeEffect.attack.attackKind,
+          attackBonus: input.activeEffect.attack.attackBonus,
+          sourceEffectRef: input.activeEffect.effectRef,
+          sourceHeldObjectProcedureRef:
+            input.activeEffect.sourceProcedureRef,
+        },
+        {
+          spellRuleFacts: input.sourceExecution.spellRuleFacts,
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: input.activeEffect.sourceCombatantId,
+          },
+          resource: { tag: "none" },
+          procedure: "spellCreatedHeldObjectReEvoke",
+          actionCost: "bonusAction",
+          sourceEffectRef: input.activeEffect.effectRef,
+          sourceHeldObjectProcedureRef:
+            input.activeEffect.sourceProcedureRef,
+        },
+      ],
+    );
   return {
     tag: "updated",
     state: {
       ...input.state,
-      combatants: new Map(input.state.combatants).set(input.actorId, nextActor),
+      combatants: new Map(input.state.combatants).set(input.actorId, {
+        ...nextActor,
+        origin: { ...nextActor.origin, execution: dynamicExecution },
+      }),
     },
   };
 }
@@ -827,13 +885,17 @@ function paladinSacredWeaponLightEmitters(
   if (combatant.origin.kind !== "character") {
     return [];
   }
-  const profile = combatant.origin.paladinSacredWeaponProfiles.get(
-    characterUnitFeatureProcedureId(
-      combatant.origin.execution,
-      effect.sourceProcedureRef,
-    ),
+  const procedure = characterUnitProcedure(
+    combatant.origin.execution,
+    effect.sourceProcedureRef,
+    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   );
-  return profile === undefined
+  const execution =
+    procedure?.kind === "unitFeature" &&
+    procedure.execution.kind === "paladinSacredWeapon"
+      ? procedure.execution
+      : undefined;
+  return execution === undefined
     ? []
     : [
         {
@@ -846,8 +908,8 @@ function paladinSacredWeaponLightEmitters(
           },
           emission: {
             kind: "brightAndDim",
-            brightRadiusFeet: profile.sacredWeapon.light.brightRadiusFeet,
-            dimAdditionalFeet: profile.sacredWeapon.light.dimAdditionalFeet,
+            brightRadiusFeet: execution.sacredWeapon.light.brightRadiusFeet,
+            dimAdditionalFeet: execution.sacredWeapon.light.dimAdditionalFeet,
           },
           opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
           expiresAt: effect.expiresAt,
@@ -1130,12 +1192,37 @@ export function applyDancingLightsSpellEffect(
     ownerId: actorId,
   });
   if (allocation.tag === "ownerNotFound") return state;
+  const owner = allocation.owner;
+  if (owner.origin.kind !== "character") return state;
+  const activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "dancingLights" }
+  > = {
+    kind: "dancingLights",
+    effectRef: allocation.effectRef,
+    sourceProcedureRef: invocation.sourceProcedureRef,
+    sourceCombatantId: actorId,
+    expiresAt: invocation.expiresAt,
+    ...dancingLights,
+  };
+  const repositionExecution: DancingLightsRepositionSpellProcedureExecution = {
+    spellRuleFacts: invocation.spellRuleFacts,
+    access: { tag: "classCantrip" },
+    resource: { tag: "none" },
+    procedure: "dancingLightsReposition",
+    actionCost: "bonusAction",
+    activeEffectRef: activeEffect.effectRef,
+    sourceDancingLightsProcedureRef: activeEffect.sourceProcedureRef,
+    maxMoveFeet: invocation.maxMoveFeet,
+    rangeFeet: invocation.rangeFeet,
+    spacingFeet: invocation.spacingFeet,
+  };
   return {
     ...allocation.state,
     combatants: new Map(allocation.state.combatants).set(actorId, {
-      ...allocation.owner,
+      ...owner,
       activeEffects: [
-        ...caster.activeEffects.filter(
+        ...owner.activeEffects.filter(
           (effect) =>
             !(
               effect.kind === "dancingLights" &&
@@ -1143,15 +1230,15 @@ export function applyDancingLightsSpellEffect(
               effect.sourceCombatantId === actorId
             ),
         ),
-        {
-          kind: "dancingLights",
-          effectRef: allocation.effectRef,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-          expiresAt: invocation.expiresAt,
-          ...dancingLights,
-        },
+        activeEffect,
       ],
+      origin: {
+        ...owner.origin,
+        execution: characterExecutionWithDancingLightsReposition(
+          owner.origin.execution,
+          repositionExecution,
+        ),
+      },
     }),
   };
 }
@@ -1180,6 +1267,8 @@ export function repositionDancingLightsSpellEffect(
         if (
           effect.kind !== "dancingLights" ||
           effect.effectRef !== invocation.activeEffectRef ||
+          effect.sourceProcedureRef !==
+            invocation.sourceDancingLightsProcedureRef ||
           effect.sourceCombatantId !== actorId
         ) {
           return [effect];
@@ -2091,6 +2180,29 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
     ownerId: input.actorId,
   });
   if (allocation.tag === "ownerNotFound") return input.state;
+  const activeEffect = {
+    kind: "spiritualWeapon" as const,
+    effectRef: allocation.effectRef,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    sourceCombatantId: input.actorId,
+    sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
+    forcePositionId: input.forcePositionId,
+    forceReachFeet: input.invocation.forceReachFeet,
+    repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
+    repeatTargeting: input.repeatTargeting,
+    startedOn: {
+      actorId: input.actorId,
+      round: input.state.initiative.round,
+    },
+    damage: input.invocation.damage,
+    attackKind: input.invocation.attackKind,
+    attackBonus: input.invocation.attackBonus,
+    expiresAt: {
+      kind: "concentration" as const,
+      combatantId: input.actorId,
+      durationTicks: input.invocation.durationTicks,
+    },
+  } satisfies Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }>;
   const activeEffects = [
     ...caster.activeEffects.filter(
       (effect) =>
@@ -2100,31 +2212,26 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
           effect.sourceCombatantId === input.actorId
         ),
     ),
-    {
-      kind: "spiritualWeapon" as const,
-      effectRef: allocation.effectRef,
-      sourceProcedureRef: input.invocation.sourceProcedureRef,
-      sourceCombatantId: input.actorId,
-      sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
-      forcePositionId: input.forcePositionId,
-      forceReachFeet: input.invocation.forceReachFeet,
-      repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
-      repeatTargeting: input.repeatTargeting,
-      startedOn: {
-        actorId: input.actorId,
-        round: input.state.initiative.round,
-      },
-      damage: input.invocation.damage,
-      attackKind: input.invocation.attackKind,
-      attackBonus: input.invocation.attackBonus,
-      expiresAt: {
-        kind: "concentration" as const,
-        combatantId: input.actorId,
-        durationTicks: input.invocation.durationTicks,
-      },
-    },
+    activeEffect,
   ];
-  combatants.set(input.actorId, { ...allocation.owner, activeEffects });
+  const owner = allocation.owner;
+  if (owner.origin.kind !== "character") return input.state;
+  const repeatExecution = {
+    procedure: "spiritualWeaponRepeatAttack" as const,
+    activeEffectRef: activeEffect.effectRef,
+    activeEffectSourceProcedureRef: activeEffect.sourceProcedureRef,
+  } satisfies SpiritualWeaponRepeatAttackSpellProcedureExecution;
+  combatants.set(input.actorId, {
+    ...owner,
+    activeEffects,
+    origin: {
+      ...owner.origin,
+      execution: characterExecutionWithSpiritualWeaponRepeatAttack(
+        owner.origin.execution,
+        repeatExecution,
+      ),
+    },
+  });
   return { ...allocation.state, combatants };
 }
 
@@ -3480,7 +3587,8 @@ export function applyShieldReactionSpellActiveEffect(
           sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: reactorId,
           bonus: invocation.armorClassBonus,
-          negatedSpellIds: invocation.negatedSpellIds,
+          negatesRepeatedDamageAllocation:
+            invocation.negatesRepeatedDamageAllocation,
           expiresAt: {
             kind: "startOfTurn",
             combatantId: reactorId,

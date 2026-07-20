@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-save-gated-condition-immunity
+import { CreatureTypeSchema } from "@dnd/surface/surface/schema";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
 //
@@ -15,7 +17,6 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition Immunity, Magic Action,
 //     and Spell Invocation.
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -27,7 +28,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { supportedPreparedSaveGateConditionImmunityProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionImmunitySpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -36,15 +37,22 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   AbilitySchema,
-  BattleRuntimeObjectSchema,
+  BattleConditionSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+
+const ConditionImmunityActiveEffectTemplateSchema = Schema.Struct({
+  sourceCombatantId: CombatantId,
+  kind: Schema.Literal("conditionImmunity"),
+  condition: BattleConditionSchema,
+  expiresAt: BattleActiveEffectExpirationSchema,
+});
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
@@ -164,7 +172,6 @@ function saveGatedConditionImmunityCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: saveGatedConditionImmunityInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -199,23 +206,6 @@ function saveGatedConditionImmunityMetamagicInitialHoles(
   return holes;
 }
 
-function saveGatedConditionImmunityInvocationRef(
-  invocation: SaveGatedConditionImmunitySpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "saveGatedConditionImmunity",
-  };
-}
-
-function saveGatedConditionImmunityCastSummary(
-  invocation: SaveGatedConditionImmunitySpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
 function resolveSaveGatedConditionImmunity(
   input: SaveGatedConditionImmunityResolveInput,
 ): BattleResolutionResult {
@@ -234,17 +224,12 @@ function resolveSaveGatedConditionImmunity(
 }
 
 const SaveGatedConditionImmunityInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "saveGatedConditionImmunity" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedConditionImmunity"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       ability: AbilitySchema,
       dc: DcSourceSchema,
@@ -252,25 +237,22 @@ const SaveGatedConditionImmunityInvocationSchema =
         kind: Schema.Literal("pointOriginSphere"),
         radiusFeet: MovementFeet,
       }),
-      targetCreatureTypes: Schema.Array(Schema.String),
+      targetCreatureTypes: Schema.Array(CreatureTypeSchema),
       activeEffects: Schema.Tuple(
-        BattleRuntimeObjectSchema,
-        BattleRuntimeObjectSchema,
+        ConditionImmunityActiveEffectTemplateSchema,
+        ConditionImmunityActiveEffectTemplateSchema,
       ),
       rangeFeet: MovementFeet,
     }),
   );
 export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
-  invocationSchema: SaveGatedConditionImmunityInvocationSchema,
+  executionSchema: SaveGatedConditionImmunityInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSaveGatedConditionImmunity,
   discoverCastAct: discoverSaveGatedConditionImmunityCastAct,
-  castSummary: saveGatedConditionImmunityCastSummary,
-  invocationRef: saveGatedConditionImmunityInvocationRef,
   resolve: resolveSaveGatedConditionImmunity,
 } satisfies SpellProcedureProfile<
   "saveGatedConditionImmunity",

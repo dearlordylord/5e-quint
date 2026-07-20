@@ -52,7 +52,7 @@ import {
   spellSlotInvocationRef,
   type BattleFill,
   type BattleHole,
-  type BattleState,
+  type BattleRuntimeSession,
 } from "./unit-profile-admission-test-support.ts";
 
 type OngoingSpellTargetChoiceFill = Extract<
@@ -80,7 +80,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -139,7 +139,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       });
 
       expect(
-        maybeSpellAct({ state, spellId: spell.id, slotLevel: 3 }),
+        maybeSpellAct({ session: state, spellId: spell.id, slotLevel: 3 }),
       ).toBeUndefined();
     }
   });
@@ -156,7 +156,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       }),
     ]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -166,7 +166,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -208,7 +208,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       }),
     ]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -218,12 +218,12 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
 
     const missingFact = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [ongoingSpellTargetFill({ hole: targetHole, target, facts: [] })],
     });
     const wrongTargetFact = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -239,7 +239,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       ],
     });
     const tooFarFact = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -277,7 +277,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
     const state = stateWithLightEmitters([emitter]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -291,7 +291,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
 
     const needsCheck = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -319,7 +319,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
 
     const failed = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill, abilityCheckFill(checkHole, 13)],
     });
@@ -331,7 +331,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
 
     const succeeded = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill, abilityCheckFill(checkHole, 14)],
     });
@@ -352,7 +352,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
     const state = stateWithLightEmitters([emitter]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -361,14 +361,14 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       target: { kind: "object", objectId },
     });
     const needsCheck = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
     const checkHole = requireResultHole(needsCheck, "spellcastingAbilityCheck");
 
     const duplicateCheckFill = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -396,13 +396,13 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       }),
     ]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 4,
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -427,13 +427,13 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       }),
     ]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -496,13 +496,13 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       },
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -541,7 +541,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       }),
     ]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -551,7 +551,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
 
     const needsCheck = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -572,7 +572,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
 
     const failed = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill, abilityCheckFill(checkHole, 13)],
     });
@@ -591,7 +591,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
 
     const succeeded = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill, abilityCheckFill(checkHole, 14)],
     });
@@ -632,13 +632,13 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
     const state = stateWithLightEmitters([selectedEmitter, retainedEmitter]);
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -704,13 +704,13 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       },
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -775,7 +775,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         "spiritualWeaponAttackProxy",
       ),
     );
-    const caster = baseState.combatants.get(spellCasterId);
+    const caster = baseState.state.combatants.get(spellCasterId);
     if (caster === undefined) {
       throw new Error("Expected spell caster combatant.");
     }
@@ -790,19 +790,22 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       effectRef: effectAllocation.effectRef,
       sourceProcedureRef: boundProcedureRef,
     };
-    const state = {
+    const state: BattleRuntimeSession = {
       ...baseState,
-      combatants: new Map(baseState.combatants).set(spellCasterId, {
-        ...effectAllocation.owner,
-        concentration: {
-          sourceProcedureRef: boundProcedureRef,
-          effectKind: "spellEffect" as const,
-        },
-        activeEffects: [...caster.activeEffects, effect],
-      }),
+      state: {
+        ...baseState.state,
+        combatants: new Map(baseState.state.combatants).set(spellCasterId, {
+          ...effectAllocation.owner,
+          concentration: {
+            sourceProcedureRef: boundProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+          activeEffects: [...caster.activeEffects, effect],
+        }),
+      },
     };
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -818,7 +821,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     expect(
       requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
     ).toContainEqual(target);
-    const snapshot = snapshotBattle(state);
+    const snapshot = snapshotBattle(state.state);
     const focusedSnapshot = {
       ...snapshot,
       acts: snapshot.acts.filter(
@@ -854,7 +857,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -890,7 +893,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       },
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -908,7 +911,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toContainEqual(target);
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -948,7 +951,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       },
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -963,7 +966,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           ongoingSpellTargetFill({
@@ -994,7 +997,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       },
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -1012,7 +1015,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
 
     const needsCheck = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -1029,7 +1032,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
 
     const failed = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill, abilityCheckFill(checkHole, 13)],
     });
@@ -1044,7 +1047,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
 
     const succeeded = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill, abilityCheckFill(checkHole, 14)],
     });
@@ -1070,7 +1073,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         sourceSpellLevel: 2,
       }),
     ]);
-    const snapshot = snapshotBattle(state);
+    const snapshot = snapshotBattle(state.state);
 
     const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)({
       ...snapshot,
@@ -1094,13 +1097,14 @@ function stateWithLightEmitters(
     { spellLevel: 3, count: 1 },
     { spellLevel: 4, count: 1 },
   ],
-): BattleState {
+): BattleRuntimeSession {
+  const session = spellBattle({
+    preparedSpells: [spellRecord(dispelMagicUnitId)],
+    spellSlots,
+  });
   return {
-    ...spellBattle({
-      preparedSpells: [spellRecord(dispelMagicUnitId)],
-      spellSlots,
-    }),
-    lightEmitters,
+    ...session,
+    state: { ...session.state, lightEmitters },
   };
 }
 
@@ -1121,19 +1125,22 @@ function stateWithActiveEffects(
       effectKind: "spellEffect",
     },
   },
-): BattleState {
-  const state = stateWithLightEmitters([]);
-  const caster = state.combatants.get(spellCasterId);
+): BattleRuntimeSession {
+  const session = stateWithLightEmitters([]);
+  const caster = session.state.combatants.get(spellCasterId);
   if (caster === undefined) {
     throw new Error("Expected spell caster combatant.");
   }
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      concentration: input.concentration ?? null,
-      activeEffects: [...caster.activeEffects, ...activeEffects],
-    }),
+    ...session,
+    state: {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...caster,
+        concentration: input.concentration ?? null,
+        activeEffects: [...caster.activeEffects, ...activeEffects],
+      }),
+    },
   };
 }
 
@@ -1156,9 +1163,9 @@ function stateWithCombatantActiveEffects(input: {
       readonly effectKind: "spellEffect";
     } | null;
   };
-}): BattleState {
-  const state = stateWithLightEmitters([]);
-  const combatants = new Map(state.combatants);
+}): BattleRuntimeSession {
+  const session = stateWithLightEmitters([]);
+  const combatants = new Map(session.state.combatants);
   if (input.caster !== undefined) {
     const caster = combatants.get(spellCasterId);
     if (caster === undefined) {
@@ -1181,7 +1188,7 @@ function stateWithCombatantActiveEffects(input: {
       activeEffects: [...target.activeEffects, ...input.target.activeEffects],
     });
   }
-  return { ...state, combatants };
+  return { ...session, state: { ...session.state, combatants } };
 }
 
 function objectSpellEmitter(input: {

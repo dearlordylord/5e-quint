@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV69B hellish_rebuke
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
@@ -24,6 +23,8 @@ import {
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
+  battleProcedureExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
@@ -44,8 +45,9 @@ import {
   type BattleHole,
   type BattleInterruptCheckpoint,
   type BattleInterruptProcedureChoice,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -84,7 +86,11 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
     }
-    const choice = requireHellishRebukeChoice(awaitingReaction, spellCasterId);
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      state,
+    );
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(choice.initialHoles, "rolledDice");
     expect(save).toMatchObject({ ability: "dex" });
@@ -148,7 +154,11 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
     }
-    const choice = requireHellishRebukeChoice(awaitingReaction, spellCasterId);
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      state,
+    );
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(choice.initialHoles, "rolledDice");
 
@@ -255,10 +265,14 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
     }
-    const choice = requireHellishRebukeChoice(awaitingReaction, spellCasterId);
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      state,
+    );
 
     const stale = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: choice.subject,
       fills: [],
     });
@@ -296,11 +310,16 @@ describe("Hellish Rebuke Reaction spell", () => {
   });
 
   test("is not offered when the damaged caster has no Reaction available", () => {
-    const state = withCombatant(
-      battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId)),
-      spellCasterId,
-      (caster) => ({ ...caster, reactionAvailable: false }),
+    const session = battleWithHellishRebuke(
+      srdSpellRecord(hellishRebukeUnitId),
     );
+    const state = {
+      ...session,
+      state: withCombatant(session.state, spellCasterId, (caster) => ({
+        ...caster,
+        reactionAvailable: false,
+      })),
+    };
     const result = resolveUnarmedStrikeAgainstCaster({
       state,
       includeHellishRebukeTriggerFact: true,
@@ -371,7 +390,7 @@ describe("Hellish Rebuke Reaction spell", () => {
         )
           return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          awaitingReaction.state,
+          { ...state, state: awaitingReaction.state },
           candidate.reactorId,
           candidate.subject.procedureRef,
         );
@@ -392,7 +411,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        awaitingReaction.state,
+        { ...state, state: awaitingReaction.state },
         choice.reactorId,
         choice.subject.procedureRef,
       ),
@@ -425,7 +444,11 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected initial Hellish Rebuke Reaction window.");
     }
-    const choice = requireHellishRebukeChoice(awaitingReaction, spellCasterId);
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      state,
+    );
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(choice.initialHoles, "rolledDice");
     const afterHellishRebukeDamage = resolveBattleInterrupt({
@@ -455,7 +478,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (afterHellishRebukeDamage.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke damage Reaction window.");
     }
-    expectHellishRebukeChoice(afterHellishRebukeDamage, damagerId);
+    expectHellishRebukeChoice(afterHellishRebukeDamage, damagerId, state);
 
     const resumed = resolveBattleInterrupt({
       state: afterHellishRebukeDamage.state,
@@ -492,7 +515,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       srdSpellRecord(hellishRebukeUnitId),
     );
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: {
         tag: "actionSpell",
         actorId: spellCasterId,
@@ -529,8 +552,8 @@ describe("Hellish Rebuke Reaction spell", () => {
       },
     });
     const targetAllocationResult = resolveBattleSubject({
-      state,
-      subject: magicMissileSubject(),
+      state: state.state,
+      subject: magicMissileSubject(state),
       fills: [],
     });
     if (targetAllocationResult.tag !== "needsHoles") {
@@ -541,19 +564,19 @@ describe("Hellish Rebuke Reaction spell", () => {
       "spellTargetAllocation",
     );
     const damageResult = resolveBattleSubject({
-      state,
-      subject: magicMissileSubject(),
-      fills: [magicMissileTargetAllocationFill(targetAllocation)],
+      state: state.state,
+      subject: magicMissileSubject(state),
+      fills: [magicMissileTargetAllocationFill(state.state, targetAllocation)],
     });
     if (damageResult.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage hole.");
     }
     const damage = requireHole(damageResult.holes, "rolledDice");
     const result = resolveBattleSubject({
-      state,
-      subject: magicMissileSubject(),
+      state: state.state,
+      subject: magicMissileSubject(state),
       fills: [
-        magicMissileTargetAllocationFill(targetAllocation),
+        magicMissileTargetAllocationFill(state.state, targetAllocation),
         damageRollFillWithGroups(damage, [[1, 1, 1]]),
       ],
     });
@@ -564,7 +587,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (result.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage to offer Hellish Rebuke.");
     }
-    expectHellishRebukeChoice(result, spellCasterId);
+    expectHellishRebukeChoice(result, spellCasterId, state);
   });
 });
 
@@ -588,7 +611,7 @@ function battleWithHellishRebuke(
       { readonly kind: "character" }
     >["spellcasting"];
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("hellish-rebuke-reaction-spell"),
     combatants: [
@@ -627,7 +650,9 @@ function battleWithHellishRebuke(
   return result.right;
 }
 
-function battleWithHellishRebukeOnCasterTurn(spell: SpellRecord): BattleState {
+function battleWithHellishRebukeOnCasterTurn(
+  spell: SpellRecord,
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("hellish-rebuke-direct-spell-lane"),
     combatants: [
@@ -709,7 +734,7 @@ function characterCreature(input: {
 }
 
 function resolveUnarmedStrikeAgainstCaster(input: {
-  readonly state: BattleState;
+  readonly state: BattleRuntimeSession;
   readonly includeHellishRebukeTriggerFact: boolean;
   readonly hellishRebukeFactRangeFeet?:
     | ReturnType<typeof movementFeet>
@@ -728,6 +753,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
   }
   const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
   const targetFill = attackTargetFill({
+    state: input.state.state,
     hole: targetHole,
     includeHellishRebukeTriggerFact: input.includeHellishRebukeTriggerFact,
     hellishRebukeFactRangeFeet: input.hellishRebukeFactRangeFeet,
@@ -735,7 +761,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
       input.includeReciprocalHellishRebukeTriggerFact === true,
   });
   const awaitingAttackRoll = resolveBattleSubject({
-    state: input.state,
+    state: input.state.state,
     subject: attackAct.subject,
     fills: [targetFill],
   });
@@ -744,7 +770,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
   }
   const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
   return resolveBattleSubject({
-    state: input.state,
+    state: input.state.state,
     subject: attackAct.subject,
     fills: [
       targetFill,
@@ -758,6 +784,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
 }
 
 function attackTargetFill(input: {
+  readonly state: BattleState;
   readonly hole: Extract<BattleHole, { readonly kind: "targetChoice" }>;
   readonly includeHellishRebukeTriggerFact: boolean;
   readonly hellishRebukeFactRangeFeet?:
@@ -785,8 +812,9 @@ function attackTargetFill(input: {
               kind: "reactionSpellDamagerVisibleWithinRange" as const,
               reactorId: spellCasterId,
               damageSourceId: damagerId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(hellishRebukeUnitId),
+              sourceProcedureRef: hellishRebukeProcedureRef(
+                input.state,
+                spellCasterId,
               ),
               rangeFeet: input.hellishRebukeFactRangeFeet ?? movementFeet(60),
             },
@@ -798,8 +826,9 @@ function attackTargetFill(input: {
               kind: "reactionSpellDamagerVisibleWithinRange" as const,
               reactorId: damagerId,
               damageSourceId: spellCasterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(hellishRebukeUnitId),
+              sourceProcedureRef: hellishRebukeProcedureRef(
+                input.state,
+                damagerId,
               ),
               rangeFeet: movementFeet(60),
             },
@@ -842,6 +871,7 @@ function expectHellishRebukeChoice(
     { readonly tag: "needsHoles" }
   >,
   reactorId: CombatantId,
+  session: BattleRuntimeSession,
 ): void {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
     (candidate) =>
@@ -853,7 +883,7 @@ function expectHellishRebukeChoice(
   }
   expect(
     characterSpellInvocationRefForProcedureRefForTest(
-      result.state,
+      { ...session, state: result.state },
       choice.reactorId,
       choice.subject.procedureRef,
     ),
@@ -869,6 +899,7 @@ function requireHellishRebukeChoice(
     { readonly tag: "needsHoles" }
   >,
   reactorId: CombatantId,
+  session: BattleRuntimeSession,
 ): Extract<
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
@@ -886,7 +917,7 @@ function requireHellishRebukeChoice(
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        result.state,
+        { ...session, state: result.state },
         candidate.reactorId,
         candidate.subject.procedureRef,
       );
@@ -904,20 +935,21 @@ function requireHellishRebukeChoice(
   return choice;
 }
 
-function magicMissileSubject(): BattleSubject {
+function magicMissileSubject(session: BattleRuntimeSession): BattleSubject {
   return {
     tag: "actionSpell",
     actorId: damagerId,
-    invocation: spellSlotInvocationRef(
-      magicMissileUnitId,
-      1,
-      "repeatedDamageAllocation",
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      damagerId,
+      spellSlotInvocationRef(magicMissileUnitId, 1, "repeatedDamageAllocation"),
     ),
     mode: { tag: "cast" },
   };
 }
 
 function magicMissileTargetAllocationFill(
+  state: BattleState,
   hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
 ): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
   return {
@@ -929,21 +961,50 @@ function magicMissileTargetAllocationFill(
         kind: "spellTarget",
         casterId: damagerId,
         targetId: spellCasterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(magicMissileUnitId),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
       },
       {
         kind: "reactionSpellDamagerVisibleWithinRange",
         reactorId: spellCasterId,
         damageSourceId: damagerId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hellishRebukeUnitId),
-        ),
+        sourceProcedureRef: hellishRebukeProcedureRef(state, spellCasterId),
         rangeFeet: movementFeet(60),
       },
     ],
   };
+}
+
+function hellishRebukeProcedureRef(state: BattleState, reactorId: CombatantId) {
+  const slotLevel = reactorId === spellCasterId ? 2 : 1;
+  const reactor = state.combatants.get(reactorId);
+  const slot =
+    reactor?.origin.kind === "character"
+      ? reactor.origin.spellcasting?.spellSlots.find(
+          (candidate) => candidate.spellLevel === slotLevel,
+        )
+      : undefined;
+  if (slot === undefined || slot.expended >= slot.count) {
+    return battleProcedureExecutionRefForTest(
+      "synthetic-unavailable-reaction-procedure",
+    );
+  }
+  const binding =
+    reactor?.origin.kind === "character"
+      ? reactor.origin.execution.procedureBindings.find(
+          (candidate) =>
+            candidate.procedure.kind === "spellInvocation" &&
+            candidate.procedure.execution.procedure === "saveGatedDamage" &&
+            candidate.procedure.execution.resource.tag === "spellSlot" &&
+            candidate.procedure.execution.resource.slotLevel === slotLevel,
+        )
+      : undefined;
+  return (
+    binding?.procedureRef ??
+    battleProcedureExecutionRefForTest(
+      "synthetic-unavailable-reaction-procedure",
+    )
+  );
 }
 
 function interruptDecisionFill(

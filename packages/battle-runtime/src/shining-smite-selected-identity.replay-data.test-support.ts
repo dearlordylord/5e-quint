@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { expect } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
@@ -54,7 +53,7 @@ export const shiningSmiteSelectedIdentityReplay = {
             });
             const subject = weaponAttackSubject(state, "Longsword");
             const target = requireResultHole(
-              resolveBattleSubject({ state, subject, fills: [] }),
+              resolveBattleSubject({ state: state.state, subject, fills: [] }),
               "targetChoice",
             );
             const targetFill = attackTargetFill(
@@ -64,7 +63,11 @@ export const shiningSmiteSelectedIdentityReplay = {
               "Longsword",
             );
             const roll = requireResultHole(
-              resolveBattleSubject({ state, subject, fills: [targetFill] }),
+              resolveBattleSubject({
+                state: state.state,
+                subject,
+                fills: [targetFill],
+              }),
               "attackRoll",
             );
             const rollFill = attackRollFill(roll, {
@@ -72,7 +75,7 @@ export const shiningSmiteSelectedIdentityReplay = {
               naturalD20: 10,
             });
             const awaitingReaction = resolveBattleSubject({
-              state,
+              state: state.state,
               subject,
               fills: [targetFill, rollFill],
             });
@@ -87,7 +90,10 @@ export const shiningSmiteSelectedIdentityReplay = {
                   }
                   return (
                     characterSpellInvocationRefForProcedureRefForTest(
-                      awaitingReaction.state,
+                      {
+                        state: awaitingReaction.state,
+                        context: state.context,
+                      },
                       candidate.reactorId,
                       candidate.subject.procedureRef,
                     ).spellId === shiningSmiteUnitId
@@ -102,11 +108,12 @@ export const shiningSmiteSelectedIdentityReplay = {
                 "Expected selected Shining Smite after-hit choice.",
               );
             }
+            const selectedProcedureRef = choice.subject.procedureRef;
             expect(
               characterSpellInvocationRefForProcedureRefForTest(
-                awaitingReaction.state,
+                { state: awaitingReaction.state, context: state.context },
                 choice.reactorId,
-                choice.subject.procedureRef,
+                selectedProcedureRef,
               ),
             ).toEqual(
               spellSlotInvocationRef(
@@ -125,7 +132,7 @@ export const shiningSmiteSelectedIdentityReplay = {
                   responderId: spellCasterId,
                   choice: {
                     kind: "castAttackHitBonusActionSpell",
-                    procedureRef: choice.subject.procedureRef,
+                    procedureRef: selectedProcedureRef,
                     fills: [],
                   },
                 },
@@ -141,9 +148,7 @@ export const shiningSmiteSelectedIdentityReplay = {
               expect.objectContaining({
                 spellWeaponDamageRiders: [
                   expect.objectContaining({
-                    sourceProcedureRef: battleProcedureExecutionRefForTest(
-                      String(shiningSmiteUnitId),
-                    ),
+                    sourceProcedureRef: selectedProcedureRef,
                     damage: {
                       expr: { dice: 3, dieSize: 6 },
                       damageType: "radiant",
@@ -169,9 +174,7 @@ export const shiningSmiteSelectedIdentityReplay = {
             ).toEqual([
               {
                 kind: "spellLightEmitter",
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(shiningSmiteUnitId),
-                ),
+                sourceProcedureRef: selectedProcedureRef,
                 sourceCombatantId: spellCasterId,
                 attachment: { kind: "combatant", combatantId: spellTargetId },
                 emission: {

@@ -7,7 +7,10 @@
 // grants its active positive effects and carries the spell-end lethargy rider
 // until Concentration or duration cleanup promotes it.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  ElapsedTimeTicksSchema,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
 import type {
@@ -21,7 +24,6 @@ import { Either, Schema } from "effect";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -33,7 +35,7 @@ import {
   type BattleState,
   type HastePositiveSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -48,7 +50,6 @@ import {
 } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -59,7 +60,7 @@ import type {
   SpellProcedureProfileResolveInput,
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 
 const HASTE_POSITIVE_ACTIONS = [
   "attack",
@@ -68,6 +69,29 @@ const HASTE_POSITIVE_ACTIONS = [
   "hide",
   "utilize",
 ] as const satisfies ReadonlyArray<StandardActionKind>;
+
+const HastePositiveExpirationSchema = Schema.Struct({
+  kind: Schema.Literal("concentration"),
+  combatantId: CombatantId,
+  durationTicks: ElapsedTimeTicksSchema,
+});
+
+const HastePositiveActionRestrictionSchema = Schema.Struct({
+  kind: Schema.Literal("allow_only"),
+  actions: Schema.Tuple(
+    Schema.Struct({
+      action: Schema.Literal("attack"),
+      attackLimit: Schema.Struct({
+        kind: Schema.Literal("attack_count"),
+        count: Schema.Literal(1),
+      }),
+    }),
+    Schema.Struct({ action: Schema.Literal("dash") }),
+    Schema.Struct({ action: Schema.Literal("disengage") }),
+    Schema.Struct({ action: Schema.Literal("hide") }),
+    Schema.Struct({ action: Schema.Literal("utilize") }),
+  ),
+});
 
 type HastePositiveTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
@@ -209,7 +233,7 @@ function hastePositiveSpellProjection(
         kind: "spellArmorClassBonus",
         sourceCombatantId: actorId,
         bonus: armorClassBonus.delta.amount,
-        negatedSpellIds: [],
+        negatesRepeatedDamageAllocation: false,
         expiresAt,
       },
       dexteritySavingThrowAdvantage: {
@@ -222,7 +246,19 @@ function hastePositiveSpellProjection(
       grantedActionResource: {
         kind: "spellGrantedActionResource",
         sourceCombatantId: actorId,
-        restriction: extraAction.restriction,
+        restriction: {
+          kind: "allow_only",
+          actions: [
+            {
+              action: "attack",
+              attackLimit: { kind: "attack_count", count: 1 },
+            },
+            { action: "dash" },
+            { action: "disengage" },
+            { action: "hide" },
+            { action: "utilize" },
+          ],
+        },
         expiresAt,
       },
       spellEndTargetState: {
@@ -296,7 +332,6 @@ function discoverHastePositiveCastAct(
             tag: "actionSpell" as const,
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: hastePositiveInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
           initialHoles: [targetHole],
@@ -304,22 +339,6 @@ function discoverHastePositiveCastAct(
       ];
 }
 
-function hastePositiveInvocationRef(
-  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "hastePositive",
-  };
-}
-
-function hastePositiveCastSummary(
-  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveHastePositive(
   input: SpellProcedureProfileResolveInput<
@@ -576,12 +595,12 @@ function isHastePositiveActiveEffect(
 }
 
 const HastePositiveInvocationSchema =
-  spellProcedureInvocationSchema<HastePositiveSpellInvocation>(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("hastePositive"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
@@ -590,11 +609,39 @@ const HastePositiveInvocationSchema =
         requiredTargetDisposition: Schema.Literal("willing"),
       }),
       activeEffects: Schema.Struct({
-        speedRatio: BattleRuntimeObjectSchema,
-        armorClassBonus: BattleRuntimeObjectSchema,
-        dexteritySavingThrowAdvantage: BattleRuntimeObjectSchema,
-        grantedActionResource: BattleRuntimeObjectSchema,
-        spellEndTargetState: BattleRuntimeObjectSchema,
+        speedRatio: Schema.Struct({
+          kind: Schema.Literal("speedRatio"),
+          sourceCombatantId: CombatantId,
+          numerator: Schema.Number,
+          denominator: Schema.Number,
+          expiresAt: HastePositiveExpirationSchema,
+        }),
+        armorClassBonus: Schema.Struct({
+          kind: Schema.Literal("spellArmorClassBonus"),
+          sourceCombatantId: CombatantId,
+          bonus: Schema.Number,
+          negatesRepeatedDamageAllocation: Schema.Literal(false),
+          expiresAt: HastePositiveExpirationSchema,
+        }),
+        dexteritySavingThrowAdvantage: Schema.Struct({
+          kind: Schema.Literal("savingThrowRollMode"),
+          sourceCombatantId: CombatantId,
+          ability: Schema.Literal("dex"),
+          mode: Schema.Literal("advantage"),
+          expiresAt: HastePositiveExpirationSchema,
+        }),
+        grantedActionResource: Schema.Struct({
+          kind: Schema.Literal("spellGrantedActionResource"),
+          sourceCombatantId: CombatantId,
+          restriction: HastePositiveActionRestrictionSchema,
+          expiresAt: HastePositiveExpirationSchema,
+        }),
+        spellEndTargetState: Schema.Struct({
+          kind: Schema.Literal("spellEndTargetState"),
+          sourceCombatantId: CombatantId,
+          condition: Schema.Literal("incapacitated"),
+          expiresAt: HastePositiveExpirationSchema,
+        }),
       }),
       rangeFeet: MovementFeet,
     }),
@@ -602,15 +649,12 @@ const HastePositiveInvocationSchema =
 
 export const hastePositiveProfile = {
   procedure: "hastePositive",
-  invocationSchema: HastePositiveInvocationSchema,
+  executionSchema: HastePositiveInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitHastePositive,
   discoverCastAct: discoverHastePositiveCastAct,
-  castSummary: hastePositiveCastSummary,
-  invocationRef: hastePositiveInvocationRef,
   resolve: resolveHastePositive,
 } satisfies SpellProcedureProfile<
   "hastePositive",

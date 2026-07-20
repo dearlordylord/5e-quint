@@ -41,7 +41,7 @@ import {
   spellSlotInvocationRef,
   spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
-import { discoverBattleActs } from "./index.ts";
+import { discoverBattleActCandidates, discoverBattleActs } from "./index.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -64,10 +64,14 @@ function castSleetStorm() {
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 3, count: 1 }],
   });
-  const act = spellAct({ state, spellId: sleetStormUnitId, slotLevel: 3 });
+  const act = spellAct({
+    session: state,
+    spellId: sleetStormUnitId,
+    slotLevel: 3,
+  });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [sleetStormAreaFill(area)],
   });
@@ -90,7 +94,7 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
     ),
     sourceCombatantId: spellTargetId,
     bonus: 1,
-    negatedSpellIds: [],
+    negatesRepeatedDamageAllocation: false,
     expiresAt: {
       kind: "concentration",
       combatantId: spellTargetId,
@@ -184,12 +188,12 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       ),
     ).toBe(false);
     const thirdLevelAct = spellAct({
-      state,
+      session: state,
       spellId: sleetStormUnitId,
       slotLevel: 3,
     });
     const fourthLevelAct = spellAct({
-      state,
+      session: state,
       spellId: sleetStormUnitId,
       slotLevel: 4,
     });
@@ -210,7 +214,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     const area = requireHole(thirdLevelAct.initialHoles, "spellAreaChoice");
     expect(area).toEqual(
       expect.objectContaining({
-        label: "Sleet Storm area",
+        label: "Spell area",
         area: {
           kind: "pointOriginCylinder",
           radiusFeet: movementFeet(20),
@@ -377,7 +381,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
   test("save commands require a caller-supplied area-membership trigger fact", () => {
     const { targetTurn } = castSleetStorm();
     expect(
-      discoverBattleActs(targetTurn).some(
+      discoverBattleActCandidates(targetTurn).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
           act.subject.command === "sleetStormAreaHazardSave",
@@ -437,7 +441,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       ],
     );
     expect(
-      discoverBattleActs(failed.state).some(
+      discoverBattleActCandidates(failed.state).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
           act.subject.command === "sleetStormAreaHazardSave",
@@ -558,7 +562,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       }),
     ]);
     expect(
-      discoverBattleActs(succeeded.state).some(
+      discoverBattleActCandidates(succeeded.state).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
           act.subject.command === "sleetStormAreaHazardSave",

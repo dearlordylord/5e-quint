@@ -17,6 +17,7 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
   type BattleSubject,
+  type BattleRuntimeSession,
   type BattleState,
 } from "@dnd/battle-runtime";
 import {
@@ -114,7 +115,7 @@ function testBattleCreatureStateWithoutKnockOut(
 
 function startBattleFromCharacterBuildAndStatBlockRight(
   input: Parameters<typeof startBattleFromCharacterBuildAndStatBlock>[0],
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattleFromCharacterBuildAndStatBlock(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
@@ -307,7 +308,7 @@ describe("MCP server route", () => {
 
   test("starts battle from Character Build at the MCP composition boundary", () => {
     const root = createMcpCompositionRoot();
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root"),
       character: {
         combatantId: fighterId,
@@ -326,7 +327,7 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    root.sessionStore.battleState = state;
+    root.sessionStore.battleSession = { state, context };
     root.sessionStore.pendingBattleFills = null;
 
     expect(snapshotBattle(state)).toMatchObject({
@@ -355,7 +356,9 @@ describe("MCP server route", () => {
       currentActorId: fighterId,
     });
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
-    expect(discoverBattleActs(state).map((act) => act.summary)).toEqual(
+    expect(
+      discoverBattleActs({ state, context }).map((act) => act.summary),
+    ).toEqual(
       expect.arrayContaining([
         "Take the Attack action with Longsword.",
         "Take the Attack action with Unarmed Strike.",
@@ -388,7 +391,7 @@ describe("MCP server route", () => {
       },
     };
 
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-multiclass"),
       character: {
         combatantId: fighterId,
@@ -419,7 +422,7 @@ describe("MCP server route", () => {
   test("derives base Unarmed Strike when no weapon is selected", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-unarmed"),
       character: {
         combatantId: fighterId,
@@ -467,9 +470,9 @@ describe("MCP server route", () => {
         damageAbilityModifier: 3,
       },
     });
-    expect(discoverBattleActs(state).map((act) => act.summary)).toContain(
-      "Take the Attack action with Unarmed Strike.",
-    );
+    expect(
+      discoverBattleActs({ state, context }).map((act) => act.summary),
+    ).toContain("Take the Attack action with Unarmed Strike.");
   });
 
   test("admits only supported authored critical-range Unit hooks at the battle support boundary", () => {
@@ -488,7 +491,7 @@ describe("MCP server route", () => {
       supportedLibrary,
       improvedCriticalUnit.acquiredAtLevel,
     );
-    const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-critical-range"),
       character: {
         combatantId: fighterId,
@@ -508,7 +511,7 @@ describe("MCP server route", () => {
     });
 
     expect(
-      characterUnitRef(supportedState, fighterId, "fighter_improved_critical"),
+      characterUnitRef(context, fighterId, "fighter_improved_critical"),
     ).toMatchObject({
       supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
     });
@@ -563,7 +566,7 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary);
     const supportedLibrary = rogueBattleUnitLibrary(root);
-    const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-attack-damage-rider"),
       character: {
         combatantId: fighterId,
@@ -583,7 +586,7 @@ describe("MCP server route", () => {
     });
 
     expect(
-      characterUnitRef(supportedState, fighterId, "rogue_sneak_attack"),
+      characterUnitRef(context, fighterId, "rogue_sneak_attack"),
     ).toMatchObject({
       supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
     });
@@ -607,7 +610,7 @@ describe("MCP server route", () => {
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 2,
     });
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-cunning-action"),
       character: {
         combatantId: fighterId,
@@ -627,7 +630,7 @@ describe("MCP server route", () => {
     });
 
     expect(
-      characterUnitRef(state, fighterId, "rogue_cunning_action"),
+      characterUnitRef(context, fighterId, "rogue_cunning_action"),
     ).toMatchObject({
       supportProfiles: [
         {
@@ -640,31 +643,32 @@ describe("MCP server route", () => {
         },
       ],
     });
-    expect(characterUnitRef(state, fighterId, "class_rogue")).toMatchObject({
+    expect(characterUnitRef(context, fighterId, "class_rogue")).toMatchObject({
       supportProfiles: [],
     });
   });
 
   test("does not infer Cunning Action support from Rogue class name or level", () => {
     const root = createMcpCompositionRoot();
-    const rogueOneState = startBattleFromCharacterBuildAndStatBlockRight({
-      battleId: battleId("battle-rogue-one-no-cunning-action"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("rogue-character"),
-        displayName: "Orc Soldier Rogue",
-        build: rogueCharacterBuild(root.unitLibrary),
-        initiative: initiativeScore(12),
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: rogueBattleUnitLibrary(root),
-    });
+    const { context: rogueOneContext } =
+      startBattleFromCharacterBuildAndStatBlockRight({
+        battleId: battleId("battle-rogue-one-no-cunning-action"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("rogue-character"),
+          displayName: "Orc Soldier Rogue",
+          build: rogueCharacterBuild(root.unitLibrary),
+          initiative: initiativeScore(12),
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(11),
+        },
+        unitLibrary: rogueBattleUnitLibrary(root),
+      });
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 2,
     });
@@ -676,7 +680,7 @@ describe("MCP server route", () => {
           feature.unitId !== "rogue_cunning_action",
       ),
     };
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-no-inferred-cunning-action"),
       character: {
         combatantId: fighterId,
@@ -696,11 +700,11 @@ describe("MCP server route", () => {
     });
 
     expect(
-      characterUnitRef(rogueOneState, fighterId, "class_rogue"),
+      characterUnitRef(rogueOneContext, fighterId, "class_rogue"),
     ).toMatchObject({
       supportProfiles: [],
     });
-    expect(characterUnitRef(state, fighterId, "class_rogue")).toMatchObject({
+    expect(characterUnitRef(context, fighterId, "class_rogue")).toMatchObject({
       supportProfiles: [],
     });
   });
@@ -710,7 +714,7 @@ describe("MCP server route", () => {
     const evasionBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 7,
     });
-    const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-save-damage-replacement"),
       character: {
         combatantId: fighterId,
@@ -729,11 +733,11 @@ describe("MCP server route", () => {
       unitLibrary: rogueBattleUnitLibrary(root),
     });
 
-    expect(
-      characterUnitRef(supportedState, fighterId, "rogue_evasion"),
-    ).toMatchObject({
-      supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
-    });
+    expect(characterUnitRef(context, fighterId, "rogue_evasion")).toMatchObject(
+      {
+        supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
+      },
+    );
 
     const evasionUnit = root.unitLibrary.requireUnit("rogue_evasion");
     if (
@@ -782,7 +786,7 @@ describe("MCP server route", () => {
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 5,
     });
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-reaction-modifier"),
       character: {
         combatantId: fighterId,
@@ -802,7 +806,7 @@ describe("MCP server route", () => {
     });
 
     expect(
-      characterUnitRef(state, fighterId, "rogue_uncanny_dodge"),
+      characterUnitRef(context, fighterId, "rogue_uncanny_dodge"),
     ).toMatchObject({
       supportProfiles: [REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE],
     });
@@ -898,7 +902,7 @@ describe("MCP server route", () => {
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
     const root = createMcpCompositionRoot();
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-fighter-two"),
       character: {
         combatantId: fighterId,
@@ -917,13 +921,18 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+    expect(discoverBattleActs({ state, context })).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          tag: "unitFeature",
-          actorId: fighterId,
-          unitId: "fighter_action_surge",
-          procedureRef: expect.any(String),
+          presentation: expect.objectContaining({
+            kind: "unit",
+            unitId: "fighter_action_surge",
+          }),
+          subject: expect.objectContaining({
+            tag: "unitFeature",
+            actorId: fighterId,
+            procedureRef: expect.any(String),
+          }),
         }),
       ]),
     );
@@ -931,27 +940,32 @@ describe("MCP server route", () => {
 
   test("discovers Stat Block Multiattack and Bonus Action subjects through battle runtime", () => {
     const root = createMcpCompositionRoot();
-    const fighterTurn = startBattleFromCharacterBuildAndStatBlockRight({
-      battleId: battleId("battle-root-stat-block-procedures"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Orc Soldier Fighter",
-        build: fighterCharacterBuild(root.unitLibrary),
-        initiative: initiativeScore(12),
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: goblinWarriorMultiattackStatBlock(root),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: root.unitLibrary,
-    });
+    const { state: fighterTurn, context } =
+      startBattleFromCharacterBuildAndStatBlockRight({
+        battleId: battleId("battle-root-stat-block-procedures"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("fighter-character"),
+          displayName: "Orc Soldier Fighter",
+          build: fighterCharacterBuild(root.unitLibrary),
+          initiative: initiativeScore(12),
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: goblinWarriorMultiattackStatBlock(root),
+          initiative: initiativeScore(11),
+        },
+        unitLibrary: root.unitLibrary,
+      });
     const goblinTurn = resolvedState(
       endTurn({ state: fighterTurn, actorId: fighterId }),
     );
 
-    expect(discoverBattleActs(goblinTurn).map((act) => act.subject)).toEqual(
+    expect(
+      discoverBattleActs({ state: goblinTurn, context }).map(
+        (act) => act.subject,
+      ),
+    ).toEqual(
       expect.arrayContaining([
         {
           tag: "action",
@@ -972,7 +986,7 @@ describe("MCP server route", () => {
 
   test("starts battle from a CharacterBuild with two Light weapons for the off-hand runtime path", () => {
     const root = createMcpCompositionRoot();
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-off-hand"),
       character: {
         combatantId: fighterId,
@@ -991,9 +1005,9 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
-      "Make the Light property Bonus Action attack with Dagger.",
-    );
+    expect(
+      discoverBattleActs({ state, context }).map((act) => act.summary),
+    ).not.toContain("Make the Light property Bonus Action attack with Dagger.");
   });
 
   test("registers agent-facing content discovery tool names", () => {
@@ -1086,7 +1100,7 @@ describe("MCP server route", () => {
     expect(workflow).toMatchObject({
       resultPaths: {
         creationHoles: "holes",
-        battleActs: "snapshot.acts",
+        battleActs: "availableActs",
         followUpBattleHoles: "result.holes",
       },
       acceptedInputs: {
@@ -1152,7 +1166,7 @@ describe("MCP server route", () => {
     expect(
       readPayload(handleToolCall(root, "describe_mcp_workflow", undefined)),
     ).toMatchObject({
-      resultPaths: { battleActs: "snapshot.acts" },
+      resultPaths: { battleActs: "availableActs" },
     });
 
     expect(
@@ -1235,9 +1249,9 @@ describe("MCP server route", () => {
     });
     const started = readPayload(startResponse);
 
-    expect(root.sessionStore.battleState).not.toBeNull();
+    expect(root.sessionStore.battleSession).not.toBeNull();
     expect(
-      root.sessionStore.battleState?.combatants.get(goblinId),
+      root.sessionStore.battleSession?.state.combatants.get(goblinId),
     ).toMatchObject({
       displayName: "Goblin Warrior",
       initiative: 7,
@@ -1309,18 +1323,18 @@ describe("MCP server route", () => {
       ],
     });
     expect(
-      read.snapshot.acts.map((act: { label: string }) => act.label),
+      read.availableActs.map((act: { label: string }) => act.label),
     ).toEqual([
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
-      "Adrenaline Rush",
+      "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
       "End Turn",
     ]);
     expect(
-      read.snapshot.acts
+      read.availableActs
         .filter((act: { label: string }) => act.label === "Ready")
         .map(
           (act: { subject: { readonly readyTrigger?: string } }) =>
@@ -1393,7 +1407,8 @@ describe("MCP server route", () => {
       ]),
     );
     expect(
-      root.sessionStore.battleState?.currentTurnResources.actionResources,
+      root.sessionStore.battleSession?.state.currentTurnResources
+        .actionResources,
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1407,10 +1422,10 @@ describe("MCP server route", () => {
       handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(
-      continuation.snapshot.acts.map((act: { label: string }) => act.label),
+      continuation.availableActs.map((act: { label: string }) => act.label),
     ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
     expect(
-      continuation.snapshot.acts.map(
+      continuation.availableActs.map(
         (act: { subject: unknown }) => act.subject,
       ),
     ).toEqual([
@@ -1570,7 +1585,7 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    const firstBattleState = root.sessionStore.battleState;
+    const firstBattleState = root.sessionStore.battleSession;
     expect(firstBattleState).not.toBeNull();
 
     const rejected = readPayload(
@@ -1600,7 +1615,7 @@ describe("MCP server route", () => {
         battleId: "battle:mcp-active-battle-first",
       },
     });
-    expect(root.sessionStore.battleState).toBe(firstBattleState);
+    expect(root.sessionStore.battleSession).toBe(firstBattleState);
     expect(
       root.sessionStore.characters.get(testCharacterId(firstDraftId)),
     ).toMatchObject({
@@ -1649,9 +1664,9 @@ describe("MCP server route", () => {
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(discovered.snapshot).toMatchObject({
-      currentActorId: "fighter",
-      acts: expect.arrayContaining([
+    expect(discovered.snapshot).toMatchObject({ currentActorId: "fighter" });
+    expect(discovered.availableActs).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
           summary: "Take the Attack action with Longsword.",
@@ -1671,10 +1686,14 @@ describe("MCP server route", () => {
         }),
         expect.objectContaining({
           label: "Second Wind",
+          presentation: expect.objectContaining({
+            kind: "unit",
+            unitId: "fighter_second_wind",
+          }),
           subject: expect.objectContaining({
             tag: "unitFeature",
             actorId: "fighter",
-            unitId: "fighter_second_wind",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({
@@ -1694,7 +1713,7 @@ describe("MCP server route", () => {
           }),
         }),
       ]),
-    });
+    );
     const fighterAttackSubject = battleAttackSubjectForName(
       root,
       "fighter",
@@ -1780,8 +1799,8 @@ describe("MCP server route", () => {
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
     expect(
-      afterDamage.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Adrenaline Rush", "Second Wind", "Move", "End Turn"]);
+      afterDamage.availableActs.map((act: { label: string }) => act.label),
+    ).toEqual(["Adrenaline Rush: Dash", "Second Wind", "Move", "End Turn"]);
     expect(root.sessionStore.pendingBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
@@ -1795,12 +1814,14 @@ describe("MCP server route", () => {
         { combatantId: "goblin", hp: 2 },
       ],
     });
-    expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(2);
+    expect(
+      root.sessionStore.battleSession?.state.combatants.get(goblinId)?.hp,
+    ).toBe(2);
 
     const goblinActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(goblinActs.snapshot.acts).toEqual(
+    expect(goblinActs.availableActs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -1825,7 +1846,7 @@ describe("MCP server route", () => {
       ]),
     );
     expect(
-      goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
+      goblinActs.availableActs.map((act: { label: string }) => act.label),
     ).toEqual([
       "Attack",
       "Attack",
@@ -1909,7 +1930,7 @@ describe("MCP server route", () => {
 
   test("replays long-range attack target facts into a Disadvantage attack-roll hole", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState =
+    root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-long-range-attack"),
         character: {
@@ -1982,7 +2003,7 @@ describe("MCP server route", () => {
 
   test("rejects contradictory long-range and normal-range attack target facts", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState =
+    root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-contradictory-range-attack"),
         character: {
@@ -2050,7 +2071,7 @@ describe("MCP server route", () => {
 
   test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState =
+    root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-sneak-attack-rider"),
         character: {
@@ -2070,19 +2091,19 @@ describe("MCP server route", () => {
         unitLibrary: rogueBattleUnitLibrary(root),
       });
     const allyId = combatantId("sneak-attack-ally");
-    const battleState = root.sessionStore.battleState;
-    const rogue = battleState.combatants.get(fighterId);
+    const battleState = root.sessionStore.battleSession;
+    const rogue = battleState.state.combatants.get(fighterId);
     if (rogue === undefined) {
       throw new Error("Expected rogue combatant in MCP Sneak Attack fixture.");
     }
-    const combatants = new Map(battleState.combatants).set(allyId, {
+    const combatants = new Map(battleState.state.combatants).set(allyId, {
       ...rogue,
       combatantId: allyId,
       displayName: "Sneak Attack Ally",
     });
-    root.sessionStore.battleState = {
+    root.sessionStore.battleSession = {
       ...battleState,
-      combatants,
+      state: { ...battleState.state, combatants },
     };
     root.sessionStore.pendingBattleFills = null;
 
@@ -2111,14 +2132,23 @@ describe("MCP server route", () => {
           holeId: "battle:attack:damage-result:1d4+3-piercing",
           attackDamageRiders: [
             {
-              unitId: "rogue_sneak_attack",
-              label: "Sneak Attack",
+              procedureRef: expect.any(String),
               damage: { dice: 1, dieSize: 6, damageType: "piercing" },
             },
           ],
         },
       ],
     });
+    const sneakAttackProcedureRef = afterAttackRoll.result.holes.flatMap(
+      (hole: {
+        readonly attackDamageRiders?: readonly {
+          readonly procedureRef: string;
+        }[];
+      }) => hole.attackDamageRiders ?? [],
+    )[0]?.procedureRef;
+    if (sneakAttackProcedureRef === undefined) {
+      throw new Error("Expected the mechanical Sneak Attack procedure ref.");
+    }
 
     const afterDamage = fillBattleHoleThroughTool(
       root,
@@ -2127,7 +2157,7 @@ describe("MCP server route", () => {
       {
         kind: "rolledDice",
         holeId: "battle:attack:damage-result:1d4+3-piercing",
-        selectedAttackDamageRiderUnitIds: ["rogue_sneak_attack"],
+        selectedAttackDamageRiderProcedureRefs: [sneakAttackProcedureRef],
         value: [{ results: [2] }, { results: [3] }],
       },
       afterAttackRoll.result.subject,
@@ -2141,7 +2171,7 @@ describe("MCP server route", () => {
       ]),
     );
     expect(afterDamage.snapshot.turn.attackDamageRidersUsedThisTurn).toEqual([
-      { attackerId: "fighter", unitId: "rogue_sneak_attack" },
+      { attackerId: "fighter", procedureRef: sneakAttackProcedureRef },
     ]);
     expect(afterDamage.session).toMatchObject({ transientBattleFills: null });
   });
@@ -2181,7 +2211,7 @@ describe("MCP server route", () => {
         code: "INVALID_ARGUMENTS",
       },
     });
-    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.battleSession).toBeNull();
   });
 
   test("start_battle rejects empty or over-wide character inputs", () => {
@@ -2238,7 +2268,7 @@ describe("MCP server route", () => {
         code: "INVALID_ARGUMENTS",
       },
     });
-    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.battleSession).toBeNull();
   });
 
   test("start_battle reports missing finalized character sessions before runtime start", () => {
@@ -2309,7 +2339,7 @@ describe("MCP server route", () => {
         ],
       },
     });
-    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.battleSession).toBeNull();
   });
 
   test("starts battle from multiple Stat Block combatants", () => {
@@ -2407,7 +2437,7 @@ describe("MCP server route", () => {
       ],
     });
     expect(
-      root.sessionStore.battleState?.combatants.get(
+      root.sessionStore.battleSession?.state.combatants.get(
         combatantId("wizard-familiar"),
       ),
     ).toMatchObject({
@@ -2415,9 +2445,9 @@ describe("MCP server route", () => {
       tempHp: Hp(3),
     });
     expect(
-      root.sessionStore.battleState === null
+      root.sessionStore.battleSession === null
         ? []
-        : snapshotBattle(root.sessionStore.battleState).companions,
+        : snapshotBattle(root.sessionStore.battleSession.state).companions,
     ).toMatchObject([
       {
         companionId: combatantId("wizard-familiar"),
@@ -2477,7 +2507,7 @@ describe("MCP server route", () => {
 
     const dismissalAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).snapshot.acts.find(
+    ).availableActs.find(
       (act: {
         readonly subject: { readonly tag: string; readonly action?: string };
       }) =>
@@ -2517,7 +2547,7 @@ describe("MCP server route", () => {
     readPayload(handleToolCall(root, "end_turn", { actorId: "wizard" }));
     const reappearanceAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).snapshot.acts.find(
+    ).availableActs.find(
       (act: {
         readonly subject: { readonly tag: string; readonly action?: string };
       }) =>
@@ -2618,7 +2648,7 @@ describe("MCP server route", () => {
 
     const deliveryAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).snapshot.acts.find(
+    ).availableActs.find(
       (act: {
         readonly subject: {
           readonly tag: string;
@@ -2660,7 +2690,7 @@ describe("MCP server route", () => {
       fills: [expect.objectContaining({ kind: "findFamiliarConnection" })],
     });
     expect(
-      root.sessionStore.battleState?.combatants.get(
+      root.sessionStore.battleSession?.state.combatants.get(
         combatantId("wizard-familiar"),
       )?.reactionAvailable,
     ).toBe(true);
@@ -2694,7 +2724,7 @@ describe("MCP server route", () => {
     );
     expect(afterTarget.result.tag).toBe("needsHoles");
     expect(
-      root.sessionStore.battleState?.combatants.get(
+      root.sessionStore.battleSession?.state.combatants.get(
         combatantId("wizard-familiar"),
       )?.reactionAvailable,
     ).toBe(true);
@@ -2717,7 +2747,7 @@ describe("MCP server route", () => {
     expect(afterHealingRoll.result.tag).toBe("resolved");
     expect(afterHealingRoll.session.transientBattleFills).toBeNull();
     expect(
-      root.sessionStore.battleState?.combatants.get(
+      root.sessionStore.battleSession?.state.combatants.get(
         combatantId("wizard-familiar"),
       )?.reactionAvailable,
     ).toBe(false);
@@ -2950,7 +2980,7 @@ describe("MCP server route", () => {
 
     const permanentDismissAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).snapshot.acts.find(
+    ).availableActs.find(
       (act: {
         readonly subject: { readonly tag: string; readonly action?: string };
       }) =>
@@ -3058,7 +3088,7 @@ describe("MCP server route", () => {
         characterId: "missing-wizard",
       },
     });
-    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.battleSession).toBeNull();
   });
 
   test("Character Sheet rejects invalid retained companion HP before MCP admission", () => {
@@ -3086,7 +3116,7 @@ describe("MCP server route", () => {
         message: "Retained companion current HP must be positive.",
       },
     });
-    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.battleSession).toBeNull();
   });
 
   test("battle act tools reject contradictory subjects and no-hole misuse", () => {
@@ -3228,7 +3258,7 @@ describe("MCP server route", () => {
         combatantId: "goblin",
       },
     });
-    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.battleSession).toBeNull();
   });
 
   test("creates and finalizes the supported Fighter through stored creation holes", () => {
@@ -3370,7 +3400,7 @@ describe("MCP server route", () => {
     const fighterActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(fighterActs.snapshot.acts).toEqual(
+    expect(fighterActs.availableActs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -3384,10 +3414,14 @@ describe("MCP server route", () => {
         }),
         expect.objectContaining({
           label: "Second Wind",
+          presentation: expect.objectContaining({
+            kind: "unit",
+            unitId: "fighter_second_wind",
+          }),
           subject: expect.objectContaining({
             tag: "unitFeature",
             actorId: "fighter",
-            unitId: "fighter_second_wind",
+            procedureRef: expect.any(String),
           }),
         }),
         expect.objectContaining({
@@ -3409,12 +3443,12 @@ describe("MCP server route", () => {
       ]),
     );
     expect(
-      fighterActs.snapshot.acts.map((act: { label: string }) => act.label),
+      fighterActs.availableActs.map((act: { label: string }) => act.label),
     ).toEqual([
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
-      "Adrenaline Rush",
+      "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
       "End Turn",
@@ -3430,9 +3464,9 @@ describe("MCP server route", () => {
         value: "goblin",
       },
     );
-    expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(
-      10,
-    );
+    expect(
+      root.sessionStore.battleSession?.state.combatants.get(goblinId)?.hp,
+    ).toBe(10);
     expect(root.sessionStore.pendingBattleFills).toMatchObject({
       subject: {
         actorId: "fighter",
@@ -3480,7 +3514,7 @@ describe("MCP server route", () => {
     const goblinActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(goblinActs.snapshot.acts).toEqual(
+    expect(goblinActs.availableActs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -3505,7 +3539,7 @@ describe("MCP server route", () => {
       ]),
     );
     expect(
-      goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
+      goblinActs.availableActs.map((act: { label: string }) => act.label),
     ).toEqual([
       "Attack",
       "Attack",
@@ -3568,9 +3602,9 @@ describe("MCP server route", () => {
       selectedStatBlockId: "stat_block_goblin_warrior",
       transientBattleFills: null,
     });
-    expect(root.sessionStore.battleState?.combatants.get(fighterId)?.hp).toBe(
-      5,
-    );
+    expect(
+      root.sessionStore.battleSession?.state.combatants.get(fighterId)?.hp,
+    ).toBe(5);
 
     const ended = readPayload(handleToolCall(root, "end_battle", {}));
     expect(ended).toMatchObject({
@@ -3580,7 +3614,7 @@ describe("MCP server route", () => {
         characterIds: [testCharacterId(draftId)],
       },
     });
-    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.battleSession).toBeNull();
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({
         tag: "available",
@@ -3646,7 +3680,7 @@ describe("MCP server route", () => {
 
   test("returns Shove push outcomes through MCP battle resolution output", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState =
+    root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-shove-push-outcome"),
         character: {
@@ -3667,7 +3701,7 @@ describe("MCP server route", () => {
       });
 
     const acts = readPayload(handleToolCall(root, "discover_battle_acts", {}));
-    const shove = acts.snapshot.acts.find(
+    const shove = acts.availableActs.find(
       (act: { label: string }) => act.label === "Unarmed Strike (Shove)",
     );
     expect(shove).toBeDefined();
@@ -3755,8 +3789,8 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    const battleState = root.sessionStore.battleState;
-    const fighter = battleState?.combatants.get(fighterId);
+    const battleState = root.sessionStore.battleSession;
+    const fighter = battleState?.state.combatants.get(fighterId);
     if (
       battleState === null ||
       fighter === undefined ||
@@ -3764,24 +3798,27 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleState = {
+    root.sessionStore.battleSession = {
       ...battleState,
-      combatants: new Map(battleState.combatants).set(fighterId, {
-        ...testBattleCreatureStateWithoutKnockOut(fighter, {
-          hp: Hp(0),
-          conditions: fighter.conditions,
-        }),
-        zeroHpLifecycle: {
-          ...fighter.zeroHpLifecycle,
-          deathSaves: {
-            deathSaves: { successes: 0, failures: 0 },
-            stable: true,
-            dead: false,
-            hpRegained: false,
+      state: {
+        ...battleState.state,
+        combatants: new Map(battleState.state.combatants).set(fighterId, {
+          ...testBattleCreatureStateWithoutKnockOut(fighter, {
+            hp: Hp(0),
+            conditions: fighter.conditions,
+          }),
+          zeroHpLifecycle: {
+            ...fighter.zeroHpLifecycle,
+            deathSaves: {
+              deathSaves: { successes: 0, failures: 0 },
+              stable: true,
+              dead: false,
+              hpRegained: false,
+            },
           },
-        },
-      }),
-    } satisfies BattleState;
+        }),
+      },
+    } satisfies BattleRuntimeSession;
 
     const ended = readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -3854,21 +3891,24 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    const battleState = root.sessionStore.battleState;
-    const fighter = battleState?.combatants.get(fighterId);
+    const battleState = root.sessionStore.battleSession;
+    const fighter = battleState?.state.combatants.get(fighterId);
     if (battleState === null || fighter === undefined) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleState = {
+    root.sessionStore.battleSession = {
       ...battleState,
-      combatants: new Map(battleState.combatants).set(
-        fighterId,
-        testBattleCreatureStateWithoutKnockOut(fighter, {
-          hp: Hp(3),
-          conditions: fighter.conditions,
-        }),
-      ),
-    } satisfies BattleState;
+      state: {
+        ...battleState.state,
+        combatants: new Map(battleState.state.combatants).set(
+          fighterId,
+          testBattleCreatureStateWithoutKnockOut(fighter, {
+            hp: Hp(3),
+            conditions: fighter.conditions,
+          }),
+        ),
+      },
+    } satisfies BattleRuntimeSession;
 
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
     const goblinScimitar = battleAttackSubjectForName(
@@ -3979,21 +4019,24 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    const battleState = root.sessionStore.battleState;
-    const fighter = battleState?.combatants.get(fighterId);
+    const battleState = root.sessionStore.battleSession;
+    const fighter = battleState?.state.combatants.get(fighterId);
     if (battleState === null || fighter === undefined) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleState = {
+    root.sessionStore.battleSession = {
       ...battleState,
-      combatants: new Map(battleState.combatants).set(
-        fighterId,
-        testBattleCreatureStateWithoutKnockOut(fighter, {
-          hp: Hp(1),
-          conditions: applyCondition(fighter.conditions, "unconscious"),
-        }),
-      ),
-    } satisfies BattleState;
+      state: {
+        ...battleState.state,
+        combatants: new Map(battleState.state.combatants).set(
+          fighterId,
+          testBattleCreatureStateWithoutKnockOut(fighter, {
+            hp: Hp(1),
+            conditions: applyCondition(fighter.conditions, "unconscious"),
+          }),
+        ),
+      },
+    } satisfies BattleRuntimeSession;
 
     readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -4290,8 +4333,8 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    const battleState = root.sessionStore.battleState;
-    const fighter = battleState?.combatants.get(fighterId);
+    const battleState = root.sessionStore.battleSession;
+    const fighter = battleState?.state.combatants.get(fighterId);
     if (
       battleState === null ||
       fighter === undefined ||
@@ -4299,24 +4342,27 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleState = {
+    root.sessionStore.battleSession = {
       ...battleState,
-      combatants: new Map(battleState.combatants).set(fighterId, {
-        ...testBattleCreatureStateWithoutKnockOut(fighter, {
-          hp: Hp(0),
-          conditions: fighter.conditions,
-        }),
-        zeroHpLifecycle: {
-          ...fighter.zeroHpLifecycle,
-          deathSaves: {
-            deathSaves: { successes: 0, failures: 3 },
-            stable: false,
-            dead: true,
-            hpRegained: false,
+      state: {
+        ...battleState.state,
+        combatants: new Map(battleState.state.combatants).set(fighterId, {
+          ...testBattleCreatureStateWithoutKnockOut(fighter, {
+            hp: Hp(0),
+            conditions: fighter.conditions,
+          }),
+          zeroHpLifecycle: {
+            ...fighter.zeroHpLifecycle,
+            deathSaves: {
+              deathSaves: { successes: 0, failures: 3 },
+              stable: false,
+              dead: true,
+              hpRegained: false,
+            },
           },
-        },
-      }),
-    } satisfies BattleState;
+        }),
+      },
+    } satisfies BattleRuntimeSession;
 
     readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -4553,7 +4599,7 @@ describe("MCP server route", () => {
   test("does not apply Defense Fighting Style when no armor is worn", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-unarmored"),
       character: {
         combatantId: fighterId,
@@ -4599,7 +4645,7 @@ describe("MCP server route", () => {
   test("keeps spell slots but suppresses action-time spell acts when armor training blocks casting", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-armored-spellcaster"),
       character: {
         combatantId: fighterId,
@@ -4641,14 +4687,14 @@ describe("MCP server route", () => {
       spellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
     });
     expect(
-      discoverBattleActs(state).map((act) => act.subject),
+      discoverBattleActs({ state, context }).map((act) => act.subject),
     ).not.toContainEqual(expect.objectContaining({ tag: "actionSpell" }));
   });
 
   test("keeps spell acts when only shield training is missing", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-shield-spellcaster"),
       character: {
         combatantId: fighterId,
@@ -4690,15 +4736,15 @@ describe("MCP server route", () => {
     expect(actor.origin.spellcasting).toMatchObject({
       canCastSpells: true,
     });
-    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual(
-      expect.objectContaining({ tag: "actionSpell" }),
-    );
+    expect(
+      discoverBattleActs({ state, context }).map((act) => act.subject),
+    ).toContainEqual(expect.objectContaining({ tag: "actionSpell" }));
   });
 
   test("replays Acid Splash save-gate damage through MCP battle fills", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-acid-splash"),
       character: {
         combatantId: fighterId,
@@ -4733,13 +4779,13 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleState = state;
+    root.sessionStore.battleSession = { state, context };
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.snapshot.acts.find(
+    const act = discovered.availableActs.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -4760,6 +4806,12 @@ describe("MCP server route", () => {
         }),
       ],
     });
+    const savingThrowHole = act.initialHoles.find(
+      (hole: { readonly kind?: string }) => hole.kind === "savingThrowOutcome",
+    );
+    if (savingThrowHole === undefined) {
+      throw new Error("Expected Acid Splash saving throw outcome hole.");
+    }
     const subject = act.subject;
 
     const afterSavingThrow = readPayload(
@@ -4767,7 +4819,7 @@ describe("MCP server route", () => {
         subject,
         fill: {
           kind: "savingThrowOutcome",
-          holeId: "battle:spell:saving-throw-outcome:acid_splash",
+          holeId: savingThrowHole.holeId,
           value: {
             area: {
               originAnchorId: "fighter",
@@ -4783,17 +4835,23 @@ describe("MCP server route", () => {
       holes: [
         {
           kind: "rolledDice",
-          holeId: "battle:spell:damage-result:acid_splash:1d6-acid",
+          holeId: expect.any(String),
         },
       ],
     });
+    const acidDamageHole = afterSavingThrow.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
+    );
+    if (acidDamageHole === undefined) {
+      throw new Error("Expected Acid Splash damage hole.");
+    }
 
     const afterDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject,
         fill: {
           kind: "rolledDice",
-          holeId: "battle:spell:damage-result:acid_splash:1d6-acid",
+          holeId: acidDamageHole.holeId,
           value: [{ results: [4] }],
         },
       }),
@@ -4814,7 +4872,7 @@ describe("MCP server route", () => {
   test("returns Fire Bolt object damage and ignition through MCP battle fills", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-fire-bolt-object"),
       character: {
         combatantId: fighterId,
@@ -4849,13 +4907,13 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleState = state;
+    root.sessionStore.battleSession = { state, context };
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.snapshot.acts.find(
+    const act = discovered.availableActs.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -4957,7 +5015,7 @@ describe("MCP server route", () => {
           kind: "startsBurning",
           objectId: "dry-training-dummy",
           sourceCombatantId: "fighter",
-          sourceProcedureRef: "fire_bolt",
+          sourceProcedureRef: act.subject.procedureRef,
         },
       ],
     });
@@ -4971,7 +5029,7 @@ describe("MCP server route", () => {
     if (sorcerer.kind !== "class") {
       throw new Error("Expected Sorcerer class Unit.");
     }
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-sorcerous-burst"),
       character: {
         combatantId: fighterId,
@@ -5033,13 +5091,13 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleState = state;
+    root.sessionStore.battleSession = { state, context };
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.snapshot.acts.find(
+    const act = discovered.availableActs.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -5135,7 +5193,7 @@ describe("MCP server route", () => {
       throw new Error("Expected Sorcerous Burst damage hole.");
     }
     expect(damage).toMatchObject({
-      label: "Sorcerous Burst damage (2d8-thunder)",
+      label: "Spell damage (2d8-thunder)",
     });
 
     const afterDamage = readPayload(
@@ -5220,8 +5278,8 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    const battleState = root.sessionStore.battleState;
-    const targetCombatant = battleState?.combatants.get(
+    const battleState = root.sessionStore.battleSession;
+    const targetCombatant = battleState?.state.combatants.get(
       combatantId("dying-ally"),
     );
     if (
@@ -5231,31 +5289,34 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle dying ally character combatant.");
     }
-    root.sessionStore.battleState = {
+    root.sessionStore.battleSession = {
       ...battleState,
-      combatants: new Map(battleState.combatants).set(
-        combatantId("dying-ally"),
-        {
-          ...testBattleCreatureStateWithoutKnockOut(targetCombatant, {
-            hp: Hp(0),
-            conditions: targetCombatant.conditions,
-          }),
-          zeroHpLifecycle: {
-            ...targetCombatant.zeroHpLifecycle,
-            deathSaves: {
-              deathSaves: { successes: 2, failures: 1 },
-              stable: false,
-              dead: false,
-              hpRegained: false,
+      state: {
+        ...battleState.state,
+        combatants: new Map(battleState.state.combatants).set(
+          combatantId("dying-ally"),
+          {
+            ...testBattleCreatureStateWithoutKnockOut(targetCombatant, {
+              hp: Hp(0),
+              conditions: targetCombatant.conditions,
+            }),
+            zeroHpLifecycle: {
+              ...targetCombatant.zeroHpLifecycle,
+              deathSaves: {
+                deathSaves: { successes: 2, failures: 1 },
+                stable: false,
+                dead: false,
+                hpRegained: false,
+              },
             },
           },
-        },
-      ),
-    } satisfies BattleState;
+        ),
+      },
+    } satisfies BattleRuntimeSession;
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.snapshot.acts.find(
+    const act = discovered.availableActs.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -5320,7 +5381,7 @@ describe("MCP server route", () => {
   test("returns Starry Wisp object damage through MCP battle fills", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-starry-wisp-object"),
       character: {
         combatantId: fighterId,
@@ -5355,13 +5416,13 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleState = state;
+    root.sessionStore.battleSession = { state, context };
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.snapshot.acts.find(
+    const act = discovered.availableActs.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -5458,7 +5519,7 @@ describe("MCP server route", () => {
   test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-reaction-replay"),
       character: {
         combatantId: fighterId,
@@ -5493,10 +5554,10 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleState = state;
+    root.sessionStore.battleSession = { state, context };
     root.sessionStore.pendingBattleFills = null;
 
-    const rayOfFrostAct = discoverBattleActs(state).find(
+    const rayOfFrostAct = discoverBattleActs({ state, context }).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.actorId === fighterId &&
@@ -5514,8 +5575,8 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const readiedState = root.sessionStore.battleState;
-    if (readiedState?.readiedSpells.get(fighterId) === undefined) {
+    const readiedState = root.sessionStore.battleSession;
+    if (readiedState?.state.readiedSpells.get(fighterId) === undefined) {
       throw new Error("Expected Fighter to hold a readied spell.");
     }
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
@@ -5606,7 +5667,9 @@ describe("MCP server route", () => {
         pendingInterrupt: { trigger: "attackHit" },
       },
     });
-    expect(root.sessionStore.battleState?.interruptStack).toHaveLength(1);
+    expect(root.sessionStore.battleSession?.state.interruptStack).toHaveLength(
+      1,
+    );
     expect(afterReactionDecision.session.transientBattleFills).toMatchObject({
       subject: {
         command: "releaseReadiedSpell",
@@ -5822,15 +5885,15 @@ function fighterTwoCharacterBuild(
 }
 
 function characterUnitRef(
-  state: BattleState,
+  context: BattleRuntimeSession["context"],
   combatantId: typeof fighterId,
   unitId: string,
 ) {
-  const combatant = state.combatants.get(combatantId);
-  if (combatant?.origin.kind !== "character") {
-    throw new Error(`Expected character combatant: ${combatantId}`);
+  const characterContext = context.characters.get(combatantId);
+  if (characterContext === undefined) {
+    throw new Error(`Expected character battle context: ${combatantId}`);
   }
-  return combatant.origin.characterUnitRefs.find(
+  return characterContext.unitPresentationSources.find(
     (ref) => ref.unit.id === unitId,
   );
 }
@@ -6217,7 +6280,7 @@ function fillBattleHoleThroughTool(
       | "attackDamageDisposition";
     readonly holeId: string;
     readonly spatialFacts?: readonly unknown[];
-    readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+    readonly selectedAttackDamageRiderProcedureRefs?: readonly string[];
     readonly value: unknown;
   },
   subject?: BattleSubject,
@@ -6281,16 +6344,22 @@ function battleAttackSubjectForName(
 > {
   const matchingActs = readPayload(
     handleToolCall(root, "discover_battle_acts", {}),
-  ).snapshot.acts.filter(
+  ).availableActs.filter(
     (candidate: {
-      readonly summary?: string;
+      readonly presentation: {
+        readonly kind: string;
+        readonly procedureRef?: string;
+        readonly name?: string;
+      };
       readonly subject: BattleSubject;
     }) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.statBlockDamageNotation === undefined &&
-      candidate.summary === `Take the Attack action with ${attackName}.`,
+      candidate.presentation.kind === "attack" &&
+      candidate.presentation.procedureRef === candidate.subject.procedureRef &&
+      candidate.presentation.name === attackName,
   );
   const [act] = matchingActs;
   if (matchingActs.length !== 1 || act === undefined) {
@@ -6326,7 +6395,7 @@ function battleActionSubject(
 ): BattleSubject {
   const act = readPayload(
     handleToolCall(root, "discover_battle_acts", {}),
-  ).snapshot.acts.find(
+  ).availableActs.find(
     (candidate: { readonly subject: BattleSubject }) =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&

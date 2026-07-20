@@ -51,8 +51,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import {
   spellCasterId,
@@ -94,7 +95,7 @@ type RayOfEnfeeblementLifecycleState = {
 };
 
 type RayOfEnfeeblementRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly currentTurnRole: RayTurnRole;
   readonly holes: readonly BattleHole[];
   readonly lastDamageAfterPenalty: number;
@@ -252,7 +253,7 @@ function castRayOfEnfeeblementFailedSave(
   state: RayOfEnfeeblementRuntimeState,
 ): RayOfEnfeeblementRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: rayOfEnfeeblementUnitId,
     slotLevel: 2,
   });
@@ -265,7 +266,7 @@ function castRayOfEnfeeblementFailedSave(
   );
   const saveHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -273,7 +274,7 @@ function castRayOfEnfeeblementFailedSave(
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -286,7 +287,7 @@ function castRayOfEnfeeblementFailedSave(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { state: result.state, context: state.battle.context },
     currentTurnRole: "caster",
     holes: [],
     lastResult: "resolved",
@@ -297,12 +298,12 @@ function endCasterTurn(
   state: RayOfEnfeeblementRuntimeState,
 ): RayOfEnfeeblementRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected caster turn to end.",
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { state: result.state, context: state.battle.context },
     currentTurnRole: "target",
     holes: [],
     lastResult: "resolved",
@@ -312,7 +313,7 @@ function endCasterTurn(
 function discoverRepeatSave(
   state: RayOfEnfeeblementRuntimeState,
 ): RayOfEnfeeblementRuntimeState {
-  const result = endTurn({ state: state.battle, actorId: spellTargetId });
+  const result = endTurn({ state: state.battle.state, actorId: spellTargetId });
   expect(result).toMatchObject({ tag: "needsHoles" });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Ray of Enfeeblement repeat save hole.");
@@ -331,7 +332,7 @@ function fillRepeatSave(
   const repeatSave = requireHole(state.holes, "savingThrowOutcome");
   const result = requireResolved(
     endTurn({
-      state: state.battle,
+      state: state.battle.state,
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(repeatSave, [
@@ -343,7 +344,7 @@ function fillRepeatSave(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { state: result.state, context: state.battle.context },
     currentTurnRole: "caster",
     holes: [],
     lastResult: succeeded ? "ended" : "maintained",
@@ -354,7 +355,9 @@ function resolveTargetDamage(
   state: RayOfEnfeeblementRuntimeState,
   penaltyRoll: number,
 ): RayOfEnfeeblementRuntimeState {
-  const beforeHp = Number(requireCombatant(state.battle, spellCasterId).hp);
+  const beforeHp = Number(
+    requireCombatant(state.battle.state, spellCasterId).hp,
+  );
   const attack = targetLongswordAct(state.battle);
   const targetHole = requireHole(attack.initialHoles, "targetChoice");
   const targetFill = attackTargetFill(
@@ -365,7 +368,7 @@ function resolveTargetDamage(
   );
   const attackRoll = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: attack.subject,
       fills: [targetFill],
     }),
@@ -378,7 +381,7 @@ function resolveTargetDamage(
   });
   const damageRoll = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: attack.subject,
       fills: [targetFill, attackFill],
     }),
@@ -386,7 +389,7 @@ function resolveTargetDamage(
   );
   const damageFill = damageRollFillWithGroups(damageRoll, [[6]]);
   const penaltyRequest = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: attack.subject,
     fills: [targetFill, attackFill, damageFill],
   });
@@ -394,7 +397,7 @@ function resolveTargetDamage(
   expect(penaltyHole).toHaveProperty("sourceDamageRollPenalty");
   const penaltyFill = damageRollFillWithGroups(penaltyHole, [[penaltyRoll]]);
   const damageResult = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: attack.subject,
     fills: [targetFill, attackFill, damageFill, penaltyFill],
   });
@@ -413,7 +416,7 @@ function resolveTargetDamage(
   const afterHp = Number(requireCombatant(resolved.state, spellCasterId).hp);
   return {
     ...state,
-    battle: resolved.state,
+    battle: { state: resolved.state, context: state.battle.context },
     holes: [],
     lastDamageAfterPenalty: beforeHp - afterHp,
     lastResult: "resolved",
@@ -444,10 +447,12 @@ function resolveAfterConcentrationSave(input: {
   );
 }
 
-function targetLongswordAct(state: BattleState): AvailableBattleAct & {
+function targetLongswordAct(
+  session: BattleRuntimeSession,
+): AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -467,7 +472,7 @@ function targetLongswordAct(state: BattleState): AvailableBattleAct & {
 function rayOfEnfeeblementProjection(
   state: RayOfEnfeeblementRuntimeState,
 ): RayOfEnfeeblementLifecycleState {
-  const target = requireCombatant(state.battle, spellTargetId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
   const d20EffectActive = target.activeEffects.some(
     (effect) => effect.kind === "abilityD20TestRollModeEndTurnSave",
   );
@@ -475,7 +480,7 @@ function rayOfEnfeeblementProjection(
     (effect) => effect.kind === "sourceDamageRollPenalty",
   );
   const strSavingThrowDisadvantage = savingThrowRollModeProjections(
-    state.battle,
+    state.battle.state,
     "str",
   ).some(
     (projection) =>
@@ -484,26 +489,30 @@ function rayOfEnfeeblementProjection(
   );
   const projection = {
     currentTurnRole: state.currentTurnRole,
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: rayOfEnfeeblementUnitId,
         slotLevel: 2,
       }) !== undefined,
     d20EffectActive,
     damagePenaltyActive,
     casterConcentrating:
-      requireCombatant(state.battle, spellCasterId).concentration !== null,
+      requireCombatant(state.battle.state, spellCasterId).concentration !==
+      null,
     strAttackRollDisadvantage:
       requiredAttackRollMode(
-        state.battle,
+        state.battle.state,
         spellTargetId,
         spellCasterId,
         zeroAbilityWeaponAttack("weapon_longsword"),
       ) === "disadvantage",
     strAbilityCheckDisadvantage:
-      requiredAbilityCheckRollMode(state.battle, spellTargetId, "str") ===
+      requiredAbilityCheckRollMode(state.battle.state, spellTargetId, "str") ===
       "disadvantage",
     strSavingThrowDisadvantage,
     holes: battleHolesToRayHoles(state.holes),

@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 import type {
   BattleFill,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -16,8 +16,10 @@ import {
   combatantId,
   concentrationSavingThrowFill,
   damageRollFillWithGroups,
+  findAct,
   magicSubject,
   requireCharacterSpellProcedureRefForTest,
+  requireCharacterUnitProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -28,7 +30,7 @@ import {
   skeletonId,
   spellRecord,
   spellSlotInvocationRef,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCatalog,
   statBlockCreatureInit,
   targetFill,
@@ -41,7 +43,7 @@ import {
 describe("battle runtime: Ice Knife", () => {
   test("Ray of Enfeeblement source penalty is requested before Ice Knife attack-burst save damage", () => {
     const primaryTargetId = combatantId("ice-knife-ray-primary");
-    const baseState = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-ice-knife-ray-penalty"),
       combatants: [
         characterSeed({
@@ -64,6 +66,7 @@ describe("battle runtime: Ice Knife", () => {
         }),
       ],
     });
+    const baseState = session.state;
     const wizard = baseState.combatants.get(wizardId);
     if (wizard === undefined) {
       throw new Error("Expected Wizard.");
@@ -93,7 +96,7 @@ describe("battle runtime: Ice Knife", () => {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        { ...session, state },
         wizardId,
         spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
@@ -250,7 +253,7 @@ describe("battle runtime: Ice Knife", () => {
 
   test("Ice Knife resolves critical attack damage and mandatory primary-target burst", () => {
     const primaryTargetId = combatantId("ice-knife-primary");
-    const baseState = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-ice-knife"),
       combatants: [
         characterSeed({
@@ -279,6 +282,7 @@ describe("battle runtime: Ice Knife", () => {
         }),
       ],
     });
+    const baseState = session.state;
     const primaryTarget = baseState.combatants.get(primaryTargetId);
     if (primaryTarget === undefined) {
       throw new Error("Expected primary target.");
@@ -299,7 +303,7 @@ describe("battle runtime: Ice Knife", () => {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        { ...session, state },
         wizardId,
         spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
@@ -324,7 +328,7 @@ describe("battle runtime: Ice Knife", () => {
       "rolledDice",
     );
     expect(attackDamage).toMatchObject({
-      label: "Ice Knife damage (2d10-piercing)",
+      label: "Spell damage (2d10-piercing)",
     });
     const attackDamageRoll = damageRollFillWithGroups(attackDamage, [[5, 5]]);
     const savingThrows = requireHole(
@@ -336,7 +340,7 @@ describe("battle runtime: Ice Knife", () => {
       "savingThrowOutcome",
     );
     expect(savingThrows).toMatchObject({
-      label: "Ice Knife primary-target-origin Emanation Saving Throw outcomes",
+      label: "Spell primary-target-origin Emanation Saving Throw outcomes",
       ability: "dex",
     });
     const saveFill: Extract<
@@ -365,7 +369,7 @@ describe("battle runtime: Ice Knife", () => {
       "rolledDice",
     );
     expect(burstDamage).toMatchObject({
-      label: "Ice Knife burst damage (3d6-cold)",
+      label: "Spell burst damage (3d6-cold)",
     });
 
     const burstDamageRoll = damageRollFillWithGroups(burstDamage, [[2, 2, 2]]);
@@ -428,7 +432,7 @@ describe("battle runtime: Ice Knife", () => {
     const relentlessEndurance = unitLibrary.requireUnit(
       "orc_relentless_endurance",
     );
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-ice-knife-attack-relentless"),
       combatants: [
         characterSeed({
@@ -458,7 +462,8 @@ describe("battle runtime: Ice Knife", () => {
         }),
       ],
     });
-    const subject = magicSubject("ice_knife");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("ice_knife")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -492,7 +497,11 @@ describe("battle runtime: Ice Knife", () => {
       choices: expect.arrayContaining([
         {
           kind: "zeroHitPointReplacement",
-          unitId: "orc_relentless_endurance",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            { ...session, state },
+            primaryTargetId,
+            "orc_relentless_endurance",
+          ),
         },
       ]),
     });
@@ -507,7 +516,11 @@ describe("battle runtime: Ice Knife", () => {
           attackDamageRoll,
           attackDamageDispositionFill(disposition, {
             kind: "zeroHitPointReplacement",
-            unitId: "orc_relentless_endurance",
+            procedureRef: requireCharacterUnitProcedureRefForTest(
+              { ...session, state },
+              primaryTargetId,
+              "orc_relentless_endurance",
+            ),
           }),
         ],
       }),
@@ -523,7 +536,11 @@ describe("battle runtime: Ice Knife", () => {
           attackDamageRoll,
           attackDamageDispositionFill(disposition, {
             kind: "zeroHitPointReplacement",
-            unitId: "orc_relentless_endurance",
+            procedureRef: requireCharacterUnitProcedureRefForTest(
+              { ...session, state },
+              primaryTargetId,
+              "orc_relentless_endurance",
+            ),
           }),
           {
             kind: "savingThrowOutcome",
@@ -558,7 +575,7 @@ describe("battle runtime: Ice Knife", () => {
     const relentlessEndurance = unitLibrary.requireUnit(
       "orc_relentless_endurance",
     );
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-ice-knife-burst-relentless"),
       combatants: [
         characterSeed({
@@ -588,7 +605,8 @@ describe("battle runtime: Ice Knife", () => {
         }),
       ],
     });
-    const subject = magicSubject("ice_knife");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("ice_knife")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -659,7 +677,11 @@ describe("battle runtime: Ice Knife", () => {
       choices: expect.arrayContaining([
         {
           kind: "zeroHitPointReplacement",
-          unitId: "orc_relentless_endurance",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            { ...session, state },
+            primaryTargetId,
+            "orc_relentless_endurance",
+          ),
         },
       ]),
     });
@@ -675,7 +697,11 @@ describe("battle runtime: Ice Knife", () => {
           burstDamageRoll,
           attackDamageDispositionFill(disposition, {
             kind: "zeroHitPointReplacement",
-            unitId: "orc_relentless_endurance",
+            procedureRef: requireCharacterUnitProcedureRefForTest(
+              { ...session, state },
+              primaryTargetId,
+              "orc_relentless_endurance",
+            ),
           }),
         ],
       }),
@@ -695,7 +721,7 @@ describe("battle runtime: Ice Knife", () => {
   });
 
   test("Ice Knife miss still requires a primary-target-anchored burst save", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-ice-knife-miss"),
       combatants: [
         characterSeed({
@@ -712,7 +738,8 @@ describe("battle runtime: Ice Knife", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("ice_knife");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("ice_knife")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -774,7 +801,7 @@ describe("battle runtime: Ice Knife", () => {
   });
 
   test("Ice Knife burst damage requests Concentration follow-up for damaged burst targets", () => {
-    const baseState = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-ice-knife-concentration"),
       combatants: [
         characterSeed({
@@ -798,13 +825,13 @@ describe("battle runtime: Ice Knife", () => {
         }),
       ],
     });
-    const concentrating = baseState.combatants.get(secondWizardId);
+    const concentrating = session.state.combatants.get(secondWizardId);
     if (concentrating === undefined) {
       throw new Error("Expected concentrating target.");
     }
     const state = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(secondWizardId, {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(secondWizardId, {
         ...concentrating,
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -814,7 +841,7 @@ describe("battle runtime: Ice Knife", () => {
         },
       }),
     };
-    const subject = magicSubject("ice_knife");
+    const subject = findAct(session, magicSubject("ice_knife")).subject;
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

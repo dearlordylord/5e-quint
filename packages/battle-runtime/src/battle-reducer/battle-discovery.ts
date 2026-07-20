@@ -38,9 +38,8 @@ import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
 import type {
   BattleMovementSpeedKind,
   BattleSubject,
-  CharacterProcedureSelectionSubject,
+  CharacterProcedureBattleSubject,
 } from "../battle-subjects.ts";
-import { isCharacterProcedureSelectionSubject } from "../battle-subjects.ts";
 import { CombatantId } from "../identity.ts";
 import {
   findFamiliarCompanionEntryForOwner,
@@ -107,7 +106,6 @@ import {
 } from "./spell-condition-effects-helpers.ts";
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
-import { supportedSpellInvocationMatchesRef } from "./spells-invocation-ref.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import {
@@ -164,12 +162,12 @@ import type {
   BattleActDiscoveryCandidate,
   BattleActiveEffect,
   BattleCreatureState,
+  BattleExecutableSpellInvocation,
   BattleState,
   ClassFeatureExtraAttackActionResource,
   SelfTransformationModeKind,
   StatBlockBattleCreatureState,
   StatBlockMultiattackActionResource,
-  SupportedSpellInvocation,
   SupportedStatBlockBonusActionStandardAction,
 } from "../battle-reducer.ts";
 
@@ -710,12 +708,11 @@ function findFamiliarTouchSpellActs(input: {
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  const invocations = supportedSpellActs(actor, input.state);
+  const invocations = supportedSpellActs(actor);
   return input.spellActs.flatMap(
     (act): readonly BattleActDiscoveryCandidate[] => {
       const subject = act.subject;
       if (
-        !isCharacterProcedureSelectionSubject(subject) ||
         (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
         subject.mode.tag !== "cast" ||
         subject.procedureRef === undefined
@@ -741,14 +738,10 @@ function findFamiliarTouchSpellActs(input: {
             companionId: input.companionId,
             spellAction:
               subject.tag === "actionSpell" ? "action" : "bonusAction",
-            invocation: subject.invocation,
             mode: subject.mode,
             ...(subject.metamagic === undefined
               ? {}
               : { metamagic: subject.metamagic }),
-            ...(subject.componentWeaponItemId === undefined
-              ? {}
-              : { componentWeaponItemId: subject.componentWeaponItemId }),
           },
           initialHoles: [
             findFamiliarConnectionHole({
@@ -764,18 +757,18 @@ function findFamiliarTouchSpellActs(input: {
 }
 
 function touchSpellDeliveryInvocation(
-  invocations: readonly SupportedSpellInvocation[],
+  invocations: readonly BattleExecutableSpellInvocation[],
   subject: Extract<
-    CharacterProcedureSelectionSubject,
+    CharacterProcedureBattleSubject,
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >,
-): SupportedSpellInvocation | null {
-  const invocation = invocations.find((candidate) =>
-    supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+): BattleExecutableSpellInvocation | null {
+  const invocation = invocations.find(
+    (candidate) => candidate.sourceProcedureRef === subject.procedureRef,
   );
   return invocation !== undefined &&
     spellInvocationIsSpellcasting(invocation) &&
-    invocation.spell.mechanics.range.kind === "touch"
+    invocation.spellRuleFacts.range.kind === "touch"
     ? invocation
     : null;
 }
@@ -966,9 +959,10 @@ function readiedSpellReleaseActs(
     const caster = state.combatants.get(casterId);
     const invocation =
       caster?.origin.kind === "character"
-        ? characterSpellProcedure(
+          ? characterSpellProcedure(
             caster.origin.execution,
             readiedSpell.procedureRef,
+            caster,
           )
         : undefined;
     return invocation === undefined

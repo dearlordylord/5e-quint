@@ -50,14 +50,16 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   breakBattleConcentration,
+  discoverBattleActCandidates,
   combatantId,
   discoverBattleActs,
   endTurn,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 
 const concentrationBreakTeardownScenarios = [
@@ -115,7 +117,7 @@ type PendingConcentrationSave = {
 };
 
 type ConcentrationBreakTeardownRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly scenario: ConcentrationBreakTeardownScenario;
   readonly damageTaken: number;
   readonly saveDc: number;
@@ -259,7 +261,7 @@ describe("Concentration break teardown MBT parity", () => {
     const act = endConcentrationAct(cast.battle);
     const ended = requireResolved(
       resolveBattleSubject({
-        state: cast.battle,
+        state: cast.battle.state,
         subject: act.subject,
         fills: [],
       }),
@@ -281,7 +283,7 @@ describe("Concentration break teardown MBT parity", () => {
       throw new Error("Expected pending Concentration save.");
     }
     const filled = resolveBattleSubject({
-      state: cast.battle,
+      state: cast.battle.state,
       subject: act.subject,
       fills: [
         concentrationSavingThrowFill(
@@ -359,34 +361,28 @@ function stateAfterBlurCast(
   expect(act.initialHoles).toEqual([]);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     pendingConcentrationSave: null,
   };
 }
 
-function concentrationSpellCastAct(state: BattleState): ReturnType<
+function concentrationSpellCastAct(state: BattleRuntimeSession): ReturnType<
   typeof discoverBattleActs
 >[number] & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
   const act = discoverBattleActs(state).find(
     (
       candidate,
     ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "actionSpell"; readonly invocation: unknown }
-      >;
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
     } =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -398,7 +394,7 @@ function concentrationSpellCastAct(state: BattleState): ReturnType<
   return act;
 }
 
-function endConcentrationAct(state: BattleState): ReturnType<
+function endConcentrationAct(state: BattleRuntimeSession): ReturnType<
   typeof discoverBattleActs
 >[number] & {
   readonly subject: Extract<
@@ -429,8 +425,12 @@ function damageRequestsConcentrationSave(
   damageDiePip: number,
 ): ConcentrationBreakTeardownRuntimeState {
   expect(state.scenario).toBe("concentrationSpellCast");
-  const attackerTurn = advanceToAttackerTurn(state.battle);
-  const attack = statBlockAttackAct(attackerTurn, attackerId, "Scimitar");
+  const attackerTurn = advanceToAttackerTurn(state.battle.state);
+  const attack = statBlockAttackAct(
+    { ...state.battle, state: attackerTurn },
+    attackerId,
+    "Scimitar",
+  );
   const target = requireResultHole(
     resolveBattleSubject({
       state: attackerTurn,
@@ -484,7 +484,7 @@ function damageRequestsConcentrationSave(
   expect(damageTaken).toBe(damageDiePip + 2);
   return {
     ...state,
-    battle: pending.state,
+    battle: { ...state.battle, state: pending.state },
     scenario: "damageSaveNeeded",
     damageTaken,
     saveDc: Number(concentration.dc),
@@ -520,7 +520,7 @@ function failConcentrationSave(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     scenario: "damageFailedTeardownBeforeNextCommand",
     saveRollTotal,
     concentrationSaveOffered: false,
@@ -535,10 +535,10 @@ function voluntarilyEndConcentration(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownRuntimeState {
   const cast = stateAfterBlurCast(state);
-  const broken = breakBattleConcentration(cast.battle, spellCasterId);
+  const broken = breakBattleConcentration(cast.battle.state, spellCasterId);
   return {
     ...cast,
-    battle: broken,
+    battle: { ...cast.battle, state: broken },
     scenario: "voluntaryEndTeardown",
     teardownBeforeNextCommand:
       concentrationTeardownIsVisibleBeforeNextCommand(broken),
@@ -548,15 +548,18 @@ function voluntarilyEndConcentration(
 function castReplacementConcentrationSpell(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownRuntimeState {
-  const beforeReplacement = stateWithPreexistingBlurConcentration(state.battle);
+  const beforeReplacement = stateWithPreexistingBlurConcentration(
+    state.battle.state,
+  );
   const replaced = stateAfterBlurCast({
     ...state,
-    battle: beforeReplacement,
+    battle: { ...state.battle, state: beforeReplacement },
   });
   return {
     ...replaced,
     scenario: "replacementTeardownBeforeNewEffect",
-    replacementStartedAfterTeardown: blurredEffectCount(replaced.battle) === 1,
+    replacementStartedAfterTeardown:
+      blurredEffectCount(replaced.battle.state) === 1,
   };
 }
 
@@ -602,7 +605,7 @@ function concentrationTeardownIsVisibleBeforeNextCommand(
 ): boolean {
   const caster = requireCombatant(state, spellCasterId);
   return (
-    discoverBattleActs(state).length > 0 &&
+    discoverBattleActCandidates(state).length > 0 &&
     caster.concentration === null &&
     blurredEffectCount(state) === 0
   );
@@ -611,7 +614,7 @@ function concentrationTeardownIsVisibleBeforeNextCommand(
 function concentrationBreakTeardownProjection(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownProjection {
-  const caster = requireCombatant(state.battle, spellCasterId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
   const blurredEffect = caster.activeEffects.find(
     (effect) => effect.kind === "blurred",
   );
@@ -625,8 +628,8 @@ function concentrationBreakTeardownProjection(
       blurredEffect !== undefined &&
       caster.concentration?.sourceProcedureRef ===
         blurredEffect.sourceProcedureRef,
-    blurredEffectCount: blurredEffectCount(state.battle),
-    spellSlotExpended: casterSpellSlotExpended(state.battle),
+    blurredEffectCount: blurredEffectCount(state.battle.state),
+    spellSlotExpended: casterSpellSlotExpended(state.battle.state),
     teardownBeforeNextCommand: state.teardownBeforeNextCommand,
     replacementStartedAfterTeardown: state.replacementStartedAfterTeardown,
   };

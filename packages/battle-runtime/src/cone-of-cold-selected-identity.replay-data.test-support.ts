@@ -34,7 +34,7 @@ export const coneOfColdSelectedIdentityReplay = {
               spellSlots: [{ spellLevel: 5, count: 1 }],
             });
             const act = spellAct({
-              state,
+              session: state,
               spellId: coneOfColdUnitId,
               slotLevel: 5,
             });
@@ -57,7 +57,7 @@ export const coneOfColdSelectedIdentityReplay = {
             );
             expect(savingThrow).toEqual(
               expect.objectContaining({
-                label: "Cone of Cold self-origin Cone Saving Throw outcomes",
+                label: "Spell self-origin Cone Saving Throw outcomes",
                 ability: "con",
                 dc: { kind: "caster_spell_save_dc" },
               }),
@@ -95,7 +95,7 @@ export const coneOfColdSelectedIdentityReplay = {
               spellSlots: [{ spellLevel: 5, count: 1 }],
             });
             const act = spellAct({
-              state,
+              session: state,
               spellId: flameStrikeUnitId,
               slotLevel: 5,
             });
@@ -118,8 +118,7 @@ export const coneOfColdSelectedIdentityReplay = {
             );
             expect(savingThrow).toEqual(
               expect.objectContaining({
-                label:
-                  "Flame Strike point-origin Cylinder Saving Throw outcomes",
+                label: "Spell point-origin Cylinder Saving Throw outcomes",
                 ability: "dex",
                 dc: { kind: "caster_spell_save_dc" },
               }),

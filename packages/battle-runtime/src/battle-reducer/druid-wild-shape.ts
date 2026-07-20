@@ -25,7 +25,6 @@ import type {
   Size,
   Skill,
   StatBlockRecord,
-  UnitRecord,
 } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 
@@ -329,7 +328,6 @@ export function removeEndedDruidWildShapeEffects(
 export function assumeDruidWildShapeForm(input: {
   readonly state: BattleState;
   readonly actor: CharacterBattleCreatureState;
-  readonly unitId: UnitRecord["id"];
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly form: BattleDruidWildShapeKnownForm;
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;

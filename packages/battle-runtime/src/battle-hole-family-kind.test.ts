@@ -10,7 +10,7 @@ import {
   battleSubjectKind,
   type BattleFill,
   type BattleHole,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 
 type BattleHoleFrontierRow = {

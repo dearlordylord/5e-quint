@@ -47,7 +47,7 @@ import {
 describe("L12G deterministic Flaming Sphere admission", () => {
   test("flaming sphere is admitted as a movable fire Sphere hazard", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 2, count: 1 },
@@ -55,12 +55,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       ],
     });
     const secondLevelAct = spellAct({
-      state,
+      session,
       spellId: flamingSphereUnitId,
       slotLevel: 2,
     });
     const thirdLevelAct = spellAct({
-      state,
+      session,
       spellId: flamingSphereUnitId,
       slotLevel: 3,
     });
@@ -72,7 +72,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(flamingSphereUnitId, 2, "flamingSphere"),
       ),
@@ -81,14 +81,14 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const area = requireHole(secondLevelAct.initialHoles, "spellAreaChoice");
     expect(area).toEqual(
       expect.objectContaining({
-        label: "Flaming Sphere area",
+        label: "Spell area",
         area: {
           kind: "pointOriginSphereDiameter",
           diameterFeet: movementFeet(5),
         },
       }),
     );
-    expect(spellHoleInvocation(state, [area])).toEqual(
+    expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "flamingSphere",
         spell,
@@ -105,7 +105,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         damage: { expr: { dice: 2, dieSize: 6 }, damageType: "fire" },
       }),
     );
-    expect(spellHoleInvocation(state, thirdLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(session, thirdLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "flamingSphere",
         damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
@@ -115,15 +115,19 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("cast records the source-owned sphere hazard", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -154,16 +158,20 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("end-within-5-feet save applies failed-save fire damage before ending the turn", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -175,7 +183,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
 
-    const endWithinFiveFeet = flamingSphereEndTurnAct(targetTurn.state);
+    const endWithinFiveFeet = flamingSphereEndTurnAct({
+      ...session,
+      state: targetTurn.state,
+    });
     const save = requireHole(
       endWithinFiveFeet.initialHoles,
       "savingThrowOutcome",
@@ -211,16 +222,20 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("end-within-5-feet save rejects duplicate target Concentration fills", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -245,9 +260,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       }),
     };
 
-    const endWithinFiveFeet = flamingSphereEndTurnAct(
-      stateWithConcentratingTarget,
-    );
+    const endWithinFiveFeet = flamingSphereEndTurnAct({
+      ...session,
+      state: stateWithConcentratingTarget,
+    });
     const save = requireHole(
       endWithinFiveFeet.initialHoles,
       "savingThrowOutcome",
@@ -307,16 +323,20 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("reposition spends the caster Bonus Action without save or damage", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -324,7 +344,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const reposition = flamingSphereRepositionAct(cast.state);
+    const reposition = flamingSphereRepositionAct({
+      ...session,
+      state: cast.state,
+    });
     const movement = requireHole(
       reposition.initialHoles,
       "movableZoneRepositionMovement",
@@ -365,16 +388,20 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("ram spends the caster Bonus Action and applies successful-save half damage", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -382,11 +409,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const ram = flamingSphereRamAct(cast.state);
+    const ram = flamingSphereRamAct({ ...session, state: cast.state });
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     expect(movement).toEqual(
       expect.objectContaining({
-        label: "flaming_sphere ram movement",
         movableZone: expect.objectContaining({
           targetId: spellTargetId,
           sourceCombatantId: spellCasterId,
@@ -437,14 +463,18 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("ram discovery includes the caster as a creature-space target", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -453,7 +483,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     }
 
     const selfRam = flamingSphereRamAct(
-      cast.state,
+      { ...session, state: cast.state },
       spellCasterId,
       spellCasterId,
     );
@@ -481,14 +511,18 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("ram rejects missing and over-cap movement witnesses", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -496,7 +530,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const ram = flamingSphereRamAct(cast.state);
+    const ram = flamingSphereRamAct({ ...session, state: cast.state });
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");
     const succeededSave = singleTargetSavingThrowOutcomeFill(
@@ -542,14 +576,18 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
   test("ram rejects stale accepted-kind fills for unrelated holes", () => {
     const spell = spellRecord(flamingSphereUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
     const area = requireHole(act.initialHoles, "spellAreaChoice");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [flamingSphereAreaFill(area)],
     });
@@ -557,7 +595,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const ram = flamingSphereRamAct(cast.state);
+    const ram = flamingSphereRamAct({ ...session, state: cast.state });
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     const movementFill = flamingSphereRamMovementFill(movement);
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");

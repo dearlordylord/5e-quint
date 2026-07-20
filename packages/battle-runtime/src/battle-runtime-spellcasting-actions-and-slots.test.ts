@@ -1,15 +1,13 @@
 import { describe, expect, test } from "vitest";
-import {
-  admitCharacterProcedureSelectionSubject,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type {
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
   attackRollFill,
   battleId,
+  battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
   cantripSpellInvocationRef,
   characterSeed,
@@ -40,7 +38,7 @@ import {
   spellRecord,
   spellSlotInvocationRef,
   spellTargetAllocationFill,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   wizardId,
@@ -233,20 +231,20 @@ describe("battle runtime: spellcasting actions and slots", () => {
 
     const magicMissileTarget = requireHole(
       resolveBattleSubject({
-        state: magicMissileState,
+        session: magicMissileState,
         subject: magicSubject("magic_missile"),
         fills: [],
       }),
       "spellTargetAllocation",
     );
     expect(magicMissileTarget).toMatchObject({
-      label: "Magic Missile target allocation",
+      label: "Spell target allocation",
       allocationCount: 3,
       choices: [wizardId, skeletonId],
     });
     expect(
       resolveBattleSubject({
-        state: magicMissileState,
+        session: magicMissileState,
         subject: magicSubject("magic_missile"),
         fills: [
           spellTargetAllocationFill(magicMissileTarget, [
@@ -263,7 +261,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     const magicMissileDamage = requireHole(
       resolveBattleSubject({
-        state: magicMissileState,
+        session: magicMissileState,
         subject: magicSubject("magic_missile"),
         fills: [
           spellTargetAllocationFill(magicMissileTarget, [
@@ -274,11 +272,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
       "rolledDice",
     );
     expect(magicMissileDamage).toMatchObject({
-      label: "Magic Missile damage (3d4+3-force)",
+      label: "Spell damage (3d4+3-force)",
     });
     expect(
       resolveBattleSubject({
-        state: magicMissileState,
+        session: magicMissileState,
         subject: magicSubject("magic_missile"),
         fills: [
           {
@@ -297,7 +295,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
 
     const magicMissile = resolveBattleSubject({
-      state: magicMissileState,
+      session: magicMissileState,
       subject: magicSubject("magic_missile"),
       fills: [
         spellTargetAllocationFill(magicMissileTarget, [
@@ -320,7 +318,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       1,
     );
 
-    const healingWordState = startBattleRight({
+    const healingWordState = startBattleSessionRight({
       battleId: battleId("battle-healing-word-bonus-action"),
       combatants: [
         characterSeed({
@@ -371,7 +369,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const healingWordRoll = requireHole(
       resolveBattleSubject({
-        state: healingWordState,
+        state: healingWordState.state,
         subject: healingWordAct.subject,
         fills: [
           targetFill(healingWordTarget, fighterId, [
@@ -379,9 +377,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("healing_word"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(
+                  healingWordTarget,
+                ),
             },
           ]),
         ],
@@ -390,7 +389,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const healingWord = requireResolved(
       resolveBattleSubject({
-        state: healingWordState,
+        state: healingWordState.state,
         subject: healingWordAct.subject,
         fills: [
           targetFill(healingWordTarget, fighterId, [
@@ -398,9 +397,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("healing_word"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(
+                  healingWordTarget,
+                ),
             },
           ]),
           damageRollFillWithGroups(healingWordRoll, [[4, 3]]),
@@ -415,19 +415,15 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     expect(expendedLevelOneSlots(healingWord, wizardId)).toBe(1);
     expect(
-      admitCharacterProcedureSelectionSubject(healingWordState, {
-        tag: "bonusActionSpell",
-        actorId: wizardId,
-        invocation: spellSlotInvocationRef(
-          "magic_missile",
-          1,
-          "repeatedDamageAllocation",
-        ),
-        mode: { tag: "cast" },
-      }),
-    ).toBeUndefined();
+      discoverBattleActs(healingWordState).some(
+        (act) =>
+          act.subject.tag === "bonusActionSpell" &&
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            "magic_missile",
+      ),
+    ).toBe(false);
 
-    const slotTurnState = startBattleRight({
+    const slotTurnState = startBattleSessionRight({
       battleId: battleId("battle-one-slot-spell-per-turn"),
       combatants: [
         characterSeed({
@@ -451,7 +447,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     const slotTurnMissileTarget = requireHole(
       resolveBattleSubject({
-        state: slotTurnState,
+        session: slotTurnState,
         subject: magicSubject("magic_missile"),
         fills: [],
       }),
@@ -459,7 +455,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const slotTurnMissileDamage = requireHole(
       resolveBattleSubject({
-        state: slotTurnState,
+        session: slotTurnState,
         subject: magicSubject("magic_missile"),
         fills: [
           spellTargetAllocationFill(slotTurnMissileTarget, [
@@ -471,7 +467,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const afterSlotSpell = requireResolved(
       resolveBattleSubject({
-        state: slotTurnState,
+        session: slotTurnState,
         subject: magicSubject("magic_missile"),
         fills: [
           spellTargetAllocationFill(slotTurnMissileTarget, [
@@ -488,7 +484,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       levelOnePlusSpellCastsThisTurn: [wizardId],
     });
     expect(
-      discoverBattleActs(afterSlotSpell).some(
+      discoverBattleActs({ ...slotTurnState, state: afterSlotSpell }).some(
         (act) =>
           act.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(act)?.invocation.spellId ===
@@ -502,7 +498,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
           tag: "bonusActionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            afterSlotSpell,
+            { ...slotTurnState, state: afterSlotSpell },
             wizardId,
             spellSlotInvocationRef(
               "healing_word",
@@ -542,13 +538,12 @@ describe("battle runtime: spellcasting actions and slots", () => {
         kind: "spellTarget",
         casterId: fighterId,
         targetId: fighterId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("healing_word"),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(reactionTarget),
       },
     ]);
     const awaitingSpellCastReaction = resolveBattleSubject({
-      state: healingWordReactionState,
+      state: healingWordReactionState.state,
       subject: healingWordReactionAct.subject,
       fills: [reactionTargetFill],
     });
@@ -577,11 +572,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
       subject: healingWordReactionAct.subject,
-      holes: [{ kind: "rolledDice", label: "Healing Word healing (2d4+3)" }],
+      holes: [{ kind: "rolledDice", label: "Spell healing (2d4+3)" }],
       snapshot: { pendingInterrupt: null },
     });
 
-    const levelTwoState = startBattleRight({
+    const levelTwoState = startBattleSessionRight({
       battleId: battleId("battle-magic-missile-split-targets"),
       combatants: [
         characterSeed({
@@ -637,7 +632,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     };
     const levelTwoTargets = requireHole(
       resolveBattleSubject({
-        state: levelTwoState,
+        state: levelTwoState.state,
         subject: levelTwoSubject,
         fills: [],
       }),
@@ -646,7 +641,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     expect(levelTwoTargets).toMatchObject({ allocationCount: 4 });
     const levelTwoDamage = requireHole(
       resolveBattleSubject({
-        state: levelTwoState,
+        state: levelTwoState.state,
         subject: levelTwoSubject,
         fills: [
           spellTargetAllocationFill(levelTwoTargets, [
@@ -658,10 +653,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
       "rolledDice",
     );
     expect(levelTwoDamage).toMatchObject({
-      label: "Magic Missile damage (4d4+4-force)",
+      label: "Spell damage (4d4+4-force)",
     });
     const splitMagicMissile = resolveBattleSubject({
-      state: levelTwoState,
+      state: levelTwoState.state,
       subject: levelTwoSubject,
       fills: [
         spellTargetAllocationFill(levelTwoTargets, [
@@ -682,38 +677,27 @@ describe("battle runtime: spellcasting actions and slots", () => {
       },
     });
 
+    const secondWizardSession = startBattleSessionRight({
+      battleId: battleId("battle-second-wizard-ready-after-damage"),
+      combatants: [
+        characterSeed({
+          combatantId: secondWizardId,
+          displayName: "Second Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
     const secondWizardReady = requireResolved(
       resolveBattleSubject({
-        state: startBattleRight({
-          battleId: battleId("battle-second-wizard-ready-after-damage"),
-          combatants: [
-            characterSeed({
-              combatantId: secondWizardId,
-              displayName: "Second Wizard",
-              initiative: 20,
-              attack: null,
-              spellcasting: wizardSpellcasting(),
-            }),
-            skeletonCreatureInit({ initiative: 10 }),
-          ],
-        }),
+        state: secondWizardSession.state,
         subject: {
           tag: "actionSpell",
           actorId: secondWizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            startBattleRight({
-              battleId: battleId("battle-second-wizard-ready-after-damage"),
-              combatants: [
-                characterSeed({
-                  combatantId: secondWizardId,
-                  displayName: "Second Wizard",
-                  initiative: 20,
-                  attack: null,
-                  spellcasting: wizardSpellcasting(),
-                }),
-                skeletonCreatureInit({ initiative: 10 }),
-              ],
-            }),
+            secondWizardSession,
             secondWizardId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -729,8 +713,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
       throw new Error("Expected Second Wizard to hold a Readied Spell.");
     }
     const afterDamageSequenceState = {
-      ...levelTwoState,
-      combatants: new Map(levelTwoState.combatants).set(
+      ...levelTwoState.state,
+      combatants: new Map(levelTwoState.state.combatants).set(
         secondWizardId,
         concentratingSecondWizard,
       ),
@@ -779,15 +763,17 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const rayState = wizardVsSkeletonBattle();
     const rayTarget = requireHole(
       resolveBattleSubject({
-        state: rayState,
+        session: rayState,
         subject: magicSubject("ray_of_frost"),
         fills: [],
       }),
       "targetChoice",
     );
+    const rayProcedureRef =
+      battleProcedureExecutionRefForSpellHoleForTest(rayTarget);
     const rayRoll = requireHole(
       resolveBattleSubject({
-        state: rayState,
+        session: rayState,
         subject: magicSubject("ray_of_frost"),
         fills: [targetFill(rayTarget, skeletonId)],
       }),
@@ -798,7 +784,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     const rayDamage = requireHole(
       resolveBattleSubject({
-        state: rayState,
+        session: rayState,
         subject: magicSubject("ray_of_frost"),
         fills: [
           targetFill(rayTarget, skeletonId),
@@ -808,7 +794,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       "rolledDice",
     );
     const ray = resolveBattleSubject({
-      state: rayState,
+      session: rayState,
       subject: magicSubject("ray_of_frost"),
       fills: [
         targetFill(rayTarget, skeletonId),
@@ -834,7 +820,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
         activeEffects: [
           {
             kind: "speedDelta",
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: rayProcedureRef,
             sourceCombatantId: wizardId,
             deltaFeet: movementDeltaFeet(-10),
             expiresAt: {
@@ -847,16 +833,17 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     expect(expendedLevelOneSlots(requireResolved(ray), wizardId)).toBe(0);
 
+    const existingSpeedDeltaProcedureRef = battleProcedureExecutionRefForTest(
+      "existing-speed-delta-procedure",
+    );
     const stackedRayState = {
-      ...rayState,
-      combatants: new Map(rayState.combatants).set(skeletonId, {
-        ...rayState.combatants.get(skeletonId)!,
+      ...rayState.state,
+      combatants: new Map(rayState.state.combatants).set(skeletonId, {
+        ...rayState.state.combatants.get(skeletonId)!,
         activeEffects: [
           {
             kind: "speedDelta",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("ray_of_frost"),
-            ),
+            sourceProcedureRef: existingSpeedDeltaProcedureRef,
             sourceCombatantId: combatantId("other-wizard"),
             deltaFeet: movementDeltaFeet(-10),
             expiresAt: {
@@ -868,7 +855,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       }),
     } satisfies BattleState;
     const refreshedRay = resolveBattleSubject({
-      state: stackedRayState,
+      session: { ...rayState, state: stackedRayState },
       subject: magicSubject("ray_of_frost"),
       fills: [
         targetFill(rayTarget, skeletonId),
@@ -886,17 +873,33 @@ describe("battle runtime: spellcasting actions and slots", () => {
       requireResolved(refreshedRay).state.combatants.get(skeletonId),
     ).toMatchObject({
       activeEffects: [
-        expect.objectContaining({
-          sourceProcedureRef: expect.any(String),
+        {
+          kind: "speedDelta",
+          sourceProcedureRef: existingSpeedDeltaProcedureRef,
+          sourceCombatantId: combatantId("other-wizard"),
+          deltaFeet: movementDeltaFeet(-10),
+          expiresAt: {
+            kind: "startOfTurn",
+            combatantId: combatantId("other-wizard"),
+          },
+        },
+        {
+          kind: "speedDelta",
+          sourceProcedureRef: rayProcedureRef,
           sourceCombatantId: wizardId,
-        }),
+          deltaFeet: movementDeltaFeet(-10),
+          expiresAt: {
+            kind: "startOfTurn",
+            combatantId: wizardId,
+          },
+        },
       ],
     });
 
     const criticalRayState = wizardVsSkeletonBattle();
     const criticalRayTarget = requireHole(
       resolveBattleSubject({
-        state: criticalRayState,
+        session: criticalRayState,
         subject: magicSubject("ray_of_frost"),
         fills: [],
       }),
@@ -904,7 +907,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const criticalRayRoll = requireHole(
       resolveBattleSubject({
-        state: criticalRayState,
+        session: criticalRayState,
         subject: magicSubject("ray_of_frost"),
         fills: [targetFill(criticalRayTarget, skeletonId)],
       }),
@@ -912,7 +915,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const criticalRayDamage = requireHole(
       resolveBattleSubject({
-        state: criticalRayState,
+        session: criticalRayState,
         subject: magicSubject("ray_of_frost"),
         fills: [
           targetFill(criticalRayTarget, skeletonId),
@@ -922,12 +925,12 @@ describe("battle runtime: spellcasting actions and slots", () => {
       "rolledDice",
     );
     expect(criticalRayDamage).toMatchObject({
-      label: "Ray of Frost damage (2d8-cold)",
+      label: "Spell damage (2d8-cold)",
       critical: true,
     });
     expect(
       resolveBattleSubject({
-        state: criticalRayState,
+        session: criticalRayState,
         subject: magicSubject("ray_of_frost"),
         fills: [
           targetFill(criticalRayTarget, skeletonId),
@@ -938,7 +941,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     expect(
       resolveBattleSubject({
-        state: criticalRayState,
+        session: criticalRayState,
         subject: magicSubject("ray_of_frost"),
         fills: [
           targetFill(criticalRayTarget, skeletonId),
@@ -984,7 +987,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).toEqual([]);
 
     const rayMiss = resolveBattleSubject({
-      state: rayState,
+      session: rayState,
       subject: magicSubject("ray_of_frost"),
       fills: [
         targetFill(rayTarget, skeletonId),
@@ -1005,7 +1008,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
   });
 
   test("prepared spell-slot damage can use spell attack or save-gated invocation refs", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-prepared-damage-invocation-refs"),
       combatants: [
         characterSeed({
@@ -1063,12 +1066,16 @@ describe("battle runtime: spellcasting actions and slots", () => {
       mode: { tag: "cast" },
     };
     const attackTarget = requireHole(
-      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: attackSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: attackSubject,
         fills: [
           targetFill(attackTarget, skeletonId, [
@@ -1076,9 +1083,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("slot_attack_damage"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(attackTarget),
             },
           ]),
         ],
@@ -1087,7 +1093,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const attackDamage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: attackSubject,
         fills: [
           targetFill(attackTarget, skeletonId, [
@@ -1095,9 +1101,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("slot_attack_damage"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(attackTarget),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -1106,11 +1111,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
       "rolledDice",
     );
     expect(attackDamage).toMatchObject({
-      label: "Slot Attack Damage damage (2d8-cold)",
+      label: "Spell damage (2d8-cold)",
     });
     const afterAttackSpell = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: attackSubject,
         fills: [
           targetFill(attackTarget, skeletonId, [
@@ -1118,9 +1123,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("slot_attack_damage"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(attackTarget),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -1144,12 +1148,16 @@ describe("battle runtime: spellcasting actions and slots", () => {
       mode: { tag: "cast" },
     };
     const saveOutcome = requireHole(
-      resolveBattleSubject({ state, subject: saveSubject, fills: [] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject: saveSubject,
+        fills: [],
+      }),
       "savingThrowOutcome",
     );
     const saveDamage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: saveSubject,
         fills: [
           savingThrowOutcomeFill(saveOutcome, [
@@ -1160,11 +1168,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
       "rolledDice",
     );
     expect(saveDamage).toMatchObject({
-      label: "Slot Save Damage damage (2d6-acid)",
+      label: "Spell damage (2d6-acid)",
     });
     const afterSaveSpell = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: saveSubject,
         fills: [
           savingThrowOutcomeFill(saveOutcome, [
@@ -1178,7 +1186,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
   });
 
   test("prepared spell-slot damage supports only slot-axis linear scaling", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-prepared-damage-axis"),
       combatants: [
         characterSeed({
@@ -1225,7 +1233,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
   });
 
   test("cantrip damage uses character-tier scaling from the authored source", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-cantrip-scaling"),
       combatants: [
         characterSeed({
@@ -1253,12 +1261,12 @@ describe("battle runtime: spellcasting actions and slots", () => {
       mode: { tag: "cast" },
     };
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId, [
@@ -1266,9 +1274,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("ray_of_frost"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(target),
             },
           ]),
         ],
@@ -1277,7 +1284,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFill(target, skeletonId, [
@@ -1285,9 +1292,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: skeletonId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("ray_of_frost"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(target),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -1297,12 +1303,12 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
 
     expect(damage).toMatchObject({
-      label: "Ray of Frost damage (2d8-cold)",
+      label: "Spell damage (2d8-cold)",
     });
   });
 
   test("prepared spell-slot damage discovery summaries name Spell Slot casting", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-prepared-damage-summaries"),
       combatants: [
         characterSeed({
@@ -1331,7 +1337,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
           battleActSpellPresentation(act)?.invocation.procedure ===
             "spellAttackDamage",
       )?.summary,
-    ).toBe("Cast Slot Attack Damage using a level 1 Spell Slot.");
+    ).toBe("Use Slot Attack Damage.");
     expect(
       acts.find(
         (act) =>
@@ -1342,8 +1348,6 @@ describe("battle runtime: spellcasting actions and slots", () => {
           battleActSpellPresentation(act)?.invocation.procedure ===
             "saveGatedDamage",
       )?.summary,
-    ).toBe(
-      "Cast Slot Save Damage using a level 1 Spell Slot. Table-supplied affected targets make DEX Saving Throws.",
-    );
+    ).toBe("Use Slot Save Damage.");
   });
 });

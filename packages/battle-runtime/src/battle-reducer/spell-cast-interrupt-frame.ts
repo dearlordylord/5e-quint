@@ -7,10 +7,10 @@ import type {
   BattleInterruptCheckpointInput,
   BattleSpellCastingTimeResource,
   SpellComponent,
-  SupportedSpellInvocation,
+  BattleExecutableSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
-import { spellId, type CombatantId } from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_INSTANCE,
@@ -18,21 +18,21 @@ import {
 
 export function spellCastReactionFactsHole(input: {
   readonly casterId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
 }): BattleSpellCastReactionFactsHole {
   const resource = input.invocation.resource;
   return {
     kind: "targetSpatialFacts",
     holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
     holeInstanceKey: SPELL_CAST_REACTION_FACTS_HOLE_INSTANCE,
-    label: `${input.invocation.spell.name} spell-cast Reaction facts`,
+    label: "Spell-cast Reaction facts",
     spellBeingCast: {
       casterId: input.casterId,
-      spellId: spellId(input.invocation.spell.id),
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
       castLevel:
         resource.tag === "spellSlot"
           ? Number(resource.slotLevel)
-          : input.invocation.spell.mechanics.level,
+          : spellExecutionLevel(input.invocation),
       components: spellComponents(input.invocation),
     },
     requiresTableSpatialFact: true,
@@ -41,7 +41,7 @@ export function spellCastReactionFactsHole(input: {
 
 type SpellCastInterruptFrameInput = {
   readonly casterId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly targetIds: readonly CombatantId[];
   readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
   readonly castingResource: BattleSpellCastingTimeResource;
@@ -57,7 +57,7 @@ type SpellCastInterruptFrameInput = {
 );
 
 export function spellCastMetamagicApplicationsInput(
-  applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
+  applications: readonly CharacterBattleMetamagicOptionFact[],
 ):
   | { readonly metamagicApplications?: never }
   | {
@@ -66,7 +66,7 @@ export function spellCastMetamagicApplicationsInput(
         ...CharacterBattleMetamagicOptionFact[],
       ];
     } {
-  return applications === undefined || applications.length === 0
+  return applications.length === 0
     ? {}
     : {
         metamagicApplications: [applications[0], ...applications.slice(1)],
@@ -80,11 +80,12 @@ export function spellCastInterruptFrame(
   return {
     trigger: "spellCast",
     casterId: input.casterId,
-    spellId: input.invocation.spell.id,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellProcedure: input.invocation.procedure,
     castLevel:
       resource.tag === "spellSlot"
         ? Number(resource.slotLevel)
-        : input.invocation.spell.mechanics.level,
+        : spellExecutionLevel(input.invocation),
     components: spellComponents(input.invocation),
     castingResource: input.castingResource,
     spellSlotCommitment:
@@ -99,7 +100,7 @@ export function spellCastInterruptFrame(
             applications: input.metamagicApplications,
           },
     concentrationCommitment:
-      input.invocation.spell.mechanics.duration.kind === "concentration"
+      input.invocation.spellRuleFacts.duration.kind === "concentration"
         ? { kind: "breakExisting" }
         : { kind: "none" },
     targetIds: input.targetIds,
@@ -109,12 +110,18 @@ export function spellCastInterruptFrame(
 }
 
 export function spellComponents(
-  invocation: SupportedSpellInvocation,
+  invocation: BattleExecutableSpellInvocation,
 ): readonly SpellComponent[] {
-  const components = invocation.spell.mechanics.components;
+  const components = invocation.spellRuleFacts.components;
   return [
-    ...(components.v ? (["V"] as const) : []),
-    ...(components.s ? (["S"] as const) : []),
-    ...(components.m ? (["M"] as const) : []),
+    ...(components.verbal ? (["V"] as const) : []),
+    ...(components.somatic ? (["S"] as const) : []),
+    ...(components.hasMaterial ? (["M"] as const) : []),
   ];
+}
+
+function spellExecutionLevel(
+  invocation: BattleExecutableSpellInvocation,
+): number {
+  return invocation.spellRuleFacts.level;
 }

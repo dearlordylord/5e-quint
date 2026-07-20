@@ -1,13 +1,6 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellPresentation,
-  battleActUnitPresentation,
-} from "./battle-act-composition.ts";
-import {
-  requireCharacterSpellProcedureRefForTest,
-  requireCharacterUnitProcedureRefForTest,
-  resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
 // UNIT-IDENTITY-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
 import { Either } from "effect";
@@ -27,17 +20,15 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 
-import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   activeFeatureSpellSaveDcRouteEvents,
   battleId,
   battleReducerStartRouteEvent,
-  cantripSpellInvocationRef,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   spellSaveDcForCaster,
   startBattle,
@@ -49,7 +40,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
@@ -92,8 +83,6 @@ const innateSorceryExpiresRound = 11;
 const activeInnateSorceryOccurrence = "activeUntilEndOfRound11";
 const sorcererId = combatantId("innate-sorcery-selected-identity-sorcerer");
 const targetId = combatantId("innate-sorcery-selected-identity-target");
-const innateSorcerySourceKey =
-  ongoingFeatureSourceKeyForUnit(innateSorceryUnitId);
 const selectedUnitRuntimeBoundaryIds = new Set<string>();
 
 const unitCatalogResult = buildUnitCatalog({
@@ -214,7 +203,7 @@ function projectBattleState(
 ): InnateSorcerySelectedIdentityProjection {
   const sorcerer = requireCombatant(state, sorcererId);
   const occurrence = sorcerer.activeOngoingFeatureOccurrences.get(
-    innateSorcerySourceKey,
+    innateSorceryProcedureRef(state),
   );
   return {
     bonusActionAvailable: state.currentTurnResources.currentHasBonusAction,
@@ -294,16 +283,7 @@ function resolveInnateSorceryWithRoute(state: BattleState): {
 function spellAttackRollModeForRayOfFrost(
   state: BattleState,
 ): InnateSorcerySpellAttackRollMode {
-  const subject: BattleSubject = {
-    tag: "actionSpell",
-    actorId: sorcererId,
-    procedureRef: requireCharacterSpellProcedureRefForTest(
-      state,
-      sorcererId,
-      cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
-    ),
-    mode: { tag: "cast" },
-  };
+  const subject = rayOfFrostActionSpellAct(state).subject;
   const target = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -370,7 +350,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function characterCombatant(input: {
@@ -454,48 +434,60 @@ function innateSorceryResource(): NonNullable<
 }
 
 function innateSorceryAct(state: BattleState): UnitFeatureAct {
-  const subject: Extract<BattleSubject, { readonly tag: "unitFeature" }> = {
-    tag: "unitFeature",
-    actorId: sorcererId,
-    procedureRef: requireCharacterUnitProcedureRefForTest(
-      state,
-      sorcererId,
-      recordSelectedUnitRuntimeBoundaryId(innateSorceryUnitId),
-    ),
-  };
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is UnitFeatureAct =>
       candidate.subject.tag === "unitFeature" &&
-      candidate.subject.actorId === subject.actorId &&
-      battleActUnitPresentation(candidate)?.unitId === innateSorceryUnitId,
+      candidate.subject.actorId === sorcererId &&
+      candidate.subject.procedureRef === innateSorceryProcedureRef(state),
   );
   if (act === undefined) {
     throw new Error("Expected Innate Sorcery Unit feature act.");
   }
+  recordSelectedUnitRuntimeBoundaryId(innateSorceryUnitId);
   return act;
 }
 
+function innateSorceryProcedureRef(state: BattleState) {
+  const sorcerer = requireCombatant(state, sorcererId);
+  if (sorcerer.origin.kind !== "character") {
+    throw new Error("Expected Innate Sorcery character.");
+  }
+  const binding = sorcerer.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitFeature" &&
+      candidate.procedure.execution.kind === "ongoingFeature" &&
+      candidate.procedure.execution.activationTrigger === "bonusAction" &&
+      candidate.procedure.execution.spellModifiers.some(
+        (modifier) =>
+          modifier.sourceClassName === "sorcerer" &&
+          modifier.saveDcBonus === 1 &&
+          modifier.attackRollMode === "advantage",
+      ),
+  );
+  if (binding === undefined) {
+    throw new Error("Expected admitted Innate Sorcery procedure binding.");
+  }
+  return binding.procedureRef;
+}
+
 function rayOfFrostActionSpellAct(state: BattleState): AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
-  const act = discoverBattleActs(state).find(
+  const sorcerer = requireCombatant(state, sorcererId);
+  if (sorcerer.origin.kind !== "character") {
+    throw new Error("Expected Innate Sorcery character.");
+  }
+  const execution = sorcerer.origin.execution;
+  const act = discoverBattleActCandidates(state).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "actionSpell"; readonly invocation: unknown }
-      >;
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
     } =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === sorcererId &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        rayOfFrostUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "spellAttackDamage",
+      characterSpellProcedure(execution, candidate.subject.procedureRef)
+        ?.procedure === "spellAttackDamage",
   );
   if (act === undefined) {
     throw new Error("Expected Ray of Frost action Spell act.");
@@ -529,7 +521,7 @@ function innateSorceryUsesRemaining(state: BattleState): number {
     throw new Error("Expected Innate Sorcery actor to be a character.");
   }
   const resource = sorcerer.origin.resources.find(
-    (candidate) => candidate.unit.id === innateSorceryUnitId,
+    (candidate) => "usesRemaining" in candidate,
   );
   if (resource === undefined) {
     throw new Error("Expected Innate Sorcery resource.");

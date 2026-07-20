@@ -511,7 +511,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       ordinaryHit,
     });
     if (
-      step.attackRoll.value.missToHitReplacementUnitId !== undefined &&
+      step.attackRoll.value.missToHitReplacementProcedureRef !== undefined &&
       missToHitReplacement === null
     ) {
       return invalidResult(

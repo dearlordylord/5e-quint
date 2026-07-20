@@ -22,6 +22,7 @@ import {
 import type { SpellRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
+import { SpellWeaponAttackOverrideTemplateSchema } from "../../active-effect/codecs.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -32,8 +33,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -49,14 +49,13 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
-  BattleRuntimeObjectSchema,
-  BoundCharacterWeaponAttackActionOptionSchema,
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 const SHILLELAGH_WEAPON_UNIT_IDS = [
@@ -283,29 +282,11 @@ function discoverWeaponAttackOverrideCastAct(
         tag: "bonusActionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: weaponAttackOverrideInvocationRef(invocation),
         mode: { tag: "cast" },
-        componentWeaponItemId: invocation.attachedWeapon.itemId,
       },
       initialHoles: [],
     },
   ];
-}
-
-function weaponAttackOverrideInvocationRef(
-  invocation: WeaponAttackOverrideInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "weaponAttackOverride",
-  };
-}
-
-function weaponAttackOverrideCastSummary(
-  invocation: WeaponAttackOverrideInvocation,
-): string {
-  return `Cast ${invocation.spell.name} as a cantrip on ${invocation.attachedWeapon.attack.weapon.name}.`;
 }
 
 function resolveWeaponAttackOverride(
@@ -318,17 +299,6 @@ function resolveWeaponAttackOverride(
       "Weapon attack override spells do not use target, roll, damage, or save fills.",
     );
   }
-  if (
-    input.input.subject.componentWeaponItemId !==
-    input.invocation.attachedWeapon.itemId
-  ) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Weapon attack override spell no longer matches the selected held weapon.",
-    );
-  }
-
   const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
     spellCastInterruptFrame({
@@ -413,23 +383,15 @@ function weaponAttackOverrideFillSetHasDisallowedFills(
   );
 }
 
-const WeaponAttackOverrideInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "weaponAttackOverride" }
-  >
->(
+const WeaponAttackOverrideExecutionSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: ClassCantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("weaponAttackOverride"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
-    attachedWeapon: Schema.Struct({
-      itemId: Schema.String,
-      attack: BoundCharacterWeaponAttackActionOptionSchema,
-    }),
-    activeEffect: BattleRuntimeObjectSchema,
+    attachedWeaponItemId: Schema.String,
+    activeEffect: SpellWeaponAttackOverrideTemplateSchema,
   }),
 );
 export const weaponAttackOverrideProfile: SpellProcedureProfile<
@@ -438,14 +400,11 @@ export const weaponAttackOverrideProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "weaponAttackOverride",
-  invocationSchema: WeaponAttackOverrideInvocationSchema,
+  executionSchema: WeaponAttackOverrideExecutionSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitWeaponAttackOverride,
   discoverCastAct: discoverWeaponAttackOverrideCastAct,
-  castSummary: weaponAttackOverrideCastSummary,
-  invocationRef: weaponAttackOverrideInvocationRef,
   resolve: resolveWeaponAttackOverride,
 };

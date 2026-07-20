@@ -139,21 +139,25 @@ describe("Flaming Sphere hazard/ram MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createFlamingSphereHazardRamDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: flamingSphereHazardRamStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createFlamingSphereHazardRamDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: flamingSphereHazardRamStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeFlamingSphereHazardRamQuintState(
@@ -210,10 +214,7 @@ function normalizeFlamingSphereHazardRamQuintState(
 function sphereFromQuintState(
   state: Readonly<Record<string, unknown>>,
 ): FlamingSphereHazardRamState["sphere"] {
-  const sphereActive = booleanValue(
-    state["qSphereActive"],
-    "qSphereActive",
-  );
+  const sphereActive = booleanValue(state["qSphereActive"], "qSphereActive");
   return sphereActive
     ? {
         tag: "active",

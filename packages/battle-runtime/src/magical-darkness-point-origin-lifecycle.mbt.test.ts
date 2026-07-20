@@ -61,6 +61,7 @@ import {
   type BattleHole,
   type BattleMagicalDarknessZone,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
@@ -102,7 +103,7 @@ type DarknessProjection = {
 };
 
 type DarknessRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly lastResult: LastResult;
 };
 
@@ -230,29 +231,33 @@ describe("Magical Darkness point-origin lifecycle MBT parity", () => {
 });
 
 function initialRuntimeState(): DarknessRuntimeState {
+  const session = spellBattle({
+    preparedSpells: [spellRecord(darknessUnitId)],
+    spellSlots: [{ spellLevel: 2, count: 1 }],
+  });
   return {
     battle: {
-      ...spellBattle({
-        preparedSpells: [spellRecord(darknessUnitId)],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      }),
-      lightEmitters: [
-        trackedObjectSpellLightEmitter({
-          sourceEffectId: OVERLAPPING_LOW_LEVEL_LIGHT_ID,
-          sourceSpellLevel: 2,
-          objectId: "focused-darkness-overlapping-level-two-object",
-        }),
-        trackedObjectSpellLightEmitter({
-          sourceEffectId: OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
-          sourceSpellLevel: 3,
-          objectId: "focused-darkness-overlapping-level-three-object",
-        }),
-        trackedObjectSpellLightEmitter({
-          sourceEffectId: NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
-          sourceSpellLevel: 2,
-          objectId: "focused-darkness-non-overlapping-level-two-object",
-        }),
-      ],
+      ...session,
+      state: {
+        ...session.state,
+        lightEmitters: [
+          trackedObjectSpellLightEmitter({
+            sourceEffectId: OVERLAPPING_LOW_LEVEL_LIGHT_ID,
+            sourceSpellLevel: 2,
+            objectId: "focused-darkness-overlapping-level-two-object",
+          }),
+          trackedObjectSpellLightEmitter({
+            sourceEffectId: OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
+            sourceSpellLevel: 3,
+            objectId: "focused-darkness-overlapping-level-three-object",
+          }),
+          trackedObjectSpellLightEmitter({
+            sourceEffectId: NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
+            sourceSpellLevel: 2,
+            objectId: "focused-darkness-non-overlapping-level-two-object",
+          }),
+        ],
+      },
     },
     lastResult: "init",
   };
@@ -262,14 +267,14 @@ function castWithAreaAndLightWitnesses(
   state: DarknessRuntimeState,
 ): DarknessRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: darknessUnitId,
     slotLevel: 2,
   });
   const area = requireSpellAreaChoiceHole(act.initialHoles);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         magicalDarknessAreaFill(area, DARKNESS_AREA_ID, [
@@ -283,7 +288,7 @@ function castWithAreaAndLightWitnesses(
     "Expected Darkness cast to resolve.",
   );
   return {
-    battle: resolved.state,
+    battle: { state: resolved.state, context: state.battle.context },
     lastResult: "castWithAreaAndLightWitnesses",
   };
 }
@@ -292,7 +297,10 @@ function breakDarknessConcentration(
   state: DarknessRuntimeState,
 ): DarknessRuntimeState {
   return {
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    battle: {
+      state: breakBattleConcentration(state.battle.state, spellCasterId),
+      context: state.battle.context,
+    },
     lastResult: "concentrationCleaned",
   };
 }
@@ -300,25 +308,34 @@ function breakDarknessConcentration(
 function expireDarknessDuration(
   state: DarknessRuntimeState,
 ): DarknessRuntimeState {
-  const expiring = darknessWithDurationTicks(state.battle, elapsedTimeTicks(1));
+  const expiring = darknessWithDurationTicks(
+    state.battle.state,
+    elapsedTimeTicks(1),
+  );
   return {
     battle: {
-      ...expiring,
-      combatants: tickDurationEffects(expiring.combatants).value,
+      state: {
+        ...expiring,
+        combatants: tickDurationEffects(expiring.combatants).value,
+      },
+      context: state.battle.context,
     },
     lastResult: "durationCleaned",
   };
 }
 
 function darknessProjection(state: DarknessRuntimeState): DarknessProjection {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const zone = magicalDarknessZone(state.battle);
-  const activeEffect = magicalDarknessActiveEffect(state.battle);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const zone = magicalDarknessZone(state.battle.state);
+  const activeEffect = magicalDarknessActiveEffect(state.battle.state);
   return {
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: darknessUnitId,
         slotLevel: 2,
       }) !== undefined,
@@ -359,15 +376,15 @@ function darknessProjection(state: DarknessRuntimeState): DarknessProjection {
             areaId: DARKNESS_AREA_ID,
           }) ?? "none"),
     overlappingLowLevelSpellLightActive: spellLightEmitterActive(
-      state.battle,
+      state.battle.state,
       OVERLAPPING_LOW_LEVEL_LIGHT_ID,
     ),
     overlappingHighLevelSpellLightActive: spellLightEmitterActive(
-      state.battle,
+      state.battle.state,
       OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
     ),
     nonOverlappingLowLevelSpellLightActive: spellLightEmitterActive(
-      state.battle,
+      state.battle.state,
       NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
     ),
     lastResult: state.lastResult,

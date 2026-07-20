@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-independent-attack-sequence
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
 // The spellAttackSequence Spell Procedure Profile: an action-time spell attack
@@ -23,10 +24,8 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellCastSelectionSubject } from "../spells-discovery.ts";
-import { spellAttackSequencePartName } from "../spells-profile-shared.ts";
 import {
   supportedCantripSpellAttackSequenceProfile,
   supportedPreparedSpellAttackSequenceProfile,
@@ -45,7 +44,6 @@ import type {
 import { Schema } from "effect";
 import {
   AttackBonus,
-  BattleRuntimeObjectSchema,
   CantripSpellAttackSequenceTargetingSchema,
   ClassCantripSpellAccessSchema,
   DamageTypeSchema,
@@ -57,7 +55,8 @@ import {
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 type SpellAttackSequenceResolveInput = SpellProcedureProfileResolveInput<
@@ -106,39 +105,10 @@ function discoverSpellAttackSequenceCastAct(
       subject: spellCastSelectionSubject(
         actorId,
         invocation,
-        spellAttackSequenceInvocationRef(invocation),
       ),
       initialHoles,
     },
   ];
-}
-
-function spellAttackSequenceInvocationRef(
-  invocation: SpellAttackSequenceInvocation,
-): SpellInvocationRef {
-  return invocation.resource.tag === "spellSlot"
-    ? {
-        tag: "spellSlot",
-        spellId: spellId(invocation.spell.id),
-        slotLevel: invocation.resource.slotLevel,
-        procedure: "spellAttackSequence",
-      }
-    : {
-        tag: "cantrip",
-        spellId: spellId(invocation.spell.id),
-        procedure: "spellAttackSequence",
-      };
-}
-
-function spellAttackSequenceCastSummary(
-  invocation: SpellAttackSequenceInvocation,
-): string {
-  const partName = spellAttackSequencePartName();
-  const resource =
-    invocation.resource.tag === "spellSlot"
-      ? `using a level ${invocation.resource.slotLevel} Spell Slot`
-      : "as a cantrip";
-  return `Cast ${invocation.spell.name} ${resource}, resolving ${invocation.targeting.attackCount} ${partName}${invocation.targeting.attackCount === 1 ? "" : "s"}.`;
 }
 
 function resolveSpellAttackSequence(
@@ -158,21 +128,16 @@ function resolveSpellAttackSequence(
   });
 }
 
-const SpellAttackSequenceInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellAttackSequence" }
-  >
->(
+const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackSequence"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: CantripSpellAttackSequenceTargetingSchema,
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
       rangeFeet: MovementFeet,
@@ -183,10 +148,10 @@ const SpellAttackSequenceInvocationSchema = spellProcedureInvocationSchema<
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackSequence"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: PreparedSpellAttackSequenceTargetingSchema,
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
       rangeFeet: MovementFeet,
@@ -200,17 +165,15 @@ export const spellAttackSequenceProfile: SpellProcedureProfile<
   Extract<
     SupportedSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
-  >
+  >,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellAttackSequence",
-  invocationSchema: SpellAttackSequenceInvocationSchema,
+  executionSchema: SpellAttackSequenceInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpellAttackSequence,
   discoverCastAct: discoverSpellAttackSequenceCastAct,
-  castSummary: spellAttackSequenceCastSummary,
-  invocationRef: spellAttackSequenceInvocationRef,
   resolve: resolveSpellAttackSequence,
 };

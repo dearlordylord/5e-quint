@@ -129,7 +129,11 @@ export function readiedSpellInitialHoles(
   const caster = state.combatants.get(casterId);
   const invocation =
     caster?.origin.kind === "character"
-      ? characterSpellProcedure(caster.origin.execution, readied.procedureRef)
+      ? characterSpellProcedure(
+          caster.origin.execution,
+          readied.procedureRef,
+          caster,
+        )
       : undefined;
   if (invocation === undefined || !isReadiedSpellInvocation(invocation)) {
     return [];
@@ -198,7 +202,11 @@ export function resolveReleaseReadiedSpellCommand(
   const caster = input.state.combatants.get(casterId);
   const invocation =
     caster?.origin.kind === "character"
-      ? characterSpellProcedure(caster.origin.execution, readied.procedureRef)
+      ? characterSpellProcedure(
+          caster.origin.execution,
+          readied.procedureRef,
+          caster,
+        )
       : undefined;
   if (invocation === undefined || !isReadiedSpellInvocation(invocation)) {
     return invalidResult(

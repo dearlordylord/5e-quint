@@ -23,27 +23,25 @@ import {
   type Ability,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
 import type {
   BattleObjectId,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
-import { characterUnitProcedureRef } from "../character-execution.ts";
 import {
-  effectiveCharacterBattleCantrips,
-  effectiveCharacterBattlePreparedSpells,
-} from "../character-battle-resources.ts";
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterUnitProcedure,
+} from "../character-execution.ts";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
   CharacterWeaponAttackAbilityChoice,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
+import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import type {
   OngoingFeatureDamageModifier,
   OngoingFeatureRollModifier,
-  SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import {
   HUNTERS_PREY_SUPPORT_PROFILE,
@@ -82,15 +80,22 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type {
+  RuntimeSpellProcedureExecution,
+  UnitFeatureProcedureExecution,
+} from "../character-execution.ts";
+
+type RuntimeSpellProcedure =
+  | SupportedSpellInvocation
+  | RuntimeSpellProcedureExecution;
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   battleCreatureStateWithKnockOutPreservedConditions,
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
-  ongoingFeatureSourceKeyForUnit,
 } from "./creature-state.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
-import { attackDamageDieFloorChoiceUnitIds } from "./attack-damage-die-floor-choice.ts";
+import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   activeRageSourceKeysForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
@@ -103,7 +108,7 @@ import {
 } from "./creature-state-leaves.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
 import {
-  activeOngoingFeatureOccurrenceFromProfile,
+  activeOngoingFeatureOccurrenceFromExecution,
   extendOngoingFeatureToEndOfNextTurn,
   ongoingFeatureProfileHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
@@ -181,7 +186,6 @@ type WeaponMasteryPropertySupportProfile =
 
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
-  readonly unitId: UnitRecord["id"];
   readonly procedureRef: BattleProcedureExecutionRef;
 };
 
@@ -410,7 +414,7 @@ function objectTargetAttackRollSourceFlags(
 export function requiredSpellObjectTargetAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   targetObjectId: BattleObjectId,
   attackerCanSeeObject: boolean | undefined,
 ): AttackRollMode | undefined {
@@ -483,7 +487,7 @@ export function requiredSpellAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   targetSpatialFacts: readonly BattleTargetSpatialFact[] = [],
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
@@ -538,7 +542,7 @@ export function attackRollModeWithOptionalOngoingFeature(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
-  activatedOngoingFeatureUnitId: UnitRecord["id"] | undefined,
+  activatedOngoingFeatureProcedureRef: BattleProcedureExecutionRef | undefined,
 ): AttackRollMode | undefined {
   const baseline = requiredAttackRollMode(
     state,
@@ -547,7 +551,7 @@ export function attackRollModeWithOptionalOngoingFeature(
     attack,
     targetSpatialFacts,
   );
-  if (activatedOngoingFeatureUnitId === undefined) {
+  if (activatedOngoingFeatureProcedureRef === undefined) {
     return baseline;
   }
   if (baseline === "disadvantage") {
@@ -581,13 +585,21 @@ export function attackRollOngoingFeatureActivations(
   ) {
     return [];
   }
-  return [...attacker.origin.ongoingFeatureProfiles.values()].flatMap(
-    (unitFeature): readonly AttackRollFeatureActivation[] => {
+  return attacker.origin.execution.procedureBindings.flatMap(
+    (binding): readonly AttackRollFeatureActivation[] => {
+      const procedure = binding.procedure;
+      if (
+        procedure.kind !== "unitFeature" ||
+        procedure.execution.kind !== "ongoingFeature"
+      ) {
+        return [];
+      }
+      const unitFeature = procedure.execution;
       if (
         unitFeature.activationTrigger !== "firstAttackRoll" ||
         unitFeature.spendsUse ||
         activeOngoingFeatureOccurrencesForCombatant(attacker).has(
-          ongoingFeatureSourceKeyForUnit(unitFeature.unit.id),
+          binding.procedureRef,
         ) ||
         !unitFeature.rollModifiers.some(
           (modifier) =>
@@ -600,8 +612,7 @@ export function attackRollOngoingFeatureActivations(
       }
       return [
         {
-          unitId: unitFeature.unit.id,
-          label: unitFeature.unit.name,
+          procedureRef: binding.procedureRef,
           rollMode: "advantage" as const,
         },
       ];
@@ -613,34 +624,48 @@ export function attackRollOngoingFeatureActivationProfile(
   state: BattleState,
   attackerId: CombatantId,
   attack: SupportedAttackActionOption,
-  unitId: UnitRecord["id"] | undefined,
+  procedureRef: BattleProcedureExecutionRef | undefined,
   allowAlreadyActiveReplay: boolean,
-): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "ongoingFeature" }
-> | null {
-  if (unitId === undefined) return null;
+):
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly execution: Extract<
+        UnitFeatureProcedureExecution,
+        { readonly kind: "ongoingFeature" }
+      >;
+    }
+  | null {
+  if (procedureRef === undefined) return null;
   const attacker = state.combatants.get(attackerId);
   if (!isCharacterBattleCreatureState(attacker)) return null;
-  const unitFeature = attacker.origin.ongoingFeatureProfiles.get(
-    ongoingFeatureSourceKeyForUnit(unitId),
+  const procedure = characterUnitProcedure(
+    attacker.origin.execution,
+    procedureRef,
+    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   );
+  const activation =
+    procedure?.kind === "unitFeature" &&
+    procedure.execution.kind === "ongoingFeature"
+      ? { procedureRef, execution: procedure.execution }
+      : undefined;
+  const unitFeature = activation?.execution;
   if (
-    unitFeature?.kind !== "ongoingFeature" ||
+    activation === undefined ||
+    unitFeature === undefined ||
     unitFeature.activationTrigger !== "firstAttackRoll" ||
     !(
       attackRollOngoingFeatureActivations(state, attackerId, attack).some(
-        (option) => option.unitId === unitId,
+        (option) => option.procedureRef === activation.procedureRef,
       ) ||
       (allowAlreadyActiveReplay &&
         activeOngoingFeatureOccurrencesForCombatant(attacker).has(
-          ongoingFeatureSourceKeyForUnit(unitId),
+          activation.procedureRef,
         ))
     )
   ) {
     return null;
   }
-  return unitFeature;
+  return activation;
 }
 
 export function ongoingFeatureGrantsAttackRollMode(
@@ -687,7 +712,7 @@ export function ongoingFeatureGrantsAttackRollMode(
 
 function ongoingFeatureGrantsSpellAttackRollMode(
   attacker: BattleCreatureState | undefined,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   mode: AttackRollMode,
 ): boolean {
   return (
@@ -710,18 +735,12 @@ function ongoingFeatureGrantsSpellAttackRollMode(
 
 function spellInvocationIsFromSpellcastingSource(
   combatant: BattleCreatureState | undefined,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
-  if (!isCharacterBattleCreatureState(combatant)) {
-    return false;
-  }
-  const spellcasting = combatant.origin.spellcasting;
   return (
-    spellcasting !== undefined &&
-    [
-      ...effectiveCharacterBattleCantrips(spellcasting),
-      ...effectiveCharacterBattlePreparedSpells(spellcasting),
-    ].some((spell) => spell.id === invocation.spell.id)
+    isCharacterBattleCreatureState(combatant) &&
+    combatant.origin.spellcasting !== undefined &&
+    spellInvocationIsSpellcasting(invocation)
   );
 }
 
@@ -929,7 +948,7 @@ export function applyWeaponMasterySapOnHit(
 }
 
 type TacticalMasterReplacementSelection = {
-  readonly unitId: UnitRecord["id"];
+  readonly procedureRef: BattleProcedureExecutionRef;
   readonly replacementProperties: readonly TacticalMasterReplacementMasteryProperty[];
 };
 
@@ -1334,11 +1353,11 @@ export function weaponMasteryCleaveDamageHole(
   attack: CharacterWeaponAttackActionOption,
   critical: boolean,
   attackRoll: BattleAttackRollResult,
-  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  eligibleAttackDamageDieFloorChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(attack, critical, attackRoll);
-  const damageDieFloorChoiceUnitIds = attackDamageDieFloorChoiceUnitIds(
-    eligibleAttackDamageDieFloorChoiceUnitIds,
+  const damageDieFloorProcedureRefs = attackDamageDieFloorChoiceProcedureRefs(
+    eligibleAttackDamageDieFloorChoiceProcedureRefs,
   );
   return {
     kind: "rolledDice",
@@ -1347,9 +1366,9 @@ export function weaponMasteryCleaveDamageHole(
     label: `Cleave damage (${expression})`,
     attack,
     critical,
-    ...(damageDieFloorChoiceUnitIds === null
+    ...(damageDieFloorProcedureRefs === null
       ? {}
-      : { attackDamageDieFloorChoiceUnitIds: damageDieFloorChoiceUnitIds }),
+      : { attackDamageDieFloorChoiceProcedureRefs: damageDieFloorProcedureRefs }),
   };
 }
 
@@ -1371,7 +1390,6 @@ export function weaponMasteryCleaveExtraAttack(
 }
 
 export type HuntersPreyHordeBreakerSelection = {
-  readonly unitId: UnitRecord["id"];
   readonly procedureRef: BattleProcedureExecutionRef;
 };
 
@@ -1463,7 +1481,7 @@ export function huntersPreyHordeBreakerDamageHole(
   spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
-  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  eligibleAttackDamageDieFloorChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
     attack,
@@ -1474,8 +1492,8 @@ export function huntersPreyHordeBreakerDamageHole(
     spellMarkedDamageRiders,
     ongoingDamageModifier,
   );
-  const damageDieFloorChoiceUnitIds = attackDamageDieFloorChoiceUnitIds(
-    eligibleAttackDamageDieFloorChoiceUnitIds,
+  const damageDieFloorProcedureRefs = attackDamageDieFloorChoiceProcedureRefs(
+    eligibleAttackDamageDieFloorChoiceProcedureRefs,
   );
   return {
     kind: "rolledDice",
@@ -1491,9 +1509,9 @@ export function huntersPreyHordeBreakerDamageHole(
     ...(spellMarkedDamageRiders.length === 0
       ? {}
       : { spellMarkedDamageRiders }),
-    ...(damageDieFloorChoiceUnitIds === null
+    ...(damageDieFloorProcedureRefs === null
       ? {}
-      : { attackDamageDieFloorChoiceUnitIds: damageDieFloorChoiceUnitIds }),
+      : { attackDamageDieFloorChoiceProcedureRefs: damageDieFloorProcedureRefs }),
   };
 }
 
@@ -1529,10 +1547,12 @@ export function huntersPreyHordeBreakerTargetIsLegal(input: {
 export function recordHuntersPreyHordeBreakerUsed(
   state: BattleState,
   attackerId: CombatantId,
-  unitId: UnitRecord["id"],
+  procedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   return state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
-    (usage) => usage.attackerId === attackerId && usage.unitId === unitId,
+    (usage) =>
+      usage.attackerId === attackerId &&
+      usage.procedureRef === procedureRef,
   )
     ? state
     : {
@@ -1541,7 +1561,7 @@ export function recordHuntersPreyHordeBreakerUsed(
           ...state.currentTurnResources,
           huntersPreyHordeBreakerUsedThisTurn: [
             ...state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
-            { attackerId, unitId },
+            { attackerId, procedureRef },
           ],
         },
       };
@@ -1564,31 +1584,24 @@ export function huntersPreyHordeBreakerSelection(
   if (!isCharacterBattleCreatureState(attacker)) {
     return null;
   }
-  const unitRef = attacker.origin.characterUnitRefs.find(
-    (candidate) =>
+  const binding = attacker.origin.execution.procedureBindings.find(
+    (candidate) => {
+      const procedure = candidate.procedure;
+      return (
       !state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
         (usage) =>
-          usage.attackerId === attackerId && usage.unitId === candidate.unit.id,
+            usage.attackerId === attackerId &&
+            usage.procedureRef === candidate.procedureRef,
       ) &&
-      candidate.supportProfiles.some(
-        (profile) =>
-          typeof profile === "object" &&
-          profile.kind === HUNTERS_PREY_SUPPORT_PROFILE &&
-          profile.huntersPrey.kind === "nearbyDifferentTargetSameWeaponAttack",
-      ),
-  );
-  if (unitRef === undefined) return null;
-  const procedureRef = characterUnitProcedureRef(
-    attacker.origin.execution,
-    unitRef.unit.id,
-    {
-      kind: "unitSupportProfile",
-      supportKinds: new Set([HUNTERS_PREY_SUPPORT_PROFILE]),
+        procedure.kind === "unitSupportProfile" &&
+        typeof procedure.execution === "object" &&
+        procedure.execution.kind === HUNTERS_PREY_SUPPORT_PROFILE &&
+        procedure.execution.huntersPrey.kind ===
+          "nearbyDifferentTargetSameWeaponAttack"
+      );
     },
   );
-  return procedureRef === undefined
-    ? null
-    : { unitId: unitRef.unit.id, procedureRef };
+  return binding === undefined ? null : { procedureRef: binding.procedureRef };
 }
 
 function cleaveAbilityChoices(
@@ -1706,25 +1719,23 @@ function tacticalMasterReplacementSelection(
   ) {
     return null;
   }
-  const unitRef = attacker.origin.characterUnitRefs.find((candidate) =>
-    candidate.supportProfiles.some(
-      (profile) =>
-        typeof profile === "object" &&
-        profile.kind === TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
-    ),
+  const binding = attacker.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitSupportProfile" &&
+      typeof candidate.procedure.execution === "object" &&
+      candidate.procedure.execution.kind ===
+        TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   );
-  const supportProfile = unitRef?.supportProfiles.find(
-    (profile) =>
-      typeof profile === "object" &&
-      profile.kind === TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
-  );
-  return unitRef === undefined ||
-    supportProfile === undefined ||
-    typeof supportProfile !== "object"
+  return binding === undefined ||
+    binding.procedure.kind !== "unitSupportProfile" ||
+    typeof binding.procedure.execution !== "object" ||
+    binding.procedure.execution.kind !==
+      TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE
     ? null
     : {
-        unitId: unitRef.unit.id,
-        replacementProperties: supportProfile.replacementProperties,
+        procedureRef: binding.procedureRef,
+        replacementProperties:
+          binding.procedure.execution.replacementProperties,
       };
 }
 
@@ -1784,35 +1795,14 @@ function selectedWeaponMasteryProperty(input: {
   ) {
     return null;
   }
-  const unitRef = attacker.origin.characterUnitRefs.find((candidate) =>
-    weaponMasteryPropertySupportProfiles(candidate.supportProfiles).includes(
-      input.supportProfile,
-    ),
+  const binding = attacker.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitSupportProfile" &&
+      candidate.procedure.execution === input.supportProfile,
   );
-  if (unitRef === undefined) return null;
-  const procedureRef = characterUnitProcedureRef(
-    attacker.origin.execution,
-    unitRef.unit.id,
-    {
-      kind: "unitSupportProfile",
-      supportKinds: new Set([input.supportProfile]),
-    },
-  );
-  return procedureRef === undefined
+  return binding === undefined
     ? null
-    : { attack, unitId: unitRef.unit.id, procedureRef };
-}
-
-function weaponMasteryPropertySupportProfiles(
-  supportProfiles: readonly BattleUnitSupportProfile[],
-): readonly WeaponMasteryPropertySupportProfile[] {
-  return supportProfiles.filter(isWeaponMasteryPropertySupportProfile);
-}
-
-function isWeaponMasteryPropertySupportProfile(
-  supportProfile: BattleUnitSupportProfile,
-): supportProfile is WeaponMasteryPropertySupportProfile {
-  return weaponMasteryPropertyForSupportProfile(supportProfile) !== null;
+    : { attack, procedureRef: binding.procedureRef };
 }
 
 function weaponMasteryPropertyForSupportProfile(
@@ -2003,10 +1993,13 @@ export function recordAttackRollOngoingFeatures(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
-  activatedOngoingFeatureProfile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "ongoingFeature" }
-  > | null,
+  activatedOngoingFeatureProfile: {
+    readonly procedureRef: BattleProcedureExecutionRef;
+    readonly execution: Extract<
+      UnitFeatureProcedureExecution,
+      { readonly kind: "ongoingFeature" }
+    >;
+  } | null,
   relationshipFacts: readonly BattleAttackRollRelationshipFact[],
 ): BattleState {
   const attacker = state.combatants.get(attackerId);
@@ -2017,13 +2010,12 @@ export function recordAttackRollOngoingFeatures(
     isCharacterBattleCreatureState(attacker) &&
     activatedOngoingFeatureProfile !== null &&
     ongoingFeatureProfileIsRecklessAttackForFrenzy(
-      activatedOngoingFeatureProfile,
+      activatedOngoingFeatureProfile.execution,
     )
       ? activeRageSourceKeysForFrenzy(attacker).map((rageSourceKey) => ({
           attackerId,
-          recklessAttackSourceKey: ongoingFeatureSourceKeyForUnit(
-            activatedOngoingFeatureProfile.unit.id,
-          ),
+          recklessAttackSourceKey:
+            activatedOngoingFeatureProfile.procedureRef,
           rageSourceKey,
         }))
       : [];
@@ -2069,15 +2061,22 @@ export function stateWithActiveOngoingFeatureOccurrence(
   state: BattleState,
   actor: BattleCreatureState,
   actorId: CombatantId,
-  profile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "ongoingFeature" }
-  >,
+  activation: {
+    readonly procedureRef: BattleProcedureExecutionRef;
+    readonly execution: Extract<
+      UnitFeatureProcedureExecution,
+      { readonly kind: "ongoingFeature" }
+    >;
+  },
 ): BattleState {
   const occurrences = new Map(actor.activeOngoingFeatureOccurrences);
   occurrences.set(
-    ongoingFeatureSourceKeyForUnit(profile.unit.id),
-    activeOngoingFeatureOccurrenceFromProfile(state, actorId, profile),
+    activation.procedureRef,
+    activeOngoingFeatureOccurrenceFromExecution(
+      state,
+      actorId,
+      activation.execution,
+    ),
   );
   return {
     ...state,

@@ -22,6 +22,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   testDaggerAttack,
   characterSeed,
@@ -34,13 +35,13 @@ import {
 } from "./identity.ts";
 import { boundAttackExecutionSelectionKey } from "./battle-action-options.ts";
 
-function identicalDaggerBattle(name = "Dagger") {
+function identicalDaggerSession(name = "Dagger") {
   const attack = testDaggerAttack();
   const renamedAttack = {
     ...attack,
     weapon: { ...attack.weapon, name },
   };
-  return startBattleRight({
+  return startBattleSessionRight({
     battleId: battleId("battle-character-attack-execution-references"),
     combatants: [
       characterSeed({
@@ -62,6 +63,10 @@ function identicalDaggerBattle(name = "Dagger") {
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
+}
+
+function identicalDaggerBattle(name = "Dagger") {
+  return identicalDaggerSession(name).state;
 }
 
 function fighterOrigin(state: ReturnType<typeof identicalDaggerBattle>) {
@@ -126,8 +131,10 @@ describe("character attack execution references", () => {
   });
 
   test("keeps presentation names outside the reducer protocol", () => {
-    const canonical = identicalDaggerBattle();
-    const renamed = identicalDaggerBattle("Synthetic Needle");
+    const canonicalSession = identicalDaggerSession();
+    const renamedSession = identicalDaggerSession("Synthetic Needle");
+    const canonical = canonicalSession.state;
+    const renamed = renamedSession.state;
     const canonicalOrigin = fighterOrigin(canonical);
     const renamedOrigin = fighterOrigin(renamed);
 
@@ -149,7 +156,7 @@ describe("character attack execution references", () => {
     });
     expect(subject).not.toHaveProperty("attackName");
 
-    const act = discoverBattleActs(renamed).find(
+    const act = discoverBattleActs(renamedSession).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&

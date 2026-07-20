@@ -17,7 +17,7 @@ import { expect } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import type { BattleState } from "./index.ts";
+import type { BattleRuntimeSession } from "./index.ts";
 import {
   aidUnitId,
   barkskinUnitId,
@@ -261,12 +261,12 @@ function recordDiscoveredInvocation(
   const act =
     input.actionTag === "bonusActionSpell"
       ? bonusSpellAct({
-          state,
+          session: state,
           spellId: input.spellId,
           slotLevel: 2,
         })
       : spellAct({
-          state,
+          session: state,
           spellId: input.spellId,
           slotLevel: 2,
         });
@@ -291,7 +291,7 @@ function resolveEnhanceAbilityHigherSlotPerTarget(): Level2ProtectionSpellSelect
     extraTargetIds: [enhanceAbilitySecondTargetId],
   });
   const act = spellAct({
-    state,
+    session: state,
     spellId: enhanceAbilityUnitId,
     slotLevel: 3,
   });
@@ -311,7 +311,7 @@ function resolveEnhanceAbilityHigherSlotPerTarget(): Level2ProtectionSpellSelect
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   const abilityByTarget = requireHole(act.initialHoles, "targetAbilityChoices");
   const result = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [
       spellTargetListFill(targetList, spellCasterId, enhanceAbilityUnitId, [
@@ -369,7 +369,7 @@ function expectedProjection(
   return { lastResult };
 }
 
-function selectedSpellBattle(spell: SpellRecord): BattleState {
+function selectedSpellBattle(spell: SpellRecord): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],

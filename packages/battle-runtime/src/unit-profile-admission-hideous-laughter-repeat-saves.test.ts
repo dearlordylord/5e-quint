@@ -73,7 +73,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseState.state, spellTargetId);
     const targetWithConditions =
       battleCreatureStateWithKnockOutPreservedConditions(
         target,
@@ -86,8 +86,8 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         ),
       );
     const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(spellTargetId, {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...targetWithConditions,
         activeEffects: [
           ...target.activeEffects,
@@ -191,7 +191,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseState.state, spellTargetId);
     const hideousLaughterEffect = {
       kind: "hideousLaughter",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -219,10 +219,10 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       ),
     );
     const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants)
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants)
         .set(spellCasterId, {
-          ...requireCombatant(baseState, spellCasterId),
+          ...requireCombatant(baseState.state, spellCasterId),
           concentration: {
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(hideousLaughterUnitId),
@@ -235,7 +235,10 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
           activeEffects: [hideousLaughterEffect],
         }),
     };
-    const act = spellAct({ state, spellId: eldritchBlastUnitId });
+    const act = spellAct({
+      session: { ...baseState, state },
+      spellId: eldritchBlastUnitId,
+    });
     const targetFills = act.initialHoles
       .filter(
         (
@@ -372,7 +375,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       targetHp: 20,
       targetMaxHp: 20,
     });
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseState.state, spellTargetId);
     const hideousLaughterEffect = {
       kind: "hideousLaughter",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -400,13 +403,16 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       ),
     );
     const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(spellTargetId, {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...affectedTarget,
         activeEffects: [hideousLaughterEffect],
       }),
     };
-    const act = spellAct({ state, spellId: iceKnifeUnitId });
+    const act = spellAct({
+      session: { ...baseState, state },
+      spellId: iceKnifeUnitId,
+    });
     const targetFill = spellTargetFill(
       requireHole(act.initialHoles, "targetChoice"),
       iceKnifeUnitId,
@@ -557,7 +563,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       throw new Error(baseStateResult.left.message);
     }
     const baseState = baseStateResult.right;
-    const target = requireCombatant(baseState, spellTargetId);
+    const target = requireCombatant(baseState.state, spellTargetId);
     const hideousLaughterEffect = {
       kind: "hideousLaughter",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -585,13 +591,13 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       ),
     );
     const state: BattleState = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(spellTargetId, {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...affectedTarget,
         activeEffects: [hideousLaughterEffect],
       }),
     };
-    const subject = weaponAttackSubject(state, "Longsword");
+    const subject = weaponAttackSubject({ ...baseState, state }, "Longsword");
     const targetHole = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

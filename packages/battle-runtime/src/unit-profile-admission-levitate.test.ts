@@ -1,7 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME levitate
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-levitated-creature
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import type {
   BattleFill,
@@ -29,7 +28,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   breakBattleConcentration,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   elapsedTimeTicks,
   endTurn,
   movementFeet,
@@ -39,8 +38,12 @@ import {
 describe("L12G deterministic Levitate creature admission", () => {
   test("levitate admits the creature branch as a level-2 Magic Action Spell Slot profile", () => {
     const spell = spellRecord(levitateUnitId);
-    const state = levitateSpellBattle(spell);
-    const act = spellAct({ state, spellId: levitateUnitId, slotLevel: 2 });
+    const session = levitateSpellBattle(spell);
+    const act = spellAct({
+      session,
+      spellId: levitateUnitId,
+      slotLevel: 2,
+    });
 
     expect(act).toEqual(
       expect.objectContaining({
@@ -61,19 +64,21 @@ describe("L12G deterministic Levitate creature admission", () => {
     const cast = castWillingLevitate({ initialRiseFeet: 12 });
     const target = requireCombatant(cast.state, spellTargetId);
 
-    expect(requireLevitatedEffect(cast.state)).toEqual({
-      kind: "spellLevitatedCreature",
-      sourceProcedureRef: expect.any(String),
-      sourceCombatantId: spellCasterId,
-      altitudeFeet: movementFeet(12),
-      maxAltitudeChangeFeet: movementFeet(20),
-      rangeFeet: movementFeet(60),
-      expiresAt: {
-        kind: "concentration",
-        combatantId: spellCasterId,
-        durationTicks: elapsedTimeTicks(100),
-      },
-    });
+    expect(requireLevitatedEffect(cast.state)).toEqual(
+      expect.objectContaining({
+        kind: "spellLevitatedCreature",
+        sourceProcedureRef: expect.any(String),
+        sourceCombatantId: spellCasterId,
+        altitudeFeet: movementFeet(12),
+        maxAltitudeChangeFeet: movementFeet(20),
+        rangeFeet: movementFeet(60),
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: elapsedTimeTicks(100),
+        },
+      }),
+    );
     expect(target.activeEffects).toContainEqual(
       requireLevitatedEffect(cast.state),
     );
@@ -81,8 +86,13 @@ describe("L12G deterministic Levitate creature admission", () => {
 
   test("unwilling creature save success spends the slot without levitating or starting concentration", () => {
     const spell = spellRecord(levitateUnitId);
-    const state = levitateSpellBattle(spell);
-    const act = spellAct({ state, spellId: levitateUnitId, slotLevel: 2 });
+    const session = levitateSpellBattle(spell);
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: levitateUnitId,
+      slotLevel: 2,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const needsSave = resolveBattleSubject({
       state,
@@ -138,8 +148,13 @@ describe("L12G deterministic Levitate creature admission", () => {
 
   test("unwilling creature save success rejects an inert initial-rise fill", () => {
     const spell = spellRecord(levitateUnitId);
-    const state = levitateSpellBattle(spell);
-    const act = spellAct({ state, spellId: levitateUnitId, slotLevel: 2 });
+    const session = levitateSpellBattle(spell);
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: levitateUnitId,
+      slotLevel: 2,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const needsSave = resolveBattleSubject({
       state,
@@ -208,8 +223,13 @@ describe("L12G deterministic Levitate creature admission", () => {
 
   test("levitate creature cast requires a caller-selected initial rise up to 20 feet", () => {
     const spell = spellRecord(levitateUnitId);
-    const state = levitateSpellBattle(spell);
-    const act = spellAct({ state, spellId: levitateUnitId, slotLevel: 2 });
+    const session = levitateSpellBattle(spell);
+    const state = session.state;
+    const act = spellAct({
+      session,
+      spellId: levitateUnitId,
+      slotLevel: 2,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const needsInitialRise = resolveBattleSubject({
       state,
@@ -278,7 +298,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster end turn.");
     }
-    const moveAct = discoverBattleActs(targetTurn.state).find(
+    const moveAct = discoverBattleActCandidates(targetTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "move",
@@ -311,9 +331,8 @@ describe("L12G deterministic Levitate creature admission", () => {
           levitatedMovement: {
             kind: "levitatedMovement",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(levitateUnitId),
-            ),
+            sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
+              .sourceProcedureRef,
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "down",
@@ -339,9 +358,8 @@ describe("L12G deterministic Levitate creature admission", () => {
           levitatedMovement: {
             kind: "levitatedMovement",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(levitateUnitId),
-            ),
+            sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
+              .sourceProcedureRef,
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "down",
@@ -376,7 +394,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     if (nextCasterTurn.tag !== "resolved") {
       throw new Error("Expected target end turn.");
     }
-    const altitudeAct = discoverBattleActs(nextCasterTurn.state).find(
+    const altitudeAct = discoverBattleActCandidates(nextCasterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "levitateAltitudeControl",
@@ -404,9 +422,8 @@ describe("L12G deterministic Levitate creature admission", () => {
           {
             kind: "levitatedTargetWithinSpellRange",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(levitateUnitId),
-            ),
+            sourceProcedureRef: requireLevitatedEffect(nextCasterTurn.state)
+              .sourceProcedureRef,
             targetId: spellTargetId,
             rangeFeet: movementFeet(60),
           },
@@ -432,13 +449,13 @@ describe("L12G deterministic Levitate creature admission", () => {
     });
     const casterTurn = advanceToNextCasterTurn(cast.state);
     expect(
-      discoverBattleActs(casterTurn).some(
+      discoverBattleActCandidates(casterTurn).some(
         (candidate) =>
           candidate.subject.tag === "runtimeCommand" &&
           candidate.subject.command === "levitateAltitudeControl",
       ),
     ).toBe(false);
-    const moveAct = discoverBattleActs(casterTurn).find(
+    const moveAct = discoverBattleActCandidates(casterTurn).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "move",
@@ -458,9 +475,10 @@ describe("L12G deterministic Levitate creature admission", () => {
           levitatedMovement: {
             kind: "levitatedMovement",
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(levitateUnitId),
-            ),
+            sourceProcedureRef: requireLevitatedEffect(
+              casterTurn,
+              spellCasterId,
+            ).sourceProcedureRef,
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "up",
@@ -533,8 +551,13 @@ function castWillingLevitate(
   { readonly tag: "resolved" }
 > {
   const spell = spellRecord(levitateUnitId);
-  const state = levitateSpellBattle(spell);
-  const act = spellAct({ state, spellId: levitateUnitId, slotLevel: 2 });
+  const session = levitateSpellBattle(spell);
+  const state = session.state;
+  const act = spellAct({
+    session,
+    spellId: levitateUnitId,
+    slotLevel: 2,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const targetId = input.targetId ?? spellTargetId;
   const needsInitialRise = resolveBattleSubject({

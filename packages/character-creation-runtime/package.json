@@ -25,7 +25,7 @@
     "effect": "^3.21.0"
   },
   "devDependencies": {
-    "@firfi/quint-connect": "^2.0.0",
+    "@firfi/quint-connect": "catalog:",
     "@types/node": "^22.10.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "fast-check": "3.23.2",

@@ -12,15 +12,16 @@ import {
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   type BattleState,
   type BattleFill,
   type BattleReducerRouteEvent,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
+  characterBattleFeatureInitForTest,
   resolveBattleSubject,
   characterSeed,
   characterAttackSubjectForTest,
@@ -316,7 +317,7 @@ function halflingNimblenessBattle(input: {
         displayName: "Nimble Mover",
         initiative: 20,
         size: "small",
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
         characterUnitRefs: input.selected ? [unitRef.right] : [],
       }),
       characterSeed({
@@ -476,7 +477,7 @@ function observeMovementRouteResult(
     actorId: nimbleMoverId,
     command: "move",
   };
-  const moveAct = discoverBattleActs(state).find(
+  const moveAct = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.actorId === nimbleMoverId &&
@@ -523,7 +524,7 @@ function observeOrdinaryMovementRoute(
     actorId: nimbleMoverId,
     command: "move",
   };
-  const moveAct = discoverBattleActs(state).find(
+  const moveAct = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
       act.subject.actorId === nimbleMoverId &&

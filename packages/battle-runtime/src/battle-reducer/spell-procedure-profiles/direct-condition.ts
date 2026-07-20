@@ -6,12 +6,14 @@
 // that applies a spell-owned condition to touched creature targets, with
 // Concentration duration and target-action early end.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  ElapsedTimeTicksSchema,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord, TargetSelection } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -24,7 +26,7 @@ import {
   type DirectConditionSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { applyDirectConditionSpellEffects } from "../direct-condition-lifecycle.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -48,10 +50,11 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 import {
-  BattleRuntimeObjectSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
+import {
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -186,29 +189,11 @@ function discoverDirectConditionCastAct(
             tag: "actionSpell",
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: directConditionInvocationRef(invocation),
             mode: { tag: "cast" },
           },
           initialHoles: [targetHole],
         },
       ];
-}
-
-function directConditionInvocationRef(
-  invocation: DirectConditionSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "directCondition",
-  };
-}
-
-function directConditionCastSummary(
-  invocation: DirectConditionSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveDirectCondition(
@@ -275,7 +260,9 @@ function resolveDirectCondition(
           input.input.subject.tag === "bonusActionSpell"
             ? { kind: "bonusAction" }
             : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
+        ...spellCastMetamagicApplicationsInput(
+          input.metamagicApplications ?? [],
+        ),
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -333,21 +320,28 @@ function resolveDirectCondition(
   };
 }
 
-const DirectConditionInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "directCondition" }>
->(
+const DirectConditionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("directCondition"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Number,
     }),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: Schema.Struct({
+      kind: Schema.Literal("targetActionEndedSpellCondition"),
+      sourceCombatantId: CombatantId,
+      condition: Schema.Literal("invisible"),
+      expiresAt: Schema.Struct({
+        kind: Schema.Literal("concentration"),
+        combatantId: CombatantId,
+        durationTicks: ElapsedTimeTicksSchema,
+      }),
+    }),
     rangeFeet: MovementFeet,
   }),
 );
@@ -357,14 +351,11 @@ export const directConditionProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   procedure: "directCondition",
-  invocationSchema: DirectConditionInvocationSchema,
+  executionSchema: DirectConditionInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitDirectCondition,
   discoverCastAct: discoverDirectConditionCastAct,
-  castSummary: directConditionCastSummary,
-  invocationRef: directConditionInvocationRef,
   resolve: resolveDirectCondition,
 };

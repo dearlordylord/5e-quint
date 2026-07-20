@@ -1,6 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  startBattleRight,
+  battleProcedureExecutionRefForTest,
+  startBattleSessionRight,
   requireResolved,
   requireHole,
   targetFill,
@@ -26,28 +27,29 @@ import {
   attackBonus,
   BattleFillSchema,
   BattleHoleSchema,
+  BattleSubjectSchema,
   battleId,
   Either,
   elapsedTimeTicks,
   endTurn,
+  discoverBattleActs,
+  findAct,
   holeId,
   holeInstanceKey,
   movementFeet,
   resolveBattleSubject,
   Schema,
-  spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
 import type {
-  BattleActDiscoverySubject,
-  BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
+  BattleRuntimeSession,
   CombatantId,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: spell riders, invocations, and codecs", () => {
   test("spell attack riders use SRD-specific expiration anchors", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-spell-rider-anchors"),
       combatants: [
         characterSeed({
@@ -77,10 +79,19 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       ],
     });
 
+    const state = session.state;
+    const sicknessSubject = findAct(
+      session,
+      magicSubject("ray_of_sickness"),
+    ).subject;
+    const shockingGraspSubject = findAct(
+      session,
+      magicSubject("shocking_grasp"),
+    ).subject;
     const sickTarget = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("ray_of_sickness"),
+        subject: sicknessSubject,
         fills: [],
       }),
       "targetChoice",
@@ -88,7 +99,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const sickRoll = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("ray_of_sickness"),
+        subject: sicknessSubject,
         fills: [targetFill(sickTarget, skeletonId)],
       }),
       "attackRoll",
@@ -96,7 +107,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const sickDamage = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("ray_of_sickness"),
+        subject: sicknessSubject,
         fills: [
           targetFill(sickTarget, skeletonId),
           attackRollFill(sickRoll, { total: 18, naturalD20: 12 }),
@@ -107,7 +118,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const sick = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("ray_of_sickness"),
+        subject: sicknessSubject,
         fills: [
           targetFill(sickTarget, skeletonId),
           attackRollFill(sickRoll, { total: 18, naturalD20: 12 }),
@@ -159,7 +170,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const graspTarget = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("shocking_grasp"),
+        subject: shockingGraspSubject,
         fills: [],
       }),
       "targetChoice",
@@ -167,7 +178,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const graspRoll = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("shocking_grasp"),
+        subject: shockingGraspSubject,
         fills: [targetFill(graspTarget, skeletonId)],
       }),
       "attackRoll",
@@ -175,7 +186,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const graspDamage = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("shocking_grasp"),
+        subject: shockingGraspSubject,
         fills: [
           targetFill(graspTarget, skeletonId),
           attackRollFill(graspRoll, { total: 18, naturalD20: 12 }),
@@ -186,7 +197,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const grasp = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("shocking_grasp"),
+        subject: shockingGraspSubject,
         fills: [
           targetFill(graspTarget, skeletonId),
           attackRollFill(graspRoll, { total: 18, naturalD20: 12 }),
@@ -247,7 +258,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
   });
 
   test("spell condition riders preserve unrelated pre-existing conditions", () => {
-    const poisoned = startBattleRight({
+    const poisonedSession = startBattleSessionRight({
       battleId: battleId("battle-spell-condition-rider-source"),
       combatants: [
         characterSeed({
@@ -268,10 +279,15 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         }),
       ],
     });
+    const poisoned = poisonedSession.state;
+    const subject = findAct(
+      poisonedSession,
+      magicSubject("ray_of_sickness"),
+    ).subject;
     const target = requireHole(
       resolveBattleSubject({
         state: poisoned,
-        subject: magicSubject("ray_of_sickness"),
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -279,7 +295,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const roll = requireHole(
       resolveBattleSubject({
         state: poisoned,
-        subject: magicSubject("ray_of_sickness"),
+        subject,
         fills: [targetFill(target, skeletonId)],
       }),
       "attackRoll",
@@ -287,7 +303,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const damage = requireHole(
       resolveBattleSubject({
         state: poisoned,
-        subject: magicSubject("ray_of_sickness"),
+        subject,
         fills: [
           targetFill(target, skeletonId),
           attackRollFill(roll, { total: 18, naturalD20: 12 }),
@@ -298,7 +314,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const resolved = requireResolved(
       resolveBattleSubject({
         state: poisoned,
-        subject: magicSubject("ray_of_sickness"),
+        subject,
         fills: [
           targetFill(target, skeletonId),
           attackRollFill(roll, { total: 18, naturalD20: 12 }),
@@ -316,7 +332,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const refreshRoll = requireHole(
       resolveBattleSubject({
         state: nextWizard.state,
-        subject: magicSubject("ray_of_sickness"),
+        subject,
         fills: [targetFill(target, skeletonId)],
       }),
       "attackRoll",
@@ -324,7 +340,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const refreshDamage = requireHole(
       resolveBattleSubject({
         state: nextWizard.state,
-        subject: magicSubject("ray_of_sickness"),
+        subject,
         fills: [
           targetFill(target, skeletonId),
           attackRollFill(refreshRoll, { total: 18, naturalD20: 12 }),
@@ -335,7 +351,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const refreshed = requireResolved(
       resolveBattleSubject({
         state: nextWizard.state,
-        subject: magicSubject("ray_of_sickness"),
+        subject,
         fills: [
           targetFill(target, skeletonId),
           attackRollFill(refreshRoll, { total: 18, naturalD20: 12 }),
@@ -368,7 +384,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
   });
 
   test("overlapping spell condition riders preserve a pre-existing non-spell condition source", () => {
-    const poisoned = startBattleRight({
+    const poisoned = startBattleSessionRight({
       battleId: battleId("battle-spell-condition-rider-overlap-source"),
       combatants: [
         characterSeed({
@@ -400,27 +416,29 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       ],
     });
 
-    const castRayOfSickness = (state: BattleState, actorId: CombatantId) => {
+    const castRayOfSickness = (
+      session: BattleRuntimeSession,
+      actorId: CombatantId,
+    ) => {
+      const act = discoverBattleActs(session).find(
+        (candidate) =>
+          candidate.subject.actorId === actorId &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            "ray_of_sickness",
+      );
+      if (act?.subject.tag !== "actionSpell") {
+        throw new Error("Expected Ray of Sickness action-spell act.");
+      }
+      const subject = act.subject;
+      const state = session.state;
       const spatialFacts = [
         {
           kind: "spellTarget" as const,
           casterId: actorId,
           targetId: skeletonId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("ray_of_sickness"),
-          ),
+          sourceProcedureRef: subject.procedureRef,
         },
       ];
-      const subject: BattleActDiscoverySubject = {
-        tag: "actionSpell",
-        actorId,
-        invocation: spellSlotInvocationRef(
-          "ray_of_sickness",
-          1,
-          "spellAttackDamage",
-        ),
-        mode: { tag: "cast" },
-      };
       const target = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
         "targetChoice",
@@ -444,7 +462,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         }),
         "rolledDice",
       );
-      return requireResolved(
+      const resolvedState = requireResolved(
         resolveBattleSubject({
           state,
           subject,
@@ -455,15 +473,19 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           ],
         }),
       ).state;
+      return { state: resolvedState, context: session.context };
     };
 
     const firstSpell = castRayOfSickness(poisoned, wizardId);
     const secondWizardTurn = requireResolved(
-      endTurn({ state: firstSpell, actorId: wizardId }),
+      endTurn({ state: firstSpell.state, actorId: wizardId }),
     ).state;
-    const secondSpell = castRayOfSickness(secondWizardTurn, secondWizardId);
+    const secondSpell = castRayOfSickness(
+      { state: secondWizardTurn, context: firstSpell.context },
+      secondWizardId,
+    );
     const skeletonTurn = requireResolved(
-      endTurn({ state: secondSpell, actorId: secondWizardId }),
+      endTurn({ state: secondSpell.state, actorId: secondWizardId }),
     ).state;
     const nextWizardTurn = requireResolved(
       endTurn({ state: skeletonTurn, actorId: skeletonId }),
@@ -511,7 +533,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
   });
 
   test("one-shot spell attack-roll riders affect only matching attack rolls", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-spell-one-shot-riders"),
       combatants: [
         characterSeed({
@@ -537,10 +559,19 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         }),
       ],
     });
+    const state = session.state;
+    const guidingBoltSubject = findAct(
+      session,
+      magicSubject("guiding_bolt"),
+    ).subject;
+    const viciousMockerySubject = findAct(
+      session,
+      magicSubject("vicious_mockery"),
+    ).subject;
     const guidingTarget = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("guiding_bolt"),
+        subject: guidingBoltSubject,
         fills: [],
       }),
       "targetChoice",
@@ -548,7 +579,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const guidingRoll = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("guiding_bolt"),
+        subject: guidingBoltSubject,
         fills: [targetFill(guidingTarget, skeletonId)],
       }),
       "attackRoll",
@@ -556,7 +587,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const guidingDamage = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("guiding_bolt"),
+        subject: guidingBoltSubject,
         fills: [
           targetFill(guidingTarget, skeletonId),
           attackRollFill(guidingRoll, { total: 18, naturalD20: 12 }),
@@ -567,7 +598,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const guided = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("guiding_bolt"),
+        subject: guidingBoltSubject,
         fills: [
           targetFill(guidingTarget, skeletonId),
           attackRollFill(guidingRoll, { total: 18, naturalD20: 12 }),
@@ -620,7 +651,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const mockeryTarget = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("vicious_mockery"),
+        subject: viciousMockerySubject,
         fills: [],
       }),
       "targetChoice",
@@ -628,7 +659,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const save = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("vicious_mockery"),
+        subject: viciousMockerySubject,
         fills: [targetFill(mockeryTarget, skeletonId)],
       }),
       "savingThrowOutcome",
@@ -636,7 +667,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const mockeryDamage = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("vicious_mockery"),
+        subject: viciousMockerySubject,
         fills: [
           targetFill(mockeryTarget, skeletonId),
           savingThrowOutcomeFill(save, [
@@ -649,7 +680,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const mocked = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("vicious_mockery"),
+        subject: viciousMockerySubject,
         fills: [
           targetFill(mockeryTarget, skeletonId),
           savingThrowOutcomeFill(save, [
@@ -786,7 +817,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       kind: "savingThrowOutcome",
       holeId: holeId("battle:test:charm-person-save"),
       holeInstanceKey: holeInstanceKey("battle:test:charm-person-save"),
-      label: "Charm Person Saving Throw outcomes",
+      label: "Spell Saving Throw outcomes",
       sourceProcedureRef: battleProcedureExecutionRefForTest("charm-person"),
       outcomeTargeting: "singleTarget",
       ability: "wis",
@@ -811,8 +842,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     });
   });
 
-  test("spell target-list codec preserves willing-target evidence without a second procedure identity", () => {
-    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)({
+  test("spell target-list codec preserves the willing-target evidence request", () => {
+    const encoded = {
       kind: "spellTargetList",
       holeId: holeId("battle:test:willing-target-list"),
       holeInstanceKey: holeInstanceKey("battle:test:willing-target-list"),
@@ -820,21 +851,78 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "willing-target-list",
       ),
-      procedure: "saveGatedDamage",
       minTargets: 1,
       maxTargets: 1,
       spatialTargeting: { kind: "individualTargets" },
       choices: [fighterId],
       requiresTableSpatialFact: true,
       requiresKnownWillingTargets: true,
-    });
+    };
+    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(encoded);
 
     if (Either.isLeft(decoded)) throw new Error(String(decoded.left));
     expect(decoded.right).toMatchObject({
       kind: "spellTargetList",
       requiresKnownWillingTargets: true,
     });
-    expect(decoded.right).not.toHaveProperty("procedure");
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...encoded,
+          procedure: "jumpMovementReplacement",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([
+    {
+      tag: "actionSpell" as const,
+      mode: { tag: "cast" as const },
+    },
+    {
+      tag: "bonusActionSpell" as const,
+      mode: { tag: "cast" as const },
+    },
+    {
+      tag: "findFamiliarTouchSpell" as const,
+      companionId: goblinId,
+      spellAction: "action" as const,
+      mode: { tag: "cast" as const },
+    },
+  ])(
+    "$tag replay subject codec rejects redundant component weapon identity",
+    (subject) => {
+      expect(
+        Either.isLeft(
+          Schema.decodeUnknownEither(BattleSubjectSchema)({
+            ...subject,
+            actorId: wizardId,
+            procedureRef: battleProcedureExecutionRefForTest(
+              "hosted-weapon-procedure",
+            ),
+            componentWeaponItemId: "main:synthetic-weapon",
+          }),
+        ),
+      ).toBe(true);
+    },
+  );
+
+  test("rolled-dice codec rejects positional Empowered Spell die identity", () => {
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "rolledDice",
+          holeId: holeId("battle:test:empowered-spell"),
+          spellDamageReroll: {
+            kind: "reroll",
+            effectKind: "damage_dice_reroll",
+            dice: [{ dieRef: "legacy-position", original: 1, replacement: 2 }],
+          },
+          value: [{ results: [1] }],
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("spell saving throw outcome codec rejects incomplete Grease area facts", () => {

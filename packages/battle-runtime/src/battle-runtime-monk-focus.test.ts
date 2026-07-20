@@ -12,9 +12,11 @@ import {
   battleProcedureExecutionRefForTest,
   characterSeed,
   damageRollFillWithGroups,
+  discoverBattleActCandidates,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
+  fighterAttackSubject,
   fighterId,
   goblinId,
   grappleOutcomeFill,
@@ -25,13 +27,15 @@ import {
   resolveBattleSubject,
   shoveOutcomeFill,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   testBattleCreatureStateWithConditions,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Monk's Focus battle options", () => {
@@ -108,8 +112,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
     );
     expect(resolved.state.currentTurnResources.disengaged).toBe(true);
     expect(monk.dodging).toBe(false);
-    expect(monk.origin.resources[0]?.unit.id).toBe("monk_monks_focus");
-    expect(monk.origin.resources[0]?.usesRemaining).toBe(2);
+    expect(
+      monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
+    ).toBe(2);
   });
 
   test("Patient Defense spends a shared Focus Point for Disengage and Dodge", () => {
@@ -134,8 +139,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
     );
     expect(resolved.state.currentTurnResources.disengaged).toBe(true);
     expect(monk.dodging).toBe(true);
-    expect(monk.origin.resources[0]?.unit.id).toBe("monk_monks_focus");
-    expect(monk.origin.resources[0]?.usesRemaining).toBe(1);
+    expect(
+      monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
+    ).toBe(1);
   });
 
   test("Heightened Focus Patient Defense rolls two Martial Arts dice for Temporary Hit Points", () => {
@@ -169,7 +175,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(resolved.state.currentTurnResources.disengaged).toBe(true);
     expect(monk.dodging).toBe(true);
     expect(Number(monk.tempHp)).toBe(7);
-    expect(monk.origin.resources[0]?.usesRemaining).toBe(9);
+    expect(
+      monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
+    ).toBe(9);
   });
 
   test("Heightened Focus Patient Defense keeps higher existing Temporary Hit Points", () => {
@@ -226,7 +234,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(resolved.state.currentTurnResources.dashMovementBonusFeet).toBe(
       movementFeet(30),
     );
-    expect(monk.origin.resources[0]?.usesRemaining).toBe(2);
+    expect(
+      monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
+    ).toBe(2);
     expect(monk.activeEffects).toEqual([]);
   });
 
@@ -258,13 +268,15 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(resolved.snapshot.turn.jumpDistanceMultiplier).toEqual({
       multiplier: 2,
     });
-    expect(monk.origin.resources[0]?.usesRemaining).toBe(1);
+    expect(
+      monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
+    ).toBe(1);
     expect(monk.activeEffects).toEqual([]);
   });
 
   test("Heightened Focus Step of the Wind carries a willing nearby creature for the turn", () => {
     const state = monkFocusBattle({ usesRemaining: 10, classLevel: 10 });
-    const act = discoverBattleActs(state).find(
+    const act = discoverBattleActCandidates(state).find(
       (candidate) =>
         candidate.subject.tag === "monkFocusOption" &&
         candidate.subject.option === "stepOfTheWind" &&
@@ -327,7 +339,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
 
   test("Heightened Focus Step of the Wind rejects carry without eligibility facts", () => {
     const state = monkFocusBattle({ usesRemaining: 10, classLevel: 10 });
-    const act = discoverBattleActs(state).find(
+    const act = discoverBattleActCandidates(state).find(
       (candidate) =>
         candidate.subject.tag === "monkFocusOption" &&
         candidate.subject.option === "stepOfTheWind" &&
@@ -432,9 +444,8 @@ describe("battle runtime: Monk's Focus battle options", () => {
   });
 
   test("Step of the Wind Focus projects doubled Jump spell distance in act discovery", () => {
-    const state = withJumpMovementReplacementEffect(
-      monkFocusBattle({ usesRemaining: 2 }),
-    );
+    const session = monkFocusBattleSession({ usesRemaining: 2 });
+    const state = withJumpMovementReplacementEffect(session.state);
     const subject = monkFocusSubject(
       state,
       (candidate) =>
@@ -447,7 +458,10 @@ describe("battle runtime: Monk's Focus battle options", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
     );
 
-    const jumpAct = discoverBattleActs(stepped.state).find(
+    const jumpAct = discoverBattleActs({
+      ...session,
+      state: stepped.state,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "jumpMovementReplacement",
@@ -513,7 +527,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
     if (monkAfterActivation?.origin.kind !== "character") {
       throw new Error("Expected character Monk.");
     }
-    expect(monkAfterActivation.origin.resources[0]?.usesRemaining).toBe(1);
+    expect(
+      monkFocusResourceForSubject(activated.state, subject).usesRemaining,
+    ).toBe(1);
     expect(
       activated.state.currentTurnResources.actionResources.filter(
         (resource) => resource.source === "monkFocusFlurryOfBlows",
@@ -594,13 +610,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
     );
 
-    const weaponAttackSubject = monkFocusSubject(
-      activated.state,
-      (candidate) =>
-        candidate.tag === "action" &&
-        candidate.action === "attack" &&
-        candidate.attackName !== "Unarmed Strike",
-    );
+    const weaponAttackSubject = fighterAttackSubject(activated.state);
     const target = requireHole(
       resolveBattleSubject({
         state: activated.state,
@@ -650,9 +660,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
       actorId: fighterId,
       action: "grapple",
     };
-    expect(discoverBattleActs(flurryOnly).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([grappleSubject]),
-    );
+    expect(
+      discoverBattleActCandidates(flurryOnly).map((act) => act.subject),
+    ).toEqual(expect.arrayContaining([grappleSubject]));
 
     const target = requireHole(
       resolveBattleSubject({
@@ -702,9 +712,9 @@ describe("battle runtime: Monk's Focus battle options", () => {
       actorId: fighterId,
       action: "shove",
     };
-    expect(discoverBattleActs(flurryOnly).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([shoveSubject]),
-    );
+    expect(
+      discoverBattleActCandidates(flurryOnly).map((act) => act.subject),
+    ).toEqual(expect.arrayContaining([shoveSubject]));
 
     const target = requireHole(
       resolveBattleSubject({
@@ -925,7 +935,16 @@ function monkFocusBattle(input: {
   readonly tempHp?: number;
   readonly weaponAttackAvailable?: true;
 }): BattleState {
-  return startBattleRight({
+  return monkFocusBattleSession(input).state;
+}
+
+function monkFocusBattleSession(input: {
+  readonly usesRemaining: number;
+  readonly classLevel?: number;
+  readonly tempHp?: number;
+  readonly weaponAttackAvailable?: true;
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId(`battle-monk-focus-${input.usesRemaining}`),
     combatants: [
       characterSeed({
@@ -946,13 +965,53 @@ function monkFocusSubject(
   state: BattleState,
   predicate: (subject: BattleSubject) => boolean,
 ): BattleSubject {
-  const act = discoverBattleActs(state).find((candidate) =>
+  const act = discoverBattleActCandidates(state).find((candidate) =>
     predicate(candidate.subject),
   );
   if (act === undefined) {
     throw new Error("Expected Monk Focus battle act.");
   }
   return act.subject;
+}
+
+function monkFocusResourceForSubject(
+  state: BattleState,
+  subject: BattleSubject,
+) {
+  if (subject.tag !== "monkFocusOption") {
+    throw new Error("Expected a Monk Focus option subject.");
+  }
+  const monk = state.combatants.get(subject.actorId);
+  if (monk?.origin.kind !== "character") {
+    throw new Error("Expected character Monk.");
+  }
+  const binding = monk.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === subject.procedureRef,
+  );
+  const procedure = binding?.procedure;
+  if (procedure?.kind !== "unitSupportProfile") {
+    throw new Error("Expected a resource-backed Monk Focus procedure.");
+  }
+  if (
+    typeof procedure.execution !== "object" ||
+    procedure.execution.kind !== "monkFocusBattleOptions"
+  ) {
+    throw new Error("Expected a resource-backed Monk Focus procedure.");
+  }
+  if (
+    typeof procedure.source !== "object" ||
+    procedure.source.kind !== "resourcePool"
+  ) {
+    throw new Error("Expected a resource-backed Monk Focus procedure.");
+  }
+  const resourcePoolRef = procedure.source.resourcePoolRef;
+  const resource = monk.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+  );
+  if (resource === undefined || resource.resource.kind !== "use_count") {
+    throw new Error("Expected the Monk Focus use-count resource.");
+  }
+  return resource;
 }
 
 function withJumpMovementReplacementEffect(state: BattleState): BattleState {

@@ -43,8 +43,10 @@ import {
   attackRollFill,
   attackTargetFill,
   battleId,
+  battleProcedureExecutionRefForTest,
   characterSeed,
   damageRollFillWithGroups,
+  discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
   fighterId,
@@ -55,12 +57,13 @@ import {
   requireNeedsHoles,
   requireResolved,
   resolveBattleSubject,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import type { AttackDamageRider } from "./battle-reducer.ts";
 import type { BattleResolutionResult } from "./index.ts";
@@ -104,7 +107,7 @@ function requireMultiattackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "multiattack" }
 > {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "action" && act.subject.action === "multiattack",
   )?.subject;
@@ -179,9 +182,9 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
   ) => State,
 ) {
   return defineDriver<typeof driverSchema, State>(driverSchema, () => {
-    let state = statBlockActionOrderingBattle(monsterResourceStatBlock());
+    let session = statBlockActionOrderingBattle(monsterResourceStatBlock());
     let subject: BattleSubject = requireDiscoveredStatBlockAttackSubject(
-      state,
+      session,
       rechargeAttackName,
       "rolled",
     );
@@ -196,9 +199,9 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
     let usesRolledDamage = true;
 
     function reset(): void {
-      state = statBlockActionOrderingBattle(monsterResourceStatBlock());
+      session = statBlockActionOrderingBattle(monsterResourceStatBlock());
       subject = requireDiscoveredStatBlockAttackSubject(
-        state,
+        session,
         rechargeAttackName,
         "rolled",
       );
@@ -214,7 +217,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
     }
 
     function discoverAttack(input: {
-      readonly battle: BattleState;
+      readonly battle: BattleRuntimeSession;
       readonly attackSubject: Extract<
         BattleSubject,
         { readonly tag: "action"; readonly action: "attack" }
@@ -222,8 +225,8 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       readonly rolledDamage: boolean;
       readonly dispatchesAvailable: number;
     }): void {
-      state = input.battle;
-      const admittedSubject = discoverBattleActs(state).find(
+      session = input.battle;
+      const admittedSubject = discoverBattleActCandidates(session.state).find(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
@@ -240,7 +243,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       subject = admittedSubject;
       fills = [];
       holes = requireNeedsHoles(
-        resolveBattleSubject({ state, subject, fills: [] }),
+        resolveBattleSubject({ state: session.state, subject, fills: [] }),
       ).holes;
       route = [
         ...route,
@@ -255,7 +258,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       orderingError = "";
       multiattackDispatchesAvailable = input.dispatchesAvailable;
       rechargeActionAvailable = statBlockAttackAvailable(
-        state,
+        session,
         rechargeAttackName,
       );
       usesRolledDamage = input.rolledDamage;
@@ -274,7 +277,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
             ? []
             : holes;
       if (result.tag === "needsHoles") {
-        state = result.state;
+        session = { ...session, state: result.state };
         holes = result.holes;
         route = [
           ...route,
@@ -291,7 +294,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         return;
       }
       if (result.tag === "resolved") {
-        state = result.state;
+        session = { ...session, state: result.state };
         holes = [];
         route = [
           ...route,
@@ -306,7 +309,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         lastResult = "resolved";
         orderingError = "";
         rechargeActionAvailable = statBlockAttackAvailable(
-          state,
+          session,
           rechargeAttackName,
         );
         return;
@@ -371,15 +374,16 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         );
         const multiattack = requireResolved(
           resolveBattleSubject({
-            state: battle,
-            subject: requireMultiattackSubject(battle),
+            state: battle.state,
+            subject: requireMultiattackSubject(battle.state),
             fills: [],
           }),
-        ).state;
+        );
+        const multiattackSession = { ...battle, state: multiattack.state };
         discoverAttack({
-          battle: multiattack,
+          battle: multiattackSession,
           attackSubject: requireDiscoveredStatBlockAttackSubject(
-            multiattack,
+            multiattackSession,
             multiattackDispatchAttackName,
             "rolled",
           ),
@@ -388,10 +392,13 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         });
       },
       doDiscoverRolledActionAttackControl: () => {
+        const battle = statBlockActionOrderingBattle(
+          monsterResourceStatBlock(),
+        );
         discoverAttack({
-          battle: statBlockActionOrderingBattle(monsterResourceStatBlock()),
+          battle,
           attackSubject: requireDiscoveredStatBlockAttackSubject(
-            statBlockActionOrderingBattle(monsterResourceStatBlock()),
+            battle,
             rechargeAttackName,
             "rolled",
           ),
@@ -416,7 +423,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         const targetChoice = targetChoiceFill();
         const attackRollHole = requireHole(
           resolveBattleSubject({
-            state,
+            state: session.state,
             subject,
             fills: [targetChoice],
           }),
@@ -424,7 +431,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         );
         recordOrderingRejection(
           resolveBattleSubject({
-            state,
+            state: session.state,
             subject,
             fills: [
               attackRollFill(attackRollHole, {
@@ -441,7 +448,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       doFillTargetChoice: () => {
         fills = [targetChoiceFill()];
         recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
+          resolveBattleSubject({ state: session.state, subject, fills }),
           "attackRoll",
           "targetChoice",
           "battleTargetSelection",
@@ -454,7 +461,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         });
         const damageHole = requireHole(
           resolveBattleSubject({
-            state,
+            state: session.state,
             subject,
             fills: [...fills, attackRoll],
           }),
@@ -462,7 +469,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         );
         recordOrderingRejection(
           resolveBattleSubject({
-            state,
+            state: session.state,
             subject,
             fills: [...fills, damageRollFillWithGroups(damageHole, [[3]])],
           }),
@@ -477,7 +484,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           attackRollFillForCurrentHole({ total: 1, naturalD20: 1 }),
         ];
         recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
+          resolveBattleSubject({ state: session.state, subject, fills }),
           "resolved",
           "attackRoll",
           "battleAttackRoll",
@@ -489,7 +496,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           attackRollFillForCurrentHole({ total: 20, naturalD20: 12 }),
         ];
         recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
+          resolveBattleSubject({ state: session.state, subject, fills }),
           "damageDice",
           "attackRoll",
           "battleAttackRoll",
@@ -501,7 +508,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           attackRollFillForCurrentHole({ total: 20, naturalD20: 12 }),
         ];
         recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
+          resolveBattleSubject({ state: session.state, subject, fills }),
           "resolved",
           "attackRoll",
           "battleHitPoint",
@@ -515,7 +522,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           ]),
         ];
         recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
+          resolveBattleSubject({ state: session.state, subject, fills }),
           "resolved",
           "rolledDice",
           "battleHitPoint",
@@ -524,12 +531,13 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       doSpendRechargeGatedRolledAttack: () => {
         const spent = spendRechargeAttack();
         const fighterTurn = requireResolved(
-          endTurn({ state: spent, actorId: goblinId }),
-        ).state;
-        const rechargeRequest = requireNeedsHoles(
-          endTurn({ state: fighterTurn, actorId: fighterId }),
+          endTurn({ state: spent.state, actorId: goblinId }),
         );
-        state = fighterTurn;
+        const fighterTurnSession = { ...spent, state: fighterTurn.state };
+        const rechargeRequest = requireNeedsHoles(
+          endTurn({ state: fighterTurnSession.state, actorId: fighterId }),
+        );
+        session = fighterTurnSession;
         subject = {
           tag: "runtimeCommand",
           actorId: fighterId,
@@ -563,7 +571,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         }
         recordAccepted(
           resolveBattleSubject({
-            state,
+            state: session.state,
             subject,
             fills: [
               {
@@ -630,8 +638,9 @@ describe("Stat Block action ordering MBT", () => {
     }
     const rider = {
       attackerId: goblinId,
-      unitId: "synthetic_static_stat_block_damage_rider",
-      label: "Synthetic Damage Rider",
+      procedureRef: battleProcedureExecutionRefForTest(
+        "synthetic_static_stat_block_damage_rider",
+      ),
       optional: false,
       damage: { dice: 1, dieSize: 4, damageType: "fire" },
     } satisfies AttackDamageRider;
@@ -650,6 +659,7 @@ describe("Stat Block action ordering MBT", () => {
       attackDamageByTypeEntries(
         undefined,
         attack,
+        attack.procedureRef,
         damageRoll,
         false,
         undefined,
@@ -682,9 +692,9 @@ describe("Stat Block action ordering MBT", () => {
   });
 
   it("discovers SRD static Stat Block damage notation as an attack subject", () => {
-    const state = statBlockActionOrderingBattle(srdGoblinWarrior);
+    const session = statBlockActionOrderingBattle(srdGoblinWarrior);
     const subject = requireDiscoveredStatBlockAttackSubject(
-      state,
+      session,
       multiattackDispatchAttackName,
       "static",
     );
@@ -698,20 +708,20 @@ describe("Stat Block action ordering MBT", () => {
   });
 
   it("resolves SRD static Stat Block damage notation without a rolled-dice frontier", () => {
-    const state = statBlockActionOrderingBattle(srdGoblinWarrior);
+    const session = statBlockActionOrderingBattle(srdGoblinWarrior);
     const subject = requireDiscoveredStatBlockAttackSubject(
-      state,
+      session,
       multiattackDispatchAttackName,
       "static",
     );
     const targetHole = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: session.state, subject, fills: [] }),
       "targetChoice",
     );
     const targetChoice = attackTargetFill(targetHole, goblinId, fighterId);
     const attackRollHole = requireHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject,
         fills: [targetChoice],
       }),
@@ -724,7 +734,7 @@ describe("Stat Block action ordering MBT", () => {
     });
     const resolved = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject,
         fills: [targetChoice, attackRoll],
       }),
@@ -793,33 +803,35 @@ function statBlockAttackEffectWithoutStaticDamage(
 
 function statBlockActionOrderingBattle(
   statBlock: StatBlockRecord,
-): BattleState {
-  return requireResolved(
-    endTurn({
-      state: startBattleRight({
-        battleId: battleId("stat-block-action-ordering"),
-        combatants: [
-          characterSeed({ initiative: 20 }),
-          statBlockCreatureInit({
-            initiative: 10,
-            statBlock,
-          }),
-        ],
+): BattleRuntimeSession {
+  const session = startBattleSessionRight({
+    battleId: battleId("stat-block-action-ordering"),
+    combatants: [
+      characterSeed({ initiative: 20 }),
+      statBlockCreatureInit({
+        initiative: 10,
+        statBlock,
       }),
+    ],
+  });
+  const goblinTurn = requireResolved(
+    endTurn({
+      state: session.state,
       actorId: fighterId,
     }),
-  ).state;
+  );
+  return { ...session, state: goblinTurn.state };
 }
 
 function requireDiscoveredStatBlockAttackSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   attackName: string,
   statBlockDamageNotation: StatBlockDamageNotation,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
@@ -840,7 +852,7 @@ function requireDiscoveredStatBlockAttackSubject(
   return act.subject;
 }
 
-function spendRechargeAttack(): BattleState {
+function spendRechargeAttack(): BattleRuntimeSession {
   const battle = statBlockActionOrderingBattle(monsterResourceStatBlock());
   const subject = requireDiscoveredStatBlockAttackSubject(
     battle,
@@ -848,13 +860,13 @@ function spendRechargeAttack(): BattleState {
     "rolled",
   );
   const target = requireHole(
-    resolveBattleSubject({ state: battle, subject, fills: [] }),
+    resolveBattleSubject({ state: battle.state, subject, fills: [] }),
     "targetChoice",
   );
   const targetChoice = attackTargetFill(target, goblinId, fighterId);
   const attackRoll = requireHole(
     resolveBattleSubject({
-      state: battle,
+      state: battle.state,
       subject,
       fills: [targetChoice],
     }),
@@ -866,7 +878,7 @@ function spendRechargeAttack(): BattleState {
   });
   const damage = requireHole(
     resolveBattleSubject({
-      state: battle,
+      state: battle.state,
       subject,
       fills: [targetChoice, attackRollResult],
     }),
@@ -874,7 +886,7 @@ function spendRechargeAttack(): BattleState {
   );
   const spent = requireResolved(
     resolveBattleSubject({
-      state: battle,
+      state: battle.state,
       subject,
       fills: [
         targetChoice,
@@ -883,17 +895,18 @@ function spendRechargeAttack(): BattleState {
       ],
     }),
   ).state;
-  if (statBlockAttackAvailable(spent, rechargeAttackName)) {
+  const spentSession = { ...battle, state: spent };
+  if (statBlockAttackAvailable(spentSession, rechargeAttackName)) {
     throw new Error("Expected spent recharge Stat Block attack to be hidden.");
   }
-  return spent;
+  return spentSession;
 }
 
 function statBlockAttackAvailable(
-  state: BattleState,
+  session: BattleRuntimeSession,
   attackName: string,
 ): boolean {
-  return discoverBattleActs(state).some(
+  return discoverBattleActs(session).some(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&

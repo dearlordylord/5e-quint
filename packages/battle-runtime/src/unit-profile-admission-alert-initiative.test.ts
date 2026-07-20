@@ -173,14 +173,14 @@ describe("L12G deterministic Alert Initiative admission", () => {
       throw new Error(result.left.message);
     }
     const state = finishInitialInitiativeSetup(result.right);
-    expect(initiativeOrder(state)).toEqual([
+    expect(initiativeOrder(state.state)).toEqual([
       alertSourceId,
       alertEnemyId,
       alertAllyId,
       alertSecondAllyId,
     ]);
-    expect(state.combatants.get(alertSourceId)?.initiative).toBe(18);
-    expect(state.combatants.get(alertAllyId)?.initiative).toBe(12);
+    expect(state.state.combatants.get(alertSourceId)?.initiative).toBe(18);
+    expect(state.state.combatants.get(alertAllyId)?.initiative).toBe(12);
   });
 
   test("Initiative Swap consumes the operation-local ally fact instead of stored creature classification", () => {
@@ -292,7 +292,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const setup = alertBattleSetup();
 
     const actedState = endTurn({
-      state: finishInitialInitiativeSetup(setup),
+      state: finishInitialInitiativeSetup(setup).state,
       actorId: alertAllyId,
     });
     expect(actedState.tag).toBe("resolved");

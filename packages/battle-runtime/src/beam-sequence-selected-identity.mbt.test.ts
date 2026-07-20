@@ -1,6 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ELDRITCH-BLAST eldritch_blast
 // UNIT-IDENTITY-REPLAY: L1H-ELDRITCH-BLAST eldritch_blast doDiscoverLevelFiveBeamTargetHoles doResolveTwoCreatureBeamsSameTarget doResolveTwoCreatureBeamsSplitTargets doResolveCreatureAndObjectBeamTargets
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
@@ -29,19 +28,19 @@ import {
   battleObjectId,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
   startBattle,
-  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
@@ -76,7 +75,7 @@ type BeamSequenceProjection = {
   readonly lastResult: BeamSequenceLastResult;
 };
 
-type ActionSpellAct = AvailableBattleAct & {
+type ActionSpellAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "actionSpell"; readonly invocation: unknown }
@@ -367,7 +366,7 @@ function eldritchBlastBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function battleCreature(input: {
@@ -432,12 +431,10 @@ function eldritchBlastSpellRecord(): SpellRecord {
 }
 
 function eldritchBlastAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.actorId === casterId &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        eldritchBlastUnitId,
+      candidate.subject.actorId === casterId,
   );
   if (act === undefined) {
     throw new Error("Expected Eldritch Blast action Spell act.");

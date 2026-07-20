@@ -6,11 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 
 import { CombatantId } from "../identity.ts";
-import {
-  bindSpellProcedureExecutionFacts,
-  characterSpellProcedureRef,
-} from "../character-execution.ts";
-import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
+import type { SpellProcedureExecution } from "../character-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   combatantCanTakeReactions,
@@ -40,7 +36,6 @@ import type {
   BattleExecutableSpellInvocation,
   BattleState,
   BattleTargetSpatialFact,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 
 export { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
@@ -81,17 +76,9 @@ export function triggeredReactionSpellChoices(
       ) {
         return [];
       }
-      return supportedSpellActs(reactor, state).flatMap(
+      return supportedSpellActs(reactor).flatMap(
         (invocation): readonly BattleInterruptProcedureChoice[] => {
-          const procedureRef = characterSpellProcedureRef(
-            reactor.origin.execution,
-            invocation,
-          );
-          if (procedureRef === undefined) return [];
-          const executableInvocation = bindSpellProcedureExecutionFacts(
-            invocation,
-            procedureRef,
-          );
+          const executableInvocation = invocation;
           if (
             !isTriggeredReactionSpellInvocation(executableInvocation) ||
             !spellHasAvailableSpend(reactor, executableInvocation) ||
@@ -158,7 +145,7 @@ export function triggeredReactionSpellChoices(
                 actorId: currentActorId(state),
                 command: "castTriggeredReactionSpell" as const,
                 reactorId,
-                procedureRef,
+                procedureRef: executableInvocation.sourceProcedureRef,
               },
             },
           ];
@@ -172,7 +159,7 @@ export function triggeredReactionSpellTurnResourceAvailable(
   state: BattleState,
   reactorId: CombatantId,
   invocation: Extract<
-    SupportedSpellInvocation,
+    SpellProcedureExecution,
     {
       readonly procedure:
         | "shieldReaction"
@@ -194,7 +181,7 @@ export function triggeredReactionSpellTurnResourceAvailable(
 export function triggeredReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      SpellProcedureExecution,
       {
         readonly procedure:
           | "shieldReaction"
@@ -225,25 +212,21 @@ export function triggeredReactionSpellMatchesTrigger(
 
 export function counterspellReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "counterspell" }>
+    Extract<SpellProcedureExecution, { readonly procedure: "counterspell" }>
   >,
   frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
 ): boolean {
-  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
   if (
     frame.trigger !== "spellCast" ||
     frame.casterId === reactorId ||
-    invocation.spell.mechanics.family !== "triggered_reaction" ||
-    castingTime?.kind !== "reaction" ||
-    castingTime.trigger.kind !== "creature_casts_spell"
+    invocation.triggerComponents.length === 0
   ) {
     return false;
   }
-  const triggerComponents = castingTime.trigger.components;
   return (
     frame.components.some((component) =>
-      triggerComponents.includes(component),
+      invocation.triggerComponents.includes(component),
     ) &&
     frame.reactionSpellTargetFacts.some(
       (fact) =>
@@ -258,17 +241,15 @@ export function counterspellReactionSpellMatchesTrigger(
 
 export function hellishRebukeReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "saveGatedDamage" }>
+    Extract<SpellProcedureExecution, { readonly procedure: "saveGatedDamage" }>
   >,
   frame: BattleInterruptCheckpointInput,
 ): boolean {
-  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
+  const castingTime = invocation.castingTime;
   return (
     frame.trigger === "afterDamage" &&
     Number(frame.damageAmount) > 0 &&
-    invocation.spell.mechanics.family === "triggered_reaction" &&
-    castingTime?.kind === "reaction" &&
-    castingTime.trigger.kind === "takes_damage_from_creature" &&
+    castingTime.kind === "reaction" &&
     frame.damagedId !== frame.damageSourceId &&
     (frame.reactionSpellTargetFacts ?? []).some(
       (fact) =>
@@ -302,18 +283,14 @@ export function reactionSpellTargetFactsForAfterDamage(input: {
 export function featherFallReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
     Extract<
-      SupportedSpellInvocation,
+      SpellProcedureExecution,
       { readonly procedure: "featherFallMitigation" }
     >
   >,
   frame: BattleInterruptCheckpointInput,
 ): boolean {
-  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
   return (
     frame.trigger === "creatureFalls" &&
-    invocation.spell.mechanics.family === "triggered_reaction" &&
-    castingTime?.kind === "reaction" &&
-    castingTime.trigger.kind === "self_or_visible_creature_falls" &&
     frame.reactionSpellTargetFacts.some(
       (fact) =>
         fact.kind === "featherFallTriggerSelfOrVisibleCreatureWithinRange" &&

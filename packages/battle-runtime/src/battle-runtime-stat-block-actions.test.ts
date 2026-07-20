@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 import type {
   BattleHole,
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import {
   abilityCheckFill,
@@ -68,11 +68,18 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+import { emptyBattleRuntimeContext } from "./battle-runtime-context.ts";
 import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
 
+const statBlockPresentationContext = emptyBattleRuntimeContext();
+
+function discoverStatBlockActs(state: BattleState) {
+  return discoverBattleActs({ state, context: statBlockPresentationContext });
+}
+
 function discoveredMultiattackSubject(state: BattleState): BattleSubject {
-  const act = discoverBattleActs(state).find(
+  const act = discoverStatBlockActs(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "multiattack",
@@ -85,7 +92,7 @@ function discoveredStatBlockBonusActionSubject(
   state: BattleState,
   standardAction: "disengage" | "hide",
 ): BattleSubject {
-  const act = discoverBattleActs(state).find(
+  const act = discoverStatBlockActs(state).find(
     (candidate) =>
       candidate.subject.tag === "bonusAction" &&
       candidate.subject.action === "statBlockActionOption" &&
@@ -105,7 +112,7 @@ function discoveredStatBlockAttackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const act = discoverBattleActs(state).find(
+  const act = discoverStatBlockActs(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
@@ -527,7 +534,7 @@ describe("battle runtime: Stat Block actions", () => {
       throw new Error(`Expected resolved End Turn, got ${afterFighter.tag}.`);
     }
 
-    const acts = discoverBattleActs(afterFighter.state);
+    const acts = discoverStatBlockActs(afterFighter.state);
 
     expect(acts.map((act) => act.subject)).toEqual(
       expect.arrayContaining([
@@ -567,7 +574,9 @@ describe("battle runtime: Stat Block actions", () => {
     ).state;
     const subject = discoveredStatBlockAttackSubject(monsterTurn, "Venom Dart");
 
-    expect(discoverBattleActs(monsterTurn).map((act) => act.subject)).toEqual(
+    expect(
+      discoverStatBlockActs(monsterTurn).map((act) => act.subject),
+    ).toEqual(
       expect.arrayContaining([
         subject,
         {
@@ -704,7 +713,7 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+    expect(discoverStatBlockActs(state).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
         {
           tag: "action",
@@ -811,9 +820,9 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
-      "Take the Attack action with Bite.",
-    );
+    expect(
+      discoverStatBlockActs(state).map((act) => act.summary),
+    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Stat Block attacks with non-Prone target-size condition riders remain unsupported", () => {
@@ -835,9 +844,9 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
-      "Take the Attack action with Bite.",
-    );
+    expect(
+      discoverStatBlockActs(state).map((act) => act.summary),
+    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Stat Block attacks with only condition riders remain unsupported", () => {
@@ -856,9 +865,9 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    expect(discoverBattleActs(state).map((act) => act.summary)).not.toContain(
-      "Take the Attack action with Bite.",
-    );
+    expect(
+      discoverStatBlockActs(state).map((act) => act.summary),
+    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Goblin Warrior discovers Nimble Escape as Stat Block Bonus Action options", () => {
@@ -961,7 +970,7 @@ describe("battle runtime: Stat Block actions", () => {
     const subject = discoveredMultiattackSubject(goblinTurn);
 
     expect(
-      discoverBattleActs(goblinTurn).map((act) => act.subject),
+      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
     ).toContainEqual(subject);
     const multiattackState = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
@@ -989,7 +998,7 @@ describe("battle runtime: Stat Block actions", () => {
         },
       },
     ]);
-    const continuationActs = discoverBattleActs(multiattackState);
+    const continuationActs = discoverStatBlockActs(multiattackState);
     const continuationSubjects = continuationActs.map((act) => act.subject);
     expect(continuationSubjects).toEqual([
       {
@@ -1072,7 +1081,7 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    const shortbow = discoverBattleActs(multiattackState).find(
+    const shortbow = discoverStatBlockActs(multiattackState).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
@@ -1114,7 +1123,9 @@ describe("battle runtime: Stat Block actions", () => {
         attackProcedureRef: procedureRefForAttack(goblinTurn, "Scimitar"),
       }),
     ]);
-    expect(discoverBattleActs(afterDispatch).map((act) => act.subject)).toEqual(
+    expect(
+      discoverStatBlockActs(afterDispatch).map((act) => act.subject),
+    ).toEqual(
       expect.arrayContaining([
         {
           tag: "action",
@@ -1125,7 +1136,7 @@ describe("battle runtime: Stat Block actions", () => {
       ]),
     );
     expect(
-      discoverBattleActs(afterDispatch).map((act) => act.subject),
+      discoverStatBlockActs(afterDispatch).map((act) => act.subject),
     ).not.toContainEqual(shortbowSubject);
     expect(
       resolveBattleSubject({
@@ -1157,7 +1168,7 @@ describe("battle runtime: Stat Block actions", () => {
     const subject = unavailableMultiattackSubject(goblinTurn);
 
     expect(
-      discoverBattleActs(goblinTurn).map((act) => act.subject),
+      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
     ).not.toContainEqual(subject);
     expect(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
@@ -1214,7 +1225,7 @@ describe("battle runtime: Stat Block actions", () => {
       ),
     ).toBe(false);
     expect(
-      discoverBattleActs(goblinTurn).some(
+      discoverStatBlockActs(goblinTurn).some(
         (act) =>
           act.subject.tag === "action" && act.subject.action === "multiattack",
       ),
@@ -1259,7 +1270,7 @@ describe("battle runtime: Stat Block actions", () => {
     ).state;
 
     expect(
-      discoverBattleActs(multiattackState).map((act) => act.subject),
+      discoverStatBlockActs(multiattackState).map((act) => act.subject),
     ).not.toContainEqual(escapeSubject);
     expect(
       resolveBattleSubject({
@@ -1291,7 +1302,7 @@ describe("battle runtime: Stat Block actions", () => {
     const subject = unavailableMultiattackSubject(goblinTurn);
 
     expect(
-      discoverBattleActs(goblinTurn).map((act) => act.subject),
+      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
     ).not.toContainEqual(subject);
     expect(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
@@ -1398,7 +1409,7 @@ describe("battle runtime: Stat Block actions", () => {
     ).state;
 
     expect(
-      discoverBattleActs(goblinTurn).some(
+      discoverStatBlockActs(goblinTurn).some(
         (act) =>
           act.summary === "Take the Attack action with Swift Bite." ||
           act.summary === "Take the Attack action with Counter Snap.",
@@ -1451,7 +1462,7 @@ describe("battle runtime: Stat Block actions", () => {
     ).state;
 
     expect(
-      discoverBattleActs(spent).some(
+      discoverStatBlockActs(spent).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
@@ -1503,7 +1514,7 @@ describe("battle runtime: Stat Block actions", () => {
     ).state;
 
     expect(
-      discoverBattleActs(recharged).some(
+      discoverStatBlockActs(recharged).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
@@ -1568,7 +1579,7 @@ describe("battle runtime: Stat Block actions", () => {
       ),
     ).toMatchObject({ kind: "daily", usesRemaining: 0 });
     expect(
-      discoverBattleActs(spent).some(
+      discoverStatBlockActs(spent).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
@@ -1695,7 +1706,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const legendaryAct = discoverBattleActs(state).find(
+    const legendaryAct = discoverStatBlockActs(state).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
@@ -1748,7 +1759,7 @@ describe("battle runtime: Stat Block actions", () => {
       ),
     ).toMatchObject({ usesRemaining: 1 });
     expect(
-      discoverBattleActs(afterLegendary).some(
+      discoverStatBlockActs(afterLegendary).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
@@ -1822,7 +1833,7 @@ describe("battle runtime: Stat Block actions", () => {
     ).state;
 
     expect(
-      discoverBattleActs(afterDistantFighterActs).some(
+      discoverStatBlockActs(afterDistantFighterActs).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
@@ -1845,7 +1856,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
 
     expect(
-      discoverBattleActs(state).some(
+      discoverStatBlockActs(state).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
@@ -1883,7 +1894,7 @@ describe("battle runtime: Stat Block actions", () => {
     ).state;
 
     expect(
-      discoverBattleActs(ownTurn).some(
+      discoverStatBlockActs(ownTurn).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&

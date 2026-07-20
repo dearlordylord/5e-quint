@@ -1126,12 +1126,16 @@ module battleRuntimeMetamagic {
 
   pure def interruptedQuickenedActionSpellResult(
     before: BattleState,
+    breaksExistingConcentration: bool,
     selectedCost: int,
     sorceryPointsRemaining: int,
   ): BattleRuntimeQuickenedMetamagicResult = {
     state: commitActorQuickenedLevelOnePlusSpellCast({
       ...before,
-      fighter: { ...before.fighter, concentrating: false },
+      fighter: {
+        ...before.fighter,
+        concentrating: before.fighter.concentrating and not(breaksExistingConcentration),
+      },
       bonusActionAvailable: false,
     }, Fighter),
     sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,

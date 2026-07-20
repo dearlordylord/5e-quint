@@ -19,6 +19,7 @@ import type {
   BattleD20TestRollReplacement,
   BattleSavingThrowOutcome,
 } from "../battle-reducer.ts";
+import { characterUnitProcedureBindings } from "../character-execution.ts";
 
 export const D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE =
   "D20 Test natural-1 reroll is not available for this actor.";
@@ -151,7 +152,11 @@ export function combatantHasD20TestNaturalOneReroll(
 ): boolean {
   return (
     actor?.origin.kind === "character" &&
-    actor.origin.d20TestNaturalOneRerollProfiles.size > 0
+    characterUnitProcedureBindings(actor.origin.execution).some(
+      ({ procedure }) =>
+        procedure.kind === "unitFeature" &&
+        procedure.execution.kind === "d20TestNaturalOneReroll",
+    )
   );
 }
 

@@ -26,7 +26,7 @@ import {
 import type {
   BattleFill,
   BattleHole,
-  BattleState,
+  BattleRuntimeSession,
   BattleTargetSpatialFact,
   CombatantId,
 } from "./unit-profile-admission-test-support.ts";
@@ -61,7 +61,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     });
 
     const attackRoll = attackerAttackRollHole({
-      state: cast.state,
+      session: { ...state, state: cast.state },
       attackerId,
       targetId: spellCasterId,
     });
@@ -76,7 +76,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
       const cast = castBlur(state);
 
       const attackRoll = attackerAttackRollHole({
-        state: cast.state,
+        session: { ...state, state: cast.state },
         attackerId,
         targetId: spellCasterId,
         extraFacts: [blurBypassFact(attackerId, spellCasterId, sense)],
@@ -91,7 +91,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     const cast = castBlur(state);
 
     const attackRoll = attackerAttackRollHole({
-      state: cast.state,
+      session: { ...state, state: cast.state },
       attackerId,
       targetId: spellCasterId,
       extraFacts: [
@@ -123,7 +123,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     );
 
     const attackRoll = attackerAttackRollHole({
-      state: concentrationBroken,
+      session: { ...state, state: concentrationBroken },
       attackerId,
       targetId: spellCasterId,
     });
@@ -131,7 +131,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
   });
 });
 
-function blurBattle(attackerId: CombatantId): BattleState {
+function blurBattle(attackerId: CombatantId): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(blurUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -146,12 +146,12 @@ function blurBattle(attackerId: CombatantId): BattleState {
 }
 
 function castBlur(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
 > {
-  const act = spellAct({ state, spellId: blurUnitId, slotLevel: 2 });
+  const act = spellAct({ session, spellId: blurUnitId, slotLevel: 2 });
   expect(act.initialHoles).toEqual([]);
   expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
@@ -160,7 +160,7 @@ function castBlur(
     procedure: "blurAttackRollDefense",
   });
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [],
   });
@@ -172,13 +172,13 @@ function castBlur(
 }
 
 function attackerAttackRollHole(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
   readonly extraFacts?: readonly BattleTargetSpatialFact[];
 }): Extract<BattleHole, { readonly kind: "attackRoll" }> {
   const attackerTurn = endTurn({
-    state: input.state,
+    state: input.session.state,
     actorId: spellCasterId,
   });
   expect(attackerTurn).toMatchObject({ tag: "resolved" });
@@ -186,8 +186,9 @@ function attackerAttackRollHole(input: {
     throw new Error("Expected to advance to Blur attacker turn.");
   }
 
+  const attackerSession = { ...input.session, state: attackerTurn.state };
   const attack = statBlockAttackAct(
-    attackerTurn.state,
+    attackerSession,
     input.attackerId,
     "Scimitar",
   );

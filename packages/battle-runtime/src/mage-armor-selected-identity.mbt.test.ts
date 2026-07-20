@@ -49,9 +49,10 @@ import {
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleProcedureExecutionRef,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -77,10 +78,7 @@ type MageArmorSelectedIdentityProjection = {
 
 type ArmorClassState = ReturnType<typeof defaultArmorClassState>;
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 type ResolvedBattleResult = Extract<
   BattleResolutionResult,
@@ -199,8 +197,9 @@ describe("Mage Armor selected identity public reducer route replay", () => {
 });
 
 function replayMageArmorBaseArmorClassProjectionRoute(): readonly BattleReducerRouteEvent[] {
-  const state = mageArmorBattle();
-  const act = mageArmorAct(state);
+  const session = mageArmorBattle();
+  const state = session.state;
+  const act = mageArmorAct(session);
   const target = targetChoiceHole(act.initialHoles);
   const result = resolveBattleSubject({
     state,
@@ -216,8 +215,9 @@ function replayMageArmorBaseArmorClassProjectionRoute(): readonly BattleReducerR
 }
 
 function replayMageArmorArmoredTargetRejectionRoute(): readonly BattleReducerRouteEvent[] {
-  const state = mageArmorBattle({ includeArmoredTarget: true });
-  const act = mageArmorAct(state);
+  const session = mageArmorBattle({ includeArmoredTarget: true });
+  const state = session.state;
+  const act = mageArmorAct(session);
   const target = targetChoiceHole(act.initialHoles);
   const result = resolveBattleSubject({
     state,
@@ -293,18 +293,20 @@ function projectInitialBattle(
     "init" | "discovered"
   >,
 ): MageArmorSelectedIdentityProjection {
-  const state = mageArmorBattle();
+  const session = mageArmorBattle();
+  const state = session.state;
   return {
     ...projectBattleState(state),
-    selfTargetAdmitted: selfTargetAdmitted(state),
+    selfTargetAdmitted: selfTargetAdmitted(session),
     armoredTargetRejected: false,
     lastResult,
   };
 }
 
 function projectArmoredTargetRejection(): MageArmorSelectedIdentityProjection {
-  const state = mageArmorBattle({ includeArmoredTarget: true });
-  const act = mageArmorAct(state);
+  const session = mageArmorBattle({ includeArmoredTarget: true });
+  const state = session.state;
+  const act = mageArmorAct(session);
   const target = targetChoiceHole(act.initialHoles);
   const result = resolveBattleSubject({
     state,
@@ -378,8 +380,9 @@ function projectBattleState(
 }
 
 function resolveMageArmorSelf(): ResolvedBattleResult {
-  const state = mageArmorBattle();
-  const act = mageArmorAct(state);
+  const session = mageArmorBattle();
+  const state = session.state;
+  const act = mageArmorAct(session);
   const target = targetChoiceHole(act.initialHoles);
   return requireResolved(
     resolveBattleSubject({
@@ -430,7 +433,7 @@ function mageArmorBattle(
   input: {
     readonly includeArmoredTarget?: boolean;
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const combatants = [
     battleCreature({
       combatantId: casterId,
@@ -469,7 +472,7 @@ function mageArmorBattle(
 
 function startBattleRight(
   input: Parameters<typeof startBattle>[0],
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
@@ -532,8 +535,8 @@ function spellRecord(): SpellRecord {
   return unit;
 }
 
-function mageArmorAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+function mageArmorAct(session: BattleRuntimeSession): ActionSpellAct {
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
@@ -610,8 +613,8 @@ function mediumArmorClassState(): ArmorClassState {
   };
 }
 
-function selfTargetAdmitted(state: BattleState): boolean {
-  return targetChoiceHole(mageArmorAct(state).initialHoles).choices.includes(
+function selfTargetAdmitted(session: BattleRuntimeSession): boolean {
+  return targetChoiceHole(mageArmorAct(session).initialHoles).choices.includes(
     casterId,
   );
 }

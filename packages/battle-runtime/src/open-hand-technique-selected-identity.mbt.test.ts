@@ -11,7 +11,7 @@ import {
   attackRollFill,
   battleId,
   characterSeed,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   fighterAttackSubject,
   goblinId,
   hasCondition,
@@ -31,7 +31,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 type OpenHandTechniqueProjection = {
@@ -399,7 +399,7 @@ function openHandSubject(
   state: BattleState,
   predicate: (subject: BattleSubject) => boolean,
 ): BattleSubject {
-  const act = discoverBattleActs(state).find((candidate) =>
+  const act = discoverBattleActCandidates(state).find((candidate) =>
     predicate(candidate.subject),
   );
   if (act === undefined) {

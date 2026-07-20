@@ -1,5 +1,4 @@
 import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
@@ -16,9 +15,8 @@ import { describe, expect, it } from "vitest";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
-  characterSpellInvocationRefForProcedureRefForTest,
-  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
+import { characterSpellProcedureExecution } from "./character-execution.ts";
 
 import {
   canSpendAction,
@@ -66,7 +64,7 @@ import {
   battleTablePositionId,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
   objectInvisibleBenefitDenied,
@@ -74,9 +72,7 @@ import {
   resolveBattleInterrupt,
   resolveFeatherFallLanding,
   snapshotBattle,
-  spellSlotInvocationRef,
   startBattle,
-  type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureInit,
   type BattleFill,
@@ -96,10 +92,11 @@ import {
   type BattleSpellAreaChoice,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
@@ -260,31 +257,28 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+type ActionSpellAct = BattleActDiscoveryCandidate & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
-type BonusActionSpellAct = AvailableBattleAct & {
+type BonusActionSpellAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "bonusActionSpell" }
   >;
 };
-type FogCloudStrongWindDispersalAct = AvailableBattleAct & {
+type FogCloudStrongWindDispersalAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "disperseFogCloud" }
   >;
 };
-type MovementAct = AvailableBattleAct & {
+type MovementAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "move" }
   >;
 };
-type GreaseGroundHazardSaveAct = AvailableBattleAct & {
+type GreaseGroundHazardSaveAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -293,7 +287,7 @@ type GreaseGroundHazardSaveAct = AvailableBattleAct & {
     }
   >;
 };
-type JumpMovementReplacementAct = AvailableBattleAct & {
+type JumpMovementReplacementAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -3089,7 +3083,7 @@ function dancingLightsBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function faerieFireBattle(): BattleState {
@@ -3125,7 +3119,7 @@ function faerieFireBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function featherFallBattle(): BattleState {
@@ -3165,7 +3159,7 @@ function featherFallBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function fogCloudBattle(): BattleState {
@@ -3200,7 +3194,7 @@ function fogCloudBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function greaseBattle(): BattleState {
@@ -3240,7 +3234,7 @@ function greaseBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function jumpBattle(): BattleState {
@@ -3275,7 +3269,7 @@ function jumpBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function lightBattle(): BattleState {
@@ -3310,7 +3304,7 @@ function lightBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function lightOneRoundRemainingBattle(): BattleState {
@@ -3359,7 +3353,7 @@ function produceFlameBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function produceFlameOneRoundRemainingBattle(): BattleState {
@@ -3422,7 +3416,7 @@ function thunderwaveBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function spatialWitnessCreature(input: {
@@ -3486,13 +3480,30 @@ function spellRecord(
   return unit;
 }
 
+function spellProcedureForAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+) {
+  if (
+    act.subject.tag !== "actionSpell" &&
+    act.subject.tag !== "bonusActionSpell"
+  ) {
+    return undefined;
+  }
+  const actor = state.combatants.get(act.subject.actorId);
+  return actor?.origin.kind === "character"
+    ? characterSpellProcedureExecution(
+        actor.origin.execution,
+        act.subject.procedureRef,
+      )
+    : undefined;
+}
+
 function dancingLightsSeparateCastAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        dancingLightsUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
+      spellProcedureForAct(state, candidate)?.procedure ===
         "dancingLightsSeparateCast",
   );
   if (act === undefined) {
@@ -3502,12 +3513,10 @@ function dancingLightsSeparateCastAct(state: BattleState): ActionSpellAct {
 }
 
 function dancingLightsRepositionAct(state: BattleState): BonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        dancingLightsUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
+      spellProcedureForAct(state, candidate)?.procedure ===
         "dancingLightsReposition",
   );
   if (act === undefined) {
@@ -3517,12 +3526,10 @@ function dancingLightsRepositionAct(state: BattleState): BonusActionSpellAct {
 }
 
 function faerieFireAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        faerieFireUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
+      spellProcedureForAct(state, candidate)?.procedure ===
         "saveGatedAttackRollAdvantage",
   );
   if (act === undefined) {
@@ -3532,12 +3539,10 @@ function faerieFireAct(state: BattleState): ActionSpellAct {
 }
 
 function fogCloudAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        fogCloudUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
+      spellProcedureForAct(state, candidate)?.procedure ===
         "fogCloudObscurement",
   );
   if (act === undefined) {
@@ -3547,12 +3552,10 @@ function fogCloudAct(state: BattleState): ActionSpellAct {
 }
 
 function greaseAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        greaseUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
+      spellProcedureForAct(state, candidate)?.procedure ===
         "greaseGroundHazard",
   );
   if (act === undefined) {
@@ -3562,7 +3565,7 @@ function greaseAct(state: BattleState): ActionSpellAct {
 }
 
 function greaseMovementAct(state: BattleState): MovementAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is MovementAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "move" &&
@@ -3579,7 +3582,7 @@ function greaseGroundHazardSaveAct(
   actorId: CombatantId,
   trigger: GreaseGroundHazardSaveAct["subject"]["trigger"],
 ): GreaseGroundHazardSaveAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is GreaseGroundHazardSaveAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "greaseGroundHazardSave" &&
@@ -3594,12 +3597,10 @@ function greaseGroundHazardSaveAct(
 }
 
 function jumpCastAct(state: BattleState): BonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        jumpUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
+      spellProcedureForAct(state, candidate)?.procedure ===
         "jumpMovementReplacement",
   );
   if (act === undefined) {
@@ -3609,13 +3610,10 @@ function jumpCastAct(state: BattleState): BonusActionSpellAct {
 }
 
 function lightAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        lightUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "objectLight",
+      spellProcedureForAct(state, candidate)?.procedure === "objectLight",
   );
   if (act === undefined) {
     throw new Error("Expected Light object-emitter action.");
@@ -3624,13 +3622,10 @@ function lightAct(state: BattleState): ActionSpellAct {
 }
 
 function produceFlameHeldLightAct(state: BattleState): BonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        produceFlameUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "heldLight",
+      spellProcedureForAct(state, candidate)?.procedure === "heldLight",
   );
   if (act === undefined) {
     throw new Error("Expected Produce Flame held-light Bonus Action spell.");
@@ -3639,13 +3634,10 @@ function produceFlameHeldLightAct(state: BattleState): BonusActionSpellAct {
 }
 
 function produceFlameHurlAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        produceFlameUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "heldLightHurl",
+      spellProcedureForAct(state, candidate)?.procedure === "heldLightHurl",
   );
   if (act === undefined) {
     throw new Error("Expected Produce Flame hurl Magic Action spell.");
@@ -3654,13 +3646,10 @@ function produceFlameHurlAct(state: BattleState): ActionSpellAct {
 }
 
 function thunderwaveAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        thunderwaveUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "saveGatedDamage",
+      spellProcedureForAct(state, candidate)?.procedure === "saveGatedDamage",
   );
   if (act === undefined) {
     throw new Error("Expected Thunderwave save-gated damage action.");
@@ -3683,7 +3672,7 @@ function maybeJumpMovementReplacementAct(
   state: BattleState,
   actorId: CombatantId,
 ): JumpMovementReplacementAct | undefined {
-  return discoverBattleActs(state).find(
+  return discoverBattleActCandidates(state).find(
     (candidate): candidate is JumpMovementReplacementAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "jumpMovementReplacement" &&
@@ -4057,11 +4046,19 @@ function openFeatherFallWindow(
 function featherFallProcedureRef(
   state: BattleState,
 ): BattleProcedureExecutionRef {
-  return requireCharacterSpellProcedureRefForTest(
-    state,
-    casterId,
-    spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
-  );
+  const caster = state.combatants.get(casterId);
+  const binding =
+    caster?.origin.kind === "character"
+      ? caster.origin.execution.procedureBindings.find(
+          (candidate) =>
+            candidate.procedure.kind === "spellInvocation" &&
+            candidate.procedure.execution.procedure === "featherFallMitigation",
+        )
+      : undefined;
+  if (binding === undefined) {
+    throw new Error("Expected Feather Fall procedure binding.");
+  }
+  return binding.procedureRef;
 }
 
 function featherFallTriggerFact(
@@ -4084,15 +4081,13 @@ function featherFallReactionChoice(
 ) {
   const choice = result.snapshot.pendingInterrupt?.choices.find((candidate) => {
     if (candidate.kind !== "castTriggeredReactionSpell") return false;
-    const invocation = characterSpellInvocationRefForProcedureRefForTest(
-      result.state,
-      candidate.reactorId,
-      candidate.subject.procedureRef,
-    );
+    const reactor = result.state.combatants.get(candidate.reactorId);
     return (
-      invocation.tag === "spellSlot" &&
-      invocation.spellId === featherFallUnitId &&
-      invocation.procedure === "featherFallMitigation"
+      reactor?.origin.kind === "character" &&
+      characterSpellProcedureExecution(
+        reactor.origin.execution,
+        candidate.subject.procedureRef,
+      )?.procedure === "featherFallMitigation"
     );
   });
   if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
@@ -4134,7 +4129,7 @@ function fogCloudAreaFill(
 function fogCloudStrongWindDispersalAct(
   state: BattleState,
 ): FogCloudStrongWindDispersalAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is FogCloudStrongWindDispersalAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "disperseFogCloud" &&
@@ -4346,7 +4341,7 @@ function attackTargetFill(
 function attackRollModeForFaerieFireObject(
   state: BattleState,
 ): ProjectedAttackRollMode {
-  const act = actionSpellAct(state, starryWispUnitId);
+  const act = actionSpellAct(state);
   const objectTarget = requireHole(act.initialHoles, "objectTargetChoice");
   const attackRoll = requireResultHole(
     resolveBattleSubject({
@@ -4359,17 +4354,14 @@ function attackRollModeForFaerieFireObject(
   return attackRoll.rollMode ?? "normal";
 }
 
-function actionSpellAct(
-  state: BattleState,
-  spellUnitId: Level1SpatialWitnessCatalogSpellId,
-): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+function actionSpellAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellUnitId,
+      spellProcedureForAct(state, candidate)?.procedure === "spellAttackDamage",
   );
   if (act === undefined) {
-    throw new Error(`Expected ${spellUnitId} action spell act.`);
+    throw new Error("Expected spell-attack-damage action spell act.");
   }
   return act;
 }

@@ -41,8 +41,9 @@ import {
   type BattleActiveEffect,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import {
   sleetStormAreaId,
@@ -92,7 +93,7 @@ type SleetStormAreaHazardState = {
 };
 
 type SleetStormRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly currentTurnRole: SleetStormTurnRole;
   readonly holes: readonly BattleHole[];
   readonly lastResult: SleetStormLastResult;
@@ -201,14 +202,14 @@ describe("Sleet Storm area hazard MBT parity", () => {
     const supplied = supplySleetStormTriggerFact(targetTurn, "entersArea");
     const saved = fillSleetStormSave(supplied, "entersArea", true);
     const duplicateStartTurn = sleetStormAreaHazardSaveAct(
-      saved.battle,
+      saved.battle.state,
       spellTargetId,
       "startsTurnInArea",
     );
 
     expect(
       resolveBattleSubject({
-        state: saved.battle,
+        state: saved.battle.state,
         subject: duplicateStartTurn.subject,
         fills: [],
       }),
@@ -255,14 +256,14 @@ describe("Sleet Storm area hazard MBT parity", () => {
     );
     const saved = fillSleetStormSave(supplied, "startsTurnInArea", true);
     const duplicateEntry = sleetStormAreaHazardSaveAct(
-      saved.battle,
+      saved.battle.state,
       spellTargetId,
       "entersArea",
     );
 
     expect(
       resolveBattleSubject({
-        state: saved.battle,
+        state: saved.battle.state,
         subject: duplicateEntry.subject,
         fills: [],
       }),
@@ -296,13 +297,15 @@ describe("Sleet Storm area hazard MBT parity", () => {
 });
 
 function initialRuntimeState(): SleetStormRuntimeState {
+  const battle = spellBattle({
+    preparedSpells: [spellRecord(sleetStormUnitId)],
+    spellSlots: [{ spellLevel: 3, count: 1 }],
+  });
   return {
-    battle: stateWithTargetConcentration(
-      spellBattle({
-        preparedSpells: [spellRecord(sleetStormUnitId)],
-        spellSlots: [{ spellLevel: 3, count: 1 }],
-      }),
-    ),
+    battle: {
+      ...battle,
+      state: stateWithTargetConcentration(battle.state),
+    },
     currentTurnRole: "caster",
     holes: [],
     lastResult: "init",
@@ -318,7 +321,7 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
     ),
     sourceCombatantId: spellTargetId,
     bonus: 1,
-    negatedSpellIds: [],
+    negatesRepeatedDamageAllocation: false,
     expiresAt: {
       kind: "concentration",
       combatantId: spellTargetId,
@@ -341,14 +344,14 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
 
 function castSleetStorm(state: SleetStormRuntimeState): SleetStormRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: sleetStormUnitId,
     slotLevel: 3,
   });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [sleetStormAreaFill(area)],
     }),
@@ -356,7 +359,7 @@ function castSleetStorm(state: SleetStormRuntimeState): SleetStormRuntimeState {
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "caster",
     holes: [],
     lastResult: "resolved",
@@ -365,12 +368,12 @@ function castSleetStorm(state: SleetStormRuntimeState): SleetStormRuntimeState {
 
 function endCasterTurn(state: SleetStormRuntimeState): SleetStormRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected Sleet Storm caster End Turn to resolve.",
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "target",
     holes: [],
     lastResult: "resolved",
@@ -381,9 +384,13 @@ function supplySleetStormTriggerFact(
   state: SleetStormRuntimeState,
   trigger: "entersArea" | "startsTurnInArea",
 ): SleetStormRuntimeState {
-  const act = sleetStormAreaHazardSaveAct(state.battle, spellTargetId, trigger);
+  const act = sleetStormAreaHazardSaveAct(
+    state.battle.state,
+    spellTargetId,
+    trigger,
+  );
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [],
   });
@@ -404,10 +411,14 @@ function fillSleetStormSave(
   succeeded: boolean,
 ): SleetStormRuntimeState {
   const save = requireSleetStormSaveHole(state.holes, trigger);
-  const act = sleetStormAreaHazardSaveAct(state.battle, spellTargetId, trigger);
+  const act = sleetStormAreaHazardSaveAct(
+    state.battle.state,
+    spellTargetId,
+    trigger,
+  );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         singleTargetSavingThrowOutcomeFill(save, spellTargetId, succeeded),
@@ -417,7 +428,7 @@ function fillSleetStormSave(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: succeeded ? "saved" : "prone",
   };
@@ -427,7 +438,7 @@ function moveWithDifficultTerrain(
   state: SleetStormRuntimeState,
 ): SleetStormRuntimeState {
   const hazard = requireCombatant(
-    state.battle,
+    state.battle.state,
     spellCasterId,
   ).activeEffects.find(
     (effect): effect is SleetStormAreaHazardEffect =>
@@ -445,7 +456,7 @@ function moveWithDifficultTerrain(
   };
   const moveHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: moveSubject,
       fills: [],
     }),
@@ -453,7 +464,7 @@ function moveWithDifficultTerrain(
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
@@ -479,7 +490,7 @@ function moveWithDifficultTerrain(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: "moved",
   };
@@ -487,12 +498,12 @@ function moveWithDifficultTerrain(
 
 function endTargetTurn(state: SleetStormRuntimeState): SleetStormRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellTargetId }),
+    endTurn({ state: state.battle.state, actorId: spellTargetId }),
     "Expected Sleet Storm target End Turn to resolve.",
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "caster",
     holes: [],
     lastResult: "reset",
@@ -502,8 +513,8 @@ function endTargetTurn(state: SleetStormRuntimeState): SleetStormRuntimeState {
 function sleetStormProjection(
   state: SleetStormRuntimeState,
 ): SleetStormAreaHazardState {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const target = requireCombatant(state.battle, spellTargetId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
   const hazard = caster.activeEffects.find(
     (effect): effect is SleetStormAreaHazardEffect =>
       effect.kind === "sleetStormAreaHazard" &&
@@ -512,10 +523,13 @@ function sleetStormProjection(
   );
   const projection = {
     currentTurnRole: state.currentTurnRole,
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: sleetStormUnitId,
         slotLevel: 3,
       }) !== undefined,
@@ -532,7 +546,7 @@ function sleetStormProjection(
     targetProne: target.conditions.prone,
     savedThisTurn: hazard?.savedThisTurn.includes(spellTargetId) ?? false,
     movementSpentFeet: Number(target.movementSpentFeet),
-    heavilyObscured: battleObscurementZones(state.battle).some(
+    heavilyObscured: battleObscurementZones(state.battle.state).some(
       (zone) =>
         zone.kind === "spellObscurementZone" &&
         hazard !== undefined &&

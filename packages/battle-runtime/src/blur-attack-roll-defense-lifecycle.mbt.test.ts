@@ -35,6 +35,7 @@ import type {
   BattleFill,
   BattleHole,
   BattleResolutionResult,
+  BattleRuntimeSession,
   BattleState,
   BattleTargetSpatialFact,
   CombatantId,
@@ -111,7 +112,7 @@ type BlurAttackRollDefenseProjection = {
 };
 
 type BlurAttackRollDefenseRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly attackerId: CombatantId;
   readonly bypassSense: BlurBypassSense | undefined;
   readonly otherAttackAdvantage: boolean;
@@ -192,7 +193,7 @@ const blurAttackRollDefenseStateCheck = stateCheck(
 describe("Blur attack-roll defense lifecycle MBT parity", () => {
   it("creates a self Spell Effect with Concentration and Attack Roll Disadvantage", () => {
     const cast = castBlur(initialRuntimeState());
-    const caster = requireCombatant(cast.battle, spellCasterId);
+    const caster = requireCombatant(cast.battle.state, spellCasterId);
     const blurredEffect = caster.activeEffects.find(
       (effect) => effect.kind === "blurred",
     );
@@ -258,7 +259,8 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
     const concentrationBroken = breakBlurConcentration(cast);
 
     expect(
-      requireCombatant(concentrationBroken.battle, spellCasterId).activeEffects,
+      requireCombatant(concentrationBroken.battle.state, spellCasterId)
+        .activeEffects,
     ).toEqual(
       expect.not.arrayContaining([
         expect.objectContaining({ kind: "blurred" }),
@@ -317,7 +319,7 @@ function castBlur(
   state: BlurAttackRollDefenseRuntimeState,
 ): BlurAttackRollDefenseRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: blurUnitId,
     slotLevel: 2,
   });
@@ -330,13 +332,17 @@ function castBlur(
   });
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
     "Expected Blur to resolve.",
   );
-  return { ...state, battle: result.state, lastResult: "blurCast" };
+  return {
+    ...state,
+    battle: { ...state.battle, state: result.state },
+    lastResult: "blurCast",
+  };
 }
 
 function breakBlurConcentration(
@@ -347,7 +353,10 @@ function breakBlurConcentration(
   }
   return {
     ...state,
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    battle: {
+      ...state.battle,
+      state: breakBattleConcentration(state.battle.state, spellCasterId),
+    },
     lastResult: "concentrationBroken",
   };
 }
@@ -355,23 +364,26 @@ function breakBlurConcentration(
 function blurAttackRollDefenseProjection(
   state: BlurAttackRollDefenseRuntimeState,
 ): BlurAttackRollDefenseProjection {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const spellSlotExpended = casterSpellSlotExpended(state.battle);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const spellSlotExpended = casterSpellSlotExpended(state.battle.state);
   const blurredEffect = caster.activeEffects.find(
     (effect) => effect.kind === "blurred",
   );
   const attackRollMode = attackerAttackRollMode(state);
   return {
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: blurUnitId,
         slotLevel: 2,
       }) !== undefined,
     spellSlotExpended,
     slotSpellCastThisTurn:
-      state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
+      state.battle.state.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
     blurredEffectActive: blurredEffect !== undefined,
@@ -391,7 +403,7 @@ function attackerAttackRollMode(
   state: BlurAttackRollDefenseRuntimeState,
 ): AttackRollMode {
   const attackerTurn = endTurn({
-    state: state.battle,
+    state: state.battle.state,
     actorId: spellCasterId,
   });
   expect(attackerTurn).toMatchObject({ tag: "resolved" });
@@ -399,8 +411,9 @@ function attackerAttackRollMode(
     throw new Error("Expected to advance to Blur attacker turn.");
   }
 
+  const attackerSession = { ...state.battle, state: attackerTurn.state };
   const attack = statBlockAttackAct(
-    attackerTurn.state,
+    attackerSession,
     state.attackerId,
     "Scimitar",
   );

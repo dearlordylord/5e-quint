@@ -16,16 +16,11 @@
 //   - UBIQUITOUS_LANGUAGE.md: Table Decisions, Saving Throw, Turn, Prone,
 //     Magic Action, and Spell Invocation.
 
-import {
-  movementFeet,
-  spellSlotLevel,
-  type SpellSlotLevel,
-} from "@dnd/shared/types";
+import { spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
 import type {
   ActivationPhase,
   TargetSelection,
 } from "@dnd/surface/surface/types";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -37,7 +32,7 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
 import { resolveCommandSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -46,11 +41,9 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
-  MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -154,7 +147,6 @@ export function supportedPreparedCommandProfile(
         ability: command.phase.ability,
         dc: command.phase.dc,
         targeting: command.targeting(slot.spellLevel),
-        rangeFeet: command.rangeFeet,
       },
     ];
   });
@@ -165,7 +157,6 @@ function commandSpell(spell: CommandSpellInvocation["spell"]): {
   readonly targeting: (
     slotLevel: SpellSlotLevel,
   ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
-  readonly rangeFeet: CommandSpellInvocation["rangeFeet"];
 } | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -204,7 +195,6 @@ function commandSpell(spell: CommandSpellInvocation["spell"]): {
       minTargets: 1,
       maxTargets: targetCountBySlot(slotLevel),
     }),
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }
 
@@ -313,7 +303,6 @@ function commandCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: commandInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -348,20 +337,6 @@ function commandMetamagicInitialHoles(
   return holes;
 }
 
-function commandInvocationRef(
-  invocation: CommandSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "command",
-  };
-}
-
-function commandCastSummary(invocation: CommandSpellInvocation): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
   return resolveCommandSpellAct({
@@ -375,14 +350,12 @@ function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
   });
 }
 
-const CommandInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "command" }>
->(
+const CommandInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("command"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
@@ -391,20 +364,16 @@ const CommandInvocationSchema = spellProcedureInvocationSchema<
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Number,
     }),
-    rangeFeet: MovementFeet,
   }),
 );
 export const commandProfile = {
   procedure: "command",
-  invocationSchema: CommandInvocationSchema,
+  executionSchema: CommandInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitCommand,
   discoverCastAct: discoverCommandCastAct,
-  castSummary: commandCastSummary,
-  invocationRef: commandInvocationRef,
   resolve: resolveCommand,
 } satisfies SpellProcedureProfile<
   "command",

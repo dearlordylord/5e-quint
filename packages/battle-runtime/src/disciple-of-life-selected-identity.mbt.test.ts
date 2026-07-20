@@ -5,6 +5,7 @@
 import { Hp } from "@dnd/shared/types";
 
 import {
+  characterBattleFeatureInitForTest,
   damageRollFillWithGroups,
   type BattleState,
   type CombatantId,
@@ -37,6 +38,7 @@ import {
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleResolutionResult, BattleUnitRef } from "./index.ts";
+import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 
 type DiscipleOfLifeLastResult =
   | "init"
@@ -161,12 +163,16 @@ function projectBattleState(
   };
 }
 
-function discipleOfLifeBattle(): BattleState {
+function discipleOfLifeBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(cureWoundsUnitId)],
     casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
     casterUnitRefs: [discipleOfLifeUnitRef],
-    casterUnitFeatures: [{ unit: discipleOfLifeUnit }],
+    casterUnitFeatures: [
+      characterBattleFeatureInitForTest(discipleOfLifeUnit, [
+        { className: "cleric", level: classLevel(3) },
+      ]),
+    ],
     spellSlots: [{ spellLevel: 1, count: 1 }],
     targetHp: 1,
     targetMaxHp: 20,
@@ -176,7 +182,7 @@ function discipleOfLifeBattle(): BattleState {
   });
 }
 
-function healingBattleWithoutModifier(): BattleState {
+function healingBattleWithoutModifier(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(cureWoundsUnitId)],
     casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
@@ -192,11 +198,15 @@ function healingBattleWithoutModifier(): BattleState {
 const syntheticHealingCantripUnitId = "synthetic_healing_cantrip";
 
 function noSlotHealingCantripExcludedBattle(): BattleState {
-  const state = spellBattle({
+  const session = spellBattle({
     cantrips: [syntheticHealingCantrip()],
     casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
     casterUnitRefs: [discipleOfLifeUnitRef],
-    casterUnitFeatures: [{ unit: discipleOfLifeUnit }],
+    casterUnitFeatures: [
+      characterBattleFeatureInitForTest(discipleOfLifeUnit, [
+        { className: "cleric", level: classLevel(3) },
+      ]),
+    ],
     spellSlots: [{ spellLevel: 1, count: 1 }],
     targetHp: 1,
     targetMaxHp: 20,
@@ -204,11 +214,14 @@ function noSlotHealingCantripExcludedBattle(): BattleState {
     extraTargetMaxHp: 20,
     extraTargetIds: [secondTargetId],
   });
-  const act = maybeSpellAct({ state, spellId: syntheticHealingCantripUnitId });
+  const act = maybeSpellAct({
+    session,
+    spellId: syntheticHealingCantripUnitId,
+  });
   if (act !== undefined) {
     throw new Error("No-slot healing cantrip must not admit a healing act.");
   }
-  return state;
+  return session.state;
 }
 
 function syntheticHealingCantrip(): ReturnType<typeof spellRecord> {
@@ -225,13 +238,13 @@ function syntheticHealingCantrip(): ReturnType<typeof spellRecord> {
 }
 
 function resolveCureWounds(
-  state: BattleState,
+  session: BattleRuntimeSession,
   input: {
     readonly targetId: CombatantId;
     readonly dice: readonly number[];
   },
 ): BattleState {
-  const act = spellAct({ state, spellId: cureWoundsUnitId });
+  const act = spellAct({ session, spellId: cureWoundsUnitId });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const target = spellTargetFill(
     targetHole,
@@ -240,7 +253,7 @@ function resolveCureWounds(
     input.targetId,
   );
   const awaitingHealing = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [target],
   });
@@ -252,7 +265,7 @@ function resolveCureWounds(
   const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
   return recordResolvedState(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [target, damageRollFillWithGroups(healingRoll, [input.dice])],
     }),
@@ -262,11 +275,15 @@ function resolveCureWounds(
 function resolveMassHealingWord(input: {
   readonly dice: readonly number[];
 }): BattleState {
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spellRecord(massHealingWordUnitId)],
     casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
     casterUnitRefs: [discipleOfLifeUnitRef],
-    casterUnitFeatures: [{ unit: discipleOfLifeUnit }],
+    casterUnitFeatures: [
+      characterBattleFeatureInitForTest(discipleOfLifeUnit, [
+        { className: "cleric", level: classLevel(3) },
+      ]),
+    ],
     spellSlots: [{ spellLevel: 3, count: 1 }],
     targetHp: 1,
     targetMaxHp: 20,
@@ -275,7 +292,7 @@ function resolveMassHealingWord(input: {
     extraTargetIds: [secondTargetId],
   });
   const act = bonusSpellAct({
-    state,
+    session,
     spellId: massHealingWordUnitId,
     slotLevel: 3,
   });
@@ -287,7 +304,7 @@ function resolveMassHealingWord(input: {
     [spellTargetId, secondTargetId],
   );
   const awaitingHealing = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [targets],
   });
@@ -299,7 +316,7 @@ function resolveMassHealingWord(input: {
   const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
   return recordResolvedState(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targets, damageRollFillWithGroups(healingRoll, [input.dice])],
     }),

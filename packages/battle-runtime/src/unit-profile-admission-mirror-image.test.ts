@@ -32,6 +32,7 @@ import type {
   BattleActiveEffect,
   BattleFill,
   BattleHole,
+  BattleRuntimeSession,
   BattleState,
   BattleTargetSpatialFact,
   CombatantId,
@@ -86,7 +87,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const attackerId = combatantId("unit-profile-mirror-image-hole-attacker");
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
     const attack = attackThroughRoll({
-      state: cast.state,
+      session: cast,
       attackerId,
       targetId: spellCasterId,
     });
@@ -116,7 +117,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     );
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
     const attack = attackThroughRoll({
-      state: cast.state,
+      session: cast,
       attackerId,
       targetId: spellCasterId,
     });
@@ -146,7 +147,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const attackerId = combatantId("unit-profile-mirror-image-fail-attacker");
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
     const attack = attackThroughRoll({
-      state: cast.state,
+      session: cast,
       attackerId,
       targetId: spellCasterId,
     });
@@ -191,7 +192,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
     const oneDuplicate = withMirrorImageDuplicateCount(cast.state, 1);
     const attack = attackThroughRoll({
-      state: oneDuplicate,
+      session: { ...cast, state: oneDuplicate },
       attackerId,
       targetId: spellCasterId,
     });
@@ -222,7 +223,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
       const attackerId = combatantId(`unit-profile-mirror-image-${sense}`);
       const cast = castMirrorImage(mirrorImageBattle(attackerId));
       const damageHole = attackDamageHole({
-        state: cast.state,
+        session: cast,
         attackerId,
         targetFacts: [mirrorImageBypassFact(attackerId, spellCasterId, sense)],
       });
@@ -238,7 +239,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
     const blinded = withBlindedAttacker(cast.state, attackerId);
     const damageHole = attackDamageHole({
-      state: blinded,
+      session: { ...cast, state: blinded },
       attackerId,
       targetFacts: [],
     });
@@ -247,7 +248,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
   });
 });
 
-function mirrorImageBattle(attackerId: CombatantId): BattleState {
+function mirrorImageBattle(attackerId: CombatantId): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(mirrorImageUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -261,13 +262,12 @@ function mirrorImageBattle(attackerId: CombatantId): BattleState {
   });
 }
 
-function castMirrorImage(
-  state: BattleState,
-): Extract<
-  ReturnType<typeof resolveBattleSubject>,
-  { readonly tag: "resolved" }
-> {
-  const act = spellAct({ state, spellId: mirrorImageUnitId, slotLevel: 2 });
+function castMirrorImage(session: BattleRuntimeSession): BattleRuntimeSession {
+  const act = spellAct({
+    session,
+    spellId: mirrorImageUnitId,
+    slotLevel: 2,
+  });
   expect(act.initialHoles).toEqual([]);
   expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
     tag: "spellSlot",
@@ -276,7 +276,7 @@ function castMirrorImage(
     procedure: "mirrorImageHitInterception",
   });
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [],
   });
@@ -284,7 +284,7 @@ function castMirrorImage(
   if (result.tag !== "resolved") {
     throw new Error("Expected Mirror Image to resolve.");
   }
-  return result;
+  return { ...session, state: result.state };
 }
 
 function attackerTurnState(
@@ -299,7 +299,7 @@ function attackerTurnState(
 }
 
 function attackThroughRoll(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
   readonly targetFacts?: readonly BattleTargetSpatialFact[];
@@ -310,9 +310,10 @@ function attackThroughRoll(input: {
   readonly attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }>;
   readonly mirrorHole: MirrorImageDuplicateRollHole;
 } {
-  const attackerTurn = attackerTurnState(input.state);
+  const attackerTurn = attackerTurnState(input.session.state);
+  const attackerSession = { ...input.session, state: attackerTurn.state };
   const attack = statBlockAttackAct(
-    attackerTurn.state,
+    attackerSession,
     input.attackerId,
     "Scimitar",
   );
@@ -363,13 +364,14 @@ function attackThroughRoll(input: {
 }
 
 function attackDamageHole(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly attackerId: CombatantId;
   readonly targetFacts: readonly BattleTargetSpatialFact[];
 }): Extract<BattleHole, { readonly kind: "rolledDice" }> {
-  const attackerTurn = attackerTurnState(input.state);
+  const attackerTurn = attackerTurnState(input.session.state);
+  const attackerSession = { ...input.session, state: attackerTurn.state };
   const attack = statBlockAttackAct(
-    attackerTurn.state,
+    attackerSession,
     input.attackerId,
     "Scimitar",
   );

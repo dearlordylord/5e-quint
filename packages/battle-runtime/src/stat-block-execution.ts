@@ -16,6 +16,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type {
   StatBlockAttackActionOption,
+  StatBlockTraitAttackRollMode,
   StatBlockAttackSection,
   SupportedCreatureAttackRollMechanics,
   SupportedStaticDamageCreatureAttackRollMechanics,
@@ -54,7 +55,7 @@ export type StatBlockAttackProcedure = {
     "actions" | "legendaryActions"
   >;
   readonly attack: SupportedCreatureAttackRollMechanics;
-  readonly traitAttackRollModes?: StatBlockAttackActionOption["traitAttackRollModes"];
+  readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
 export type StatBlockMultiattackProcedure = {

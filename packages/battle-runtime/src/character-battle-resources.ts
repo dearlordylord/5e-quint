@@ -1,6 +1,7 @@
 import {
   AbilityModifier,
   ClassLevel,
+  NonNegativeInteger,
   ResourceCount,
   SpellSlotLevel,
   abilityModifier,
@@ -18,6 +19,7 @@ import type {
   EffectAtom,
   PointPoolResource,
   SpellRecord,
+  SpawnedCreatureMechanics,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
@@ -37,13 +39,22 @@ import {
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
   unitHasAttackActionAreaSaveDamageReplacementResourceShape,
+  type SupportedUnitFeatureFacts,
 } from "./unit-feature-support.ts";
 import {
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
   type PactOfTheChainFindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import * as Either from "effect/Either";
-import type { BattleResourcePoolExecutionRef } from "./identity.ts";
+import {
+  battleResourcePoolExecutionRef,
+  type BattleCharacterExecutionScopeRef,
+  type BattleResourcePoolExecutionRef,
+} from "./identity.ts";
+import {
+  persistentArmorEffectSpellProfileForSpell,
+  type PersistentArmorEffectSpellRecord,
+} from "./battle-reducer/spell-procedure-profiles/persistent-armor-effect-facts.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.failed-saving-throw-reroll unit-feature.paladin-sacred-weapon
@@ -68,7 +79,7 @@ export type CharacterBattleResourceInit =
   | CharacterBattleUseCountResourceInit
   | CharacterBattlePointPoolResourceInit;
 
-export type CharacterBattleFeatureInit = {
+export type CharacterBattleFeatureInit = SupportedUnitFeatureFacts & {
   readonly unit: UnitRecord;
 };
 
@@ -86,8 +97,14 @@ export type CharacterBattleMetamagicOptionFact = {
 export type CharacterBattleMetamagicEffectKind =
   CharacterBattleMetamagicOptionFact["effectKind"];
 
-export type CharacterBattleMetamagicState = {
+export type CharacterBattleMetamagicInit = {
   readonly sorceryPointResourceUnitId: UnitRecord["id"];
+  readonly spellUseLimit: SorcererMetamagicMechanics["spellUseLimit"]["kind"];
+  readonly knownOptions: readonly CharacterBattleMetamagicOptionFact[];
+};
+
+export type CharacterBattleMetamagicState = {
+  readonly sorceryPointResourcePoolRef: BattleResourcePoolExecutionRef;
   readonly spellUseLimit: SorcererMetamagicMechanics["spellUseLimit"]["kind"];
   readonly knownOptions: readonly CharacterBattleMetamagicOptionFact[];
 };
@@ -128,21 +145,13 @@ type SupportedPointPoolResource = PointPoolResource & {
     | { readonly kind: "threshold_tiers" }
   >;
 };
-type CharacterBattleResource =
+export type CharacterBattleResourceExecutionFacts =
   | CharacterBattleActivationResource
   | SupportedPointPoolResource;
 type SpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access" }
 >;
-const MAGE_ARMOR_SPELL_ID = "mage_armor" satisfies SpellRecord["id"];
-const ARMOR_OF_SHADOWS_SPELL_NAME = "Mage Armor" satisfies SpellRecord["name"];
-const ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION =
-  "Spells/Descriptions-M-P#Mage Armor";
-const FIND_FAMILIAR_SPELL_ID = "find_familiar" satisfies SpellRecord["id"];
-const FIND_FAMILIAR_SPELL_NAME = "Find Familiar" satisfies SpellRecord["name"];
-const FIND_FAMILIAR_SPELL_PROVENANCE_SECTION =
-  "Spells/Descriptions-E-L#Find Familiar";
 export type PactOfTheChainFindFamiliarInvocationMode = {
   readonly action: "magicAction";
   readonly resource: "noSpellSlot";
@@ -151,31 +160,66 @@ export const PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE = {
   action: "magicAction",
   resource: "noSpellSlot",
 } as const satisfies PactOfTheChainFindFamiliarInvocationMode;
-type ArmorOfShadowsMageArmorSpellRecord = SpellRecord & {
-  readonly id: typeof MAGE_ARMOR_SPELL_ID;
-  readonly name: typeof ARMOR_OF_SHADOWS_SPELL_NAME;
-  readonly provenance: Extract<
-    SpellRecord["provenance"],
-    { readonly kind: "srd-5.2.1" }
-  > & {
-    readonly section: typeof ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION;
-  };
-};
+type FamiliarFormCatalog = Extract<
+  SpawnedCreatureMechanics["creature"],
+  { readonly kind: "familiar_form_catalog" }
+>;
 type PactOfTheChainFindFamiliarSpellRecord = SpellRecord & {
-  readonly id: typeof FIND_FAMILIAR_SPELL_ID;
-  readonly name: typeof FIND_FAMILIAR_SPELL_NAME;
-  readonly provenance: Extract<
-    SpellRecord["provenance"],
-    { readonly kind: "srd-5.2.1" }
-  > & {
-    readonly section: typeof FIND_FAMILIAR_SPELL_PROVENANCE_SECTION;
+  readonly mechanics: SpawnedCreatureMechanics & {
+    readonly creature: FamiliarFormCatalog;
   };
 };
+type PactOfTheChainFindFamiliarSpellProfile = {
+  readonly spell: PactOfTheChainFindFamiliarSpellRecord;
+  readonly eligibleForms: PactOfTheChainFindFamiliarFormEligibility;
+};
+type PactOfTheChainFindFamiliarSpellProfileParseResult =
+  | {
+      readonly tag: "parsed";
+      readonly profile: PactOfTheChainFindFamiliarSpellProfile;
+    }
+  | { readonly tag: "missingFamiliarFormCatalog" }
+  | { readonly tag: "unsupported" };
+
 
 type CharacterBattleResourceStateBase = {
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+};
+
+/**
+ * Composition-owned authored provenance for a mechanical battle resource.
+ * This value is deliberately not part of BattleState or its snapshots.
+ */
+export type CharacterBattleResourceOwnership = {
+  readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   readonly unit: UnitRecord;
 };
+
+export type CharacterBattleResourceAdmission = {
+  readonly states: readonly CharacterBattleResourceState[];
+  readonly ownership: readonly CharacterBattleResourceOwnership[];
+};
+
+export function admitCharacterBattleResources(
+  inits: readonly CharacterBattleResourceInit[],
+  classLevels: readonly CharacterBattleClassLevel[],
+  scopeRef: BattleCharacterExecutionScopeRef,
+): CharacterBattleResourceAdmission {
+  const admitted = inits.map((init, ordinal) => {
+    const resourcePoolRef = battleResourcePoolExecutionRef(
+      scopeRef,
+      NonNegativeInteger(ordinal),
+    );
+    return {
+      state: characterResourceState(init, classLevels, resourcePoolRef),
+      ownership: { resourcePoolRef, unit: init.unit },
+    };
+  });
+  return {
+    states: admitted.map(({ state }) => state),
+    ownership: admitted.map(({ ownership }) => ownership),
+  };
+}
 
 export type CharacterBattleUseCountResourceStateBase =
   CharacterBattleResourceStateBase & {
@@ -254,7 +298,7 @@ export type CharacterBattleBookOfShadowsPresence =
 export type CharacterBattleInvocationSpellAccessState =
   | {
       readonly tag: "armorOfShadowsMageArmor";
-      readonly spell: ArmorOfShadowsMageArmorSpellRecord;
+      readonly spell: PersistentArmorEffectSpellRecord;
     }
   | {
       readonly tag: "pactOfTheChainFindFamiliar";
@@ -321,6 +365,33 @@ export type CharacterBattleSpellcastingState = Omit<
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
 };
+
+export type CharacterBattleSpellcastingExecutionState = {
+  readonly sourceClassName: ClassName;
+  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly proficiencyBonus: ProficiencyBonus;
+  readonly canCastSpells: boolean;
+  readonly spellSlots: readonly CharacterBattleSpellSlotState[];
+  readonly pactOfTheChainFindFamiliarInvocationMode: PactOfTheChainFindFamiliarInvocationMode | null;
+};
+
+export function characterSpellcastingExecutionState(
+  state: CharacterBattleSpellcastingState,
+): CharacterBattleSpellcastingExecutionState {
+  const hasPactOfTheChainFindFamiliar = state.invocationSpellAccesses.some(
+    (access) => access.tag === "pactOfTheChainFindFamiliar",
+  );
+  return {
+    sourceClassName: state.sourceClassName,
+    spellcastingAbilityModifier: state.spellcastingAbilityModifier,
+    proficiencyBonus: state.proficiencyBonus,
+    canCastSpells: state.canCastSpells,
+    spellSlots: state.spellSlots,
+    pactOfTheChainFindFamiliarInvocationMode: hasPactOfTheChainFindFamiliar
+      ? PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE
+      : null,
+  };
+}
 
 export function effectiveCharacterBattleCantrips(
   spellcasting: Pick<
@@ -398,7 +469,8 @@ export function parseCharacterBattleInvocationSpellAccesses(
   const parsed: CharacterBattleInvocationSpellAccessState[] = [];
   for (const access of invocationSpellAccesses) {
     if (access.tag === "armorOfShadowsMageArmor") {
-      if (!isArmorOfShadowsMageArmorSpell(access.spell)) {
+      const profile = persistentArmorEffectSpellProfileForSpell(access.spell);
+      if (profile === null) {
         return {
           tag: "issue",
           message: "Armor of Shadows Spell Access must grant Mage Armor.",
@@ -406,31 +478,32 @@ export function parseCharacterBattleInvocationSpellAccesses(
       }
       parsed.push({
         tag: access.tag,
-        spell: access.spell,
+        spell: profile.spell,
       });
       continue;
     }
-    if (!isPactOfTheChainFindFamiliarSpell(access.spell)) {
-      return {
-        tag: "issue",
-        message: "Pact of the Chain Spell Access must grant Find Familiar.",
-      };
-    }
-    const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(
+    const profileResult = pactOfTheChainFindFamiliarSpellProfileForSpell(
       access.spell,
     );
-    if (eligibleForms === null) {
+    if (profileResult.tag === "missingFamiliarFormCatalog") {
       return {
         tag: "issue",
         message:
           "Pact of the Chain Find Familiar access requires familiar form catalog references.",
       };
     }
+    if (profileResult.tag === "unsupported") {
+      return {
+        tag: "issue",
+        message: "Pact of the Chain Spell Access must grant Find Familiar.",
+      };
+    }
+    const profile = profileResult.profile;
     parsed.push({
       tag: access.tag,
-      spell: access.spell,
+      spell: profile.spell,
       invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-      eligibleForms,
+      eligibleForms: profile.eligibleForms,
     });
   }
   return {
@@ -472,7 +545,7 @@ export function characterResourceState(
     throw new Error(initIssue);
   }
   const resource = characterBattleResourceForUnit(input.unit);
-  const base = { resourcePoolRef, unit: input.unit };
+  const base = { resourcePoolRef };
   if (resource.kind === "point_pool") {
     const defaultPointsRemaining = characterBattleResourceMaxPoints({
       unit: input.unit,
@@ -621,7 +694,7 @@ export function characterBattleResourceInitIssue(
 }
 
 export function characterBattleMetamagicInitIssue(input: {
-  readonly metamagic: CharacterBattleMetamagicState | undefined;
+  readonly metamagic: CharacterBattleMetamagicInit | undefined;
   readonly resources: readonly CharacterBattleResourceInit[];
 }): string | null {
   if (input.metamagic === undefined) {
@@ -660,9 +733,30 @@ export function characterBattleMetamagicInitIssue(input: {
     : "Metamagic battle state must reference a point-pool Sorcery Point resource.";
 }
 
+export function characterBattleMetamagicState(
+  metamagic: CharacterBattleMetamagicInit | undefined,
+  resources: readonly CharacterBattleResourceState[],
+  ownership: readonly CharacterBattleResourceOwnership[],
+): CharacterBattleMetamagicState | undefined {
+  if (metamagic === undefined) return undefined;
+  const owner = ownership.find(
+    (candidate) => candidate.unit.id === metamagic.sorceryPointResourceUnitId,
+  );
+  const resource = resources.find(
+    (candidate) => candidate.resourcePoolRef === owner?.resourcePoolRef,
+  );
+  return resource === undefined
+    ? undefined
+    : {
+        sorceryPointResourcePoolRef: resource.resourcePoolRef,
+        spellUseLimit: metamagic.spellUseLimit,
+        knownOptions: metamagic.knownOptions,
+      };
+}
+
 export function characterBattleResourceForUnit(
   unit: UnitRecord,
-): CharacterBattleResource {
+): CharacterBattleResourceExecutionFacts {
   const resource = characterBattleResourceForUnitOrNull(unit);
   if (resource === null) {
     throw new Error(
@@ -695,7 +789,7 @@ export function unitIsSupportedClassFeatureSpellFreeCastResource(
 
 function characterBattleResourceForUnitOrNull(
   unit: UnitRecord,
-): CharacterBattleResource | null {
+): CharacterBattleResourceExecutionFacts | null {
   const freeCastResource = classFeatureSpellFreeCastResource(unit);
   if (freeCastResource !== null) {
     return freeCastResource;
@@ -773,7 +867,7 @@ function classFeatureSpellFreeCastResource(
 }
 
 export function characterResourceIsFavoredEnemyFreeCast(
-  resource: CharacterBattleResourceState,
+  resource: CharacterBattleResourceOwnership,
 ): boolean {
   return (
     classFeatureSpellFreeCastProfileForResource(resource)?.resourceTag ===
@@ -782,16 +876,13 @@ export function characterResourceIsFavoredEnemyFreeCast(
 }
 
 export function classFeatureSpellFreeCastProfileForResource(
-  resource: CharacterBattleResourceState,
+  resource: CharacterBattleResourceOwnership,
 ): SupportedClassFeatureSpellFreeCastProfile | null {
-  if (!characterBattleResourceIsUseCount(resource)) {
-    return null;
-  }
   return classFeatureSpellFreeCastProfileForUnit(resource.unit);
 }
 
 export function characterResourceIsClassFeatureFreeCastForSpell(
-  resource: CharacterBattleResourceState,
+  resource: CharacterBattleResourceOwnership,
   spellId: SpellRecord["id"],
 ): boolean {
   return (
@@ -1076,36 +1167,46 @@ export function characterSpellcastingState(
   };
 }
 
-function isArmorOfShadowsMageArmorSpell(
+function pactOfTheChainFindFamiliarSpellProfileForSpell(
   spell: SpellRecord,
-): spell is ArmorOfShadowsMageArmorSpellRecord {
-  return (
-    spell.id === MAGE_ARMOR_SPELL_ID &&
-    spell.name === ARMOR_OF_SHADOWS_SPELL_NAME &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION
-  );
-}
-
-function isPactOfTheChainFindFamiliarSpell(
-  spell: SpellRecord,
-): spell is PactOfTheChainFindFamiliarSpellRecord {
+): PactOfTheChainFindFamiliarSpellProfileParseResult {
   const components = spell.mechanics.components;
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
 
-  return (
-    spell.id === FIND_FAMILIAR_SPELL_ID &&
-    spell.name === FIND_FAMILIAR_SPELL_NAME &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === FIND_FAMILIAR_SPELL_PROVENANCE_SECTION &&
-    spell.mechanics.family === "spawned_creature" &&
-    spell.mechanics.level === 1 &&
-    castingTime?.kind === "action" &&
-    "materialCostGp" in components &&
-    "materialConsumed" in components &&
-    components.materialCostGp === 10 &&
-    components.materialConsumed === true
-  );
+  if (
+    spell.mechanics.family !== "spawned_creature"
+  ) {
+    return { tag: "unsupported" };
+  }
+  if (spell.mechanics.creature.kind !== "familiar_form_catalog") {
+    return { tag: "missingFamiliarFormCatalog" };
+  }
+  if (
+    spell.mechanics.level !== 1 ||
+    castingTime?.kind !== "action" ||
+    !("materialCostGp" in components) ||
+    !("materialConsumed" in components) ||
+    components.materialCostGp !== 10 ||
+    components.materialConsumed !== true
+  ) {
+    return { tag: "unsupported" };
+  }
+  const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
+  return eligibleForms === null
+    ? { tag: "missingFamiliarFormCatalog" }
+    : {
+        tag: "parsed",
+        profile: {
+          spell: {
+            ...spell,
+            mechanics: {
+              ...spell.mechanics,
+              creature: spell.mechanics.creature,
+            },
+          },
+          eligibleForms,
+        },
+      };
 }
 
 function unitGrantsPreparedSpellAccess(

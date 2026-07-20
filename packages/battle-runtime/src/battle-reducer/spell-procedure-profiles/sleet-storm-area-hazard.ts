@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 //
 // The Sleet Storm Spell Procedure Profile: action-time Spell Slot casting
@@ -29,7 +30,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -37,9 +37,8 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -52,7 +51,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 
 type SleetStormAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -254,29 +253,11 @@ function discoverSleetStormAreaHazardCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: sleetStormAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];
-}
-
-function sleetStormAreaHazardInvocationRef(
-  invocation: SleetStormAreaHazardSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "sleetStormAreaHazard",
-  };
-}
-
-function sleetStormAreaHazardCastSummary(
-  invocation: SleetStormAreaHazardSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveSleetStormAreaHazard(
@@ -290,17 +271,12 @@ function resolveSleetStormAreaHazard(
   });
 }
 
-const SleetStormAreaHazardInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "sleetStormAreaHazard" }
-  >
->(
+const SleetStormAreaHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("sleetStormAreaHazard"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
@@ -308,22 +284,19 @@ const SleetStormAreaHazardInvocationSchema = spellProcedureInvocationSchema<
       radiusFeet: MovementFeet,
       heightFeet: MovementFeet,
     }),
-    durationTicks: Schema.Number,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
   }),
 );
 
 export const sleetStormAreaHazardProfile = {
   procedure: "sleetStormAreaHazard",
-  invocationSchema: SleetStormAreaHazardInvocationSchema,
+  executionSchema: SleetStormAreaHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSleetStormAreaHazard,
   discoverCastAct: discoverSleetStormAreaHazardCastAct,
-  castSummary: sleetStormAreaHazardCastSummary,
-  invocationRef: sleetStormAreaHazardInvocationRef,
   resolve: resolveSleetStormAreaHazard,
 } satisfies SpellProcedureProfile<
   "sleetStormAreaHazard",

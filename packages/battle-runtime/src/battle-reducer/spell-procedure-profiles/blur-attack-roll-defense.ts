@@ -13,7 +13,6 @@
 //                         spells-discovery.ts
 //   - castSummary()     - was the blurAttackRollDefense branch in
 //                         spells-discovery.ts
-//   - invocationRef()   - was the blurAttackRollDefense branch in
 //                         spells-invocation-ref.ts
 //   - resolve()         - was resolveBlurAttackRollDefenseSpellAct in
 //                         spells-resolve-support-effects.ts
@@ -28,7 +27,6 @@
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -38,7 +36,8 @@ import {
   type BattleState,
   type BlurAttackRollDefenseSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
+import { BlurredActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -54,10 +53,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -143,7 +140,6 @@ function discoverBlurAttackRollDefenseCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: blurAttackRollDefenseInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [],
@@ -151,22 +147,6 @@ function discoverBlurAttackRollDefenseCastAct(
   ];
 }
 
-function blurAttackRollDefenseInvocationRef(
-  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "blurAttackRollDefense",
-  };
-}
-
-function blurAttackRollDefenseCastSummary(
-  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function applyBlurAttackRollDefenseEffect(
   state: BattleState,
@@ -282,19 +262,14 @@ function resolveBlurAttackRollDefense(
       };
 }
 
-const BlurAttackRollDefenseInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "blurAttackRollDefense" }
-  >
->(
+const BlurAttackRollDefenseInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("blurAttackRollDefense"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: BlurredActiveEffectTemplateSchema,
   }),
 );
 export const blurAttackRollDefenseProfile: SpellProcedureProfile<
@@ -302,14 +277,11 @@ export const blurAttackRollDefenseProfile: SpellProcedureProfile<
   BlurAttackRollDefenseSpellInvocation
 > = {
   procedure: "blurAttackRollDefense",
-  invocationSchema: BlurAttackRollDefenseInvocationSchema,
+  executionSchema: BlurAttackRollDefenseInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitBlurAttackRollDefense,
   discoverCastAct: discoverBlurAttackRollDefenseCastAct,
-  castSummary: blurAttackRollDefenseCastSummary,
-  invocationRef: blurAttackRollDefenseInvocationRef,
   resolve: resolveBlurAttackRollDefense,
 };

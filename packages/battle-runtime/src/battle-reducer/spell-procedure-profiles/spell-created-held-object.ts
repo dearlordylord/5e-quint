@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 //
 // The spellCreatedHeldObject profile family: a prepared Bonus Action spell
@@ -43,7 +44,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
-import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
+import { characterSpellProcedureRefsForProcedure } from "../../character-execution.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -57,12 +58,14 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
-  type SpellInvocationRef,
-  spellEffectInvocationRef,
-} from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../../identity.ts";
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET } from "../domain-constants.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
@@ -75,10 +78,9 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   AttackBonus,
-  BattleRuntimeObjectSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
@@ -90,12 +92,34 @@ import {
   setSpellCreatedHeldObjectState,
 } from "../spells-active-effects.ts";
 
-const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
-
 type SpellCreatedHeldObjectInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellCreatedHeldObject" }
 >;
+
+const SpellCreatedHeldObjectTemplateSchema = Schema.Struct({
+  kind: Schema.Literal("spellCreatedHeldObject"),
+  sourceCombatantId: CombatantId,
+  objectState: Schema.Struct({ kind: Schema.Literal("held") }),
+  light: Schema.Struct({
+    brightRadiusFeet: MovementFeet,
+    dimAdditionalFeet: MovementFeet,
+  }),
+  attack: Schema.Struct({
+    damage: Schema.Struct({
+      expr: DiceExprSchema,
+      damageType: DamageTypeSchema,
+    }),
+    attackKind: Schema.Literal("melee_spell_attack"),
+    attackBonus: AttackBonus,
+  }),
+  expiresAt: Schema.Struct({
+    kind: Schema.Literal("concentration"),
+    combatantId: CombatantId,
+    durationTicks: ElapsedTimeTicksSchema,
+  }),
+});
+
 type SpellCreatedHeldObjectAttackInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellCreatedHeldObjectAttack" }
@@ -104,11 +128,6 @@ type SpellCreatedHeldObjectReEvokeInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellCreatedHeldObjectReEvoke" }
 >;
-type SpellCreatedHeldObjectFamilyInvocation =
-  | SpellCreatedHeldObjectInvocation
-  | SpellCreatedHeldObjectAttackInvocation
-  | SpellCreatedHeldObjectReEvokeInvocation;
-
 type OngoingEffectSpellMechanics = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -207,7 +226,8 @@ function admitSpellCreatedHeldObjectAttack(
               rangeFeet: SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
               attackKind: effect.attack.attackKind,
               attackBonus: effect.attack.attackBonus,
-              activeEffect: { ...effect, objectState: { kind: "held" } },
+              sourceEffectRef: effect.effectRef,
+              sourceHeldObjectProcedureRef: effect.sourceProcedureRef,
             },
           ]
         : [],
@@ -231,7 +251,8 @@ function admitSpellCreatedHeldObjectReEvoke(
               procedure: "spellCreatedHeldObjectReEvoke",
               spell,
               actionCost: "bonusAction",
-              activeEffect: { ...effect, objectState: { kind: "notHeld" } },
+              sourceEffectRef: effect.effectRef,
+              sourceHeldObjectProcedureRef: effect.sourceProcedureRef,
             },
           ]
         : [],
@@ -240,12 +261,12 @@ function admitSpellCreatedHeldObjectReEvoke(
 
 function spellCreatedHeldObjectEffectsForSpell(
   ctx: SpellAdmissionContext,
-  spell: SpellRecord,
+  _spell: SpellRecord,
 ): readonly SpellCreatedHeldObjectActiveEffect[] {
   const selectedExecutionRefs = new Set(
-    characterSpellProcedureRefsForAdmissionContent(
+    characterSpellProcedureRefsForProcedure(
       ctx.actor.origin.execution,
-      spell,
+      new Set(["spellCreatedHeldObject"]),
     ),
   );
   return ctx.actor.activeEffects.filter(
@@ -429,7 +450,6 @@ function discoverSpellCreatedHeldObjectCastAct(
         tag: "bonusActionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: spellCreatedHeldObjectInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [],
@@ -442,6 +462,17 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SpellCreatedHeldObjectAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
+  const effect = state.combatants
+    .get(actorId)
+    ?.activeEffects.find(
+      (candidate): candidate is SpellCreatedHeldObjectActiveEffect =>
+        candidate.kind === "spellCreatedHeldObject" &&
+        candidate.effectRef === invocation.sourceEffectRef &&
+        candidate.sourceProcedureRef ===
+          invocation.sourceHeldObjectProcedureRef &&
+        candidate.sourceCombatantId === actorId,
+    );
+  if (effect?.objectState.kind !== "held") return [];
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []
@@ -451,7 +482,6 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
             tag: "actionSpell",
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: spellCreatedHeldObjectAttackInvocationRef(invocation),
             mode: { tag: "cast" },
           },
           initialHoles: [targetHole],
@@ -467,13 +497,23 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
   }
+  const effect = state.combatants
+    .get(actorId)
+    ?.activeEffects.find(
+      (candidate): candidate is SpellCreatedHeldObjectActiveEffect =>
+        candidate.kind === "spellCreatedHeldObject" &&
+        candidate.effectRef === invocation.sourceEffectRef &&
+        candidate.sourceProcedureRef ===
+          invocation.sourceHeldObjectProcedureRef &&
+        candidate.sourceCombatantId === actorId,
+    );
+  if (effect?.objectState.kind !== "notHeld") return [];
   return [
     {
       subject: {
         tag: "bonusActionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: spellCreatedHeldObjectReEvokeInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [],
@@ -481,70 +521,7 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
   ];
 }
 
-function spellCreatedHeldObjectInvocationRef(
-  invocation: SpellCreatedHeldObjectInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "spellCreatedHeldObject",
-  };
-}
 
-function spellCreatedHeldObjectAttackInvocationRef(
-  invocation: SpellCreatedHeldObjectAttackInvocation,
-): SpellInvocationRef {
-  return spellCreatedHeldObjectEffectInvocationRef(
-    invocation,
-    "spellCreatedHeldObjectAttack",
-  );
-}
-
-function spellCreatedHeldObjectReEvokeInvocationRef(
-  invocation: SpellCreatedHeldObjectReEvokeInvocation,
-): SpellInvocationRef {
-  return spellCreatedHeldObjectEffectInvocationRef(
-    invocation,
-    "spellCreatedHeldObjectReEvoke",
-  );
-}
-
-function spellCreatedHeldObjectEffectInvocationRef(
-  invocation: Extract<
-    SpellCreatedHeldObjectFamilyInvocation,
-    {
-      readonly procedure:
-        | "spellCreatedHeldObjectAttack"
-        | "spellCreatedHeldObjectReEvoke";
-    }
-  >,
-  procedure: "spellCreatedHeldObjectAttack" | "spellCreatedHeldObjectReEvoke",
-): SpellInvocationRef {
-  return spellEffectInvocationRef(
-    invocation.spell.id,
-    invocation.activeEffect.sourceCombatantId,
-    procedure,
-  );
-}
-
-function spellCreatedHeldObjectCastSummary(
-  invocation: SpellCreatedHeldObjectInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function spellCreatedHeldObjectAttackCastSummary(
-  invocation: SpellCreatedHeldObjectAttackInvocation,
-): string {
-  return `Take a Magic action to attack with ${invocation.spell.name}.`;
-}
-
-function spellCreatedHeldObjectReEvokeCastSummary(
-  invocation: SpellCreatedHeldObjectReEvokeInvocation,
-): string {
-  return `Re-evoke ${invocation.spell.name} with a Bonus Action.`;
-}
 
 function resolveSpellCreatedHeldObject(
   input: SpellCreatedHeldObjectResolveInput,
@@ -621,6 +598,7 @@ function resolveSpellCreatedHeldObject(
       sourceProcedureRef: input.input.subject.procedureRef,
       effectRef: allocation.effectRef,
     },
+    sourceExecution: input.invocation,
   });
   if (effected.tag === "invalid") {
     return invalidResult(input.input.state, "staleSubject", effected.message);
@@ -669,9 +647,10 @@ function resolveSpellCreatedHeldObjectReEvoke(
   const activeEffect = actor?.activeEffects.find(
     (effect): effect is SpellCreatedHeldObjectActiveEffect =>
       effect.kind === "spellCreatedHeldObject" &&
-      effect.effectRef === input.invocation.activeEffect.effectRef &&
-      effect.sourceCombatantId ===
-        input.invocation.activeEffect.sourceCombatantId,
+      effect.effectRef === input.invocation.sourceEffectRef &&
+      effect.sourceProcedureRef ===
+        input.invocation.sourceHeldObjectProcedureRef &&
+      effect.sourceCombatantId === input.actorId,
   );
   if (
     activeEffect === undefined ||
@@ -781,62 +760,49 @@ function spellCreatedHeldObjectHasUnrelatedFills(
   );
 }
 
-const SpellCreatedHeldObjectInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellCreatedHeldObject" }
-  >
->(
+const SpellCreatedHeldObjectInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("spellCreatedHeldObject"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: SpellCreatedHeldObjectTemplateSchema,
   }),
 );
 
 const SpellCreatedHeldObjectAttackInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "spellCreatedHeldObjectAttack" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: SpellEffectSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellCreatedHeldObjectAttack"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({
         kind: Schema.Literal("singleCombatant"),
       }),
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack"),
       attackBonus: AttackBonus,
-      activeEffect: BattleRuntimeObjectSchema,
+      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );
 
 const SpellCreatedHeldObjectReEvokeInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "spellCreatedHeldObjectReEvoke" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: SpellEffectSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellCreatedHeldObjectReEvoke"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
-      activeEffect: BattleRuntimeObjectSchema,
+      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );
 export const spellCreatedHeldObjectProfile: SpellProcedureProfile<
@@ -845,15 +811,12 @@ export const spellCreatedHeldObjectProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObject",
-  invocationSchema: SpellCreatedHeldObjectInvocationSchema,
+  executionSchema: SpellCreatedHeldObjectInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpellCreatedHeldObject,
   discoverCastAct: discoverSpellCreatedHeldObjectCastAct,
-  castSummary: spellCreatedHeldObjectCastSummary,
-  invocationRef: spellCreatedHeldObjectInvocationRef,
   resolve: resolveSpellCreatedHeldObject,
 };
 
@@ -863,15 +826,12 @@ export const spellCreatedHeldObjectAttackProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObjectAttack",
-  invocationSchema: SpellCreatedHeldObjectAttackInvocationSchema,
+  executionSchema: SpellCreatedHeldObjectAttackInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpellCreatedHeldObjectAttack,
   discoverCastAct: discoverSpellCreatedHeldObjectAttackCastAct,
-  castSummary: spellCreatedHeldObjectAttackCastSummary,
-  invocationRef: spellCreatedHeldObjectAttackInvocationRef,
   resolve: resolveSpellCreatedHeldObjectAttack,
 };
 
@@ -881,14 +841,11 @@ export const spellCreatedHeldObjectReEvokeProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObjectReEvoke",
-  invocationSchema: SpellCreatedHeldObjectReEvokeInvocationSchema,
+  executionSchema: SpellCreatedHeldObjectReEvokeInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpellCreatedHeldObjectReEvoke,
   discoverCastAct: discoverSpellCreatedHeldObjectReEvokeCastAct,
-  castSummary: spellCreatedHeldObjectReEvokeCastSummary,
-  invocationRef: spellCreatedHeldObjectReEvokeInvocationRef,
   resolve: resolveSpellCreatedHeldObjectReEvoke,
 };

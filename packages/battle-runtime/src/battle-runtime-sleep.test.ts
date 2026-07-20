@@ -1,7 +1,8 @@
 import type {
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
+import { discoverBattleActCandidates } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   applyBattleHitPointDamage,
@@ -15,7 +16,6 @@ import {
   characterSeed,
   damageRollFill,
   damageRollFillWithGroups,
-  discoverBattleActs,
   endTurn,
   expendedLevelOneSlots,
   fighterAttackSubject,
@@ -40,7 +40,7 @@ import {
   spellRecord,
   spellSlotInvocationRef,
   spellTargetAllocationFill,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   wizardId,
@@ -49,7 +49,7 @@ import {
 
 describe("battle runtime: Sleep", () => {
   test("Sleep failed initial saves apply pending Incapacitated and spend cast resources", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-admission"),
       combatants: [
         characterSeed({
@@ -67,13 +67,14 @@ describe("battle runtime: Sleep", () => {
         skeletonCreatureInit({ initiative: 8 }),
       ],
     });
-    const subject = magicSubject("sleep");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
     );
     expect(savingThrows).toMatchObject({
-      label: "Sleep point-origin Sphere Saving Throw outcomes",
+      label: "Spell point-origin Sphere Saving Throw outcomes",
       ability: "wis",
     });
 
@@ -124,7 +125,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep failed initial save breaks affected target Concentration", () => {
-    const base = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-admission-breaks-target-concentration"),
       combatants: [
         characterSeed({
@@ -145,6 +146,7 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const base = session.state;
     const goblin = base.combatants.get(goblinId)!;
     const state = {
       ...base,
@@ -175,7 +177,7 @@ describe("battle runtime: Sleep", () => {
         ],
       }),
     } satisfies BattleState;
-    const subject = magicSubject("sleep");
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -207,7 +209,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep self-target failed initial save immediately ends its own Concentration", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-self-target-breaks-concentration"),
       combatants: [
         characterSeed({
@@ -228,7 +230,8 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
-    const subject = magicSubject("sleep");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -263,7 +266,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep concentration break removes pending repeat saves before they can escalate", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-repeat-concentration-break"),
       combatants: [
         characterSeed({
@@ -284,10 +287,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const sleepSubject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -295,7 +300,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -322,7 +327,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep repeat save is requested at the failed target's next end turn and success ends that target's effect", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-repeat-success"),
       combatants: [
         characterSeed({
@@ -344,10 +349,12 @@ describe("battle runtime: Sleep", () => {
         skeletonCreatureInit({ initiative: 8 }),
       ],
     });
+    const state = session.state;
+    const sleepSubject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -355,7 +362,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -375,7 +382,7 @@ describe("battle runtime: Sleep", () => {
       "savingThrowOutcome",
     );
     expect(repeatSave).toMatchObject({
-      label: "sleep repeat WIS save",
+      label: "Repeat WIS save",
       ability: "wis",
       sleepRepeatSave: {
         targetId: goblinId,
@@ -404,7 +411,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep failed repeat save escalates pending Incapacitated to spell-owned Unconscious", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-repeat-failure"),
       combatants: [
         characterSeed({
@@ -425,10 +432,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const sleepSubject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -436,7 +445,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -482,7 +491,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep concentration break removes escalated Unconscious effects", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-unconscious-concentration-break"),
       combatants: [
         characterSeed({
@@ -503,10 +512,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -514,7 +525,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -553,7 +564,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep failed repeat save breaks affected target Concentration", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-repeat-failure-breaks-concentration"),
       combatants: [
         characterSeed({
@@ -574,10 +585,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -585,7 +598,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -658,7 +671,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep pending effect ends when the target takes damage from a non-caster", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-pending-damage-cleanup"),
       combatants: [
         characterSeed({
@@ -682,10 +695,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const sleepSubject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -693,7 +708,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: fighterId, succeeded: false },
@@ -748,7 +763,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep Unconscious ends on damage and leaves Prone", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-unconscious-damage-cleanup"),
       combatants: [
         characterSeed({
@@ -776,10 +791,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const sleepSubject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -787,7 +804,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -868,7 +885,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep pending effect ends when the target takes spell damage", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-spell-damage-cleanup"),
       combatants: [
         characterSeed({
@@ -902,10 +919,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -913,7 +932,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -924,24 +943,28 @@ describe("battle runtime: Sleep", () => {
     const fighterTurn = requireResolved(
       endTurn({ state: slept, actorId: wizardId }),
     ).state;
-    const subject: BattleSubject = {
+    const damageSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         fighterId,
         spellSlotInvocationRef("magic_missile", 1, "repeatedDamageAllocation"),
       ),
       mode: { tag: "cast" },
     };
     const targetAllocation = requireHole(
-      resolveBattleSubject({ state: fighterTurn, subject, fills: [] }),
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject: damageSubject,
+        fills: [],
+      }),
       "spellTargetAllocation",
     );
     const damage = requireHole(
       resolveBattleSubject({
         state: fighterTurn,
-        subject,
+        subject: damageSubject,
         fills: [
           spellTargetAllocationFill(
             targetAllocation,
@@ -956,7 +979,7 @@ describe("battle runtime: Sleep", () => {
     const damaged = requireResolved(
       resolveBattleSubject({
         state: fighterTurn,
-        subject,
+        subject: damageSubject,
         fills: [
           spellTargetAllocationFill(
             targetAllocation,
@@ -975,7 +998,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep damage cleanup ignores no-damage events and is idempotent", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-damage-cleanup-idempotent"),
       combatants: [
         characterSeed({
@@ -998,10 +1021,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -1009,7 +1034,7 @@ describe("battle runtime: Sleep", () => {
     const sleeping = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -1056,7 +1081,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep damage cleanup preserves unrelated Incapacitated and Unconscious sources", () => {
-    const incapacitatedState = startBattleRight({
+    const incapacitatedSession = startBattleSessionRight({
       battleId: battleId("battle-sleep-damage-cleanup-preserves-incapacitated"),
       combatants: [
         characterSeed({
@@ -1080,10 +1105,15 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const incapacitatedState = incapacitatedSession.state;
+    const incapacitatedSubject = findAct(
+      incapacitatedSession,
+      magicSubject("sleep"),
+    ).subject;
     const incapacitatedSavingThrows = requireHole(
       resolveBattleSubject({
         state: incapacitatedState,
-        subject: magicSubject("sleep"),
+        subject: incapacitatedSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -1091,7 +1121,7 @@ describe("battle runtime: Sleep", () => {
     const sleptIncapacitated = requireResolved(
       resolveBattleSubject({
         state: incapacitatedState,
-        subject: magicSubject("sleep"),
+        subject: incapacitatedSubject,
         fills: [
           savingThrowOutcomeFill(incapacitatedSavingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -1113,7 +1143,7 @@ describe("battle runtime: Sleep", () => {
       activeEffects: [],
     });
 
-    const unconsciousState = startBattleRight({
+    const unconsciousSession = startBattleSessionRight({
       battleId: battleId("battle-sleep-damage-cleanup-preserves-unconscious"),
       combatants: [
         characterSeed({
@@ -1137,10 +1167,15 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const unconsciousState = unconsciousSession.state;
+    const unconsciousSubject = findAct(
+      unconsciousSession,
+      magicSubject("sleep"),
+    ).subject;
     const unconsciousSavingThrows = requireHole(
       resolveBattleSubject({
         state: unconsciousState,
-        subject: magicSubject("sleep"),
+        subject: unconsciousSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -1148,7 +1183,7 @@ describe("battle runtime: Sleep", () => {
     const sleptUnconscious = requireResolved(
       resolveBattleSubject({
         state: unconsciousState,
-        subject: magicSubject("sleep"),
+        subject: unconsciousSubject,
         fills: [
           savingThrowOutcomeFill(unconsciousSavingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -1190,7 +1225,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep shake-awake spends an action and requires an adjacent target fact", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-shake-awake"),
       combatants: [
         characterSeed({
@@ -1216,10 +1251,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const sleepSubject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -1227,7 +1264,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -1323,7 +1360,7 @@ describe("battle runtime: Sleep", () => {
       }),
     ).state;
 
-    expect(discoverBattleActs(shaken)).not.toEqual(
+    expect(discoverBattleActCandidates(shaken)).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ subject })]),
     );
     expect(
@@ -1340,7 +1377,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep repeat success preserves unrelated Incapacitated sources", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-repeat-preserve-incapacitated"),
       combatants: [
         characterSeed({
@@ -1362,10 +1399,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -1373,7 +1412,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -1408,7 +1447,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep repeat success removes direct Sleep Incapacitated while preserving stronger conditions", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-repeat-preserve-paralyzed"),
       combatants: [
         characterSeed({
@@ -1430,10 +1469,12 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [],
       }),
       "savingThrowOutcome",
@@ -1441,7 +1482,7 @@ describe("battle runtime: Sleep", () => {
     const slept = requireResolved(
       resolveBattleSubject({
         state,
-        subject: magicSubject("sleep"),
+        subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
             { targetId: goblinId, succeeded: false },
@@ -1484,7 +1525,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep rejects rolled outcomes for automatic-success targets", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-auto-success"),
       combatants: [
         characterSeed({
@@ -1501,7 +1542,9 @@ describe("battle runtime: Sleep", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("sleep");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
+
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -1533,7 +1576,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep non-sleeper facts automatically succeed without a save outcome", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-non-sleeper-auto-success"),
       combatants: [
         characterSeed({
@@ -1554,7 +1597,9 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
-    const subject = magicSubject("sleep");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
+
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -1626,7 +1671,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep rejects duplicate or unselected non-sleeper facts", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-non-sleeper-validation"),
       combatants: [
         characterSeed({
@@ -1647,7 +1692,9 @@ describe("battle runtime: Sleep", () => {
         }),
       ],
     });
-    const subject = magicSubject("sleep");
+    const state = session.state;
+    const subject = findAct(session, magicSubject("sleep")).subject;
+
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -1708,7 +1755,7 @@ describe("battle runtime: Sleep", () => {
   });
 
   test("Sleep cannot be readied through direct reducer input", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-sleep-ready-rejected"),
       combatants: [
         characterSeed({
@@ -1725,18 +1772,16 @@ describe("battle runtime: Sleep", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-
+    const state = session.state;
+    const castSubject = findAct(session, magicSubject("sleep")).subject;
+    if (castSubject.tag !== "actionSpell") {
+      throw new Error("Expected Sleep action spell subject.");
+    }
     expect(
       resolveBattleSubject({
         state,
         subject: {
-          tag: "actionSpell",
-          actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            state,
-            wizardId,
-            spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
-          ),
+          ...castSubject,
           mode: { tag: "ready", trigger: "spellCast" },
         },
         fills: [],

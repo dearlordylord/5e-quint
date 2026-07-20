@@ -1,7 +1,7 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
-  startBattleRight,
+  startBattleSessionRight,
   requireResolved,
   requireHole,
   concentrationSavingThrowFill,
@@ -28,7 +28,7 @@ import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Acid Splash", () => {
   test("Acid Splash support is gated to the authored 5-foot point-origin Sphere", () => {
-    const unsupportedState = startBattleRight({
+    const unsupportedSession = startBattleSessionRight({
       battleId: battleId("battle-acid-splash-unsupported-area"),
       combatants: [
         characterSeed({
@@ -45,7 +45,7 @@ describe("battle runtime: Acid Splash", () => {
     });
 
     expect(
-      discoverBattleActs(unsupportedState).map((act) => act.subject),
+      discoverBattleActs(unsupportedSession).map((act) => act.subject),
     ).toEqual(
       expect.arrayContaining([
         { tag: "action", actorId: wizardId, action: "grapple" },
@@ -53,7 +53,7 @@ describe("battle runtime: Acid Splash", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedState,
+            unsupportedSession,
             wizardId,
             spellSlotInvocationRef(
               "magic_missile",
@@ -67,7 +67,7 @@ describe("battle runtime: Acid Splash", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedState,
+            unsupportedSession,
             wizardId,
             spellSlotInvocationRef(
               "magic_missile",
@@ -81,7 +81,7 @@ describe("battle runtime: Acid Splash", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedState,
+            unsupportedSession,
             wizardId,
             spellSlotInvocationRef(
               "magic_missile",
@@ -95,7 +95,7 @@ describe("battle runtime: Acid Splash", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedState,
+            unsupportedSession,
             wizardId,
             spellSlotInvocationRef(
               "magic_missile",
@@ -109,7 +109,7 @@ describe("battle runtime: Acid Splash", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedState,
+            unsupportedSession,
             wizardId,
             spellSlotInvocationRef(
               "magic_missile",
@@ -126,7 +126,7 @@ describe("battle runtime: Acid Splash", () => {
   });
 
   test("Acid Splash save-gate damage applies only to failed Saving Throws", () => {
-    const state = wizardVsSkeletonBattle({
+    const session = wizardVsSkeletonBattle({
       extraCombatants: [
         statBlockCreatureInit({
           combatantId: secondSkeletonId,
@@ -139,21 +139,21 @@ describe("battle runtime: Acid Splash", () => {
     const subject = magicSubject("acid_splash");
     const savingThrows = requireHole(
       resolveBattleSubject({
-        state,
+        session,
         subject,
         fills: [],
       }),
       "savingThrowOutcome",
     );
     expect(savingThrows).toMatchObject({
-      label: "Acid Splash point-origin Sphere Saving Throw outcomes",
+      label: "Spell point-origin Sphere Saving Throw outcomes",
       ability: "dex",
       dc: { kind: "caster_spell_save_dc" },
       areaChoices: [],
     });
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        session,
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
@@ -168,11 +168,11 @@ describe("battle runtime: Acid Splash", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Acid Splash damage (1d6-acid)",
+      label: "Spell damage (1d6-acid)",
     });
 
     const result = resolveBattleSubject({
-      state,
+      session,
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -199,7 +199,7 @@ describe("battle runtime: Acid Splash", () => {
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
 
     const allSucceeded = resolveBattleSubject({
-      state,
+      session,
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -225,7 +225,8 @@ describe("battle runtime: Acid Splash", () => {
   });
 
   test("Acid Splash damage requests and consumes Concentration saves", () => {
-    const baseState = wizardVsSkeletonBattle();
+    const baseSession = wizardVsSkeletonBattle();
+    const baseState = baseSession.state;
     const skeleton = baseState.combatants.get(skeletonId);
     if (skeleton === undefined) {
       throw new Error("Expected Skeleton in battle.");
@@ -242,14 +243,15 @@ describe("battle runtime: Acid Splash", () => {
         },
       }),
     };
+    const session = { ...baseSession, state };
     const subject = magicSubject("acid_splash");
     const savingThrows = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ session, subject, fills: [] }),
       "savingThrowOutcome",
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        session,
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
@@ -261,7 +263,7 @@ describe("battle runtime: Acid Splash", () => {
       "rolledDice",
     );
     const needsConcentration = resolveBattleSubject({
-      state,
+      session,
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -283,7 +285,7 @@ describe("battle runtime: Acid Splash", () => {
     });
     expect(
       resolveBattleSubject({
-        state,
+        session,
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [

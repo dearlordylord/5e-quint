@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.hit-point-restoration unit-feature.spell-slot-healing-modifier
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
 // The directHitPointRestoration Spell Procedure Profile: prepared spells that
@@ -32,9 +33,9 @@ import type {
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
-import { Match } from "effect";
+import { Match, Schema } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { characterUnitProcedureBindings } from "../../character-execution.ts";
 import {
   maybeOpenInterruptWindow,
   type ActionSpellBattleResolutionInput,
@@ -48,7 +49,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { applyHpHealing } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -73,8 +74,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import { SupportedHealingSpellInvocationSchema } from "../codec-building-blocks.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
+import {
+  MovementFeet as MovementFeetSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type DirectHitPointRestorationInvocation = Extract<
   SupportedSpellInvocation,
@@ -278,32 +286,11 @@ function discoverDirectHitPointRestorationCastAct(
       ? []
       : [
           {
-            subject: spellCastSelectionSubject(
-              actorId,
-              invocation,
-              directHitPointRestorationInvocationRef(invocation),
-            ),
+            subject: spellCastSelectionSubject(actorId, invocation),
             initialHoles: [targetHole],
           },
         ];
   return castActs;
-}
-
-function directHitPointRestorationInvocationRef(
-  invocation: DirectHitPointRestorationInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "directHitPointRestoration",
-  };
-}
-
-function directHitPointRestorationCastSummary(
-  invocation: DirectHitPointRestorationInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveDirectHitPointRestoration(
@@ -351,7 +338,7 @@ function resolveDirectHitPointRestoration(
         input.input.subject.tag === "bonusActionSpell"
           ? { kind: "bonusAction" }
           : { kind: "magicAction" },
-      ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
+      ...spellCastMetamagicApplicationsInput(input.metamagicApplications ?? []),
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -414,39 +401,59 @@ function resolveDirectHitPointRestoration(
 function spellSlotHealingModifierAmount(
   state: BattleState,
   actorId: CombatantId,
-  invocation: DirectHitPointRestorationInvocation,
+  invocation: DirectHitPointRestorationResolveInput["invocation"],
 ): number {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     return 0;
   }
-  return [...actor.origin.spellSlotHealingModifierProfiles.values()].reduce(
-    (total, profile) =>
-      total +
-      profile.healingModifier.bonus.flat +
-      Number(invocation.resource.slotLevel),
+  return characterUnitProcedureBindings(actor.origin.execution).reduce(
+    (total, { procedure }) =>
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "spellSlotHealingModifier"
+        ? total +
+          procedure.execution.healingModifier.bonus.flat +
+          Number(invocation.resource.slotLevel)
+        : total,
     0,
   );
 }
 
-const DirectHitPointRestorationInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "directHitPointRestoration" }
-    >
-  >(SupportedHealingSpellInvocationSchema);
+const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("directHitPointRestoration"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction", "bonusAction"),
+    targeting: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphereTargetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+        area: Schema.Struct({
+          kind: Schema.Literal("pointOriginSphere"),
+          radiusFeet: MovementFeetSchema,
+        }),
+      }),
+    ),
+    healing: Schema.Struct({ expr: DiceExprSchema }),
+    rangeFeet: MovementFeetSchema,
+  }),
+);
 export const directHitPointRestorationProfile = {
   procedure: "directHitPointRestoration",
-  invocationSchema: DirectHitPointRestorationInvocationSchema,
+  executionSchema: DirectHitPointRestorationInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitDirectHitPointRestoration,
   discoverCastAct: discoverDirectHitPointRestorationCastAct,
-  castSummary: directHitPointRestorationCastSummary,
-  invocationRef: directHitPointRestorationInvocationRef,
   resolve: resolveDirectHitPointRestoration,
 } satisfies SpellProcedureProfile<
   "directHitPointRestoration",

@@ -36,7 +36,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: alterSelfUnitId,
       slotLevel: 2,
     });
@@ -65,7 +65,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     ]);
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {
@@ -124,7 +124,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: alterSelfUnitId,
       slotLevel: 2,
     });
@@ -133,7 +133,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       "selfTransformationModeChoice",
     );
     const modeOnly = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {
@@ -151,7 +151,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     ]);
 
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {
@@ -203,11 +203,15 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       throw new Error("Expected target end turn to resolve.");
     }
 
-    const unarmedStrike = discoverBattleActs(casterTurn.state).find(
+    const unarmedStrike = discoverBattleActs({
+      ...state,
+      state: casterTurn.state,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.summary === "Take the Attack action with Unarmed Strike.",
+        candidate.presentation.kind === "attack" &&
+        candidate.presentation.name === "Unarmed Strike",
     );
     expect(unarmedStrike).toBeDefined();
     if (unarmedStrike === undefined) {
@@ -288,7 +292,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: alterSelfUnitId,
       slotLevel: 2,
     });
@@ -297,7 +301,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       "selfTransformationModeChoice",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {
@@ -329,7 +333,10 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       throw new Error("Expected active self-transformation effect.");
     }
 
-    const replacementAct = discoverBattleActs(casterTurn.state).find(
+    const replacementAct = discoverBattleActs({
+      ...state,
+      state: casterTurn.state,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "replaceSelfTransformationMode" &&
@@ -376,7 +383,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: alterSelfUnitId,
       slotLevel: 2,
     });
@@ -385,7 +392,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       "selfTransformationModeChoice",
     );
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {
@@ -416,7 +423,10 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       throw new Error("Expected active self-transformation effect.");
     }
 
-    const replacementAct = discoverBattleActs(casterTurn.state).find(
+    const replacementAct = discoverBattleActs({
+      ...state,
+      state: casterTurn.state,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "replaceSelfTransformationMode" &&
@@ -465,7 +475,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: alterSelfUnitId,
       slotLevel: 2,
     });
@@ -474,7 +484,7 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       "selfTransformationModeChoice",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {

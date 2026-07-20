@@ -1,10 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellSlotPresentation,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
@@ -27,7 +22,7 @@ import {
   battleId,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -36,15 +31,19 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { spellSlotInvocationRef } from "./battle-subjects.ts";
 import {
-  battleProcedureExecutionRefForSpellHoleForTest,
+  cantripSpellInvocationRef,
+  spellSlotInvocationRef,
+} from "./battle-subjects.ts";
+import {
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
@@ -69,13 +68,16 @@ const secondCounterspellerId = combatantId("counterspell-second-reactor");
 
 describe("Counterspell Reaction spell", () => {
   test("ends a lower-level spell automatically without expending the triggering slot", () => {
-    const state = battleWithCounterspell();
+    const session = battleWithCounterspell();
+    const state = session.state;
     const awaitingReaction = startMagicMissile({
+      session,
       state,
       slotLevel: 1,
       targetId: counterspellerId,
       counterspellFacts: [
         counterspellTriggerFact({
+          session,
           reactorId: counterspellerId,
           casterId,
         }),
@@ -85,6 +87,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingReaction,
       counterspellerId,
       3,
+      session,
     );
     expect(choice.initialHoles).toHaveLength(0);
 
@@ -129,17 +132,23 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("closes the spell-cast window after the first successful Counterspell", () => {
-    const state = battleWithCounterspell({ includeSecondCounterspeller: true });
+    const session = battleWithCounterspell({
+      includeSecondCounterspeller: true,
+    });
+    const state = session.state;
     const awaitingReaction = startMagicMissile({
+      session,
       state,
       slotLevel: 1,
       targetId: counterspellerId,
       counterspellFacts: [
         counterspellTriggerFact({
+          session,
           reactorId: counterspellerId,
           casterId,
         }),
         counterspellTriggerFact({
+          session,
           reactorId: secondCounterspellerId,
           casterId,
         }),
@@ -149,6 +158,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingReaction,
       counterspellerId,
       3,
+      session,
     );
 
     const resolved = resolveBattleInterrupt({
@@ -172,18 +182,21 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("lets the triggering spell continue when the triggering caster succeeds the Constitution save", () => {
-    const state = battleWithCounterspell({
+    const session = battleWithCounterspell({
       casterSlots: [
         { spellLevel: 4, count: 1 },
         { spellLevel: 3, count: 1 },
       ],
     });
+    const state = session.state;
     const awaitingReaction = startMagicMissile({
+      session,
       state,
       slotLevel: 4,
       targetId: counterspellerId,
       counterspellFacts: [
         counterspellTriggerFact({
+          session,
           reactorId: counterspellerId,
           casterId,
         }),
@@ -193,6 +206,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingReaction,
       counterspellerId,
       3,
+      session,
     );
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
 
@@ -220,10 +234,12 @@ describe("Counterspell Reaction spell", () => {
       state: afterCounterspell.state,
       subject: awaitingReaction.subject,
       slotLevel: 4,
-      targetAllocationFill: awaitingReaction.targetAllocationFill,
       damage,
       dartCount: 6,
     });
+    if (resolved.tag === "invalid") {
+      throw new Error(resolved.message);
+    }
     expect(resolved).toMatchObject({ tag: "resolved" });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected continued Magic Missile to resolve.");
@@ -251,15 +267,18 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("ends a higher-level spell on a failed Constitution save without expending the triggering slot", () => {
-    const state = battleWithCounterspell({
+    const session = battleWithCounterspell({
       casterSlots: [{ spellLevel: 4, count: 1 }],
     });
+    const state = session.state;
     const awaitingReaction = startMagicMissile({
+      session,
       state,
       slotLevel: 4,
       targetId: counterspellerId,
       counterspellFacts: [
         counterspellTriggerFact({
+          session,
           reactorId: counterspellerId,
           casterId,
         }),
@@ -269,6 +288,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingReaction,
       counterspellerId,
       3,
+      session,
     );
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
 
@@ -316,17 +336,20 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("allows a second Counterspell to end the first Counterspell and resume the triggering spell", () => {
-    const state = battleWithCounterspell({
+    const session = battleWithCounterspell({
       casterSlots: [{ spellLevel: 1, count: 1 }],
       includeSecondCounterspeller: true,
     });
+    const state = session.state;
     const counterspellFacts = [
       counterspellTriggerFact({
+        session,
         reactorId: counterspellerId,
         casterId,
       }),
     ];
     const awaitingFirstCounterspell = startMagicMissile({
+      session,
       state,
       slotLevel: 1,
       targetId: counterspellerId,
@@ -336,13 +359,14 @@ describe("Counterspell Reaction spell", () => {
       awaitingFirstCounterspell,
       counterspellerId,
       3,
+      session,
     );
     expect(
       requireHole(firstChoice.initialHoles, "targetSpatialFacts"),
     ).toMatchObject({
       spellBeingCast: {
         casterId: counterspellerId,
-        spellId: counterspellUnitId,
+        sourceProcedureRef: firstChoice.subject.procedureRef,
         castLevel: 3,
         components: ["S"],
       },
@@ -355,6 +379,7 @@ describe("Counterspell Reaction spell", () => {
         counterspellDecision(counterspellerId, firstChoice, [
           spellCastReactionFactsFill([
             counterspellTriggerFact({
+              session,
               reactorId: secondCounterspellerId,
               casterId: counterspellerId,
             }),
@@ -373,6 +398,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingSecondCounterspell,
       secondCounterspellerId,
       3,
+      session,
     );
 
     const afterSecondCounterspell = resolveBattleInterrupt({
@@ -395,7 +421,6 @@ describe("Counterspell Reaction spell", () => {
       state: afterSecondCounterspell.state,
       subject: awaitingFirstCounterspell.subject,
       slotLevel: 1,
-      targetAllocationFill: awaitingFirstCounterspell.targetAllocationFill,
       damage,
       dartCount: 3,
     });
@@ -436,19 +461,22 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("allows Counterspell to end Shield before Shield affects the triggering spell", () => {
-    const state = battleWithCounterspell({
+    const session = battleWithCounterspell({
       casterSlots: [{ spellLevel: 1, count: 1 }],
       counterspellerPreparedSpells: [srdSpellRecord(shieldUnitId)],
       counterspellerSlots: [{ spellLevel: 1, count: 1 }],
       includeSecondCounterspeller: true,
     });
+    const state = session.state;
     const awaitingShield = startMagicMissile({
+      session,
       state,
       slotLevel: 1,
       targetId: counterspellerId,
       counterspellFacts: [],
     });
     const shieldChoice = requireTriggeredReactionSpellChoice({
+      session,
       result: awaitingShield,
       reactorId: counterspellerId,
       spellId: shieldUnitId,
@@ -463,6 +491,7 @@ describe("Counterspell Reaction spell", () => {
         triggeredReactionSpellDecision(counterspellerId, shieldChoice, [
           spellCastReactionFactsFill([
             counterspellTriggerFact({
+              session,
               reactorId: secondCounterspellerId,
               casterId: counterspellerId,
             }),
@@ -481,6 +510,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingCounterspell,
       secondCounterspellerId,
       3,
+      session,
     );
 
     const afterCounterspell = resolveBattleInterrupt({
@@ -505,7 +535,6 @@ describe("Counterspell Reaction spell", () => {
       state: afterCounterspell.state,
       subject: awaitingShield.subject,
       slotLevel: 1,
-      targetAllocationFill: awaitingShield.targetAllocationFill,
       damage,
       dartCount: 3,
     });
@@ -538,17 +567,26 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("opens Counterspell before save-gated damage asks for save or damage fills", () => {
-    const state = battleWithCounterspell({
+    const session = battleWithCounterspell({
       casterCantrips: [srdSpellRecord(acidSplashUnitId)],
       casterPreparedSpells: [],
     });
-    const subject = requireCastSpellSubject(state, acidSplashUnitId);
+    const state = session.state;
+    const subject = requireCastSpellSubject(
+      session,
+      requireCharacterSpellProcedureRefForTest(
+        session,
+        casterId,
+        cantripSpellInvocationRef(acidSplashUnitId, "saveGatedDamage"),
+      ),
+    );
     const awaitingReaction = resolveBattleSubject({
       state,
       subject,
       fills: [
         spellCastReactionFactsFill([
           counterspellTriggerFact({
+            session,
             reactorId: counterspellerId,
             casterId,
           }),
@@ -569,6 +607,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingReaction,
       counterspellerId,
       3,
+      session,
     );
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -600,17 +639,30 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("allows Counterspell facts on a no-target Bonus Action spell cast", () => {
-    const state = battleWithCounterspell({
+    const session = battleWithCounterspell({
       casterPreparedSpells: [srdSpellRecord(expeditiousRetreatUnitId)],
       casterSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const subject = requireCastSpellSubject(state, expeditiousRetreatUnitId);
+    const state = session.state;
+    const subject = requireCastSpellSubject(
+      session,
+      requireCharacterSpellProcedureRefForTest(
+        session,
+        casterId,
+        spellSlotInvocationRef(
+          expeditiousRetreatUnitId,
+          1,
+          "expeditiousRetreatDash",
+        ),
+      ),
+    );
     const awaitingReaction = resolveBattleSubject({
       state,
       subject,
       fills: [
         spellCastReactionFactsFill([
           counterspellTriggerFact({
+            session,
             reactorId: counterspellerId,
             casterId,
           }),
@@ -630,6 +682,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingReaction,
       counterspellerId,
       3,
+      session,
     );
 
     const resolved = resolveBattleInterrupt({
@@ -662,13 +715,16 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("does not reopen Counterspell after all reactors decline and the spell asks for later fills", () => {
-    const state = battleWithCounterspell();
+    const session = battleWithCounterspell();
+    const state = session.state;
     const awaitingReaction = startMagicMissile({
+      session,
       state,
       slotLevel: 1,
       targetId: counterspellerId,
       counterspellFacts: [
         counterspellTriggerFact({
+          session,
           reactorId: counterspellerId,
           casterId,
         }),
@@ -696,7 +752,6 @@ describe("Counterspell Reaction spell", () => {
       state: declined.state,
       subject: awaitingReaction.subject,
       slotLevel: 1,
-      targetAllocationFill: awaitingReaction.targetAllocationFill,
       damage,
       dartCount: 3,
     });
@@ -708,7 +763,7 @@ describe("Counterspell Reaction spell", () => {
   });
 
   test("does not offer same-turn Counterspell when the triggering caster already has a pending spell-slot cast", () => {
-    const state = battleWithCounterspell({
+    const session = battleWithCounterspell({
       casterPreparedSpells: [
         srdSpellRecord(magicMissileUnitId),
         srdSpellRecord(counterspellUnitId),
@@ -718,16 +773,20 @@ describe("Counterspell Reaction spell", () => {
         { spellLevel: 3, count: 1 },
       ],
     });
+    const state = session.state;
     const awaitingReaction = startMagicMissile({
+      session,
       state,
       slotLevel: 1,
       targetId: counterspellerId,
       counterspellFacts: [
         counterspellTriggerFact({
+          session,
           reactorId: counterspellerId,
           casterId,
         }),
         counterspellTriggerFact({
+          session,
           reactorId: casterId,
           casterId: counterspellerId,
         }),
@@ -737,6 +796,7 @@ describe("Counterspell Reaction spell", () => {
       awaitingReaction,
       counterspellerId,
       3,
+      session,
     );
 
     const resolved = resolveBattleInterrupt({
@@ -796,7 +856,7 @@ function battleWithCounterspell(
       | undefined;
     readonly includeSecondCounterspeller?: boolean | undefined;
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const counterspell = srdSpellRecord(counterspellUnitId);
   const result = startBattle({
     battleId: battleId("counterspell-reaction-spell"),
@@ -930,20 +990,16 @@ type NeedsHolesResult = Extract<
   { readonly tag: "needsHoles" }
 >;
 
-type StartedMagicMissile = NeedsHolesResult & {
-  readonly targetAllocationFill: Extract<
-    BattleFill,
-    { readonly kind: "spellTargetAllocation" }
-  >;
-};
+type StartedMagicMissile = NeedsHolesResult;
 
 function startMagicMissile(input: {
+  readonly session: BattleRuntimeSession;
   readonly state: BattleState;
   readonly slotLevel: number;
   readonly targetId: CombatantId;
   readonly counterspellFacts: readonly CounterspellTriggerFact[];
 }): StartedMagicMissile {
-  const subject = magicMissileSubject(input.state, input.slotLevel);
+  const subject = magicMissileSubject(input.session, input.slotLevel);
   const targetAllocationResult = resolveBattleSubject({
     state: input.state,
     subject,
@@ -971,7 +1027,7 @@ function startMagicMissile(input: {
         input.counterspellFacts.map((fact) => ({
           ...fact,
           sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-            input.state,
+            input.session,
             fact.reactorId,
             spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
           ),
@@ -986,17 +1042,13 @@ function startMagicMissile(input: {
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Magic Missile spell-cast Reaction window.");
   }
-  return { ...result, targetAllocationFill };
+  return result;
 }
 
 function finishMagicMissile(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly slotLevel: number;
-  readonly targetAllocationFill: Extract<
-    BattleFill,
-    { readonly kind: "spellTargetAllocation" }
-  >;
   readonly damage: Extract<BattleHole, { readonly kind: "rolledDice" }>;
   readonly dartCount: number;
 }): ReturnType<typeof resolveBattleSubject> {
@@ -1004,7 +1056,6 @@ function finishMagicMissile(input: {
     state: input.state,
     subject: input.subject,
     fills: [
-      input.targetAllocationFill,
       damageRollFillWithGroups(input.damage, [
         Array.from({ length: input.dartCount }, () => 1),
       ]),
@@ -1021,6 +1072,7 @@ type CounterspellTriggerFact = Extract<
 >;
 
 function counterspellTriggerFact(input: {
+  readonly session: BattleRuntimeSession;
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
 }): CounterspellTriggerFact {
@@ -1028,26 +1080,34 @@ function counterspellTriggerFact(input: {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(counterspellUnitId),
+    sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+      input.session,
+      input.reactorId,
+      spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
     ),
     rangeFeet: movementFeet(60),
   };
 }
 
 function magicMissileSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   slotLevel: number,
 ): BattleSubject {
-  const subject = discoverBattleActs(state).find(
+  const procedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    casterId,
+    spellSlotInvocationRef(
+      magicMissileUnitId,
+      slotLevel,
+      "repeatedDamageAllocation",
+    ),
+  );
+  const subject = discoverBattleActCandidates(session.state).find(
     (act) =>
       act.subject.tag === "actionSpell" &&
       act.subject.actorId === casterId &&
       act.subject.mode.tag === "cast" &&
-      battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
-      battleActSpellPresentation(act)?.invocation.spellId ===
-        magicMissileUnitId &&
-      battleActSpellSlotPresentation(act)?.invocation.slotLevel === slotLevel,
+      act.subject.procedureRef === procedureRef,
   )?.subject;
   if (subject === undefined) {
     throw new Error(`Expected a bound level ${slotLevel} Magic Missile act.`);
@@ -1056,20 +1116,20 @@ function magicMissileSubject(
 }
 
 function requireCastSpellSubject(
-  state: BattleState,
-  spellId: string,
+  session: BattleRuntimeSession,
+  procedureRef: BattleProcedureExecutionRef,
 ): BattleSubject {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActCandidates(session.state).find(
     (act) =>
       (act.subject.tag === "actionSpell" ||
         act.subject.tag === "bonusActionSpell" ||
         act.subject.tag === "bonusActionDashSpell") &&
       act.subject.actorId === casterId &&
       act.subject.mode.tag === "cast" &&
-      battleActSpellPresentation(act)?.invocation.spellId === spellId,
+      act.subject.procedureRef === procedureRef,
   )?.subject;
   if (subject === undefined) {
-    throw new Error(`Expected a bound ${spellId} cast act.`);
+    throw new Error(`Expected a bound ${procedureRef} cast act.`);
   }
   return subject;
 }
@@ -1094,9 +1154,7 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: input.casterId,
         targetId: input.targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
-          input.hole,
-        ),
+        sourceProcedureRef: input.hole.sourceProcedureRef,
       },
     ],
   };
@@ -1109,11 +1167,13 @@ function requireCounterspellChoice(
   >,
   reactorId: CombatantId,
   slotLevel: number,
+  session: BattleRuntimeSession,
 ): Extract<
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
   return requireTriggeredReactionSpellChoice({
+    session,
     result,
     reactorId,
     spellId: counterspellUnitId,
@@ -1123,6 +1183,7 @@ function requireCounterspellChoice(
 }
 
 function requireTriggeredReactionSpellChoice(input: {
+  readonly session: BattleRuntimeSession;
   readonly result: Extract<
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
@@ -1149,7 +1210,7 @@ function requireTriggeredReactionSpellChoice(input: {
         return false;
       }
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        input.result.state,
+        { state: input.result.state, context: input.session.context },
         candidate.reactorId,
         candidate.subject.procedureRef,
       );

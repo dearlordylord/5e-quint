@@ -22,12 +22,13 @@
 
 import {
   elapsedTimeTicksFromTimeSpanDuration,
+  ElapsedTimeTicksSchema,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
+import { characterSpellProcedureRefsForProcedure } from "../../character-execution.ts";
 
 import {
   type ActionSpellBattleResolutionInput,
@@ -39,11 +40,10 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   BattleActiveEffectExecutionRef,
-  spellId,
-  type CombatantId,
+  BattleProcedureExecutionRef,
+  CombatantId,
 } from "../../identity.ts";
 import {
   DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
@@ -60,12 +60,17 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+
+const DancingLightsExpirationSchema = Schema.Struct({
+  kind: Schema.Literal("concentration"),
+  combatantId: CombatantId,
+  durationTicks: ElapsedTimeTicksSchema,
+});
 
 const DANCING_LIGHTS_RANGE_FEET = 120;
 const DANCING_LIGHTS_DURATION_MINUTES = 1;
@@ -149,9 +154,9 @@ function admitDancingLightsReposition(
     return [];
   }
   const selectedExecutionRefs = new Set(
-    characterSpellProcedureRefsForAdmissionContent(
+    characterSpellProcedureRefsForProcedure(
       ctx.actor.origin.execution,
-      spell,
+      new Set(["dancingLightsCombinedCast", "dancingLightsSeparateCast"]),
     ),
   );
   return ctx.actor.activeEffects.flatMap((activeEffect) =>
@@ -166,6 +171,8 @@ function admitDancingLightsReposition(
             spell,
             actionCost: "bonusAction",
             activeEffectRef: activeEffect.effectRef,
+            sourceDancingLightsProcedureRef:
+              activeEffect.sourceProcedureRef,
             maxMoveFeet: profile.maxMoveFeet,
             rangeFeet: profile.rangeFeet,
             spacingFeet: profile.spacingFeet,
@@ -260,7 +267,6 @@ function discoverDancingLightsCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: dancingLightsCastInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [
@@ -284,7 +290,6 @@ function discoverDancingLightsRepositionAct(
             tag: "bonusActionSpell",
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: dancingLightsRepositionInvocationRef(invocation),
             mode: { tag: "cast" },
           },
           initialHoles: [
@@ -316,38 +321,10 @@ function activeDancingLightsEffect(
       > =>
         effect.kind === "dancingLights" &&
         effect.effectRef === invocation.activeEffectRef &&
+        effect.sourceProcedureRef ===
+          invocation.sourceDancingLightsProcedureRef &&
         effect.sourceCombatantId === actorId,
     );
-}
-
-function dancingLightsCastInvocationRef(
-  invocation: DancingLightsCastInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: invocation.procedure,
-  };
-}
-
-function dancingLightsRepositionInvocationRef(
-  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "dancingLightsReposition",
-  };
-}
-
-function dancingLightsCastSummary(invocation: DancingLightsCastInvocation) {
-  return `Cast ${invocation.spell.name} as a cantrip.`;
-}
-
-function dancingLightsRepositionCastSummary(
-  invocation: BattleExecutableSpellInvocation<DancingLightsRepositionInvocation>,
-) {
-  return `Move ${invocation.spell.name} with a Bonus Action.`;
 }
 
 function resolveDancingLightsCast(
@@ -363,62 +340,48 @@ function resolveDancingLightsReposition(
 }
 
 const DancingLightsSeparateCastInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "dancingLightsSeparateCast" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("dancingLightsSeparateCast"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       form: Schema.Literal("separateLights"),
       dimRadiusFeet: MovementFeet,
       rangeFeet: MovementFeet,
       maxMoveFeet: MovementFeet,
       spacingFeet: MovementFeet,
-      expiresAt: BattleRuntimeObjectSchema,
+      expiresAt: DancingLightsExpirationSchema,
     }),
   );
 
 const DancingLightsCombinedCastInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "dancingLightsCombinedCast" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("dancingLightsCombinedCast"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       form: Schema.Literal("combinedMediumForm"),
       dimRadiusFeet: MovementFeet,
       rangeFeet: MovementFeet,
       maxMoveFeet: MovementFeet,
       spacingFeet: MovementFeet,
-      expiresAt: BattleRuntimeObjectSchema,
+      expiresAt: DancingLightsExpirationSchema,
     }),
   );
 
-const DancingLightsRepositionInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "dancingLightsReposition" }
-  >
->(
+const DancingLightsRepositionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: ClassCantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("dancingLightsReposition"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
     activeEffectRef: BattleActiveEffectExecutionRef,
+    sourceDancingLightsProcedureRef: BattleProcedureExecutionRef,
     maxMoveFeet: MovementFeet,
     rangeFeet: MovementFeet,
     spacingFeet: MovementFeet,
@@ -430,15 +393,12 @@ export const dancingLightsSeparateCastProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsSeparateCast",
-  invocationSchema: DancingLightsSeparateCastInvocationSchema,
+  executionSchema: DancingLightsSeparateCastInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitDancingLightsSeparateCast,
   discoverCastAct: discoverDancingLightsCastAct,
-  castSummary: dancingLightsCastSummary,
-  invocationRef: dancingLightsCastInvocationRef,
   resolve: resolveDancingLightsCast,
 };
 
@@ -448,15 +408,12 @@ export const dancingLightsCombinedCastProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsCombinedCast",
-  invocationSchema: DancingLightsCombinedCastInvocationSchema,
+  executionSchema: DancingLightsCombinedCastInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitDancingLightsCombinedCast,
   discoverCastAct: discoverDancingLightsCastAct,
-  castSummary: dancingLightsCastSummary,
-  invocationRef: dancingLightsCastInvocationRef,
   resolve: resolveDancingLightsCast,
 };
 
@@ -466,14 +423,11 @@ export const dancingLightsRepositionProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsReposition",
-  invocationSchema: DancingLightsRepositionInvocationSchema,
+  executionSchema: DancingLightsRepositionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitDancingLightsReposition,
   discoverCastAct: discoverDancingLightsRepositionAct,
-  castSummary: dancingLightsRepositionCastSummary,
-  invocationRef: dancingLightsRepositionInvocationRef,
   resolve: resolveDancingLightsReposition,
 };

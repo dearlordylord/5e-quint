@@ -4,6 +4,7 @@ import type {
   BattleReadiedSpellTrigger,
   BattleState,
 } from "./battle-runtime-test-support.ts";
+import type { BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   armorClass,
@@ -25,6 +26,7 @@ import {
   movementFeet,
   objectTargetFill,
   requireCharacterSpellProcedureRefForTest,
+  requireCharacterUnitProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -32,7 +34,7 @@ import {
   skeletonCreatureInit,
   skeletonId,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   targetFill,
   unitLibrary,
   wizardId,
@@ -43,7 +45,7 @@ import {
 describe("battle runtime: Eldritch Blast", () => {
   test("Eldritch Blast resolves independent creature and object beams for one Magic action", () => {
     const objectId = battleObjectId("eldritch-training-crystal");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-beams"),
       combatants: [
         characterSeed({
@@ -60,8 +62,9 @@ describe("battle runtime: Eldritch Blast", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("eldritch_blast");
-    const act = findAct(state, subject);
+    const state = session.state;
+    const act = findAct(session, magicSubject("eldritch_blast"));
+    const subject = act.subject;
     const targetHoles = act.initialHoles.filter(
       (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
         hole.kind === "targetChoice",
@@ -79,7 +82,7 @@ describe("battle runtime: Eldritch Blast", () => {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         wizardId,
         cantripSpellInvocationRef("eldritch_blast", "spellAttackSequence"),
       ),
@@ -89,13 +92,13 @@ describe("battle runtime: Eldritch Blast", () => {
     expect(objectTargetHoles).toHaveLength(2);
     expect(act.initialHoles).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Eldritch Blast attack 1 target" }),
+        expect.objectContaining({ label: "Spell attack 1 target" }),
         expect.objectContaining({
-          label: "Eldritch Blast attack 1 object target",
+          label: "Spell attack 1 object target",
         }),
-        expect.objectContaining({ label: "Eldritch Blast attack 2 target" }),
+        expect.objectContaining({ label: "Spell attack 2 target" }),
         expect.objectContaining({
-          label: "Eldritch Blast attack 2 object target",
+          label: "Spell attack 2 object target",
         }),
       ]),
     );
@@ -104,7 +107,6 @@ describe("battle runtime: Eldritch Blast", () => {
     const beamTwoTarget = objectTargetFill({
       hole: objectTargetHoles[1]!,
       objectId,
-      spellId: "eldritch_blast",
       rangeFeet: movementFeet(120),
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
@@ -118,7 +120,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "attackRoll",
     );
     expect(firstAttackRoll).toMatchObject({
-      label: "Eldritch Blast attack 1 spell attack roll",
+      label: "Spell attack 1 spell attack roll",
     });
     const firstDamage = requireHole(
       resolveBattleSubject({
@@ -133,7 +135,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(firstDamage).toMatchObject({
-      label: "Eldritch Blast attack 1 damage (1d10-force)",
+      label: "Spell attack 1 damage (1d10-force)",
     });
     const secondAttackRoll = requireHole(
       resolveBattleSubject({
@@ -149,7 +151,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "attackRoll",
     );
     expect(secondAttackRoll).toMatchObject({
-      label: "Eldritch Blast attack 2 spell attack roll",
+      label: "Spell attack 2 spell attack roll",
     });
     const secondDamage = requireHole(
       resolveBattleSubject({
@@ -166,7 +168,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(secondDamage).toMatchObject({
-      label: "Eldritch Blast attack 2 damage (1d10-force)",
+      label: "Spell attack 2 damage (1d10-force)",
     });
 
     const result = resolveBattleSubject({
@@ -208,7 +210,7 @@ describe("battle runtime: Eldritch Blast", () => {
   });
 
   test("Eldritch Blast beams can target the same creature and miss independently", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-same-target-miss"),
       combatants: [
         characterSeed({
@@ -225,8 +227,10 @@ describe("battle runtime: Eldritch Blast", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("eldritch_blast");
-    const targetHoles = findAct(state, subject).initialHoles.filter(
+    const state = session.state;
+    const act = findAct(session, magicSubject("eldritch_blast"));
+    const subject = act.subject;
+    const targetHoles = act.initialHoles.filter(
       (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
         hole.kind === "targetChoice",
     );
@@ -291,7 +295,7 @@ describe("battle runtime: Eldritch Blast", () => {
   });
 
   test("Eldritch Blast same-target hits use independent damage lifecycle holes", () => {
-    const baseState = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-same-target-lifecycle"),
       combatants: [
         characterSeed({
@@ -313,6 +317,7 @@ describe("battle runtime: Eldritch Blast", () => {
         }),
       ],
     });
+    const baseState = session.state;
     const target = baseState.combatants.get(skeletonId)!;
     const state = {
       ...baseState,
@@ -343,8 +348,9 @@ describe("battle runtime: Eldritch Blast", () => {
         ],
       }),
     } satisfies BattleState;
-    const subject = magicSubject("eldritch_blast");
-    const targetHoles = findAct(state, subject).initialHoles.filter(
+    const act = findAct({ ...session, state }, magicSubject("eldritch_blast"));
+    const subject = act.subject;
+    const targetHoles = act.initialHoles.filter(
       (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
         hole.kind === "targetChoice",
     );
@@ -384,7 +390,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(firstReduction).toMatchObject({
-      label: "Eldritch Blast attack 1 damage reduction",
+      label: "Spell attack 1 damage reduction",
     });
     const firstConcentration = requireHole(
       resolveBattleSubject({
@@ -491,7 +497,7 @@ describe("battle runtime: Eldritch Blast", () => {
     ] as const;
 
     for (const [classLevel, beamCount] of cases) {
-      const state = startBattleRight({
+      const session = startBattleSessionRight({
         battleId: battleId(`battle-eldritch-blast-level-${classLevel}`),
         combatants: [
           characterSeed({
@@ -508,7 +514,10 @@ describe("battle runtime: Eldritch Blast", () => {
           skeletonCreatureInit({ initiative: 10 }),
         ],
       });
-      const holes = findAct(state, magicSubject("eldritch_blast")).initialHoles;
+      const holes = findAct(
+        session,
+        magicSubject("eldritch_blast"),
+      ).initialHoles;
       expect(holes.filter((hole) => hole.kind === "targetChoice")).toHaveLength(
         beamCount,
       );
@@ -519,7 +528,7 @@ describe("battle runtime: Eldritch Blast", () => {
   });
 
   test("Eldritch Blast creature beams use Concentration, spell reduction, and zero-HP damage lifecycle holes", () => {
-    const concentrationState = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-concentration"),
       combatants: [
         characterSeed({
@@ -540,6 +549,7 @@ describe("battle runtime: Eldritch Blast", () => {
         }),
       ],
     });
+    const concentrationState = session.state;
     const concentratingTarget = concentrationState.combatants.get(skeletonId)!;
     const state = {
       ...concentrationState,
@@ -553,11 +563,12 @@ describe("battle runtime: Eldritch Blast", () => {
         },
       }),
     } satisfies BattleState;
-    const subject = magicSubject("eldritch_blast");
-    const target = findHole(
-      findAct(state, subject).initialHoles,
-      "targetChoice",
+    const act = findAct(
+      { ...session, state },
+      magicSubject("eldritch_blast"),
     );
+    const subject = act.subject;
+    const target = findHole(act.initialHoles, "targetChoice");
     const attack = requireHole(
       resolveBattleSubject({
         state,
@@ -645,7 +656,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(reduction).toMatchObject({
-      label: "Eldritch Blast attack 1 damage reduction",
+      label: "Spell attack 1 damage reduction",
     });
     const reduced = requireResolved(
       resolveBattleSubject({
@@ -664,7 +675,7 @@ describe("battle runtime: Eldritch Blast", () => {
     const relentlessEndurance = unitLibrary.requireUnit(
       "orc_relentless_endurance",
     );
-    const zeroHpState = startBattleRight({
+    const zeroHpSession = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-zero-hp"),
       combatants: [
         characterSeed({
@@ -694,14 +705,20 @@ describe("battle runtime: Eldritch Blast", () => {
         }),
       ],
     });
+    const zeroHpState = zeroHpSession.state;
+    const zeroHpAct = findAct(
+      zeroHpSession,
+      magicSubject("eldritch_blast"),
+    );
+    const zeroHpSubject = zeroHpAct.subject;
     const zeroTarget = findHole(
-      findAct(zeroHpState, subject).initialHoles,
+      zeroHpAct.initialHoles,
       "targetChoice",
     );
     const zeroAttack = requireHole(
       resolveBattleSubject({
         state: zeroHpState,
-        subject,
+        subject: zeroHpSubject,
         fills: [targetFill(zeroTarget, skeletonId)],
       }),
       "attackRoll",
@@ -709,7 +726,7 @@ describe("battle runtime: Eldritch Blast", () => {
     const zeroDamage = requireHole(
       resolveBattleSubject({
         state: zeroHpState,
-        subject,
+        subject: zeroHpSubject,
         fills: [
           targetFill(zeroTarget, skeletonId),
           attackRollFill(zeroAttack, { total: 18, naturalD20: 12 }),
@@ -720,7 +737,7 @@ describe("battle runtime: Eldritch Blast", () => {
     const disposition = requireHole(
       resolveBattleSubject({
         state: zeroHpState,
-        subject,
+        subject: zeroHpSubject,
         fills: [
           targetFill(zeroTarget, skeletonId),
           attackRollFill(zeroAttack, { total: 18, naturalD20: 12 }),
@@ -733,67 +750,53 @@ describe("battle runtime: Eldritch Blast", () => {
       targetId: skeletonId,
       choices: expect.arrayContaining([
         { kind: "ordinaryDamage" },
-        { kind: "zeroHitPointReplacement", unitId: "orc_relentless_endurance" },
+        {
+          kind: "zeroHitPointReplacement",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            zeroHpSession,
+            skeletonId,
+            "orc_relentless_endurance",
+          ),
+        },
       ]),
     });
   });
 
   test("Eldritch Blast beams open attack-hit and after-damage reaction windows", () => {
-    const subject = magicSubject("eldritch_blast");
+    const subjectSelector = magicSubject("eldritch_blast");
     const warlockTurnWithReadiedRay = (
       trigger: BattleReadiedSpellTrigger,
-    ): BattleState => {
+    ): BattleRuntimeSession => {
+      const session = startBattleSessionRight({
+        battleId: battleId(`battle-eldritch-blast-readied-${trigger}`),
+        combatants: [
+          characterSeed({
+            combatantId: secondWizardId,
+            displayName: "Second Wizard",
+            initiative: 30,
+            attack: null,
+            spellcasting: wizardSpellcasting(),
+          }),
+          characterSeed({
+            combatantId: wizardId,
+            displayName: "Warlock",
+            initiative: 20,
+            attack: null,
+            spellcasting: wizardSpellcasting({
+              cantrips: [spellRecord("eldritch_blast")],
+              preparedSpells: [],
+            }),
+          }),
+          skeletonCreatureInit({ initiative: 10 }),
+        ],
+      });
       const readied = resolveBattleSubject({
-        state: startBattleRight({
-          battleId: battleId(`battle-eldritch-blast-readied-${trigger}`),
-          combatants: [
-            characterSeed({
-              combatantId: secondWizardId,
-              displayName: "Second Wizard",
-              initiative: 30,
-              attack: null,
-              spellcasting: wizardSpellcasting(),
-            }),
-            characterSeed({
-              combatantId: wizardId,
-              displayName: "Warlock",
-              initiative: 20,
-              attack: null,
-              spellcasting: wizardSpellcasting({
-                cantrips: [spellRecord("eldritch_blast")],
-                preparedSpells: [],
-              }),
-            }),
-            skeletonCreatureInit({ initiative: 10 }),
-          ],
-        }),
+        state: session.state,
         subject: {
           tag: "actionSpell",
           actorId: secondWizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            startBattleRight({
-              battleId: battleId(`battle-eldritch-blast-readied-${trigger}`),
-              combatants: [
-                characterSeed({
-                  combatantId: secondWizardId,
-                  displayName: "Second Wizard",
-                  initiative: 30,
-                  attack: null,
-                  spellcasting: wizardSpellcasting(),
-                }),
-                characterSeed({
-                  combatantId: wizardId,
-                  displayName: "Warlock",
-                  initiative: 20,
-                  attack: null,
-                  spellcasting: wizardSpellcasting({
-                    cantrips: [spellRecord("eldritch_blast")],
-                    preparedSpells: [],
-                  }),
-                }),
-                skeletonCreatureInit({ initiative: 10 }),
-              ],
-            }),
+            session,
             secondWizardId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -808,17 +811,19 @@ describe("battle runtime: Eldritch Blast", () => {
       if (next.tag !== "resolved") {
         throw new Error(`Expected resolved End Turn, got ${next.tag}.`);
       }
-      return next.state;
+      return { ...session, state: next.state };
     };
-    const attackHitState = warlockTurnWithReadiedRay("attackHit");
+    const attackHitSession = warlockTurnWithReadiedRay("attackHit");
+    const attackHitState = attackHitSession.state;
+    const attackHitSubject = findAct(attackHitSession, subjectSelector).subject;
     const attackHitTarget = findHole(
-      findAct(attackHitState, subject).initialHoles,
+      findAct(attackHitState, attackHitSubject).initialHoles,
       "targetChoice",
     );
     const attackHitRoll = requireHole(
       resolveBattleSubject({
         state: attackHitState,
-        subject,
+        subject: attackHitSubject,
         fills: [targetFill(attackHitTarget, skeletonId)],
       }),
       "attackRoll",
@@ -826,7 +831,7 @@ describe("battle runtime: Eldritch Blast", () => {
     expect(
       resolveBattleSubject({
         state: attackHitState,
-        subject,
+        subject: attackHitSubject,
         fills: [
           targetFill(attackHitTarget, skeletonId),
           attackRollFill(attackHitRoll, { total: 18, naturalD20: 12 }),
@@ -837,15 +842,20 @@ describe("battle runtime: Eldritch Blast", () => {
       holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
     });
 
-    const afterDamageState = warlockTurnWithReadiedRay("afterDamage");
+    const afterDamageSession = warlockTurnWithReadiedRay("afterDamage");
+    const afterDamageState = afterDamageSession.state;
+    const afterDamageSubject = findAct(
+      afterDamageSession,
+      subjectSelector,
+    ).subject;
     const afterDamageTarget = findHole(
-      findAct(afterDamageState, subject).initialHoles,
+      findAct(afterDamageState, afterDamageSubject).initialHoles,
       "targetChoice",
     );
     const afterDamageRoll = requireHole(
       resolveBattleSubject({
         state: afterDamageState,
-        subject,
+        subject: afterDamageSubject,
         fills: [targetFill(afterDamageTarget, skeletonId)],
       }),
       "attackRoll",
@@ -857,7 +867,7 @@ describe("battle runtime: Eldritch Blast", () => {
     const afterDamageDamage = requireHole(
       resolveBattleSubject({
         state: afterDamageState,
-        subject,
+        subject: afterDamageSubject,
         fills: [targetFill(afterDamageTarget, skeletonId), afterDamageRollFill],
       }),
       "rolledDice",
@@ -865,7 +875,7 @@ describe("battle runtime: Eldritch Blast", () => {
     expect(
       resolveBattleSubject({
         state: afterDamageState,
-        subject,
+        subject: afterDamageSubject,
         fills: [
           targetFill(afterDamageTarget, skeletonId),
           afterDamageRollFill,

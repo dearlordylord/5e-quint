@@ -49,7 +49,8 @@ import {
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleRuntimeSession,
+  type BattleSubject,
 } from "./index.ts";
 
 type FindFamiliarSelectedIdentityProjection = {
@@ -202,10 +203,9 @@ function observeDismissAndReappearFindFamiliarRoute(): readonly BattleReducerRou
 }
 
 function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
-  const state = requireResolved(
-    castCatFamiliar(startSpellcasterFixtureBattle()),
-  );
-  const act = touchDeliveryAct(state);
+  const session = startSpellcasterFixtureSession();
+  const state = requireResolved(castCatFamiliar(session.state));
+  const act = touchDeliveryAct({ ...session, state });
   const targetFill = selectedTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
   );
@@ -346,11 +346,15 @@ function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentit
 }
 
 function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
-  const cast = castCatFamiliar(startSpellcasterFixtureBattle());
+  const session = startSpellcasterFixtureSession();
+  const cast = castCatFamiliar(session.state);
   if (cast.tag !== "resolved") {
     throw new Error(`Expected Find Familiar cast, got ${cast.tag}.`);
   }
-  const cureWoundsAct = discoverBattleActs(cast.state).find(
+  const cureWoundsAct = discoverBattleActs({
+    ...session,
+    state: cast.state,
+  }).find(
     (act) =>
       act.subject.tag === "actionSpell" &&
       battleActSpellPresentation(act)?.invocation.spellId === cureWoundsUnitId,
@@ -415,6 +419,10 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
 }
 
 function startSpellcasterFixtureBattle(): BattleState {
+  return startSpellcasterFixtureSession().state;
+}
+
+function startSpellcasterFixtureSession(): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("find-familiar-selected-identity-test"),
     combatants: [
@@ -484,13 +492,13 @@ function castRatFamiliar(state: BattleState) {
   });
 }
 
-function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
+function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "findFamiliarTouchSpell" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {

@@ -1,6 +1,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARBARIAN-DANGER-SENSE barbarian_danger_sense
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
+} from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
@@ -29,6 +32,7 @@ import {
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import type {
   BattleActiveEffect,
+  BattleRuntimeSession,
   BattleState,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
@@ -103,24 +107,24 @@ describe("L12G deterministic Danger Sense admission", () => {
   test("Danger Sense projects Advantage for Dexterity saves while not Incapacitated", () => {
     const state = dangerSenseBattle();
 
-    expect(savingThrowRollModeProjections(state, "dex")).toEqual([
+    expect(savingThrowRollModeProjections(state.state, "dex")).toEqual([
       {
         targetId: spellTargetId,
         rollMode: "advantage",
       },
     ]);
-    expect(savingThrowRollModeProjections(state, "con")).toEqual([]);
+    expect(savingThrowRollModeProjections(state.state, "con")).toEqual([]);
   });
 
   test("Danger Sense is suppressed while the target is Incapacitated", () => {
     const state = dangerSenseBattle();
-    const target = state.combatants.get(spellTargetId);
+    const target = state.state.combatants.get(spellTargetId);
     if (target === undefined) {
       throw new Error("Expected Danger Sense target combatant.");
     }
     const incapacitatedState: BattleState = {
-      ...state,
-      combatants: new Map(state.combatants).set(spellTargetId, {
+      ...state.state,
+      combatants: new Map(state.state.combatants).set(spellTargetId, {
         ...battleCreatureStateWithKnockOutPreservedConditions(
           target,
           applyCondition(target.conditions, "incapacitated"),
@@ -194,7 +198,7 @@ describe("L12G deterministic Danger Sense admission", () => {
   });
 });
 
-function dangerSenseBattle(): BattleState {
+function dangerSenseBattle(): BattleRuntimeSession {
   const unit = unitLibrary.requireUnit(barbarianDangerSenseUnitId);
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: unit.id },
@@ -222,7 +226,11 @@ function dangerSenseBattle(): BattleState {
         displayName: "Danger Sense Barbarian",
         initiative: 10,
         classLevels: [{ className: "barbarian", level: classLevel(2) }],
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "barbarian", level: classLevel(2) },
+          ]),
+        ],
         characterUnitRefs: [unitRef.right],
       }),
     ],
@@ -236,8 +244,9 @@ function dangerSenseBattle(): BattleState {
 
 function dangerSenseGreaseGroundHazardBattle(input?: {
   readonly incapacitated?: boolean;
-}): BattleState {
-  const state = dangerSenseBattle();
+}): BattleRuntimeSession {
+  const session = dangerSenseBattle();
+  const state = session.state;
   const caster = state.combatants.get(spellCasterId);
   const target = state.combatants.get(spellTargetId);
   if (caster === undefined || target === undefined) {
@@ -277,5 +286,5 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Danger Sense Grease target turn.");
   }
-  return targetTurn.state;
+  return { ...session, state: targetTurn.state };
 }

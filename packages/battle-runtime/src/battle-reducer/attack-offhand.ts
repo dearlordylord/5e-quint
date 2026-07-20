@@ -107,8 +107,8 @@ import { invalidResult } from "./result-helpers.ts";
 import {
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
-  eligibleAttackDamageDieFloorUnitIds,
-  eligibleWeaponDamageDiceRollChoiceUnitIds,
+  eligibleAttackDamageDieFloorProcedureRefs,
+  eligibleWeaponDamageDiceRollChoiceProcedureRefs,
   selectedAttackDamageRiders,
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
@@ -319,11 +319,11 @@ function resolveBonusActionAttack(
       input.state,
       input.subject.actorId,
       attack,
-      fillSet.attackRoll.activatedOngoingFeatureUnitId,
+      fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
       fillSet.damageRoll != null,
     );
   if (
-    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
     activatedOngoingFeatureProfile === null
   ) {
     return invalidResult(
@@ -338,10 +338,10 @@ function resolveBonusActionAttack(
     target.combatantId,
     attack,
     fillSet.targetSpatialFacts,
-    fillSet.attackRoll.activatedOngoingFeatureUnitId,
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
   );
   if (
-    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
     fillSet.attackRoll.rollMode !== requiredRollMode
   ) {
     return invalidResult(
@@ -438,17 +438,18 @@ function resolveBonusActionAttack(
       )
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
-    ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+    ? eligibleWeaponDamageDiceRollChoiceProcedureRefs(
         attackRolledState,
         input.subject.actorId,
         attack,
       )
     : [];
   const eligibleDamageDieFloorChoiceUnitIds = hit
-    ? eligibleAttackDamageDieFloorUnitIds(
+    ? eligibleAttackDamageDieFloorProcedureRefs(
         attackRolledState,
         input.subject.actorId,
         attack,
+        attack.procedureRef,
       )
     : [];
   const spellWeaponDamageRiders = hit
@@ -471,7 +472,7 @@ function resolveBonusActionAttack(
       ? []
       : (selectedAttackDamageRiders(
           eligibleDamageRiders,
-          fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
+          fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
         ) ?? []);
   const eligibleCunningStrikeDamageOptions = hit
     ? eligibleCunningStrikeContexts({
@@ -615,6 +616,7 @@ function resolveBonusActionAttack(
     const damageRollByType = attackDamageByTypeEntries(
       damageSource,
       attack,
+      attack.procedureRef,
       fillSet.damageRoll,
       critical,
       effectiveAttackRoll,

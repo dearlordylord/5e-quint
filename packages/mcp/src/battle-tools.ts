@@ -1,14 +1,14 @@
 import {
   discoverBattleActs,
+  battleSubjectPresentation,
   openCreatureFallsInterruptWindow,
   resolveBattleInterrupt,
-  resolveBattleSubject,
+  resolveBattleRuntimeSubject,
   sameBattleSubject,
-  snapshotBattle,
   type BattleFill,
-  type BattleActPresentation,
   type BattleResolutionResult,
-  type BattleState,
+  type BattleRuntimeResolutionResult,
+  type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 
@@ -27,6 +27,13 @@ import {
   SelectStatBlockOutputSchema,
 } from "./battle-tool-output.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
+import {
+  battleResolutionPayload,
+  battleSessionPayload,
+  noStoredBattleContent,
+  pendingBattleFillsContent,
+  unknownStatBlockContent,
+} from "./battle-tool-payloads.ts";
 import type {
   BattleFillSession,
   PendingBattleFillSession,
@@ -70,18 +77,18 @@ export function handleBattleToolCall(
     Match.when({ name: battleToolNames.readBattleState }, () =>
       schemaJsonContent(
         BattleSessionOutputSchema,
-        battleSessionPayload(root, root.sessionStore.battleState),
+        battleSessionPayload(root, root.sessionStore.battleSession),
       ),
     ),
     Match.when({ name: battleToolNames.discoverBattleActs }, () =>
       schemaJsonContent(
         BattleSessionOutputSchema,
-        battleSessionPayload(root, root.sessionStore.battleState),
+        battleSessionPayload(root, root.sessionStore.battleSession),
       ),
     ),
     Match.when({ name: battleToolNames.fillBattleHole }, (matched) => {
-      const visibleState = root.sessionStore.battleState;
-      if (visibleState == null) return noStoredBattleContent();
+      const visibleSession = root.sessionStore.battleSession;
+      if (visibleSession == null) return noStoredBattleContent();
 
       const subject = matched.args.subject;
       const previous = root.sessionStore.pendingBattleFills;
@@ -92,12 +99,10 @@ export function handleBattleToolCall(
           requestedSubject: subject,
         });
       }
-      const discoveredAct = discoverBattleActs(visibleState).find((act) =>
+      const discoveredAct = discoverBattleActs(visibleSession).find((act) =>
         sameBattleSubject(act.subject, subject),
       );
-      const presentation =
-        previous?.presentation ?? discoveredAct?.presentation;
-      if (presentation === undefined) {
+      if (previous === null && discoveredAct === undefined) {
         return errorContent("Battle act is not currently available.", {
           code: "BATTLE_ACT_NOT_AVAILABLE",
           subject,
@@ -107,16 +112,19 @@ export function handleBattleToolCall(
       const fills = [...(previous?.fills ?? []), matched.args.fill];
       const isInterruptDecision =
         matched.args.fill.kind === "interruptDecision";
-      const replayState = isInterruptDecision
-        ? visibleState
-        : (previous?.baseState ?? visibleState);
+      const replaySession = isInterruptDecision
+        ? visibleSession
+        : (previous?.baseSession ?? visibleSession);
       const result = isInterruptDecision
-        ? resolveBattleInterrupt({
-            state: replayState,
-            fill: matched.args.fill,
-          })
-        : resolveBattleSubject({
-            state: replayState,
+        ? runtimeResolutionFromMechanical(
+            replaySession,
+            resolveBattleInterrupt({
+              state: replaySession.state,
+              fill: matched.args.fill,
+            }),
+          )
+        : resolveBattleRuntimeSubject({
+            session: replaySession,
             subject,
             fills,
             statBlockCatalog: root.statBlockCatalog,
@@ -126,9 +134,8 @@ export function handleBattleToolCall(
         filledSubject: subject,
         previous,
         fills,
-        replayState,
+        replaySession,
         isInterruptDecision,
-        presentation,
       });
       if (storeBattleResolution(root, result, pendingTransaction)) {
         publishAdminProjectionBestEffort(root);
@@ -148,11 +155,14 @@ export function handleBattleToolCall(
         matched.args.subject.tag === "runtimeCommand" &&
         matched.args.subject.command === "creatureFalls"
       ) {
-        const result = openCreatureFallsInterruptWindow({
-          state: state.right,
-          fallingCreatureId: matched.args.subject.fallingCreatureId,
-          reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
-        });
+        const result = runtimeResolutionFromMechanical(
+          state.right,
+          openCreatureFallsInterruptWindow({
+            state: state.right.state,
+            fallingCreatureId: matched.args.subject.fallingCreatureId,
+            reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
+          }),
+        );
         if (
           storeBattleResolution(
             root,
@@ -162,9 +172,8 @@ export function handleBattleToolCall(
               filledSubject: matched.args.subject,
               previous: null,
               fills: [],
-              replayState: state.right,
+              replaySession: state.right,
               isInterruptDecision: false,
-              presentation: { kind: "intrinsic" },
             }),
           )
         ) {
@@ -190,8 +199,8 @@ export function handleBattleToolCall(
           subject: matched.args.subject,
         });
       }
-      const result = resolveBattleSubject({
-        state: state.right,
+      const result = resolveBattleRuntimeSubject({
+        session: state.right,
         subject: matched.args.subject,
         fills: [],
         statBlockCatalog: root.statBlockCatalog,
@@ -205,9 +214,8 @@ export function handleBattleToolCall(
             filledSubject: matched.args.subject,
             previous: null,
             fills: [],
-            replayState: state.right,
+            replaySession: state.right,
             isInterruptDecision: false,
-            presentation: availableAct.presentation,
           }),
         )
       ) {
@@ -224,8 +232,8 @@ export function handleBattleToolCall(
         "Cannot end turn with pending battle fills.",
       );
       if (Either.isLeft(state)) return state.left;
-      const result = resolveBattleSubject({
-        state: state.right,
+      const result = resolveBattleRuntimeSubject({
+        session: state.right,
         subject: {
           tag: "runtimeCommand",
           actorId: matched.args.actorId,
@@ -247,9 +255,8 @@ export function handleBattleToolCall(
             },
             previous: null,
             fills: [],
-            replayState: state.right,
+            replaySession: state.right,
             isInterruptDecision: false,
-            presentation: { kind: "intrinsic" },
           }),
         )
       ) {
@@ -269,12 +276,12 @@ export function handleBattleToolCall(
 
       const handoff = finalizeCharacterSessionsFromBattle(root, state.right);
       if (handoff !== null) return handoff;
-      root.sessionStore.battleState = null;
+      root.sessionStore.battleSession = null;
       root.sessionStore.pendingBattleFills = null;
       publishAdminProjectionBestEffort(root);
 
       return schemaJsonContent(EndBattleOutputSchema, {
-        endedBattleId: state.right.battleId,
+        endedBattleId: state.right.state.battleId,
         characters: Array.from(root.sessionStore.characters.entries()).map(
           ([characterId, session]) => ({
             characterId,
@@ -290,16 +297,17 @@ export function handleBattleToolCall(
 
 function storeBattleResolution(
   root: McpCompositionRoot,
-  result: BattleResolutionResult,
+  result: BattleRuntimeResolutionResult,
   pendingTransaction: PendingBattleFillSession | null,
 ): boolean {
   if (result.tag === "resolved") {
-    root.sessionStore.battleState = result.state;
+    root.sessionStore.battleSession = result.session;
     root.sessionStore.pendingBattleFills = null;
     return true;
   }
   if (result.tag === "needsHoles") {
-    root.sessionStore.battleState = result.state;
+    if (pendingTransaction === null) return false;
+    root.sessionStore.battleSession = result.session;
     root.sessionStore.pendingBattleFills = pendingTransaction;
     return true;
   }
@@ -311,123 +319,102 @@ function pendingTransactionForResult({
   filledSubject,
   previous,
   fills,
-  replayState,
+  replaySession,
   isInterruptDecision,
-  presentation,
 }: {
-  readonly result: BattleResolutionResult;
+  readonly result: BattleRuntimeResolutionResult;
   readonly filledSubject: BattleFillSession["subject"];
   readonly previous: PendingBattleFillSession | null;
   readonly fills: readonly BattleFill[];
-  readonly replayState: BattleState;
+  readonly replaySession: BattleRuntimeSession;
   readonly isInterruptDecision: boolean;
-  readonly presentation: BattleActPresentation;
 }): PendingBattleFillSession | null {
   if (result.tag !== "needsHoles") return null;
+  const resultPresentation = battleSubjectPresentation(
+    result.session,
+    result.subject,
+  );
+  if (resultPresentation === undefined) return null;
   if (
     isInterruptDecision &&
     previous !== null &&
     sameBattleSubject(result.subject, filledSubject)
   ) {
     return {
-      baseState: previous.baseState,
+      baseSession: previous.baseSession,
       subject: result.subject,
-      presentation: previous.presentation,
       fills: previous.fills,
     };
   }
   return {
-    baseState: isInterruptDecision ? result.state : replayState,
+    baseSession: isInterruptDecision ? result.session : replaySession,
     subject: result.subject,
-    presentation,
     fills: isInterruptDecision ? [] : fills,
   };
 }
 
-function unknownStatBlockContent(statBlockId: string, error: unknown) {
-  return errorContent(`Unknown Stat Block: ${statBlockId}`, {
-    code: "UNKNOWN_STAT_BLOCK",
-    statBlockId,
-    message: error instanceof Error ? error.message : String(error),
-  });
-}
+const byResolutionTag = Match.discriminator("tag");
 
-function battleSessionPayload(
-  root: McpCompositionRoot,
-  state: BattleState | null,
-) {
-  return {
-    snapshot: state === null ? null : snapshotBattle(state),
-    session: root.sessionStore.snapshot(),
-  };
-}
-
-function battleResolutionPayload(
-  root: McpCompositionRoot,
+function runtimeResolutionFromMechanical(
+  session: BattleRuntimeSession,
   result: BattleResolutionResult,
-) {
-  return {
-    result: battleResolutionResultPayload(result),
-    snapshot: result.snapshot,
-    session: root.sessionStore.snapshot(),
-  };
-}
-
-function battleResolutionResultPayload(result: BattleResolutionResult) {
-  if (result.tag === "resolved") {
-    return {
-      tag: result.tag,
-      snapshot: result.snapshot,
-      ...(result.objectDamages === undefined
+): BattleRuntimeResolutionResult {
+  return Match.value(result).pipe(
+    byResolutionTag("resolved", (outcome) => ({
+      tag: outcome.tag,
+      session: { state: outcome.state, context: session.context },
+      snapshot: outcome.snapshot,
+      ...(outcome.routeEvents === undefined
         ? {}
-        : { objectDamages: result.objectDamages }),
-      ...(result.objectIgnitions === undefined
+        : { routeEvents: outcome.routeEvents }),
+      ...(outcome.objectDamages === undefined
         ? {}
-        : { objectIgnitions: result.objectIgnitions }),
-      ...(result.droppedObjects === undefined
+        : { objectDamages: outcome.objectDamages }),
+      ...(outcome.objectIgnitions === undefined
         ? {}
-        : { droppedObjects: result.droppedObjects }),
-      ...(result.shovePushes === undefined
+        : { objectIgnitions: outcome.objectIgnitions }),
+      ...(outcome.droppedObjects === undefined
         ? {}
-        : { shovePushes: result.shovePushes }),
-    };
-  }
-  if (result.tag === "needsHoles") {
-    return {
-      tag: result.tag,
-      subject: result.subject,
-      holes: result.holes,
-      snapshot: result.snapshot,
-    };
-  }
-
-  return result;
-}
-
-function noStoredBattleContent() {
-  return errorContent("No battle session has been started.", {
-    code: "NO_BATTLE_SESSION",
-  });
+        : { droppedObjects: outcome.droppedObjects }),
+      ...(outcome.shovePushes === undefined
+        ? {}
+        : { shovePushes: outcome.shovePushes }),
+      ...(outcome.teleports === undefined
+        ? {}
+        : { teleports: outcome.teleports }),
+    })),
+    byResolutionTag("needsHoles", (outcome) => ({
+      tag: outcome.tag,
+      session: { state: outcome.state, context: session.context },
+      subject: outcome.subject,
+      holes: outcome.holes,
+      snapshot: outcome.snapshot,
+      ...(outcome.routeEvents === undefined
+        ? {}
+        : { routeEvents: outcome.routeEvents }),
+    })),
+    byResolutionTag("invalid", (outcome) => ({
+      tag: outcome.tag,
+      session,
+      reason: outcome.reason,
+      message: outcome.message,
+      snapshot: outcome.snapshot,
+      ...(outcome.routeEvents === undefined
+        ? {}
+        : { routeEvents: outcome.routeEvents }),
+    })),
+    Match.exhaustive,
+  );
 }
 
 function activeBattleWithoutPendingFills(
   root: McpCompositionRoot,
   pendingMessage: string,
-): Either.Either<BattleState, ToolError> {
-  const state = root.sessionStore.battleState;
-  if (state == null) return Either.left(noStoredBattleContent());
+): Either.Either<BattleRuntimeSession, ToolError> {
+  const session = root.sessionStore.battleSession;
+  if (session == null) return Either.left(noStoredBattleContent());
   const pendingFills = root.sessionStore.pendingBattleFills;
   return pendingFills === null
-    ? Either.right(state)
+    ? Either.right(session)
     : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
-}
-
-function pendingBattleFillsContent(
-  pendingFills: BattleFillSession,
-  message: string,
-) {
-  return errorContent(message, {
-    code: "BATTLE_FILLS_PENDING",
-    pendingSubject: pendingFills.subject,
-  });
 }

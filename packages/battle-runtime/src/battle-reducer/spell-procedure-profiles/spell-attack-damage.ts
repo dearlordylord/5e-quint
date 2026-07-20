@@ -13,7 +13,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Spell Attack, Attack Roll, Damage Roll, Damage
 //     Type, and Spell Invocation.
 //
-// What lives here: admit, discoverCastAct, castSummary, invocationRef, and the
+// What lives here: admit, discoverCastAct, castSummary, and the
 // profile-owned resolve entrypoint.
 //
 // What stays in shared infrastructure: the attack/damage resolver body remains
@@ -22,6 +22,10 @@
 // one damage lifecycle. The profile owns dispatch into that shared lifecycle.
 
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  DamageTypeSchema,
+  DiceExprSchema,
+} from "@dnd/surface/surface/schema";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -32,8 +36,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   readiedSpellAct,
@@ -53,12 +56,11 @@ import type {
 import { Schema } from "effect";
 import {
   AttackBonus,
-  BattleRuntimeObjectSchema,
   ClassCantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
-  SpellAttackDamagePayloadSchema,
+  SpellDamageSchema,
   SpellAttackMissDamageSchema,
   SpellAttackDamageTargetingSchema,
   SpellPostDamageRiderSchema,
@@ -66,8 +68,35 @@ import {
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
+
+const SpellAttackDamagePayloadExecutionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fixedSpellAttackDamage"),
+    expr: DiceExprSchema,
+    damageType: DamageTypeSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("sorcerousBurstDamageTypeChoice"),
+    expr: DiceExprSchema,
+    damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
+    maxDieAdditionalDiceLimit: Schema.Number.pipe(
+      Schema.int(),
+      Schema.greaterThanOrEqualTo(0),
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("selectedSorcerousBurstDamage"),
+    expr: DiceExprSchema,
+    damageType: DamageTypeSchema,
+    maxDieAdditionalDiceLimit: Schema.Number.pipe(
+      Schema.int(),
+      Schema.greaterThanOrEqualTo(0),
+    ),
+  }),
+);
 
 type SpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackDamageInvocation,
@@ -127,7 +156,6 @@ function discoverSpellAttackDamageCastAct(
         subject: spellCastSelectionSubject(
           actorId,
           invocation,
-          spellAttackDamageInvocationRef(invocation),
         ),
         initialHoles,
       },
@@ -144,7 +172,6 @@ function discoverSpellAttackDamageCastAct(
             subject: spellCastSelectionSubject(
               actorId,
               invocation,
-              spellAttackDamageInvocationRef(invocation),
             ),
             initialHoles: [
               ...(invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
@@ -157,53 +184,26 @@ function discoverSpellAttackDamageCastAct(
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
 }
 
-function spellAttackDamageInvocationRef(
-  invocation: SpellAttackDamageInvocation,
-): SpellInvocationRef {
-  return invocation.resource.tag === "spellSlot"
-    ? {
-        tag: "spellSlot",
-        spellId: spellId(invocation.spell.id),
-        slotLevel: invocation.resource.slotLevel,
-        procedure: "spellAttackDamage",
-      }
-    : {
-        tag: "cantrip",
-        spellId: spellId(invocation.spell.id),
-        procedure: "spellAttackDamage",
-      };
-}
-
-function spellAttackDamageCastSummary(
-  invocation: SpellAttackDamageInvocation,
-): string {
-  return invocation.resource.tag === "spellSlot"
-    ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
-    : `Cast ${invocation.spell.name} as a cantrip.`;
-}
-
 function resolveSpellAttackDamage(
   input: SpellAttackDamageResolveInput,
 ): BattleResolutionResult {
   return resolveSpellAttackDamageAct(input);
 }
 
-export const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
->(
+export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackDamage"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: SpellAttackDamageTargetingSchema,
-      damage: SpellAttackDamagePayloadSchema,
+      damage: SpellAttackDamagePayloadExecutionSchema,
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,
       missDamage: SpellAttackMissDamageSchema,
-      laterDamage: Schema.NullOr(BattleRuntimeObjectSchema),
+      laterDamage: Schema.NullOr(SpellDamageSchema),
       postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
       objectHitEffect: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("none") }),
@@ -216,14 +216,14 @@ export const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackDamage"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: SpellAttackDamageTargetingSchema,
-      damage: SpellAttackDamagePayloadSchema,
+      damage: SpellAttackDamagePayloadExecutionSchema,
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,
       missDamage: SpellAttackMissDamageSchema,
-      laterDamage: Schema.NullOr(BattleRuntimeObjectSchema),
+      laterDamage: Schema.NullOr(SpellDamageSchema),
       postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
       objectHitEffect: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("none") }),
@@ -236,17 +236,15 @@ export const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
 );
 export const spellAttackDamageProfile: SpellProcedureProfile<
   "spellAttackDamage",
-  Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
+  Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellAttackDamage",
-  invocationSchema: SpellAttackDamageInvocationSchema,
+  executionSchema: SpellAttackDamageInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
-  knownWillingTargetSpellIds: [],
   admit: admitSpellAttackDamage,
   discoverCastAct: discoverSpellAttackDamageCastAct,
-  castSummary: spellAttackDamageCastSummary,
-  invocationRef: spellAttackDamageInvocationRef,
   resolve: resolveSpellAttackDamage,
 };

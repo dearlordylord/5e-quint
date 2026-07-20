@@ -12,8 +12,6 @@
 //                         spells-discovery.ts
 //   - castSummary()     - was the thaumaturgyBoomingVoice branch in
 //                         spells-discovery.ts
-//   - invocationRef()   - was the thaumaturgyBoomingVoice branch in
-//                         spells-invocation-ref.ts
 //   - resolve()         - was resolveThaumaturgyBoomingVoiceSpellAct in
 //                         spells-resolve-support-effects.ts
 //   - applyEffect()     - was applyThaumaturgyBoomingVoiceSpellEffect in
@@ -38,8 +36,8 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { type CombatantId } from "../../identity.ts";
+import { ThaumaturgyBoomingVoiceTemplateSchema } from "../../active-effect/codecs.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -53,9 +51,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   ClassCantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
@@ -99,28 +96,11 @@ function discoverThaumaturgyBoomingVoiceCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: thaumaturgyBoomingVoiceInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [thaumaturgyActiveOneMinuteEffectCountHole(invocation)],
     },
   ];
-}
-
-function thaumaturgyBoomingVoiceInvocationRef(
-  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "thaumaturgyBoomingVoice",
-  };
-}
-
-function thaumaturgyBoomingVoiceCastSummary(
-  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
-): string {
-  return `Cast ${invocation.spell.name} as a cantrip, using the Booming Voice effect.`;
 }
 
 function isThaumaturgyBoomingVoiceEffectForInvocation(
@@ -286,19 +266,14 @@ function resolveThaumaturgyBoomingVoice(
       };
 }
 
-const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "thaumaturgyBoomingVoice" }
-  >
->(
+const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: ClassCantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("thaumaturgyBoomingVoice"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: ThaumaturgyBoomingVoiceTemplateSchema,
     rangeFeet: MovementFeet,
   }),
 );
@@ -307,14 +282,11 @@ export const thaumaturgyBoomingVoiceProfile: SpellProcedureProfile<
   ThaumaturgyBoomingVoiceInvocation
 > = {
   procedure: "thaumaturgyBoomingVoice",
-  invocationSchema: ThaumaturgyBoomingVoiceInvocationSchema,
+  executionSchema: ThaumaturgyBoomingVoiceInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitThaumaturgyBoomingVoice,
   discoverCastAct: discoverThaumaturgyBoomingVoiceCastAct,
-  castSummary: thaumaturgyBoomingVoiceCastSummary,
-  invocationRef: thaumaturgyBoomingVoiceInvocationRef,
   resolve: resolveThaumaturgyBoomingVoice,
 };

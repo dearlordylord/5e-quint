@@ -15,6 +15,11 @@ import {
   type BattleCreatureState,
   type BattleStateInitIssue,
   type BattleState,
+  type BattleRuntimeContext,
+  type BattleRuntimeSession,
+  type CharacterBattleResourceOwnership,
+  type CharacterBattleResourceState,
+  type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
@@ -167,9 +172,7 @@ export {
   type CharacterBattleSettlementRouteAction,
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./character-battle-route.ts";
-export {
-  type CharacterBattleOriginFeatSelectedReferenceProjection,
-} from "./origin-feat-selected-reference-projection.ts";
+export { type CharacterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 
 export type CharacterSheetBattleInitInput = Omit<
   CharacterBuildCreatureInput,
@@ -201,8 +204,7 @@ export type CharacterBattleInitProjectionIssue = {
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
-export type CharacterBattleRuntimeEntry = {
-  readonly state: BattleState;
+export type CharacterBattleRuntimeEntry = BattleRuntimeSession & {
   readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
   readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
 };
@@ -343,7 +345,10 @@ export function startBattleFromCharacterSheetAndStatBlock(input: {
   readonly battleId: BattleId;
   readonly character: CharacterSheetBattleInitInput;
   readonly statBlockBattleInput: StatBlockBattleInitInput;
-}): Either.Either<CharacterBattleRuntimeEntry, CharacterBattleRuntimeEntryIssue> {
+}): Either.Either<
+  CharacterBattleRuntimeEntry,
+  CharacterBattleRuntimeEntryIssue
+> {
   const characterInit = characterSheetBattleInitWithRoute(input.character);
   if (Either.isLeft(characterInit)) {
     return Either.left({
@@ -351,29 +356,28 @@ export function startBattleFromCharacterSheetAndStatBlock(input: {
       routeEvents: characterInit.left.routeEvents,
     });
   }
-  const state = startBattle({
+  const session = startBattle({
     battleId: input.battleId,
     combatants: [
       characterInit.right.init,
       battleCreatureInitFromStatBlock(input.statBlockBattleInput),
     ],
   });
-  if (Either.isLeft(state)) {
+  if (Either.isLeft(session)) {
     return Either.left({
-      issue: state.left,
+      issue: session.left,
       routeEvents: characterInit.right.routeEvents,
     });
   }
   return Either.right({
-    state: state.right,
+    ...session.right,
     initProjectionRouteEvents: characterInit.right.routeEvents,
-    encounterCompositionRouteEvents: characterBattleEncounterCompositionRouteEvents(
-      {
-        state: state.right,
+    encounterCompositionRouteEvents:
+      characterBattleEncounterCompositionRouteEvents({
+        state: session.right.state,
         characterCombatantId: characterInit.right.init.combatantId,
         statBlockCombatantId: input.statBlockBattleInput.combatantId,
-      },
-    ),
+      }),
   });
 }
 
@@ -439,20 +443,18 @@ function acceptedCharacterSheetBattleInitRoute(input: {
           owner: "characterBattleInitProjection",
         }),
       ];
-  return [
-    ...baseRoute,
-    ...selectedReferenceBattleInitRouteEvents(input),
-  ];
+  return [...baseRoute, ...selectedReferenceBattleInitRouteEvents(input)];
 }
 
 function selectedReferenceBattleInitRouteEvents(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
 }): readonly CharacterBattleRouteEvent[] {
-  const selectedReference = characterBattleOriginFeatSelectedReferenceProjection({
-    build: input.sheet.build,
-    unitLibrary: input.unitLibrary,
-  });
+  const selectedReference =
+    characterBattleOriginFeatSelectedReferenceProjection({
+      build: input.sheet.build,
+      unitLibrary: input.unitLibrary,
+    });
   if (Either.isLeft(selectedReference)) return [];
 
   return [
@@ -523,11 +525,28 @@ function rejectCharacterBattleInitProjectionRoute(): readonly CharacterBattleRou
 export function settleCharacterSheetFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly state: BattleState;
+  readonly context: BattleRuntimeContext;
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  const settledCharacter = settleBattleCombatantIntoCharacterSheet(input);
+  if (input.combatant.origin.kind !== "character") {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff combatant is not a character.",
+    );
+  }
+  const runtimeContext = input.context.characters.get(
+    input.combatant.combatantId,
+  );
+  if (runtimeContext === undefined) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff character has no authored runtime ownership context.",
+    );
+  }
+  const settledCharacter = settleBattleCombatantIntoCharacterSheet({
+    ...input,
+    runtimeContext,
+  });
   if (Either.isLeft(settledCharacter)) return settledCharacter;
   return settleCompanionFromBattle({
     sheet: settledCharacter.right,
@@ -541,6 +560,7 @@ function settleBattleCombatantIntoCharacterSheet(input: {
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
+  readonly runtimeContext: CharacterBattleRuntimeContext;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
   if (input.combatant.origin.kind !== "character") {
     return characterSheetBattleHandoffIssue(
@@ -824,6 +844,7 @@ function characterResourceExpendituresFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
+  readonly runtimeContext: CharacterBattleRuntimeContext;
 }): Either.Either<
   readonly CharacterSheetResourceExpenditure[],
   CharacterSheetBattleHandoffIssue
@@ -831,7 +852,10 @@ function characterResourceExpendituresFromBattle(input: {
   if (input.combatant.origin.kind !== "character") {
     return Either.right(input.sheet.resourceExpenditures);
   }
-  const sheetResources = characterSheetResources(input.sheet, input.unitLibrary);
+  const sheetResources = characterSheetResources(
+    input.sheet,
+    input.unitLibrary,
+  );
   if (Either.isLeft(sheetResources)) {
     return characterSheetBattleHandoffIssue(sheetResources.left.message);
   }
@@ -840,7 +864,14 @@ function characterResourceExpendituresFromBattle(input: {
   if (Either.isLeft(wildShapeUnitId)) {
     return Either.left(wildShapeUnitId.left);
   }
-  const battleResources = origin.resources;
+  const ownedBattleResources = characterBattleResourcesWithOwnership({
+    resources: origin.resources,
+    ownership: input.runtimeContext.resourceOwnership,
+  });
+  if (Either.isLeft(ownedBattleResources)) {
+    return Either.left(ownedBattleResources.left);
+  }
+  const battleResources = ownedBattleResources.right;
   const battleUseCountResourceUnitIds =
     new Set<CharacterSheetUseCountResourceUnitId>();
   const battlePointPoolResourceUnitIds =
@@ -853,7 +884,7 @@ function characterResourceExpendituresFromBattle(input: {
       characterSheetPointPoolResourceUnitIdForBattleResource(resource);
     if (
       pointPoolUnitId !== null &&
-      characterBattleResourceIsPointPool(resource)
+      characterBattleResourceIsPointPool(resource.state)
     ) {
       battlePointPoolResourceUnitIds.add(pointPoolUnitId);
     }
@@ -874,11 +905,13 @@ function characterResourceExpendituresFromBattle(input: {
   const nextFreeCastExpenditures: CharacterSheetResourceExpenditure[] = [];
   const nextUseCountExpenditures: CharacterSheetResourceExpenditure[] = [];
   const nextPointPoolExpenditures: CharacterSheetResourceExpenditure[] = [];
-  const druidWildShapeExpenditure =
-    druidWildShapeResourceExpenditureFromBattle({
+  const druidWildShapeExpenditure = druidWildShapeResourceExpenditureFromBattle(
+    {
       ...input,
       sheetResources: sheetResources.right,
-    });
+      battleResources,
+    },
+  );
   if (Either.isLeft(druidWildShapeExpenditure)) {
     return Either.left(druidWildShapeExpenditure.left);
   }
@@ -887,10 +920,10 @@ function characterResourceExpendituresFromBattle(input: {
       characterSheetPointPoolResourceUnitIdForBattleResource(resource);
     if (
       pointPoolUnitId !== null &&
-      characterBattleResourceIsPointPool(resource)
+      characterBattleResourceIsPointPool(resource.state)
     ) {
       const maxPoints = characterBattleResourceMaxPoints({
-        unit: resource.unit,
+        unit: resource.ownership.unit,
         classLevels: input.combatant.origin.classLevels,
       });
       if (maxPoints === undefined) {
@@ -908,7 +941,8 @@ function characterResourceExpendituresFromBattle(input: {
           "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
         );
       }
-      const expended = Number(maxPoints) - Number(resource.pointsRemaining);
+      const expended =
+        Number(maxPoints) - Number(resource.state.pointsRemaining);
       if (expended < 0) {
         return characterSheetBattleHandoffIssue(
           "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
@@ -923,14 +957,19 @@ function characterResourceExpendituresFromBattle(input: {
       }
       continue;
     }
-    const profile = classFeatureSpellFreeCastProfileForResource(resource);
-    if (profile !== null && !characterBattleResourceIsPointPool(resource)) {
-      if (resource.resource.cap.kind !== "fixed") {
+    const profile = classFeatureSpellFreeCastProfileForResource(
+      resource.ownership,
+    );
+    if (
+      profile !== null &&
+      !characterBattleResourceIsPointPool(resource.state)
+    ) {
+      if (resource.state.resource.cap.kind !== "fixed") {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
         );
       }
-      if (resource.usesRemaining === undefined) {
+      if (resource.state.usesRemaining === undefined) {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free casts must carry remaining uses during battle handoff.",
         );
@@ -940,12 +979,13 @@ function characterResourceExpendituresFromBattle(input: {
         tag: profile.resourceTag,
       });
       if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-      if (resource.resource.cap.uses !== sheetCount.right) {
+      if (resource.state.resource.cap.uses !== sheetCount.right) {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free-cast battle capacity must match Character Sheet resource capacity.",
         );
       }
-      const expended = resource.resource.cap.uses - resource.usesRemaining;
+      const expended =
+        resource.state.resource.cap.uses - resource.state.usesRemaining;
       if (expended < 0) {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
@@ -960,8 +1000,10 @@ function characterResourceExpendituresFromBattle(input: {
       continue;
     }
     if (
-      parseSupportedUnitFeatureProfile(resource.unit, origin.classLevels)
-        ?.kind === "druidWildShapeKnownForm"
+      parseSupportedUnitFeatureProfile(
+        resource.ownership.unit,
+        origin.classLevels,
+      )?.kind === "druidWildShapeKnownForm"
     ) {
       continue;
     }
@@ -969,13 +1011,13 @@ function characterResourceExpendituresFromBattle(input: {
       characterSheetUseCountResourceUnitIdForBattleResource(resource);
     if (
       useCountUnitId !== null &&
-      !characterBattleResourceIsPointPool(resource)
+      !characterBattleResourceIsPointPool(resource.state)
     ) {
       const maxUses = characterBattleResourceMaxUses({
-        unit: resource.unit,
+        unit: resource.ownership.unit,
         classLevels: input.combatant.origin.classLevels,
       });
-      if (maxUses === undefined || resource.usesRemaining === undefined) {
+      if (maxUses === undefined || resource.state.usesRemaining === undefined) {
         return characterSheetBattleHandoffIssue(
           "Class feature use-count resources must carry finite remaining uses during battle handoff.",
         );
@@ -990,7 +1032,7 @@ function characterResourceExpendituresFromBattle(input: {
           "Class feature use-count battle capacity must match Character Sheet resource capacity.",
         );
       }
-      const expended = Number(maxUses) - Number(resource.usesRemaining);
+      const expended = Number(maxUses) - Number(resource.state.usesRemaining);
       if (expended < 0) {
         return characterSheetBattleHandoffIssue(
           "Class feature use-count remaining uses exceed the battle resource cap during battle handoff.",
@@ -1016,31 +1058,69 @@ function characterResourceExpendituresFromBattle(input: {
   ]);
 }
 
+type OwnedCharacterBattleResource = {
+  readonly state: CharacterBattleResourceState;
+  readonly ownership: CharacterBattleResourceOwnership;
+};
+
+function characterBattleResourcesWithOwnership(input: {
+  readonly resources: readonly CharacterBattleResourceState[];
+  readonly ownership: readonly CharacterBattleResourceOwnership[];
+}): Either.Either<
+  readonly OwnedCharacterBattleResource[],
+  CharacterSheetBattleHandoffIssue
+> {
+  if (input.resources.length !== input.ownership.length) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff resource ownership must cover every mechanical resource exactly once.",
+    );
+  }
+  const seenOwnershipRefs = new Set<string>();
+  for (const ownership of input.ownership) {
+    if (seenOwnershipRefs.has(ownership.resourcePoolRef)) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff resource ownership contains a duplicate resource pool reference.",
+      );
+    }
+    seenOwnershipRefs.add(ownership.resourcePoolRef);
+  }
+  const ownedResources: OwnedCharacterBattleResource[] = [];
+  const seenStateRefs = new Set<string>();
+  for (const state of input.resources) {
+    if (seenStateRefs.has(state.resourcePoolRef)) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff contains a duplicate mechanical resource pool reference.",
+      );
+    }
+    seenStateRefs.add(state.resourcePoolRef);
+    const ownership = input.ownership.find(
+      (candidate) => candidate.resourcePoolRef === state.resourcePoolRef,
+    );
+    if (ownership === undefined) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff mechanical resource has no authored ownership context.",
+      );
+    }
+    ownedResources.push({ state, ownership });
+  }
+  return Either.right(ownedResources);
+}
+
 function characterSheetPointPoolResourceUnitIdForBattleResource(
-  resource: NonNullable<
-    Extract<
-      BattleCreatureState["origin"],
-      { readonly kind: "character" }
-    >["resources"]
-  >[number],
+  resource: OwnedCharacterBattleResource,
 ): CharacterSheetPointPoolResourceUnitId | null {
-  return characterBattleResourceIsPointPool(resource) &&
-    isCharacterSheetPointPoolResourceUnitId(resource.unit.id)
-    ? resource.unit.id
+  return characterBattleResourceIsPointPool(resource.state) &&
+    isCharacterSheetPointPoolResourceUnitId(resource.ownership.unit.id)
+    ? resource.ownership.unit.id
     : null;
 }
 
 function characterSheetUseCountResourceUnitIdForBattleResource(
-  resource: NonNullable<
-    Extract<
-      BattleCreatureState["origin"],
-      { readonly kind: "character" }
-    >["resources"]
-  >[number],
+  resource: OwnedCharacterBattleResource,
 ): CharacterSheetUseCountResourceUnitId | null {
-  return resource.resource.kind === "use_count" &&
-    isCharacterSheetUseCountResourceUnitId(resource.unit.id)
-    ? resource.unit.id
+  return resource.state.resource.kind === "use_count" &&
+    isCharacterSheetUseCountResourceUnitId(resource.ownership.unit.id)
+    ? resource.ownership.unit.id
     : null;
 }
 
@@ -1139,6 +1219,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly sheetResources: readonly CharacterSheetResourceState[];
+  readonly battleResources: readonly OwnedCharacterBattleResource[];
 }): Either.Either<
   CharacterSheetResourceExpenditure | undefined,
   CharacterSheetBattleHandoffIssue
@@ -1147,10 +1228,12 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
     return Either.right(undefined);
   }
   const origin = input.combatant.origin;
-  const resources = origin.resources.filter(
+  const resources = input.battleResources.filter(
     (candidate) =>
-      parseSupportedUnitFeatureProfile(candidate.unit, origin.classLevels)
-        ?.kind === "druidWildShapeKnownForm",
+      parseSupportedUnitFeatureProfile(
+        candidate.ownership.unit,
+        origin.classLevels,
+      )?.kind === "druidWildShapeKnownForm",
   );
   if (resources.length > 1) {
     return characterSheetBattleHandoffIssue(
@@ -1173,13 +1256,13 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       "Battle handoff Druid Wild Shape resource requires the Druid Wild Shape feature.",
     );
   }
-  if (!("usesRemaining" in resource)) {
+  if (!("usesRemaining" in resource.state)) {
     return characterSheetBattleHandoffIssue(
       "Druid Wild Shape must carry remaining uses during battle handoff.",
     );
   }
   const maxUses = characterBattleResourceMaxUses({
-    unit: resource.unit,
+    unit: resource.ownership.unit,
     classLevels: input.combatant.origin.classLevels,
   });
   if (!isCharacterSheetUseCountResourceUnitId(facts.right.unitId)) {
@@ -1197,7 +1280,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       "Druid Wild Shape battle capacity must match Character Sheet resource capacity.",
     );
   }
-  const expended = Number(maxUses) - Number(resource.usesRemaining);
+  const expended = Number(maxUses) - Number(resource.state.usesRemaining);
   if (expended < 0) {
     return characterSheetBattleHandoffIssue(
       "Druid Wild Shape remaining uses exceed the character resource cap during battle handoff.",
@@ -1208,7 +1291,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       ? undefined
       : {
           tag: "useCountResource",
-          unitId: resource.unit.id,
+          unitId: facts.right.unitId,
           expended: resourceCount(expended),
         },
   );
@@ -1356,13 +1439,15 @@ function characterSheetPactSlotExpenditureFromBattle(
 function bookOfShadowsPresenceFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
+  readonly runtimeContext: CharacterBattleRuntimeContext;
 }): CharacterSheetBookOfShadowsPresence | undefined {
   if (input.combatant.origin.kind !== "character") {
     return input.sheet.bookOfShadowsPresence;
   }
   return (
-    input.combatant.origin.spellcasting?.bookOfShadowsSpellAccesses[0]
-      ?.bookPresence ?? input.sheet.bookOfShadowsPresence
+    input.runtimeContext.spellcastingPresentationSource
+      ?.bookOfShadowsSpellAccesses[0]?.bookPresence ??
+    input.sheet.bookOfShadowsPresence
   );
 }
 

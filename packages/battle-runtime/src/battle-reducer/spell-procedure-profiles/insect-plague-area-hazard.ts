@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
 //
 // Insect Plague: action-time Spell Slot casting creates a caster-owned
@@ -25,7 +27,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -33,9 +34,8 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -49,7 +49,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 
 type InsectPlagueAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -242,7 +242,6 @@ function discoverInsectPlagueAreaHazardCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: insectPlagueAreaHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
@@ -250,22 +249,6 @@ function discoverInsectPlagueAreaHazardCastAct(
   ];
 }
 
-function insectPlagueAreaHazardInvocationRef(
-  invocation: InsectPlagueAreaHazardSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "insectPlagueAreaHazard",
-  };
-}
-
-function insectPlagueAreaHazardCastSummary(
-  invocation: InsectPlagueAreaHazardSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveInsectPlagueAreaHazard(
   input: InsectPlagueAreaHazardResolveInput,
@@ -278,27 +261,22 @@ function resolveInsectPlagueAreaHazard(
   });
 }
 
-const InsectPlagueAreaHazardInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "insectPlagueAreaHazard" }
-  >
->(
+const InsectPlagueAreaHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("insectPlagueAreaHazard"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("con"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginSphere"),
       radiusFeet: MovementFeet,
     }),
-    durationTicks: BattleRuntimeObjectSchema,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
+      expr: DiceExprSchema,
       damageType: Schema.Literal("piercing"),
     }),
   }),
@@ -306,15 +284,12 @@ const InsectPlagueAreaHazardInvocationSchema = spellProcedureInvocationSchema<
 
 export const insectPlagueAreaHazardProfile = {
   procedure: "insectPlagueAreaHazard",
-  invocationSchema: InsectPlagueAreaHazardInvocationSchema,
+  executionSchema: InsectPlagueAreaHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitInsectPlagueAreaHazard,
   discoverCastAct: discoverInsectPlagueAreaHazardCastAct,
-  castSummary: insectPlagueAreaHazardCastSummary,
-  invocationRef: insectPlagueAreaHazardInvocationRef,
   resolve: resolveInsectPlagueAreaHazard,
 } satisfies SpellProcedureProfile<
   "insectPlagueAreaHazard",

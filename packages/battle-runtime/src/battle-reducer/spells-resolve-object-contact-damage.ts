@@ -13,6 +13,10 @@ import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
 import {
+  characterExecutionWithObjectContactDamageRepeat,
+  type ObjectContactDamageRepeatSpellProcedureExecution,
+} from "../character-execution.ts";
+import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
@@ -447,7 +451,10 @@ function validateObjectContactTargets(input: {
       fact.sourceCombatantId === input.actorId &&
       fact.sourceProcedureRef === hole.objectContact.sourceProcedureRef &&
       fact.objectId === input.objectId &&
-      fact.rangeFeet === input.invocation.rangeFeet,
+      fact.rangeFeet ===
+        (input.invocation.procedure === "objectContactDamageRepeat"
+          ? input.invocation.activeEffect.rangeFeet
+          : input.invocation.rangeFeet),
   );
   if (input.requiresObjectWithinRange && matchingRangeFacts.length !== 1) {
     return {
@@ -1131,7 +1138,7 @@ function objectContactSavingThrowOutcomeHole(input: {
     outcomeTargeting: "targetList",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${input.invocation.spell.name} holding or wearing Constitution save`,
+    label: `Spell holding or wearing Constitution save`,
     objectContactSave: {
       sourceCombatantId: input.actorId,
       sourceProcedureRef: objectContactDamageSourceProcedureRef(
@@ -1191,7 +1198,7 @@ function objectDropResolutionHole(input: {
     kind: "objectDropResolution",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${input.invocation.spell.name} object drop resolution`,
+    label: `Spell object drop resolution`,
     objectDrop: {
       sourceCombatantId: input.actorId,
       sourceProcedureRef: objectContactDamageSourceProcedureRef(
@@ -1366,11 +1373,21 @@ function applyObjectContactDamageActiveEffect(input: {
       combatantId: input.actorId,
       durationTicks: input.invocation.durationTicks,
     },
-  };
+  } satisfies Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellObjectContactDamage" }
+  >;
+  const owner = allocation.owner;
+  if (owner.origin.kind !== "character") return input.state;
+  const repeatExecution = {
+    procedure: "objectContactDamageRepeat" as const,
+    activeEffectRef: effect.effectRef,
+    activeEffectSourceProcedureRef: effect.sourceProcedureRef,
+  } satisfies ObjectContactDamageRepeatSpellProcedureExecution;
   return {
     ...allocation.state,
-    combatants: new Map(input.state.combatants).set(input.actorId, {
-      ...allocation.owner,
+    combatants: new Map(allocation.state.combatants).set(input.actorId, {
+      ...owner,
       activeEffects: [
         ...actor.activeEffects.filter(
           (candidate) =>
@@ -1381,6 +1398,13 @@ function applyObjectContactDamageActiveEffect(input: {
         ),
         effect,
       ],
+      origin: {
+        ...owner.origin,
+        execution: characterExecutionWithObjectContactDamageRepeat(
+          owner.origin.execution,
+          repeatExecution,
+        ),
+      },
     }),
   };
 }

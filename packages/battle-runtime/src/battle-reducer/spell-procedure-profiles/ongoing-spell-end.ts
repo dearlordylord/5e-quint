@@ -43,9 +43,7 @@ import {
   type BattleTrackedOngoingSpellLightEmitter,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  spellId,
   type BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
@@ -71,9 +69,8 @@ import type {
   SpellProcedureProfile,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -223,29 +220,11 @@ function discoverOngoingSpellEndCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: ongoingSpellEndInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [ongoingSpellTargetChoiceHole(state, actorId, invocation)],
     },
   ];
-}
-
-function ongoingSpellEndInvocationRef(
-  invocation: OngoingSpellEndInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "ongoingSpellEnd",
-  };
-}
-
-function ongoingSpellEndCastSummary(
-  invocation: OngoingSpellEndInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 const ONGOING_SPELL_TARGET_CHOICE_HOLE_ID = holeId(
@@ -295,11 +274,10 @@ function ongoingSpellTargetChoiceHole(
     holeInstanceKey: ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE,
     holeId: ONGOING_SPELL_TARGET_CHOICE_HOLE_ID,
     kind: "ongoingSpellTargetChoice",
-    label: `${invocation.spell.name} target`,
+    label: "Ongoing spell target",
     requiresTableSpatialFact: true,
     casterId,
     procedureRef: invocation.sourceProcedureRef,
-    spellId: invocation.spell.id,
     rangeFeet: invocation.rangeFeet,
     choices: ongoingSpellTargetChoices(state),
   };
@@ -646,7 +624,7 @@ function ongoingSpellEndAbilityCheckHole(
       `battle:spell:ongoing-end:check:${ongoingSpellEffectRefKey(effect)}`,
     ),
     kind: "spellcastingAbilityCheck",
-    label: `${invocation.spell.name} spellcasting ability check (DC ${dc})`,
+    label: `Spellcasting ability check (DC ${dc})`,
     dc,
     spellcastingAbilityCheck: {
       casterId,
@@ -876,29 +854,24 @@ function uniqueConcentrationSources(
   return unique;
 }
 
-const OngoingSpellEndInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "ongoingSpellEnd" }>
->(
+const OngoingSpellEndInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("ongoingSpellEnd"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     rangeFeet: MovementFeet,
   }),
 );
 export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
-  invocationSchema: OngoingSpellEndInvocationSchema,
+  executionSchema: OngoingSpellEndInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitOngoingSpellEnd,
   discoverCastAct: discoverOngoingSpellEndCastAct,
-  castSummary: ongoingSpellEndCastSummary,
-  invocationRef: ongoingSpellEndInvocationRef,
   resolve: resolveOngoingSpellEndSpellAct,
 } satisfies SpellProcedureProfile<
   "ongoingSpellEnd",

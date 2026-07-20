@@ -46,18 +46,32 @@ module battleRuntimeMetamagicTests {
     }
   }
 
-  run test_interrupted_quickened_action_spell_commits_metamagic_without_spell_slot = {
+  run test_interrupted_quickened_concentration_spell_commits_metamagic_without_spell_slot = {
     val concentrating = {
       ...initialState,
       fighter: { ...initialState.fighter, concentrating: true },
     }
-    val result = interruptedQuickenedActionSpellResult(concentrating, 2, 4)
+    val result = interruptedQuickenedActionSpellResult(concentrating, true, 2, 4)
     all {
       assert(result.state.actionAvailable),
       assert(not(result.state.bonusActionAvailable)),
       assert(not(result.state.fighter.concentrating)),
       assert(not(battleActorHasCommittedSpellSlotUse(result.state, Fighter))),
       assert(not(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter))),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
+  run test_interrupted_quickened_instantaneous_spell_preserves_concentration = {
+    val concentrating = {
+      ...initialState,
+      fighter: { ...initialState.fighter, concentrating: true },
+    }
+    val result = interruptedQuickenedActionSpellResult(concentrating, false, 2, 4)
+    all {
+      assert(result.state.fighter.concentrating),
+      assert(not(result.state.bonusActionAvailable)),
       assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
       assert(result.sorceryPointsRemaining == 2),
     }

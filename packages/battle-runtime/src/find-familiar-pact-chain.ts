@@ -111,9 +111,10 @@ export function combatantHasPactOfTheChainFindFamiliar(
   const owner = state.combatants.get(ownerId);
   return (
     owner?.origin.kind === "character" &&
-    owner.origin.spellcasting?.invocationSpellAccesses.some(
-      (access) => access.tag === "pactOfTheChainFindFamiliar",
-    ) === true
+    owner.origin.spellcasting?.pactOfTheChainFindFamiliarInvocationMode !==
+      null &&
+    owner.origin.spellcasting?.pactOfTheChainFindFamiliarInvocationMode !==
+      undefined
   );
 }
 

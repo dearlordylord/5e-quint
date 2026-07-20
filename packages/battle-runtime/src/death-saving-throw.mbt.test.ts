@@ -39,7 +39,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 

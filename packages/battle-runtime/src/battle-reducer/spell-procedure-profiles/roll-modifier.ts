@@ -22,8 +22,6 @@
 //                         spells-discovery.ts:discoverBattleActs.
 //   - castSummary()     — was the rollModifier branch in
 //                         spellInvocationCastSummary.
-//   - invocationRef()   — was the rollModifier Match case in
-//                         supportedSpellInvocationRef.
 //
 // What stays in shared infrastructure files (imported back here):
 //   - rollModifierSpellProjection + projection sub-helpers
@@ -40,11 +38,8 @@
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import { spellId } from "../../identity.ts";
-import type {
-  BattleProcedureExecutionRef,
-  CombatantId,
-} from "../../identity.ts";
+import { BattleProcedureExecutionRef, CombatantId } from "../../identity.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
@@ -86,7 +81,6 @@ import {
   rollModifierSpellTargetSelection,
 } from "../spells-resolve-target-selection.ts";
 import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -94,12 +88,52 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   BATTLE_SURFACE_ABILITIES,
   BATTLE_SURFACE_SKILLS,
-  RollModifierSpellInvocationBaseSchemaFields,
+  ClassCantripSpellAccessSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  RollModifierSpellSaveGateSchema,
+  RollModifierSpellTargetingSchema,
+  SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
+  BATTLE_D20_ROLL_MODIFIER_KINDS,
+} from "../domain-constants.ts";
+
+const D20RollModifierEffectSchema = Schema.Struct({
+  kind: Schema.Literal("d20RollModifier"),
+  sourceCombatantId: CombatantId,
+  on: Schema.Array(Schema.Literal(...BATTLE_D20_ROLL_MODIFIER_KINDS)),
+  delta: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("fixedNumber"),
+      amount: Schema.Number,
+      sign: Schema.Literal("+", "-"),
+    }),
+    Schema.Struct({
+      dice: Schema.Number,
+      dieSize: Schema.Literal(...BATTLE_D20_ROLL_MODIFIER_DIE_SIZES),
+      sign: Schema.Literal("+", "-"),
+    }),
+  ),
+  skill: Schema.NullOr(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+  expiresAt: BattleActiveEffectExpirationSchema,
+});
+
+const AbilityCheckRollModeEffectSchema = Schema.Struct({
+  kind: Schema.Literal("abilityCheckRollMode"),
+  sourceCombatantId: CombatantId,
+  mode: Schema.Literal("advantage"),
+  expiresAt: BattleActiveEffectExpirationSchema,
+});
 
 type RollModifierInvocation = Extract<
   SupportedSpellInvocation,
@@ -279,35 +313,11 @@ function discoverRollModifierCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: rollModifierInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles,
     },
   ];
-}
-
-function rollModifierInvocationRef(
-  invocation: RollModifierInvocation,
-): SpellInvocationRef {
-  return invocation.resource.tag === "none"
-    ? {
-        tag: "cantrip",
-        spellId: spellId(invocation.spell.id),
-        procedure: "rollModifier",
-      }
-    : {
-        tag: "spellSlot",
-        spellId: spellId(invocation.spell.id),
-        slotLevel: invocation.resource.slotLevel,
-        procedure: "rollModifier",
-      };
-}
-
-function rollModifierCastSummary(invocation: RollModifierInvocation): string {
-  return invocation.resource.tag === "spellSlot"
-    ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
-    : `Cast ${invocation.spell.name} as a cantrip.`;
 }
 
 function resolveRollModifier(
@@ -373,7 +383,9 @@ function resolveRollModifier(
           input.input.subject.tag === "bonusActionSpell"
             ? { kind: "bonusAction" }
             : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(input.metamagicApplications),
+        ...spellCastMetamagicApplicationsInput(
+          input.metamagicApplications ?? [],
+        ),
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -454,12 +466,24 @@ function resolveRollModifier(
       };
 }
 
-const RollModifierInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
->(
+const RollModifierInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
-      ...RollModifierSpellInvocationBaseSchemaFields,
+      access: Schema.Union(
+        PreparedSpellAccessSchema,
+        ClassCantripSpellAccessSchema,
+      ),
+      resource: Schema.Union(
+        SpellSlotInvocationResourceSchema,
+        NoSpellInvocationResourceSchema,
+      ),
+      procedure: Schema.Literal("rollModifier"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: RollModifierSpellTargetingSchema,
+      effect: D20RollModifierEffectSchema,
+      rangeFeet: MovementFeet,
+      saveGate: RollModifierSpellSaveGateSchema,
       skillChoices: Schema.NullOr(
         Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
       ),
@@ -469,7 +493,21 @@ const RollModifierInvocationSchema = spellProcedureInvocationSchema<
       }),
     }),
     Schema.Struct({
-      ...RollModifierSpellInvocationBaseSchemaFields,
+      access: Schema.Union(
+        PreparedSpellAccessSchema,
+        ClassCantripSpellAccessSchema,
+      ),
+      resource: Schema.Union(
+        SpellSlotInvocationResourceSchema,
+        NoSpellInvocationResourceSchema,
+      ),
+      procedure: Schema.Literal("rollModifier"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: RollModifierSpellTargetingSchema,
+      effect: AbilityCheckRollModeEffectSchema,
+      rangeFeet: MovementFeet,
+      saveGate: RollModifierSpellSaveGateSchema,
       skillChoices: Schema.Literal(null),
       abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
       abilityChoiceApplication: Schema.Literal("single", "perTarget"),
@@ -485,14 +523,9 @@ export const rollModifierProfile: SpellProcedureProfile<
   metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: ["guidance"] as const satisfies ReadonlyArray<
-    SpellRecord["id"]
-  >,
   admit: admitRollModifier,
 
   discoverCastAct: discoverRollModifierCastAct,
-  castSummary: rollModifierCastSummary,
-  invocationRef: rollModifierInvocationRef,
-  invocationSchema: RollModifierInvocationSchema,
+  executionSchema: RollModifierInvocationSchema,
   resolve: resolveRollModifier,
 };

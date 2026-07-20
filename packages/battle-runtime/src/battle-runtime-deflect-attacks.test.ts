@@ -1,6 +1,7 @@
 import {
   requireCharacterUnitProcedureRefForTest,
   startBattleRight,
+  startBattleSessionRight,
   requireResolved,
   goblinAttackSubject,
   attackInitialTargetHole,
@@ -13,6 +14,7 @@ import {
   savingThrowOutcomeFill,
   damageRollFill,
   damageRollFillWithGroups,
+  characterBattleFeatureInitForTest,
   characterSeed,
   statBlockCreatureInit,
   resistantSkeletonCreatureInit,
@@ -37,6 +39,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
+import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Deflect Attacks", () => {
@@ -67,7 +70,11 @@ describe("battle runtime: Deflect Attacks", () => {
           classLevels: [{ className: "monk", level: 3 }],
           attack: null,
           resources: [monkDeflectAttacksFocusResource()],
-          unitFeatures: [{ unit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "monk", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
             reactionModifierUnitRefWithProfile(
               unit.id,
@@ -115,12 +122,18 @@ describe("battle runtime: Deflect Attacks", () => {
     expect(awaitingRedirect).toMatchObject({
       tag: "needsHoles",
       holes: [
-        { kind: "targetChoice", label: "Deflect Attacks redirect target" },
+        {
+          kind: "targetChoice",
+          label: "Attack damage reduction redirect target",
+        },
         {
           kind: "savingThrowOutcome",
-          label: "Deflect Attacks Dexterity saving throw",
+          label: "Attack damage reduction redirect Dexterity saving throw",
         },
-        { kind: "rolledDice", label: "Deflect Attacks redirected damage" },
+        {
+          kind: "rolledDice",
+          label: "Attack damage reduction redirected damage",
+        },
       ],
     });
   });
@@ -128,7 +141,7 @@ describe("battle runtime: Deflect Attacks", () => {
   test("Deflect Attacks does not redirect when Resistance alone lowers reduced damage to 0", () => {
     const unit = unitLibrary.requireUnit("monk_deflect_attacks");
     const rage = barbarianRageUnit();
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-deflect-attacks-redirect-pre-resistance"),
       combatants: [
         characterSeed({
@@ -141,7 +154,16 @@ describe("battle runtime: Deflect Attacks", () => {
           ],
           attack: null,
           resources: [monkDeflectAttacksFocusResource(), rageResource()],
-          unitFeatures: [{ unit }, { unit: rage }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "monk", level: classLevel(3) },
+              { className: "barbarian", level: classLevel(1) },
+            ]),
+            characterBattleFeatureInitForTest(rage, [
+              { className: "monk", level: classLevel(3) },
+              { className: "barbarian", level: classLevel(1) },
+            ]),
+          ],
           characterUnitRefs: [
             reactionModifierUnitRefWithProfile(
               unit.id,
@@ -155,12 +177,12 @@ describe("battle runtime: Deflect Attacks", () => {
     });
     const raging = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "barbarian_rage",
           ),
@@ -216,7 +238,8 @@ describe("battle runtime: Deflect Attacks", () => {
     }
     expect(
       monk.origin.resources.find(
-        (resource) => resource.unit.id === "monk_monks_focus",
+        (resource) =>
+          resource.resourcePoolRef === redirectResourcePoolRef(choice),
       )?.usesRemaining,
     ).toBe(3);
   });
@@ -235,7 +258,11 @@ describe("battle runtime: Deflect Attacks", () => {
           classLevels: [{ className: "monk", level: 3 }],
           attack: null,
           resources: [monkDeflectAttacksFocusResource()],
-          unitFeatures: [{ unit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "monk", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
             reactionModifierUnitRefWithProfile(
               unit.id,
@@ -314,7 +341,12 @@ describe("battle runtime: Deflect Attacks", () => {
     if (monk?.origin.kind !== "character") {
       throw new Error("Expected character Monk.");
     }
-    expect(monk.origin.resources[0]?.usesRemaining).toBe(2);
+    expect(
+      monk.origin.resources.find(
+        (resource) =>
+          resource.resourcePoolRef === redirectResourcePoolRef(choice),
+      )?.usesRemaining,
+    ).toBe(2);
   });
 
   test("Deflect Attacks rejects redirected damage dice outside the Martial Arts die", () => {
@@ -331,7 +363,11 @@ describe("battle runtime: Deflect Attacks", () => {
           classLevels: [{ className: "monk", level: 3 }],
           attack: null,
           resources: [monkDeflectAttacksFocusResource()],
-          unitFeatures: [{ unit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "monk", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
             reactionModifierUnitRefWithProfile(
               unit.id,
@@ -428,7 +464,11 @@ describe("battle runtime: Deflect Attacks", () => {
           classLevels: [{ className: "monk", level: 3 }],
           attack: null,
           resources: [monkDeflectAttacksFocusResource()],
-          unitFeatures: [{ unit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "monk", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
             reactionModifierUnitRefWithProfile(
               unit.id,
@@ -512,7 +552,12 @@ describe("battle runtime: Deflect Attacks", () => {
     if (monk?.origin.kind !== "character") {
       throw new Error("Expected character Monk.");
     }
-    expect(monk.origin.resources[0]?.usesRemaining).toBe(2);
+    expect(
+      monk.origin.resources.find(
+        (resource) =>
+          resource.resourcePoolRef === redirectResourcePoolRef(choice),
+      )?.usesRemaining,
+    ).toBe(2);
   });
 
   test("Deflect Attacks rejects redirect targets without the required attack-kind spatial fact", () => {
@@ -528,7 +573,11 @@ describe("battle runtime: Deflect Attacks", () => {
           classLevels: [{ className: "monk", level: 3 }],
           attack: null,
           resources: [monkDeflectAttacksFocusResource()],
-          unitFeatures: [{ unit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "monk", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
             reactionModifierUnitRefWithProfile(
               unit.id,
@@ -626,3 +675,16 @@ describe("battle runtime: Deflect Attacks", () => {
     });
   });
 });
+
+function redirectResourcePoolRef(
+  choice: ReturnType<typeof reactionModifierChoice>,
+) {
+  if (!("zeroDamageRedirect" in choice.choice)) {
+    throw new Error("Expected a redirect-capable reaction modifier choice.");
+  }
+  const redirect = choice.choice.zeroDamageRedirect;
+  if (redirect === undefined) {
+    throw new Error("Expected Deflect Attacks redirect resource spend.");
+  }
+  return redirect.spends.resourcePoolRef;
+}
