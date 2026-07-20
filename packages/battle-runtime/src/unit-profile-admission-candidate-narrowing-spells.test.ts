@@ -301,11 +301,13 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       ...spellProcedureExecution(selectedSorcerousBurstSource),
       sourceProcedureRef: act.subject.procedureRef,
     };
-    expect(
-      isSelectedSorcerousBurstDamageInvocation(
+    if (
+      !isSelectedSorcerousBurstDamageInvocation(
         selectedSorcerousBurstInvocation,
-      ),
-    ).toBe(true);
+      )
+    ) {
+      throw new Error("Expected selected Sorcerous Burst damage facts.");
+    }
     const markedDamageRider = {
       kind: "spellMarkedDamageRider" as const,
       effectRef: battleActiveEffectExecutionRefForTest("candidate-mark"),

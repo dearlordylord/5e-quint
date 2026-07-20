@@ -37,19 +37,13 @@ import {
   type DamageAmount,
   type DieRollResult,
 } from "@dnd/shared/types";
-import type {
-  Ability,
-  DamageType,
-  DiceExpr,
-} from "@dnd/surface/surface/types";
+import type { Ability, DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import type {
   BattleObjectId,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
-import type {
-  PassiveSavingThrowRollModeProfile,
-} from "../unit-feature-support.ts";
+import type { PassiveSavingThrowRollModeProfile } from "../unit-feature-support.ts";
 import {
   scalarBuffTemporaryHitPointsExpression,
   spellBurstDamageExpression,
@@ -124,8 +118,6 @@ import {
 import {
   characterUnitProcedureBindings,
   type RuntimeSpellProcedureExecution,
-  type SpellExecutableExecutionOf,
-  type SpellProcedureExecution,
   type UnitFeatureProcedureExecution,
 } from "../character-execution.ts";
 import {
@@ -142,47 +134,49 @@ import {
 } from "./creature-size-change-effects.ts";
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
-type RuntimeDamageSpellProcedureBase = Extract<
-  RuntimeSpellProcedure,
-  { readonly procedure: SupportedDamageSpellInvocation["procedure"] }
->;
+type RuntimeDamageSpellProcedureOf<Procedure> = Procedure extends {
+  readonly procedure: SupportedDamageSpellInvocation["procedure"];
+}
+  ? Procedure
+  : never;
+type RuntimeDamageSpellProcedureBase =
+  RuntimeDamageSpellProcedureOf<RuntimeSpellProcedure>;
+type ResolvedRuntimeSpellAttackDamageProcedure<Procedure> = Procedure extends {
+  readonly procedure: "spellAttackDamage";
+}
+  ? Procedure & { readonly damage: ResolvedSpellAttackDamagePayload }
+  : never;
 export type RuntimeDamageSpellProcedure =
   | Exclude<
       RuntimeDamageSpellProcedureBase,
       { readonly procedure: "spellAttackDamage" }
     >
-  | (Extract<
-      RuntimeDamageSpellProcedureBase,
-      { readonly procedure: "spellAttackDamage" }
-    > & { readonly damage: ResolvedSpellAttackDamagePayload });
+  | ResolvedRuntimeSpellAttackDamageProcedure<RuntimeDamageSpellProcedureBase>;
+
+type RuntimeExecutableDamageSpellProcedureOf<Procedure> =
+  Procedure extends RuntimeDamageSpellProcedure
+    ? Procedure & {
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      }
+    : never;
 
 export type RuntimeExecutableDamageSpellProcedure =
-  RuntimeDamageSpellProcedure & {
-    readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  };
+  RuntimeExecutableDamageSpellProcedureOf<RuntimeDamageSpellProcedure>;
 
-function runtimeSpellPrimaryDamage(
-  invocation: RuntimeDamageSpellProcedure,
-): { readonly expr: DiceExpr; readonly damageType: DamageType } {
+function runtimeSpellPrimaryDamage(invocation: RuntimeDamageSpellProcedure): {
+  readonly expr: DiceExpr;
+  readonly damageType: DamageType;
+} {
   return invocation.procedure === "objectContactDamageRepeat"
     ? invocation.activeEffect.damage
     : invocation.damage;
 }
 
-type UnresolvedSpellAttackDamageProcedure = Extract<
-  BattleExecutableSpellInvocation,
-  { readonly procedure: "spellAttackDamage" }
-> & {
-  readonly damage: { readonly kind: "sorcerousBurstDamageTypeChoice" };
-};
-
 type SelectedSpellAttackDamageProcedure<
   Invocation extends BattleExecutableSpellInvocation,
-> =
-  | Exclude<Invocation, UnresolvedSpellAttackDamageProcedure>
-  | (Extract<Invocation, { readonly procedure: "spellAttackDamage" }> & {
-      readonly damage: ResolvedSpellAttackDamagePayload;
-    });
+> = Invocation extends { readonly procedure: "spellAttackDamage" }
+  ? Invocation & { readonly damage: ResolvedSpellAttackDamagePayload }
+  : Invocation;
 
 export type SelectedSpellAttackDamageProcedureResult<
   Invocation extends BattleExecutableSpellInvocation,
@@ -210,7 +204,16 @@ export function selectedSpellAttackDamageProcedure(
   damageTypeChoice:
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
     | undefined,
-): SelectedSpellAttackDamageProcedureResult<BattleExecutableSpellInvocation> {
+):
+  | {
+      readonly tag: "ok";
+      readonly invocation: BattleExecutableSpellInvocation;
+    }
+  | {
+      readonly tag: "needsHoles";
+      readonly hole: BattleSpellDamageTypeChoiceHole;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
   if (
     invocation.procedure !== "spellAttackDamage" ||
     invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"
@@ -1182,9 +1185,9 @@ function heightenedRollModeProjection(
       };
 }
 
-export function carefulSpellProtectedTargetsHoleId(
-  invocation: { readonly procedure: RuntimeSpellProcedure["procedure"] },
-): BattleHoleId {
+export function carefulSpellProtectedTargetsHoleId(invocation: {
+  readonly procedure: RuntimeSpellProcedure["procedure"];
+}): BattleHoleId {
   return holeId(
     `battle:spell:careful-spell:protected-targets:${invocation.procedure}`,
   );

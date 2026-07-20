@@ -93174,7 +93174,7 @@
       "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
       "rowKey": "level-1:Rogue:rogue_sneak_attack",
       "tracerNeedles": [
-        "rogueSneakAttackUnitId"
+        "Expected Sneak Attack mechanical procedure reference."
       ]
     },
     {
@@ -93238,7 +93238,6 @@
             "\"saveGatedDamage\"",
             "spellTargetFill(",
             "spellSaveDcForCaster(state, input.casterId)",
-            "label: \"Vicious Mockery Saving Throw outcome\"",
             "ability: \"wis\"",
             "resource: { tag: \"none\" }",
             "targeting: { kind: \"singleCombatant\" }",
@@ -93248,7 +93247,6 @@
             "kind: \"nextAttackRollByTarget\"",
             "mode: \"disadvantage\"",
             "expiresAt: \"endOfTargetNextTurn\"",
-            "label: \"Vicious Mockery damage (1d6-psychic)\"",
             "damageRollFillWithGroups(damage, [[6]])",
             "hp: Hp(7)",
             "kind: \"nextAttackRollBySelf\"",
@@ -93256,7 +93254,7 @@
             "sourceCombatantId: input.casterId",
             "expiresAt: { kind: \"endOfTurn\", combatantId: monsterId, round: 1 }",
             "endTurn({ state: failedSave.state, actorId: input.casterId })",
-            "attackSubject(monsterTurn, monsterId, \"Shortsword\")",
+            "const monsterAttack = attackSubject(",
             "rollMode: \"disadvantage\"",
             "activeEffects",
             "succeeded: true",
@@ -93324,7 +93322,6 @@
             "\"saveGatedDamage\"",
             "spellTargetFill(",
             "spellSaveDcForCaster(state, input.casterId)",
-            "label: \"Dissonant Whispers Saving Throw outcome\"",
             "ability: \"wis\"",
             "resource: { tag: \"spellSlot\", slotLevel: 1 }",
             "targeting: { kind: \"singleCombatant\" }",
@@ -93336,7 +93333,6 @@
             "route: \"safest\"",
             "distance: \"asFarAsPossible\"",
             "cost: \"targetReactionIfAvailable\"",
-            "label: \"Dissonant Whispers damage (3d6-psychic)\"",
             "damageRollFillWithGroups(failedDamage, [[3, 4, 5]])",
             "\"movement\"",
             "const walkMovementBudget = requireMovementSpeedBudget(movement, \"walk\");",
@@ -93408,7 +93404,6 @@
           "needles": [
             "cantripCastActionSpellAct(",
             "\"saveGatedDamage\"",
-            "label: \"Acid Splash point-origin Sphere Saving Throw outcomes\"",
             "ability: \"dex\"",
             "targeting: { kind: \"pointOriginSphere\", radiusFeet: 5 }",
             "damage: { expr: { dice: 1, dieSize: 6 }, damageType: \"acid\" }",
@@ -93417,7 +93412,6 @@
             "areaSavingThrowOutcomeFill(save, input.casterId,",
             "{ targetId: monsterId, succeeded: false }",
             "{ targetId: secondMonsterId, succeeded: true }",
-            "label: \"Acid Splash damage (1d6-acid)\"",
             "damageRollFillWithGroups(damage, [[4]])",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
@@ -93468,7 +93462,6 @@
           "needles": [
             "cantripCastActionSpellAct(",
             "\"saveGatedDamage\"",
-            "label: \"Acid Splash point-origin Sphere Saving Throw outcomes\"",
             "ability: \"dex\"",
             "targeting: { kind: \"pointOriginSphere\", radiusFeet: 5 }",
             "damage: { expr: { dice: 1, dieSize: 6 }, damageType: \"acid\" }",
@@ -93477,7 +93470,6 @@
             "areaSavingThrowOutcomeFill(save, input.casterId,",
             "{ targetId: monsterId, succeeded: false }",
             "{ targetId: secondMonsterId, succeeded: true }",
-            "label: \"Acid Splash damage (1d6-acid)\"",
             "damageRollFillWithGroups(damage, [[4]])",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
@@ -93550,11 +93542,10 @@
             "attackKind: \"ranged_spell_attack\"",
             "targeting: { kind: \"singleCreatureOrObject\" }",
             "rangeFeet: 120",
-            "kind: \"selectedSorcerousBurstDamage\"",
+            "kind: \"sorcerousBurstDamageTypeChoice\"",
             "expr: { dice: 1, dieSize: 8 }",
-            "damageType: \"thunder\"",
+            "damageTypeChoices: expect.arrayContaining([\"thunder\"])",
             "maxDieAdditionalDiceLimit: 2",
-            "label: \"Sorcerous Burst damage (1d8-thunder)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[8, 3]]",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(2));",
@@ -93624,7 +93615,6 @@
             "expr: { dice: 1, dieSize: 12 }",
             "damageType: \"poison\"",
             "postDamageRiders: []",
-            "label: \"Poison Spray damage (1d12-poison)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[7]]",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
@@ -93688,7 +93678,6 @@
             "expr: { dice: 1, dieSize: 12 }",
             "damageType: \"poison\"",
             "postDamageRiders: []",
-            "label: \"Poison Spray damage (1d12-poison)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[7]]",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
@@ -93759,7 +93748,6 @@
             "cantripCastActionSpellAct(",
             "\"heldLightHurl\"",
             "\"objectTargetChoice\"",
-            "\"Produce Flame object target\"",
             "requiresTableSpatialFact: true",
             "attackBonus: input.expectedSpellAttackBonus",
             "resource: { tag: \"none\" }",
@@ -93768,7 +93756,6 @@
             "rangeFeet: 60",
             "expr: { dice: 1, dieSize: 8 }",
             "damageType: \"fire\"",
-            "label: \"Produce Flame damage (1d8-fire)\"",
             "damageRollFillWithGroups(damage, [[5]])",
             "Hp(5)",
             "effect.kind === \"heldLight\"",
@@ -93794,7 +93781,7 @@
             "\"actorId\" in candidate.subject",
             "battleActSpellPresentation(candidate)?.invocation.tag === \"cantrip\"",
             "battleActSpellPresentation(candidate)?.invocation.procedure",
-            "return discoverBattleActs(state).some("
+            "return discoverBattleActs(session).some("
           ]
         }
       ],
@@ -93854,11 +93841,10 @@
         {
           "anchor": "function assertLevelOneShillelagh",
           "needles": [
-            "shillelaghBonusActionSpellAct(state, input.casterId)",
+            "shillelaghBonusActionSpellAct(session, input.casterId)",
             "tag: \"bonusActionSpell\"",
             "spellId: shillelaghSpellId",
             "procedure: \"weaponAttackOverride\"",
-            "componentWeaponItemId: shillelaghQuarterstaffItemId",
             "kind: \"spellWeaponAttackOverride\"",
             "spellcastingAbilityModifier: abilityModifier(2)",
             "attackBonus: attackBonus(4)",
@@ -93871,8 +93857,6 @@
             "input.expectedSpellSlots",
             "\"Quarterstaff (force)\"",
             "attackBonus: attackBonus(4)",
-            "label: \"Quarterstaff (force) damage (1d8+2-force)\"",
-            "\"Quarterstaff (bludgeoning)\"",
             "damageDice: [[5]]",
             "expect(requireCombatant(hit.state, monsterId).hp).toBe(Hp(6));"
           ]
@@ -93884,7 +93868,8 @@
             "shillelaghSpellId",
             "\"weaponAttackOverride\"",
             "candidate.subject.tag === \"bonusActionSpell\"",
-            "candidate.subject.componentWeaponItemId === shillelaghQuarterstaffItemId",
+            "spellProcedureComponentWeaponItemId(session.state, candidate) ===",
+            "shillelaghQuarterstaffItemId",
             "return act;"
           ]
         }
@@ -93940,7 +93925,6 @@
             "cantripCastActionSpellAct(",
             "\"saveGatedDamage\"",
             "spellTargetFill(",
-            "label: \"Sacred Flame Saving Throw outcome\"",
             "ability: \"dex\"",
             "resource: { tag: \"none\" }",
             "targeting: { kind: \"singleCombatant\" }",
@@ -93950,7 +93934,6 @@
             "savingThrowOutcomeFill(save,",
             "{ targetId: monsterId, succeeded: false }",
             "{ targetId: monsterId, succeeded: true }",
-            "label: \"Sacred Flame damage (1d8-radiant)\"",
             "damageRollFillWithGroups(damage, [[7]])",
             "expect(requireCombatant(failedSave.state, monsterId).hp).toBe(Hp(6));",
             "expect(requireCombatant(successfulSave.state, monsterId).hp).toBe(Hp(13));",
@@ -94016,7 +93999,6 @@
             "thaumaturgySpellId",
             "\"thaumaturgyBoomingVoice\"",
             "\"thaumaturgyActiveOneMinuteEffectCount\"",
-            "label: \"Thaumaturgy total active 1-minute effects\"",
             "maximumActiveOneMinuteEffects: 3",
             "requiresTableSpellEffectCount: true",
             "noActiveThaumaturgyOneMinuteEffectsFill(countHole)",
@@ -94109,7 +94091,6 @@
             "kind: \"nextAttackRollAgainstTarget\"",
             "mode: \"advantage\"",
             "expiresAt: \"endOfCasterNextTurn\"",
-            "label: \"Guiding Bolt damage (4d6-radiant)\"",
             "damageRollFillWithGroups(damage, [[2, 2, 2, 2]])",
             "hp: Hp(5)",
             "kind: \"nextAttackRollAgainstSelf\"",
@@ -94119,7 +94100,7 @@
             "round: 2",
             "expect(snapshotBattle(guided.state).turn.actionResources).toEqual([]);",
             "{ spellLevel: 1, count: 2, expended: 1 }",
-            "attackSubject(allyTurn, input.allyId, \"Longsword\")",
+            "const allyAttack = attackSubject(",
             "expect(allyAttackRoll).toMatchObject({ rollMode: \"advantage\" });",
             "expect(requireCombatant(consumed.state, monsterId).activeEffects).toEqual([]);"
           ]
@@ -94185,7 +94166,6 @@
             "\"saveGatedDamage\"",
             "spellTargetFill(",
             "spellSaveDcForCaster(state, input.casterId)",
-            "label: \"Inflict Wounds Saving Throw outcome\"",
             "ability: \"con\"",
             "resource: { tag: \"spellSlot\", slotLevel: 1 }",
             "targeting: { kind: \"singleCombatant\" }",
@@ -94194,7 +94174,6 @@
             "rangeFeet: 5",
             "savingThrowOutcomeFill(save,",
             "{ targetId: monsterId, succeeded: false }",
-            "label: \"Inflict Wounds damage (2d10-necrotic)\"",
             "damageRollFillWithGroups(failedDamage, [[5, 5]])",
             "expect(requireCombatant(failedSave.state, monsterId).hp).toBe(Hp(3));",
             "expect(snapshotBattle(failedSave.state).turn.actionResources).toEqual([]);",
@@ -94267,7 +94246,6 @@
             "sanctuaryBonusActionSpellSlotAct(",
             "\"sanctuaryTargetingInterdiction\"",
             "\"spellTargetList\"",
-            "label: \"Sanctuary targets\"",
             "minTargets: 1",
             "maxTargets: 1",
             "requiresTableSpatialFact: true",
@@ -94374,7 +94352,6 @@
             "expr: { dice: 1, dieSize: 12 }",
             "damageType: \"poison\"",
             "postDamageRiders: []",
-            "label: \"Poison Spray damage (1d12-poison)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[7]]",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
@@ -94439,7 +94416,6 @@
             "expr: { dice: 1, dieSize: 12 }",
             "damageType: \"poison\"",
             "postDamageRiders: []",
-            "label: \"Poison Spray damage (1d12-poison)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[7]]",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
@@ -94506,7 +94482,6 @@
             "damageType: \"necrotic\"",
             "kind: \"hitPointRegainPrevented\"",
             "expiresAt: \"endOfCasterNextTurn\"",
-            "label: \"Chill Touch damage (1d10-necrotic)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[6]]",
             "hp: Hp(4)",
@@ -94583,7 +94558,6 @@
             "damageType: \"necrotic\"",
             "kind: \"hitPointRegainPrevented\"",
             "expiresAt: \"endOfCasterNextTurn\"",
-            "label: \"Chill Touch damage (1d10-necrotic)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[6]]",
             "hp: Hp(4)",
@@ -94656,7 +94630,6 @@
             "damageType: \"necrotic\"",
             "kind: \"hitPointRegainPrevented\"",
             "expiresAt: \"endOfCasterNextTurn\"",
-            "label: \"Chill Touch damage (1d10-necrotic)\"",
             "ordinaryAttackDamageFills({",
             "damageDice: [[6]]",
             "hp: Hp(4)",
@@ -94722,8 +94695,6 @@
             "\"spellAttackSequence\"",
             "srdStatBlock(\"stat_block_goblin_warrior\")",
             "expect(act.initialHoles).toHaveLength(2)",
-            "\"Eldritch Blast attack 1 target\"",
-            "\"Eldritch Blast attack 1 object target\"",
             "requiresTableSpatialFact: true",
             "attackBonus: input.expectedSpellAttackBonus",
             "resource: { tag: \"none\" }",
@@ -94734,7 +94705,6 @@
             "rangeFeet: 120",
             "expr: { dice: 1, dieSize: 10 }",
             "damageType: \"force\"",
-            "label: \"Eldritch Blast attack 1 damage (1d10-force)\"",
             "damageRollFillWithGroups(damage, [[6]])",
             "Hp(4)",
             "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
@@ -94821,7 +94791,7 @@
         "preparedSpells: expect.arrayContaining([hexSpellId])",
         "pactMagic: { kind: \"pactMagic\", slotLevel: 1, count: 1 }",
         "const hexSheet = characterSheet({",
-        "hexBonusActionSpellSlotAct(state, hexWarlockId)",
+        "hexBonusActionSpellSlotAct(session, hexWarlockId)",
         "abilityChoiceFill(ability, \"wis\")",
         "kind: \"spellMarkedDamageRider\"",
         "damageType: \"necrotic\"",
@@ -94890,7 +94860,6 @@
             "escape: { kind: \"targetDamagedByCasterOrAlly\" }",
             "rangeFeet: movementFeet(30)",
             "animalFriendshipTargetListFill(",
-            "label: \"Animal Friendship target-list Saving Throw outcomes\"",
             "savingThrowOutcomeFill(save,",
             "{ targetId: animalFriendshipBeastId, succeeded: false }",
             "hasCondition(beast.conditions, \"charmed\")",
@@ -94980,7 +94949,6 @@
             "escape: { kind: \"targetDamagedByCasterOrAlly\" }",
             "rangeFeet: movementFeet(30)",
             "animalFriendshipTargetListFill(",
-            "label: \"Animal Friendship target-list Saving Throw outcomes\"",
             "savingThrowOutcomeFill(save,",
             "{ targetId: animalFriendshipBeastId, succeeded: false }",
             "hasCondition(beast.conditions, \"charmed\")",
@@ -95070,7 +95038,6 @@
             "escape: { kind: \"targetDamagedByCasterOrAlly\" }",
             "rangeFeet: movementFeet(30)",
             "animalFriendshipTargetListFill(",
-            "label: \"Animal Friendship target-list Saving Throw outcomes\"",
             "savingThrowOutcomeFill(save,",
             "{ targetId: animalFriendshipBeastId, succeeded: false }",
             "hasCondition(beast.conditions, \"charmed\")",
@@ -95146,10 +95113,9 @@
         {
           "anchor": "function assertLevelOneHuntersMark",
           "needles": [
-            "huntersMarkFavoredEnemyBonusActionSpellAct(state, input.casterId)",
+            "const act = huntersMarkFavoredEnemyBonusActionSpellAct(",
             "usesRemaining: 2",
             "tag: \"classFeatureFreeCast\"",
-            "resourceUnitId: rangerFavoredEnemyUnitId",
             "requiresTableSpatialFact: true",
             "spellSlotUsesThisTurn).toEqual([])",
             "usesRemaining: 1",
@@ -95188,7 +95154,6 @@
             "candidate.subject.tag === \"bonusActionSpell\"",
             "invocation?.tag === \"classFeatureFreeCast\"",
             "invocation.spellId === huntersMarkSpellId",
-            "invocation.resourceUnitId ===",
             "rangerFavoredEnemyUnitId",
             "invocation.procedure === \"markedDamageRider\""
           ]
@@ -95257,7 +95222,7 @@
           "needles": [
             "tag: \"favoredEnemyHuntersMarkFreeCasts\"",
             "expended: resourceCount(2)",
-            "huntersMarkSpellSlotBonusActionSpellAct(state, input.casterId)",
+            "huntersMarkSpellSlotBonusActionSpellAct(session, input.casterId)",
             "usesRemaining: 0",
             "tag: \"spellSlot\"",
             "slotLevel: 1",
@@ -95341,9 +95306,8 @@
         {
           "anchor": "function assertLevelOneBless",
           "needles": [
-            "spellSlotActForProcedure(state, blessSpellId, 1, \"rollModifier\")",
+            "const act = spellSlotActForProcedure(",
             "const expectedEffect = expectedLevelOneBlessEffect(",
-            "label: \"Bless targets\"",
             "maxTargets: 3",
             "procedure: \"rollModifier\"",
             "actionCost: \"magicAction\"",
@@ -95448,9 +95412,8 @@
         {
           "anchor": "function assertLevelOneBless",
           "needles": [
-            "spellSlotActForProcedure(state, blessSpellId, 1, \"rollModifier\")",
+            "const act = spellSlotActForProcedure(",
             "const expectedEffect = expectedLevelOneBlessEffect(",
-            "label: \"Bless targets\"",
             "maxTargets: 3",
             "procedure: \"rollModifier\"",
             "actionCost: \"magicAction\"",
@@ -95521,7 +95484,7 @@
         {
           "needles": [
             "shieldOfFaithWithObjectTarget()",
-            "maybeBonusSpellAct({ state, spellId: spell.id })",
+            "maybeBonusSpellAct({ session, spellId: spell.id })",
             "toBeUndefined()"
           ],
           "path": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
@@ -95556,7 +95519,7 @@
         {
           "anchor": "function assertLevelOneShieldOfFaith",
           "needles": [
-            "shieldOfFaithBonusActionSpellSlotAct(state, input.casterId)",
+            "shieldOfFaithBonusActionSpellSlotAct(session, input.casterId)",
             "snapshotCombatant(",
             "expectedLevelOneShieldOfFaithEffect(",
             "tag: \"bonusActionSpell\"",
@@ -95583,7 +95546,7 @@
             "kind: \"spellArmorClassBonus\"",
             "sourceProcedureRef,",
             "bonus: 2",
-            "negatedSpellIds: []",
+            "negatesRepeatedDamageAllocation: false",
             "expiresAt: {",
             "kind: \"concentration\"",
             "combatantId: casterId"
@@ -95592,7 +95555,7 @@
         {
           "anchor": "function shieldOfFaithBonusActionSpellSlotAct",
           "needles": [
-            "discoverBattleActs(state).find(",
+            "discoverBattleActs(session).find(",
             "CastBonusActionSpellAct",
             "actorId",
             "shieldOfFaithSpellId",
@@ -95631,7 +95594,7 @@
         {
           "needles": [
             "shieldOfFaithWithObjectTarget()",
-            "maybeBonusSpellAct({ state, spellId: spell.id })",
+            "maybeBonusSpellAct({ session, spellId: spell.id })",
             "toBeUndefined()"
           ],
           "path": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
@@ -95685,7 +95648,7 @@
         {
           "anchor": "function assertLevelOneShieldOfFaith",
           "needles": [
-            "shieldOfFaithBonusActionSpellSlotAct(state, input.casterId)",
+            "shieldOfFaithBonusActionSpellSlotAct(session, input.casterId)",
             "snapshotCombatant(",
             "expectedLevelOneShieldOfFaithEffect(",
             "tag: \"bonusActionSpell\"",
@@ -95712,7 +95675,7 @@
             "kind: \"spellArmorClassBonus\"",
             "sourceProcedureRef,",
             "bonus: 2",
-            "negatedSpellIds: []",
+            "negatesRepeatedDamageAllocation: false",
             "expiresAt: {",
             "kind: \"concentration\"",
             "combatantId: casterId"
@@ -95721,7 +95684,7 @@
         {
           "anchor": "function shieldOfFaithBonusActionSpellSlotAct",
           "needles": [
-            "discoverBattleActs(state).find(",
+            "discoverBattleActs(session).find(",
             "CastBonusActionSpellAct",
             "actorId",
             "shieldOfFaithSpellId",
@@ -96175,9 +96138,8 @@
         {
           "anchor": "function assertLevelOneHealingWord",
           "needles": [
-            "healingWordBonusActionSpellSlotAct(state, input.casterId)",
+            "healingWordBonusActionSpellSlotAct(session, input.casterId)",
             "requiresTableSpatialFact: true",
-            "label: \"Healing Word healing (2d4+2)\"",
             "healing: { expr: { dice: 2, dieSize: 4, flat: 2 } }",
             "rangeFeet: 60",
             "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
@@ -96254,9 +96216,8 @@
         {
           "anchor": "function assertLevelOneHealingWord",
           "needles": [
-            "healingWordBonusActionSpellSlotAct(state, input.casterId)",
+            "healingWordBonusActionSpellSlotAct(session, input.casterId)",
             "requiresTableSpatialFact: true",
-            "label: \"Healing Word healing (2d4+2)\"",
             "healing: { expr: { dice: 2, dieSize: 4, flat: 2 } }",
             "rangeFeet: 60",
             "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
@@ -96333,9 +96294,8 @@
         {
           "anchor": "function assertLevelOneHealingWord",
           "needles": [
-            "healingWordBonusActionSpellSlotAct(state, input.casterId)",
+            "healingWordBonusActionSpellSlotAct(session, input.casterId)",
             "requiresTableSpatialFact: true",
-            "label: \"Healing Word healing (2d4+2)\"",
             "healing: { expr: { dice: 2, dieSize: 4, flat: 2 } }",
             "rangeFeet: 60",
             "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
@@ -96406,7 +96366,6 @@
             "targeting: { kind: \"singleCombatant\" }",
             "damage: { expr: { dice: 1, dieSize: 8 }, damageType: \"cold\" }",
             "rangeFeet: 60",
-            "label: \"Ray of Frost damage (1d8-cold)\"",
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"speedDelta\"",
@@ -96477,7 +96436,6 @@
             "targeting: { kind: \"singleCombatant\" }",
             "damage: { expr: { dice: 1, dieSize: 8 }, damageType: \"cold\" }",
             "rangeFeet: 60",
-            "label: \"Ray of Frost damage (1d8-cold)\"",
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"speedDelta\"",
@@ -96548,7 +96506,6 @@
             "targeting: { kind: \"singleCombatant\" }",
             "damage: { expr: { dice: 1, dieSize: 8 }, damageType: \"lightning\" }",
             "rangeFeet: 5",
-            "label: \"Shocking Grasp damage (1d8-lightning)\"",
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"opportunityAttackDenied\"",
@@ -96614,7 +96571,6 @@
             "targeting: { kind: \"singleCombatant\" }",
             "damage: { expr: { dice: 1, dieSize: 8 }, damageType: \"lightning\" }",
             "rangeFeet: 5",
-            "label: \"Shocking Grasp damage (1d8-lightning)\"",
             "damageRollFillWithGroups(damage, [[4]])",
             "hp: Hp(9)",
             "kind: \"opportunityAttackDenied\"",
@@ -96844,7 +96800,6 @@
             "falseLifeSpellId",
             "\"scalarBuff\"",
             "\"rolledDice\"",
-            "label: \"False Life Temporary Hit Points (2d4+4)\"",
             "targeting: { kind: \"self\" }",
             "kind: \"temporaryHitPoints\"",
             "amount: { expr: { dice: 2, dieSize: 4, flat: 4 } }",
@@ -96899,7 +96854,6 @@
             "falseLifeSpellId",
             "\"scalarBuff\"",
             "\"rolledDice\"",
-            "label: \"False Life Temporary Hit Points (2d4+4)\"",
             "targeting: { kind: \"self\" }",
             "kind: \"temporaryHitPoints\"",
             "amount: { expr: { dice: 2, dieSize: 4, flat: 4 } }",
@@ -96959,7 +96913,7 @@
             "requiresTableSpatialFact: true",
             "spellTargetFill(",
             "attackBonus: input.expectedSpellAttackBonus",
-            "mechanics: { duration: { kind: \"instantaneous\" } }",
+            "procedure: \"spellAttackDamage\"",
             "attackKind: \"ranged_spell_attack\"",
             "targeting: { kind: \"singleCombatant\" }",
             "rangeFeet: 60",
@@ -96968,7 +96922,6 @@
             "damageType: \"poison\"",
             "condition: \"poisoned\"",
             "expiresAt: \"endOfCasterNextTurn\"",
-            "label: \"Ray of Sickness damage (2d8-poison)\"",
             "damageRollFillWithGroups(damage, [[1, 1]])",
             "expect(poisonedTarget.hp).toBe(Hp(8));",
             "kind: \"spellCondition\"",
@@ -97035,7 +96988,7 @@
             "requiresTableSpatialFact: true",
             "spellTargetFill(",
             "attackBonus: input.expectedSpellAttackBonus",
-            "mechanics: { duration: { kind: \"instantaneous\" } }",
+            "procedure: \"spellAttackDamage\"",
             "attackKind: \"ranged_spell_attack\"",
             "targeting: { kind: \"singleCombatant\" }",
             "rangeFeet: 60",
@@ -97044,7 +96997,6 @@
             "damageType: \"poison\"",
             "condition: \"poisoned\"",
             "expiresAt: \"endOfCasterNextTurn\"",
-            "label: \"Ray of Sickness damage (2d8-poison)\"",
             "damageRollFillWithGroups(damage, [[1, 1]])",
             "expect(poisonedTarget.hp).toBe(Hp(8));",
             "kind: \"spellCondition\"",
@@ -97107,7 +97059,6 @@
             "\"saveGatedDamage\"",
             "\"savingThrowOutcome\"",
             "requireThunderwaveSavingThrowHole(",
-            "label: \"Thunderwave self-origin Cube Saving Throw outcomes\"",
             "ability: \"con\"",
             "dc: { kind: \"caster_spell_save_dc\" }",
             "outcomeTargeting: \"area\"",
@@ -97117,7 +97068,6 @@
             "affectedTargetIds: [monsterId, secondMonsterId]",
             "objectId: thunderwaveUnsecuredObjectId",
             "audibleRadiusFeet: movementFeet(300)",
-            "label: \"Thunderwave damage (2d8-thunder)\"",
             "damageRollFillWithGroups(damage, [[4, 4]])",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(5));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(9));",
@@ -97205,7 +97155,6 @@
             "\"saveGatedDamage\"",
             "\"savingThrowOutcome\"",
             "requireThunderwaveSavingThrowHole(",
-            "label: \"Thunderwave self-origin Cube Saving Throw outcomes\"",
             "ability: \"con\"",
             "dc: { kind: \"caster_spell_save_dc\" }",
             "outcomeTargeting: \"area\"",
@@ -97215,7 +97164,6 @@
             "affectedTargetIds: [monsterId, secondMonsterId]",
             "objectId: thunderwaveUnsecuredObjectId",
             "audibleRadiusFeet: movementFeet(300)",
-            "label: \"Thunderwave damage (2d8-thunder)\"",
             "damageRollFillWithGroups(damage, [[4, 4]])",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(5));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(9));",
@@ -97300,7 +97248,6 @@
             "chromaticOrbSpellId",
             "\"chainedSpellAttackDamage\"",
             "\"damageTypeChoice\"",
-            "label: \"Chromatic Orb damage type\"",
             "choices: [\"acid\", \"cold\", \"fire\", \"lightning\", \"poison\", \"thunder\"]",
             "resource: { tag: \"spellSlot\", slotLevel: 1 }",
             "targeting: { kind: \"singleCombatant\" }",
@@ -97311,14 +97258,12 @@
             "damageTypeChoiceFill(damageType, \"poison\")",
             "spellTargetFill(",
             "attackRollFill(primaryAttackRoll,",
-            "label: \"Chromatic Orb damage 1 (3d8-poison)\"",
             "damageRollFillWithGroups(primaryDamage,",
             "[4, 4, 1]",
             "requiresTableSpatialFact: true",
             "choices: expect.arrayContaining([secondMonsterId])",
             "expect(leapTarget.choices).not.toContain(monsterId);",
             "spellLeapTargetFill(",
-            "label: \"Chromatic Orb damage 2 (3d8-poison)\"",
             "damageRollFillWithGroups(leapDamage, [[2, 2, 2]])",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(13));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
@@ -97382,7 +97327,6 @@
             "chromaticOrbSpellId",
             "\"chainedSpellAttackDamage\"",
             "\"damageTypeChoice\"",
-            "label: \"Chromatic Orb damage type\"",
             "choices: [\"acid\", \"cold\", \"fire\", \"lightning\", \"poison\", \"thunder\"]",
             "resource: { tag: \"spellSlot\", slotLevel: 1 }",
             "targeting: { kind: \"singleCombatant\" }",
@@ -97393,14 +97337,12 @@
             "damageTypeChoiceFill(damageType, \"poison\")",
             "spellTargetFill(",
             "attackRollFill(primaryAttackRoll,",
-            "label: \"Chromatic Orb damage 1 (3d8-poison)\"",
             "damageRollFillWithGroups(primaryDamage,",
             "[4, 4, 1]",
             "requiresTableSpatialFact: true",
             "choices: expect.arrayContaining([secondMonsterId])",
             "expect(leapTarget.choices).not.toContain(monsterId);",
             "spellLeapTargetFill(",
-            "label: \"Chromatic Orb damage 2 (3d8-poison)\"",
             "damageRollFillWithGroups(leapDamage, [[2, 2, 2]])",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(13));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
@@ -97465,7 +97407,7 @@
             "\"spellTargetAllocation\"",
             "allocationCount: 3",
             "requiresTableSpatialFact: true",
-            "range: { kind: \"point\", feet: 120 }",
+            "rangeFeet: 120",
             "damageType: \"force\"",
             "expr: { dice: 1, dieSize: 4, flat: 1 }",
             "expect(requireCombatant(state, monsterId).hp).toBe(Hp(13));",
@@ -97475,7 +97417,6 @@
             "{ targetId: secondMonsterId, count: 1 }",
             "damageRollFillWithGroups(damage,",
             "damageRollFillWithGroups(damage, [[2, 3], [4]])",
-            "label: \"Magic Missile damage (3d4+3-force)\"",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(6));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(8));",
             "{ spellLevel: 1, count: 2, expended: 1 }"
@@ -97527,7 +97468,7 @@
             "\"spellTargetAllocation\"",
             "allocationCount: 3",
             "requiresTableSpatialFact: true",
-            "range: { kind: \"point\", feet: 120 }",
+            "rangeFeet: 120",
             "damageType: \"force\"",
             "expr: { dice: 1, dieSize: 4, flat: 1 }",
             "expect(requireCombatant(state, monsterId).hp).toBe(Hp(13));",
@@ -97537,7 +97478,6 @@
             "{ targetId: secondMonsterId, count: 1 }",
             "damageRollFillWithGroups(damage,",
             "damageRollFillWithGroups(damage, [[2, 3], [4]])",
-            "label: \"Magic Missile damage (3d4+3-force)\"",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(6));",
             "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(8));",
             "{ spellLevel: 1, count: 2, expended: 1 }"
@@ -97596,7 +97536,6 @@
             "objectHitEffect: { kind: \"igniteFlammableUnattended\" }",
             "expr: { dice: 1, dieSize: 10 }",
             "damageType: \"fire\"",
-            "label: \"Fire Bolt damage (1d10-fire)\"",
             "spellTargetFill(",
             "attackRollFill(",
             "ordinaryAttackDamageFills({",
@@ -97656,7 +97595,6 @@
             "objectHitEffect: { kind: \"igniteFlammableUnattended\" }",
             "expr: { dice: 1, dieSize: 10 }",
             "damageType: \"fire\"",
-            "label: \"Fire Bolt damage (1d10-fire)\"",
             "spellTargetFill(",
             "attackRollFill(",
             "ordinaryAttackDamageFills({",
@@ -97728,7 +97666,7 @@
       "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement",
       "rowKey": "level-5:Barbarian:barbarian_fast_movement",
       "tracerNeedles": [
-        "barbarianFastMovementUnitId"
+        "assertLevelFiveFastMovementHandoff();"
       ]
     },
     {
@@ -97835,7 +97773,7 @@
       "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
       "rowKey": "level-5:Monk:monk_stunning_strike",
       "tracerNeedles": [
-        "binding.procedure.supportKind === \"stunningStrike\"",
+        "procedure.execution.kind === \"stunningStrike\"",
         "sourceProcedureRef: stunningStrikeProcedureRef"
       ]
     },
@@ -97852,7 +97790,7 @@
       "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike",
       "rowKey": "level-5:Rogue:rogue_cunning_strike",
       "tracerNeedles": [
-        "rogueCunningStrikeUnitId"
+        "Expected Cunning Strike mechanical procedure references."
       ]
     },
     {

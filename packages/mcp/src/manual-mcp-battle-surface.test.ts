@@ -925,8 +925,7 @@ describe("manual MCP battle surface coverage", () => {
         .get(fighterId)
         ?.resourceOwnership.find(
           (candidate) =>
-            candidate.resourcePoolRef ===
-            favoredEnemyResource.resourcePoolRef,
+            candidate.resourcePoolRef === favoredEnemyResource.resourcePoolRef,
         );
     expect(favoredEnemyOwnership?.unit.id).toBe("ranger_favored_enemy");
     expect(favoredEnemyResource.usesRemaining).toBe(1);

@@ -2284,6 +2284,14 @@ export type ClassFeatureFreeCastInvocationResource = {
   readonly tag: "classFeatureFreeCast";
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
 };
+type PreparedSpellSlotSource = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+};
+type PreparedClassFeatureFreeCastSource = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: ClassFeatureFreeCastInvocationResource;
+};
 type ClassCantripDamageSpellSource = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -2683,14 +2691,26 @@ export type ScalarBuffSpellTargeting =
     });
 type SpellTargetListTargetingKind =
   | "targetList"
-  | "pointOriginSphereTargetList";
+  | "pointOriginSphereTargetList"
+  | "selfAndChosenLegalTargets";
 
-export type TargetListSpellInvocationOf<Invocation> =
-  Invocation extends { readonly targeting: infer Targeting }
-    ? Targeting extends { readonly kind: SpellTargetListTargetingKind }
-      ? Invocation & { readonly targeting: Targeting }
-      : never
-    : never;
+export type TargetListSpellInvocationOf<Invocation> = Invocation extends {
+  readonly targeting: infer Targeting;
+}
+  ? Extract<
+      Targeting,
+      { readonly kind: SpellTargetListTargetingKind }
+    > extends infer TargetListTargeting
+    ? [TargetListTargeting] extends [never]
+      ? never
+      : Exclude<
+            Targeting,
+            { readonly kind: SpellTargetListTargetingKind }
+          > extends never
+        ? Invocation
+        : Invocation & { readonly targeting: TargetListTargeting }
+    : never
+  : never;
 
 export type TargetListSpellInvocation =
   TargetListSpellInvocationOf<SupportedSpellInvocation>;
@@ -2770,8 +2790,6 @@ type RollModifierSpellSaveGate = {
   readonly dc: DcSource;
 };
 type RollModifierSpellInvocationBase = {
-  readonly access: PreparedSpellAccess | ClassCantripSpellAccess;
-  readonly resource: SpellSlotInvocationResource | NoSpellInvocationResource;
   readonly procedure: "rollModifier";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
@@ -2779,7 +2797,11 @@ type RollModifierSpellInvocationBase = {
   readonly rangeFeet: MovementFeet;
   readonly saveGate: RollModifierSpellSaveGate | null;
 };
-export type RollModifierSpellInvocation = RollModifierSpellInvocationBase &
+export type RollModifierSpellInvocation = (
+  | ClassCantripDamageSpellSource
+  | PreparedSpellSlotSource
+) &
+  RollModifierSpellInvocationBase &
   (
     | {
         readonly effect: D20RollModifierSpellEffect;
@@ -3115,11 +3137,10 @@ export type MagicWeaponEnhancementSpellInvocation = {
   readonly bonus: MagicWeaponEnhancementBonus;
   readonly durationTicks: ElapsedTimeTicks;
 };
-export type AfterHitDamageSpellInvocation = {
-  readonly access: PreparedSpellAccess;
-  readonly resource:
-    | SpellSlotInvocationResource
-    | ClassFeatureFreeCastInvocationResource;
+export type AfterHitDamageSpellInvocation = (
+  | PreparedSpellSlotSource
+  | PreparedClassFeatureFreeCastSource
+) & {
   readonly procedure: "afterHitDamage";
   readonly spell: SpellRecord;
   readonly actionCost: "bonusAction";
@@ -3179,11 +3200,7 @@ export type AfterHitDamageAndIlluminationSpellInvocation = {
   >;
 };
 export type MarkedDamageRiderSpellInvocation =
-  | {
-      readonly access: PreparedSpellAccess;
-      readonly resource:
-        | SpellSlotInvocationResource
-        | ClassFeatureFreeCastInvocationResource;
+  | ((PreparedSpellSlotSource | PreparedClassFeatureFreeCastSource) & {
       readonly procedure: "markedDamageRider";
       readonly action: "cast";
       readonly spell: SpellRecord;
@@ -3197,7 +3214,7 @@ export type MarkedDamageRiderSpellInvocation =
       readonly retargetTiming: MarkedDamageRiderRetargetTiming;
       readonly rangeFeet: MovementFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
-    }
+    })
   | {
       readonly access: SpellEffectSpellAccess;
       readonly resource: NoSpellInvocationResource;

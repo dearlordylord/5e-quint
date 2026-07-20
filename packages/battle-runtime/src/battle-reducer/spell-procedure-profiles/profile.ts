@@ -29,6 +29,7 @@ import type {
   ReadiedSpellInvocation,
   SupportedSpellInvocation,
   TargetListSpellInvocation,
+  TargetListSpellInvocationOf,
 } from "../../battle-reducer.ts";
 import type {
   BattleSpellProcedureExecution,
@@ -206,12 +207,6 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
     : never;
 }[SupportedSpellInvocation["procedure"]];
 
-type SpellProcedureTargeting<I> = I extends {
-  readonly targeting: infer Targeting;
-}
-  ? Targeting
-  : never;
-
 export type SpellProcedureAnyTargetListInvocationClassifier =
   | { readonly kind: "always" }
   | { readonly kind: "none" }
@@ -221,10 +216,7 @@ export type SpellProcedureTargetListInvocationClassifier<
   I extends SupportedSpellInvocation,
 > = [I] extends [TargetListSpellInvocation]
   ? { readonly kind: "always" }
-  : Extract<
-        SpellProcedureTargeting<I>,
-        { readonly kind: "targetList" }
-      > extends never
+  : TargetListSpellInvocationOf<I> extends never
     ? { readonly kind: "none" }
     :
         | { readonly kind: "none" }

@@ -1992,7 +1992,15 @@ export function isSelectedSorcerousBurstDamageInvocation(
 ): invocation is Extract<
   SpellProcedureExecution,
   { readonly procedure: "spellAttackDamage" }
-> {
+> & {
+  readonly damage: Extract<
+    Extract<
+      SpellProcedureExecution,
+      { readonly procedure: "spellAttackDamage" }
+    >["damage"],
+    { readonly kind: "selectedSorcerousBurstDamage" }
+  >;
+} {
   return (
     invocation.procedure === "spellAttackDamage" &&
     invocation.damage.kind === "selectedSorcerousBurstDamage"

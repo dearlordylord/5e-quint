@@ -116,11 +116,7 @@ import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import {
-  sameSpellInvocationRef,
-  supportedSpellInvocationMatchesRef,
-  supportedSpellInvocationRef,
-} from "./battle-reducer/spells-invocation-ref.ts";
+import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
@@ -562,6 +558,42 @@ export function requireCharacterSpellProcedureRefForTest(
     );
   }
   return procedureRef;
+}
+
+function sameSpellInvocationRef(
+  left: SpellInvocationRef,
+  right: SpellInvocationRef,
+): boolean {
+  if (
+    left.tag !== right.tag ||
+    left.spellId !== right.spellId ||
+    left.procedure !== right.procedure
+  ) {
+    return false;
+  }
+  if (left.tag === "cantrip" && right.tag === "cantrip") return true;
+  if (left.tag === "spellEffect" && right.tag === "spellEffect") {
+    return left.sourceCombatantId === right.sourceCombatantId;
+  }
+  if (
+    left.tag === "classFeatureFreeCast" &&
+    right.tag === "classFeatureFreeCast"
+  ) {
+    return left.resourcePoolRef === right.resourcePoolRef;
+  }
+  if (left.tag === "armorOfShadows" && right.tag === "armorOfShadows") {
+    return true;
+  }
+  return left.tag === "spellSlot" && right.tag === "spellSlot"
+    ? left.slotLevel === right.slotLevel
+    : false;
+}
+
+function supportedSpellInvocationMatchesRef(
+  invocation: Parameters<typeof supportedSpellInvocationRef>[0],
+  ref: SpellInvocationRef,
+): boolean {
+  return sameSpellInvocationRef(supportedSpellInvocationRef(invocation), ref);
 }
 
 export function requireCharacterUnitProcedureRefForTest(
@@ -3994,9 +4026,7 @@ export function recklessAttackFeature(): NonNullable<
 >[number] {
   return characterBattleFeatureInitForTest(
     barbarianRecklessAttackUnit(),
-    parseCharacterBattleClassLevels([
-      { className: "barbarian", level: 2 },
-    ]),
+    parseCharacterBattleClassLevels([{ className: "barbarian", level: 2 }]),
   );
 }
 

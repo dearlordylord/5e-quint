@@ -7,9 +7,10 @@ import {
   type BattleObjectDamageDisposition,
   type BattleObjectId,
   type BattleResolutionResult,
-  type BattleState,
+  type BattleRuntimeContext,
+  type BattleRuntimeSession,
   type BattleSubject,
-  characterProcedureBinding,
+  battleSubjectPresentation,
   type CombatantId,
   discoverBattleActs,
   SPELL_CAST_REACTION_FACTS_HOLE_ID
@@ -32,8 +33,12 @@ type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>
 }
 
-export function requireActionSpellAct(state: BattleState, selectedSpellId: string, slotLevel: number): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+export function requireActionSpellAct(
+  session: BattleRuntimeSession,
+  selectedSpellId: string,
+  slotLevel: number
+): ActionSpellAct {
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellSlotPresentation(candidate)?.invocation.spellId === selectedSpellId &&
@@ -46,6 +51,7 @@ export function requireActionSpellAct(state: BattleState, selectedSpellId: strin
 }
 
 export function requireCounterspellChoice(
+  context: BattleRuntimeContext,
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   input: {
     readonly reactorId: CombatantId
@@ -53,22 +59,18 @@ export function requireCounterspellChoice(
     readonly spellId: string
   }
 ): CounterspellReactionChoice {
-  const reactor = result.state.combatants.get(input.reactorId)
   const choice = result.snapshot.pendingInterrupt?.choices.find(
     (candidate): candidate is CounterspellReactionChoice => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== input.reactorId ||
-        reactor?.origin.kind !== "character"
-      ) {
+      if (candidate.kind !== "castTriggeredReactionSpell" || candidate.reactorId !== input.reactorId) {
         return false
       }
-      const binding = characterProcedureBinding(reactor.origin.execution, candidate.subject.procedureRef)
+      const presentation = battleSubjectPresentation({ state: result.state, context }, candidate.subject)
       return (
-        binding?.procedure.kind === "spellInvocation" &&
-        binding.procedure.invocation.procedure === "counterspell" &&
-        binding.procedure.invocation.spell.id === input.spellId &&
-        Number(binding.procedure.invocation.resource.slotLevel) === input.slotLevel
+        presentation?.kind === "spell" &&
+        presentation.invocation.tag === "spellSlot" &&
+        presentation.invocation.procedure === "counterspell" &&
+        presentation.invocation.spellId === input.spellId &&
+        Number(presentation.invocation.slotLevel) === input.slotLevel
       )
     }
   )
@@ -117,6 +119,26 @@ export function counterspellTriggerFact(input: {
     sourceProcedureRef: input.sourceProcedureRef,
     rangeFeet: movementFeet(input.rangeFeet)
   }
+}
+
+export function requireCounterspellProcedureRef(
+  context: BattleRuntimeContext,
+  reactorId: CombatantId,
+  spellId: string,
+  slotLevel: number
+): CounterspellTriggerFact["sourceProcedureRef"] {
+  const source = context.characters
+    .get(reactorId)
+    ?.spellPresentationSources.find(
+      (candidate) =>
+        candidate.invocation.procedure === "counterspell" &&
+        candidate.invocation.spell.id === spellId &&
+        Number(candidate.invocation.resource.slotLevel) === slotLevel
+    )
+  if (source === undefined) {
+    throw new Error("Expected Counterspell procedure presentation source.")
+  }
+  return source.procedureRef
 }
 
 export function interruptDecisionFill(

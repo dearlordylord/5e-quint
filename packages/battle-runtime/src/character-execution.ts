@@ -42,11 +42,6 @@ import type {
   SupportedSpellInvocation,
 } from "./battle-reducer.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
-import type { SpellInvocationRef } from "./battle-subjects.ts";
-import {
-  sameSpellInvocationRef,
-  supportedSpellInvocationRef,
-} from "./battle-reducer/spells-invocation-ref.ts";
 import { Brand, Match, Schema } from "effect";
 import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 import {
@@ -842,9 +837,7 @@ export type HeldLightHurlSpellProcedureExecution =
       HeldLightHurlSpellInvocation["resource"]
     >;
     readonly sourceEffectRef: HeldLightHurlSpellInvocation["sourceEffectRef"];
-    readonly sourceHeldLightProcedureRef: HeldLightHurlSpellInvocation[
-      "sourceHeldLightProcedureRef"
-    ];
+    readonly sourceHeldLightProcedureRef: HeldLightHurlSpellInvocation["sourceHeldLightProcedureRef"];
     readonly targeting: HeldLightHurlSpellInvocation["targeting"];
   };
 
@@ -992,13 +985,12 @@ type MarkedDamageRiderTransferSpellInvocation = Extract<
   SpellInvocationFor<"markedDamageRider">,
   { readonly action: "transfer" }
 >;
-export type MarkedDamageRiderTransferSpellProcedureExecution =
-  {
-    readonly action: MarkedDamageRiderTransferSpellInvocation["action"];
-    readonly activeEffectRef: BattleActiveEffectExecutionRef;
-    readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
-    readonly procedure: MarkedDamageRiderTransferSpellInvocation["procedure"];
-  };
+export type MarkedDamageRiderTransferSpellProcedureExecution = {
+  readonly action: MarkedDamageRiderTransferSpellInvocation["action"];
+  readonly activeEffectRef: BattleActiveEffectExecutionRef;
+  readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
+  readonly procedure: MarkedDamageRiderTransferSpellInvocation["procedure"];
+};
 
 type MirrorImageHitInterceptionSpellInvocation =
   SpellInvocationFor<"mirrorImageHitInterception">;
@@ -1047,12 +1039,11 @@ export type ObjectContactDamageSpellProcedureExecution =
 
 type ObjectContactDamageRepeatSpellInvocation =
   SpellInvocationFor<"objectContactDamageRepeat">;
-export type ObjectContactDamageRepeatSpellProcedureExecution =
-  {
-    readonly activeEffectRef: BattleActiveEffectExecutionRef;
-    readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
-    readonly procedure: ObjectContactDamageRepeatSpellInvocation["procedure"];
-  };
+export type ObjectContactDamageRepeatSpellProcedureExecution = {
+  readonly activeEffectRef: BattleActiveEffectExecutionRef;
+  readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
+  readonly procedure: ObjectContactDamageRepeatSpellInvocation["procedure"];
+};
 
 type ObjectLightClassCantripSpellInvocation = Extract<
   SpellInvocationFor<"objectLight">,
@@ -1598,12 +1589,11 @@ export type SpiritualWeaponAttackProxySpellProcedureExecution =
 
 type SpiritualWeaponRepeatAttackSpellInvocation =
   SpellInvocationFor<"spiritualWeaponRepeatAttack">;
-export type SpiritualWeaponRepeatAttackSpellProcedureExecution =
-  {
-    readonly activeEffectRef: BattleActiveEffectExecutionRef;
-    readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
-    readonly procedure: SpiritualWeaponRepeatAttackSpellInvocation["procedure"];
-  };
+export type SpiritualWeaponRepeatAttackSpellProcedureExecution = {
+  readonly activeEffectRef: BattleActiveEffectExecutionRef;
+  readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
+  readonly procedure: SpiritualWeaponRepeatAttackSpellInvocation["procedure"];
+};
 
 type ThaumaturgyBoomingVoiceSpellInvocation =
   SpellInvocationFor<"thaumaturgyBoomingVoice">;
@@ -1849,19 +1839,20 @@ type LiveDynamicSpellProcedureExecution<
 
 export type SpellExecutableExecutionOf<
   Input extends SupportedSpellInvocation | SpellProcedureExecution,
-> = (Input extends SupportedSpellInvocation
-  ? SpellProcedureExecution<Input>
-  : Input extends SpellProcedureExecution
-    ? Input
-    : never) extends infer Execution
+> = (
+  Input extends SupportedSpellInvocation
+    ? SpellProcedureExecution<Input>
+    : Input extends SpellProcedureExecution
+      ? Input
+      : never
+) extends infer Execution
   ? Execution extends DynamicActiveEffectSpellProcedureExecution
     ? LiveDynamicSpellProcedureExecution<Execution>
     : Execution
   : never;
 
-export type RuntimeSpellProcedureExecution = SpellExecutableExecutionOf<
-  SpellProcedureExecution
->;
+export type RuntimeSpellProcedureExecution =
+  SpellExecutableExecutionOf<SpellProcedureExecution>;
 
 export type BattleSpellProcedureExecution<
   Invocation extends SupportedSpellInvocation = SupportedSpellInvocation,
@@ -2108,19 +2099,21 @@ export function characterExecutionFromUnits(input: {
     unitFeatureProcedureRefsByUnitId,
     supportProcedureRefsByUnitId: new Map(),
   };
-  const unitSupportProcedures = input.unitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.map((profile) => ({
-      unitId: unitRef.unit.id,
-      profile,
-    })),
-  ).filter(
-    (candidate) =>
-      !unitSupportProcedureIsOwnedByUnitFeature(
-        unitProcedures,
-        candidate,
-        unitSupportExecutionContext,
-      ),
-  );
+  const unitSupportProcedures = input.unitRefs
+    .flatMap((unitRef) =>
+      unitRef.supportProfiles.map((profile) => ({
+        unitId: unitRef.unit.id,
+        profile,
+      })),
+    )
+    .filter(
+      (candidate) =>
+        !unitSupportProcedureIsOwnedByUnitFeature(
+          unitProcedures,
+          candidate,
+          unitSupportExecutionContext,
+        ),
+    );
   const primarySupportProcedures = unitSupportProcedures.filter(
     ({ profile }) =>
       typeof profile !== "object" ||
@@ -5242,8 +5235,7 @@ export function spellProcedureExecution(
         access: value.access,
         actionCost: value.actionCost,
         activeEffectRef: value.activeEffectRef,
-        sourceDancingLightsProcedureRef:
-          value.sourceDancingLightsProcedureRef,
+        sourceDancingLightsProcedureRef: value.sourceDancingLightsProcedureRef,
         maxMoveFeet: value.maxMoveFeet,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
@@ -6318,14 +6310,19 @@ function executableSpellProcedureFromLiveEffects(
       }
     | undefined,
 ): SpellExecutableExecutionOf<SpellProcedureExecution> | undefined {
-  if (stored.procedure === "markedDamageRider" && stored.action === "transfer") {
+  if (
+    stored.procedure === "markedDamageRider" &&
+    stored.action === "transfer"
+  ) {
     if (liveActor === undefined) return undefined;
     const source = characterSpellProcedureExecution(
       execution,
       stored.activeEffectSourceProcedureRef,
     );
     const activeEffect = liveActor.activeEffects.find(
-      (effect): effect is Extract<
+      (
+        effect,
+      ): effect is Extract<
         BattleActiveEffect,
         { readonly kind: "spellMarkedDamageRider" }
       > =>
@@ -6339,7 +6336,10 @@ function executableSpellProcedureFromLiveEffects(
       source.action === "cast"
       ? {
           spellRuleFacts: source.spellRuleFacts,
-          access: { tag: "spellEffect", sourceCombatantId: liveActor.combatantId },
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: liveActor.combatantId,
+          },
           resource: { tag: "none" },
           procedure: stored.procedure,
           action: stored.action,
@@ -6357,7 +6357,9 @@ function executableSpellProcedureFromLiveEffects(
       stored.activeEffectSourceProcedureRef,
     );
     const activeEffect = liveActor.activeEffects.find(
-      (effect): effect is Extract<
+      (
+        effect,
+      ): effect is Extract<
         BattleActiveEffect,
         { readonly kind: "spellObjectContactDamage" }
       > =>
@@ -6366,10 +6368,14 @@ function executableSpellProcedureFromLiveEffects(
         effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
         effect.sourceCombatantId === liveActor.combatantId,
     );
-    return activeEffect !== undefined && source?.procedure === "objectContactDamage"
+    return activeEffect !== undefined &&
+      source?.procedure === "objectContactDamage"
       ? {
           spellRuleFacts: source.spellRuleFacts,
-          access: { tag: "spellEffect", sourceCombatantId: liveActor.combatantId },
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: liveActor.combatantId,
+          },
           resource: { tag: "none" },
           procedure: stored.procedure,
           actionCost: "bonusAction",
@@ -6384,7 +6390,9 @@ function executableSpellProcedureFromLiveEffects(
       stored.activeEffectSourceProcedureRef,
     );
     const activeEffect = liveActor.activeEffects.find(
-      (effect): effect is Extract<
+      (
+        effect,
+      ): effect is Extract<
         BattleActiveEffect,
         { readonly kind: "spiritualWeapon" }
       > =>
@@ -6397,7 +6405,10 @@ function executableSpellProcedureFromLiveEffects(
       source?.procedure === "spiritualWeaponAttackProxy"
       ? {
           spellRuleFacts: source.spellRuleFacts,
-          access: { tag: "spellEffect", sourceCombatantId: liveActor.combatantId },
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: liveActor.combatantId,
+          },
           resource: { tag: "none" },
           procedure: stored.procedure,
           actionCost: "bonusAction",
@@ -6441,38 +6452,6 @@ export function characterSpellProcedureExecution(
   return binding?.procedure.kind === "spellInvocation"
     ? binding.procedure.execution
     : undefined;
-}
-
-export function characterSpellProcedureRefForInvocationRef(
-  execution: CharacterExecutionState,
-  invocationRef: SpellInvocationRef,
-  invocations: readonly SupportedSpellInvocation[],
-): BattleProcedureExecutionRef | undefined {
-  const invocation = invocations.find((candidate) =>
-    sameSpellInvocationRef(
-      supportedSpellInvocationRef(candidate),
-      invocationRef,
-    ),
-  );
-  return invocation === undefined
-    ? undefined
-    : characterSpellProcedureRef(execution, invocation);
-}
-
-export function characterStoredSpellProcedureRefForInvocationRef(
-  execution: CharacterExecutionState,
-  invocationRef: SpellInvocationRef,
-  invocations: readonly SupportedSpellInvocation[],
-): BattleProcedureExecutionRef | undefined {
-  const invocation = invocations.find((candidate) =>
-    sameSpellInvocationRef(
-      supportedSpellInvocationRef(candidate),
-      invocationRef,
-    ),
-  );
-  return invocation === undefined
-    ? undefined
-    : characterStoredSpellProcedureRef(execution, invocation);
 }
 
 export function bindStoredSpellProcedureExecutionFacts<
